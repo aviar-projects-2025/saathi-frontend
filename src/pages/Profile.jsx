@@ -18,7 +18,7 @@ import {
 import VerifiedIcon from "@mui/icons-material/Verified";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
-import { useApp } from "../context/Roles.jsx";
+
 import { rideHistory } from "../data/mockData.jsx";
 
 export default function Profile() {
