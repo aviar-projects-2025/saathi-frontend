@@ -7,7 +7,7 @@ import GroupsIcon from '@mui/icons-material/Groups';
 import StarIcon from '@mui/icons-material/Star';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import FavoriteIcon from '@mui/icons-material/Favorite';
-import { communityStats } from '../data/mockData.jsx';
+
 import UserAvatar from '../components/UserAvatar.jsx';
 
 const topMembers = [

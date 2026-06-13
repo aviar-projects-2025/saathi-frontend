@@ -7,7 +7,7 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useNavigate } from 'react-router-dom';
-import { useApp } from '../context/AppContext.jsx';
+
 
 const steps = ['Trip details', 'Preferences', 'Review & post'];
 

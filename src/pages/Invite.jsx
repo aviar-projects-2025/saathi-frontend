@@ -24,7 +24,7 @@ import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import ShareIcon from "@mui/icons-material/Share";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ScheduleIcon from "@mui/icons-material/Schedule";
-import { useApp } from "../context/AppContext.jsx";
+
 import { referrals } from "../data/mockData.jsx";
 
 export default function Invite() {

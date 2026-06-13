@@ -11,7 +11,7 @@ import {
   Paper,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-import { useApp } from "../context/AppContext.jsx";
+
 import RideCard from "../components/RideCard.jsx";
 
 const filters = ["All", "Airport", "Intercity", "Temple", "Parents", "Late Night"];

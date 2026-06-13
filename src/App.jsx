@@ -1,57 +1,73 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { ThemeProvider, CssBaseline, Snackbar, Alert, Box } from '@mui/material';
+import React from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import ProtectedRoute from "./routes/ProtectedRoute.jsx";
+import ROLES from "./context/Role";
 
-import { AppProvider, useApp } from './context/AppContext.jsx';
-import BottomNav from './components/BottomNav.jsx';
-import Home from './pages/Home.jsx';
-import FindRides from './pages/FindRides.jsx';
-import PostRide from './pages/PostRide.jsx';
-import Invite from './pages/Invite.jsx';
-import Profile from './pages/Profile.jsx';
-import InviteFriend from './pages/InviteFriend.jsx'
-import Login from './components/Auth/Login.jsx'
-import SignupForm from './components/Auth/SignUp.jsx'
+// Public Pages
+import Web          from "./pages/Web.jsx";
+import Login        from "./pages/Login.jsx";
+import SignUp       from "./pages/SignUp.jsx";
+import Unauthorized from "./pages/Unauthorized.jsx";
 
-function AppContent() {
-  const { snackbar, closeSnackbar } = useApp();
+// Shared (both roles)
+import BottomNav    from "./components/BottomNav.jsx";
+import Invite       from "./pages/Invite.jsx";
+
+// USER pages
+import Home         from "./pages/Home.jsx";
+import FindRides    from "./pages/FindRides.jsx";
+import Profile      from "./pages/Profile.jsx";
+import Community    from "./pages/Community.jsx";
+import MyRide       from "./pages/MyRide.jsx";
+import Notification from "./pages/Notification.jsx";
+import OfferRide    from "./pages/OfferRide.jsx";
+
+// ADMIN pages
+import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
+import AdminUsers     from "./pages/admin/AdminUsers.jsx";
+
+function App() {
   return (
-    <>
-      <Box >
-        <Routes>
-          <Route path="/" element={<Login />} />
-          <Route path="/sign" element={<SignupForm />} />
-          <Route path="/home" element={<Home />} />
-          <Route path="/find" element={<FindRides />} />
-          <Route path="/post" element={<PostRide />} />
+    <BrowserRouter>
+      <Routes>
+
+        {/*  Public — anyone can visit */}
+        <Route path="/"            element={<Web />} />
+        <Route path="/login"       element={<Login />} />
+        <Route path="/signUp"      element={<SignUp />} />
+        <Route path="/unauthorized" element={<Unauthorized />} />
+
+        {/* ADMIN only routes */}
+        <Route element={<ProtectedRoute allowedRoles={[ROLES.ADMIN]} />}>
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/users"     element={<AdminUsers />} />
+        </Route>
+
+        {/* USER only routes */}
+        <Route element={<ProtectedRoute allowedRoles={[ROLES.USER]} />}>
+          <Route path="/home"         element={<Home />} />
+          <Route path="/find"         element={<FindRides />} />
+          <Route path="/offerRide"    element={<OfferRide />} />
+          <Route path="/profile"      element={<Profile />} />
+        
+          <Route path="/myRide"       element={<MyRide />} />
+          <Route path="/notification" element={<Notification />} />
+        </Route>
+
+        {/*Both ADMIN and USER */}
+        <Route element={<ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.USER]} />}>
           <Route path="/invite" element={<Invite />} />
-          <Route path="/profile" element={<Profile />} />
-        </Routes>
-      </Box>
+           <Route path="/community"    element={<Community />} />
+        </Route>
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
+
+      </Routes>
+
       <BottomNav />
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={closeSnackbar}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert onClose={closeSnackbar} severity={snackbar.severity} sx={{ width: '100%', fontWeight: 600 }}>
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-    </>
+    </BrowserRouter>
   );
 }
 
-export default function App() {
-  return (
-    <>
-      <CssBaseline />
-      <AppProvider>
-        <BrowserRouter>
-          <AppContent />
-        </BrowserRouter>
-      </AppProvider>
-    </>
-  );
-}
+export default App;
