@@ -2,52 +2,40 @@ import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, CssBaseline, Snackbar, Alert, Box } from '@mui/material';
 
-import { AppProvider, useApp } from './context/AppContext.jsx';
+import { AppProvider, useApp } from './context/Roles.jsx';
 import BottomNav from './components/BottomNav.jsx';
 import Home from './pages/Home.jsx';
 import FindRides from './pages/FindRides.jsx';
 import PostRide from './pages/PostRide.jsx';
 import Invite from './pages/Invite.jsx';
 import Profile from './pages/Profile.jsx';
-import InviteFriend from './pages/InviteFriend.jsx'
-function AppContent() {
-  const { snackbar, closeSnackbar } = useApp();
+import InviteFriend from './pages/InviteFriend.jsx';
+import Web from "./pages/Web.jsx";
+import Login from "./pages/Login.jsx";
+import ProtectedeRoute from "./routes/ProtectedRoute.jsx"
+function App() {
+
   return (
     <>
-      <Box >
+      <BrowserRouter >
         <Routes>
-          <Route path="/" element={<InviteFriend />} />
+          <Route path="/" element={<Web/>} />
+          <Route path="/login" element={<Login/>}/>
+
+          <Route element ={<ProtectedeRoute />}/>
           <Route path="/home" element={<Home/>}/>
           <Route path="/find" element={<FindRides />} />
           <Route path="/post" element={<PostRide />} />
           <Route path="/invite" element={<Invite />} />
           <Route path="/profile" element={<Profile />} />
         </Routes>
-      </Box>
+  
       <BottomNav />
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={closeSnackbar}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert onClose={closeSnackbar} severity={snackbar.severity} sx={{ width: '100%', fontWeight: 600 }}>
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
+  
+          </BrowserRouter>
     </>
   );
 }
 
-export default function App() {
-  return (
-    <>
-      <CssBaseline />
-      <AppProvider>
-        <BrowserRouter>
-          <AppContent />
-        </BrowserRouter>
-      </AppProvider>
-    </>
-  );
-}
+export default App
+
