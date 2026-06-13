@@ -10,14 +10,18 @@ import PostRide from './pages/PostRide.jsx';
 import Invite from './pages/Invite.jsx';
 import Profile from './pages/Profile.jsx';
 import InviteFriend from './pages/InviteFriend.jsx'
+import Login from './components/Auth/Login.jsx'
+import SignupForm from './components/Auth/SignUp.jsx'
+
 function AppContent() {
   const { snackbar, closeSnackbar } = useApp();
   return (
     <>
       <Box >
         <Routes>
-          <Route path="/" element={<InviteFriend />} />
-          <Route path="/home" element={<Home/>}/>
+          <Route path="/" element={<Login />} />
+          <Route path="/sign" element={<SignupForm />} />
+          <Route path="/home" element={<Home />} />
           <Route path="/find" element={<FindRides />} />
           <Route path="/post" element={<PostRide />} />
           <Route path="/invite" element={<Invite />} />

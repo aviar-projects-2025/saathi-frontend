@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+import "tailwindcss"
 
 // Load Nunito from Google Fonts
 const link = document.createElement('link');
