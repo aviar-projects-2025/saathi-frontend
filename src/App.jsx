@@ -6,7 +6,7 @@ import ROLES from "./context/Role";
 // Public Pages
 import Web from "./pages/Web.jsx";
 import Login from "./components/Auth/Login.jsx";
-import SignUp from "./pages/SignUp.jsx";
+import Register from "./pages/Register.jsx";
 import Unauthorized from "./pages/Unauthorized.jsx";
 import PublicRoute from "./routes/PublicRoute.jsx";
 
@@ -26,19 +26,24 @@ import OfferRide from "./pages/OfferRide.jsx";
 // ADMIN pages
 import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
 import AdminUsers from "./pages/admin/AdminUsers.jsx";
+import { ToastContainer } from "react-toastify";
 
 function App() {
   return (
     <BrowserRouter>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        theme="light"
+      />
       <Routes>
-
         <Route path="/" element={<Web />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
 
         {/* Public auth routes */}
         <Route element={<PublicRoute />}>
           <Route path="/login" element={<Login />} />
-          <Route path="/signUp" element={<SignUp />} />
+          <Route path="/register" element={<Register />} />
         </Route>
 
         {/* ADMIN only routes */}

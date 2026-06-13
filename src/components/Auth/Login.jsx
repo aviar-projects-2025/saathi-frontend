@@ -13,6 +13,7 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "./../../context/AuthContext";
 import ROLES from "../../context/Role";
+import { toast } from "react-toastify";
 
 
 
@@ -35,6 +36,7 @@ const Login = () => {
     const loginSubmit = async (values) => {
         try {
            const data =  await login(values);
+           toast.success("Login Success")
             if (role === ROLES.ADMIN) {
                 navigate("/admin/dashboard");
             } else {
