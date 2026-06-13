@@ -10,28 +10,40 @@ import {
     Typography,
     Link as MuiLink,
 } from "@mui/material";
-import {
-    Instagram,
-    Facebook,
-    X,
-    Google,
-} from "@mui/icons-material";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "./../../context/AuthContext";
+import ROLES from "../../context/Role";
 
 
-function Login() {
+
+
+const Login = () => {
+
+    const { login } = useAuth();
+    const role = localStorage.getItem('role');
 
     const navigate = useNavigate();
-
     const validationSchema = Yup.object({
-        username: Yup.string()
-            .min(3, "Username must be at least 3 characters")
-            .required("Username is required"),
+        email: Yup.string()
+            .min(3, "email must be at least 3 characters")
+            .required("email is required"),
         password: Yup.string()
             .min(6, "Password must be at least 6 characters")
             .required("Password is required"),
     });
 
+    const loginSubmit = async (values) => {
+        try {
+           const data =  await login(values);
+            if (role === ROLES.ADMIN) {
+                navigate("/admin/dashboard");
+            } else {
+                navigate("/home");
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    };
     return (
         <Container
             maxWidth={false}
@@ -40,7 +52,6 @@ function Login() {
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
-                bgcolor: "#f8f9fa",
             }}
         >
             <Paper
@@ -53,12 +64,12 @@ function Login() {
             >
                 <Formik
                     initialValues={{
-                        username: "",
+                        email: "",
                         password: "",
                     }}
                     validationSchema={validationSchema}
                     onSubmit={(values) => {
-                        console.log("Submitted:", values);
+                        loginSubmit(values);
                     }}
                 >
                     {({
@@ -79,19 +90,19 @@ function Login() {
                                 Login
                             </Typography>
 
-                            {/* Username */}
+                            {/* Email */}
                             <TextField
                                 fullWidth
-                                label="Username"
-                                name="username"
-                                value={values.username}
+                                label="Email"
+                                name="email"
+                                value={values.email}
                                 onChange={handleChange}
                                 onBlur={handleBlur}
                                 error={
-                                    touched.username && Boolean(errors.username)
+                                    touched.email && Boolean(errors.email)
                                 }
                                 helperText={
-                                    touched.username && errors.username
+                                    touched.email && errors.email
                                 }
                                 margin="normal"
                             />
@@ -120,10 +131,8 @@ function Login() {
                                 type="submit"
                                 variant="contained"
                                 sx={{
-                                    mt: 3,
+                                    mt: 1,
                                     py: 1.5,
-                                    background:
-                                        "linear-gradient(45deg, #ff0000, #0000ff)",
                                     textTransform: "none",
                                     fontSize: "16px",
                                     fontWeight: 600,
@@ -132,70 +141,8 @@ function Login() {
                                 LOGIN
                             </Button>
 
-                            {/* Social Login */}
-                            {/* <Box textAlign="center" mt={4}>
-                                <Typography variant="h6">
-                                    Sign In Using
-                                </Typography>
-
-                                <Stack
-                                    direction="row"
-                                    spacing={3}
-                                    justifyContent="center"
-                                    mt={2}
-                                >
-                                    <MuiLink
-                                        href="https://instagram.com"
-                                        target="_blank"
-                                    >
-                                        <Instagram
-                                            sx={{
-                                                color: "#E1306C",
-                                                fontSize: 32,
-                                            }}
-                                        />
-                                    </MuiLink>
-
-                                    <MuiLink
-                                        href="https://facebook.com"
-                                        target="_blank"
-                                    >
-                                        <Facebook
-                                            sx={{
-                                                color: "#1877F2",
-                                                fontSize: 32,
-                                            }}
-                                        />
-                                    </MuiLink>
-
-                                    <MuiLink
-                                        href="https://x.com"
-                                        target="_blank"
-                                    >
-                                        <X
-                                            sx={{
-                                                color: "#000",
-                                                fontSize: 32,
-                                            }}
-                                        />
-                                    </MuiLink>
-
-                                    <MuiLink
-                                        href="https://google.com"
-                                        target="_blank"
-                                    >
-                                        <Google
-                                            sx={{
-                                                color: "#DB4437",
-                                                fontSize: 32,
-                                            }}
-                                        />
-                                    </MuiLink>
-                                </Stack>
-                            </Box> */}
-
                             {/* Register */}
-                            <Box textAlign="center" mt={4}>
+                            <Box style={{ textAlign: "center" }} mt={4}>
                                 <Typography variant="body2" mt={4}>
                                     Don't have an account?
                                 </Typography>
@@ -205,7 +152,7 @@ function Login() {
                                     to="/register"
                                     underline="hover"
                                     sx={{
-                                        fontWeight: 600,
+                                        fontWeight: 500,
                                         cursor: "pointer",
                                     }}
                                 >
