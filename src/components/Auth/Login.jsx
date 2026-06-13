@@ -37,7 +37,8 @@ const Login = () => {
         try {
            const data =  await login(values);
            toast.success("Login Success")
-            if (role === ROLES.ADMIN) {
+           console.log(data.user.role,'role')
+            if (data.user.role === ROLES.ADMIN) {
                 navigate("/admin/dashboard");
             } else {
                 navigate("/home");

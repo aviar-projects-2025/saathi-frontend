@@ -27,6 +27,7 @@ import OfferRide from "./pages/OfferRide.jsx";
 import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
 import AdminUsers from "./pages/admin/AdminUsers.jsx";
 import { ToastContainer } from "react-toastify";
+import AdminLayout from "./components/AdminLayout.jsx";
 
 function App() {
   return (
@@ -48,8 +49,10 @@ function App() {
 
         {/* ADMIN only routes */}
         <Route element={<ProtectedRoute allowedRoles={[ROLES.ADMIN]} />}>
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/users" element={<AdminUsers />} />
+          <Route element={<AdminLayout />}>
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/users" element={<AdminUsers />} />
+          </Route>
         </Route>
 
         {/* USER only routes */}
