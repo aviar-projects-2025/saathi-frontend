@@ -1,0 +1,28 @@
+import Input from "../components/Input";
+import Dropdown from "../components/Dropdown";
+
+<Input
+  label="First Name"
+  name="firstName"
+  value={values.firstName}
+  onChange={handleChange}
+  onBlur={handleBlur}
+  error={errors.firstName}
+  touched={touched.firstName}
+  required
+/>
+
+<Dropdown
+  label="Role"
+  name="role"
+  value={values.role}
+  onChange={handleChange}
+  onBlur={handleBlur}
+  error={errors.role}
+  touched={touched.role}
+  options={[
+    { label: "Student", value: "student" },
+    { label: "Teacher", value: "teacher" },
+    { label: "Admin", value: "admin" },
+  ]}
+/>
