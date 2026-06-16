@@ -7,6 +7,7 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useNavigate } from 'react-router-dom';
+import PageLayout from '../components/PageLayout';
 
 
 const steps = ['Trip details', 'Preferences', 'Review & post'];
@@ -14,7 +15,7 @@ const steps = ['Trip details', 'Preferences', 'Review & post'];
 const languageOptions = ['Hindi', 'Gujarati', 'Tamil', 'Telugu', 'Punjabi', 'Marathi', 'Bengali', 'Kannada', 'Malayalam', 'English'];
 
 export default function OfferRide() {
-  const { addRide } = useApp();
+  // const { addRide } = useApp();
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [submitted, setSubmitted] = useState(false);
@@ -46,15 +47,15 @@ export default function OfferRide() {
     }));
   };
 
-  const handleSubmit = () => {
-    addRide({
-      ...form,
-      price: form.price === '' ? null : Number(form.price),
-      tags: [form.category, ...(form.luggageOk ? ['Luggage OK'] : []), ...(form.recurring ? ['Recurring'] : [])],
-      duration: 'TBD',
-    });
-    setSubmitted(true);
-  };
+  // const handleSubmit = () => {
+  //   addRide({
+  //     ...form,
+  //     price: form.price === '' ? null : Number(form.price),
+  //     tags: [form.category, ...(form.luggageOk ? ['Luggage OK'] : []), ...(form.recurring ? ['Recurring'] : [])],
+  //     duration: 'TBD',
+  //   });
+  //   setSubmitted(true);
+  // };
 
   if (submitted) {
     return (
@@ -73,7 +74,7 @@ export default function OfferRide() {
   }
 
   return (
-    <Box sx={{ maxWidth: 620, mx: 'auto', px: { xs: 2, md: 3 }, py: 3 }}>
+    <PageLayout>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
         <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/')} sx={{ color: 'text.secondary' }}>
           Back
@@ -120,8 +121,8 @@ export default function OfferRide() {
             <TextField label="From" fullWidth size="small" value={form.from} onChange={e => update('from', e.target.value)} placeholder="Plano, TX" />
             <TextField label="To" fullWidth size="small" value={form.to} onChange={e => update('to', e.target.value)} placeholder="DFW Airport — Terminal D" />
             <Stack direction="row" spacing={2}>
-              <TextField label="Date" fullWidth size="small" type="date" value={form.date} onChange={e => update('date', e.target.value)} InputLabelProps={{ shrink: true }} />
-              <TextField label="Time" fullWidth size="small" type="time" value={form.time} onChange={e => update('time', e.target.value)} InputLabelProps={{ shrink: true }} />
+              <TextField label="Date" fullWidth size="small" type="date" value={form.date} onChange={e => update('date', e.target.value)} inputlabelprops={{ shrink: true }} />
+              <TextField label="Time" fullWidth size="small" type="time" value={form.time} onChange={e => update('time', e.target.value)} inputlabelprops={{ shrink: true }} />
             </Stack>
             <TextField
               label="Description"
@@ -257,6 +258,7 @@ export default function OfferRide() {
           )}
         </Stack>
       </Paper>
-    </Box>
+      
+    </PageLayout>
   );
 }

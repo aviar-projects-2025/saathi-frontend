@@ -29,6 +29,7 @@ import AdminUsers from "./pages/admin/AdminUsers.jsx";
 import { ToastContainer } from "react-toastify";
 import AdminLayout from "./components/AdminLayout.jsx";
 import MyRides from "./pages/MyRides.jsx";
+import UserLayout from "./components/UserLayout.jsx";
 
 function App() {
   return (
@@ -58,13 +59,15 @@ function App() {
 
         {/* USER only routes */}
         <Route element={<ProtectedRoute allowedRoles={[ROLES.USER]} />}>
-          <Route path="/home" element={<Home />} />
-          <Route path="/find" element={<FindRides />} />
-          <Route path="/offerRide" element={<OfferRide />} />
-          <Route path="/profile" element={<Profile />} />
+          <Route element={<UserLayout />}>
+            <Route path="/home" element={<Home />} />
+            <Route path="/find-ride" element={<FindRides />} />
+            <Route path="/offer-ride" element={<OfferRide />} />
+            <Route path="/profile" element={<Profile />} />
 
-          <Route path="/myRide" element={<MyRides />} />
-          <Route path="/notification" element={<Notification />} />
+            <Route path="/myride" element={<MyRides/>} />
+            <Route path="/notification" element={<Notification />} />
+          </Route>
         </Route>
 
         {/*Both ADMIN and USER */}

@@ -1,6 +1,7 @@
 import { Box } from "@mui/material";
 import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
+import Header from "./Header";
 
 const userMenus = [
   { label: "Home", path: "/home" },
@@ -14,12 +15,31 @@ const userMenus = [
 
 const UserLayout = () => {
   return (
-    <Box sx={{ display: "flex" }}>
-      <Sidebar/>
-      <Box component="main" sx={{ flex: 1, p: 3 }}>
-        <Outlet />
+    <>
+      <Header />
+      <Box
+        sx={{
+          display: "flex",
+          height: "100vh",
+          overflow: "hidden",
+        }}
+      >
+        <Sidebar />
+
+        <Box
+          component="main"
+          sx={{
+            flex: 1,
+            px: 3,
+            pt : 1,
+            overflowY: "auto",
+            height: "100vh",
+          }}
+        >
+          <Outlet />
+        </Box>
       </Box>
-    </Box>
+    </>
   );
 };
 
