@@ -116,8 +116,7 @@
 //   );
 // }
 
-
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box, Typography, Tabs, Tab, Paper, Chip, Button, Alert,
   Dialog, DialogTitle, DialogContent, DialogActions,
@@ -128,7 +127,9 @@ import StarIcon from '@mui/icons-material/Star';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloseIcon from '@mui/icons-material/Close';
-import { rides as initialRides } from '../data/mockData';
+import axios from 'axios';
+import Api from '../Api';
+
 
 const statusConfig = {
   confirmed: { label: 'Confirmed', color: '#2D6A4F', bg: '#E8F5E9', icon: '✅' },
@@ -136,6 +137,21 @@ const statusConfig = {
   completed: { label: 'Completed', color: '#555577', bg: '#F5F5F5', icon: '🏁' },
   cancelled: { label: 'Cancelled', color: '#9B2226', bg: '#FFEBEE', icon: '❌' },
 };
+
+// ── Empty State ─────────────────────────────────────────────────────────────
+function EmptyState({ emoji, message, actionLabel, actionHref }) {
+  return (
+    <Paper sx={{ p: 4, textAlign: 'center', border: '1px dashed #E0D5CC', bgcolor: '#FFF8F2', borderRadius: 2 }} elevation={0}>
+      <Typography fontSize="2rem">{emoji}</Typography>
+      <Typography fontWeight={600} color="text.secondary" mt={1}>{message}</Typography>
+      {actionLabel && (
+        <Button variant="contained" sx={{ mt: 2 }} href={actionHref}>
+          {actionLabel}
+        </Button>
+      )}
+    </Paper>
+  );
+}
 
 // ── Edit Modal ──────────────────────────────────────────────────────────────
 function EditRideModal({ ride, onSave, onClose }) {
@@ -151,8 +167,7 @@ function EditRideModal({ ride, onSave, onClose }) {
   const set = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }));
 
   return (
-    <Dialog open onClose={onClose} maxWidth="sm" fullWidth
-      PaperProps={{ sx: { borderRadius: 3 } }}>
+    <Dialog open onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
       <DialogTitle sx={{ fontWeight: 800, pb: 0 }}>
         Edit Ride
         <IconButton onClick={onClose} size="small"
@@ -164,19 +179,15 @@ function EditRideModal({ ride, onSave, onClose }) {
       <DialogContent sx={{ pt: 2 }}>
         <Stack spacing={2} mt={0.5}>
           <Box sx={{ display: 'flex', gap: 1.5 }}>
-            <TextField label="From" value={form.from} onChange={set('from')}
-              fullWidth size="small" />
-            <TextField label="To" value={form.to} onChange={set('to')}
-              fullWidth size="small" />
+            <TextField label="From" value={form.from} onChange={set('from')} fullWidth size="small" />
+            <TextField label="To" value={form.to} onChange={set('to')} fullWidth size="small" />
           </Box>
-          <TextField label="Date & Time" value={form.date} onChange={set('date')}
-            fullWidth size="small" />
+          <TextField label="Date & Time" value={form.date} onChange={set('date')} fullWidth size="small" />
           {ride.seats !== undefined && (
             <Box sx={{ display: 'flex', gap: 1.5 }}>
               <TextField label="Seats" value={form.seats} onChange={set('seats')}
                 fullWidth size="small" type="number" inputProps={{ min: 1, max: 8 }} />
-              <TextField label="Price" value={form.price} onChange={set('price')}
-                fullWidth size="small" />
+              <TextField label="Price" value={form.price} onChange={set('price')} fullWidth size="small" />
             </Box>
           )}
           {ride.note !== undefined && (
@@ -199,7 +210,7 @@ function EditRideModal({ ride, onSave, onClose }) {
   );
 }
 
-// ── Delete Confirm Dialog ──────────────────────────────────────────────────
+// ── Delete Confirm Dialog ───────────────────────────────────────────────────
 function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
   const isPost = ride.role === 'offered' && (ride.status === 'pending' || ride.status === 'confirmed');
   const label = isPost ? 'Remove post' : 'Cancel ride';
@@ -208,8 +219,7 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
     : 'This will cancel your booking. The driver will be notified.';
 
   return (
-    <Dialog open onClose={onClose} maxWidth="xs" fullWidth
-      PaperProps={{ sx: { borderRadius: 3 } }}>
+    <Dialog open onClose={onClose} maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
       <DialogTitle sx={{ fontWeight: 800 }}>
         {label}?
         <IconButton onClick={onClose} size="small"
@@ -220,9 +230,7 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
       <DialogContent>
         <Typography color="text.secondary" fontSize="0.9rem">{body}</Typography>
         <Paper sx={{ mt: 2, p: 1.5, bgcolor: '#FFF8F2', border: '1px solid #F0E6DC', borderRadius: 2 }} elevation={0}>
-          <Typography fontSize="0.85rem" fontWeight={700}>
-            {ride.from} → {ride.to}
-          </Typography>
+          <Typography fontSize="0.85rem" fontWeight={700}>{ride.from} → {ride.to}</Typography>
           <Typography fontSize="0.78rem" color="text.secondary">{ride.date}</Typography>
         </Paper>
       </DialogContent>
@@ -239,57 +247,31 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
   );
 }
 
-// ── Ride Card ──────────────────────────────────────────────────────────────
+// ── Ride Card ───────────────────────────────────────────────────────────────
 function RideCard({ ride, showEdit, showDelete, onEdit, onDelete }) {
   const status = statusConfig[ride.status] || statusConfig.pending;
 
   return (
     <Paper sx={{ p: 2, mb: 1.5, borderRadius: 2, border: '1px solid #F0E6DC' }} elevation={0}>
-      {/* Top row: status + role chips, action buttons */}
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
         <Box sx={{ display: 'flex', gap: 0.75 }}>
-          <Chip
-            label={`${status.icon} ${status.label}`}
-            size="small"
-            sx={{ bgcolor: status.bg, color: status.color, fontWeight: 700, fontSize: '0.72rem' }}
-          />
-          <Chip
-            label={ride.role === 'offered' ? '🚗 Driver' : '🧑‍💼 Passenger'}
-            size="small"
-            sx={{ bgcolor: '#F0F4FF', color: '#4361EE', fontSize: '0.72rem' }}
-          />
+          <Chip label={`${status.icon} ${status.label}`} size="small"
+            sx={{ bgcolor: status.bg, color: status.color, fontWeight: 700, fontSize: '0.72rem' }} />
+          <Chip label={ride.role === 'offered' ? '🚗 Driver' : '🧑‍💼 Passenger'} size="small"
+            sx={{ bgcolor: '#F0F4FF', color: '#4361EE', fontSize: '0.72rem' }} />
         </Box>
 
-        {/* Action buttons — only when applicable */}
         {(showEdit || showDelete) && (
           <Box sx={{ display: 'flex', gap: 0.5 }}>
             {showEdit && (
-              <IconButton
-                size="small"
-                onClick={() => onEdit(ride)}
-                sx={{
-                  color: '#4361EE',
-                  bgcolor: '#F0F4FF',
-                  borderRadius: 1.5,
-                  p: 0.6,
-                  '&:hover': { bgcolor: '#E0E8FF' },
-                }}
-              >
+              <IconButton size="small" onClick={() => onEdit(ride)}
+                sx={{ color: '#4361EE', bgcolor: '#F0F4FF', borderRadius: 1.5, p: 0.6, '&:hover': { bgcolor: '#E0E8FF' } }}>
                 <EditIcon sx={{ fontSize: 16 }} />
               </IconButton>
             )}
             {showDelete && (
-              <IconButton
-                size="small"
-                onClick={() => onDelete(ride)}
-                sx={{
-                  color: '#9B2226',
-                  bgcolor: '#FFEBEE',
-                  borderRadius: 1.5,
-                  p: 0.6,
-                  '&:hover': { bgcolor: '#FFCDD2' },
-                }}
-              >
+              <IconButton size="small" onClick={() => onDelete(ride)}
+                sx={{ color: '#9B2226', bgcolor: '#FFEBEE', borderRadius: 1.5, p: 0.6, '&:hover': { bgcolor: '#FFCDD2' } }}>
                 <DeleteIcon sx={{ fontSize: 16 }} />
               </IconButton>
             )}
@@ -297,14 +279,13 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete }) {
         )}
       </Box>
 
-      {/* Route */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.75 }}>
         <Typography fontWeight={700} fontSize="0.9rem">{ride.from}</Typography>
         <ArrowForwardIcon sx={{ fontSize: 16, color: 'primary.main' }} />
         <Typography fontWeight={700} fontSize="0.9rem">{ride.to}</Typography>
       </Box>
 
-      <Typography variant="caption" color="text.secondary">📅 {ride.date} {' '}</Typography>
+      <Typography variant="caption" color="text.secondary">📅 {ride.date} </Typography>
 
       {ride.passenger && (
         <Typography variant="caption" color="text.secondary" display="block">
@@ -339,41 +320,54 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete }) {
   );
 }
 
+// ── Main Component ──────────────────────────────────────────────────────────
 const MyRides = () => {
   const [tab, setTab] = useState(0);
-  const [rideList, setRideList] = useState(initialRides);
-  const [editRide, setEditRide] = useState(null);   // ride being edited
-  const [deleteRide, setDeleteRide] = useState(null); // ride being deleted
+  const [rideList, setRideList] = useState([]);   // ✅ initialise as empty array
+  const [editRide, setEditRide] = useState(null);
+  const [deleteRide, setDeleteRide] = useState(null);
   const [toast, setToast] = useState('');
 
-  const upcoming = rideList.filter(r => r.status === 'confirmed' || r.status === 'pending');
-  const history = rideList;
+  // ✅ Derive filtered lists from state, not inside useEffect
   const myPosts = rideList.filter(r => r.role === 'offered');
+
+  console.log("assssssssss ===> ", myPosts);
+
+
+  const upcoming = rideList.filter(r => r.status === 'confirmed' || r.status === 'pending');
+  const history = rideList.filter(r => r.status === 'completed' || r.status === 'cancelled');
   const confirmedCount = upcoming.filter(r => r.status === 'confirmed').length;
 
-  // Edit: merge updated fields back into list
+  useEffect(() => {
+    const fetchRides = async () => {
+      try {
+        const response = await axios.get(`${Api}/rides/`);
+        setRideList(response.data?.data); // ✅ actually store data in state
+      } catch (error) {
+        console.error('Error fetching rides:', error.message);
+      }
+    };
+    fetchRides();
+  }, []);
+
   const handleSave = (updated) => {
     setRideList(list => list.map(r => r.id === updated.id ? updated : r));
     setEditRide(null);
     setToast('Ride updated successfully ✅');
   };
 
-  // Delete: remove from list (or mark cancelled for passenger bookings)
   const handleDelete = () => {
     const r = deleteRide;
     if (r.role === 'offered') {
-      // Driver removing their own post — remove entirely
       setRideList(list => list.filter(x => x.id !== r.id));
       setToast('Ride post removed 🗑️');
     } else {
-      // Passenger cancelling booking — mark cancelled so it shows in history
       setRideList(list => list.map(x => x.id === r.id ? { ...x, status: 'cancelled' } : x));
       setToast('Booking cancelled ❌');
     }
     setDeleteRide(null);
   };
 
-  // Rule: edit only offered rides; delete only upcoming (not history)
   const canEdit = (r) => r.role === 'offered' && (r.status === 'pending' || r.status === 'confirmed');
   const canDelete = (r) => r.status === 'pending' || r.status === 'confirmed';
 
@@ -389,8 +383,10 @@ const MyRides = () => {
       />
     ));
 
+  console.log("Ride Data ===> ", rideList);
+
   return (
-    <Box sx={{ maxWidth: 700, }}>
+    <Box sx={{ maxWidth: 700 }}>
       <Typography variant="h5" fontWeight={800} mb={2.5}>My Rides</Typography>
 
       <Tabs
@@ -406,8 +402,16 @@ const MyRides = () => {
         <Tab label={`My Posts (${myPosts.length})`} />
         <Tab label={`Upcoming (${upcoming.length})`} />
         <Tab label={`History (${history.length})`} />
-
       </Tabs>
+
+      {tab === 0 && (
+        <Box>
+          {myPosts.length > 0
+            ? renderList(myPosts)
+            : <EmptyState emoji="🚗" message="You haven't posted any rides yet"
+              actionLabel="Post your first ride" actionHref="/offer" />}
+        </Box>
+      )}
 
       {tab === 1 && (
         <Box>
@@ -435,20 +439,9 @@ const MyRides = () => {
         </Box>
       )}
 
-      {tab === 0 && (
-        <Box>
-          {myPosts.length > 0
-            ? renderList(myPosts)
-            : <EmptyState emoji="🚗" message="You haven't posted any rides yet"
-              actionLabel="Post your first ride" actionHref="/offer" />}
-        </Box>
-      )}
-
-      {/* ── Modals ── */}
       {editRide && <EditRideModal ride={editRide} onSave={handleSave} onClose={() => setEditRide(null)} />}
       {deleteRide && <DeleteConfirmDialog ride={deleteRide} onConfirm={handleDelete} onClose={() => setDeleteRide(null)} />}
 
-      {/* ── Toast ── */}
       <Snackbar
         open={!!toast}
         autoHideDuration={3000}
@@ -459,7 +452,6 @@ const MyRides = () => {
       />
     </Box>
   );
-}
+};
 
-
-export default MyRides
+export default MyRides;
