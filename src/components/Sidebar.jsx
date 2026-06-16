@@ -15,7 +15,6 @@ const menuItems = [
   { label: "Community", icon: <DashboardIcon />, link: "/community" },
   { label: "Offer Ride", icon: <DirectionsCarIcon />, link: "/offer-ride" },
   { label: "Find Ride", icon: <SearchIcon />, link: "/find-ride" },
-  { label: "Community", icon: <GroupsIcon />, link: "/community" },
   { label: "My Rides", icon: <RouteIcon />, link: "/myride" },
   { label: "Refer", icon: <SettingsIcon />, link: "/settings" },
   { label: "Settings", icon: <SettingsIcon />, link: "/settings" },

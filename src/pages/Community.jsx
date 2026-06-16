@@ -9,6 +9,7 @@ import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 
 import UserAvatar from '../components/UserAvatar.jsx';
+import PageLayout from '../components/PageLayout.jsx';
 
 const topMembers = [
   { name: 'Vijay Patel', initials: 'VP', rides: 67, city: 'Frisco', badge: '🏅 Founding member', verified: true },
@@ -28,7 +29,8 @@ const activities = [
 
 export default function Community() {
   return (
-    <Box sx={{ maxWidth: 1000, mx: 'auto', px: { xs: 2, md: 3 }, py: 3 }}>
+    // <Box sx={{ maxWidth: 1000, mx: 'auto', px: { xs: 2, md: 3 }, py: 3 }}>
+    <PageLayout>
       <Typography variant="h5" fontWeight={800} mb={0.5}>
         Saathi <span style={{ color: '#E8650A' }}>Community</span>
       </Typography>
@@ -39,10 +41,10 @@ export default function Community() {
       {/* Stats */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
         {[
-          { icon: '👥', value: communityStats.members.toLocaleString(), label: 'Members', color: '#E8650A' },
-          { icon: '🚗', value: communityStats.ridesGiven.toLocaleString(), label: 'Rides given', color: '#4361EE' },
-          { icon: '🏙️', value: communityStats.cities, label: 'Cities', color: '#2D6A4F' },
-          { icon: '⭐', value: communityStats.avgRating, label: 'Avg rating', color: '#F4A261' },
+          // { icon: '👥', value: communityStats.members.toLocaleString(), label: 'Members', color: '#E8650A' },
+          // { icon: '🚗', value: communityStats.ridesGiven.toLocaleString(), label: 'Rides given', color: '#4361EE' },
+          // { icon: '🏙️', value: communityStats.cities, label: 'Cities', color: '#2D6A4F' },
+          // { icon: '⭐', value: communityStats.avgRating, label: 'Avg rating', color: '#F4A261' },
         ].map(stat => (
           <Grid item xs={6} sm={3} key={stat.label}>
             <Paper sx={{ p: 2, textAlign: 'center', borderRadius: 3, border: '1px solid #F0E6DC' }} elevation={0}>
@@ -56,7 +58,7 @@ export default function Community() {
 
       <Grid container spacing={3}>
         {/* Top members */}
-        <Grid item xs={12} md={7}>
+        <Grid xs={12} md={7}>
           <Paper sx={{ p: 2.5, borderRadius: 3, border: '1px solid #F0E6DC' }} elevation={0}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
               <EmojiEventsIcon sx={{ color: '#F4A261' }} />
@@ -90,7 +92,7 @@ export default function Community() {
         </Grid>
 
         {/* Activity feed + invite */}
-        <Grid item xs={12} md={5}>
+        <Grid xs={12} md={5}>
           <Paper sx={{ p: 2.5, borderRadius: 3, border: '1px solid #F0E6DC', mb: 2 }} elevation={0}>
             <Typography fontWeight={700} mb={1.5}>Recent Activity</Typography>
             {activities.map((a, i) => (
@@ -127,6 +129,7 @@ export default function Community() {
           </Paper>
         </Grid>
       </Grid>
-    </Box>
+    </PageLayout>
+    // </Box>
   );
 }

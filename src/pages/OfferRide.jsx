@@ -193,13 +193,13 @@ export default function OfferRide() {
   return (
     <PageLayout>
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 3 }}>
-        <Button
+        {/* <Button
           startIcon={<ArrowBackIcon />}
           onClick={() => navigate("/home")}
           sx={{ color: "text.secondary" }}
         >
           Back
-        </Button>
+        </Button> */}
 
         <Typography variant="h5" fontWeight={800}>
           Offer a Ride

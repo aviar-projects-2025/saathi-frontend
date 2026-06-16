@@ -41,7 +41,7 @@ const Login = () => {
             if (data.user.role === ROLES.ADMIN) {
                 navigate("/admin/dashboard");
             } else {
-                navigate("/home");
+                navigate("/community");
             }
         } catch (error) {
             console.log(error);

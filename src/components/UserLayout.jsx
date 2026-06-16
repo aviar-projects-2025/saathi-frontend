@@ -31,7 +31,7 @@ const UserLayout = () => {
           sx={{
             flex: 1,
             px: 3,
-            pt : 1,
+            pt: 1,
             overflowY: "auto",
             height: "100vh",
           }}
