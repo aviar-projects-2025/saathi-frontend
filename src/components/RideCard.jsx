@@ -3,6 +3,8 @@ import {
   Card, CardContent, Box, Typography, Avatar, Chip, Button, Divider,
   IconButton, Collapse, Stack,
 } from '@mui/material';
+
+import { useApp } from "../context/AppContext.jsx";
 import FlightTakeoffIcon from '@mui/icons-material/FlightTakeoff';
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 import TempleHinduIcon from '@mui/icons-material/TempleHindu';

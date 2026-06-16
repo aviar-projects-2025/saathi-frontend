@@ -1,252 +1,299 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Box,
   Typography,
-  Chip,
-  Stack,
   TextField,
   InputAdornment,
-  ToggleButton,
-  ToggleButtonGroup,
+  Chip,
+  Stack,
+  Button,
   Paper,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
+import MapIcon from "@mui/icons-material/Map";
+import SortIcon from "@mui/icons-material/Sort";
 
+import { useApp } from "../context/AppContext.jsx";
+import { filterCategories } from "../data/mockData.jsx";
 import RideCard from "../components/RideCard.jsx";
+import Sidebar from "../components/Sidebar.jsx";
 
-const filters = ["All", "Airport", "Intercity", "Temple", "Parents", "Late Night"];
+const cityRouteMap = {
+  chennai: [
+    "chennai",
+    "villupuram",
+    "trichy",
+    "madurai",
+    "tirunelveli",
+    "kanyakumari",
+  ],
+  kanyakumari: [
+    "kanyakumari",
+    "tirunelveli",
+    "madurai",
+    "trichy",
+    "villupuram",
+    "chennai",
+  ],
+  madurai: ["madurai", "trichy", "villupuram", "chennai"],
+  trichy: ["trichy", "villupuram", "chennai"],
+};
+
+const normalize = (text = "") => text.toLowerCase().trim();
 
 export default function FindRides() {
-  // const { rides } = useApp();
-  const [active, setActive] = useState("All");
-  const [mode, setMode] = useState("all");
-  const [search, setSearch] = useState("");
+  const {
+    rides,
+    activeFilter,
+    setActiveFilter,
+    searchQuery,
+    setSearchQuery,
+  } = useApp();
 
-  // const filtered = rides.filter((r) => {
-  //   const matchFilter =
-  //     active === "All" ||
-  //     (active === "Airport" && r.type === "airport") ||
-  //     (active === "Intercity" && r.type === "intercity") ||
-  //     (active === "Temple" && r.type === "temple") ||
-  //     (active === "Parents" && r.tags?.includes("parents")) ||
-  //     (active === "Late Night" && r.tags?.includes("late-night"));
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const [userLocation, setUserLocation] = useState("");
 
-  //   const matchMode =
-  //     mode === "all" ||
-  //     (mode === "offering" && r.mode === "offering") ||
-  //     (mode === "requesting" && r.mode === "requesting");
+  const filteredRides = useMemo(() => {
+    const fromText = normalize(from);
+    const toText = normalize(to);
+    const normalSearch = normalize(searchQuery);
 
-  //   const matchSearch =
-  //     !search ||
-  //     r.from.toLowerCase().includes(search.toLowerCase()) ||
-  //     r.to.toLowerCase().includes(search.toLowerCase());
+    return rides.filter((ride) => {
+      const rideFrom = normalize(ride.from);
+      const rideTo = normalize(ride.to);
+      const rideName = normalize(ride.driver?.name || "");
 
-  //   return matchFilter && matchMode && matchSearch;
-  // });
+      const routeCities =
+        fromText && toText && cityRouteMap[fromText]
+          ? cityRouteMap[fromText]
+          : [];
+
+      const fromIndex = routeCities.indexOf(fromText);
+      const toIndex = routeCities.indexOf(toText);
+      const rideFromIndex = routeCities.indexOf(rideFrom);
+      const rideToIndex = routeCities.indexOf(rideTo);
+
+      const isBetweenRoute =
+        fromIndex !== -1 &&
+        toIndex !== -1 &&
+        rideFromIndex !== -1 &&
+        rideToIndex !== -1 &&
+        rideFromIndex >= fromIndex &&
+        rideToIndex <= toIndex;
+
+      const matchesFromTo =
+        !fromText && !toText
+          ? true
+          : rideFrom.includes(fromText) ||
+            rideTo.includes(toText) ||
+            isBetweenRoute ||
+            routeCities.includes(rideFrom) ||
+            routeCities.includes(rideTo);
+
+      const matchesSearch =
+        !normalSearch ||
+        rideFrom.includes(normalSearch) ||
+        rideTo.includes(normalSearch) ||
+        rideName.includes(normalSearch);
+
+      const matchesFilter =
+        activeFilter === "all" || ride.type === activeFilter;
+
+      return matchesFromTo && matchesSearch && matchesFilter;
+    });
+  }, [rides, from, to, searchQuery, activeFilter]);
+
+  const handleLocationAccess = () => {
+    if (!navigator.geolocation) {
+      alert("Location access is not supported in this browser");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        console.log("Latitude:", position.coords.latitude);
+        console.log("Longitude:", position.coords.longitude);
+        setUserLocation("Current location detected");
+      },
+      () => {
+        alert("Please allow location access");
+      }
+    );
+  };
 
   return (
     <Box
       sx={{
-        width: "100%",
-        minHeight: "100vh",
-        bgcolor: "background.default",
-        pb: 10,
+        display: "flex",
+        gap: 3,
+        maxWidth: 1100,
+        mx: "auto",
+        px: { xs: 2, md: 3 },
+        py: 3,
       }}
     >
-      {/* Header */}
-      <Box
-        sx={{
-          background:
-            "linear-gradient(135deg, #102A43 0%, #1A3C5E 55%, #E85D26 100%)",
-          pt: 5,
-          pb: 5,
-          px: { xs: 2.5, sm: 4, md: 6 },
-          borderBottomLeftRadius: { xs: 28, md: 42 },
-          borderBottomRightRadius: { xs: 28, md: 42 },
-          boxShadow: "0 18px 35px rgba(26,60,94,0.22)",
-        }}
-      >
-        <Box sx={{ maxWidth: "1400px", mx: "auto" }}>
-          <Typography variant="h4" fontWeight={900} color="white" mb={0.5}>
-            Find Rides
+  
+
+      <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Box sx={{ mb: 2.5 }}>
+          <Typography variant="h5" fontWeight={800} sx={{ mb: 0.25 }}>
+            Community <span style={{ color: "#E8650A" }}>rides</span>
           </Typography>
 
-          <Typography
-            variant="body2"
-            sx={{ color: "rgba(255,255,255,0.78)", mb: 3 }}
-          >
-            Search community rides near you
+          <Typography variant="body2" color="text.secondary">
+            Showing {filteredRides.length} rides ·{" "}
+            {userLocation || "Dallas area"}
           </Typography>
+        </Box>
 
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+            gap: 1,
+            mb: 2,
+          }}
+        >
           <TextField
-            fullWidth
-            placeholder="Search by city or route..."
             size="small"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            sx={{
-              maxWidth: 720,
-              bgcolor: "rgba(255,255,255,0.96)",
-              borderRadius: 999,
-              boxShadow: "0 12px 28px rgba(0,0,0,0.16)",
-              "& fieldset": { border: "none" },
-              "& .MuiOutlinedInput-root": {
-                borderRadius: 999,
-                height: 52,
-                px: 1,
-              },
-            }}
+            placeholder="From destination"
+            value={from}
+            onChange={(e) => setFrom(e.target.value)}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <SearchIcon sx={{ color: "#1A3C5E" }} />
+                  <LocationOnIcon
+                    fontSize="small"
+                    sx={{ color: "primary.main" }}
+                  />
                 </InputAdornment>
               ),
             }}
+            sx={{ bgcolor: "#fff", borderRadius: 2 }}
+          />
+
+          <TextField
+            size="small"
+            placeholder="To destination"
+            value={to}
+            onChange={(e) => setTo(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <LocationOnIcon
+                    fontSize="small"
+                    sx={{ color: "#E8650A" }}
+                  />
+                </InputAdornment>
+              ),
+            }}
+            sx={{ bgcolor: "#fff", borderRadius: 2 }}
           />
         </Box>
-      </Box>
 
-      {/* Content */}
-      <Box
-        sx={{
-          maxWidth: "1400px",
-          mx: "auto",
-          px: { xs: 2, sm: 4, md: 6 },
-          mt: 3,
-        }}
-      >
-        {/* Mode Toggle */}
-        <Paper
-          elevation={0}
-          sx={{
-            p: 0.7,
-            mb: 2.5,
-            borderRadius: 4,
-            bgcolor: "white",
-            maxWidth: 520,
-            boxShadow: "0 10px 24px rgba(16,42,67,0.08)",
-          }}
-        >
-          <ToggleButtonGroup
-            value={mode}
-            exclusive
-            onChange={(_, v) => v && setMode(v)}
-            size="small"
+        <Box sx={{ display: "flex", gap: 1, mb: 2, alignItems: "center" }}>
+          <TextField
             fullWidth
-            sx={{
-              "& .MuiToggleButton-root": {
-                border: "none",
-                borderRadius: "14px !important",
-                textTransform: "none",
-                fontWeight: 800,
-                fontSize: "0.85rem",
-                color: "#5A6A7A",
-              },
-              "& .Mui-selected": {
-                bgcolor: "#E85D26 !important",
-                color: "white !important",
-              },
+            size="small"
+            placeholder="Search by city, airport, or community member..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon
+                    fontSize="small"
+                    sx={{ color: "text.secondary" }}
+                  />
+                </InputAdornment>
+              ),
             }}
-          >
-            <ToggleButton value="all">All Rides</ToggleButton>
-            <ToggleButton value="offering">Offering</ToggleButton>
-            <ToggleButton value="requesting">Requesting</ToggleButton>
-          </ToggleButtonGroup>
-        </Paper>
+            sx={{ bgcolor: "#fff", borderRadius: 2 }}
+          />
 
-        {/* Filter Chips */}
+          <Button
+            startIcon={<LocationOnIcon />}
+            variant="outlined"
+            size="small"
+            onClick={handleLocationAccess}
+            sx={{ flexShrink: 0 }}
+          >
+            Location
+          </Button>
+
+          <Button
+            startIcon={<MapIcon />}
+            variant="outlined"
+            size="small"
+            sx={{ flexShrink: 0 }}
+          >
+            Map
+          </Button>
+
+          <Button
+            startIcon={<SortIcon />}
+            variant="outlined"
+            size="small"
+            sx={{ flexShrink: 0 }}
+          >
+            Sort
+          </Button>
+        </Box>
+
         <Stack
           direction="row"
-          spacing={1}
-          sx={{
-            overflowX: "auto",
-            pb: 1,
-            mb: 3,
-            "&::-webkit-scrollbar": { display: "none" },
-          }}
+          spacing={0.75}
+          sx={{ mb: 2.5, overflowX: "auto", pb: 0.5 }}
         >
-          {filters.map((f) => (
+          {filterCategories.map((cat) => (
             <Chip
-              key={f}
-              label={f}
-              onClick={() => setActive(f)}
+              key={cat.value}
+              label={`${cat.icon} ${cat.label}`}
+              onClick={() => setActiveFilter(cat.value)}
+              variant={activeFilter === cat.value ? "filled" : "outlined"}
               sx={{
-                px: 1,
-                height: 36,
-                fontWeight: 800,
-                whiteSpace: "nowrap",
-                borderRadius: 999,
-                bgcolor: active === f ? "#1A3C5E" : "white",
-                color: active === f ? "white" : "#1A3C5E",
-                border: "1px solid rgba(26,60,94,0.12)",
-                boxShadow:
-                  active === f
-                    ? "0 8px 18px rgba(26,60,94,0.22)"
-                    : "0 6px 16px rgba(0,0,0,0.05)",
+                flexShrink: 0,
+                fontWeight: activeFilter === cat.value ? 700 : 500,
+                bgcolor:
+                  activeFilter === cat.value
+                    ? "primary.main"
+                    : "transparent",
+                color: activeFilter === cat.value ? "#fff" : "text.secondary",
+                borderColor:
+                  activeFilter === cat.value ? "primary.main" : "#E0D5CC",
                 "&:hover": {
-                  bgcolor: active === f ? "#1A3C5E" : "#FFF1EA",
+                  bgcolor:
+                    activeFilter === cat.value ? "primary.dark" : "#FFF8F2",
                 },
               }}
             />
           ))}
         </Stack>
 
-        {/* Result Heading */}
-        <Box
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-          mb={2}
-        >
-          <Typography variant="h6" fontWeight={900}>
-            Available Rides
-          </Typography>
-
-          <Typography variant="body2" fontWeight={800} color="text.secondary">
-            {/* {filtered.length} found */}
-          </Typography>
-        </Box>
-
-        {/* Results */}
-        {/* {filtered.length === 0 ? (
+        {filteredRides.length === 0 ? (
           <Paper
-            elevation={0}
             sx={{
+              p: 4,
               textAlign: "center",
-              py: 8,
-              px: 2,
-              borderRadius: 5,
-              bgcolor: "white",
-              boxShadow: "0 10px 28px rgba(16,42,67,0.08)",
+              border: "1px dashed #E0D5CC",
+              bgcolor: "#FFF8F2",
             }}
           >
-            <Typography fontSize={56}>🚗</Typography>
-            <Typography variant="h6" fontWeight={900} mt={1}>
+            <Typography fontSize="2rem" mb={1}>
+              🙏
+            </Typography>
+            <Typography fontWeight={600} color="text.secondary">
               No rides found
             </Typography>
-            <Typography color="text.secondary" variant="body2">
-              Try another filter or post a new ride
+            <Typography variant="body2" color="text.secondary">
+              Try changing From, To, or search keyword
             </Typography>
           </Paper>
         ) : (
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: {
-                xs: "1fr",
-                md: "repeat(2, 1fr)",
-                lg: "repeat(3, 1fr)",
-              },
-              gap: 2.5,
-              alignItems: "start",
-            }}
-          >
-            {filtered.map((ride) => (
-              <RideCard key={ride.id} ride={ride} />
-            ))}
-          </Box>
-        )} */}
+          filteredRides.map((ride) => <RideCard key={ride.id} ride={ride} />)
+        )}
       </Box>
     </Box>
   );

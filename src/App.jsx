@@ -60,6 +60,7 @@ function App() {
         {/* USER only routes */}
         <Route element={<ProtectedRoute allowedRoles={[ROLES.USER]} />}>
           <Route element={<UserLayout />}>
+              <Route path="/home" element={<Home />} />
             <Route path="/find-ride" element={<FindRides />} />
             <Route path="/offer-ride" element={<OfferRide />} />
             <Route path="/profile" element={<Profile />} />
