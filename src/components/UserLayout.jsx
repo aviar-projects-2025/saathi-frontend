@@ -15,12 +15,21 @@ const userMenus = [
 
 const UserLayout = () => {
   return (
-    <>
+    <Box
+      sx={{
+        height: "100dvh",
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       <Header />
+
       <Box
         sx={{
           display: "flex",
-          height: "100vh",
+          flex: 1,
+          minHeight: 0,
           overflow: "hidden",
         }}
       >
@@ -30,16 +39,16 @@ const UserLayout = () => {
           component="main"
           sx={{
             flex: 1,
+            minHeight: 0,
+            overflowY: "auto",
             px: 3,
             pt: 1,
-            overflowY: "auto",
-            height: "100vh",
           }}
         >
           <Outlet />
         </Box>
       </Box>
-    </>
+    </Box>
   );
 };
 
