@@ -9,13 +9,12 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import LogoutIcon from "@mui/icons-material/Logout";
 
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const menuItems = [
   { label: "Community", icon: <DashboardIcon />, link: "/community" },
   { label: "Offer Ride", icon: <DirectionsCarIcon />, link: "/offer-ride" },
   { label: "Find Ride", icon: <SearchIcon />, link: "/find-ride" },
-  { label: "Community", icon: <GroupsIcon />, link: "/community" },
   { label: "My Rides", icon: <RouteIcon />, link: "/myride" },
   { label: "Refer", icon: <SettingsIcon />, link: "/settings" },
   { label: "Settings", icon: <SettingsIcon />, link: "/settings" },
@@ -23,6 +22,7 @@ const menuItems = [
 
 export default function Sidebar() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = () => {
     localStorage.clear();
@@ -44,7 +44,7 @@ export default function Sidebar() {
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
-        borderRight : "1px solid #f1e4d7"
+        borderRight: "1px solid #f1e4d7"
         // borderRight: "1px solid #f1e4d7",
       }}
     >
@@ -64,6 +64,15 @@ export default function Sidebar() {
               cursor: "pointer",
               color: "#5f4632",
               transition: "0.2s ease",
+              backgroundColor:
+                location.pathname === item.link
+                  ? "#ffe8d2"
+                  : "transparent",
+
+              color:
+                location.pathname === item.link
+                  ? "#d97706"
+                  : "#5f4632",
               "& svg": {
                 fontSize: 21,
               },

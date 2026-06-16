@@ -11,7 +11,7 @@ const PublicRoute = () => {
     }
 
     if (role === ROLES.USER) {
-      return <Navigate to="/home" replace />;
+      return <Navigate to="/community" replace />;
     }
   }
 

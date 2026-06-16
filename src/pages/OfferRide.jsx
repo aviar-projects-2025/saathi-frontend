@@ -193,13 +193,13 @@ export default function OfferRide() {
   return (
     <PageLayout>
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 3 }}>
-        <Button
+        {/* <Button
           startIcon={<ArrowBackIcon />}
           onClick={() => navigate("/home")}
           sx={{ color: "text.secondary" }}
         >
           Back
-        </Button>
+        </Button> */}
 
         <Typography variant="h5" fontWeight={800}>
           Offer a Ride
@@ -255,7 +255,7 @@ export default function OfferRide() {
                   type="date"
                   value={form.date}
                   onChange={(e) => update("date", e.target.value)}
-                  InputLabelProps={{ shrink: true }}
+                  inputLabelProps={{ shrink: true }}
                   error={!form.date && showErrors}
                   helperText={!form.date && showErrors ? "Required Field " : ""}
                 />
@@ -269,7 +269,7 @@ export default function OfferRide() {
                   type="time"
                   value={form.time}
                   onChange={(e) => update("time", e.target.value)}
-                  InputLabelProps={{ shrink: true }}
+                  inputLabelProps={{ shrink: true }}
                   error={!form.time && showErrors}
                   helperText={!form.time && showErrors ? "Required Field " : ""}
                 />
@@ -283,7 +283,7 @@ export default function OfferRide() {
                 label="Mode of Travel"
                 onChange={(e) => update("modeOfTravel", e.target.value)}
                 error={!form.modeOfTravel && showErrors}
-                helperText={!form.modeOfTravel && showErrors ? "Required Field " : ""}
+                helpertext={!form.modeOfTravel && showErrors ? "Required Field " : ""}
               >
                 <MenuItem value="Car">🚗 Car</MenuItem>
                 <MenuItem value="Bus">🚌 Bus</MenuItem>
@@ -452,6 +452,7 @@ export default function OfferRide() {
           )}
         </Stack>
       </Paper>
+      
     </PageLayout>
   );
 }

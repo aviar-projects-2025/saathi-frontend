@@ -63,16 +63,17 @@ function App() {
             <Route path="/find-ride" element={<FindRides />} />
             <Route path="/offer-ride" element={<OfferRide />} />
             <Route path="/profile" element={<Profile />} />
-
-            <Route path="/myride" element={<MyRides/>} />
+            <Route path="/myride" element={<MyRides />} />
             <Route path="/notification" element={<Notification />} />
           </Route>
         </Route>
 
         {/*Both ADMIN and USER */}
         <Route element={<ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.USER]} />}>
-          <Route path="/invite" element={<Invite />} />
-          <Route path="/community" element={<Community />} />
+          <Route element={<UserLayout />}>
+            <Route path="/invite" element={<Invite />} />
+            <Route path="/community" element={<Community />} />
+          </Route>
         </Route>
 
         {/* Fallback */}
