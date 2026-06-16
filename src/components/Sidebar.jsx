@@ -12,11 +12,12 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import { useNavigate } from "react-router-dom";
 
 const menuItems = [
-  { label: "Dashboard", icon: <DashboardIcon />, link: "/home" },
+  { label: "Community", icon: <DashboardIcon />, link: "/community" },
   { label: "Offer Ride", icon: <DirectionsCarIcon />, link: "/offer-ride" },
   { label: "Find Ride", icon: <SearchIcon />, link: "/find-ride" },
   { label: "Community", icon: <GroupsIcon />, link: "/community" },
   { label: "My Rides", icon: <RouteIcon />, link: "/myride" },
+  { label: "Refer", icon: <SettingsIcon />, link: "/settings" },
   { label: "Settings", icon: <SettingsIcon />, link: "/settings" },
 ];
 
@@ -32,10 +33,10 @@ export default function Sidebar() {
     <Paper
       elevation={0}
       sx={{
-        width: 240,
-        minWidth: 240,
+        width: 200,
+        minWidth: 200,
         height: "90vh",
-        background: "#fffaf5",
+        background: "#ffffffff",
         borderRadius: 0,
         p: 2,
         position: "sticky",
@@ -43,20 +44,11 @@ export default function Sidebar() {
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
+        borderRight : "1px solid #f1e4d7"
         // borderRight: "1px solid #f1e4d7",
       }}
     >
       <Stack spacing={1}>
-        <Typography
-          sx={{
-            fontSize: 20,
-            fontWeight: 800,
-            color: "#d97706",
-            mb: 2,
-          }}
-        >
-          Saathi
-        </Typography>
 
         {menuItems.map((item, index) => (
           <Box

@@ -3,7 +3,7 @@ import React from 'react'
 
 const PageLayout = ({ children }) => {
     return (
-        <Box sx={{ maxWidth: 620, }}>
+        <Box sx={{ maxWidth: 620, marginLeft : 3}}>
             { children }
         </Box>
     )

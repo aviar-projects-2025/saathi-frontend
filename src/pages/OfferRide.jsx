@@ -36,6 +36,7 @@ export default function OfferRide() {
   const [submitted, setSubmitted] = useState(false);
 
   const user = JSON.parse(localStorage.getItem('user'));
+  const [showErrors, setShowErrors] = useState(false);
 
   const [form, setForm] = useState({
     from: "",
@@ -49,12 +50,71 @@ export default function OfferRide() {
     genderPreference: "Any",
   });
 
+  const validateStep = () => {
+    setShowErrors(true);
+
+    if (step === 0) {
+      if (!form.from.trim()) {
+        toast.error("Please enter From location");
+        return false;
+      }
+
+      if (!form.destination.trim()) {
+        toast.error("Please enter Destination");
+        return false;
+      }
+
+      if (!form.date) {
+        toast.error("Please select Date");
+        return false;
+      }
+
+      if (!form.time) {
+        toast.error("Please select Time");
+        return false;
+      }
+
+      if (!form.description.trim()) {
+        toast.error("Please enter Description");
+        return false;
+      }
+    }
+
+    if (step === 1) {
+      if (!form.genderPreference) {
+        toast.error("Please select Gender Preference");
+        return false;
+      }
+
+      if (form.availableSeats < 1) {
+        toast.error("Available seats should be at least 1");
+        return false;
+      }
+    }
+
+    return true;
+  };
+
   const update = (key, val) => {
     setForm((prev) => ({
       ...prev,
       [key]: val,
     }));
   };
+
+  const formReset = () => {
+    setForm({
+      from: "",
+      destination: "",
+      date: "",
+      time: "",
+      modeOfTravel: "Car",
+      availableSeats: 1,
+      fuelSharing: false,
+      description: "",
+      genderPreference: "Any",
+    })
+  }
 
   const handleSubmit = async () => {
     const payload = {
@@ -75,6 +135,9 @@ export default function OfferRide() {
         .then((res) => {
           console.log(res, 'res')
           toast.success("Ride Created Successfully...!")
+          setStep(0);
+          formReset()
+          setShowErrors(true);
         })
     } catch (error) {
       console.log(error.message)
@@ -169,6 +232,8 @@ export default function OfferRide() {
               value={form.from}
               onChange={(e) => update("from", e.target.value)}
               placeholder="Chennai"
+              error={!form.from && showErrors}
+              helperText={!form.from && showErrors ? "Required Field " : ""}
             />
 
             <TextField
@@ -178,28 +243,37 @@ export default function OfferRide() {
               value={form.destination}
               onChange={(e) => update("destination", e.target.value)}
               placeholder="Bangalore"
+              error={!form.destination && showErrors}
+              helperText={!form.destination && showErrors ? "Required Field " : ""}
             />
-
             <Stack direction="row" spacing={2}>
-              <TextField
-                label="Date"
-                fullWidth
-                size="small"
-                type="date"
-                value={form.date}
-                onChange={(e) => update("date", e.target.value)}
-                InputLabelProps={{ shrink: true }}
-              />
+              <Stack sx={{ flex: 1 }}>
+                <InputLabel>Date</InputLabel>
+                <TextField
+                  fullWidth
+                  size="small"
+                  type="date"
+                  value={form.date}
+                  onChange={(e) => update("date", e.target.value)}
+                  InputLabelProps={{ shrink: true }}
+                  error={!form.date && showErrors}
+                  helperText={!form.date && showErrors ? "Required Field " : ""}
+                />
+              </Stack>
 
-              <TextField
-                label="Time"
-                fullWidth
-                size="small"
-                type="time"
-                value={form.time}
-                onChange={(e) => update("time", e.target.value)}
-                InputLabelProps={{ shrink: true }}
-              />
+              <Stack sx={{ flex: 1 }}>
+                <InputLabel>Time</InputLabel>
+                <TextField
+                  fullWidth
+                  size="small"
+                  type="time"
+                  value={form.time}
+                  onChange={(e) => update("time", e.target.value)}
+                  InputLabelProps={{ shrink: true }}
+                  error={!form.time && showErrors}
+                  helperText={!form.time && showErrors ? "Required Field " : ""}
+                />
+              </Stack>
             </Stack>
 
             <FormControl fullWidth size="small">
@@ -208,6 +282,8 @@ export default function OfferRide() {
                 value={form.modeOfTravel}
                 label="Mode of Travel"
                 onChange={(e) => update("modeOfTravel", e.target.value)}
+                error={!form.modeOfTravel && showErrors}
+                helperText={!form.modeOfTravel && showErrors ? "Required Field " : ""}
               >
                 <MenuItem value="Car">🚗 Car</MenuItem>
                 <MenuItem value="Bus">🚌 Bus</MenuItem>
@@ -227,6 +303,8 @@ export default function OfferRide() {
               value={form.description}
               onChange={(e) => update("description", e.target.value)}
               placeholder="Traveling to Bangalore for a weekend trip..."
+              error={!form.description && showErrors}
+              helperText={!form.description && showErrors ? "Required Field " : ""}
             />
           </Stack>
         )}
@@ -348,7 +426,11 @@ export default function OfferRide() {
           {step < 2 ? (
             <Button
               variant="contained"
-              onClick={() => setStep((s) => s + 1)}
+              onClick={() => {
+                if (validateStep()) {
+                  setStep((s) => s + 1);
+                }
+              }}
               sx={{ flex: 1 }}
             >
               Continue
