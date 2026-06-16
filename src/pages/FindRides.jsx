@@ -17,32 +17,32 @@ import RideCard from "../components/RideCard.jsx";
 const filters = ["All", "Airport", "Intercity", "Temple", "Parents", "Late Night"];
 
 export default function FindRides() {
-  const { rides } = useApp();
+  // const { rides } = useApp();
   const [active, setActive] = useState("All");
   const [mode, setMode] = useState("all");
   const [search, setSearch] = useState("");
 
-  const filtered = rides.filter((r) => {
-    const matchFilter =
-      active === "All" ||
-      (active === "Airport" && r.type === "airport") ||
-      (active === "Intercity" && r.type === "intercity") ||
-      (active === "Temple" && r.type === "temple") ||
-      (active === "Parents" && r.tags?.includes("parents")) ||
-      (active === "Late Night" && r.tags?.includes("late-night"));
+  // const filtered = rides.filter((r) => {
+  //   const matchFilter =
+  //     active === "All" ||
+  //     (active === "Airport" && r.type === "airport") ||
+  //     (active === "Intercity" && r.type === "intercity") ||
+  //     (active === "Temple" && r.type === "temple") ||
+  //     (active === "Parents" && r.tags?.includes("parents")) ||
+  //     (active === "Late Night" && r.tags?.includes("late-night"));
 
-    const matchMode =
-      mode === "all" ||
-      (mode === "offering" && r.mode === "offering") ||
-      (mode === "requesting" && r.mode === "requesting");
+  //   const matchMode =
+  //     mode === "all" ||
+  //     (mode === "offering" && r.mode === "offering") ||
+  //     (mode === "requesting" && r.mode === "requesting");
 
-    const matchSearch =
-      !search ||
-      r.from.toLowerCase().includes(search.toLowerCase()) ||
-      r.to.toLowerCase().includes(search.toLowerCase());
+  //   const matchSearch =
+  //     !search ||
+  //     r.from.toLowerCase().includes(search.toLowerCase()) ||
+  //     r.to.toLowerCase().includes(search.toLowerCase());
 
-    return matchFilter && matchMode && matchSearch;
-  });
+  //   return matchFilter && matchMode && matchSearch;
+  // });
 
   return (
     <Box
@@ -204,12 +204,12 @@ export default function FindRides() {
           </Typography>
 
           <Typography variant="body2" fontWeight={800} color="text.secondary">
-            {filtered.length} found
+            {/* {filtered.length} found */}
           </Typography>
         </Box>
 
         {/* Results */}
-        {filtered.length === 0 ? (
+        {/* {filtered.length === 0 ? (
           <Paper
             elevation={0}
             sx={{
@@ -246,7 +246,7 @@ export default function FindRides() {
               <RideCard key={ride.id} ride={ride} />
             ))}
           </Box>
-        )}
+        )} */}
       </Box>
     </Box>
   );

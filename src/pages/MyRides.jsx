@@ -8,7 +8,7 @@ import PendingIcon from '@mui/icons-material/Pending';
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import StarIcon from '@mui/icons-material/Star';
-import { myRides } from '../data/mockData';
+// import { myRides } from '../data/mockData';
 
 const statusConfig = {
   confirmed: { label: 'Confirmed', color: '#2D6A4F', bg: '#E8F5E9', icon: '✅' },
@@ -55,11 +55,11 @@ function RideHistoryCard({ ride }) {
   );
 }
 
-export default function MyRides() {
+const MyRides = () => {
   const [tab, setTab] = useState(0);
 
   return (
-    <Box sx={{ maxWidth: 700, mx: 'auto', px: { xs: 2, md: 3 }, py: 3 }}>
+    <Box sx={{ maxWidth: 700, }}>
       <Typography variant="h5" fontWeight={800} mb={2.5}>My Rides</Typography>
 
       <Tabs
@@ -82,15 +82,15 @@ export default function MyRides() {
           <Alert severity="success" sx={{ mb: 2, borderRadius: 2 }}>
             You have 1 confirmed upcoming ride. Safe travels! 🙏
           </Alert>
-          {myRides.filter(r => r.status === 'confirmed').map(ride => (
+          {/* {myRides?.filter(r => r.status === 'confirmed').map(ride => (
             <RideHistoryCard key={ride.id} ride={ride} />
-          ))}
+          ))} */}
         </Box>
       )}
 
       {tab === 1 && (
         <Box>
-          {myRides.filter(r => r.status === 'completed').map(ride => (
+          {/* {myRides.filter(r => r.status === 'completed').map(ride => (
             <RideHistoryCard key={ride.id} ride={ride} />
           ))}
           {myRides.filter(r => r.status === 'completed').length === 0 && (
@@ -101,17 +101,29 @@ export default function MyRides() {
           )}
           {myRides.filter(r => r.status !== 'confirmed').map(ride => (
             <RideHistoryCard key={ride.id} ride={ride} />
-          ))}
+          ))} */}
         </Box>
       )}
 
       {tab === 2 && (
-        <Paper sx={{ p: 4, textAlign: 'center', border: '1px dashed #E0D5CC', bgcolor: '#FFF8F2', borderRadius: 2 }} elevation={0}>
-          <Typography fontSize="2rem">🚗</Typography>
-          <Typography fontWeight={600} color="text.secondary" mt={1}>You haven't posted any rides yet</Typography>
-          <Button variant="contained" sx={{ mt: 2 }} href="/offer">Post your first ride</Button>
-        </Paper>
+        <>
+          <Paper sx={{ p: 4, textAlign: 'center', border: '1px dashed #E0D5CC', bgcolor: '#FFF8F2', borderRadius: 2 }} elevation={0}>
+            <Typography fontSize="2rem">🚗</Typography>
+            <Typography fontWeight={600} color="text.secondary" mt={1}>You haven't posted any rides yet</Typography>
+            <Button variant="contained" sx={{ mt: 2 }} href="/offer">Post your first ride</Button>
+          </Paper>
+          <Paper sx={{ p: 4, textAlign: 'center', border: '1px dashed #E0D5CC', bgcolor: '#FFF8F2', borderRadius: 2 }} elevation={0}>
+            <Typography fontSize="2rem">🚗</Typography>
+            <Typography fontWeight={600} color="text.secondary" mt={1}>You haven't posted any rides yet</Typography>
+            <Button variant="contained" sx={{ mt: 2 }} href="/offer">Post your first ride</Button>
+          </Paper>
+          
+        </>
+
       )}
     </Box>
   );
 }
+
+
+export default MyRides
