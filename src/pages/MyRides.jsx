@@ -116,6 +116,7 @@
 //   );
 // }
 
+
 import React, { useEffect, useState } from 'react';
 import {
   Box, Typography, Tabs, Tab, Paper, Chip, Button, Alert,
@@ -282,7 +283,7 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete }) {
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.75 }}>
         <Typography fontWeight={700} fontSize="0.9rem">{ride.from}</Typography>
         <ArrowForwardIcon sx={{ fontSize: 16, color: 'primary.main' }} />
-        <Typography fontWeight={700} fontSize="0.9rem">{ride.to}</Typography>
+        <Typography fontWeight={700} fontSize="0.9rem">{ride.destination}</Typography>
       </Box>
 
       <Typography variant="caption" color="text.secondary">📅 {ride.date} </Typography>
@@ -323,32 +324,41 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete }) {
 // ── Main Component ──────────────────────────────────────────────────────────
 const MyRides = () => {
   const [tab, setTab] = useState(0);
-  const [rideList, setRideList] = useState([]);   // ✅ initialise as empty array
+  const [rideList, setRideList] = useState([]);
+  const [upcoming, setUpcoming] = useState([]);   // ✅ initialise as empty array
+  const [history, setHistory] = useState([]);   // ✅ initialise as empty array
+  const [mypost, setMypost] = useState([]);
   const [editRide, setEditRide] = useState(null);
   const [deleteRide, setDeleteRide] = useState(null);
   const [toast, setToast] = useState('');
 
-  // ✅ Derive filtered lists from state, not inside useEffect
-  const myPosts = rideList.filter(r => r.role === 'offered');
 
-  console.log("assssssssss ===> ", myPosts);
+  const user = JSON.parse(localStorage.getItem('user'))
 
 
-  const upcoming = rideList.filter(r => r.status === 'confirmed' || r.status === 'pending');
-  const history = rideList.filter(r => r.status === 'completed' || r.status === 'cancelled');
-  const confirmedCount = upcoming.filter(r => r.status === 'confirmed').length;
+  // const upcoming = rideList.filter(r => r.status === 'confirmed' || r.status === 'pending');
+  // const history = rideList.filter(r => r.status === 'completed' || r.status === 'cancelled');
+  // const confirmedCount = upcoming.filter(r => r.status === 'confirmed').length;
 
   useEffect(() => {
     const fetchRides = async () => {
       try {
         const response = await axios.get(`${Api}/rides/`);
-        setRideList(response.data?.data); // ✅ actually store data in state
+
+        setMypost(response.data.data.filter(item => item.createdBy === user.id));
+        setHistory(response.data.data);
+        setUpcoming(response.data.data.filter(item => item.createdBy === user.id));
+
       } catch (error) {
         console.error('Error fetching rides:', error.message);
       }
     };
     fetchRides();
   }, []);
+
+  console.log("MyPost ===> ", mypost);
+  console.log("UpCoomiung ===> ", upcoming);
+  console.log("History ===> ", history);
 
   const handleSave = (updated) => {
     setRideList(list => list.map(r => r.id === updated.id ? updated : r));
@@ -383,8 +393,6 @@ const MyRides = () => {
       />
     ));
 
-  console.log("Ride Data ===> ", rideList);
-
   return (
     <Box sx={{ maxWidth: 700 }}>
       <Typography variant="h5" fontWeight={800} mb={2.5}>My Rides</Typography>
@@ -399,15 +407,15 @@ const MyRides = () => {
           '& .MuiTabs-indicator': { bgcolor: 'primary.main' },
         }}
       >
-        <Tab label={`My Posts (${myPosts.length})`} />
+        <Tab label={`My Posts (${mypost?.length})`} />
         <Tab label={`Upcoming (${upcoming.length})`} />
         <Tab label={`History (${history.length})`} />
       </Tabs>
 
       {tab === 0 && (
         <Box>
-          {myPosts.length > 0
-            ? renderList(myPosts)
+          {mypost.length > 0
+            ? renderList(mypost)
             : <EmptyState emoji="🚗" message="You haven't posted any rides yet"
               actionLabel="Post your first ride" actionHref="/offer" />}
         </Box>
@@ -417,12 +425,12 @@ const MyRides = () => {
         <Box>
           {upcoming.length > 0 ? (
             <>
-              {confirmedCount > 0 && (
+              {/* {confirmedCount > 0 && (
                 <Alert severity="success" sx={{ mb: 2, borderRadius: 2 }}>
                   You have {confirmedCount} confirmed upcoming{' '}
                   {confirmedCount === 1 ? 'ride' : 'rides'}. Safe travels! 🙏
                 </Alert>
-              )}
+              )} */}
               {renderList(upcoming)}
             </>
           ) : (
