@@ -34,7 +34,7 @@ export default function Sidebar() {
       sx={{
         width: 240,
         minWidth: 240,
-        height: "100vh",
+        height: "90vh",
         background: "#fffaf5",
         borderRadius: 0,
         p: 2,
