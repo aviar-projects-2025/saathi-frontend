@@ -125,7 +125,10 @@ import {
 } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import StarIcon from '@mui/icons-material/Star';
-// import { myRides } from '../data/mockData';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import CloseIcon from '@mui/icons-material/Close';
+import { rides as initialRides } from '../data/mockData';
 
 const statusConfig = {
   confirmed: { label: 'Confirmed', color: '#2D6A4F', bg: '#E8F5E9', icon: '✅' },
@@ -344,7 +347,7 @@ const MyRides = () => {
   const [toast, setToast] = useState('');
 
   const upcoming = rideList.filter(r => r.status === 'confirmed' || r.status === 'pending');
-  const history = rideList.filter(r => r.status === 'completed' || r.status === 'cancelled');
+  const history = rideList;
   const myPosts = rideList.filter(r => r.role === 'offered');
   const confirmedCount = upcoming.filter(r => r.status === 'confirmed').length;
 
@@ -404,49 +407,32 @@ const MyRides = () => {
         <Tab label={`Upcoming (${upcoming.length})`} />
         <Tab label={`History (${history.length})`} />
 
-      {tab === 0 && (
-        <Box>
-          <Alert severity="success" sx={{ mb: 2, borderRadius: 2 }}>
-            You have 1 confirmed upcoming ride. Safe travels! 🙏
-          </Alert>
-          {/* {myRides?.filter(r => r.status === 'confirmed').map(ride => (
-            <RideHistoryCard key={ride.id} ride={ride} />
-          ))} */}
-        </Box>
-      )}
+      </Tabs>
 
       {tab === 1 && (
         <Box>
-          {/* {myRides.filter(r => r.status === 'completed').map(ride => (
-            <RideHistoryCard key={ride.id} ride={ride} />
-          ))}
-          {myRides.filter(r => r.status === 'completed').length === 0 && (
-            <Paper sx={{ p: 4, textAlign: 'center', border: '1px dashed #E0D5CC', bgcolor: '#FFF8F2', borderRadius: 2 }} elevation={0}>
-              <Typography fontSize="2rem">🕰️</Typography>
-              <Typography fontWeight={600} color="text.secondary" mt={1}>No past rides yet</Typography>
-            </Paper>
+          {upcoming.length > 0 ? (
+            <>
+              {confirmedCount > 0 && (
+                <Alert severity="success" sx={{ mb: 2, borderRadius: 2 }}>
+                  You have {confirmedCount} confirmed upcoming{' '}
+                  {confirmedCount === 1 ? 'ride' : 'rides'}. Safe travels! 🙏
+                </Alert>
+              )}
+              {renderList(upcoming)}
+            </>
+          ) : (
+            <EmptyState emoji="🗓️" message="No upcoming rides" actionLabel="Find a ride" actionHref="/find" />
           )}
-          {myRides.filter(r => r.status !== 'confirmed').map(ride => (
-            <RideHistoryCard key={ride.id} ride={ride} />
-          ))} */}
         </Box>
       )}
 
       {tab === 2 && (
-        <>
-          <Paper sx={{ p: 4, textAlign: 'center', border: '1px dashed #E0D5CC', bgcolor: '#FFF8F2', borderRadius: 2 }} elevation={0}>
-            <Typography fontSize="2rem">🚗</Typography>
-            <Typography fontWeight={600} color="text.secondary" mt={1}>You haven't posted any rides yet</Typography>
-            <Button variant="contained" sx={{ mt: 2 }} href="/offer">Post your first ride</Button>
-          </Paper>
-          <Paper sx={{ p: 4, textAlign: 'center', border: '1px dashed #E0D5CC', bgcolor: '#FFF8F2', borderRadius: 2 }} elevation={0}>
-            <Typography fontSize="2rem">🚗</Typography>
-            <Typography fontWeight={600} color="text.secondary" mt={1}>You haven't posted any rides yet</Typography>
-            <Button variant="contained" sx={{ mt: 2 }} href="/offer">Post your first ride</Button>
-          </Paper>
-          
-        </>
-
+        <Box>
+          {history.length > 0
+            ? renderList(history)
+            : <EmptyState emoji="🕰️" message="No past rides yet" />}
+        </Box>
       )}
 
       {tab === 0 && (
