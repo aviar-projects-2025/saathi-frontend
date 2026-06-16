@@ -19,7 +19,7 @@ import Home from "./pages/Home.jsx";
 import FindRides from "./pages/FindRides.jsx";
 import Profile from "./pages/Profile.jsx";
 import Community from "./pages/Community.jsx";
-import MyRide from "./pages/MyRide.jsx";
+// import myRides from "./pages/MyRides.jsx";
 import Notification from "./pages/Notification.jsx";
 import OfferRide from "./pages/OfferRide.jsx";
 
@@ -28,6 +28,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
 import AdminUsers from "./pages/admin/AdminUsers.jsx";
 import { ToastContainer } from "react-toastify";
 import AdminLayout from "./components/AdminLayout.jsx";
+import MyRides from "./pages/MyRides.jsx";
 
 function App() {
   return (
@@ -62,7 +63,7 @@ function App() {
           <Route path="/offerRide" element={<OfferRide />} />
           <Route path="/profile" element={<Profile />} />
 
-          <Route path="/myRide" element={<MyRide />} />
+          <Route path="/myRide" element={<MyRides />} />
           <Route path="/notification" element={<Notification />} />
         </Route>
 
