@@ -11,9 +11,10 @@ const colorMap = {
   Z: '#3A0CA3',
 };
 
-export default function UserAvatar({ name, initials, size = 40, verified, sx = {} }) {
+export default function UserAvatar({ name, firstName, lastName, initials, size = 40, verified, sx = {} }) {
   const letter = (initials || name || 'U')[0].toUpperCase();
   const bg = colorMap[letter] || '#E8650A';
+
 
   return (
     <Box sx={{ position: 'relative', display: 'inline-flex', ...sx }}>
@@ -30,7 +31,6 @@ export default function UserAvatar({ name, initials, size = 40, verified, sx = {
           boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
         }}
       >
-        {initials || name?.slice(0, 2).toUpperCase() || 'U'}
       </Avatar>
       {verified && (
         <Tooltip title="Verified member">
