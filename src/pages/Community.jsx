@@ -18,6 +18,7 @@ import PermMediaIcon from '@mui/icons-material/PermMedia';
 import CloseIcon from '@mui/icons-material/Close';
 import Api from '../Api.jsx';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const topMembers = [
   { name: 'Vijay Patel', initials: 'VP', rides: 67, city: 'Frisco', badge: '🏅 Founding member', verified: true },
@@ -73,35 +74,51 @@ export default function Community() {
 
   // console.log(user,'user')
 
+  const newPost = {
+    description: post,
+    authorId: user?.id,
+    postImage: preview,
+    name: "Daniel Arun",
+    city: "Saathi Community",
+    time: "Just now",
+    initials: "DA", verified: true,
+  };
 
   const handleCreatePost = async () => {
     try {
       setLoading(true);
+      const formData = new FormData();
+      formData.append("description", post);
+      formData.append("authorId", user?.id);
+      formData.append("name", "Daniel Arun");
+      formData.append("city", "Saathi Community");
+      formData.append("time", "Just now");
+      formData.append("initials", "DA");
+      formData.append("verified", true,);
 
-      const newPost = {
-        description: post,
-        authorId : user?.id,
-        postImage: preview,
-        name: "Daniel Arun",
-        city: "Saathi Community",
-        time: "Just now",
-        initials: "DA",
-        verified: true,
-      };
+      if (media) {
+        formData.append("postImage", media);
+      }
 
-      console.log("Post Data:", newPost);
-      axios.post(Api + "/community/", newPost)
-        .then((res) => {
-          console.log(res, 'res')
-        })
+      console.log(formData,'formData')
+
+      const res = await axios.post(Api + "/community/", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      console.log(res.data, "post created");
 
       setPost("");
       setMedia(null);
       setPreview("");
+      toast.success("Posted")
     } catch (error) {
       console.log(error);
     } finally {
       setLoading(false);
+      getCommmunityPost();
     }
   };
 

@@ -14,10 +14,15 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (credentials) => {
         const res = await axios.post(`${Api}/users/login`, credentials);
+
         const user = res.data.user;
+
         localStorage.setItem("token", res.data.token);
-        localStorage.setItem("role", res.data.user.role);
+        localStorage.setItem("role", user.role);
         localStorage.setItem("user", JSON.stringify(user));
+
+        setToken(res.data.token);
+        setRole(user.role);
 
         return res.data;
     };
