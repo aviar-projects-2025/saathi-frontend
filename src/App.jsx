@@ -19,7 +19,7 @@ import Home from "./pages/Home.jsx";
 import FindRides from "./pages/FindRides.jsx";
 import Profile from "./pages/Profile.jsx";
 import Community from "./pages/Community.jsx";
-import MyRide from "./pages/MyRide.jsx";
+// import myRides from "./pages/MyRides.jsx";
 import Notification from "./pages/Notification.jsx";
 import OfferRide from "./pages/OfferRide.jsx";
 
