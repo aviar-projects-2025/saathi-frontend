@@ -607,7 +607,7 @@ const MyRides = () => {
         const response = await axios.get(`${Api}/rides/`);
 
         const all = (response.data.data || []).sort(
-          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          (a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
         );
 
         console.log("All ===> ", all);
