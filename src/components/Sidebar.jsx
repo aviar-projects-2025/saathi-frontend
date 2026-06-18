@@ -19,7 +19,6 @@ const menuItems = [
   { label: "Offer Ride", icon: <DirectionsCarIcon />, link: "/offer-ride" },
   { label: "Find Ride", icon: <SearchIcon />, link: "/find-ride" },
   { label: "My Rides", icon: <RouteIcon />, link: "/myride" },
-  { label: "Refer", icon: <SendIcon />, link: "/settings" },
   { label: "My Referrals", icon: <HandshakeIcon />, link: "/my-referalls" },
   { label: "Settings", icon: <SettingsIcon />, link: "/settings" },
 ];

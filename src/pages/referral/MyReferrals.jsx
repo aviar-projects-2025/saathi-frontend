@@ -79,11 +79,11 @@ const MyReferrals = () => {
     };
 
     const declineUser = async (id) => {
-        const payload = {
-            refApprove: "Declined"
-        }
+        // const payload = {
+        //     refApprove: "Declined"
+        // }
         try {
-            axios.patch(Api + `/referrals/${id}`, payload)
+            axios.delete(Api + `/referrals/${id}`)
                 .then((res) => {
                     console.log(res, 'res')
                 })
@@ -134,33 +134,66 @@ const MyReferrals = () => {
                             </>
                             :
                             <>
-                                {referrals?.map((user) => (
-                                    <Paper
-                                        key={user._id}
-                                        elevation={0}
-                                        sx={{
-                                            p: 2.5,
-                                            borderRadius: 3,
-                                            border: "1px solid #F0E6DC",
-                                        }}
-                                    >
-                                        <Stack
-                                            direction={{ xs: "column", sm: "row" }}
-                                            spacing={2}
-                                            alignItems={{ xs: "flex-start", sm: "center" }}
+                                {
+                                    referrals?.length >= 0 ?
+                                        <Box
                                             sx={{
-                                                justifyContent: 'space-between'
+                                                py: 8,
+                                                textAlign: "center",
+                                                // border: "1px dashed #E0E0E0",
+                                                // borderRadius: 3,
+                                                // bgcolor: "#FAFAFA",
                                             }}
                                         >
-                                            <Stack direction="row" spacing={2} alignItems="center">
-                                                <Avatar sx={{ bgcolor: "#FFF0E3", color: "#E8650A" }}></Avatar>
-                                                <Box>
-                                                    <Typography fontWeight={700}>{user.firstName} {user.lastName}</Typography>
-                                                    <Typography variant="body2" color="text.secondary">
-                                                        {user.email}
-                                                    </Typography>
+                                            <Typography
+                                                variant="h6"
+                                                fontWeight={700}
+                                                color="text.secondary"
+                                            >
+                                                No Referrals Found
+                                            </Typography>
 
-                                                    {/* <Stack direction="row" spacing={1} mt={1}>
+                                            <Typography
+                                                variant="body2"
+                                                color="text.secondary"
+                                                sx={{ mt: 1 }}
+                                            >
+                                                You don't have any referral requests at the moment.
+                                            </Typography>
+
+                                            <Button>
+                                                Refer Now
+                                            </Button>
+                                        </Box>
+                                        :
+                                        <>
+                                            {referrals?.map((user) => (
+                                                <Paper
+                                                    key={user._id}
+                                                    elevation={0}
+                                                    sx={{
+                                                        p: 2.5,
+                                                        borderRadius: 3,
+                                                        border: "1px solid #F0E6DC",
+                                                    }}
+                                                >
+                                                    <Stack
+                                                        direction={{ xs: "column", sm: "row" }}
+                                                        spacing={2}
+                                                        alignItems={{ xs: "flex-start", sm: "center" }}
+                                                        sx={{
+                                                            justifyContent: 'space-between'
+                                                        }}
+                                                    >
+                                                        <Stack direction="row" spacing={2} alignItems="center">
+                                                            <Avatar sx={{ bgcolor: "#FFF0E3", color: "#E8650A" }}></Avatar>
+                                                            <Box>
+                                                                <Typography fontWeight={700}>{user.firstName} {user.lastName}</Typography>
+                                                                <Typography variant="body2" color="text.secondary">
+                                                                    {user.email}
+                                                                </Typography>
+
+                                                                {/* <Stack direction="row" spacing={1} mt={1}>
                                             <Chip size="small" label={user.city} />
                                             <Chip
                                                 size="small"
@@ -172,51 +205,53 @@ const MyReferrals = () => {
                                                 }}
                                             />
                                         </Stack> */}
-                                                </Box>
-                                            </Stack>
+                                                            </Box>
+                                                        </Stack>
 
-                                            <Stack direction="row" spacing={1}>
-                                                <Button
-                                                    variant="contained"
-                                                    startIcon={<CheckCircleIcon />}
-                                                    onClick={() => {
-                                                        approveUser(user?._id);
-                                                    }}
-                                                    sx={{
-                                                        bgcolor: "#16a34a",
-                                                        width: "100px",
-                                                        height: "30px",
-                                                        textTransform: "none",
-                                                    }}
-                                                >
-                                                    Approve
-                                                </Button>
+                                                        <Stack direction="row" spacing={1}>
+                                                            <Button
+                                                                variant="contained"
+                                                                startIcon={<CheckCircleIcon />}
+                                                                onClick={() => {
+                                                                    approveUser(user?._id);
+                                                                }}
+                                                                sx={{
+                                                                    bgcolor: "#16a34a",
+                                                                    width: "100px",
+                                                                    height: "30px",
+                                                                    textTransform: "none",
+                                                                }}
+                                                            >
+                                                                Approve
+                                                            </Button>
 
-                                                <Button
-                                                    variant="outlined"
-                                                    color="error"
-                                                    startIcon={<CancelIcon />}
-                                                    onClick={() => {
-                                                        declineUser(user?._id);
-                                                    }}
-                                                    sx={{
-                                                        width: "100px",
-                                                        height: "30px",
-                                                        textTransform: "none",
-                                                    }}
-                                                >
-                                                    Decline
-                                                </Button>
-                                            </Stack>
-                                        </Stack>
+                                                            <Button
+                                                                variant="outlined"
+                                                                color="error"
+                                                                startIcon={<CancelIcon />}
+                                                                onClick={() => {
+                                                                    declineUser(user?._id);
+                                                                }}
+                                                                sx={{
+                                                                    width: "100px",
+                                                                    height: "30px",
+                                                                    textTransform: "none",
+                                                                }}
+                                                            >
+                                                                Decline
+                                                            </Button>
+                                                        </Stack>
+                                                    </Stack>
 
-                                        <Divider sx={{ my: 2 }} />
+                                                    <Divider sx={{ my: 2 }} />
 
-                                        <Typography variant="caption" color="text.secondary">
-                                            Requested {user.joinedAt}
-                                        </Typography>
-                                    </Paper>
-                                ))}
+                                                    <Typography variant="caption" color="text.secondary">
+                                                        Requested {user.joinedAt}
+                                                    </Typography>
+                                                </Paper>
+                                            ))}
+                                        </>
+                                }
                             </>}
                     </Stack>
                 )}

@@ -32,6 +32,7 @@ import MyRides from "./pages/MyRides.jsx";
 import UserLayout from "./components/UserLayout.jsx";
 import WaitingApproval from "./components/Auth/WaitingApproval.jsx";
 import MyReferrals from "./pages/referral/MyReferrals.jsx";
+import Settings from "./pages/Settings.jsx";
 
 function App() {
   return (
@@ -77,6 +78,9 @@ function App() {
             <Route path="/invite" element={<Invite />} />
             <Route path="/community" element={<Community />} />
             <Route path="/my-referalls" element={<MyReferrals />} />
+            <Route path="/settings" element={<Settings />} />
+
+
           </Route>
         </Route>
 
