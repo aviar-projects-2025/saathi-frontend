@@ -730,48 +730,63 @@ const MyRides = () => {
           <Tab label={`History (${history.length})`} />
         </Tabs>
 
-        {/* My Posts — edit + delete */}
-        {tab === 0 && (
-          <Box>
-            {currentRide.length > 0
-              ? renderList(currentRide, false, false)
-              : <EmptyState
-                emoji="🚗"
-                message="You don't have any active rides at the moment"
-                actionLabel="Share a Ride"
-                actionHref="/offer"
-              />
-            }
+        {loading ? (
+          <Box
+            sx={{
+              width: '70%',
+              marginTop:'5rem',
+              display: 'flex',
+              justifyContent: 'center',
+            }}
+          >
+            <CircularProgress size={50} />
           </Box>
-        )}
-        {/* My Posts — edit + delete */}
-        {tab === 2 && (
-          <Box>
-            {mypost.length > 0
-              ? renderList(mypost, true, true)
-              : <EmptyState emoji="🚗" message="You haven't posted any rides yet"
-                actionLabel="Post your first ride" actionHref="/offer" />}
-          </Box>
-        )}
 
-        {/* Upcoming — edit + delete */}
-        {tab === 1 && (
-          <Box>
-            {upcoming.length > 0
-              ? renderList(upcoming, true, true)
-              : <EmptyState emoji="🗓️" message="No upcoming rides" actionLabel="Find a ride" actionHref="/find" />}
-          </Box>
-        )}
+        ) : (
+          <>
+            {/* My Posts — edit + delete */}
+            {tab === 0 && (
+              <Box>
+                {currentRide.length > 0
+                  ? renderList(currentRide, false, false)
+                  : <EmptyState
+                    emoji="🚗"
+                    message="You don't have any active rides at the moment"
+                    actionLabel="Share a Ride"
+                    actionHref="/offer"
+                  />
+                }
+              </Box>
+            )}
+            {/* My Posts — edit + delete */}
+            {tab === 2 && (
+              <Box>
+                {mypost.length > 0
+                  ? renderList(mypost, true, true)
+                  : <EmptyState emoji="🚗" message="You haven't posted any rides yet"
+                    actionLabel="Post your first ride" actionHref="/offer" />}
+              </Box>
+            )}
 
-        {/* History — edit/delete only for rides that also exist in mypost or upcoming */}
-        {tab === 3 && (
-          <Box>
-            {history.length > 0
-              ? renderList(history, false, false)
-              : <EmptyState emoji="🕰️" message="No past rides yet" />}
-          </Box>
-        )}
+            {/* Upcoming — edit + delete */}
+            {tab === 1 && (
+              <Box>
+                {upcoming.length > 0
+                  ? renderList(upcoming, true, true)
+                  : <EmptyState emoji="🗓️" message="No upcoming rides" actionLabel="Find a ride" actionHref="/find" />}
+              </Box>
+            )}
 
+            {/* History — edit/delete only for rides that also exist in mypost or upcoming */}
+            {tab === 3 && (
+              <Box>
+                {history.length > 0
+                  ? renderList(history, false, false)
+                  : <EmptyState emoji="🕰️" message="No past rides yet" />}
+              </Box>
+            )}
+          </>
+        )}
         {/* Edit Modal — pre-filled with all fields from clicked ride */}
         {editRide && (
           <EditRideModal
@@ -790,25 +805,6 @@ const MyRides = () => {
           />
         )}
       </Box>
-      {loading && (
-        <Box
-          sx={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            bgcolor: "rgba(255,255,255,0.8)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            zIndex: 9999,
-          }}
-        >
-          <CircularProgress size={60} />
-          <Typography mt={2}>Loading rides...</Typography>
-        </Box>
-      )}
     </>
   );
 };
