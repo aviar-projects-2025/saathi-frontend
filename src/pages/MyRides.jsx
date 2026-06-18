@@ -734,7 +734,7 @@ const MyRides = () => {
           <Box
             sx={{
               width: '70%',
-              marginTop:'5rem',
+              marginTop: '5rem',
               display: 'flex',
               justifyContent: 'center',
             }}
