@@ -1,300 +1,228 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import {
-  Box,
+  Container,
   Typography,
+  CircularProgress,
+  Box,
+  Grid,
   TextField,
-  InputAdornment,
-  Chip,
-  Stack,
-  Button,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
   Paper,
+  Button,
 } from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
-import LocationOnIcon from "@mui/icons-material/LocationOn";
-import MapIcon from "@mui/icons-material/Map";
-import SortIcon from "@mui/icons-material/Sort";
 
-import { useApp } from "../context/AppContext.jsx";
-import { filterCategories } from "../data/mockData.jsx";
 import RideCard from "../components/RideCard.jsx";
-import Sidebar from "../components/Sidebar.jsx";
-
-const cityRouteMap = {
-  chennai: [
-    "chennai",
-    "villupuram",
-    "trichy",
-    "madurai",
-    "tirunelveli",
-    "kanyakumari",
-  ],
-  kanyakumari: [
-    "kanyakumari",
-    "tirunelveli",
-    "madurai",
-    "trichy",
-    "villupuram",
-    "chennai",
-  ],
-  madurai: ["madurai", "trichy", "villupuram", "chennai"],
-  trichy: ["trichy", "villupuram", "chennai"],
-};
-
-const normalize = (text = "") => text.toLowerCase().trim();
+import Api from "../Api";
 
 export default function FindRides() {
-  const {
-    rides,
-    activeFilter,
-    setActiveFilter,
-    searchQuery,
-    setSearchQuery,
-  } = useApp();
+  const [rides, setRides] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
-  const [userLocation, setUserLocation] = useState("");
+  const [searchFrom, setSearchFrom] = useState("");
+  const [searchDestination, setSearchDestination] = useState("");
+  const [transportMode, setTransportMode] = useState("");
+  const [gender, setGender] = useState("");
+  const [fuelSharing, setFuelSharing] = useState("");
+  const [language, setLanguage] = useState("");
 
-  const filteredRides = useMemo(() => {
-    const fromText = normalize(from);
-    const toText = normalize(to);
-    const normalSearch = normalize(searchQuery);
+  useEffect(() => {
+    fetchRides();
+  }, []);
 
-    return rides.filter((ride) => {
-      const rideFrom = normalize(ride.from);
-      const rideTo = normalize(ride.to);
-      const rideName = normalize(ride.driver?.name || "");
-
-      const routeCities =
-        fromText && toText && cityRouteMap[fromText]
-          ? cityRouteMap[fromText]
-          : [];
-
-      const fromIndex = routeCities.indexOf(fromText);
-      const toIndex = routeCities.indexOf(toText);
-      const rideFromIndex = routeCities.indexOf(rideFrom);
-      const rideToIndex = routeCities.indexOf(rideTo);
-
-      const isBetweenRoute =
-        fromIndex !== -1 &&
-        toIndex !== -1 &&
-        rideFromIndex !== -1 &&
-        rideToIndex !== -1 &&
-        rideFromIndex >= fromIndex &&
-        rideToIndex <= toIndex;
-
-      const matchesFromTo =
-        !fromText && !toText
-          ? true
-          : rideFrom.includes(fromText) ||
-            rideTo.includes(toText) ||
-            isBetweenRoute ||
-            routeCities.includes(rideFrom) ||
-            routeCities.includes(rideTo);
-
-      const matchesSearch =
-        !normalSearch ||
-        rideFrom.includes(normalSearch) ||
-        rideTo.includes(normalSearch) ||
-        rideName.includes(normalSearch);
-
-      const matchesFilter =
-        activeFilter === "all" || ride.type === activeFilter;
-
-      return matchesFromTo && matchesSearch && matchesFilter;
-    });
-  }, [rides, from, to, searchQuery, activeFilter]);
-
-  const handleLocationAccess = () => {
-    if (!navigator.geolocation) {
-      alert("Location access is not supported in this browser");
-      return;
+  const fetchRides = async () => {
+    try {
+      const res = await axios.get(`${Api}/rides/get`);
+      setRides(res.data.data || []);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
     }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        console.log("Latitude:", position.coords.latitude);
-        console.log("Longitude:", position.coords.longitude);
-        setUserLocation("Current location detected");
-      },
-      () => {
-        alert("Please allow location access");
-      }
-    );
   };
 
-  return (
-    <Box
-      sx={{
-        display: "flex",
-        gap: 3,
-        maxWidth: 1100,
-        mx: "auto",
-        px: { xs: 2, md: 3 },
-        py: 3,
-      }}
-    >
-  
+  const clearFilters = () => {
+    setSearchFrom("");
+    setSearchDestination("");
+    setTransportMode("");
+    setGender("");
+    setFuelSharing("");
+    setLanguage("");
+  };
 
-      <Box sx={{ flex: 1, minWidth: 0 }}>
-        <Box sx={{ mb: 2.5 }}>
-          <Typography variant="h5" fontWeight={800} sx={{ mb: 0.25 }}>
-            Community <span style={{ color: "#E8650A" }}>rides</span>
-          </Typography>
+  const filteredRides = rides.filter((ride) => {
+    const fromValue =
+      ride.modeOfTravel === "Flight"
+        ? `${ride.fromAirport || ""} ${ride.fromCountry || ""} ${ride.from || ""}`
+        : ride.from || "";
 
-          <Typography variant="body2" color="text.secondary">
-            Showing {filteredRides.length} rides ·{" "}
-            {userLocation || "Dallas area"}
-          </Typography>
-        </Box>
+    const destinationValue =
+      ride.modeOfTravel === "Flight"
+        ? `${ride.toAirport || ""} ${ride.toCountry || ""} ${ride.destination || ""}`
+        : ride.destination || "";
 
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
-            gap: 1,
-            mb: 2,
-          }}
-        >
-          <TextField
-            size="small"
-            placeholder="From destination"
-            value={from}
-            onChange={(e) => setFrom(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <LocationOnIcon
-                    fontSize="small"
-                    sx={{ color: "primary.main" }}
-                  />
-                </InputAdornment>
-              ),
-            }}
-            sx={{ bgcolor: "#fff", borderRadius: 2 }}
-          />
+    const fromMatch = fromValue.toLowerCase().includes(searchFrom.toLowerCase());
 
-          <TextField
-            size="small"
-            placeholder="To destination"
-            value={to}
-            onChange={(e) => setTo(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <LocationOnIcon
-                    fontSize="small"
-                    sx={{ color: "#E8650A" }}
-                  />
-                </InputAdornment>
-              ),
-            }}
-            sx={{ bgcolor: "#fff", borderRadius: 2 }}
-          />
-        </Box>
+    const destinationMatch = destinationValue
+      .toLowerCase()
+      .includes(searchDestination.toLowerCase());
 
-        <Box sx={{ display: "flex", gap: 1, mb: 2, alignItems: "center" }}>
-          <TextField
-            fullWidth
-            size="small"
-            placeholder="Search by city, airport, or community member..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon
-                    fontSize="small"
-                    sx={{ color: "text.secondary" }}
-                  />
-                </InputAdornment>
-              ),
-            }}
-            sx={{ bgcolor: "#fff", borderRadius: 2 }}
-          />
+    const transportMatch = !transportMode || ride.modeOfTravel === transportMode;
 
-          <Button
-            startIcon={<LocationOnIcon />}
-            variant="outlined"
-            size="small"
-            onClick={handleLocationAccess}
-            sx={{ flexShrink: 0 }}
-          >
-            Location
-          </Button>
+    const genderMatch = !gender || ride.genderPreference === gender;
 
-          <Button
-            startIcon={<MapIcon />}
-            variant="outlined"
-            size="small"
-            sx={{ flexShrink: 0 }}
-          >
-            Map
-          </Button>
+    const fuelMatch =
+      fuelSharing === "" ||
+      ride.modeOfTravel === "Flight" ||
+      ride.fuelSharing?.toString() === fuelSharing;
 
-          <Button
-            startIcon={<SortIcon />}
-            variant="outlined"
-            size="small"
-            sx={{ flexShrink: 0 }}
-          >
-            Sort
-          </Button>
-        </Box>
+    const languageMatch =
+      !language ||
+      ride.language?.toLowerCase().includes(language.toLowerCase());
 
-        <Stack
-          direction="row"
-          spacing={0.75}
-          sx={{ mb: 2.5, overflowX: "auto", pb: 0.5 }}
-        >
-          {filterCategories.map((cat) => (
-            <Chip
-              key={cat.value}
-              label={`${cat.icon} ${cat.label}`}
-              onClick={() => setActiveFilter(cat.value)}
-              variant={activeFilter === cat.value ? "filled" : "outlined"}
-              sx={{
-                flexShrink: 0,
-                fontWeight: activeFilter === cat.value ? 700 : 500,
-                bgcolor:
-                  activeFilter === cat.value
-                    ? "primary.main"
-                    : "transparent",
-                color: activeFilter === cat.value ? "#fff" : "text.secondary",
-                borderColor:
-                  activeFilter === cat.value ? "primary.main" : "#E0D5CC",
-                "&:hover": {
-                  bgcolor:
-                    activeFilter === cat.value ? "primary.dark" : "#FFF8F2",
-                },
-              }}
-            />
-          ))}
-        </Stack>
+    return (
+      fromMatch &&
+      destinationMatch &&
+      transportMatch &&
+      genderMatch &&
+      fuelMatch &&
+      languageMatch
+    );
+  });
 
-        {filteredRides.length === 0 ? (
-          <Paper
-            sx={{
-              p: 4,
-              textAlign: "center",
-              border: "1px dashed #E0D5CC",
-              bgcolor: "#FFF8F2",
-            }}
-          >
-            <Typography fontSize="2rem" mb={1}>
-              🙏
-            </Typography>
-            <Typography fontWeight={600} color="text.secondary">
-              No rides found
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Try changing From, To, or search keyword
-            </Typography>
-          </Paper>
-        ) : (
-          filteredRides.map((ride) => <RideCard key={ride.id} ride={ride} />)
-        )}
+  if (loading) {
+    return (
+      <Box textAlign="center" mt={5}>
+        <CircularProgress />
       </Box>
-    </Box>
+    );
+  }
+
+  return (
+    <Container maxWidth="md" sx={{ py: 3 }}>
+      <Typography variant="h5" fontWeight={800} mb={2}>
+        Find Rides & Flight Companions
+      </Typography>
+
+      <Paper
+        sx={{
+          mb: 3,
+          p: 2,
+          bgcolor: "#fff",
+          borderRadius: 4,
+          boxShadow: "0 8px 25px rgba(0,0,0,0.08)",
+        }}
+      >
+        <Grid container spacing={2}>
+          <Grid item xs={12} md={3}>
+            <TextField
+              fullWidth
+              size="small"
+              label="From"
+              placeholder="City / Airport / Country"
+              value={searchFrom}
+              onChange={(e) => setSearchFrom(e.target.value)}
+            />
+          </Grid>
+
+          <Grid item xs={12} md={3}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Destination"
+              placeholder="City / Airport / Country"
+              value={searchDestination}
+              onChange={(e) => setSearchDestination(e.target.value)}
+            />
+          </Grid>
+
+          <Grid item xs={12} md={2}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Transport</InputLabel>
+              <Select
+                value={transportMode}
+                label="Transport"
+                onChange={(e) => setTransportMode(e.target.value)}
+              >
+                <MenuItem value="">All</MenuItem>
+                <MenuItem value="Car">Car</MenuItem>
+                <MenuItem value="Bike">Bike</MenuItem>
+                <MenuItem value="Bus">Bus</MenuItem>
+                <MenuItem value="Train">Train</MenuItem>
+                <MenuItem value="Flight">Flight</MenuItem>
+           
+              </Select>
+            </FormControl>
+          </Grid>
+
+          <Grid item xs={12} md={2}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Gender</InputLabel>
+              <Select
+                value={gender}
+                label="Gender"
+                onChange={(e) => setGender(e.target.value)}
+              >
+                <MenuItem value="">All</MenuItem>
+                <MenuItem value="Male">Male</MenuItem>
+                <MenuItem value="Female">Female</MenuItem>
+                <MenuItem value="Any">Any</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+
+          <Grid item xs={12} md={2}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Fuel Share</InputLabel>
+              <Select
+                value={fuelSharing}
+                label="Fuel Share"
+                onChange={(e) => setFuelSharing(e.target.value)}
+              >
+                <MenuItem value="">All</MenuItem>
+                <MenuItem value="true">Yes</MenuItem>
+                <MenuItem value="false">No</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+
+          {transportMode === "Flight" && (
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                size="small"
+                label="Language"
+                placeholder="Tamil, English, Hindi"
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+              />
+            </Grid>
+          )}
+
+          <Grid item xs={12}>
+            <Button variant="outlined" fullWidth onClick={clearFilters}>
+              Clear Filters
+            </Button>
+          </Grid>
+        </Grid>
+      </Paper>
+
+      <Typography variant="subtitle1" fontWeight={700} mb={2}>
+        {filteredRides.length} results found
+      </Typography>
+
+      {filteredRides.length > 0 ? (
+        filteredRides.map((ride) => <RideCard key={ride._id} ride={ride} />)
+      ) : (
+        <Box textAlign="center" py={5}>
+          <Typography color="text.secondary">
+            No rides found.
+          </Typography>
+        </Box>
+      )}
+    </Container>
   );
 }

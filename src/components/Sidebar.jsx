@@ -18,6 +18,7 @@ const menuItems = [
   { label: "My Rides", icon: <RouteIcon />, link: "/myride" },
   { label: "Refer", icon: <SettingsIcon />, link: "/settings" },
   { label: "Settings", icon: <SettingsIcon />, link: "/settings" },
+
 ];
 
 export default function Sidebar() {

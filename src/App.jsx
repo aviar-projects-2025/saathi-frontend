@@ -19,6 +19,7 @@ import Home from "./pages/Home.jsx";
 import FindRides from "./pages/FindRides.jsx";
 import Profile from "./pages/Profile.jsx";
 import Community from "./pages/Community.jsx";
+
 // import myRides from "./pages/MyRides.jsx";
 import Notification from "./pages/Notification.jsx";
 import OfferRide from "./pages/OfferRide.jsx";
@@ -66,6 +67,7 @@ function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/myride" element={<MyRides />} />
             <Route path="/notification" element={<Notification />} />
+
           </Route>
         </Route>
 
