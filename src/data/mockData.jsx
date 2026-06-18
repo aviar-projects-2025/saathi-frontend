@@ -283,6 +283,48 @@ export const rides = [
     price: '$30/seat',
     note: 'Business trip. Happy to share the ride.',
   },
+  {
+  id: "r6",
+  type: "intercity",
+  from: "Chennai",
+  to: "Kanyakumari",
+  date: "2025-06-10",
+  time: "6:00 AM",
+  seats: 3,
+  price: 500,
+  priceLabel: "₹500/seat",
+  driver: {
+    name: "Arun Kumar",
+    avatar: "AK",
+    trustScore: 90,
+    referredBy: "Ravi S.",
+    languages: ["Tamil", "English"],
+  },
+  mode: "offering",
+  note: "Travelling from Chennai to Kanyakumari via Trichy, Madurai, Tirunelveli.",
+  tags: ["intercity", "long-trip"],
+},
+{
+  id: "r7",
+  type: "intercity",
+  from: "Madurai",
+  to: "Kanyakumari",
+  date: "2025-06-10",
+  time: "10:30 AM",
+  seats: 2,
+  price: 250,
+  priceLabel: "₹250/seat",
+  driver: {
+    name: "Vignesh",
+    avatar: "VG",
+    trustScore: 85,
+    referredBy: "Arun K.",
+    languages: ["Tamil"],
+  },
+  mode: "offering",
+  note: "On the way ride from Madurai to Kanyakumari.",
+  tags: ["intercity"],
+}
 ];
 
 export const referrals = [
@@ -300,4 +342,10 @@ export const rideHistory = [
   { id: 'h2', from: 'Frisco',  to: 'BAPS Temple',    date: 'Apr 28', role: 'Passenger', amount: 'Free',      persons: 'Anita S.'               },
   { id: 'h3', from: 'Dallas',  to: 'Chicago',         date: 'Apr 15', role: 'Driver',    amount: '$40 × 2',  persons: 'Priya N., Suresh K.'     },
   { id: 'h4', from: 'DFW Airport', to: 'Allen, TX',  date: 'Mar 30', role: 'Driver',    amount: 'Gas split', persons: 'Deepa M.'                },
+];
+export const filterCategories = [
+  { value: "all", label: "All", icon: "🚗" },
+  { value: "airport", label: "Airport", icon: "✈️" },
+  { value: "intercity", label: "Intercity", icon: "🚌" },
+  { value: "temple", label: "Temple", icon: "🛕" },
 ];

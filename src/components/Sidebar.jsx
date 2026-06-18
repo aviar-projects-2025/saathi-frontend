@@ -21,6 +21,7 @@ const menuItems = [
   { label: "My Rides", icon: <RouteIcon />, link: "/myride" },
   { label: "My Referrals", icon: <HandshakeIcon />, link: "/my-referalls" },
   { label: "Settings", icon: <SettingsIcon />, link: "/settings" },
+
 ];
 
 export default function Sidebar() {
