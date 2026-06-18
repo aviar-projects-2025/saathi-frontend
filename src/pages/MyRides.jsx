@@ -2,23 +2,51 @@ import React, { useEffect, useState } from 'react';
 import {
   Box, Typography, Tabs, Tab, Paper, Chip, Button, Alert,
   Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField, IconButton, Snackbar, Stack, FormControl,
+  TextField, IconButton, Stack, FormControl,
   InputLabel, Select, MenuItem, FormControlLabel, Switch, Slider,
+  CircularProgress,
 } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import StarIcon from '@mui/icons-material/Star';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloseIcon from '@mui/icons-material/Close';
 import axios from 'axios';
 import Api from '../Api';
+import { toast } from 'react-toastify';
+
 
 const statusConfig = {
-  confirmed: { label: 'Confirmed', color: '#2D6A4F', bg: '#E8F5E9', icon: '✅' },
-  pending: { label: 'Pending', color: '#E8650A', bg: '#FFF3E0', icon: '⏳' },
-  completed: { label: 'Completed', color: '#555577', bg: '#F5F5F5', icon: '🏁' },
+  confirmed: { label: 'Filled', color: '#2D6A4F', bg: '#E8F5E9', icon: '✅' },
+  pending: { label: 'Opened', color: '#E8650A', bg: '#FFF3E0', icon: '⏳' },
+  completed: { label: 'Closed', color: '#555577', bg: '#F5F5F5', icon: '🏁' },
   cancelled: { label: 'Cancelled', color: '#9B2226', bg: '#FFEBEE', icon: '❌' },
 };
+
+const statusMap = {
+  OPEN: 'pending',
+  FULL: 'confirmed',
+  CLOSED: 'completed',
+  CANCELLED: 'cancelled',
+};
+
+const travelIcons = {
+  Car: '🚗',
+  Bus: '🚌',
+  Bike: '🏍️',
+  Flight: '✈️',
+  Ship: '🚢',
+  Train: '🚆',
+};
+
+const genderIcons = {
+  Male: '👨',
+  Female: '👩',
+  Any: '👥',
+};
+
+// Helper: normalise from/to regardless of field name used by the API
+const formFrom = (ride) => ride?.from || '—';
+const formTo = (ride) => ride?.destination || ride?.to || '—';
 
 // ── Empty State ──────────────────────────────────────────────────────────────
 function EmptyState({ emoji, message, actionLabel, actionHref }) {
@@ -39,25 +67,20 @@ function EmptyState({ emoji, message, actionLabel, actionHref }) {
 }
 
 // ── Edit Ride Modal ──────────────────────────────────────────────────────────
-// Maps your existing PostRide form fields to the edit modal.
+// Maps the PostRide form fields to the edit modal.
 // Fields: from, destination, date, time, modeOfTravel, description,
 //         availableSeats, genderPreference, fuelSharing
 function EditRideModal({ ride, onSave, onClose }) {
-
-  console.log('Edit Rides ===> ', ride);
-
   const startDate = new Date(ride.startTime);
 
-  const [date, time] = [
-    startDate.toISOString().split("T")[0],
-    startDate.toISOString().split("T")[1].slice(0, 5)
-  ];
+  const initialDate = !isNaN(startDate) ? startDate.toISOString().split('T')[0] : '';
+  const initialTime = !isNaN(startDate) ? startDate.toISOString().split('T')[1].slice(0, 5) : '';
 
   const [form, setForm] = useState({
     from: ride.from ?? '',
     destination: ride.destination ?? ride.to ?? '',
-    date: date ?? '',
-    time: time ?? '',
+    date: initialDate,
+    time: initialTime,
     modeOfTravel: ride.modeOfTravel ?? '',
     description: ride.description ?? '',
     availableSeats: ride.availableSeats ?? ride.seats ?? 1,
@@ -68,9 +91,9 @@ function EditRideModal({ ride, onSave, onClose }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  const update = (field, value) => setForm(f => ({ ...f, [field]: value }));
+  const update = (field, value) => setForm((f) => ({ ...f, [field]: value }));
 
-  const handleSave = async () => {
+  const handleEdit = async () => {
     setSaving(true);
     setError('');
     try {
@@ -99,9 +122,8 @@ function EditRideModal({ ride, onSave, onClose }) {
         </IconButton>
       </DialogTitle>
 
-      <DialogContent sx={{ pt: 2 }}>
-        <Stack spacing={2} mt={0.5}>
-
+      <DialogContent sx={{ pt: 3, mt: 1 }}>
+        <Stack spacing={2} sx={{ mt: 2 }}>
           {/* From */}
           <TextField
             label="From"
@@ -229,7 +251,7 @@ function EditRideModal({ ride, onSave, onClose }) {
           Cancel
         </Button>
         <Button
-          onClick={handleSave}
+          onClick={handleEdit}
           variant="contained"
           disabled={saving}
           sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700 }}
@@ -246,11 +268,11 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState('');
 
-  // const isPost = ride.role === 'offered' && (ride.status === 'pending' || ride.status === 'confirmed');
-  // const label = isPost ? 'Remove post' : 'Cancel ride';
-  // const body = isPost
-  //   ? 'This will remove your ride post. Passengers who requested this ride will be notified.'
-  //   : 'This will cancel your booking. The driver will be notified.';
+  const isPost = ride.role === 'offered' && (ride.status === 'pending' || ride.status === 'confirmed');
+  const label = isPost ? 'Remove post' : 'Cancel ride';
+  const body = isPost
+    ? 'This will remove your ride post. Passengers who requested this ride will be notified.'
+    : 'This will cancel your booking. The driver will be notified.';
 
   const handleConfirm = async () => {
     setDeleting(true);
@@ -285,7 +307,7 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
           elevation={0}
         >
           <Typography fontSize="0.85rem" fontWeight={700}>
-            {form_from(ride)} → {form_to(ride)}
+            {formFrom(ride)} → {formTo(ride)}
           </Typography>
           <Typography fontSize="0.78rem" color="text.secondary">{ride.date}</Typography>
         </Paper>
@@ -310,146 +332,255 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
   );
 }
 
-// Helper: normalise from/to regardless of field name used by the API
-const form_from = (ride) => ride?.from || '—';
-const form_to = (ride) => ride?.destination || '—';
+// ── Ride Details Modal ───────────────────────────────────────────────────────
+// Shown when a RideCard is clicked. Professional summary layout with
+// Edit / Delete / Close actions wired back to the parent handlers.
+function RideDetailsModal({ ride, showEdit, showDelete, onEdit, onDelete, onClose }) {
+  const startDate = new Date(ride.startTime);
+  const dateLabel = !isNaN(startDate)
+    ? startDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+    : '—';
+  const timeLabel = !isNaN(startDate)
+    ? startDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
+    : '—';
 
-// ── Ride Card ────────────────────────────────────────────────────────────────
-function RideCard({ ride, showEdit, showDelete, onEdit, onDelete }) {
+  const status = statusConfig[statusMap[ride?.status]];
 
-  const status = statusConfig.confirmed;
-
-  const date = new Date(ride.startTime).toLocaleDateString("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-
-  const time = new Date(ride.startTime).toLocaleTimeString("en-IN", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  });
-
-  const travelIcons = {
-    Car: "🚗",
-    Bus: "🚌",
-    Bike: "🏍️",
-    Flight: "✈️",
-    Ship: "🚢",
-    Train: "🚆",
-  };
-
-  const genderIcons = {
-    Male: "👨",
-    Female: "👩",
-    Any: "👥"
-  };
-
+  const Row = ({ icon, label, value }) => (
+    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.25, py: 0.5 }}>
+      <Typography fontSize="1.1rem" lineHeight={1.4}>{icon}</Typography>
+      <Box>
+        <Typography variant="caption" color="text.secondary" display="block">{label}</Typography>
+        <Typography fontWeight={600} fontSize="0.92rem">{value}</Typography>
+      </Box>
+    </Box>
+  );
 
   return (
-    <Paper sx={{ p: 2, mb: 1.5, borderRadius: 2, border: '1px solid #F0E6DC' }} elevation={0}>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-        <Box sx={{ display: 'flex', gap: 0.75 }}>
+    <Dialog open onClose={onClose} fullWidth maxWidth="sm" PaperProps={{ sx: { borderRadius: 3 } }}>
+      <DialogTitle sx={{ fontWeight: 800, pb: 1 }}>
+        Ride Details
+        <IconButton
+          onClick={onClose}
+          size="small"
+          sx={{ position: 'absolute', right: 12, top: 12, color: 'text.secondary' }}
+        >
+          <CloseIcon fontSize="small" />
+        </IconButton>
+      </DialogTitle>
+
+      <DialogContent dividers sx={{ pt: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Typography fontWeight={800} fontSize="1.05rem">{formFrom(ride)}</Typography>
+            <ArrowForwardIcon sx={{ fontSize: 18, color: 'primary.main' }} />
+            <Typography fontWeight={800} fontSize="1.05rem">{formTo(ride)}</Typography>
+          </Box>
           <Chip
-            label={`${status.icon} ${status.label}`}
+            label={`${status?.icon} ${status?.label}`}
             size="small"
-            sx={{ bgcolor: status.bg, color: status.color, fontWeight: 700, fontSize: '0.72rem' }}
-          />
-          <Chip
-            label={ride?.status == 'OPEN' ? '🚗 Driver' : ride?.status == 'CLOSE' ? '🧑‍💼 Passenger' : ' '}
-            size="small"
-            sx={{ bgcolor: '#F0F4FF', color: '#4361EE', fontSize: '0.72rem' }}
+            sx={{
+              bgcolor: status?.bg,
+              color: status?.color,
+              fontWeight: 700,
+              fontSize: '0.72rem'
+            }}
           />
         </Box>
 
-        {(showEdit || showDelete) && (
-          <Box sx={{ display: 'flex', gap: 0.5 }}>
-            {showEdit && (
-              <IconButton
-                size="small"
-                onClick={() => onEdit(ride)}
-                sx={{ color: '#4361EE', bgcolor: '#F0F4FF', borderRadius: 1.5, p: 0.6, '&:hover': { bgcolor: '#E0E8FF' } }}
-              >
-                <EditIcon sx={{ fontSize: 16 }} />
-              </IconButton>
-            )}
-            {showDelete && (
-              <IconButton
-                size="small"
-                onClick={() => onDelete(ride)}
-                sx={{ color: '#9B2226', bgcolor: '#FFEBEE', borderRadius: 1.5, p: 0.6, '&:hover': { bgcolor: '#FFCDD2' } }}
-              >
-                <DeleteIcon sx={{ fontSize: 16 }} />
-              </IconButton>
-            )}
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
+            gap: 0.5,
+            bgcolor: '#FFF8F2',
+            border: '1px solid #F0E6DC',
+            borderRadius: 2,
+            p: 2,
+          }}
+        >
+          <Row icon="📅" label="Date" value={dateLabel} />
+          <Row icon="🕐" label="Time" value={timeLabel} />
+          <Row
+            icon={travelIcons[ride.modeOfTravel] || '🚗'}
+            label="Mode of travel"
+            value={ride.modeOfTravel || '—'}
+          />
+          <Row icon="🪑" label="Available seats" value={ride.availableSeats ?? ride.seats ?? '—'} />
+          <Row
+            icon={genderIcons[ride.genderPreference] || '👥'}
+            label="Gender preference"
+            value={ride.genderPreference || 'Any'}
+          />
+          <Row icon="⛽" label="Fuel sharing" value={ride.fuelSharing ? 'Yes' : 'No'} />
+        </Box>
+
+        {ride.description && (
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+              📝 Description
+            </Typography>
+            <Typography fontSize="0.9rem">{ride.description}</Typography>
           </Box>
         )}
-      </Box>
+      </DialogContent>
 
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 0.75 }}>
-        <Typography fontWeight={700} fontSize="0.9rem">{form_from(ride)}</Typography>
-        <ArrowForwardIcon sx={{ fontSize: 16, color: 'primary.main' }} />
-        <Typography fontWeight={700} fontSize="0.9rem">{form_to(ride)}</Typography>
-      </Box>
-
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }} >
-
-        <Typography variant="caption" color="text.secondary">📅 {date}</Typography>
-        {time && (
-          <Typography variant="caption" color="text.secondary" display="block">
-            🕐 {time}
-          </Typography>
-        )}
-        {ride.modeOfTravel && (
-          <Typography variant="caption" color="text.secondary" display="block">
-            {/* 🚘 {ride?.modeOfTravel} */}
-            {travelIcons[ride?.modeOfTravel]} {ride?.modeOfTravel}
-          </Typography>
-        )}
-        {ride?.passenger && (
-          <Typography variant="caption" color="text.secondary" display="block">
-            Passenger: {ride.passenger}
-          </Typography>
-        )}
-        {ride.driver && (
-          <Typography variant="caption" color="text.secondary" display="block">
-            Driver: {ride.driver}
-          </Typography>
-        )}
-        {ride?.availableSeats && (
-          <Typography variant="caption" color="text.secondary" display="block">
-            🪑 {ride.availableSeats} seats
-          </Typography>
-        )}
-        {ride?.genderPreference && (
-          <Typography variant="caption" color="text.secondary" display="block">
-            {/* 👤 {ride.genderPreference} only */}
-            {genderIcons[ride?.genderPreference]} {ride?.genderPreference}
-          </Typography>
-        )}
-        {ride.status === 'completed' && (
-          <Box sx={{ mt: 1.5 }}>
-            <Button size="small" variant="outlined" startIcon={<StarIcon />} sx={{ fontSize: '0.75rem' }}>
-              Leave a review
-            </Button>
-          </Box>
-        )}
-      </Box>
-      <Box
-        sx={{ mt: 1 }}>
-        {ride?.description && (
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            display="block"
-            sx={{ fontStyle: 'italic', mt: 2 }}
+      <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
+        {showEdit && (
+          <Button
+            variant="outlined"
+            startIcon={<EditIcon />}
+            onClick={() => {
+              onEdit(ride);
+              onClose();
+            }}
+            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700 }}
           >
-            "{ride.description}"
-          </Typography>
+            Edit
+          </Button>
         )}
+        {showDelete && (
+          <Button
+            variant="outlined"
+            color="error"
+            startIcon={<DeleteIcon />}
+            onClick={() => {
+              onDelete(ride);
+              onClose();
+            }}
+            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700 }}
+          >
+            Delete
+          </Button>
+        )}
+        <Box sx={{ flexGrow: 1 }} />
+        <Button variant="outlined" onClick={onClose} sx={{ borderRadius: 2, textTransform: 'none' }}>
+          Close
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
+// ── Ride Card ────────────────────────────────────────────────────────────────
+function RideCard({ ride, showEdit, showDelete, onEdit, onDelete }) {
+  const [detailsOpen, setDetailsOpen] = useState(false);
+
+  const status = statusConfig.confirmed;
+
+  const startDate = new Date(ride.startTime);
+  const date = !isNaN(startDate)
+    ? startDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+    : '—';
+  const time = !isNaN(startDate)
+    ? startDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
+    : '—';
+
+  return (
+    <>
+      <Box onClick={() => setDetailsOpen(true)} sx={{ cursor: 'pointer' }}>
+        <Paper
+          elevation={0}
+          sx={{
+            p: 2,
+            mb: 2,
+            borderRadius: 3,
+            border: "1px solid #E8EAF0",
+            bgcolor: "#fff",
+            transition: "0.2s",
+            "&:hover": {
+              boxShadow: 2,
+            },
+          }}
+        >
+          {/* Route */}
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              mb: 1.5,
+            }}
+          >
+            <Typography
+              variant="subtitle1"
+              fontWeight={700}
+              sx={{ color: "#1F2937" }}
+            >
+              📍 {formFrom(ride)}
+            </Typography>
+
+            <ArrowForwardIcon color="primary" />
+
+            <Typography
+              variant="subtitle1"
+              fontWeight={700}
+              sx={{ color: "#1F2937" }}
+            >
+              📍 {formTo(ride)}
+            </Typography>
+          </Box>
+
+          {/* Details */}
+          <Stack
+            direction="row"
+            spacing={1}
+            flexWrap="wrap"
+            useFlexGap
+          >
+            <Chip
+              size="small"
+              label={`📅 ${date}`}
+              variant="outlined"
+            />
+
+            <Chip
+              size="small"
+              label={`🕐 ${time}`}
+              variant="outlined"
+            />
+
+            {ride.modeOfTravel && (
+              <Chip
+                size="small"
+                label={`${travelIcons[ride.modeOfTravel]} ${ride.modeOfTravel}`}
+                color="primary"
+                variant="outlined"
+              />
+            )}
+
+            {ride.availableSeats != null && (
+              <Chip
+                size="small"
+                label={`🪑 ${ride.availableSeats} Seats`}
+                color="success"
+                variant="outlined"
+              />
+            )}
+
+            {ride.genderPreference && (
+              <Chip
+                size="small"
+                label={`${genderIcons[ride.genderPreference]} ${ride.genderPreference}`}
+                color="secondary"
+                variant="outlined"
+              />
+            )}
+          </Stack>
+        </Paper>
       </Box>
-    </Paper>
+
+      {detailsOpen && (
+        <RideDetailsModal
+          ride={ride}
+          showEdit={showEdit}
+          showDelete={showDelete}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onClose={() => setDetailsOpen(false)}
+        />
+      )}
+    </>
   );
 }
 
@@ -461,158 +592,220 @@ const MyRides = () => {
   const [history, setHistory] = useState([]);
   const [editRide, setEditRide] = useState(null);
   const [deleteRide, setDeleteRide] = useState(null);
-  const [toast, setToast] = useState('');
+  const [currentRide, setCurrentRide] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const user = JSON.parse(localStorage.getItem('user'));
 
   // ── Fetch all rides ────────────────────────────────────────────────────────
   useEffect(() => {
     const fetchRides = async () => {
+
+      const currentDateTime = new Date();
+
       try {
         const response = await axios.get(`${Api}/rides/`);
-        const all = response.data.data || [];
 
-        console.log("API Data ", all);
+        const all = (response.data.data || []).sort(
+          (a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
+        );
 
-        setMypost(all.filter(item => item.createdBy === user.id));
-        setUpcoming(all.filter(item => item.createdBy === user.id));
-        setHistory(all);
+        console.log("All ===> ", all);
 
+        setMypost(
+          all.filter((item) => item?.createdBy?._id === user.id)
+        );
+
+        // Upcoming rides (only future rides)
+        setUpcoming(
+          all.filter((ride) => {
+            const rideStartTime = new Date(ride?.startTime);
+
+            return (
+              ride?.createdBy?._id === user.id &&
+              !isNaN(rideStartTime) &&
+              rideStartTime > currentDateTime
+            );
+          })
+        );
+
+        // History rides (ended after 3 hours)
+        setHistory(
+          all.filter((ride) => {
+            const rideStartTime = new Date(ride?.startTime);
+
+            const rideEndTime = new Date(
+              rideStartTime.getTime() + 3 * 60 * 60 * 1000
+            );
+
+            return (
+              ride?.createdBy?._id === user.id &&
+              !isNaN(rideStartTime) &&
+              rideEndTime < currentDateTime
+            );
+          })
+        );
+
+        // Current active ride (between start time and +3 hours)
+        setCurrentRide(
+          all.filter((ride) => {
+            const rideStartTime = new Date(ride?.startTime);
+
+            const rideEndTime = new Date(
+              rideStartTime.getTime() + 3 * 60 * 60 * 1000
+            );
+
+            return (
+              ride?.createdBy?._id === user.id &&
+              rideStartTime <= currentDateTime &&
+              rideEndTime >= currentDateTime
+            );
+          })
+        );
       } catch (error) {
         console.error('Error fetching rides:', error.message);
+      } finally {
+        setLoading(false);
       }
     };
     fetchRides();
   }, []);
 
   // ── Edit: update the ride in all three lists ───────────────────────────────
-  const handleSave = (updated) => {
+  const handleEdit = (updated) => {
     const id = updated._id || updated.id;
-    const merge = (list) => list.map(r => (r._id || r.id) === id ? updated : r);
+    const merge = (list) => list.map((r) => ((r._id || r.id) === id ? updated : r));
 
-    setMypost(merge);
-    setUpcoming(merge);
-    setHistory(merge);
+    setMypost(merge(mypost));
+    setUpcoming(merge(upcoming));
+    setHistory(merge(history));
+    setCurrentRide(prev => merge(prev));
     setEditRide(null);
-    setToast('Ride updated successfully ✅');
+    toast.success('Ride Updated Successfully...!');
   };
 
   // ── Delete: remove from all three lists (called after API success) ─────────
   const handleDelete = (deleted) => {
     const id = deleted._id || deleted.id;
-    const remove = (list) => list.filter(r => (r._id || r.id) !== id);
+    const remove = (list) => list.filter((r) => (r._id || r.id) !== id);
 
-    setMypost(remove);
-    setUpcoming(remove);
-    setHistory(remove);
+    setMypost(prev => remove(prev));
+    setUpcoming(prev => remove(prev));
+    setHistory(prev => remove(prev));
     setDeleteRide(null);
-    setToast('Ride removed 🗑️');
+    toast.success('Ride Deleted Successfully...!');
   };
 
-
-
-  const canEdit = (r) => r?.status == 'OPEN';
-  const canDelete = (r) => r?.status == 'OPEN';
-
   const renderList = (list, showEdit = false, showDelete = false) =>
-    list.map(ride => (
+    list.map((ride) => (
       <RideCard
         key={ride._id || ride.id}
         ride={ride}
-        showEdit={showEdit || canEdit(ride)}
-        showDelete={showDelete || canDelete(ride)}
+        showEdit={showEdit}
+        showDelete={showDelete}
         onEdit={setEditRide}
         onDelete={setDeleteRide}
       />
     ));
 
   return (
-    <Box sx={{ maxWidth: 700 }}>
-      <Typography variant="h5" fontWeight={800} mb={2.5}>My Rides</Typography>
+    <>
 
-      <Tabs
-        value={tab}
-        onChange={(_, v) => setTab(v)}
-        sx={{
-          mb: 2.5,
-          '& .MuiTab-root': { fontWeight: 600, textTransform: 'none' },
-          '& .Mui-selected': { color: 'primary.main' },
-          '& .MuiTabs-indicator': { bgcolor: 'primary.main' },
-        }}
-      >
-        <Tab label={`My Posts (${mypost.length})`} />
-        <Tab label={`Upcoming (${upcoming.length})`} />
-        <Tab label={`History (${history.length})`} />
-      </Tabs>
+      <Box sx={{ maxWidth: 700 }}>
+        <Typography variant="h5" fontWeight={800}>My Rides</Typography>
 
-      {/* My Posts — edit + delete */}
-      {tab === 0 && (
-        <Box>
-          {mypost.length > 0
-            ? renderList(mypost, true, true)
-            : <EmptyState emoji="🚗" message="You haven't posted any rides yet"
-              actionLabel="Post your first ride" actionHref="/offer" />}
-        </Box>
-      )}
+        <Tabs
+          value={tab}
+          onChange={(_, v) => setTab(v)}
+          sx={{
+            mb: 2.5,
+            '& .MuiTab-root': { fontWeight: 600, textTransform: 'none' },
+            '& .Mui-selected': { color: 'primary.main' },
+            '& .MuiTabs-indicator': { bgcolor: 'primary.main' },
+          }}
+        >
+          <Tab label={`Current Ride (${currentRide.length})`} />
+          <Tab label={`Upcoming (${upcoming.length})`} />
+          <Tab label={`My Posts (${mypost.length})`} />
+          <Tab label={`History (${history.length})`} />
+        </Tabs>
 
-      {/* Upcoming — edit + delete */}
-      {tab === 1 && (
-        <Box>
-          {upcoming.length > 0
-            ? renderList(upcoming, true, true)
-            : <EmptyState emoji="🗓️" message="No upcoming rides" actionLabel="Find a ride" actionHref="/find" />}
-        </Box>
-      )}
+        {loading ? (
+          <Box
+            sx={{
+              width: '70%',
+              marginTop: '5rem',
+              display: 'flex',
+              justifyContent: 'center',
+            }}
+          >
+            <CircularProgress size={50} />
+          </Box>
 
-      {/* History — edit/delete only for rides that also exist in mypost or upcoming */}
-      {tab === 2 && (
-        <Box>
-          {history.length > 0
-            ? history.map(ride => {
-              const id = ride._id || ride.id;
-              const isOwned = [...mypost, ...upcoming].some(r => (r._id || r.id) === id);
-              return (
-                <RideCard
-                  key={id}
-                  ride={ride}
-                  showEdit={isOwned && canEdit(ride)}
-                  showDelete={isOwned && canDelete(ride)}
-                  onEdit={setEditRide}
-                  onDelete={setDeleteRide}
-                />
-              );
-            })
-            : <EmptyState emoji="🕰️" message="No past rides yet" />}
-        </Box>
-      )}
+        ) : (
+          <>
+            {/* My Posts — edit + delete */}
+            {tab === 0 && (
+              <Box>
+                {currentRide.length > 0
+                  ? renderList(currentRide, false, false)
+                  : <EmptyState
+                    emoji="🚗"
+                    message="You don't have any active rides at the moment"
+                    actionLabel="Share a Ride"
+                    actionHref="/offer"
+                  />
+                }
+              </Box>
+            )}
+            {/* My Posts — edit + delete */}
+            {tab === 2 && (
+              <Box>
+                {mypost.length > 0
+                  ? renderList(mypost, true, true)
+                  : <EmptyState emoji="🚗" message="You haven't posted any rides yet"
+                    actionLabel="Post your first ride" actionHref="/offer" />}
+              </Box>
+            )}
 
-      {/* Edit Modal — pre-filled with all fields from clicked ride */}
-      {editRide && (
-        <EditRideModal
-          ride={editRide}
-          onSave={handleSave}
-          onClose={() => setEditRide(null)}
-        />
-      )}
+            {/* Upcoming — edit + delete */}
+            {tab === 1 && (
+              <Box>
+                {upcoming.length > 0
+                  ? renderList(upcoming, true, true)
+                  : <EmptyState emoji="🗓️" message="No upcoming rides" actionLabel="Find a ride" actionHref="/find" />}
+              </Box>
+            )}
 
-      {/* Delete Confirm Dialog — calls DELETE API then removes from state */}
-      {deleteRide && (
-        <DeleteConfirmDialog
-          ride={deleteRide}
-          onConfirm={handleDelete}
-          onClose={() => setDeleteRide(null)}
-        />
-      )}
+            {/* History — edit/delete only for rides that also exist in mypost or upcoming */}
+            {tab === 3 && (
+              <Box>
+                {history.length > 0
+                  ? renderList(history, false, false)
+                  : <EmptyState emoji="🕰️" message="No past rides yet" />}
+              </Box>
+            )}
+          </>
+        )}
+        {/* Edit Modal — pre-filled with all fields from clicked ride */}
+        {editRide && (
+          <EditRideModal
+            ride={editRide}
+            onSave={handleEdit}
+            onClose={() => setEditRide(null)}
+          />
+        )}
 
-      <Snackbar
-        open={!!toast}
-        autoHideDuration={3000}
-        onClose={() => setToast('')}
-        message={toast}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-        ContentProps={{ sx: { borderRadius: 2, fontWeight: 600 } }}
-      />
-    </Box>
+        {/* Delete Confirm Dialog — calls DELETE API then removes from state */}
+        {deleteRide && (
+          <DeleteConfirmDialog
+            ride={deleteRide}
+            onConfirm={handleDelete}
+            onClose={() => setDeleteRide(null)}
+          />
+        )}
+      </Box>
+    </>
   );
 };
 
