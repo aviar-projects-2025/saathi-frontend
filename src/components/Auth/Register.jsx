@@ -14,7 +14,7 @@ import {
 } from "@mui/material";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import Api from "../Api";
+import Api from "../../Api";
 import { toast } from "react-toastify";
 
 const Register = () => {
@@ -26,6 +26,7 @@ const Register = () => {
     lastName: Yup.string().required("Last name is required"),
     email: Yup.string().email("Invalid email").required("Email is required"),
     dob: Yup.string().required("Date of birth is required"),
+    referralCode: Yup.string().required('Referral Code is MUST'),
     password: Yup.string()
       .min(6, "Password must be at least 6 characters")
       .required("Password is required"),
@@ -35,9 +36,17 @@ const Register = () => {
     try {
       setServerError("");
 
-      await axios.post(`${Api}/users/`, values);
-      toast.success("Registration Success")
-      navigate("/login");
+      await axios.post(`${Api}/users/`, values)
+        .then((res) => {
+          console.log(res, 'res')
+          toast.success("Registration Success")
+          if (res?.data?.data?.refApprove === "Waiting") {
+            toast.warning("Waiting for approval!")
+            navigate("/waiting-approval");
+          }
+
+        })
+      // navigate("/login");
     } catch (error) {
       setServerError(error.response?.data?.message || "Registration failed");
     } finally {
@@ -94,6 +103,7 @@ const Register = () => {
             dob: "",
             password: "",
             role: "USER",
+            referralCode: "",
           }}
           validationSchema={validationSchema}
           onSubmit={registerSubmit}
@@ -170,6 +180,18 @@ const Register = () => {
                   onBlur={handleBlur}
                   error={touched.password && Boolean(errors.password)}
                   helperText={touched.password && errors.password}
+                />
+
+                <TextField
+                  fullWidth
+                  label="Referral Code"
+                  name="referralCode"
+                  type="text"
+                  value={values.referralCode}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  error={touched.referralCode && Boolean(errors.referralCode)}
+                  helperText={touched.referralCode && errors.referralCode}
                 />
 
                 <Button

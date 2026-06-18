@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import {
   Box, Typography, Grid, Paper, Chip, Avatar, Button,
   Divider, Stack, LinearProgress,
-  TextField
+  TextField,
+  CircularProgress
 } from '@mui/material';
 import GroupsIcon from '@mui/icons-material/Groups';
 import StarIcon from '@mui/icons-material/Star';
@@ -69,6 +70,7 @@ export default function Community() {
   const [media, setMedia] = useState(null);
   const [preview, setPreview] = useState("");
   const [loading, setLoading] = useState(false);
+  const [postLoading, setPostLoading] = useState(false);
   const [communityPosts, setCommunityPosts] = useState([]);
   const user = JSON.parse(localStorage.getItem('user'))
 
@@ -100,7 +102,7 @@ export default function Community() {
         formData.append("postImage", media);
       }
 
-      console.log(formData,'formData')
+      console.log(formData, 'formData')
 
       const res = await axios.post(Api + "/community/", formData, {
         headers: {
@@ -124,6 +126,7 @@ export default function Community() {
 
   const getCommmunityPost = async () => {
     try {
+      setPostLoading(true);
       const data = await axios.get(Api + '/community/')
         .then((res) => {
           console.log(res);
@@ -131,6 +134,8 @@ export default function Community() {
         })
     } catch (error) {
       console.error(error.message);
+    } finally {
+      setPostLoading(false)
     }
   }
 
@@ -305,96 +310,111 @@ export default function Community() {
                   </Button>
                 </Stack>
               </Paper>
-
               {/* Posts */}
-              {communityPosts?.map((post, index) => (
-                <Paper
-                  key={index}
-                  elevation={0}
-                  sx={{
-                    borderRadius: 3,
-                    border: "1px solid #F0E6DC",
-                    mb: 2,
-                    overflow: "hidden",
-                  }}
-                >
-                  <Box sx={{ p: 2 }}>
-                    {/* Header */}
-                    <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5 }}>
-                      <UserAvatar
-                        name={post?.authorId?.firstName}
-                        initials={post.initials}
-                        size={44}
-                        verified={post.verified}
-                      />
+              {postLoading ?
+                <>
+                  <Box
+                    sx={{
+                      width: '100%',
+                      display: 'flex',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <CircularProgress size={50} />
+                  </Box>
+                </>
+                :
+                <>
+                  {communityPosts?.map((post, index) => (
+                    <Paper
+                      key={index}
+                      elevation={0}
+                      sx={{
+                        borderRadius: 3,
+                        border: "1px solid #F0E6DC",
+                        mb: 2,
+                        overflow: "hidden",
+                      }}
+                    >
+                      <Box sx={{ p: 2 }}>
+                        {/* Header */}
+                        <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5 }}>
+                          <UserAvatar
+                            name={post?.authorId?.firstName}
+                            initials={post.initials}
+                            size={44}
+                            verified={post.verified}
+                          />
 
-                      <Box sx={{ flex: 1 }}>
-                        <Typography fontWeight={700} fontSize="0.95rem">
-                          {post?.authorId?.firstName} {post?.authorId?.lastName}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {'tvm'} | {formattedDateTime(post?.createdAt)}
+                          <Box sx={{ flex: 1 }}>
+                            <Typography fontWeight={700} fontSize="0.95rem">
+                              {post?.authorId?.firstName} {post?.authorId?.lastName}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {'tvm'} | {formattedDateTime(post?.createdAt)}
+                            </Typography>
+                          </Box>
+
+                          <MoreHorizIcon sx={{ color: "text.secondary" }} />
+                        </Box>
+
+                        {/* Description */}
+                        <Typography sx={{ mt: 1.5, fontSize: "0.95rem", lineHeight: 1.6 }}>
+                          {post.description}
                         </Typography>
                       </Box>
 
-                      <MoreHorizIcon sx={{ color: "text.secondary" }} />
-                    </Box>
+                      {/* Image */}
+                      {post.postImage && (
+                        <Box
+                          component="img"
+                          src={post.postImage}
+                          alt="community post"
+                          sx={{
+                            width: "100%",
+                            maxHeight: 360,
+                            objectFit: "cover",
+                            display: "block",
+                          }}
+                        />
+                      )}
 
-                    {/* Description */}
-                    <Typography sx={{ mt: 1.5, fontSize: "0.95rem", lineHeight: 1.6 }}>
-                      {post.description}
-                    </Typography>
-                  </Box>
-
-                  {/* Image */}
-                  {post.postImage && (
-                    <Box
-                      component="img"
-                      src={post.postImage}
-                      alt="community post"
-                      sx={{
-                        width: "100%",
-                        maxHeight: 360,
-                        objectFit: "cover",
-                        display: "block",
-                      }}
-                    />
-                  )}
-
-                  {/* Likes Count */}
-                  <Box sx={{ px: 2, py: 1 }}>
-                    {/* <Typography variant="caption" color="text.secondary">
+                      {/* Likes Count */}
+                      <Box sx={{ px: 2, py: 1 }}>
+                        {/* <Typography variant="caption" color="text.secondary">
                       ❤️ {post.likes} likes • {post.comments} comments
                     </Typography> */}
-                  </Box>
+                      </Box>
 
-                  <Divider />
+                      <Divider />
 
-                  {/* Actions */}
-                  <Stack direction="row" sx={{ py: 0.5 }}>
-                    <Button
-                      startIcon={<ThumbUpOffAltIcon />}
-                      sx={{ textTransform: "none", color: "text.secondary" }}
-                    >
-                      Like
-                    </Button>
+                      {/* Actions */}
+                      <Stack direction="row" sx={{ py: 0.5 }}>
+                        <Button
+                          startIcon={<ThumbUpOffAltIcon />}
+                          sx={{ textTransform: "none", color: "text.secondary" }}
+                        >
+                          Like
+                        </Button>
 
-                    <Button
-                      startIcon={<ChatIcon />}
-                      sx={{ textTransform: "none", color: "text.secondary" }}
-                    >
-                      Comment
-                    </Button>
+                        <Button
+                          startIcon={<ChatIcon />}
+                          sx={{ textTransform: "none", color: "text.secondary" }}
+                        >
+                          Comment
+                        </Button>
 
-                    <Button
-                      startIcon={<ShareIcon />}
-                      sx={{ textTransform: "none", color: "text.secondary" }}
-                    >
-                      Share
-                    </Button>
-                  </Stack>
-                </Paper>
-              ))}
+                        <Button
+                          startIcon={<ShareIcon />}
+                          sx={{ textTransform: "none", color: "text.secondary" }}
+                        >
+                          Share
+                        </Button>
+                      </Stack>
+                    </Paper>
+                  ))}
+                </>
+              }
             </Grid>
           </Grid>
         </Box>

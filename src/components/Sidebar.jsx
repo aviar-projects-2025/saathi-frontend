@@ -8,6 +8,9 @@ import RouteIcon from "@mui/icons-material/Route";
 import SettingsIcon from "@mui/icons-material/Settings";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import LogoutIcon from "@mui/icons-material/Logout";
+import PeopleIcon from '@mui/icons-material/People';
+import SendIcon from '@mui/icons-material/Send';
+import HandshakeIcon from '@mui/icons-material/Handshake';
 
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -16,7 +19,8 @@ const menuItems = [
   { label: "Offer Ride", icon: <DirectionsCarIcon />, link: "/offer-ride" },
   { label: "Find Ride", icon: <SearchIcon />, link: "/find-ride" },
   { label: "My Rides", icon: <RouteIcon />, link: "/myride" },
-  { label: "Refer", icon: <SettingsIcon />, link: "/settings" },
+  { label: "Refer", icon: <SendIcon />, link: "/settings" },
+  { label: "My Referrals", icon: <HandshakeIcon />, link: "/my-referalls" },
   { label: "Settings", icon: <SettingsIcon />, link: "/settings" },
 ];
 
