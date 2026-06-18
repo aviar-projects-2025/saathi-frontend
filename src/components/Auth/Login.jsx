@@ -35,16 +35,19 @@ const Login = () => {
 
     const loginSubmit = async (values) => {
         try {
-           const data =  await login(values);
-           toast.success("Login Success")
-           console.log(data.user.role,'role')
-            if (data.user.role === ROLES.ADMIN) {
-                navigate("/admin/dashboard");
+            const data = await login(values);
+            toast.success("Login Success")
+            if (data?.user.refApprove === "Approved") {
+                if (data.user.role === ROLES.ADMIN) {
+                    navigate("/admin/dashboard");
+                } else {
+                    navigate("/community");
+                }
             } else {
-                navigate("/community");
+                navigate("/waiting-approval")
             }
         } catch (error) {
-            console.log(error);
+            toast.error(error.message)
         }
     };
     return (

@@ -6,7 +6,7 @@ import ROLES from "./context/Role";
 // Public Pages
 import Web from "./pages/Web.jsx";
 import Login from "./components/Auth/Login.jsx";
-import Register from "./pages/Register.jsx";
+import Register from "./components/Auth/Register.jsx";
 import Unauthorized from "./pages/Unauthorized.jsx";
 import PublicRoute from "./routes/PublicRoute.jsx";
 
@@ -30,6 +30,8 @@ import { ToastContainer } from "react-toastify";
 import AdminLayout from "./components/AdminLayout.jsx";
 import MyRides from "./pages/MyRides.jsx";
 import UserLayout from "./components/UserLayout.jsx";
+import WaitingApproval from "./components/Auth/WaitingApproval.jsx";
+import MyReferrals from "./pages/referral/MyReferrals.jsx";
 
 function App() {
   return (
@@ -46,6 +48,7 @@ function App() {
         {/* Public auth routes */}
         <Route element={<PublicRoute />}>
           <Route path="/login" element={<Login />} />
+          <Route path="/waiting-approval" element={<WaitingApproval />} />
           <Route path="/register" element={<Register />} />
         </Route>
 
@@ -73,6 +76,7 @@ function App() {
           <Route element={<UserLayout />}>
             <Route path="/invite" element={<Invite />} />
             <Route path="/community" element={<Community />} />
+            <Route path="/my-referalls" element={<MyReferrals />} />
           </Route>
         </Route>
 
