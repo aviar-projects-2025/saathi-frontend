@@ -35,18 +35,14 @@ const Register = () => {
   const registerSubmit = async (values, { setSubmitting }) => {
     try {
       setServerError("");
-
-      await axios.post(`${Api}/users/`, values)
+      axios.post(`${Api}/users/`, values)
         .then((res) => {
-          console.log(res, 'res')
-          toast.success("Registration Success")
+          toast.success("Registration Success - Waiting for approval!");
+          console.log(res)
           if (res?.data?.data?.refApprove === "Waiting") {
-            toast.warning("Waiting for approval!")
             navigate("/waiting-approval");
           }
-
         })
-      // navigate("/login");
     } catch (error) {
       setServerError(error.response?.data?.message || "Registration failed");
     } finally {
