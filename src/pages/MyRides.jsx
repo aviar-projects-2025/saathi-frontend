@@ -604,11 +604,12 @@ const MyRides = () => {
       const currentDateTime = new Date();
 
       try {
-        const response = await axios.get(`${Api}/rides/`);
+        const response = await axios.get(`${Api}/rides/get`);
 
         const all = (response.data.data || []).sort(
           (a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
         );
+
 
         console.log("All ===> ", all);
 
