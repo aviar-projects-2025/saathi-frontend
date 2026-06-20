@@ -97,21 +97,33 @@ const MyReferrals = () => {
 
     return (
         <PageLayout>
-            <Box sx={{ maxWidth: 900, mx: "auto" }}>
-                <Typography variant="h5" fontWeight={800}>
+            <Box sx={{ maxWidth: 900, mx: "auto", px: { xs: 1.5, sm: 2, md: 0 } }}>
+                <Typography variant="h5" fontWeight={800} sx={{ fontSize: { xs: 20, sm: 24 } }}>
                     My Referrals
                 </Typography>
 
-                <Typography sx={{ fontSize: 13 }} color="text.secondary" mb={3}>
+                <Typography sx={{ fontSize: 13 }} color="text.secondary" sx={{ marginTop: '15px' }}>
                     Review and approve members who joined using your referral code.
                 </Typography>
 
                 <Tabs
                     value={tab}
                     onChange={(_, v) => setTab(v)}
+                    variant="scrollable"
+                    scrollButtons="auto"
+                    allowScrollButtonsMobile
                     sx={{
-                        mb: 2.5,
-                        '& .MuiTab-root': { fontWeight: 600, textTransform: 'none' },
+                        mb: 3.5,
+                        mt: 2.5,
+                        minHeight: { xs: 36, sm: 48 },
+                        '& .MuiTab-root': {
+                            fontWeight: 600,
+                            textTransform: 'none',
+                            fontSize: { xs: 12, sm: 14 },
+                            minHeight: { xs: 36, sm: 48 },
+                            px: { xs: 1.5, sm: 2 },
+                            minWidth: { xs: "auto", sm: 90 },
+                        },
                         '& .Mui-selected': { color: 'primary.main' },
                         '& .MuiTabs-indicator': { bgcolor: 'primary.main' },
                     }}
@@ -140,8 +152,10 @@ const MyReferrals = () => {
                                     referrals?.length <= 0 ?
                                         <Box
                                             sx={{
-                                                py: 8,
-                                                textAlign: "center",
+                                                py: { xs: 5, sm: 8 },
+                                                px: 2,
+                                                textAlign: { xs: "center", sm: "start" },
+                                                
                                                 // border: "1px dashed #E0E0E0",
                                                 // borderRadius: 3,
                                                 // bgcolor: "#FAFAFA",
@@ -151,6 +165,7 @@ const MyReferrals = () => {
                                                 variant="h6"
                                                 fontWeight={700}
                                                 color="text.secondary"
+                                                sx={{ fontSize: { xs: 16, sm: 18 } }}
                                             >
                                                 No Referrals Found
                                             </Typography>
@@ -158,7 +173,7 @@ const MyReferrals = () => {
                                             <Typography
                                                 variant="body2"
                                                 color="text.secondary"
-                                                sx={{ mt: 1 }}
+                                                sx={{ mt: 1, fontSize: { xs: 13, sm: 14 } }}
                                             >
                                                 You don't have any referral requests at the moment.
                                             </Typography>
@@ -174,7 +189,7 @@ const MyReferrals = () => {
                                                     key={user._id}
                                                     elevation={0}
                                                     sx={{
-                                                        p: 2.5,
+                                                        p: { xs: 1.75, sm: 2.5 },
                                                         borderRadius: 3,
                                                         border: "1px solid #F0E6DC",
                                                     }}
@@ -187,11 +202,26 @@ const MyReferrals = () => {
                                                             justifyContent: 'space-between'
                                                         }}
                                                     >
-                                                        <Stack direction="row" spacing={2} alignItems="center">
-                                                            <Avatar sx={{ bgcolor: "#FFF0E3", color: "#E8650A" }}></Avatar>
-                                                            <Box>
-                                                                <Typography fontWeight={700}>{user.firstName} {user.lastName}</Typography>
-                                                                <Typography variant="body2" color="text.secondary">
+                                                        <Stack direction="row" spacing={2} alignItems="center" sx={{ minWidth: 0, width: { xs: "100%", sm: "auto" } }}>
+                                                            <Avatar sx={{ bgcolor: "#FFF0E3", color: "#E8650A", flexShrink: 0 }}></Avatar>
+                                                            <Box sx={{ minWidth: 0 }}>
+                                                                <Typography
+                                                                    fontWeight={700}
+                                                                    sx={{
+                                                                        fontSize: { xs: 14, sm: 16 },
+                                                                        overflowWrap: "break-word",
+                                                                    }}
+                                                                >
+                                                                    {user.firstName} {user.lastName}
+                                                                </Typography>
+                                                                <Typography
+                                                                    variant="body2"
+                                                                    color="text.secondary"
+                                                                    sx={{
+                                                                        fontSize: { xs: 12, sm: 14 },
+                                                                        wordBreak: "break-word",
+                                                                    }}
+                                                                >
                                                                     {user.email}
                                                                 </Typography>
 
@@ -210,7 +240,13 @@ const MyReferrals = () => {
                                                             </Box>
                                                         </Stack>
 
-                                                        <Stack direction="row" spacing={1}>
+                                                        <Stack
+                                                            direction="row"
+                                                            spacing={1}
+                                                            sx={{
+                                                                width: { xs: "100%", sm: "auto" },
+                                                            }}
+                                                        >
                                                             <Button
                                                                 variant="contained"
                                                                 startIcon={<CheckCircleIcon />}
@@ -219,9 +255,11 @@ const MyReferrals = () => {
                                                                 }}
                                                                 sx={{
                                                                     bgcolor: "#16a34a",
-                                                                    width: "100px",
+                                                                    width: { xs: "50%", sm: "100px" },
                                                                     height: "30px",
                                                                     textTransform: "none",
+                                                                    fontSize: { xs: 12, sm: 14 },
+                                                                    "&:hover": { bgcolor: "#15803d" },
                                                                 }}
                                                             >
                                                                 Approve
@@ -235,9 +273,10 @@ const MyReferrals = () => {
                                                                     declineUser(user?._id);
                                                                 }}
                                                                 sx={{
-                                                                    width: "100px",
+                                                                    width: { xs: "50%", sm: "100px" },
                                                                     height: "30px",
                                                                     textTransform: "none",
+                                                                    fontSize: { xs: 12, sm: 14 },
                                                                 }}
                                                             >
                                                                 Decline
@@ -279,8 +318,9 @@ const MyReferrals = () => {
                                     <>
                                         <Box
                                             sx={{
-                                                py: 8,
-                                                textAlign: "center",
+                                                py: { xs: 5, sm: 8 },
+                                                px: 2,
+                                                textAlign: { xs: "center", sm: "start" },
                                                 // border: "1px dashed #E0E0E0",
                                                 // borderRadius: 3,
                                                 // bgcolor: "#FAFAFA",
@@ -290,6 +330,7 @@ const MyReferrals = () => {
                                                 variant="h6"
                                                 fontWeight={700}
                                                 color="text.secondary"
+                                                sx={{ fontSize: { xs: 16, sm: 18 } }}
                                             >
                                                 No Referrals Found
                                             </Typography>
@@ -297,7 +338,7 @@ const MyReferrals = () => {
                                             <Typography
                                                 variant="body2"
                                                 color="text.secondary"
-                                                sx={{ mt: 1 }}
+                                                sx={{ mt: 1, fontSize: { xs: 13, sm: 14 } }}
                                             >
                                                 You don't have any referrals
                                             </Typography>
@@ -314,7 +355,7 @@ const MyReferrals = () => {
                                                 key={user._id}
                                                 elevation={0}
                                                 sx={{
-                                                    p: 2.5,
+                                                    p: { xs: 1.75, sm: 2.5 },
                                                     borderRadius: 3,
                                                     border: "1px solid #F0E6DC",
                                                 }}
@@ -327,11 +368,26 @@ const MyReferrals = () => {
                                                         justifyContent: 'space-between'
                                                     }}
                                                 >
-                                                    <Stack direction="row" spacing={2} alignItems="center">
-                                                        <Avatar sx={{ bgcolor: "#FFF0E3", color: "#E8650A" }}></Avatar>
-                                                        <Box>
-                                                            <Typography fontWeight={700}>{user.firstName} {user.lastName}</Typography>
-                                                            <Typography variant="body2" color="text.secondary">
+                                                    <Stack direction="row" spacing={2} alignItems="center" sx={{ minWidth: 0, width: { xs: "100%", sm: "auto" } }}>
+                                                        <Avatar sx={{ bgcolor: "#FFF0E3", color: "#E8650A", flexShrink: 0 }}></Avatar>
+                                                        <Box sx={{ minWidth: 0 }}>
+                                                            <Typography
+                                                                fontWeight={700}
+                                                                sx={{
+                                                                    fontSize: { xs: 14, sm: 16 },
+                                                                    overflowWrap: "break-word",
+                                                                }}
+                                                            >
+                                                                {user.firstName} {user.lastName}
+                                                            </Typography>
+                                                            <Typography
+                                                                variant="body2"
+                                                                color="text.secondary"
+                                                                sx={{
+                                                                    fontSize: { xs: 12, sm: 14 },
+                                                                    wordBreak: "break-word",
+                                                                }}
+                                                            >
                                                                 {user.email}
                                                             </Typography>
 
