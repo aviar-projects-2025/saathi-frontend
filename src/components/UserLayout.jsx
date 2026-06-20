@@ -2,6 +2,7 @@ import { Box } from "@mui/material";
 import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
+import TopNav from "./Navbar";
 
 const userMenus = [
   { label: "Home", path: "/home" },
@@ -23,7 +24,8 @@ const UserLayout = () => {
         flexDirection: "column",
       }}
     >
-      <Header />
+      {/* <Header /> */}
+      <TopNav />
 
       <Box
         sx={{

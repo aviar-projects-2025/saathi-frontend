@@ -35,13 +35,14 @@ const MyReferrals = () => {
                 Api + `/referrals/${user?.id}`
             );
 
+            console.log(res, 'res')
+
             const waitingReferrals = res.data.data.filter(
                 (item) => item.refApprove === "Waiting"
             );
             const approvedReferrals = res.data.data.filter(
                 (item) => item.refApprove === "Approved"
             );
-
             setMyReferrals(waitingReferrals);
             setApprovedReferrals(approvedReferrals)
         } catch (error) {
@@ -86,6 +87,7 @@ const MyReferrals = () => {
             axios.delete(Api + `/referrals/${id}`)
                 .then((res) => {
                     console.log(res, 'res')
+                    getReferrals()
                 })
         } catch (error) {
 
@@ -135,7 +137,7 @@ const MyReferrals = () => {
                             :
                             <>
                                 {
-                                    referrals?.length >= 0 ?
+                                    referrals?.length <= 0 ?
                                         <Box
                                             sx={{
                                                 py: 8,
@@ -273,33 +275,67 @@ const MyReferrals = () => {
                             </>
                             :
                             <>
-                                {approvedReferrals?.map((user) => (
-                                    <Paper
-                                        key={user._id}
-                                        elevation={0}
-                                        sx={{
-                                            p: 2.5,
-                                            borderRadius: 3,
-                                            border: "1px solid #F0E6DC",
-                                        }}
-                                    >
-                                        <Stack
-                                            direction={{ xs: "column", sm: "row" }}
-                                            spacing={2}
-                                            alignItems={{ xs: "flex-start", sm: "center" }}
+                                {approvedReferrals.length <= 0 ?
+                                    <>
+                                        <Box
                                             sx={{
-                                                justifyContent: 'space-between'
+                                                py: 8,
+                                                textAlign: "center",
+                                                // border: "1px dashed #E0E0E0",
+                                                // borderRadius: 3,
+                                                // bgcolor: "#FAFAFA",
                                             }}
                                         >
-                                            <Stack direction="row" spacing={2} alignItems="center">
-                                                <Avatar sx={{ bgcolor: "#FFF0E3", color: "#E8650A" }}></Avatar>
-                                                <Box>
-                                                    <Typography fontWeight={700}>{user.firstName} {user.lastName}</Typography>
-                                                    <Typography variant="body2" color="text.secondary">
-                                                        {user.email}
-                                                    </Typography>
+                                            <Typography
+                                                variant="h6"
+                                                fontWeight={700}
+                                                color="text.secondary"
+                                            >
+                                                No Referrals Found
+                                            </Typography>
 
-                                                    {/* <Stack direction="row" spacing={1} mt={1}>
+                                            <Typography
+                                                variant="body2"
+                                                color="text.secondary"
+                                                sx={{ mt: 1 }}
+                                            >
+                                                You don't have any referrals
+                                            </Typography>
+
+                                            <Button>
+                                                Refer Now
+                                            </Button>
+                                        </Box>
+                                    </>
+                                    :
+                                    <>
+                                        {approvedReferrals?.map((user) => (
+                                            <Paper
+                                                key={user._id}
+                                                elevation={0}
+                                                sx={{
+                                                    p: 2.5,
+                                                    borderRadius: 3,
+                                                    border: "1px solid #F0E6DC",
+                                                }}
+                                            >
+                                                <Stack
+                                                    direction={{ xs: "column", sm: "row" }}
+                                                    spacing={2}
+                                                    alignItems={{ xs: "flex-start", sm: "center" }}
+                                                    sx={{
+                                                        justifyContent: 'space-between'
+                                                    }}
+                                                >
+                                                    <Stack direction="row" spacing={2} alignItems="center">
+                                                        <Avatar sx={{ bgcolor: "#FFF0E3", color: "#E8650A" }}></Avatar>
+                                                        <Box>
+                                                            <Typography fontWeight={700}>{user.firstName} {user.lastName}</Typography>
+                                                            <Typography variant="body2" color="text.secondary">
+                                                                {user.email}
+                                                            </Typography>
+
+                                                            {/* <Stack direction="row" spacing={1} mt={1}>
                                             <Chip size="small" label={user.city} />
                                             <Chip
                                                 size="small"
@@ -311,11 +347,12 @@ const MyReferrals = () => {
                                                 }}
                                             />
                                         </Stack> */}
-                                                </Box>
-                                            </Stack>
-                                        </Stack>
-                                    </Paper>
-                                ))}
+                                                        </Box>
+                                                    </Stack>
+                                                </Stack>
+                                            </Paper>
+                                        ))}
+                                    </>}
                             </>}
                     </Stack>
                 )}
