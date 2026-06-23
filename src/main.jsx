@@ -5,12 +5,15 @@ import "./index.css";
 
 import { AuthProvider } from "./context/AuthContext";
 import { AppProvider } from "./context/AppContext";
+import { ReferralProvider } from "./context/ReferralContext";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <AuthProvider>
       <AppProvider>
-        <App />
+        <ReferralProvider>
+          <App />
+        </ReferralProvider>
       </AppProvider>
     </AuthProvider>
   </React.StrictMode>

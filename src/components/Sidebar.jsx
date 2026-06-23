@@ -1,5 +1,5 @@
-import React from "react";
-import { Paper, Stack, Typography, Box } from "@mui/material";
+import React, { useState } from "react";
+import { Paper, Stack, Typography, Box, Badge } from "@mui/material";
 
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import SearchIcon from "@mui/icons-material/Search";
@@ -10,19 +10,16 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import HandshakeIcon from "@mui/icons-material/Handshake";
 
 import { useLocation, useNavigate } from "react-router-dom";
+import { useReferral } from "../context/ReferralContext";
 
-const menuItems = [
-  { label: "Community", icon: <DashboardIcon />, link: "/community" },
-  { label: "Offer Ride", icon: <DirectionsCarIcon />, link: "/offer-ride" },
-  { label: "Find Ride", icon: <SearchIcon />, link: "/find-ride" },
-  { label: "My Rides", icon: <RouteIcon />, link: "/myride" },
-  { label: "My Referrals", icon: <HandshakeIcon />, link: "/my-referalls" },
-  { label: "Settings", icon: <SettingsIcon />, link: "/settings" },
-];
+
 
 export default function Sidebar({ onItemClick, isMobile = false }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { pendingReferralCount } = useReferral();
+
+  console.log(pendingReferralCount,)
 
   const goTo = (link) => {
     navigate(link);
@@ -35,13 +32,41 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
     onItemClick?.();
   };
 
+  const menuItems = [
+    { label: "Community", icon: <DashboardIcon />, link: "/community" },
+    { label: "Offer Ride", icon: <DirectionsCarIcon />, link: "/offer-ride" },
+    { label: "Find Ride", icon: <SearchIcon />, link: "/find-ride" },
+    { label: "My Rides", icon: <RouteIcon />, link: "/myride" },
+    {
+      label: (
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <span>My Referrals</span>
+          {pendingReferralCount > 0 && (
+            <Typography
+              sx={{
+                fontSize: 12,
+                fontWeight: 700,
+                color: "#ff0000ff",
+              }}
+            >
+              ({pendingReferralCount})
+            </Typography>
+          )}
+        </Box>
+      ),
+      icon: <HandshakeIcon />,
+      link: "/my-referalls",
+    },
+    { label: "Settings", icon: <SettingsIcon />, link: "/settings" },
+  ];
+
   return (
     <Paper
       elevation={0}
       sx={{
         width: isMobile ? "100%" : 220,
         minWidth: isMobile ? "100%" : 220,
-        height: isMobile ? "100dvh" : "100%",
+        height: isMobile ? "100dvh" : "98%",
         bgcolor: "#ffffff",
         borderRadius: 0,
         p: 2,
@@ -52,7 +77,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
       }}
     >
       <Stack spacing={1}>
-        <Typography
+        {/* <Typography
           sx={{
             fontSize: 13,
             fontWeight: 800,
@@ -62,7 +87,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
           }}
         >
           Saathi Menu
-        </Typography>
+        </Typography> */}
 
         {menuItems.map((item) => {
           const active = location.pathname === item.link;

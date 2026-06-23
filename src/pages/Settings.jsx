@@ -109,7 +109,7 @@ const Settings = () => {
               Your referral code
             </Typography>
 
-            <Chip label={user?.referralCode || "SAATHI-CODE"} sx={{ fontWeight: 700, mb: 2 }} />
+            <Chip label={user?.referralCode || "SAATHI-CODE"} sx={{ fontWeight: 700, mb: 2, mt:1 }} />
 
             <Stack direction="row" spacing={1}>
               <Button variant="contained" sx={{ bgcolor: "#E8650A", textTransform: "none" }}>

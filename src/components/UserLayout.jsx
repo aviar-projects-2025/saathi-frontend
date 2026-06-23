@@ -17,7 +17,7 @@ const UserLayout = () => {
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
-        bgcolor: "#fffaf5",
+        bgcolor: "#fbfaf8ff",
       }}
     >
       <TopNav onMenuClick={() => setMobileOpen(true)} />
