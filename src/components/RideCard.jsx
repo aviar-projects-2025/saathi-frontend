@@ -30,6 +30,8 @@ import LuggageIcon from "@mui/icons-material/Luggage";
 import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import CloseIcon from "@mui/icons-material/Close";
+
 
 import Api from "../Api";
 import { toast } from "react-toastify";
@@ -363,10 +365,21 @@ export default function RideCard({ ride }) {
             },
           }}
         >
-          <DialogTitle>
+
+          <DialogTitle
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
             {selectedRide?.modeOfTravel === "Flight"
               ? "Request Travel Companion"
               : "Request Seat"}
+
+            <IconButton onClick={() => setOpenRequestModal(false)}>
+              <CloseIcon />
+            </IconButton>
           </DialogTitle>
 
           <DialogContent>
