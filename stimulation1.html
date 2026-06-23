@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>கணித வகுத்தல் சிமுலேஷன் - நகராட்சி பெண்கள் அரசு மாதிரி மேல் நிலை பள்ளி</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Mukta+Malar:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Mukta Malar', sans-serif;
+            background-color: #f8fafc;
+        }
+        .bounce-custom {
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        .item-ball {
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Header Section -->
+    <header class="bg-gradient-to-r from-teal-600 to-emerald-700 text-white shadow-lg py-5 px-6 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-3">
+            <div class="text-center md:text-left">
+                <h1 class="text-2xl md:text-3xl font-bold tracking-wide">நகராட்சி பெண்கள் அரசு மாதிரி மேல் நிலை பள்ளி</h1>
+                <p class="text-emerald-100 text-xs md:text-sm mt-1 flex items-center justify-center md:justify-start gap-2">
+                    <i class="fa-solid fa-calculator"></i> கணிதச் செயல்விளக்கம்: எளிய வகுத்தல் கற்றல் அரங்கம் (6, 7 & 8-ஆம் வகுப்பு)
+                </p>
+            </div>
+            <div class="bg-white/10 px-4 py-2 rounded-xl text-center backdrop-blur-md border border-white/20">
+                <span class="text-[10px] uppercase tracking-wider block opacity-75">உருவாக்கியவர்</span>
+                <span class="font-bold text-sm">3 Members Team</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Grid -->
+    <main class="max-w-7xl mx-auto p-4 md:p-6 flex-grow w-full grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Left Sidebar: Controls & Progress (4 Columns) -->
+        <section class="lg:col-span-4 flex flex-col gap-6">
+            
+            <!-- Learning Mode Card -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
+                <h3 class="text-base font-bold text-slate-700 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-map text-teal-600"></i> வகுத்தல் வழிப்பயணம்
+                </h3>
+                <div class="grid grid-cols-1 gap-2.5">
+                    <button id="btn-learn-mode" onclick="switchMode('learn')" class="w-full text-left p-3.5 rounded-xl border-2 border-teal-600 bg-teal-50 text-teal-900 font-bold flex items-center justify-between transition-all">
+                        <span class="flex items-center gap-2">
+                            <span class="bg-teal-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">1</span>
+                            வகுத்தல் என்றால் என்ன?
+                        </span>
+                        <i class="fa-solid fa-circle-play text-teal-600"></i>
+                    </button>
+                    <button id="btn-toy-mode" onclick="switchMode('toy')" class="w-full text-left p-3.5 rounded-xl border border-slate-200 hover:border-teal-300 hover:bg-slate-50 text-slate-700 font-bold flex items-center justify-between transition-all">
+                        <span class="flex items-center gap-2">
+                            <span class="bg-slate-200 text-slate-700 w-6 h-6 rounded-full flex items-center justify-center text-xs">2</span>
+                            பங்கிட்டுப் பழகு (Visual Game)
+                        </span>
+                        <i class="fa-solid fa-candy-cane text-pink-500"></i>
+                    </button>
+                    <button id="btn-challenge-mode" onclick="switchMode('challenge')" class="w-full text-left p-3.5 rounded-xl border border-slate-200 hover:border-teal-300 hover:bg-slate-50 text-slate-700 font-bold flex items-center justify-between transition-all">
+                        <span class="flex items-center gap-2">
+                            <span class="bg-slate-200 text-slate-700 w-6 h-6 rounded-full flex items-center justify-center text-xs">3</span>
+                            50-கேள்விகள் சவால்
+                        </span>
+                        <span class="flex items-center gap-1">
+                            <span class="bg-amber-100 text-amber-800 text-[10px] px-2 py-0.5 rounded-full font-bold">50 Levels</span>
+                            <i class="fa-solid fa-trophy text-amber-500"></i>
+                        </span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Scorecard & Progress -->
+            <div class="bg-gradient-to-br from-slate-900 to-teal-950 text-white p-5 rounded-2xl shadow-lg">
+                <h3 class="text-xs font-bold text-teal-300 uppercase tracking-widest mb-3">உங்களின் தற்போதைய முன்னேற்றம்</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-white/10 p-3.5 rounded-xl text-center">
+                        <span class="text-[11px] text-slate-300 block">நட்சத்திரங்கள்</span>
+                        <span id="score-stars" class="text-2xl font-black text-amber-400">⭐⭐ 0</span>
+                    </div>
+                    <div class="bg-white/10 p-3.5 rounded-xl text-center">
+                        <span class="text-[11px] text-slate-300 block">வென்ற நிலைகள்</span>
+                        <span id="completed-levels" class="text-2xl font-black text-emerald-400">0/50</span>
+                    </div>
+                </div>
+                <!-- Progress Line -->
+                <div class="mt-4">
+                    <div class="flex justify-between text-xs text-slate-300 mb-1">
+                        <span>ஒட்டுமொத்தப் பயிற்சி</span>
+                        <span id="progress-percent" class="font-bold">0%</span>
+                    </div>
+                    <div class="w-full bg-white/20 rounded-full h-2.5 overflow-hidden">
+                        <div id="progress-bar-fill" class="bg-gradient-to-r from-emerald-400 to-teal-300 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Custom Sandbox (Teacher Friendly Input) -->
+            <div id="sandbox-card" class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
+                <h3 class="text-base font-bold text-slate-700 mb-1 flex items-center gap-2">
+                    <i class="fa-solid fa-chalkboard-user text-sky-600"></i> ஆசிரியர் வகுப்பறை பலகை
+                </h3>
+                <p class="text-xs text-slate-500 mb-4">ஆசிரியர்கள் வகுப்பறையில் ஏதேனும் இரு எண்களைக் கொடுத்து மாணவிகளுக்குப் பங்கிட்டுக் காட்டலாம்.</p>
+                
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">மொத்தப் பொருட்கள்:</label>
+                            <input type="number" id="sandbox-dividend" min="1" max="100" value="12" class="w-full p-2 border rounded-lg text-center font-bold text-slate-700 bg-slate-50 focus:ring-2 focus:ring-teal-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">பங்கிட வேண்டிய நபர்கள்:</label>
+                            <input type="number" id="sandbox-divisor" min="1" max="10" value="4" class="w-full p-2 border rounded-lg text-center font-bold text-slate-700 bg-slate-50 focus:ring-2 focus:ring-teal-500 outline-none">
+                        </div>
+                    </div>
+
+                    <button onclick="startSandbox()" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 px-4 rounded-xl shadow-md transition-colors text-xs uppercase tracking-wider flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> பங்கிட்டுக் காட்டு
+                    </button>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Right: Primary Interactive Stage (8 Columns) -->
+        <section class="lg:col-span-8 flex flex-col gap-6">
+            
+            <!-- PANEL 1: LEARN MODE -->
+            <div id="panel-learn" class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col gap-6">
+                <div class="border-b pb-4">
+                    <span class="bg-teal-100 text-teal-800 text-[10px] px-2.5 py-1 rounded-full font-bold uppercase tracking-widest">நிலை 1: அடிப்படைகள்</span>
+                    <h2 class="text-xl md:text-2xl font-bold text-slate-800 mt-2">வகுத்தல் என்றால் என்ன?</h2>
+                    <p class="text-slate-600 text-xs md:text-sm mt-1">வகுத்தல் என்பது ஒரு குறிப்பிட்ட பொருட்களைப் பலருக்கு **சமமாகப் பங்கிட்டு அளிப்பதாகும்**. இதனை எளிய வரைபட வடிவில் காண்போம்.</p>
+                </div>
+
+                <!-- Story Analogy -->
+                <div class="bg-amber-50/70 p-5 rounded-2xl border border-amber-100 flex flex-col gap-4">
+                    <div class="flex items-center gap-3">
+                        <span class="text-3xl">🍎</span>
+                        <div>
+                            <h4 class="font-bold text-amber-900 text-sm md:text-base">ஒரு சிறிய கதை: ஆப்பிள் பகிர்வு</h4>
+                            <p class="text-xs text-amber-800">எங்களிடம் <span class="font-bold text-teal-700">6 சுவையான ஆப்பிள்கள்</span> உள்ளன. அவற்றை <span class="font-bold text-indigo-700">2 மாணவிகளுக்குச்</span> சமமாகப் பங்கிட வேண்டும்.</p>
+                        </div>
+                    </div>
+
+                    <!-- Steps of Sharing Animation simulation -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-center mt-2">
+                        <div class="bg-white p-3.5 rounded-xl shadow-sm border border-slate-100">
+                            <span class="text-xl font-bold block text-slate-400 mb-1">படி 1</span>
+                            <span class="text-2xl block mb-2">🍎🍎🍎🍎🍎🍎</span>
+                            <p class="text-xs font-bold text-slate-700">மொத்த ஆப்பிள்கள் = 6</p>
+                            <span class="text-[10px] text-slate-400 block mt-1">(வகுபடும் எண் / Dividend)</span>
+                        </div>
+                        <div class="bg-white p-3.5 rounded-xl shadow-sm border border-slate-100">
+                            <span class="text-xl font-bold block text-slate-400 mb-1">படி 2</span>
+                            <div class="flex justify-center gap-3 text-xl mb-2">
+                                <span>👧</span> <span>👧</span>
+                            </div>
+                            <p class="text-xs font-bold text-slate-700">மாணவிகள் எண்ணிக்கை = 2</p>
+                            <span class="text-[10px] text-slate-400 block mt-1">(வகுக்கும் எண் / Divisor)</span>
+                        </div>
+                        <div class="bg-white p-3.5 rounded-xl shadow-sm border border-slate-100 border-emerald-300 bg-emerald-50/20">
+                            <span class="text-xl font-bold block text-emerald-500 mb-1">படி 3</span>
+                            <div class="flex justify-center gap-6 text-sm mb-2">
+                                <span>👧 <br> 🍎🍎🍎</span>
+                                <span>👧 <br> 🍎🍎🍎</span>
+                            </div>
+                            <p class="text-xs font-bold text-emerald-800">ஒவ்வொருவருக்கும் = 3</p>
+                            <span class="text-[10px] text-emerald-500 block mt-1">(ஈவு விடை / Quotient)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Classroom interactive buttons -->
+                <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 flex flex-col md:flex-row justify-between items-center gap-3">
+                    <p class="text-xs text-indigo-950 font-medium">வார்த்தைகள் இல்லாமல் விளையாட்டு முறையில் பங்கிடத் தயாரா?</p>
+                    <button onclick="switchMode('toy')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg shadow text-xs flex items-center gap-1 transition-all">
+                        விளையாடச் செல்வோம் <i class="fa-solid fa-circle-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- PANEL 2: TOY SHOP GAME MODE (VISUAL GAME) -->
+            <div id="panel-toy" class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col gap-6 hidden">
+                <div class="border-b pb-4">
+                    <span class="bg-pink-100 text-pink-800 text-[10px] px-2.5 py-1 rounded-full font-bold uppercase tracking-widest">நிலை 2: பங்கிட்டுப் பழகு</span>
+                    <h2 class="text-xl md:text-2xl font-bold text-slate-800 mt-2">உன் கைகளால் பங்கிடு!</h2>
+                    <p class="text-slate-600 text-xs md:text-sm mt-1">பொருட்களைக் கூடைகளில் போட்டு வகுத்தலை உனக்கேற்றவாறு சோதித்துப் பார்.</p>
+                </div>
+
+                <!-- Simulation Interactive Area -->
+                <div class="bg-slate-100 p-6 rounded-2xl border border-slate-200">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-xs text-slate-500 font-bold">விளையாட்டுப் பலகை (Active Simulation Area)</span>
+                        <div class="flex gap-2">
+                            <button onclick="addSimulationItems(1)" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-xs font-bold px-2.5 py-1.5 rounded-lg border border-emerald-200"><i class="fa-solid fa-plus"></i> பொருள் சேர்</button>
+                            <button onclick="addSimulationBaskets(1)" class="bg-purple-100 hover:bg-purple-200 text-purple-800 text-xs font-bold px-2.5 py-1.5 rounded-lg border border-purple-200"><i class="fa-solid fa-plus"></i> கூடை சேர்</button>
+                            <button onclick="resetSimulation()" class="bg-rose-100 hover:bg-rose-200 text-rose-800 text-xs font-bold px-2.5 py-1.5 rounded-lg border border-rose-200"><i class="fa-solid fa-rotate-left"></i> முதலில் இருந்து</button>
+                        </div>
+                    </div>
+
+                    <!-- Items Pool -->
+                    <div class="mb-6">
+                        <h4 class="text-xs font-bold text-slate-500 mb-2">மொத்தப் பொருட்கள் (<span id="sim-total-count" class="text-emerald-700">12</span> மிட்டாய்கள் 🍬)</h4>
+                        <div id="sim-items-container" class="flex flex-wrap gap-2.5 p-4 bg-white rounded-xl border border-dashed border-slate-300 min-h-[80px]">
+                            <!-- Items populated here -->
+                        </div>
+                    </div>
+
+                    <!-- Baskets Pool -->
+                    <div>
+                        <h4 class="text-xs font-bold text-slate-500 mb-2">பகிர்ந்தளிக்க வேண்டிய கூடைகள் (<span id="sim-baskets-count" class="text-purple-700">3</span> கூடைகள் 🧺)</h4>
+                        <div id="sim-baskets-container" class="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                            <!-- Baskets populated here -->
+                        </div>
+                    </div>
+
+                    <!-- Leftovers and results -->
+                    <div class="mt-6 p-4 bg-white rounded-xl border border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div class="text-xs text-slate-600">
+                            ஈவு (ஒவ்வொரு கூடையில் உள்ள மிட்டாய்): <span id="sim-quotient-text" class="font-bold text-emerald-700 text-sm">0</span> <br>
+                            மீதி (கூடையில் சேராத மிட்டாய்): <span id="sim-remainder-text" class="font-bold text-rose-600 text-sm">0</span>
+                        </div>
+                        <button onclick="animateSharing()" class="bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-bold py-2.5 px-6 rounded-xl shadow-md text-xs uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-shuffle"></i> தானியங்கிப் பகிர்வு (Auto Share)
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center mt-2">
+                    <button onclick="switchMode('learn')" class="text-xs font-bold text-slate-500 hover:text-slate-700"><i class="fa-solid fa-arrow-left"></i> முந்தைய படி</button>
+                    <button onclick="switchMode('challenge')" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 px-5 rounded-xl shadow text-xs flex items-center gap-1.5">
+                        50-கேள்விகள் சவாலுக்குச் செல் <i class="fa-solid fa-circle-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- PANEL 3: 50-CHALLENGE PLAYGROUND -->
+            <div id="panel-challenge" class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col gap-6 hidden">
+                
+                <!-- Challenge Header -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b pb-4">
+                    <div>
+                        <span id="level-badge" class="bg-amber-100 text-amber-800 text-[10px] px-2.5 py-1 rounded-full font-bold uppercase tracking-widest">வினா 1/50 (மிக எளிய நிலை)</span>
+                        <h2 class="text-xl md:text-2xl font-bold text-slate-800 mt-1" id="challenge-title">கணித வகுத்தல் சவால்</h2>
+                        <p class="text-slate-500 text-xs">கேள்வியை நன்றாகப் படித்து, கீழே உள்ள காட்சிக் குறிப்பை உற்று நோக்கி விடையளிக்கவும்.</p>
+                    </div>
+                    
+                    <div class="flex gap-2 w-full sm:w-auto">
+                        <button onclick="changeLevel(-1)" class="p-2 border rounded-lg hover:bg-slate-50 text-slate-600" id="btn-prev-level" title="முந்தைய கேள்வி">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                        <select id="level-select" onchange="jumpToLevel(this.value)" class="p-2 border rounded-lg font-bold text-slate-700 bg-slate-50 text-xs focus:ring-2 focus:ring-teal-500 outline-none flex-grow">
+                            <!-- Filled dynamically -->
+                        </select>
+                        <button onclick="changeLevel(1)" class="p-2 border rounded-lg hover:bg-slate-50 text-slate-600" id="btn-next-level" title="அடுத்த கேள்வி">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Equation Area with Visual Aids -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    <!-- Left: Mathematical Representation & Custom Blocks -->
+                    <div class="bg-gradient-to-br from-indigo-900 to-slate-900 text-white p-5 rounded-2xl flex flex-col justify-between shadow-md">
+                        <div class="mb-4">
+                            <span class="text-[11px] text-indigo-200 block mb-1">தற்போதைய வகுத்தல் கேள்வி:</span>
+                            <div class="text-2xl font-black text-center bg-white/10 py-3.5 px-3 rounded-xl border border-white/10" id="math-expression-display">
+                                12 ÷ 3 = ?
+                            </div>
+                        </div>
+
+                        <!-- Live Visual Grid representation -->
+                        <div class="bg-white/5 p-4 rounded-xl border border-white/10">
+                            <span class="text-xs text-indigo-300 block mb-2 font-bold"><i class="fa-regular fa-lightbulb"></i> வினா உருவகப்படுத்துதல் (Question Visual Aid)</span>
+                            <div id="visual-grid-hint" class="flex flex-wrap gap-1.5 justify-center py-2 max-h-[160px] overflow-y-auto">
+                                <!-- Dynamic visual balls go here -->
+                            </div>
+                            <span class="text-[10px] text-indigo-400 block text-center mt-2">வண்ண வட்டங்கள் மொத்தப் பொருட்களின் அளவைக் குறிக்கின்றன.</span>
+                        </div>
+                    </div>
+
+                    <!-- Right: Step-by-Step Interactive Division Table -->
+                    <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 flex flex-col justify-between">
+                        <div>
+                            <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                                <i class="fa-solid fa-align-left text-teal-600"></i> உன் விடைகளை உள்ளிடுக
+                            </h4>
+                            
+                            <!-- Interactive Form Fields for Steps -->
+                            <div class="space-y-3.5" id="interactive-steps-container">
+                                <!-- Step inputs go here -->
+                            </div>
+
+                            <!-- Feedback Message Box -->
+                            <div id="feedback-box" class="mt-4 p-3 rounded-xl text-center font-bold text-xs hidden">
+                                <!-- Filled dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- Level Success / Action Buttons -->
+                        <div class="flex justify-between items-center border-t pt-4 mt-4">
+                            <button onclick="revealHint()" class="text-xs text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-1">
+                                <i class="fa-regular fa-lightbulb text-sm"></i> விடைக்குறிப்பு (Hint)
+                            </button>
+                            
+                            <button onclick="checkAnswer()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-5 rounded-xl shadow transition-colors flex items-center gap-1.5 text-xs">
+                                <i class="fa-solid fa-check"></i> விடையைச் சரிபார்
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Custom Step-By-Step Popup Hint Modal -->
+                <div id="hint-modal" class="hidden bg-emerald-50 border border-emerald-100 p-4 rounded-xl text-xs text-emerald-950 space-y-2">
+                    <h5 class="font-bold text-sm text-emerald-900 flex items-center gap-1"><i class="fa-regular fa-lightbulb"></i> படிநிலை வழிகாட்டி விளக்கம்:</h5>
+                    <div id="hint-modal-content">
+                        <!-- Filled dynamic -->
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Guide & Instruction for Teachers & Parents -->
+    <footer class="bg-slate-900 text-slate-400 py-8 px-6 mt-12 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div>
+                <h4 class="text-white font-bold mb-3 text-sm md:text-base">ஆசிரியர்களுக்கான மென்திறன் கையேடு</h4>
+                <p class="text-xs leading-relaxed text-slate-400">
+                    வகுப்பறையில் இந்த சிமுலேஷனை ப்ரொஜெக்டர் (Projector) அல்லது ஸ்மார்ட் போர்டு வழியாக மாணவிகளுக்கு அறிமுகப்படுத்தலாம். மெதுவாகக் கற்கும் மாணவிகள் வகுத்தல் கோட்பாட்டை எளிதாக உணர 'பங்கிட்டுப் பழகு' என்ற பகுதியைத் தாங்களாகவே சோதித்து விளையாட அனுமதியுங்கள்.
+                </p>
+            </div>
+            <div>
+                <h4 class="text-white font-bold mb-3 text-sm md:text-base">சிமுலேஷன் நிலைகளின் கட்டமைப்பு</h4>
+                <ul class="text-xs space-y-2 list-disc list-inside text-slate-400">
+                    <li>வினாக்கள் 1-15: மீதி இல்லாத எளிய ஒற்றை இலக்க வகுத்தல்கள்.</li>
+                    <li>வினாக்கள் 16-30: மீதியுடன் கூடிய வகுத்தல் பயிற்சிகள்.</li>
+                    <li>வினாக்கள் 31-45: ஈரிலக்க எண்களை ஒற்றை இலக்க எண்களால் வகுக்கும் சவால்.</li>
+                    <li>வினாக்கள் 46-50: 8-ஆம் வகுப்பு மாணவிகளுக்கான பெரிய வகுத்தல் எண்கள்.</li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-white font-bold mb-3 text-sm md:text-base">தொழில்நுட்ப விபரங்கள்</h4>
+                <p class="text-xs leading-relaxed text-slate-400 mb-2">
+                    இது ஒரு Progressive Web App (PWA) வடிவமைப்பு. மொபைல் போன், கணினி அல்லது மடிக்கணினிகளில் இணைய இணைப்பு இல்லாமலேயே எளிதாக இயங்கக் கூடியது.
+                </p>
+                <div class="text-slate-500 text-[11px] border-t border-slate-800 pt-2 flex justify-between">
+                    <span>&copy; 2026 நகராட்சி பெண்கள் பள்ளி</span>
+                    <span>Created by: 3 members</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Audio Effects using Web Audio API for gamified experience without external files -->
+    <script>
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playSound(type) {
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                if (type === 'success') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(261.63, audioCtx.currentTime); // C4
+                    osc.frequency.setValueAtTime(329.63, audioCtx.currentTime + 0.1); // E4
+                    osc.frequency.setValueAtTime(392.00, audioCtx.currentTime + 0.2); // G4
+                    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime + 0.3); // C5
+                    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.5);
+                } else if (type === 'fail') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(140, audioCtx.currentTime);
+                    osc.frequency.linearRampToValueAtTime(80, audioCtx.currentTime + 0.3);
+                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.4);
+                } else if (type === 'click') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(500, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(250, audioCtx.currentTime + 0.08);
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.08);
+                }
+            } catch (e) {
+                console.log('Audio Context activation issue: ', e);
+            }
+        }
+    </script>
+
+    <!-- Mathematical Level Database Generator -->
+    <script>
+        const mathLevels = [];
+        
+        // Generate exactly 50 progressive arithmetic division levels
+        // Levels 1 to 15: Easy single digit divisions without remainder
+        const easyNoRemainder = [
+            { div: 6, divisor: 2 },
+            { div: 8, divisor: 2 },
+            { div: 9, divisor: 3 },
+            { div: 10, divisor: 5 },
+            { div: 12, divisor: 3 },
+            { div: 12, divisor: 4 },
+            { div: 15, divisor: 5 },
+            { div: 16, divisor: 4 },
+            { div: 18, divisor: 2 },
+            { div: 20, divisor: 5 },
+            { div: 21, divisor: 3 },
+            { div: 24, divisor: 4 },
+            { div: 25, divisor: 5 },
+            { div: 27, divisor: 3 },
+            { div: 30, divisor: 5 }
+        ];
+
+        // Levels 16 to 30: Easy divisions with remainder
+        const easyWithRemainder = [
+            { div: 7, divisor: 2 },
+            { div: 9, divisor: 2 },
+            { div: 11, divisor: 3 },
+            { div: 13, divisor: 4 },
+            { div: 14, divisor: 5 },
+            { div: 17, divisor: 3 },
+            { div: 19, divisor: 4 },
+            { div: 22, divisor: 5 },
+            { div: 23, divisor: 4 },
+            { div: 26, divisor: 5 },
+            { div: 29, divisor: 3 },
+            { div: 31, divisor: 4 },
+            { div: 32, divisor: 5 },
+            { div: 34, divisor: 3 },
+            { div: 35, divisor: 4 }
+        ];
+
+        // Fill levels 1 to 15
+        for(let i=0; i<15; i++) {
+            const data = easyNoRemainder[i];
+            mathLevels.push({
+                dividend: data.div,
+                divisor: data.divisor,
+                quotient: Math.floor(data.div / data.divisor),
+                remainder: data.div % data.divisor,
+                difficulty: "எளிது (No Remainder)"
+            });
+        }
+
+        // Fill levels 16 to 30
+        for(let i=0; i<15; i++) {
+            const data = easyWithRemainder[i];
+            mathLevels.push({
+                dividend: data.dividend,
+                divisor: data.divisor,
+                quotient: Math.floor(data.dividend / data.divisor),
+                remainder: data.remainder,
+                difficulty: "மத்திமம் (With Remainder)"
+            });
+        }
+
+        // Fill levels 31 to 50: Advanced (Double-digit dividends and larger values suitable for 8th grade)
+        for(let i=31; i<=50; i++) {
+            const divisor = (i % 6) + 4; // Divisors between 4 and 9
+            const multiplier = Math.floor(i / 3) + 2; // Progressive quotient
+            const remainder = i % divisor;
+            const dividend = (divisor * multiplier) + remainder;
+            
+            mathLevels.push({
+                dividend: dividend,
+                divisor: divisor,
+                quotient: multiplier,
+                remainder: remainder,
+                difficulty: i > 40 ? "சவால் நிலை (8th Grade Challenge)" : "மத்திமம் (Progressive)"
+            });
+        }
+    </script>
+
+    <!-- Core Simulation Game Engine -->
+    <script>
+        let currentMode = 'learn';
+        let currentLevelIndex = 0;
+        let scoreStars = 0;
+        const completedLevelsSet = new Set();
+
+        // Visual Toy Simulation state
+        let simTotalCount = 12;
+        let simBasketsCount = 3;
+
+        window.addEventListener('load', () => {
+            populateLevelDropdown();
+            loadProgress();
+            renderLevel(0);
+            initToySimulation();
+        });
+
+        // Toggle Application Panel Views
+        function switchMode(mode) {
+            playSound('click');
+            currentMode = mode;
+            
+            // Highlight current button
+            document.getElementById('btn-learn-mode').className = mode === 'learn' ? 'w-full text-left p-3.5 rounded-xl border-2 border-teal-600 bg-teal-50 text-teal-900 font-bold flex items-center justify-between transition-all' : 'w-full text-left p-3.5 rounded-xl border border-slate-200 hover:border-teal-300 hover:bg-slate-50 text-slate-700 font-bold flex items-center justify-between transition-all';
+            document.getElementById('btn-toy-mode').className = mode === 'toy' ? 'w-full text-left p-3.5 rounded-xl border-2 border-pink-600 bg-pink-50 text-pink-900 font-bold flex items-center justify-between transition-all' : 'w-full text-left p-3.5 rounded-xl border border-slate-200 hover:border-teal-300 hover:bg-slate-50 text-slate-700 font-bold flex items-center justify-between transition-all';
+            document.getElementById('btn-challenge-mode').className = mode === 'challenge' ? 'w-full text-left p-3.5 rounded-xl border-2 border-amber-500 bg-amber-50 text-amber-900 font-bold flex items-center justify-between transition-all' : 'w-full text-left p-3.5 rounded-xl border border-slate-200 hover:border-teal-300 hover:bg-slate-50 text-slate-700 font-bold flex items-center justify-between transition-all';
+
+            // Show/Hide Panels
+            document.getElementById('panel-learn').classList.add('hidden');
+            document.getElementById('panel-toy').classList.add('hidden');
+            document.getElementById('panel-challenge').classList.add('hidden');
+
+            if (mode === 'learn') document.getElementById('panel-learn').classList.remove('hidden');
+            if (mode === 'toy') document.getElementById('panel-toy').classList.remove('hidden');
+            if (mode === 'challenge') document.getElementById('panel-challenge').classList.remove('hidden');
+        }
+
+        // Dropdown setup for levels
+        function populateLevelDropdown() {
+            const select = document.getElementById('level-select');
+            select.innerHTML = '';
+            mathLevels.forEach((level, idx) => {
+                const opt = document.createElement('option');
+                opt.value = idx;
+                opt.textContent = `வினா ${idx + 1} (${level.difficulty})`;
+                select.appendChild(opt);
+            });
+        }
+
+        function jumpToLevel(levelIdx) {
+            playSound('click');
+            renderLevel(parseInt(levelIdx));
+        }
+
+        function changeLevel(dir) {
+            playSound('click');
+            let target = currentLevelIndex + dir;
+            if (target >= 0 && target < mathLevels.length) {
+                renderLevel(target);
+            }
+        }
+
+        // Update overall gamified progress bar
+        function updateProgressUI() {
+            document.getElementById('score-stars').innerHTML = `⭐ ${scoreStars}`;
+            document.getElementById('completed-levels').textContent = `${completedLevelsSet.size}/50`;
+            
+            const percent = Math.round((completedLevelsSet.size / 50) * 100);
+            document.getElementById('progress-percent').textContent = `${percent}%`;
+            document.getElementById('progress-bar-fill').style.width = `${percent}%`;
+        }
+
+        // Local storage saving
+        function saveProgress() {
+            localStorage.setItem('div_stars_new', scoreStars);
+            localStorage.setItem('div_completed_new', JSON.stringify(Array.from(completedLevelsSet)));
+        }
+
+        function loadProgress() {
+            const stars = localStorage.getItem('div_stars_new');
+            const completed = localStorage.getItem('div_completed_new');
+            if (stars) scoreStars = parseInt(stars);
+            if (completed) {
+                const arr = JSON.parse(completed);
+                arr.forEach(item => completedLevelsSet.add(item));
+            }
+            updateProgressUI();
+        }
+
+        // Render mathematical level layout
+        function renderLevel(idx) {
+            currentLevelIndex = idx;
+            document.getElementById('level-select').value = idx;
+            
+            const level = mathLevels[idx];
+            
+            document.getElementById('level-badge').textContent = `வினா ${idx + 1}/50 (${level.difficulty})`;
+            document.getElementById('math-expression-display').textContent = `${level.dividend} ÷ ${level.divisor} = ?`;
+
+            // Draw Step forms suitable for 6th, 7th & 8th slow learners
+            const stepsContainer = document.getElementById('interactive-steps-container');
+            stepsContainer.innerHTML = `
+                <!-- Step 1: Dividend Entry -->
+                <div class="p-3 bg-white rounded-xl shadow-sm border border-slate-100 flex flex-col gap-1.5">
+                    <span class="text-xs font-bold text-slate-500">படி 1: மொத்தப் பொருட்கள் (Dividend)</span>
+                    <p class="text-[11px] text-slate-600">இங்கு பங்கிடப்பட வேண்டிய மொத்தப் பொருட்கள் எத்தனை?</p>
+                    <input type="number" id="chal-step1" class="border p-2 rounded-lg text-center w-28 font-bold text-sm outline-none focus:ring-2 focus:ring-teal-500" placeholder="உள்நுழைக">
+                </div>
+
+                <!-- Step 2: Divisor Entry -->
+                <div class="p-3 bg-white rounded-xl shadow-sm border border-slate-100 flex flex-col gap-1.5">
+                    <span class="text-xs font-bold text-slate-500">படி 2: பகிரும் நபர்கள் (Divisor)</span>
+                    <p class="text-[11px] text-slate-600">எத்தனை நபர்களுக்கு அல்லது கூடைகளுக்கு இதனை சமமாகப் பங்கிட வேண்டும்?</p>
+                    <input type="number" id="chal-step2" class="border p-2 rounded-lg text-center w-28 font-bold text-sm outline-none focus:ring-2 focus:ring-teal-500" placeholder="உள்நுழைக">
+                </div>
+
+                <!-- Step 3: Quotient (Quotient) -->
+                <div class="p-3 bg-white rounded-xl shadow-sm border border-slate-100 flex flex-col gap-1.5">
+                    <span class="text-xs font-bold text-slate-500">படி 3: ஈவு / விடை (Quotient)</span>
+                    <p class="text-[11px] text-slate-600">ஒவ்வொருவருக்கும் சமமாகப் பங்கிட்ட பிறகு கிடைத்த பங்கு எவ்வளவு?</p>
+                    <input type="number" id="chal-step3" class="border p-2 rounded-lg text-center w-28 font-bold text-sm outline-none focus:ring-2 focus:ring-teal-500" placeholder="ஈவு">
+                </div>
+
+                <!-- Step 4: Remainder -->
+                <div class="p-3 bg-white rounded-xl shadow-sm border border-slate-100 flex flex-col gap-1.5">
+                    <span class="text-xs font-bold text-slate-500">படி 4: மீதி (Remainder)</span>
+                    <p class="text-[11px] text-slate-600">பகிர்ந்தளிக்க முடியாமல் மீதமுள்ள பொருட்கள் எத்தனை?</p>
+                    <input type="number" id="chal-step4" class="border p-2 rounded-lg text-center w-28 font-bold text-sm outline-none focus:ring-2 focus:ring-teal-500" placeholder="மீதி">
+                </div>
+            `;
+
+            // Draw visual dots/balls
+            renderVisualDots(level.dividend);
+
+            // Hide previous alert boxes
+            document.getElementById('feedback-box').classList.add('hidden');
+            document.getElementById('hint-modal').classList.add('hidden');
+        }
+
+        // Draw nice color dots for counting help
+        function renderVisualDots(count) {
+            const container = document.getElementById('visual-grid-hint');
+            container.innerHTML = '';
+            
+            for (let i = 0; i < count; i++) {
+                const dot = document.createElement('div');
+                // Give dynamic alternating colors for visual counting ease
+                const colorClass = (i % 2 === 0) ? 'bg-indigo-500' : 'bg-emerald-500';
+                dot.className = `w-6 h-6 ${colorClass} text-white text-[10px] rounded-full flex items-center justify-center font-bold shadow-sm`;
+                dot.textContent = i + 1;
+                container.appendChild(dot);
+            }
+        }
+
+        // Reveal custom hints
+        function revealHint() {
+            playSound('click');
+            const level = mathLevels[currentLevelIndex];
+            const hintModal = document.getElementById('hint-modal');
+            const hintContent = document.getElementById('hint-modal-content');
+            
+            hintModal.classList.remove('hidden');
+            
+            hintContent.innerHTML = `
+                <div class="space-y-1.5 text-slate-800">
+                    <p>💡 **எளிய உதவிக்குறிப்பு:**</p>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>வகுபடும் எண் (Dividend) என்பது மொத்தப் பொருட்கள் ஆகும்: <strong class="text-indigo-600">${level.dividend}</strong>.</li>
+                        <li>வகுக்கும் எண் (Divisor) என்பது கூடைகள் ஆகும்: <strong class="text-indigo-600">${level.divisor}</strong>.</li>
+                        <li>வாய்மொழியாக வாய்ப்பாடு சொல்லிப் பார்: <strong class="text-emerald-700">${level.divisor} x ${level.quotient} = ${level.divisor * level.quotient}</strong>.</li>
+                        <li>மீதமுள்ள எண்: <strong class="text-rose-600">${level.remainder}</strong>.</li>
+                    </ul>
+                </div>
+            `;
+        }
+
+        // Submit and check answers
+        function checkAnswer() {
+            const level = mathLevels[currentLevelIndex];
+            const ans1 = parseInt(document.getElementById('chal-step1').value);
+            const ans2 = parseInt(document.getElementById('chal-step2').value);
+            const ans3 = parseInt(document.getElementById('chal-step3').value);
+            const ans4 = parseInt(document.getElementById('chal-step4').value);
+
+            const feedback = document.getElementById('feedback-box');
+            feedback.classList.remove('hidden');
+
+            if (ans1 === level.dividend && ans2 === level.divisor && ans3 === level.quotient && ans4 === level.remainder) {
+                // Success
+                playSound('success');
+                feedback.className = "mt-4 p-3 rounded-xl text-center font-bold text-sm bg-emerald-100 text-emerald-800 border border-emerald-200 bounce-custom";
+                feedback.innerHTML = `🎉 அருமை! உனது விடை முற்றிலும் சரியானது! <br> ஈவு (Quotient) = ${level.quotient}, மீதி (Remainder) = ${level.remainder}`;
+                
+                if (!completedLevelsSet.has(currentLevelIndex)) {
+                    completedLevelsSet.add(currentLevelIndex);
+                    scoreStars += 5; // Get 5 stars per level
+                    saveProgress();
+                    updateProgressUI();
+                }
+            } else {
+                // Fail
+                playSound('fail');
+                feedback.className = "mt-4 p-3 rounded-xl text-center font-bold text-sm bg-rose-100 text-rose-800 border border-rose-200";
+                
+                let helpTip = "விடை இன்னும் சரியாக வரவில்லை. ";
+                if (ans1 !== level.dividend) helpTip += "படி 1: மொத்தப் பொருட்கள் எண்ணிக்கையைச் சரியாக எழுதுங்கள். ";
+                else if (ans2 !== level.divisor) helpTip += "படி 2: வகுக்கும் எண்ணைச் சரிபார்க்கவும். ";
+                else if (ans3 !== level.quotient) helpTip += "படி 3: ஈவு விடை தவறாக உள்ளது. ";
+                else if (ans4 !== level.remainder) helpTip += "படி 4: மீதி தொகையை மீண்டும் கணக்கிடவும். ";
+
+                feedback.innerHTML = `❌ ${helpTip}`;
+            }
+        }
+
+        // Toy Simulation Panel Setup
+        function initToySimulation() {
+            // Populate initial state items
+            updateToySimulationUI();
+        }
+
+        function updateToySimulationUI() {
+            document.getElementById('sim-total-count').textContent = simTotalCount;
+            document.getElementById('sim-baskets-count').textContent = simBasketsCount;
+
+            // Render candies
+            const itemsContainer = document.getElementById('sim-items-container');
+            itemsContainer.innerHTML = '';
+            for(let i=0; i<simTotalCount; i++) {
+                const item = document.createElement('div');
+                item.className = "w-9 h-9 bg-pink-100 border border-pink-300 rounded-full flex items-center justify-center text-sm shadow-sm item-ball";
+                item.innerHTML = "🍬";
+                item.id = `cand-item-${i}`;
+                itemsContainer.appendChild(item);
+            }
+
+            // Render Baskets
+            const basketsContainer = document.getElementById('sim-baskets-container');
+            basketsContainer.innerHTML = '';
+            for(let i=0; i<simBasketsCount; i++) {
+                const basket = document.createElement('div');
+                basket.className = "bg-white p-4 rounded-xl border-2 border-purple-200 shadow-sm flex flex-col items-center min-h-[140px] justify-between";
+                basket.innerHTML = `
+                    <div class="text-2xl text-purple-600 font-bold">🧺</div>
+                    <span class="text-[10px] font-bold text-slate-400">கூடை ${i+1}</span>
+                    <div id="basket-items-pool-${i}" class="flex flex-wrap gap-1 justify-center mt-2 min-h-[40px] w-full p-1 bg-slate-50 rounded-lg">
+                        <!-- Items dropped inside dynamically -->
+                    </div>
+                `;
+                basketsContainer.appendChild(basket);
+            }
+
+            // Reset scores on UI
+            document.getElementById('sim-quotient-text').textContent = '0';
+            document.getElementById('sim-remainder-text').textContent = '0';
+        }
+
+        function addSimulationItems(val) {
+            playSound('click');
+            if (simTotalCount + val <= 40 && simTotalCount + val >= 1) {
+                simTotalCount += val;
+                updateToySimulationUI();
+            }
+        }
+
+        function addSimulationBaskets(val) {
+            playSound('click');
+            if (simBasketsCount + val <= 8 && simBasketsCount + val >= 1) {
+                simBasketsCount += val;
+                updateToySimulationUI();
+            }
+        }
+
+        function resetSimulation() {
+            playSound('click');
+            simTotalCount = 12;
+            simBasketsCount = 3;
+            updateToySimulationUI();
+        }
+
+        // Interactive animation simulating dividing candies into baskets
+        function animateSharing() {
+            playSound('click');
+            
+            // Calculate answers
+            const quotient = Math.floor(simTotalCount / simBasketsCount);
+            const remainder = simTotalCount % simBasketsCount;
+
+            // Animate moving candies step-by-step
+            let index = 0;
+            const interval = setInterval(() => {
+                if (index < simTotalCount - remainder) {
+                    const basketIndex = index % simBasketsCount;
+                    const item = document.getElementById(`cand-item-${index}`);
+                    const targetBasket = document.getElementById(`basket-items-pool-${basketIndex}`);
+                    
+                    if (item && targetBasket) {
+                        item.classList.add('scale-75', 'bg-purple-100');
+                        targetBasket.appendChild(item);
+                        playSound('click');
+                    }
+                    index++;
+                } else {
+                    clearInterval(interval);
+                    // Update scores
+                    document.getElementById('sim-quotient-text').textContent = quotient;
+                    document.getElementById('sim-remainder-text').textContent = remainder;
+                    playSound('success');
+                }
+            }, 150);
+        }
+
+        // Custom Teacher Sandbox execution
+        function startSandbox() {
+            playSound('click');
+            const divVal = parseInt(document.getElementById('sandbox-dividend').value) || 12;
+            const divisorVal = parseInt(document.getElementById('sandbox-divisor').value) || 4;
+
+            if (divVal < 1 || divVal > 100) {
+                return;
+            }
+
+            simTotalCount = divVal;
+            simBasketsCount = divisorVal;
+
+            // Update simulator UI with teacher's custom inputs
+            updateToySimulationUI();
+            switchMode('toy');
+        }
+    </script>
+</body>
+</html>
