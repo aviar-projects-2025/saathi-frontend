@@ -20,6 +20,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import Api from '../Api.jsx';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import CommunityImage from '../components/CommunityImage.jsx';
 
 const topMembers = [
   { name: 'Vijay Patel', initials: 'VP', rides: 67, city: 'Frisco', badge: '🏅 Founding member', verified: true },
@@ -366,17 +367,7 @@ export default function Community() {
 
                       {/* Image */}
                       {post.postImage && (
-                        <Box
-                          component="img"
-                          src={post.postImage}
-                          alt="community post"
-                          sx={{
-                            width: "100%",
-                            maxHeight: 360,
-                            objectFit: "cover",
-                            display: "block",
-                          }}
-                        />
+                        <CommunityImage src={post.postImage} />
                       )}
 
                       {/* Likes Count */}
@@ -389,7 +380,7 @@ export default function Community() {
                       <Divider />
 
                       {/* Actions */}
-                      <Stack direction="row" sx={{ py: 0.5 }}>
+                      <Stack direction="row" sx={{ py: 0.5 , marginLeft:2, gap : 5}}>
                         <Button
                           startIcon={<ThumbUpOffAltIcon />}
                           sx={{ textTransform: "none", color: "text.secondary" }}
