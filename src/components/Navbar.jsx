@@ -962,7 +962,7 @@ const TopNav = ({ onMenuClick }) => {
             <MenuIcon />
           </IconButton>
 
-          <Box sx={{ display: "flex", alignItems: "center" }}>
+          <Box sx={{ display: "flex", alignItems: "center" , cursor:'pointer'}} >
             <img
               src={saathilogo1}
               alt="saathi"

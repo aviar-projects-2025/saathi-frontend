@@ -11,6 +11,7 @@ import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import ThumbUpOffAltIcon from '@mui/icons-material/ThumbUpOffAlt';
+import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import UserAvatar from '../components/UserAvatar.jsx';
 import PageLayout from '../components/PageLayout.jsx';
 import ChatIcon from '@mui/icons-material/Chat';
@@ -100,17 +101,24 @@ export default function Community() {
   const getCommmunityPost = async () => {
     try {
       setPostLoading(true);
-      const data = await axios.get(Api + '/community/')
-        .then((res) => {
-          console.log(res);
-          setCommunityPosts(res?.data?.data)
-        })
+
+      const postsRes = await axios.get(Api + "/community/");
+      const likesRes = await axios.get(Api + `/likes/liked-posts/${user.id}`);
+
+      const likedPostIds = likesRes?.data?.data || [];
+
+      const updatedPosts = postsRes?.data?.data?.map((post) => ({
+        ...post,
+        isLiked: likedPostIds.includes(post._id),
+      }));
+
+      setCommunityPosts(updatedPosts);
     } catch (error) {
       console.error(error.message);
     } finally {
-      setPostLoading(false)
+      setPostLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     getCommmunityPost();
@@ -128,6 +136,59 @@ export default function Community() {
       minute: "2-digit"
     })
 
+  }
+
+  // const addLike = (id) => {
+  //   try {
+  //     let postId = id
+  //     axios.post(Api + `/likes/${postId}/${user.id}`)
+  //       .then((res) => {
+  //         console.log(res)
+  //         setIsLiked(res?.data?.isLiked)
+  //       })
+  //   } catch (error) {
+  //     toast.error(error.message)
+  //   }
+  // }
+
+  const addLike = async (id) => {
+    try {
+      const res = await axios.post(Api + `/likes/${id}/${user.id}`);
+
+      setCommunityPosts((prev) =>
+        prev.map((post) =>
+          post._id === id
+            ? {
+              ...post,
+              isLiked: res.data.isLiked,
+              likes: res.data.likesCount,
+            }
+            : post
+        )
+      );
+    } catch (error) {
+      // toast.error(error.message);
+    }
+  };
+
+  const removeLike = async (id) => {
+    try {
+      const res = await axios.delete(Api + `/likes/${id}/${user.id}`);
+      console.log(res,'delete')
+      setCommunityPosts((prev) =>
+        prev.map((post) =>
+          post._id === id
+            ? {
+              ...post,
+              isLiked: res.data.isLiked,
+              likes: res.data.likesCount,
+            }
+            : post
+        )
+      );
+    } catch (error) {
+      // toast.error(error.message)
+    }
   }
 
 
@@ -317,17 +378,112 @@ export default function Community() {
                           sx={{ flexShrink: 0 }}
                         />
 
-                        <Box sx={{ flex: 1, minWidth: 0 }}>
-                          <Typography
-                            fontWeight={700}
-                            fontSize="0.95rem"
-                            noWrap
-                          >
-                            {post?.authorId?.firstName} {post?.authorId?.lastName}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary" noWrap component="div">
-                            {'tvm'} | {formattedDateTime(post?.createdAt)}
-                          </Typography>
+                    <Button
+                      size="small"
+                      onClick={() => {
+                        setMedia(null);
+                        setPreview("");
+                      }}
+                      sx={{
+                        position: "absolute",
+                        top: 8,
+                        right: 8,
+                        minWidth: 0,
+                        bgcolor: "#fff",
+                        borderRadius: "50%",
+                        width: 34,
+                        height: 34,
+                      }}
+                    >
+                      <CloseIcon fontSize="small" />
+                    </Button>
+                  </Box>
+                )}
+
+                <Divider sx={{ my: 1.5 }} />
+
+                <Stack direction="row" >
+                  <Button
+                    component="label"
+                    startIcon={<PermMediaIcon />}
+                    sx={{ textTransform: "none" }}
+                  >
+                    Media
+                    <input
+                      hidden
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          setMedia(file);
+                          setPreview(URL.createObjectURL(file));
+                        }
+                      }}
+                    />
+                  </Button>
+
+                  <Button
+                    variant="contained"
+                    disabled={loading || (!post.trim() && !media)}
+                    onClick={handleCreatePost}
+                    sx={{
+                      borderRadius: 999,
+                      textTransform: "none",
+                      bgcolor: "#E8650A",
+                    }}
+                  >
+                    {loading ? "Posting..." : "Post"}
+                  </Button>
+                </Stack>
+              </Paper>
+              {/* Posts */}
+              {postLoading ?
+                <>
+                  <Box
+                    sx={{
+                      width: '100%',
+                      display: 'flex',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <CircularProgress size={50} />
+                  </Box>
+                </>
+                :
+                <>
+                  {communityPosts?.map((post, index) => (
+                    <Paper
+                      key={index}
+                      elevation={0}
+                      sx={{
+                        borderRadius: 3,
+                        border: "1px solid #F0E6DC",
+                        mb: 2,
+                        overflow: "hidden",
+                      }}
+                    >
+                      {console.log(post)}
+                      <Box sx={{ p: 2 }}>
+                        {/* Header */}
+                        <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5 }}>
+                          <UserAvatar
+                            name={post?.authorId?.firstName}
+                            initials={post.initials}
+                            size={44}
+                            verified={post.verified}
+                          />
+
+                          <Box sx={{ flex: 1 }}>
+                            <Typography fontWeight={700} fontSize="0.95rem">
+                              {post?.authorId?.firstName} {post?.authorId?.lastName}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {'tvm'} | {formattedDateTime(post?.createdAt)}
+                            </Typography>
+                          </Box>
+
+                          <MoreHorizIcon sx={{ color: "text.secondary" }} />
                         </Box>
 
                         <MoreHorizIcon sx={{ color: "text.secondary", flexShrink: 0 }} />
@@ -358,7 +514,26 @@ export default function Community() {
                   </Typography> */}
                     </Box>
 
-                    <Divider />
+                      {/* Actions */}
+                      <Stack direction="row" sx={{ py: 0.5, marginLeft: 2, gap: 5 }}>
+                        {/* {console.log(isLiked, 'isLiked')} */}
+                        <Button
+                          onClick={() => {
+                            post.isLiked ?
+                              removeLike(post._id) :
+                              addLike(post._id)
+                          }}
+                          startIcon={
+                            post.isLiked ? (
+                              <ThumbUpIcon sx={{ color: "#0084ffff" }} />
+                            ) : (
+                              <ThumbUpOffAltIcon />
+                            )
+                          }
+                          sx={{ textTransform: "none", color: "text.secondary" }}
+                        >
+                          Like {post?.likes || 0}
+                        </Button>
 
                     {/* Actions */}
                     <Stack
