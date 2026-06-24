@@ -61,7 +61,7 @@ const CommunityComments = ({ post, user }) => {
 
   const replySend = async (postId, parentId) => {
     try {
-      const res = await axios.post(Api + `/community/comments/${postId}/reply/${parentId}/${user.id}`, { comment: reply })
+      const res = await axios.post(Api + `/community/comments/${postId}/reply/${parentId}/${user.id}`, { reply })
       setReply('')
       getComments();
     } catch (error) {
