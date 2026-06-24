@@ -25,9 +25,9 @@ import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
 import FlightIcon from "@mui/icons-material/Flight";
 import DirectionsBoatIcon from "@mui/icons-material/DirectionsBoat";
 import TrainIcon from "@mui/icons-material/Train";
-import PersonIcon from '@mui/icons-material/Person';           // Male
-import WomanIcon from '@mui/icons-material/Woman';             // Female
-import GroupsIcon from '@mui/icons-material/Groups';           // Group
+import PersonIcon from '@mui/icons-material/Person';
+import WomanIcon from '@mui/icons-material/Woman';
+import GroupsIcon from '@mui/icons-material/Groups';
 
 
 
@@ -75,7 +75,6 @@ const genderIcon = {
   Any: <GroupsIcon sx={{ color: "#FF9933" }} />,
 };
 
-// Maps a fuel-sharing label to a MUI Chip `color` keyword.
 const fuelColor = {
   Yes: 'success',
   No: 'default',
@@ -83,13 +82,9 @@ const fuelColor = {
   'Not shared': 'default',
 };
 
-
-// Helper: normalise from/to regardless of field name used by the API
 const formFrom = (ride) => ride?.from || '—';
 const formTo = (ride) => ride?.destination || ride?.to || '—';
 
-// Prevents iOS Safari from auto-zooming the viewport when a text input
-// or select is focused (it zooms on any focused field under 16px font-size).
 const noZoomInputSx = {
   '& .MuiInputBase-input, & .MuiSelect-select': {
     fontSize: { xs: '16px', sm: '0.875rem' },
@@ -100,7 +95,15 @@ const noZoomInputSx = {
 function EmptyState({ emoji, message, actionLabel, actionHref }) {
   return (
     <Paper
-      sx={{ p: { xs: 3, sm: 4 }, textAlign: 'center', border: '1px dashed #E0D5CC', bgcolor: '#FFF8F2', borderRadius: 2 }}
+      sx={{
+        p: { xs: 3, sm: 4 },
+        textAlign: 'center',
+        border: '1px dashed #E0D5CC',
+        bgcolor: '#FFF8F2',
+        borderRadius: 2,
+        mx: 'auto',
+        maxWidth: 480,
+      }}
       elevation={0}
     >
       <Typography fontSize="2rem">{emoji}</Typography>
@@ -121,15 +124,11 @@ function EmptyState({ emoji, message, actionLabel, actionHref }) {
 }
 
 // ── Edit Ride Modal ──────────────────────────────────────────────────────────
-// Maps the PostRide form fields to the edit modal.
-// Fields: from, destination, date, time, modeOfTravel, description,
-//         availableSeats, genderPreference, fuelSharing
 function EditRideModal({ ride, onSave, onClose }) {
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
   const startDate = new Date(ride.startTime);
-
   const initialDate = !isNaN(startDate) ? startDate.toISOString().split('T')[0] : '';
   const initialTime = !isNaN(startDate) ? startDate.toISOString().split('T')[1].slice(0, 5) : '';
 
@@ -157,7 +156,6 @@ function EditRideModal({ ride, onSave, onClose }) {
       const startTime = new Date(`${form.date}T${form.time}:00`).toISOString();
       const { date, time, ...rest } = form;
       const payload = { ...rest, startTime };
-
       const response = await axios.patch(`${Api}/rides/edit/${ride._id || ride.id}`, payload);
       const updated = response.data?.data ?? { ...ride, ...payload };
       onSave(updated);
@@ -182,10 +180,7 @@ function EditRideModal({ ride, onSave, onClose }) {
         <IconButton
           onClick={onClose}
           aria-label="Close"
-          sx={{
-            position: 'absolute', right: 8, top: 8, color: 'text.secondary',
-            width: 44, height: 44,
-          }}
+          sx={{ position: 'absolute', right: 8, top: 8, color: 'text.secondary', width: 44, height: 44 }}
         >
           <CloseIcon fontSize="small" />
         </IconButton>
@@ -193,60 +188,23 @@ function EditRideModal({ ride, onSave, onClose }) {
 
       <DialogContent sx={{ pt: 3, mt: 1, ...noZoomInputSx }}>
         <Stack spacing={2} sx={{ mt: 2 }}>
-          {/* From */}
-          <TextField
-            label="From"
-            fullWidth
-            size="small"
-            value={form.from}
-            onChange={(e) => update('from', e.target.value)}
-            placeholder="Chennai"
-          />
+          <TextField label="From" fullWidth size="small" value={form.from} onChange={(e) => update('from', e.target.value)} placeholder="Chennai" />
+          <TextField label="Destination" fullWidth size="small" value={form.destination} onChange={(e) => update('destination', e.target.value)} placeholder="Bangalore" />
 
-          {/* Destination */}
-          <TextField
-            label="Destination"
-            fullWidth
-            size="small"
-            value={form.destination}
-            onChange={(e) => update('destination', e.target.value)}
-            placeholder="Bangalore"
-          />
-
-          {/* Date & Time */}
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
             <Stack sx={{ flex: 1 }}>
               <InputLabel shrink>Date</InputLabel>
-              <TextField
-                fullWidth
-                size="small"
-                type="date"
-                value={form.date}
-                onChange={(e) => update('date', e.target.value)}
-                InputLabelProps={{ shrink: true }}
-              />
+              <TextField fullWidth size="small" type="date" value={form.date} onChange={(e) => update('date', e.target.value)} InputLabelProps={{ shrink: true }} />
             </Stack>
             <Stack sx={{ flex: 1 }}>
               <InputLabel shrink>Time</InputLabel>
-              <TextField
-                fullWidth
-                size="small"
-                type="time"
-                value={form.time}
-                onChange={(e) => update('time', e.target.value)}
-                InputLabelProps={{ shrink: true }}
-              />
+              <TextField fullWidth size="small" type="time" value={form.time} onChange={(e) => update('time', e.target.value)} InputLabelProps={{ shrink: true }} />
             </Stack>
           </Stack>
 
-          {/* Mode of Travel */}
           <FormControl fullWidth size="small">
             <InputLabel>Mode of Travel</InputLabel>
-            <Select
-              value={form.modeOfTravel}
-              label="Mode of Travel"
-              onChange={(e) => update('modeOfTravel', e.target.value)}
-            >
+            <Select value={form.modeOfTravel} label="Mode of Travel" onChange={(e) => update('modeOfTravel', e.target.value)}>
               <MenuItem value="Car">🚗 Car</MenuItem>
               <MenuItem value="Bus">🚌 Bus</MenuItem>
               <MenuItem value="Bike">🏍️ Bike</MenuItem>
@@ -256,58 +214,26 @@ function EditRideModal({ ride, onSave, onClose }) {
             </Select>
           </FormControl>
 
-          {/* Description */}
-          <TextField
-            label="Description"
-            fullWidth
-            multiline
-            rows={3}
-            size="small"
-            value={form.description}
-            onChange={(e) => update('description', e.target.value)}
-            placeholder="Traveling to Bangalore for a weekend trip..."
-          />
+          <TextField label="Description" fullWidth multiline rows={3} size="small" value={form.description} onChange={(e) => update('description', e.target.value)} placeholder="Traveling to Bangalore for a weekend trip..." />
 
-          {/* Available Seats */}
           <Box>
             <Typography variant="subtitle2" fontWeight={700} gutterBottom>
               Available seats: {form.availableSeats}
             </Typography>
-            <Slider
-              value={form.availableSeats}
-              onChange={(_, value) => update('availableSeats', value)}
-              min={1}
-              max={7}
-              step={1}
-              marks
-              valueLabelDisplay="auto"
-              sx={{ color: 'primary.main', py: { xs: 1.5, sm: 1 } }}
-            />
+            <Slider value={form.availableSeats} onChange={(_, value) => update('availableSeats', value)} min={1} max={7} step={1} marks valueLabelDisplay="auto" sx={{ color: 'primary.main', py: { xs: 1.5, sm: 1 } }} />
           </Box>
 
-          {/* Gender Preference */}
           <FormControl fullWidth size="small">
             <InputLabel>Gender Preference</InputLabel>
-            <Select
-              value={form.genderPreference}
-              label="Gender Preference"
-              onChange={(e) => update('genderPreference', e.target.value)}
-            >
+            <Select value={form.genderPreference} label="Gender Preference" onChange={(e) => update('genderPreference', e.target.value)}>
               <MenuItem value="Any">Any</MenuItem>
               <MenuItem value="Male">Male</MenuItem>
               <MenuItem value="Female">Female</MenuItem>
             </Select>
           </FormControl>
 
-          {/* Fuel Sharing */}
           <FormControlLabel
-            control={
-              <Switch
-                checked={form.fuelSharing}
-                onChange={(e) => update('fuelSharing', e.target.checked)}
-                color="primary"
-              />
-            }
+            control={<Switch checked={form.fuelSharing} onChange={(e) => update('fuelSharing', e.target.checked)} color="primary" />}
             label="Fuel Sharing"
           />
 
@@ -316,19 +242,10 @@ function EditRideModal({ ride, onSave, onClose }) {
       </DialogContent>
 
       <DialogActions sx={{ px: 3, pb: 2.5, gap: 1, flexWrap: 'wrap' }}>
-        <Button
-          onClick={onClose}
-          variant="outlined"
-          sx={{ borderRadius: 2, textTransform: 'none', flex: { xs: '1 1 auto', sm: '0 0 auto' }, minHeight: 44 }}
-        >
+        <Button onClick={onClose} variant="outlined" sx={{ borderRadius: 2, textTransform: 'none', flex: { xs: '1 1 auto', sm: '0 0 auto' }, minHeight: 44 }}>
           Cancel
         </Button>
-        <Button
-          onClick={handleEdit}
-          variant="contained"
-          disabled={saving}
-          sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700, flex: { xs: '1 1 auto', sm: '0 0 auto' }, minHeight: 44 }}
-        >
+        <Button onClick={handleEdit} variant="contained" disabled={saving} sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700, flex: { xs: '1 1 auto', sm: '0 0 auto' }, minHeight: 44 }}>
           {saving ? 'Saving...' : 'Save changes'}
         </Button>
       </DialogActions>
@@ -347,7 +264,6 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
     ? 'This will remove your ride post. Passengers who requested this ride will be notified.'
     : 'This will cancel your booking. The driver will be notified.';
 
-  // ride doesn't carry a plain `date` field — derive a readable date from startTime.
   const startDate = new Date(ride.startTime);
   const dateLabel = !isNaN(startDate)
     ? startDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
@@ -376,24 +292,14 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
     >
       <DialogTitle sx={{ fontWeight: 800, pr: 5 }}>
         {label}?
-        <IconButton
-          onClick={onClose}
-          aria-label="Close"
-          sx={{
-            position: 'absolute', right: 8, top: 8, color: 'text.secondary',
-            width: 44, height: 44,
-          }}
-        >
+        <IconButton onClick={onClose} aria-label="Close" sx={{ position: 'absolute', right: 8, top: 8, color: 'text.secondary', width: 44, height: 44 }}>
           <CloseIcon fontSize="small" />
         </IconButton>
       </DialogTitle>
 
       <DialogContent>
         <Typography color="text.secondary" fontSize="0.9rem">{body}</Typography>
-        <Paper
-          sx={{ mt: 2, p: 1.5, bgcolor: '#FFF8F2', border: '1px solid #F0E6DC', borderRadius: 2 }}
-          elevation={0}
-        >
+        <Paper sx={{ mt: 2, p: 1.5, bgcolor: '#FFF8F2', border: '1px solid #F0E6DC', borderRadius: 2 }} elevation={0}>
           <Typography fontSize="0.85rem" fontWeight={700} sx={{ wordBreak: 'break-word' }}>
             {formFrom(ride)} → {formTo(ride)}
           </Typography>
@@ -403,20 +309,10 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
       </DialogContent>
 
       <DialogActions sx={{ px: 3, pb: 2.5, gap: 1, flexWrap: 'wrap' }}>
-        <Button
-          onClick={onClose}
-          variant="outlined"
-          sx={{ borderRadius: 2, textTransform: 'none', flex: { xs: '1 1 auto', sm: '0 0 auto' }, minHeight: 44 }}
-        >
+        <Button onClick={onClose} variant="outlined" sx={{ borderRadius: 2, textTransform: 'none', flex: { xs: '1 1 auto', sm: '0 0 auto' }, minHeight: 44 }}>
           Keep it
         </Button>
-        <Button
-          onClick={handleConfirm}
-          variant="contained"
-          color="error"
-          disabled={deleting}
-          sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700, flex: { xs: '1 1 auto', sm: '0 0 auto' }, minHeight: 44 }}
-        >
+        <Button onClick={handleConfirm} variant="contained" color="error" disabled={deleting} sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700, flex: { xs: '1 1 auto', sm: '0 0 auto' }, minHeight: 44 }}>
           {deleting ? 'Deleting...' : label}
         </Button>
       </DialogActions>
@@ -425,8 +321,6 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
 }
 
 // ── Ride Details Modal ───────────────────────────────────────────────────────
-// Shown when a RideCard is clicked. Professional summary layout with
-// Edit / Delete / Close actions wired back to the parent handlers.
 function RideDetailsModal({ ride, showEdit, showDelete, onEdit, onDelete, onClose }) {
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
@@ -455,14 +349,7 @@ function RideDetailsModal({ ride, showEdit, showDelete, onEdit, onDelete, onClos
     <Dialog open onClose={onClose} fullWidth maxWidth="sm" fullScreen={fullScreen} PaperProps={{ sx: { borderRadius: { xs: 0, sm: 3 } } }}>
       <DialogTitle sx={{ fontWeight: 800, pb: 1, pr: 5 }}>
         Ride Details
-        <IconButton
-          onClick={onClose}
-          aria-label="Close"
-          sx={{
-            position: 'absolute', right: 8, top: 8, color: 'text.secondary',
-            width: 44, height: 44,
-          }}
-        >
+        <IconButton onClick={onClose} aria-label="Close" sx={{ position: 'absolute', right: 8, top: 8, color: 'text.secondary', width: 44, height: 44 }}>
           <CloseIcon fontSize="small" />
         </IconButton>
       </DialogTitle>
@@ -486,12 +373,7 @@ function RideDetailsModal({ ride, showEdit, showDelete, onEdit, onDelete, onClos
           <Chip
             label={`${status?.icon} ${status?.label}`}
             size="small"
-            sx={{
-              bgcolor: status?.bg,
-              color: status?.color,
-              fontWeight: 700,
-              fontSize: '0.72rem'
-            }}
+            sx={{ bgcolor: status?.bg, color: status?.color, fontWeight: 700, fontSize: '0.72rem' }}
           />
         </Box>
 
@@ -508,17 +390,9 @@ function RideDetailsModal({ ride, showEdit, showDelete, onEdit, onDelete, onClos
         >
           <Row icon="📅" label="Date" value={dateLabel} />
           <Row icon="🕐" label="Time" value={timeLabel} />
-          <Row
-            icon={travelIcon[ride.modeOfTravel] || '🚗'}
-            label="Mode of travel"
-            value={ride.modeOfTravel || '—'}
-          />
+          <Row icon={travelIcon[ride.modeOfTravel] || '🚗'} label="Mode of travel" value={ride.modeOfTravel || '—'} />
           <Row icon="🪑" label="Available seats" value={ride.availableSeats ?? ride.seats ?? '—'} />
-          <Row
-            icon={genderIcons[ride.genderPreference] || '👥'}
-            label="Gender preference"
-            value={ride.genderPreference || 'Any'}
-          />
+          <Row icon={genderIcons[ride.genderPreference] || '👥'} label="Gender preference" value={ride.genderPreference || 'Any'} />
           <Row icon="⛽" label="Fuel sharing" value={ride.fuelSharing ? 'Yes' : 'No'} />
         </Box>
 
@@ -537,10 +411,7 @@ function RideDetailsModal({ ride, showEdit, showDelete, onEdit, onDelete, onClos
           <Button
             variant="outlined"
             startIcon={<EditIcon />}
-            onClick={() => {
-              onEdit(ride);
-              onClose();
-            }}
+            onClick={() => { onEdit(ride); onClose(); }}
             sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700, flex: { xs: '1 1 auto', sm: '0 0 auto' }, minHeight: 44 }}
           >
             Edit
@@ -551,21 +422,14 @@ function RideDetailsModal({ ride, showEdit, showDelete, onEdit, onDelete, onClos
             variant="outlined"
             color="error"
             startIcon={<DeleteIcon />}
-            onClick={() => {
-              onDelete(ride);
-              onClose();
-            }}
+            onClick={() => { onDelete(ride); onClose(); }}
             sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700, flex: { xs: '1 1 auto', sm: '0 0 auto' }, minHeight: 44 }}
           >
             Delete
           </Button>
         )}
         <Box sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }} />
-        <Button
-          variant="outlined"
-          onClick={onClose}
-          sx={{ borderRadius: 2, textTransform: 'none', flex: { xs: '1 1 auto', sm: '0 0 auto' }, minHeight: 44 }}
-        >
+        <Button variant="outlined" onClick={onClose} sx={{ borderRadius: 2, textTransform: 'none', flex: { xs: '1 1 auto', sm: '0 0 auto' }, minHeight: 44 }}>
           Close
         </Button>
       </DialogActions>
@@ -576,192 +440,240 @@ function RideDetailsModal({ ride, showEdit, showDelete, onEdit, onDelete, onClos
 // ── Ride Card ────────────────────────────────────────────────────────────────
 function RideCard({ ride, showEdit, showDelete, onEdit, onDelete }) {
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  const status =
-    statusConfig[statusMap[ride?.status]] || statusConfig.pending;
+  const status = statusConfig[statusMap[ride?.status]] || statusConfig.pending;
 
   const startDate = new Date(ride.startTime);
-
   const date = !isNaN(startDate)
-    ? startDate.toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    })
+    ? startDate.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
     : "—";
-
   const time = !isNaN(startDate)
-    ? startDate.toLocaleTimeString("en-IN", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    })
+    ? startDate.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })
     : "—";
 
   const fuelLabel = ride.fuelSharing ? "Yes" : "No";
+
+  // console.log("Api Data ===> ", ride);
 
   return (
     <>
       <Box
         onClick={() => setDetailsOpen(true)}
         sx={{
-          p: { xs: 1, sm: 2 },
+          p: { xs: 0.75, sm: 1.5 },
           width: '100%',
           maxWidth: 1000,
           mx: "auto",
           cursor: "pointer",
-          transition: "all .3s ease",
+          transition: "transform .25s ease",
           "&:hover": {
-            transform: { xs: 'none', sm: 'translateY(-5px)' },
+            transform: { xs: 'none', sm: 'translateY(-4px)' },
           },
         }}
       >
-        {/* From / To Header */}
+        {/* ── Top header: name + status ── */}
         <Box
           sx={{
             background: "#111",
             color: "#fff",
-            borderRadius: "16px 16px 0 0",
-            p: { xs: 1.5, sm: 1 },
+            borderRadius: "14px 14px 0 0",
+            px: { xs: 1.5, sm: 2.5 },
+            py: { xs: 1.1, sm: 1.4 },
             display: "flex",
-            flexDirection: { xs: 'column', sm: 'row' },
             justifyContent: "space-between",
-            alignItems: { xs: 'flex-start', sm: 'center' },
-            gap: { xs: 1, sm: 0 },
+            alignItems: "center",
+            gap: 1,
           }}
         >
-          <Box sx={{ minWidth: 0, maxWidth: '100%' }}>
+          {/* Name */}
+          <Box sx={{ minWidth: 0, flex: 1 }}>
             <Typography
-              variant="caption"
+              fontWeight={700}
               sx={{
-                color: "#FF9933",
-                fontWeight: 700,
-                letterSpacing: 1,
+                fontSize: { xs: '0.85rem', sm: '1rem' },
+                lineHeight: 1.3,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
               }}
             >
-              FROM
-            </Typography>
-
-            <Typography fontWeight={700} sx={{ wordBreak: 'break-word', fontSize: { xs: '0.95rem', sm: '1rem' } }}>
-              📍 {formFrom(ride)}
+              {ride.createdBy?.firstName} {ride.createdBy?.lastName}
             </Typography>
           </Box>
 
-          <Box textAlign={{ xs: 'left', sm: 'right' }} sx={{ minWidth: 0, maxWidth: '100%' }}>
-            <Typography
-              variant="caption"
-              sx={{
-                color: "#FF9933",
-                fontWeight: 700,
-                letterSpacing: 1,
-              }}
-            >
-              TO
-            </Typography>
-
-            <Typography fontWeight={700} sx={{ wordBreak: 'break-word', fontSize: { xs: '0.95rem', sm: '1rem' } }}>
-              📍 {formTo(ride)}
-            </Typography>
-          </Box>
+          {/* Status chip */}
+          <Chip
+            size="small"
+            label={`${status.icon} ${status.label}`}
+            sx={{
+              bgcolor: status.bg,
+              color: status.color,
+              fontWeight: 700,
+              fontSize: { xs: '0.62rem', sm: '0.7rem' },
+              height: { xs: 22, sm: 24 },
+              flexShrink: 0,
+            }}
+          />
         </Box>
 
+        {/* ── Card body ── */}
         <Card
           elevation={0}
           sx={{
-            borderRadius: "0 0 16px 16px",
+            borderRadius: "0 0 14px 14px",
             border: "1px solid rgba(255,153,51,0.25)",
             borderTop: 0,
             bgcolor: "#FFF9F2",
-            "&:hover": {
-              boxShadow: "0 10px 25px rgba(255,153,51,.25)",
-            },
+            transition: "box-shadow .25s ease",
+            // "&:hover": {
+            //   boxShadow: { xs: 'none', sm: "0 8px 24px rgba(255,153,51,.2)" },
+            // },
           }}
         >
-          <CardContent sx={{ p: { xs: 1.75, sm: 3 } }}>
-            <Grid container rowSpacing={{ xs: 2, sm: 3 }} columnSpacing={{ xs: 1.5, sm: 3 }} alignItems="center">
+          <CardContent
+            sx={{
+              p: { xs: '12px !important', sm: '20px 24px !important' },
+            }}
+          >
+            {/* FROM / TO row */}
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 1,
+                pb: { xs: 1.25, sm: 2 },
+                mb: { xs: 1.25, sm: 2 },
+                borderBottom: '1px solid rgba(255,153,51,0.2)',
+              }}
+            >
+              {/* FROM */}
+              <Box sx={{ minWidth: 0, flex: 1 }}>
+                <Typography
+                  variant="caption"
+                  sx={{ color: "#FF9933", fontWeight: 700, letterSpacing: 0.8, fontSize: { xs: '0.6rem', sm: '0.7rem' } }}
+                >
+                  FROM
+                </Typography>
+                <Typography
+                  fontWeight={700}
+                  sx={{
+                    wordBreak: 'break-word',
+                    fontSize: { xs: '0.82rem', sm: '0.95rem' },
+                    lineHeight: 1.3,
+                  }}
+                >
+                  📍 {formFrom(ride)}
+                </Typography>
+              </Box>
 
-              {/* Date & Time */}
-              <Grid item xs={6} sm={6} md={2}>
-                <Stack spacing={1.5}>
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <CalendarTodayIcon sx={{ color: "#FF9933", fontSize: { xs: 16, sm: 24 } }} />
-                    <Typography variant="body2" noWrap sx={{ fontSize: { xs: '0.78rem', sm: '0.875rem' } }}>
-                      {date}
-                    </Typography>
-                  </Stack>
+              <ArrowForwardIcon sx={{ color: '#FF9933', fontSize: { xs: 16, sm: 20 }, flexShrink: 0 }} />
 
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <AccessTimeIcon sx={{ color: "#FF9933", fontSize: { xs: 16, sm: 24 } }} />
-                    <Typography variant="body2" noWrap sx={{ fontSize: { xs: '0.78rem', sm: '0.875rem' } }}>
-                      {time}
-                    </Typography>
-                  </Stack>
+              {/* TO */}
+              <Box sx={{ minWidth: 0, flex: 1, textAlign: 'right' }}>
+                <Typography
+                  variant="caption"
+                  sx={{ color: "#FF9933", fontWeight: 700, letterSpacing: 0.8, fontSize: { xs: '0.6rem', sm: '0.7rem' } }}
+                >
+                  TO
+                </Typography>
+                <Typography
+                  fontWeight={700}
+                  sx={{
+                    wordBreak: 'break-word',
+                    fontSize: { xs: '0.82rem', sm: '0.95rem' },
+                    lineHeight: 1.3,
+                  }}
+                >
+                  📍 {formTo(ride)}
+                </Typography>
+              </Box>
+            </Box>
+
+            {/* Details grid — Date&time / Seats / Travel mode / Fuel / Gender pref */}
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(3, 1fr)' },
+                gap: { xs: '12px 8px', sm: 3 },
+              }}
+            >
+              {/* Date & time */}
+              <Box>
+                <Typography sx={{ fontSize: { xs: '0.65rem', sm: '0.7rem' }, color: 'text.secondary', mb: 0.5 }}>
+                  Date &amp; time
+                </Typography>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <CalendarTodayIcon sx={{ color: "#FF9933", fontSize: { xs: 15, sm: 18 } }} />
+                  <Typography sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, fontWeight: 600 }}>
+                    {date} · {time}
+                  </Typography>
                 </Stack>
-              </Grid>
+              </Box>
 
-              {/* Vehicle */}
-              <Grid item xs={6} sm={6} md={2}>
-                <Stack spacing={1.5}>
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    {travelIcons[ride.modeOfTravel]}
-                    <Typography variant="body2" noWrap sx={{ fontSize: { xs: '0.78rem', sm: '0.875rem' } }}>
-                      {`${ride.modeOfTravel}`}
-                    </Typography>
-                  </Stack>
-
-                  <Chip
-                    icon={<LocalGasStationIcon />}
-                    label={`Fuel : ${fuelLabel}`}
-                    size="small"
-                    sx={{
-                      bgcolor: fuelLabel === "Yes" ? "#FFF0DD" : "#F3F4F6",
-                      color: "#000",
-                      fontWeight: 600,
-                      fontSize: { xs: '0.68rem', sm: '0.8125rem' },
-                      maxWidth: '100%',
-                      '& .MuiChip-icon': { fontSize: { xs: 14, sm: 18 } },
-                    }}
-                  />
+              {/* Seats needed */}
+              <Box>
+                <Typography sx={{ fontSize: { xs: '0.65rem', sm: '0.7rem' }, color: 'text.secondary', mb: 0.5 }}>
+                  Seats needed
+                </Typography>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <EventSeatIcon sx={{ color: "#FF9933", fontSize: { xs: 15, sm: 18 } }} />
+                  <Typography sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, fontWeight: 600 }}>
+                    {ride.availableSeats} seat{ride.availableSeats === 1 ? '' : 's'}
+                  </Typography>
                 </Stack>
-              </Grid>
+              </Box>
 
-              {/* Gender & Seats */}
-              <Grid item xs={6} sm={6} md={2}>
-                <Stack spacing={1.5}>
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <EventSeatIcon sx={{ color: "#FF9933", fontSize: { xs: 16, sm: 24 } }} />
-                    <Typography variant="body2" noWrap sx={{ fontSize: { xs: '0.78rem', sm: '0.875rem' } }}>
-                      {ride.availableSeats} Seats
-                    </Typography>
-                  </Stack>
-
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    {genderIcon[ride.genderPreference]}
-                    <Typography variant="body2" noWrap sx={{ fontSize: { xs: '0.78rem', sm: '0.875rem' } }}>
-                      {`${ride.genderPreference}`}
-                    </Typography>
-                  </Stack>
+              {/* Travel mode */}
+              <Box>
+                <Typography sx={{ fontSize: { xs: '0.65rem', sm: '0.7rem' }, color: 'text.secondary', mb: 0.5 }}>
+                  Travel mode
+                </Typography>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  {React.cloneElement(travelIcons[ride.modeOfTravel] || travelIcons.Car, {
+                    sx: { color: "#FF9933", fontSize: { xs: 15, sm: 18 } },
+                  })}
+                  <Typography sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, fontWeight: 600 }}>
+                    {ride.modeOfTravel}
+                  </Typography>
                 </Stack>
-              </Grid>
+              </Box>
 
-              {/* Status */}
-              <Grid item xs={6} sm={6} md={2.5}>
-                <Stack direction="row" spacing={1.5} alignItems="center">
-                  <Chip
-                    size="small"
-                    label={`${status.icon} ${status.label}`}
-                    sx={{
-                      bgcolor: status.bg,
-                      color: status.color,
-                      fontWeight: 700,
-                      fontSize: { xs: '0.68rem', sm: '0.8125rem' },
-                      maxWidth: '100%',
-                    }}
-                  />
+              {/* Gender pref */}
+              <Box>
+                <Typography sx={{ fontSize: { xs: '0.65rem', sm: '0.7rem' }, color: 'text.secondary', mb: 0.5 }}>
+                  Gender pref
+                </Typography>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  {React.cloneElement(genderIcon[ride.genderPreference] || genderIcon.Any, {
+                    sx: { color: "#FF9933", fontSize: { xs: 15, sm: 18 } },
+                  })}
+                  <Typography sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, fontWeight: 600 }}>
+                    {ride.genderPreference}
+                  </Typography>
                 </Stack>
-              </Grid>
+              </Box>
 
-            </Grid>
+              {/* Fuel sharing */}
+              <Box>
+                <Typography sx={{ fontSize: { xs: '0.65rem', sm: '0.7rem' }, color: 'text.secondary', mb: 0.5 }}>
+                  Fuel sharing
+                </Typography>
+                <Chip
+                  icon={<LocalGasStationIcon sx={{ fontSize: { xs: 14, sm: 16 } }} />}
+                  label={fuelLabel}
+                  size="small"
+                  sx={{
+                    bgcolor: fuelLabel === "Yes" ? "#FFF0DD" : "#F3F4F6",
+                    color: "#000",
+                    fontWeight: 600,
+                    fontSize: { xs: '0.65rem', sm: '0.75rem' },
+                  }}
+                />
+              </Box>
+            </Box>
           </CardContent>
         </Card>
       </Box>
@@ -779,6 +691,7 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete }) {
     </>
   );
 }
+
 // ── Main Component ───────────────────────────────────────────────────────────
 const MyRides = () => {
   const [tab, setTab] = useState(0);
@@ -792,67 +705,40 @@ const MyRides = () => {
 
   const user = JSON.parse(localStorage.getItem('user'));
 
-  // ── Fetch all rides ────────────────────────────────────────────────────────
+  // const theme = useTheme();
+  // const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   useEffect(() => {
     const fetchRides = async () => {
-
       const currentDateTime = new Date();
-
       try {
         const response = await axios.get(`${Api}/rides/get`);
-
         const all = (response.data.data || []).sort(
           (a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
         );
 
-        setMypost(
-          all.filter((item) => item?.createdBy?._id === user.id)
-        );
+        setMypost(all.filter((item) => item?.createdBy?._id === user.id));
 
-        // Upcoming rides (only future rides)
         setUpcoming(
           all.filter((ride) => {
             const rideStartTime = new Date(ride?.startTime);
-
-            return (
-              ride?.createdBy?._id === user.id &&
-              !isNaN(rideStartTime) &&
-              rideStartTime > currentDateTime
-            );
+            return ride?.createdBy?._id === user.id && !isNaN(rideStartTime) && rideStartTime > currentDateTime;
           })
         );
 
-        // History rides (ended after 3 hours)
         setHistory(
           all.filter((ride) => {
             const rideStartTime = new Date(ride?.startTime);
-
-            const rideEndTime = new Date(
-              rideStartTime.getTime() + 3 * 60 * 60 * 1000
-            );
-
-            return (
-              ride?.createdBy?._id === user.id &&
-              !isNaN(rideStartTime) &&
-              rideEndTime < currentDateTime
-            );
+            const rideEndTime = new Date(rideStartTime.getTime() + 3 * 60 * 60 * 1000);
+            return ride?.createdBy?._id === user.id && !isNaN(rideStartTime) && rideEndTime < currentDateTime;
           })
         );
 
-        // Current active ride (between start time and +3 hours)
         setCurrentRide(
           all.filter((ride) => {
             const rideStartTime = new Date(ride?.startTime);
-
-            const rideEndTime = new Date(
-              rideStartTime.getTime() + 3 * 60 * 60 * 1000
-            );
-
-            return (
-              ride?.createdBy?._id === user.id &&
-              rideStartTime <= currentDateTime &&
-              rideEndTime >= currentDateTime
-            );
+            const rideEndTime = new Date(rideStartTime.getTime() + 3 * 60 * 60 * 1000);
+            return ride?.createdBy?._id === user.id && rideStartTime <= currentDateTime && rideEndTime >= currentDateTime;
           })
         );
       } catch (error) {
@@ -864,11 +750,9 @@ const MyRides = () => {
     fetchRides();
   }, []);
 
-  // ── Edit: update the ride in all three lists ───────────────────────────────
   const handleEdit = (updated) => {
     const id = updated._id || updated.id;
     const merge = (list) => list.map((r) => ((r._id || r.id) === id ? updated : r));
-
     setMypost(merge(mypost));
     setUpcoming(merge(upcoming));
     setHistory(merge(history));
@@ -877,11 +761,9 @@ const MyRides = () => {
     toast.success('Ride Updated Successfully...!');
   };
 
-  // ── Delete: remove from all three lists (called after API success) ─────────
   const handleDelete = (deleted) => {
     const id = deleted._id || deleted.id;
     const remove = (list) => list.filter((r) => (r._id || r.id) !== id);
-
     setMypost(prev => remove(prev));
     setUpcoming(prev => remove(prev));
     setHistory(prev => remove(prev));
@@ -901,79 +783,119 @@ const MyRides = () => {
       />
     ));
 
+  // Short tab labels so all 4 fit on any screen
+  const tabLabels = [
+    { short: 'Current', count: currentRide.length },
+    { short: 'Upcoming', count: upcoming.length },
+    { short: 'My Posts', count: mypost.length },
+    { short: 'History', count: history.length },
+  ];
+
   return (
     <>
       <Box
-        // sx={{ width: '100%', maxWidth: 700, mx: 'auto', px: { xs: 1.5, sm: 2, md: 0 } }}
         sx={{
           width: '100%',
           maxWidth: { xs: '100%', sm: 720 },
-          // mx: 'auto',
-          px: { xs: 2, sm: 3 },
+          px: { xs: 1.5, sm: 3 },
           py: { xs: 2, sm: 3 },
           boxSizing: 'border-box',
         }}
       >
-        <Typography variant="h5" fontWeight={800} sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
+        <Typography variant="h5" fontWeight={800} sx={{ fontSize: { xs: '1.2rem', sm: '1.5rem' }, mb: 2 }}>
           My Rides
         </Typography>
 
-        <Tabs
-          value={tab}
-          onChange={(_, v) => setTab(v)}
-          variant="scrollable"
-          scrollButtons="auto"
-          allowScrollButtonsMobile
+        {/* ── Tabs: centered, all 4 visible, no scroll ── */}
+        <Box
           sx={{
+            width: '100%',
+            borderBottom: '1px solid',
+            borderColor: 'divider',
             mb: 2.5,
-            '& .MuiTab-root': {
-              fontWeight: 600,
-              textTransform: 'none',
-              minWidth: { xs: 'auto', sm: 90 },
-              minHeight: 44,
-              px: { xs: 1.25, sm: 2 },
-              fontSize: { xs: '0.78rem', sm: '0.875rem' },
-            },
-            '& .Mui-selected': { color: 'primary.main' },
-            '& .MuiTabs-indicator': { bgcolor: 'primary.main' },
           }}
         >
-          <Tab label={`Current Ride (${currentRide.length})`} />
-          <Tab label={`Upcoming (${upcoming.length})`} />
-          <Tab label={`My Posts (${mypost.length})`} />
-          <Tab label={`History (${history.length})`} />
-        </Tabs>
-
-        {loading ? (
-          <Box
+          <Tabs
+            value={tab}
+            onChange={(_, v) => setTab(v)}
+            variant="fullWidth"
             sx={{
-              width: '100%',
-              marginTop: '5rem',
-              display: 'flex',
-              justifyContent: 'center',
+              minHeight: { xs: 50, sm: 48 },
+
+              "& .MuiTab-root": {
+                minWidth: 0,
+                padding: { xs: "4px 2px", sm: "12px 16px" },
+                fontSize: { xs: "0.7rem", sm: "0.82rem" }, // smaller text
+                fontWeight: 600,
+                textTransform: "none",
+                minHeight: { xs: 38, sm: 48 },
+                lineHeight: 1.1,
+
+              },
+
+              "& .MuiTabs-indicator": {
+                height: 3,
+              },
             }}
           >
+            {tabLabels.map(({ short, count }, i) => (
+              <Tab
+                key={i}
+                label={
+                  <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px' }}>
+                    <Typography
+                      component="span"
+                      sx={{
+                        fontSize: { xs: '0.55rem', sm: "0.8rem" },
+                        fontWeight: 'inherit',
+                        lineHeight: 1.2,
+                        whiteSpace: 'nowrap',
+
+                      }}
+                    >
+                      {`${short} ( ${count} )`}
+                    </Typography>
+                    {/* <Box
+                      sx={{
+                        bgcolor: tab === i ? "primary.main" : "#E0E0E0",
+                        color: tab === i ? "#fff" : "text.secondary",
+                        borderRadius: "10px",
+                        mt: 1,
+                        mb: 1,
+                        px: "7px",
+                        minWidth: 16,
+                        height: 20,
+                        fontSize: "0.5rem",
+                        fontWeight: 700,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      {count}
+                    </Box> */}
+                  </Box>
+                }
+              />
+            ))}
+          </Tabs>
+        </Box>
+
+        {loading ? (
+          <Box sx={{ width: '100%', mt: '5rem', display: 'flex', justifyContent: 'center' }}>
             <CircularProgress size={50} />
           </Box>
-
         ) : (
           <>
-            {/* Current Ride */}
             {tab === 0 && (
               <Box>
                 {currentRide.length > 0
                   ? renderList(currentRide, false, false)
-                  : <EmptyState
-                    emoji="🚗"
-                    message="You don't have any active rides at the moment"
-                    actionLabel="Share a Ride"
-                    actionHref="/offer"
-                  />
+                  : <EmptyState emoji="🚗" message="You don't have any active rides at the moment" actionLabel="Share a Ride" actionHref="/offer" />
                 }
               </Box>
             )}
 
-            {/* Upcoming — edit + delete */}
             {tab === 1 && (
               <Box>
                 {upcoming.length > 0
@@ -982,17 +904,14 @@ const MyRides = () => {
               </Box>
             )}
 
-            {/* My Posts — edit + delete */}
             {tab === 2 && (
               <Box>
                 {mypost.length > 0
                   ? renderList(mypost, true, true)
-                  : <EmptyState emoji="🚗" message="You haven't posted any rides yet"
-                    actionLabel="Post your first ride" actionHref="/offer" />}
+                  : <EmptyState emoji="🚗" message="You haven't posted any rides yet" actionLabel="Post your first ride" actionHref="/offer" />}
               </Box>
             )}
 
-            {/* History */}
             {tab === 3 && (
               <Box>
                 {history.length > 0
@@ -1002,22 +921,13 @@ const MyRides = () => {
             )}
           </>
         )}
-        {/* Edit Modal — pre-filled with all fields from clicked ride */}
+
         {editRide && (
-          <EditRideModal
-            ride={editRide}
-            onSave={handleEdit}
-            onClose={() => setEditRide(null)}
-          />
+          <EditRideModal ride={editRide} onSave={handleEdit} onClose={() => setEditRide(null)} />
         )}
 
-        {/* Delete Confirm Dialog — calls DELETE API then removes from state */}
         {deleteRide && (
-          <DeleteConfirmDialog
-            ride={deleteRide}
-            onConfirm={handleDelete}
-            onClose={() => setDeleteRide(null)}
-          />
+          <DeleteConfirmDialog ride={deleteRide} onConfirm={handleDelete} onClose={() => setDeleteRide(null)} />
         )}
       </Box>
     </>
