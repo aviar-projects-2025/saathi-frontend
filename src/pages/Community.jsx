@@ -22,6 +22,7 @@ import Api from '../Api.jsx';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import CommunityImage from '../components/CommunityImage.jsx';
+import CommunityComments from './CommunityComments.jsx';
 
 const topMembers = [
   { name: 'Vijay Patel', initials: 'VP', rides: 67, city: 'Frisco', badge: '🏅 Founding member', verified: true },
@@ -74,6 +75,7 @@ export default function Community() {
   const [loading, setLoading] = useState(false);
   const [postLoading, setPostLoading] = useState(false);
   const [communityPosts, setCommunityPosts] = useState([]);
+  const [activeCommentPostId, setActiveCommentPostId] = useState(null);
   const user = JSON.parse(localStorage.getItem('user'))
 
   // console.log(user,'user')
@@ -104,7 +106,6 @@ export default function Community() {
         formData.append("postImage", media);
       }
 
-      console.log(formData, 'formData')
 
       const res = await axios.post(Api + "/community/", formData, {
         headers: {
@@ -112,7 +113,6 @@ export default function Community() {
         },
       });
 
-      console.log(res.data, "post created");
 
       setPost("");
       setMedia(null);
@@ -166,19 +166,6 @@ export default function Community() {
 
   }
 
-  // const addLike = (id) => {
-  //   try {
-  //     let postId = id
-  //     axios.post(Api + `/likes/${postId}/${user.id}`)
-  //       .then((res) => {
-  //         console.log(res)
-  //         setIsLiked(res?.data?.isLiked)
-  //       })
-  //   } catch (error) {
-  //     toast.error(error.message)
-  //   }
-  // }
-
   const addLike = async (id) => {
     try {
       const res = await axios.post(Api + `/likes/${id}/${user.id}`);
@@ -202,7 +189,6 @@ export default function Community() {
   const removeLike = async (id) => {
     try {
       const res = await axios.delete(Api + `/likes/${id}/${user.id}`);
-      console.log(res,'delete')
       setCommunityPosts((prev) =>
         prev.map((post) =>
           post._id === id
@@ -398,7 +384,6 @@ export default function Community() {
                         overflow: "hidden",
                       }}
                     >
-                      {console.log(post)}
                       <Box sx={{ p: 2 }}>
                         {/* Header */}
                         <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5 }}>
@@ -443,7 +428,6 @@ export default function Community() {
 
                       {/* Actions */}
                       <Stack direction="row" sx={{ py: 0.5, marginLeft: 2, gap: 5 }}>
-                        {/* {console.log(isLiked, 'isLiked')} */}
                         <Button
                           onClick={() => {
                             post.isLiked ?
@@ -463,10 +447,15 @@ export default function Community() {
                         </Button>
 
                         <Button
-                          startIcon={<ChatIcon />}
+                          startIcon={activeCommentPostId === post._id ? <ChatIcon sx={{ color: "#0084ffff" }} /> : <ChatIcon />}
+                          onClick={() => {
+                            setActiveCommentPostId((prev) =>
+                              prev === post._id ? null : post._id
+                            );
+                          }}
                           sx={{ textTransform: "none", color: "text.secondary" }}
                         >
-                          Comment
+                          Comments
                         </Button>
 
                         <Button
@@ -476,105 +465,112 @@ export default function Community() {
                           Share
                         </Button>
                       </Stack>
-                    </Paper>
+                      <Divider />
+
+                      { activeCommentPostId === post._id && (
+                      <Box sx={{ margin: 1.5 }}>
+                        <CommunityComments post={post} user={user} />
+                      </Box>
+                    )}
+                </Paper>
                   ))}
-                </>
+            </>
               }
-            </Grid>
           </Grid>
-        </Box>
-        <Box
+        </Grid>
+      </Box>
+      <Box
+        sx={{
+          flexShrink: 0,
+          width: '70%',
+        }}
+      >
+        <Grid
+          item
+          xs={12}
+          md={4}
+          lg={3}
           sx={{
-            flexShrink: 0,
-            width: '70%',
+            height: "calc(100vh - 130px)",
+            overflowY: "auto",
+            position: { md: "sticky" },
+            top: 100,
           }}
         >
-          <Grid
-            item
-            xs={12}
-            md={4}
-            lg={3}
-            sx={{
-              height: "calc(100vh - 130px)",
-              overflowY: "auto",
-              position: { md: "sticky" },
-              top: 100,
-            }}
-          >
-            {/* Top members */}
-            <Grid xs={12} md={7}>
-              <Paper sx={{ p: 2.5, borderRadius: 3, border: '1px solid #F0E6DC' }} elevation={0}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                  <EmojiEventsIcon sx={{ color: '#F4A261' }} />
-                  <Typography fontWeight={700}>Top Community Members</Typography>
+          {/* Top members */}
+          <Grid xs={12} md={7}>
+            <Paper sx={{ p: 2.5, borderRadius: 3, border: '1px solid #F0E6DC' }} elevation={0}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                <EmojiEventsIcon sx={{ color: '#F4A261' }} />
+                <Typography fontWeight={700}>Top Community Members</Typography>
+              </Box>
+              {topMembers.map((member, i) => (
+                <Box key={member.name}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, py: 1.25 }}>
+                    <Typography fontWeight={800} color="text.secondary" fontSize="0.9rem" sx={{ width: 20, textAlign: 'center' }}>
+                      {i + 1}
+                    </Typography>
+                    <UserAvatar name={member.name} initials={member.initials} size={40} verified={member.verified} />
+                    <Box sx={{ flex: 1 }}>
+                      <Typography fontWeight={600} fontSize="0.9rem">{member.name}</Typography>
+                      <Typography variant="caption" color="text.secondary">{member.city}</Typography>
+                      {member.badge && (
+                        <Typography variant="caption" sx={{ display: 'block', color: '#E8650A', fontWeight: 600 }}>
+                          {member.badge}
+                        </Typography>
+                      )}
+                    </Box>
+                    <Box sx={{ textAlign: 'right' }}>
+                      <Typography fontWeight={700} color="primary.main" fontSize="0.9rem">{member.rides}</Typography>
+                      <Typography variant="caption" color="text.secondary">rides</Typography>
+                    </Box>
+                  </Box>
+                  {i < topMembers.length - 1 && <Divider />}
                 </Box>
-                {topMembers.map((member, i) => (
-                  <Box key={member.name}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, py: 1.25 }}>
-                      <Typography fontWeight={800} color="text.secondary" fontSize="0.9rem" sx={{ width: 20, textAlign: 'center' }}>
-                        {i + 1}
-                      </Typography>
-                      <UserAvatar name={member.name} initials={member.initials} size={40} verified={member.verified} />
-                      <Box sx={{ flex: 1 }}>
-                        <Typography fontWeight={600} fontSize="0.9rem">{member.name}</Typography>
-                        <Typography variant="caption" color="text.secondary">{member.city}</Typography>
-                        {member.badge && (
-                          <Typography variant="caption" sx={{ display: 'block', color: '#E8650A', fontWeight: 600 }}>
-                            {member.badge}
-                          </Typography>
-                        )}
-                      </Box>
-                      <Box sx={{ textAlign: 'right' }}>
-                        <Typography fontWeight={700} color="primary.main" fontSize="0.9rem">{member.rides}</Typography>
-                        <Typography variant="caption" color="text.secondary">rides</Typography>
-                      </Box>
-                    </Box>
-                    {i < topMembers.length - 1 && <Divider />}
-                  </Box>
-                ))}
-              </Paper>
-            </Grid>
-
-            {/* Activity feed + invite */}
-            <Grid xs={12} md={5}>
-              <Paper sx={{ p: 2.5, borderRadius: 3, border: '1px solid #F0E6DC', mb: 2 }} elevation={0}>
-                <Typography fontWeight={700} mb={1.5}>Recent Activity</Typography>
-                {activities.map((a, i) => (
-                  <Box key={i} sx={{ display: 'flex', gap: 1.25, mb: 1.5 }}>
-                    <Typography fontSize="1.1rem">{a.icon}</Typography>
-                    <Box>
-                      <Typography variant="body2" lineHeight={1.4}>{a.text}</Typography>
-                      <Typography variant="caption" color="text.secondary">{a.time}</Typography>
-                    </Box>
-                  </Box>
-                ))}
-              </Paper>
-
-              {/* Invite card */}
-              <Paper
-                sx={{
-                  p: 2.5, borderRadius: 3,
-                  background: 'linear-gradient(135deg, #E8650A 0%, #FF8C42 100%)',
-                  color: '#fff',
-                }}
-                elevation={0}
-              >
-                <Typography fontWeight={800} fontSize="1.05rem" mb={0.5}>Invite a friend 🙏</Typography>
-                <Typography variant="body2" mb={2} sx={{ opacity: 0.9 }}>
-                  Saathi grows through trust. Invite someone from your community to join — your referral builds their credibility.
-                </Typography>
-                <Button
-                  variant="contained"
-                  size="small"
-                  sx={{ bgcolor: '#fff', color: '#E8650A', fontWeight: 700, '&:hover': { bgcolor: '#FFF8F2' } }}
-                >
-                  Share invite link
-                </Button>
-              </Paper>
-            </Grid>
+              ))}
+            </Paper>
           </Grid>
-        </Box>
-      </Stack>
-    </PageLayout>
+
+          {/* Activity feed + invite */}
+          <Grid xs={12} md={5}>
+            <Paper sx={{ p: 2.5, borderRadius: 3, border: '1px solid #F0E6DC', mb: 2 }} elevation={0}>
+              <Typography fontWeight={700} mb={1.5}>Recent Activity</Typography>
+              {activities.map((a, i) => (
+                <Box key={i} sx={{ display: 'flex', gap: 1.25, mb: 1.5 }}>
+                  <Typography fontSize="1.1rem">{a.icon}</Typography>
+                  <Box>
+                    <Typography variant="body2" lineHeight={1.4}>{a.text}</Typography>
+                    <Typography variant="caption" color="text.secondary">{a.time}</Typography>
+                  </Box>
+                </Box>
+              ))}
+            </Paper>
+
+            {/* Invite card */}
+            <Paper
+              sx={{
+                p: 2.5, borderRadius: 3,
+                background: 'linear-gradient(135deg, #E8650A 0%, #FF8C42 100%)',
+                color: '#fff',
+              }}
+              elevation={0}
+            >
+              <Typography fontWeight={800} fontSize="1.05rem" mb={0.5}>Invite a friend 🙏</Typography>
+              <Typography variant="body2" mb={2} sx={{ opacity: 0.9 }}>
+                Saathi grows through trust. Invite someone from your community to join — your referral builds their credibility.
+              </Typography>
+              <Button
+                variant="contained"
+                size="small"
+                sx={{ bgcolor: '#fff', color: '#E8650A', fontWeight: 700, '&:hover': { bgcolor: '#FFF8F2' } }}
+              >
+                Share invite link
+              </Button>
+            </Paper>
+          </Grid>
+        </Grid>
+      </Box>
+    </Stack>
+    </PageLayout >
   );
 }
