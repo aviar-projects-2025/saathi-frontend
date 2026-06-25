@@ -1,231 +1,3 @@
-// import React, { useEffect, useState } from "react";
-// import axios from "axios";
-// import {
-//   Container,
-//   Typography,
-//   CircularProgress,
-//   Box,
-//   Grid,
-//   TextField,
-//   FormControl,
-//   InputLabel,
-//   Select,
-//   MenuItem,
-//   Paper,
-//   Button,
-// } from "@mui/material";
-
-// import RideCard from "../components/RideCard.jsx";
-// import Api from "../Api";
-
-// export default function FindRides() {
-//   const [rides, setRides] = useState([]);
-//   const [loading, setLoading] = useState(true);
-
-//   const [searchFrom, setSearchFrom] = useState("");
-//   const [searchDestination, setSearchDestination] = useState("");
-//   const [transportMode, setTransportMode] = useState("");
-//   const [gender, setGender] = useState("");
-//   const [fuelSharing, setFuelSharing] = useState("");
-//   const [language, setLanguage] = useState("");
-
-//   useEffect(() => {
-//     fetchRides();
-//   }, []);
-
-//   const fetchRides = async () => {
-//     try {
-//       const res = await axios.get(`${Api}/rides/get`);
-//       setRides(res.data.data || []);
-//     } catch (error) {
-//       console.log(error);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   const clearFilters = () => {
-//     setSearchFrom("");
-//     setSearchDestination("");
-//     setTransportMode("");
-//     setGender("");
-//     setFuelSharing("");
-//     setLanguage("");
-//   };
-
-//   const filteredRides = rides.filter((ride) => {
-//     const fromValue =
-//       ride.modeOfTravel === "Flight"
-//         ? `${ride.fromAirport || ""} ${ride.fromCountry || ""} ${ride.from || ""}`
-//         : ride.from || "";
-
-//     const destinationValue =
-//       ride.modeOfTravel === "Flight"
-//         ? `${ride.toAirport || ""} ${ride.toCountry || ""} ${ride.destination || ""}`
-//         : ride.destination || "";
-
-//     const fromMatch = fromValue.toLowerCase().includes(searchFrom.toLowerCase());
-
-//     const destinationMatch = destinationValue
-//       .toLowerCase()
-//       .includes(searchDestination.toLowerCase());
-
-//     const transportMatch = !transportMode || ride.modeOfTravel === transportMode;
-
-//     const genderMatch = !gender || ride.genderPreference === gender;
-
-//     const fuelMatch =
-//       fuelSharing === "" ||
-//       ride.modeOfTravel === "Flight" ||
-//       ride.fuelSharing?.toString() === fuelSharing;
-
-//     const languageMatch =
-//       !language ||
-//       ride.language?.toLowerCase().includes(language.toLowerCase());
-
-//     return (
-//       fromMatch &&
-//       destinationMatch &&
-//       transportMatch &&
-//       genderMatch &&
-//       fuelMatch &&
-//       languageMatch
-//     );
-//   });
-
-//   if (loading) {
-//     return (
-//       <Box textAlign="center" mt={5}>
-//         <CircularProgress />
-//       </Box>
-//     );
-//   }
-
-//   return (
-//     <Container maxWidth="md" sx={{ py: 3 }}>
-//       <Typography variant="h5" fontWeight={800} mb={2}>
-//         Find Rides & Flight Companions
-//       </Typography>
-
-//       <Paper
-//         sx={{
-//           mb: 3,
-//           p: 2,
-//           bgcolor: "#fff",
-//           borderRadius: 4,
-//           boxShadow: "0 8px 25px rgba(0,0,0,0.08)",
-//         }}
-//       >
-//         <Grid container spacing={2}>
-//           <Grid item xs={12} md={3}>
-//             <TextField
-//               fullWidth
-//               size="small"
-//               label="From"
-//               placeholder="City / Airport / Country"
-//               value={searchFrom}
-//               onChange={(e) => setSearchFrom(e.target.value)}
-//             />
-//           </Grid>
-
-//           <Grid item xs={12} md={3}>
-//             <TextField
-//               fullWidth
-//               size="small"
-//               label="Destination"
-//               placeholder="City / Airport / Country"
-//               value={searchDestination}
-//               onChange={(e) => setSearchDestination(e.target.value)}
-//             />
-//           </Grid>
-
-//           <Grid item xs={12} md={2}>
-//             <FormControl fullWidth size="small">
-//               <InputLabel>Transport</InputLabel>
-//               <Select
-//                 value={transportMode}
-//                 label="Transport"
-//                 onChange={(e) => setTransportMode(e.target.value)}
-//               >
-//                 <MenuItem value="">All</MenuItem>
-//                 <MenuItem value="Car">Car</MenuItem>
-//                 <MenuItem value="Bike">Bike</MenuItem>
-//                 <MenuItem value="Bus">Bus</MenuItem>
-//                 <MenuItem value="Train">Train</MenuItem>
-//                 <MenuItem value="Flight">Flight</MenuItem>
-
-//               </Select>
-//             </FormControl>
-//           </Grid>
-
-//           <Grid item xs={12} md={2}>
-//             <FormControl fullWidth size="small">
-//               <InputLabel>Gender</InputLabel>
-//               <Select
-//                 value={gender}
-//                 label="Gender"
-//                 onChange={(e) => setGender(e.target.value)}
-//               >
-//                 <MenuItem value="">All</MenuItem>
-//                 <MenuItem value="Male">Male</MenuItem>
-//                 <MenuItem value="Female">Female</MenuItem>
-//                 <MenuItem value="Any">Any</MenuItem>
-//               </Select>
-//             </FormControl>
-//           </Grid>
-
-//           <Grid item xs={12} md={2}>
-//             <FormControl fullWidth size="small">
-//               <InputLabel>Fuel Share</InputLabel>
-//               <Select
-//                 value={fuelSharing}
-//                 label="Fuel Share"
-//                 onChange={(e) => setFuelSharing(e.target.value)}
-//               >
-//                 <MenuItem value="">All</MenuItem>
-//                 <MenuItem value="true">Yes</MenuItem>
-//                 <MenuItem value="false">No</MenuItem>
-//               </Select>
-//             </FormControl>
-//           </Grid>
-
-//           {transportMode === "Flight" && (
-//             <Grid item xs={12}>
-//               <TextField
-//                 fullWidth
-//                 size="small"
-//                 label="Language"
-//                 placeholder="Tamil, English, Hindi"
-//                 value={language}
-//                 onChange={(e) => setLanguage(e.target.value)}
-//               />
-//             </Grid>
-//           )}
-
-//           <Grid item xs={12}>
-//             <Button variant="outlined" fullWidth onClick={clearFilters}>
-//               Clear Filters
-//             </Button>
-//           </Grid>
-//         </Grid>
-//       </Paper>
-
-//       <Typography variant="subtitle1" fontWeight={700} mb={2}>
-//         {filteredRides.length} results found
-//       </Typography>
-
-//       {filteredRides.length > 0 ? (
-//         filteredRides.map((ride) => <RideCard key={ride._id} ride={ride} />)
-//       ) : (
-//         <Box textAlign="center" py={5}>
-//           <Typography color="text.secondary">
-//             No rides found.
-//           </Typography>
-//         </Box>
-//       )}
-//     </Container>
-//   );
-// }
 
 import React, { useEffect, useState } from "react";
 import axios from "axios";
@@ -399,7 +171,7 @@ export default function FindRides() {
   return (
     <Box sx={{
       minHeight: "100vh",
-      background: `linear-gradient(160deg, ${saffron[50]} 0%, #FFFDF8 60%, #FFF5E0 100%)`,
+      // background: `linear-gradient(160deg, ${saffron[50]} 0%, #FFFDF8 60%, #FFF5E0 100%)`,
       pb: { xs: 4, sm: 6 },
       width: "100%",
       boxSizing: "border-box",
@@ -411,8 +183,8 @@ export default function FindRides() {
 
       {/* ── Hero ─────────────────────────────────────────────── */}
       <Box sx={{
-        background: `linear-gradient(135deg, ${saffron[500]} 0%, ${saffron[600]} 100%)`,
-        color: "#fff",
+        // background: `linear-gradient(135deg, ${saffron[500]} 0%, ${saffron[600]} 100%)`,
+        color: "#000000",
         pt: { xs: 2.5, sm: 4, md: 5 },
         pb: { xs: 6, sm: 6, md: 7 },
         px: { xs: 1.5, sm: 3 },
@@ -535,10 +307,10 @@ export default function FindRides() {
               sx={{
                 flexShrink: 0,
                 borderRadius: "50px",
-                background: "rgba(255,255,255,0.18)",
+                background: "#ffff",
                 backdropFilter: "blur(6px)",
-                border: "1.5px solid rgba(255,255,255,0.55)",
-                color: "#fff",
+                border: "none",
+                color: "#100f0f",
                 fontWeight: 700,
                 textTransform: "none",
                 fontSize: { xs: "0.7rem", sm: "0.82rem" },
@@ -550,7 +322,7 @@ export default function FindRides() {
                 whiteSpace: "nowrap",
                 display: "flex",
                 alignItems: "center",
-                "&:hover": { background: "rgba(255,255,255,0.28)", boxShadow: "none" },
+                "&:hover": { background: `${saffron[500]}`, boxShadow: "none", color: "#ffff" },
               }}
             >
               <TuneIcon sx={{ fontSize: { xs: 14, sm: 17 } }} />
@@ -583,7 +355,7 @@ export default function FindRides() {
           <Box sx={{
             background: "#fff",
             borderRadius: { xs: 3, md: 4 },
-            boxShadow: `0 8px 32px rgba(245,147,0,0.12)`,
+            // boxShadow: `0 8px 32px rgba(245,147,0,0.12)`,
             border: `1.5px solid ${saffron[100]}`,
             p: { xs: 1.75, sm: 3 },
             mt: { xs: -4.5, sm: -3, md: -4 },
@@ -734,7 +506,7 @@ export default function FindRides() {
                       letterSpacing: "0.08em",
                       color: saffron[700],
                       display: "block",
-                      mb: 0.5,
+                      mt: 1,
                     }}
                   >
                     Language
@@ -751,6 +523,7 @@ export default function FindRides() {
                         ...inputFieldSx["& .MuiOutlinedInput-root"],
                         fontSize: { xs: "0.7rem", sm: "0.82rem" },
                         height: { xs: 30, sm: 36 },
+                        mt: 1
                       },
                     }}
                   />
@@ -780,7 +553,7 @@ export default function FindRides() {
                   px: { xs: 1.5, sm: 2.5 },
                   height: { xs: 30, sm: 36 },
                   textTransform: "none",
-                  "&:hover": { background: saffron[50], borderColor: saffron[500] },
+                  "&:hover": { background: saffron[50], borderColor: saffron[300] , color: saffron[500]},
                 }}
               >
                 Clear all
@@ -791,14 +564,17 @@ export default function FindRides() {
                   onClick={() => setFiltersOpen(false)}
                   sx={{
                     borderRadius: "50px",
-                    background: `linear-gradient(90deg, ${saffron[500]} 0%, ${saffron[600]} 100%)`,
-                    color: "#fff",
+                    // background: `linear-gradient(90deg, ${saffron[500]} 0%, ${saffron[600]} 100%)`,
+                    // color: "#fff",
+                    border: `1.5px solid ${saffron[300]}`,
+                    bgcolor: "#ffff",
+                    color: saffron[700],
                     fontWeight: 600,
                     fontSize: { xs: "0.7rem", sm: "0.82rem" },
                     px: { xs: 1.5, sm: 2.5 },
                     height: { xs: 30, sm: 36 },
                     textTransform: "none",
-                    boxShadow: `0 3px 10px rgba(245,147,0,0.3)`,
+                    // boxShadow: `0 3px 10px rgba(245,147,0,0.3)`,
                     "&:hover": {
                       background: `linear-gradient(90deg, ${saffron[600]} 0%, ${saffron[700]} 100%)`,
                     },
