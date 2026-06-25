@@ -227,8 +227,6 @@
 //   );
 // }
 
-
-
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import {
@@ -278,20 +276,20 @@ const saffron = {
 
 const inputFieldSx = {
   "& .MuiOutlinedInput-root": {
-    borderRadius: "12px",
-    fontSize: "0.88rem",
+    borderRadius: "10px",
+    fontSize: "0.82rem",
     background: saffron[50],
     "& fieldset": { borderColor: saffron[200] },
     "&:hover fieldset": { borderColor: saffron[400] },
     "&.Mui-focused fieldset": { borderColor: saffron[500], borderWidth: 2 },
   },
-  "& .MuiInputLabel-root": { fontSize: "0.85rem", color: saffron[600] },
+  "& .MuiInputLabel-root": { fontSize: "0.8rem", color: saffron[600] },
   "& .MuiInputLabel-root.Mui-focused": { color: saffron[600] },
 };
 
 const selectSx = {
-  borderRadius: "12px",
-  fontSize: "0.85rem",
+  borderRadius: "10px",
+  fontSize: "0.82rem",
   background: saffron[50],
   "& .MuiOutlinedInput-notchedOutline": { borderColor: saffron[200] },
   "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: saffron[400] },
@@ -300,11 +298,11 @@ const selectSx = {
 
 const TRANSPORT_OPTIONS = [
   { label: "All", value: "", icon: null },
-  { label: "Car", value: "Car", icon: <DirectionsCarIcon sx={{ fontSize: 16 }} /> },
-  { label: "Bike", value: "Bike", icon: <TwoWheelerIcon sx={{ fontSize: 16 }} /> },
-  { label: "Bus", value: "Bus", icon: <DirectionsBusIcon sx={{ fontSize: 16 }} /> },
-  { label: "Train", value: "Train", icon: <TrainIcon sx={{ fontSize: 16 }} /> },
-  { label: "Flight", value: "Flight", icon: <FlightIcon sx={{ fontSize: 16 }} /> },
+  { label: "Car", value: "Car", icon: <DirectionsCarIcon sx={{ fontSize: 14 }} /> },
+  { label: "Bike", value: "Bike", icon: <TwoWheelerIcon sx={{ fontSize: 14 }} /> },
+  { label: "Bus", value: "Bus", icon: <DirectionsBusIcon sx={{ fontSize: 14 }} /> },
+  { label: "Train", value: "Train", icon: <TrainIcon sx={{ fontSize: 14 }} /> },
+  { label: "Flight", value: "Flight", icon: <FlightIcon sx={{ fontSize: 14 }} /> },
 ];
 
 const GENDER_OPTIONS = [
@@ -326,7 +324,7 @@ export default function FindRides() {
 
   const [rides, setRides] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filtersOpen, setFiltersOpen] = useState(true);
+  const [filtersOpen, setFiltersOpen] = useState(!isMobile); // closed by default on mobile
 
   const [searchFrom, setSearchFrom] = useState("");
   const [searchDestination, setSearchDestination] = useState("");
@@ -400,106 +398,185 @@ export default function FindRides() {
 
   return (
     <Box sx={{
-      minHeight: "100vh", background: `linear-gradient(160deg, ${saffron[50]} 0%, #FFFDF8 60%, #FFF5E0 100%)`, pb: 6, width: '100%',
-      maxWidth: { xs: '100%', sm: 750 },
-      // mx: 'auto',
-      px: { xs: 2, sm: 3 },
-      py: { xs: 2, sm: 3 },
+      minHeight: "100vh",
+      background: `linear-gradient(160deg, ${saffron[50]} 0%, #FFFDF8 60%, #FFF5E0 100%)`,
+      pb: { xs: 4, sm: 6 },
+      width: "100%",
+      boxSizing: "border-box",
+      overflowX: "hidden",
+      maxWidth: { xs: '100%', sm: 720 },
+      px: { xs: 1, sm: 2 },
       boxSizing: 'border-box',
-    }}
-    >
+    }}>
 
       {/* ── Hero ─────────────────────────────────────────────── */}
       <Box sx={{
         background: `linear-gradient(135deg, ${saffron[500]} 0%, ${saffron[600]} 100%)`,
         color: "#fff",
-        pt: { xs: 3, md: 5 },
-        pb: { xs: 8, sm: 6, md: 7 }, // extra bottom space on mobile so the panel's negative margin never collides with wrapped title text
-        px: { xs: 2, sm: 3 },
+        pt: { xs: 2.5, sm: 4, md: 5 },
+        pb: { xs: 6, sm: 6, md: 7 },
+        px: { xs: 1.5, sm: 3 },
       }}>
-        <Container maxWidth="md" sx={{ px: { xs: 0, sm: 2 } }}>
-          <Typography variant="h5" fontWeight={800}
-            sx={{ fontSize: { xs: "1.15rem", sm: "1.55rem", md: "1.85rem" }, letterSpacing: "0.3px" }}>
+        <Container maxWidth="md" disableGutters sx={{ px: { xs: 0, sm: 2 } }}>
+
+          {/* Title */}
+          <Typography
+            fontWeight={800}
+            sx={{
+              fontSize: { xs: "1rem", sm: "1.45rem", md: "1.8rem" },
+              letterSpacing: "0.2px",
+              lineHeight: 1.25,
+            }}
+          >
             Find Rides & Flight Companions
           </Typography>
-          <Typography variant="body2" sx={{ opacity: 0.85, mt: 1.5, mb: 2, fontSize: { xs: "0.78rem", sm: "0.9rem" } }}>
+          <Typography
+            sx={{
+              opacity: 0.85,
+              mt: 0.75,
+              mb: { xs: 1.5, sm: 2 },
+              fontSize: { xs: "0.72rem", sm: "0.88rem" },
+            }}
+          >
             Search and filter rides tailored to your journey
           </Typography>
 
-          {/* Search inputs */}
-          <Grid container spacing={1.5} mt={1.5} alignItems="stretch">
-            <Grid item xs={12} sm={6} md={5}>
-              <TextField fullWidth size="small"
-                placeholder="From — City / Airport "
-                value={searchFrom}
-                onChange={(e) => setSearchFrom(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon sx={{ color: saffron[500], fontSize: 18 }} />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: "50px",
-                    background: "rgba(255,255,255,0.96)",
-                    fontSize: "0.85rem",
-                    "& fieldset": { border: "none" },
-                  },
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={5}>
-              <TextField fullWidth size="small"
-                placeholder="To — City / Airport"
-                value={searchDestination}
-                onChange={(e) => setSearchDestination(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon sx={{ color: saffron[500], fontSize: 18 }} />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: "50px",
-                    background: "rgba(255,255,255,0.96)",
-                    fontSize: "0.85rem",
-                    "& fieldset": { border: "none" },
-                  },
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} md={2}>
-              <Button fullWidth variant="contained"
-                onClick={() => setFiltersOpen((o) => !o)}
-                startIcon={<TuneIcon sx={{ fontSize: 18 }} />}
-                sx={{
+          {/* Search row */}
+          <Box
+            sx={{
+              display: "flex",
+              gap: { xs: 0.75, sm: 1.25 },
+              alignItems: "center",
+              flexDirection: "row",
+              mt: { xs: 1, sm: 1.5 },
+            }}
+          >
+            {/* From */}
+            <TextField
+              size="small"
+              placeholder={
+                isMobile
+                  ? "From / City"
+                  : " From / City / Airport"
+              }
+              value={searchFrom}
+              onChange={(e) => setSearchFrom(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon sx={{ color: saffron[500], fontSize: { xs: 14, sm: 17 } }} />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                flex: 1,
+                minWidth: 0,
+                "& .MuiOutlinedInput-root": {
                   borderRadius: "50px",
-                  background: "rgba(255,255,255,0.18)",
-                  backdropFilter: "blur(6px)",
-                  border: "1.5px solid rgba(255,255,255,0.55)",
-                  color: "#fff",
-                  fontWeight: 700,
-                  textTransform: "none",
-                  fontSize: "0.85rem",
-                  minHeight: 40,
-                  height: "100%",
-                  boxShadow: "none",
-                  whiteSpace: "nowrap",
-                  "&:hover": { background: "rgba(255,255,255,0.28)", boxShadow: "none" },
-                }}>
+                  background: "rgba(255,255,255,0.96)",
+                  fontSize: { xs: "0.7rem", sm: "0.84rem" },
+                  height: { xs: 34, sm: 40 },
+                  pr: 0.5,
+                  "& fieldset": { border: "none" },
+                  "& input": {
+                    py: 0,
+                    px: { xs: 1, sm: 1 },
+                  },
+                  "& .MuiInputAdornment-root": {
+                    ml: { xs: 0.75, sm: 1 },
+                    mr: { xs: 0.25, sm: 0.5 },
+                  },
+                },
+              }}
+            />
+
+            {/* To */}
+            <TextField
+              size="small"
+              placeholder={
+                isMobile
+                  ? "To / City"
+                  : " To / City / Airport"
+              }
+              value={searchDestination}
+              onChange={(e) => setSearchDestination(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon sx={{ color: saffron[500], fontSize: { xs: 14, sm: 17 } }} />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                flex: 1,
+                minWidth: 0,
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: "50px",
+                  background: "rgba(255,255,255,0.96)",
+                  fontSize: { xs: "0.7rem", sm: "0.84rem" },
+                  height: { xs: 34, sm: 40 },
+                  pr: 0.5,
+                  "& fieldset": { border: "none" },
+                  "& input": {
+                    py: 0,
+                    px: { xs: 1, sm: 1 },
+                  },
+                  "& .MuiInputAdornment-root": {
+                    ml: { xs: 0.75, sm: 1 },
+                    mr: { xs: 0.25, sm: 0.5 },
+                  },
+                },
+              }}
+            />
+
+            {/* Filter toggle button */}
+            <Button
+              onClick={() => setFiltersOpen((o) => !o)}
+              sx={{
+                flexShrink: 0,
+                borderRadius: "50px",
+                background: "rgba(255,255,255,0.18)",
+                backdropFilter: "blur(6px)",
+                border: "1.5px solid rgba(255,255,255,0.55)",
+                color: "#fff",
+                fontWeight: 700,
+                textTransform: "none",
+                fontSize: { xs: "0.7rem", sm: "0.82rem" },
+                height: { xs: 34, sm: 40 },
+                minWidth: { xs: "auto", sm: 100 },
+                px: { xs: 1.25, sm: 2 },
+                gap: { xs: 0.4, sm: 0.75 },
+                boxShadow: "none",
+                whiteSpace: "nowrap",
+                display: "flex",
+                alignItems: "center",
+                "&:hover": { background: "rgba(255,255,255,0.28)", boxShadow: "none" },
+              }}
+            >
+              <TuneIcon sx={{ fontSize: { xs: 14, sm: 17 } }} />
+              {/* Show label + count on sm+; icon-only on xs */}
+              <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
                 Filters{activeFilters.length > 0 ? ` (${activeFilters.length})` : ""}
-              </Button>
-            </Grid>
-          </Grid>
+              </Box>
+              {/* Badge dot on mobile when filters active */}
+              {isMobile && activeFilters.length > 0 && (
+                <Box
+                  sx={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: "50%",
+                    background: "#fff",
+                    flexShrink: 0,
+                  }}
+                />
+              )}
+            </Button>
+          </Box>
         </Container>
       </Box>
 
       {/* ── Content ──────────────────────────────────────────── */}
-      <Container maxWidth="md">
+      <Container maxWidth="md" disableGutters sx={{ px: { xs: 1.5, sm: 3 } }}>
 
         {/* ── Filter Panel ── */}
         <Collapse in={filtersOpen}>
@@ -508,22 +585,30 @@ export default function FindRides() {
             borderRadius: { xs: 3, md: 4 },
             boxShadow: `0 8px 32px rgba(245,147,0,0.12)`,
             border: `1.5px solid ${saffron[100]}`,
-            p: { xs: 2, sm: 3 },
-            mt: { xs: -4, sm: -3, md: -4 },
-            mx: { xs: 1, sm: 0 },
+            p: { xs: 1.75, sm: 3 },
+            mt: { xs: -4.5, sm: -3, md: -4 },
             position: "relative",
             zIndex: 1,
           }}>
 
             {/* Transport chips */}
-            <Box mb={2.5}>
-              <Typography component="span" sx={{
-                fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase",
-                letterSpacing: "0.08em", color: saffron[700], mb: 1.5, display: "block",
-              }}>
+            <Box mb={2}>
+              <Typography
+                component="span"
+                sx={{
+                  fontSize: { xs: "0.65rem", sm: "0.7rem" },
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                  color: saffron[700],
+                  display: "block",
+                  mb: 1,
+                  mt: -1
+                }}
+              >
                 Mode of Travel
               </Typography>
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1.5 }}>
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: { xs: 0.6, sm: 1 } }}>
                 {TRANSPORT_OPTIONS.map((opt) => {
                   const selected = transportMode === opt.value;
                   return (
@@ -533,20 +618,27 @@ export default function FindRides() {
                       icon={opt.icon}
                       onClick={() => setTransportMode(opt.value)}
                       sx={{
-                        borderRadius: "12px",
+                        borderRadius: "20px",
                         border: `1.5px solid ${selected ? saffron[500] : saffron[200]}`,
                         background: selected ? saffron[500] : "#fff",
                         color: selected ? "#fff" : saffron[700],
                         fontWeight: 600,
-                        fontSize: { xs: "0.72rem", sm: "0.78rem" },
-                        height: { xs: 28, sm: 32 },
+                        fontSize: { xs: "0.68rem", sm: "0.86rem" },
+                        height: { xs: 24, sm: 30 },
                         cursor: "pointer",
-                        transition: "all 0.16s",
+                        transition: "all 0.15s",
+                        "& .MuiChip-label": {
+                          px: { xs: 1, sm: 1.8 },
+                        },
                         "&:hover": {
                           background: selected ? saffron[600] : saffron[50],
                           borderColor: saffron[400],
                         },
-                        "& .MuiChip-icon": { color: selected ? "#fff" : saffron[500] },
+                        "& .MuiChip-icon": {
+                          color: selected ? "#fff" : saffron[500],
+                          ml: { xs: 0.5, sm: 0.75 },
+                          mr: { xs: "-4px", sm: "-2px" },
+                        },
                       }}
                     />
                   );
@@ -554,19 +646,40 @@ export default function FindRides() {
               </Box>
             </Box>
 
-            <Grid container spacing={{ xs: 1.5, sm: 2 }}>
+            {/* Dropdowns row */}
+            <Grid container spacing={{ xs: 1, sm: 2 }} alignItems="flex-end">
               {/* Gender */}
               <Grid item xs={6} sm={4} md={3}>
-                <Typography component="span" sx={{
-                  fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase",
-                  letterSpacing: "0.08em", color: saffron[700], mb: 0.5, display: "block", mt: 2
-                }}>
+                <Typography
+                  component="span"
+                  sx={{
+                    fontSize: { xs: "0.65rem", sm: "0.7rem" },
+                    fontWeight: 600,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                    color: saffron[700],
+                    display: "block",
+                    mt: 1,
+                    mb: 1
+                  }}
+                >
                   Gender
                 </Typography>
-                <FormControl fullWidth size="small" sx={{ mt: 0.5 }}>
-                  <Select value={gender} displayEmpty onChange={(e) => setGender(e.target.value)} sx={selectSx}>
+                <FormControl fullWidth size="small">
+                  <Select
+                    value={gender}
+                    displayEmpty
+                    onChange={(e) => setGender(e.target.value)}
+                    sx={{
+                      ...selectSx,
+                      fontSize: { xs: "0.7rem", sm: "0.82rem" },
+                      height: { xs: 30, sm: 36 },
+                    }}
+                  >
                     {GENDER_OPTIONS.map((g) => (
-                      <MenuItem key={g.value} value={g.value}>{g.label}</MenuItem>
+                      <MenuItem key={g.value} value={g.value} sx={{ fontSize: { xs: "0.7rem", sm: "0.85rem" } }}>
+                        {g.label}
+                      </MenuItem>
                     ))}
                   </Select>
                 </FormControl>
@@ -574,16 +687,36 @@ export default function FindRides() {
 
               {/* Fuel Sharing */}
               <Grid item xs={6} sm={4} md={3}>
-                <Typography component="span" sx={{
-                  fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase",
-                  letterSpacing: "0.08em", color: saffron[700], mb: 0.5, display: "block", mt: 2
-                }}>
+                <Typography
+                  component="span"
+                  sx={{
+                    fontSize: { xs: "0.65rem", sm: "0.7rem" },
+                    fontWeight: 600,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                    color: saffron[700],
+                    display: "block",
+                    mt: 1,
+                    mb: 1
+                  }}
+                >
                   Fuel Sharing
                 </Typography>
-                <FormControl fullWidth size="small" sx={{ mt: 0.5 }}>
-                  <Select value={fuelSharing} displayEmpty onChange={(e) => setFuelSharing(e.target.value)} sx={selectSx}>
+                <FormControl fullWidth size="small">
+                  <Select
+                    value={fuelSharing}
+                    displayEmpty
+                    onChange={(e) => setFuelSharing(e.target.value)}
+                    sx={{
+                      ...selectSx,
+                      fontSize: { xs: "0.7rem", sm: "0.82rem" },
+                      height: { xs: 30, sm: 36 },
+                    }}
+                  >
                     {FUEL_OPTIONS.map((f) => (
-                      <MenuItem key={f.value} value={f.value}>{f.label}</MenuItem>
+                      <MenuItem key={f.value} value={f.value} sx={{ fontSize: { xs: "0.7rem", sm: "0.85rem" } }}>
+                        {f.label}
+                      </MenuItem>
                     ))}
                   </Select>
                 </FormControl>
@@ -592,54 +725,85 @@ export default function FindRides() {
               {/* Language — Flight only */}
               {transportMode === "Flight" && (
                 <Grid item xs={12} sm={4} md={6}>
-                  <Typography component="span" sx={{
-                    fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase",
-                    letterSpacing: "0.08em", color: saffron[700], mb: 0.5, display: "block", mt: 2
-                  }}>
+                  <Typography
+                    component="span"
+                    sx={{
+                      fontSize: { xs: "0.6rem", sm: "0.7rem" },
+                      fontWeight: 600,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.08em",
+                      color: saffron[700],
+                      display: "block",
+                      mb: 0.5,
+                    }}
+                  >
                     Language
                   </Typography>
-                  <TextField fullWidth size="small"
+                  <TextField
+                    fullWidth
+                    size="small"
                     placeholder="Tamil, English, Hindi…"
                     value={language}
                     onChange={(e) => setLanguage(e.target.value)}
-                    sx={{ mt: 0.5, ...inputFieldSx }}
+                    sx={{
+                      ...inputFieldSx,
+                      "& .MuiOutlinedInput-root": {
+                        ...inputFieldSx["& .MuiOutlinedInput-root"],
+                        fontSize: { xs: "0.7rem", sm: "0.82rem" },
+                        height: { xs: 30, sm: 36 },
+                      },
+                    }}
                   />
                 </Grid>
               )}
             </Grid>
 
             {/* Filter actions */}
-            <Box sx={{
-              display: "flex",
-              justifyContent: { xs: "stretch", sm: "flex-end" },
-              flexDirection: { xs: "column", sm: "row" },
-              gap: 1.5,
-              mt: 1.5,
-            }}>
-              <Button startIcon={<FilterListOffIcon />} onClick={clearFilters}
-                fullWidth={isMobile}
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: { xs: "space-between", sm: "flex-end" },
+                gap: 1,
+                mt: { xs: 1.2, sm: 2 },
+              }}
+            >
+              <Button
+                startIcon={<FilterListOffIcon sx={{ fontSize: { xs: 12, sm: 16 } }} />}
+                onClick={clearFilters}
                 sx={{
-                  order: { xs: 2, sm: 1 },
-                  borderRadius: "50px", border: `1.5px solid ${saffron[300]}`,
-                  color: saffron[700], fontWeight: 600, fontSize: "0.82rem",
-                  px: 2.5, textTransform: "none",
+                  borderRadius: "50px",
+                  border: `1.5px solid ${saffron[300]}`,
+                  color: saffron[700],
+                  fontWeight: 600,
+                  fontSize: { xs: "0.7rem", sm: "0.82rem" },
+                  px: { xs: 1.5, sm: 2.5 },
+                  height: { xs: 30, sm: 36 },
+                  textTransform: "none",
                   "&:hover": { background: saffron[50], borderColor: saffron[500] },
-                }}>
+                }}
+              >
                 Clear all
               </Button>
 
               {isMobile && (
-                <Button onClick={() => setFiltersOpen(false)}
-                  fullWidth
+                <Button
+                  onClick={() => setFiltersOpen(false)}
                   sx={{
-                    order: 1,
                     borderRadius: "50px",
                     background: `linear-gradient(90deg, ${saffron[500]} 0%, ${saffron[600]} 100%)`,
-                    color: "#fff", fontWeight: 700, fontSize: "0.85rem", px: 3,
+                    color: "#fff",
+                    fontWeight: 600,
+                    fontSize: { xs: "0.7rem", sm: "0.82rem" },
+                    px: { xs: 1.5, sm: 2.5 },
+                    height: { xs: 30, sm: 36 },
                     textTransform: "none",
-                    boxShadow: `0 4px 14px rgba(245,147,0,0.35)`,
-                    "&:hover": { background: `linear-gradient(90deg, ${saffron[600]} 0%, ${saffron[700]} 100%)` },
-                  }}>
+                    boxShadow: `0 3px 10px rgba(245,147,0,0.3)`,
+                    "&:hover": {
+                      background: `linear-gradient(90deg, ${saffron[600]} 0%, ${saffron[700]} 100%)`,
+                    },
+                  }}
+                >
                   Show {filteredRides.length} results
                 </Button>
               )}
@@ -648,18 +812,21 @@ export default function FindRides() {
         </Collapse>
 
         {/* ── Results bar ── */}
-        <Box sx={{
-          display: "flex",
-          alignItems: { xs: "flex-start", sm: "center" },
-          justifyContent: "space-between",
-          flexDirection: { xs: "column", sm: "row" },
-          flexWrap: "wrap",
-          gap: 1,
-          mb: 2,
-          mt: 3,
-        }}>
-          <Typography fontWeight={700}
-            sx={{ color: saffron[800], fontSize: { xs: "0.9rem", sm: "1rem" } }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: { xs: 0.75, sm: 1 },
+            mb: { xs: 1.5, sm: 2 },
+            mt: { xs: 2, sm: 3 },
+          }}
+        >
+          <Typography
+            fontWeight={700}
+            sx={{ color: saffron[800], fontSize: { xs: "0.9rem", sm: "1rem" } }}
+          >
             {filteredRides.length}{" "}
             <Typography component="span" fontWeight={400} color="text.secondary" fontSize="inherit">
               {filteredRides.length === 1 ? "result" : "results"} found
@@ -667,14 +834,28 @@ export default function FindRides() {
           </Typography>
 
           {activeFilters.length > 0 && (
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: { xs: 0.5, sm: 0.75 } }}>
               {activeFilters.map((f) => (
-                <Chip key={f.key} label={f.label} onDelete={f.clear}
-                  deleteIcon={<CloseIcon />} size="small"
+                <Chip
+                  key={f.key}
+                  label={f.label}
+                  onDelete={f.clear}
+                  deleteIcon={<CloseIcon />}
+                  size="small"
                   sx={{
-                    background: saffron[50], border: `1px solid ${saffron[300]}`,
-                    color: saffron[800], fontWeight: 600, fontSize: "0.75rem", height: 26,
-                    "& .MuiChip-deleteIcon": { color: saffron[500], fontSize: "0.95rem" },
+                    background: saffron[50],
+                    border: `1px solid ${saffron[300]}`,
+                    color: saffron[800],
+                    fontWeight: 600,
+                    fontSize: { xs: "0.65rem", sm: "0.75rem" },
+                    height: { xs: 22, sm: 26 },
+                    "& .MuiChip-deleteIcon": {
+                      color: saffron[500],
+                      fontSize: { xs: "0.8rem", sm: "0.95rem" },
+                    },
+                    "& .MuiChip-label": {
+                      px: { xs: 0.75, sm: 1 },
+                    },
                   }}
                 />
               ))}
@@ -684,7 +865,7 @@ export default function FindRides() {
 
         {/* ── Ride cards ── */}
         {filteredRides.length > 0 ? (
-          <Grid spacing={2}>
+          <Grid spacing={{ xs: 1.5, sm: 2 }}>
             {filteredRides.map((ride) => (
               <Grid item xs={12} sm={6} md={4} key={ride._id}>
                 <RideCard ride={ride} />
@@ -693,19 +874,37 @@ export default function FindRides() {
           </Grid>
         ) : (
           <Box
-            sx={{ background: "#fff", borderRadius: 4, border: `1.5px dashed ${saffron[200]}`, textAlign: "center", padding: "20px 20px 20px 20px" }} >
-            <Typography fontSize="2.5rem" mb={1}>🔍</Typography>
-            <Typography fontWeight={700} color={saffron[700]} mb={0.5}>No rides found</Typography>
-            <Typography color="text.secondary" fontSize="0.88rem">
+            sx={{
+              background: "#fff",
+              borderRadius: { xs: 3, sm: 4 },
+              border: `1.5px dashed ${saffron[200]}`,
+              textAlign: "center",
+              py: { xs: 3, sm: 5 },
+              px: { xs: 2, sm: 4 },
+            }}
+          >
+            <Typography fontSize={{ xs: "2rem", sm: "2.5rem" }} mb={0.75}>🔍</Typography>
+            <Typography fontWeight={700} color={saffron[700]} mb={0.5} fontSize={{ xs: "0.9rem", sm: "1rem" }}>
+              No rides found
+            </Typography>
+            <Typography color="text.secondary" fontSize={{ xs: "0.78rem", sm: "0.88rem" }}>
               Try adjusting your filters or search terms
             </Typography>
-            <Button onClick={clearFilters}
+            <Button
+              onClick={clearFilters}
               sx={{
-                mt: 2, borderRadius: "50px", border: `1.5px solid ${saffron[300]}`,
-                color: saffron[700], fontWeight: 600, fontSize: "0.82rem",
-                px: 2.5, textTransform: "none",
+                mt: 2,
+                borderRadius: "50px",
+                border: `1.5px solid ${saffron[300]}`,
+                color: saffron[700],
+                fontWeight: 600,
+                fontSize: { xs: "0.75rem", sm: "0.82rem" },
+                px: { xs: 2, sm: 2.5 },
+                height: { xs: 32, sm: 36 },
+                textTransform: "none",
                 "&:hover": { background: saffron[50], borderColor: saffron[500] },
-              }}>
+              }}
+            >
               Clear filters
             </Button>
           </Box>
