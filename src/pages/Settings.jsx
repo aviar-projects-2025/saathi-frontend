@@ -185,7 +185,7 @@
 
 
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Typography,
@@ -289,6 +289,7 @@ const Settings = () => {
   const [profileImage, setProfileImage] = useState(currentUser?.profileImage || "");
   const [profileFile, setProfileFile] = useState(null);
   const [submitLoading, setSubmitLoading] = useState(false)
+  const user = JSON.parse(localStorage.getItem('user'))
 
   console.log(currentUser, 'currentUser')
   const [formData, setFormData] = useState({
@@ -300,6 +301,22 @@ const Settings = () => {
     gender: currentUser?.gender || "",
     bio: currentUser?.bio || "",
   });
+
+  useEffect(() => {
+  if (currentUser) {
+    setFormData({
+      firstName: currentUser?.firstName || "",
+      lastName: currentUser?.lastName || "",
+      email: currentUser?.email || "",
+      mobile: currentUser?.mobile || "",
+      dob: currentUser?.dob ? dayjs(currentUser.dob) : null,
+      gender: currentUser?.gender || "",
+      bio: currentUser?.bio || "",
+    });
+
+    setProfileImage(currentUser?.profileImage || "");
+  }
+}, [currentUser]);
 
   const logout = () => {
     localStorage.clear();
@@ -340,13 +357,13 @@ const Settings = () => {
       data.append("gender", formData.gender);
       data.append("bio", formData.bio);
 
-      await axios.post(Api + `/currentUsers/update/${currentUser._id}`, data)
+      await axios.post(Api + `/users/update/${user?.id}`, data)
       toast.success("Profile updated")
+      setEditProfile(false)
     } catch (error) {
       console.log(error);
     } finally {
       setSubmitLoading(false)
-      setEditProfile(false)
     }
   };
   return (
@@ -670,7 +687,7 @@ const Settings = () => {
 
                 <Stack alignItems="center" spacing={1}>
                   <Avatar
-                    src={profileImage || currentUser?.profileImage}
+                    src={profileImage || formData?.profileImage}
                     sx={{
                       width: 90,
                       height: 90,
@@ -698,7 +715,7 @@ const Settings = () => {
                     name="firstName"
                     label="First Name"
                     size="small"
-                    value={currentUser?.firstName}
+                    value={formData?.firstName}
                     onChange={handleChange}
                     sx={{ width: "48%" }}
                   />
@@ -708,7 +725,7 @@ const Settings = () => {
                     name="lastName"
                     sx={{ width: "48%" }}
                     size="small"
-                    value={currentUser?.lastName}
+                    value={formData?.lastName}
                     onChange={handleChange}
                   />
                 </Box>
@@ -719,7 +736,7 @@ const Settings = () => {
                     name="email"
                     sx={{ width: "48%" }}
                     size="small"
-                    value={currentUser?.email}
+                    value={formData?.email}
                     onChange={handleChange}
                     disabled
                   />
@@ -729,7 +746,7 @@ const Settings = () => {
                     name="mobile"
                     sx={{ width: "48%" }}
                     size="small"
-                    value={currentUser?.mobile}
+                    value={formData?.mobile}
                     onChange={handleChange}
                   />
                 </Box>
@@ -738,7 +755,7 @@ const Settings = () => {
                   <LocalizationProvider dateAdapter={AdapterDayjs}>
                     <DatePicker
                       label="Date of Birth"
-                      value={dayjs(currentUser?.dob)}
+                      value={formData?.dob}
                       onChange={(newValue) => {
                         setFormData((prev) => ({
                           ...prev,
@@ -760,7 +777,7 @@ const Settings = () => {
                     name="gender"
                     sx={{ width: "48%" }}
                     size="small"
-                    value={currentUser?.gender}
+                    value={formData?.gender}
                     onChange={handleChange}
                   >
                     <MenuItem value="Male">Male</MenuItem>
@@ -775,7 +792,7 @@ const Settings = () => {
                   multiline
                   rows={3}
                   fullWidth
-                  value={currentUser?.bio}
+                  value={formData?.bio}
                   onChange={handleChange}
                 />
 
