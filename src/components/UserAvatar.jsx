@@ -11,14 +11,19 @@ const colorMap = {
   Z: '#3A0CA3',
 };
 
-export default function UserAvatar({ name, firstName, lastName, initials, size = 40, verified, sx = {} }) {
+export default function UserAvatar({ name, profile, firstName, lastName, initials, size = 40, currentUser, verified, sx = {} }) {
   const letter = (initials || name || 'U')[0].toUpperCase();
   const bg = colorMap[letter] || '#E8650A';
+  const user = JSON.parse(localStorage.getItem('user'))
+
+  const SAFFRON = "#E8650A";
+  const SAFFRON_LIGHT = "#FDF0E8";
+  const CARD_BORDER = "1px solid #F0E6DC";
 
 
   return (
     <Box sx={{ position: 'relative', display: 'inline-flex', ...sx }}>
-      <Avatar
+      {/* <Avatar
         sx={{
           width: size,
           height: size,
@@ -31,7 +36,26 @@ export default function UserAvatar({ name, firstName, lastName, initials, size =
           boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
         }}
       >
+      </Avatar> */}
+
+
+      <Avatar
+        src={ profile || currentUser?.profileImage || ""}
+        sx={{
+          width: { xs: 40, sm: 42, md: 42 },
+          height: { xs: 40, sm: 42, md: 42 },
+          bgcolor: SAFFRON,
+          color: "#fff",
+          fontWeight: 800,
+          fontSize: { xs: "0.85rem", sm: "1rem", md: "1.15rem" },
+          flexShrink: 0,
+        }}
+      >
+        {!currentUser?.profileImage &&
+          `${currentUser?.firstName?.[0] || ""}${currentUser?.lastName?.[0] || ""}`}
       </Avatar>
+
+
       {verified && (
         <Tooltip title="Verified member">
           <VerifiedIcon

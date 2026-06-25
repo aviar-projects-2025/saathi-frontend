@@ -6,13 +6,16 @@ import "./index.css";
 import { AuthProvider } from "./context/AuthContext";
 import { AppProvider } from "./context/AppContext";
 import { ReferralProvider } from "./context/ReferralContext";
+import { UserProvider } from "./context/userConetext";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <AuthProvider>
       <AppProvider>
         <ReferralProvider>
-          <App />
+          <UserProvider>
+            <App />
+          </UserProvider>
         </ReferralProvider>
       </AppProvider>
     </AuthProvider>
