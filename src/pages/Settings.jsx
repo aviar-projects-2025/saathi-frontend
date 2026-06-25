@@ -20,7 +20,7 @@
 // import PageLayout from "../components/PageLayout";
 
 // const Settings = () => {
-//   const user = JSON.parse(localStorage.getItem("user"));
+//   const currentUser = JSON.parse(localStorage.getItem("currentUser"));
 
 //   const logout = () => {
 //     localStorage.clear();
@@ -48,17 +48,17 @@
 //             >
 //               <Stack direction="row" spacing={2} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
 //                 <Avatar sx={{ width: 58, height: 58, color: "#050505", bgcolor: "#E8650A", flexShrink: 0,fontWeight: 800 }}>
-//                   {user?.firstName?.[0]}{user?.lastName?.[0]}
+//                   {currentUser?.firstName?.[0]}{currentUser?.lastName?.[0]}
 //                 </Avatar>
 
 //                 <Box sx={{ flex: 1, minWidth: 0 }}>
 //                   <Typography fontWeight={800} sx={{ wordBreak: "break-word" }}>
-//                     {user?.firstName} {user?.lastName}
+//                     {currentUser?.firstName} {currentUser?.lastName}
 //                   </Typography>
 //                   <Typography variant="body2" color="text.secondary" sx={{ wordBreak: "break-word" }}>
-//                     {user?.email}
+//                     {currentUser?.email}
 //                   </Typography>
-//                   {/* <Chip size="small" label={user?.role || "USER"} sx={{ mt: 1,bgcolor: "#E8650A" }} /> */}
+//                   {/* <Chip size="small" label={currentUser?.role || "currentUser"} sx={{ mt: 1,bgcolor: "#E8650A" }} /> */}
 //                 </Box>
 //               </Stack>
 
@@ -134,7 +134,7 @@
 //               Your referral code
 //             </Typography>
 
-//             <Chip label={user?.referralCode || "SAATHI-CODE"} sx={{ fontWeight: 700, mb: 2, mt:2 }} />
+//             <Chip label={currentUser?.referralCode || "SAATHI-CODE"} sx={{ fontWeight: 700, mb: 2, mt:2 }} />
 
 //             <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
 //               <Button
@@ -185,7 +185,7 @@
 
 
 
-import React from "react";
+import React, { useState } from "react";
 import {
   Box,
   Typography,
@@ -199,7 +199,10 @@ import {
   Chip,
   useMediaQuery,
   useTheme,
-  Grid
+  Grid,
+  Modal,
+  TextField,
+  MenuItem
 } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
 import LockIcon from "@mui/icons-material/Lock";
@@ -211,6 +214,13 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import ShareIcon from "@mui/icons-material/Share";
 import PageLayout from "../components/PageLayout";
+import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers"
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs from "dayjs";
+import axios from "axios";
+import Api from "../Api";
+import { toast } from "react-toastify";
+import { useUser } from "../context/userConetext";
 
 const SAFFRON = "#E8650A";
 const SAFFRON_LIGHT = "#FDF0E8";
@@ -272,15 +282,73 @@ const pillBtn = {
 };
 
 const Settings = () => {
-  const user = JSON.parse(localStorage.getItem("user"));
   const theme = useTheme();
+  const { currentUser } = useUser()
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const [editProfile, setEditProfile] = useState(false)
+  const [profileImage, setProfileImage] = useState(currentUser?.profileImage || "");
+  const [profileFile, setProfileFile] = useState(null);
+  const [submitLoading, setSubmitLoading] = useState(false)
+
+  console.log(currentUser, 'currentUser')
+  const [formData, setFormData] = useState({
+    firstName: currentUser?.firstName || "",
+    lastName: currentUser?.lastName || "",
+    email: currentUser?.email || "",
+    mobile: currentUser?.mobile || "",
+    dob: currentUser?.dob ? dayjs(currentUser.dob) : null,
+    gender: currentUser?.gender || "",
+    bio: currentUser?.bio || "",
+  });
 
   const logout = () => {
     localStorage.clear();
     window.location.replace("/login");
   };
 
+  const handleProfileImage = (e) => {
+    const file = e.target.files[0];
+
+    if (!file) return;
+
+    setProfileFile(file);
+    setProfileImage(URL.createObjectURL(file));
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleUpdateProfile = async () => {
+    try {
+      setSubmitLoading(true)
+      const data = new FormData();
+
+      if (profileFile) {
+        data.append("profileImage", profileFile);
+      }
+
+      data.append("firstName", formData.firstName);
+      data.append("lastName", formData.lastName);
+      data.append("mobile", formData.mobile);
+      data.append("dob", formData.dob ? formData.dob.format("YYYY-MM-DD") : "");
+      data.append("gender", formData.gender);
+      data.append("bio", formData.bio);
+
+      await axios.post(Api + `/currentUsers/update/${currentUser._id}`, data)
+      toast.success("Profile updated")
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setSubmitLoading(false)
+      setEditProfile(false)
+    }
+  };
   return (
     <PageLayout>
       <Box sx={{ maxWidth: 860, mx: "auto", px: { xs: 1.5, sm: 2, md: 0 } }}>
@@ -299,8 +367,8 @@ const Settings = () => {
           Manage your Saathi account, referrals, and preferences.
         </Typography>
 
-        <Stack spacing={{ xs: 1.25, sm: 1.75, md: 2 }} 
-        sx={{mt:2}}>
+        <Stack spacing={{ xs: 1.25, sm: 1.75, md: 2 }}
+          sx={{ mt: 2 }}>
 
           {/* ── Profile ── */}
           <SectionCard>
@@ -310,6 +378,7 @@ const Settings = () => {
               alignItems="center"
             >
               <Avatar
+                src={currentUser?.profileImage || ""}
                 sx={{
                   width: { xs: 40, sm: 48, md: 54 },
                   height: { xs: 40, sm: 48, md: 54 },
@@ -320,7 +389,8 @@ const Settings = () => {
                   flexShrink: 0,
                 }}
               >
-                {user?.firstName?.[0]}{user?.lastName?.[0]}
+                {!currentUser?.profileImage &&
+                  `${currentUser?.firstName?.[0] || ""}${currentUser?.lastName?.[0] || ""}`}
               </Avatar>
 
               <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -333,7 +403,7 @@ const Settings = () => {
                     textOverflow: "ellipsis",
                   }}
                 >
-                  {user?.firstName} {user?.lastName}
+                  {currentUser?.firstName} {currentUser?.lastName}
                 </Typography>
                 <Typography
                   variant="body2"
@@ -345,12 +415,13 @@ const Settings = () => {
                     textOverflow: "ellipsis",
                   }}
                 >
-                  {user?.email}
+                  {currentUser?.email}
                 </Typography>
               </Box>
 
               <Button
                 variant="outlined"
+                onClick={() => { setEditProfile(true) }}
                 sx={{
                   ...pillBtn,
                   flexShrink: 0,
@@ -484,7 +555,7 @@ const Settings = () => {
                 </Typography>
 
                 <Chip
-                  label={user?.referralCode || "SAATHI-CODE"}
+                  label={currentUser?.referralCode || "SAATHI-CODE"}
                   sx={{
                     fontWeight: 700,
                     mt: 1,
@@ -529,9 +600,9 @@ const Settings = () => {
             <Grid
               sx={{
                 display: 'flex',
-                justifyContent:  { xs: "center", sm: "end" },
-                mt:2,
-                mx:1
+                justifyContent: { xs: "center", sm: "end" },
+                mt: 2,
+                mx: 1
               }}>
               <Stack direction={{ xs: "row", sm: "row" }} spacing={2}>
 
@@ -566,6 +637,173 @@ const Settings = () => {
 
         </Stack>
       </Box>
+
+      <Modal
+        open={editProfile}
+        children={
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              width: "100%",
+              height: "100vh",
+              p: 2,
+            }}
+          >
+            <Box
+              sx={{
+                bgcolor: "white",
+                width: { xs: "100%", sm: 450 },
+                borderRadius: 2,
+                boxShadow: 24,
+                p: 3,
+                maxHeight: "90vh",
+                overflowY: "auto",
+                justifyContent: 'center', alignItems: 'center', display: 'flex'
+              }}
+            >
+              <Stack spacing={2.5} >
+                <Typography variant="h6" fontWeight={700} mb={3}>
+                  Edit Profile
+                </Typography>
+
+                <Stack alignItems="center" spacing={1}>
+                  <Avatar
+                    src={profileImage || currentUser?.profileImage}
+                    sx={{
+                      width: 90,
+                      height: 90,
+                      fontSize: 32,
+                    }}
+                  />
+
+                  <Button
+                    variant="outlined"
+                    component="label"
+                  >
+                    Change Photo
+
+                    <input
+                      hidden
+                      type="file"
+                      accept="image/*"
+                      onChange={handleProfileImage}
+                    />
+                  </Button>
+                </Stack>
+
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                  <TextField
+                    name="firstName"
+                    label="First Name"
+                    size="small"
+                    value={currentUser?.firstName}
+                    onChange={handleChange}
+                    sx={{ width: "48%" }}
+                  />
+
+                  <TextField
+                    label="Last Name"
+                    name="lastName"
+                    sx={{ width: "48%" }}
+                    size="small"
+                    value={currentUser?.lastName}
+                    onChange={handleChange}
+                  />
+                </Box>
+
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                  <TextField
+                    label="Email"
+                    name="email"
+                    sx={{ width: "48%" }}
+                    size="small"
+                    value={currentUser?.email}
+                    onChange={handleChange}
+                    disabled
+                  />
+
+                  <TextField
+                    label="Mobile Number"
+                    name="mobile"
+                    sx={{ width: "48%" }}
+                    size="small"
+                    value={currentUser?.mobile}
+                    onChange={handleChange}
+                  />
+                </Box>
+
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <DatePicker
+                      label="Date of Birth"
+                      value={dayjs(currentUser?.dob)}
+                      onChange={(newValue) => {
+                        setFormData((prev) => ({
+                          ...prev,
+                          dob: newValue,
+                        }));
+                      }}
+                      slotProps={{
+                        textField: {
+                          size: "small",
+                          sx: { width: "48%" },
+                        },
+                      }}
+                    />
+                  </LocalizationProvider>
+
+                  <TextField
+                    select
+                    label="Gender"
+                    name="gender"
+                    sx={{ width: "48%" }}
+                    size="small"
+                    value={currentUser?.gender}
+                    onChange={handleChange}
+                  >
+                    <MenuItem value="Male">Male</MenuItem>
+                    <MenuItem value="Female">Female</MenuItem>
+                    <MenuItem value="Other">Other</MenuItem>
+                  </TextField>
+                </Box>
+
+                <TextField
+                  label="Bio"
+                  name="bio"
+                  multiline
+                  rows={3}
+                  fullWidth
+                  value={currentUser?.bio}
+                  onChange={handleChange}
+                />
+
+                <Stack direction="row" spacing={2} justifyContent="flex-end">
+                  <Button
+                    variant="outlined"
+                    onClick={() => {
+                      setProfileImage('')
+                      setEditProfile(false)
+                    }}
+                  >
+                    Cancel
+                  </Button>
+
+                  <Button
+                    variant="contained"
+                    onClick={handleUpdateProfile}
+                    disabled={submitLoading}
+                  >
+                    Save Changes
+                  </Button>
+                </Stack>
+
+              </Stack>
+            </Box>
+          </Box>
+        }
+      />
     </PageLayout>
   );
 };
