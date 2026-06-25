@@ -12,11 +12,11 @@ export const UserProvider = ({ children }) => {
 
     useEffect(() => {
         getuserData()
-    }, [user.id])
+    }, [user?.id])
 
     const getuserData = () => {
         try {
-            axios.get(Api + `/users/${user.id}`)
+            axios.get(Api + `/users/${user?.id}`)
                 .then((res) => {
                     setCurrentUser(res.data.data)
                 })
