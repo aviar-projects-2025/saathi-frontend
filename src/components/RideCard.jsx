@@ -30,6 +30,8 @@ import LuggageIcon from "@mui/icons-material/Luggage";
 import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import CloseIcon from "@mui/icons-material/Close";
+
 
 import Api from "../Api";
 import { toast } from "react-toastify";
@@ -120,100 +122,114 @@ export default function RideCard({ ride }) {
     });
   };
 
-const handleRequestSubmit = async () => {
-  if (!selectedRide) return;
+  const handleRequestSubmit = async () => {
+    if (!selectedRide) return;
 
-  if (!isFlight && Number(requestData.seatsRequested) > maxSeats) {
-    toast.error(`Only ${maxSeats} seat(s) available`);
-    return;
-  }
-
-  if (!isFlight && Number(requestData.membersCount) > maxSeats) {
-    toast.error(`Only ${maxSeats} member(s) allowed`);
-    return;
-  }
-
-  if (!requestData.phone.trim()) {
-    toast.error("Please enter phone number");
-    return;
-  }
-
-  if (!/^[6-9]\d{9}$/.test(requestData.phone)) {
-    toast.error("Enter valid 10 digit phone number");
-    return;
-  }
-
-  for (let i = 0; i < requestData.members.length; i++) {
-    if (!requestData.members[i].name.trim()) {
-      toast.error(`Please enter Member ${i + 1} name`);
+    if (!isFlight && Number(requestData.seatsRequested) > maxSeats) {
+      toast.error(`Only ${maxSeats} seat(s) available`);
       return;
     }
 
-    if (!requestData.members[i].age) {
-      toast.error(`Please enter Member ${i + 1} age`);
+    if (!isFlight && Number(requestData.membersCount) > maxSeats) {
+      toast.error(`Only ${maxSeats} member(s) allowed`);
       return;
     }
-  }
 
-  const user = JSON.parse(localStorage.getItem("user"));
+    if (!requestData.phone.trim()) {
+      toast.error("Please enter phone number");
+      return;
+    }
 
-  const payload = {
-    requestedBy: user?.id,
-    seatsRequested:
-      selectedRide.modeOfTravel === "Flight"
-        ? null
-        : Number(requestData.seatsRequested),
-    membersCount: Number(requestData.membersCount),
-    members: requestData.members,
-    phone: requestData.phone,
-    message: requestData.message,
-    requestType:
-      selectedRide.modeOfTravel === "Flight" ? "COMPANION" : "SEAT",
+    if (!/^[6-9]\d{9}$/.test(requestData.phone)) {
+      toast.error("Enter valid 10 digit phone number");
+      return;
+    }
+
+    for (let i = 0; i < requestData.members.length; i++) {
+      if (!requestData.members[i].name.trim()) {
+        toast.error(`Please enter Member ${i + 1} name`);
+        return;
+      }
+
+      if (!requestData.members[i].age) {
+        toast.error(`Please enter Member ${i + 1} age`);
+        return;
+      }
+    }
+
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    const payload = {
+      requestedBy: user?.id,
+      seatsRequested:
+        selectedRide.modeOfTravel === "Flight"
+          ? null
+          : Number(requestData.seatsRequested),
+      membersCount: Number(requestData.membersCount),
+      members: requestData.members,
+      phone: requestData.phone,
+      message: requestData.message,
+      requestType:
+        selectedRide.modeOfTravel === "Flight" ? "COMPANION" : "SEAT",
+    };
+
+    console.log("Selected Ride:", selectedRide);
+    console.log("Request Data:", requestData);
+    console.log("API Payload:", payload);
+
+    try {
+      const res = await axios.post(`${Api}/bookride/request/create/${selectedRide._id}`, payload);
+
+      console.log("API Response:", res.data);
+
+      toast.success(
+        selectedRide.modeOfTravel === "Flight"
+          ? "Companion request sent"
+          : "Seat request sent"
+      );
+
+      setOpenRequestModal(false);
+      resetRequestData();
+    } catch (error) {
+      console.log("Full Error:", error);
+      console.log("Error Response:", error.response?.data);
+
+      toast.error(error.response?.data?.message || "Request failed");
+    }
   };
-
-  console.log("Selected Ride:", selectedRide);
-  console.log("Request Data:", requestData);
-  console.log("API Payload:", payload);
-
-  try {
-    const res = await axios.post(`${Api}/bookride/request/create/${selectedRide._id}`,payload);
-
-    console.log("API Response:", res.data);
-
-    toast.success(
-      selectedRide.modeOfTravel === "Flight"
-        ? "Companion request sent"
-        : "Seat request sent"
-    );
-
-    setOpenRequestModal(false);
-    resetRequestData();
-  } catch (error) {
-    console.log("Full Error:", error);
-    console.log("Error Response:", error.response?.data);
-
-    toast.error(error.response?.data?.message || "Request failed");
-  }
-};
 
   return (
     <Card
       sx={{
-        mb: 3,
+        mb: 2,
+        mx: { xs: 1, sm: 0 },
         borderRadius: 4,
         overflow: "hidden",
         boxShadow: "0 8px 25px rgba(0,0,0,0.08)",
+
       }}
     >
-      <CardContent sx={{ p: 3 }}>
-        <Box display="flex" justifyContent="space-between" flexWrap="wrap" gap={2}>
+      <CardContent
+        sx={{
+          p: { xs: 2, sm: 3 },
+
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            flexDirection: { xs: "column", sm: "row" },
+            alignItems: { xs: "flex-start", sm: "center" }
+          }}
+        >
           <Box display="flex" alignItems="center" gap={2}>
             <Avatar sx={{ bgcolor: isFlight ? "#1A3C5E" : "#2D6A4F" }}>
               {userName.charAt(0)}
             </Avatar>
 
             <Box>
-              <Typography fontWeight={800}>{userName}</Typography>
+              <Typography fontWeight={800} sx={{ mt: 1, mb: 1 }}>{userName}</Typography>
 
               <Box display="flex" alignItems="center" gap={0.5}>
                 <VerifiedIcon color="success" sx={{ fontSize: 16 }} />
@@ -233,10 +249,18 @@ const handleRequestSubmit = async () => {
               fontWeight: 700,
             }}
           />
-        </Box>
+        </div>
 
-        <Box sx={{ mt: 3, p: 2, bgcolor: "#F8FAFC", borderRadius: 3 }}>
-          <Typography variant="h6" fontWeight={800} textAlign="center">
+        <Box sx={{ mt: 3, p: 2, bgcolor: "#F8FAFC", borderRadius: 3, mb: 2 }}>
+          <Typography
+            variant="h6"
+            fontWeight={800}
+            textAlign="center"
+            sx={{
+              wordBreak: "break-word",
+              fontSize: { xs: "0.8rem", sm: "1.5rem" },
+            }}
+          >
             {routeFrom || "From"}
             <Box component="span" sx={{ mx: 1, color: "#1976d2" }}>
               →
@@ -251,7 +275,7 @@ const handleRequestSubmit = async () => {
           )}
         </Box>
 
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={1} mt={2}>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={3} mt={2}>
           <Chip
             icon={<AccessTimeIcon />}
             label={
@@ -279,7 +303,7 @@ const handleRequestSubmit = async () => {
         </Stack>
 
         {isFlight && (
-          <Stack direction={{ xs: "column", sm: "row" }} spacing={1} mt={1}>
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={3} sx={{ mt: 2 }}>
             <Chip label={ride.travellerType || "Traveller Type"} />
             <Chip icon={<LanguageIcon />} label={ride.language || "Language"} />
 
@@ -295,13 +319,25 @@ const handleRequestSubmit = async () => {
           </Typography>
         </Box>
 
-        <Box display="flex" justifyContent="space-between" alignItems="center" mt={2}>
+        <div
+          // alignItems="center"
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            flexDirection: { xs: "column", sm: "row" },
+            gap: 1,
+            mt: 3,
+          }}
+        >
           <IconButton onClick={() => setExpanded(!expanded)}>
             {expanded ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
           </IconButton>
 
           <Button
             variant="contained"
+            sx={{
+              width: { xs: "100%", sm: "auto" },
+            }}
             disabled={!isFlight && Number(ride.availableSeats) <= 0}
             onClick={() => {
               setSelectedRide(ride);
@@ -312,21 +348,38 @@ const handleRequestSubmit = async () => {
             {!isFlight && Number(ride.availableSeats) <= 0
               ? "No Seats Available"
               : isFlight
-              ? "Request Companion"
-              : "Request Seat"}
+                ? "Request Companion"
+                : "Request Seat"}
           </Button>
-        </Box>
+        </div>
 
         <Dialog
           open={openRequestModal}
           onClose={() => setOpenRequestModal(false)}
           fullWidth
           maxWidth="sm"
+          PaperProps={{
+            sx: {
+              m: 1,
+              width: "100%",
+            },
+          }}
         >
-          <DialogTitle>
+
+          <DialogTitle
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
             {selectedRide?.modeOfTravel === "Flight"
               ? "Request Travel Companion"
               : "Request Seat"}
+
+            <IconButton onClick={() => setOpenRequestModal(false)}>
+              <CloseIcon />
+            </IconButton>
           </DialogTitle>
 
           <DialogContent>
@@ -392,7 +445,9 @@ const handleRequestSubmit = async () => {
                   label="Age"
                   type="number"
                   size="small"
-                  sx={{ width: 120 }}
+                  sx={{
+                    width: { xs: "100%", sm: 120 },
+                  }}
                   value={member.age}
                   onChange={(e) =>
                     handleMemberChange(index, "age", e.target.value)
@@ -435,9 +490,16 @@ const handleRequestSubmit = async () => {
           </DialogContent>
 
           <DialogActions>
-            <Button onClick={() => setOpenRequestModal(false)}>Cancel</Button>
+            <Button
+              sx={{
+                width: { xs: "100%", sm: "auto" },
+              }}
+              onClick={() => setOpenRequestModal(false)}>Cancel</Button>
 
-            <Button variant="contained" onClick={handleRequestSubmit}>
+            <Button variant="contained" sx={{
+              width: { xs: "100%", sm: "auto" },
+            }}
+              onClick={handleRequestSubmit}>
               Submit Request
             </Button>
           </DialogActions>
@@ -471,7 +533,17 @@ const handleRequestSubmit = async () => {
                   {ride.transitAirport || "No transit"}
                 </Typography>
 
-                <Stack direction="row" flexWrap="wrap" gap={1} mt={1.5}>
+                <Stack
+                  direction="row"
+                  flexWrap="wrap"
+                  gap={1}
+                  mt={1.5}
+                  sx={{
+                    "& .MuiChip-root": {
+                      maxWidth: "100%",
+                    },
+                  }}
+                >
                   {ride.medicalAssistance && (
                     <Chip
                       size="small"

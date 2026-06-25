@@ -76,8 +76,12 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
         borderRight: isMobile ? "none" : "1px solid #f1e4d7",
       }}
     >
-      <Stack spacing={1}>
-        {/* <Typography
+      <Stack spacing={1.2}
+        sx={{
+          marginTop: isMobile ? 7 : 0,
+        }}
+      >
+        <Typography
           sx={{
             fontSize: 13,
             fontWeight: 800,
@@ -87,7 +91,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
           }}
         >
           Saathi Menu
-        </Typography> */}
+        </Typography> 
 
         {menuItems.map((item) => {
           const active = location.pathname === item.link;
@@ -102,7 +106,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
                 gap: 1.5,
                 px: 1.5,
                 py: 1.2,
-                borderRadius: 2,
+                borderRadius: 3,
                 cursor: "pointer",
                 transition: "0.2s ease",
                 bgcolor: active ? "#fff0df" : "transparent",
