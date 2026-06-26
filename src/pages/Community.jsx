@@ -11,6 +11,7 @@ import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import ThumbUpOffAltIcon from '@mui/icons-material/ThumbUpOffAlt';
+import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import UserAvatar from '../components/UserAvatar.jsx';
 import PageLayout from '../components/PageLayout.jsx';
 import ChatIcon from '@mui/icons-material/Chat';
@@ -21,6 +22,8 @@ import Api from '../Api.jsx';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import CommunityImage from '../components/CommunityImage.jsx';
+import CommunityComments from './CommunityComments.jsx';
+import { useUser } from '../context/userConetext.jsx';
 
 const topMembers = [
   { name: 'Vijay Patel', initials: 'VP', rides: 67, city: 'Frisco', badge: '🏅 Founding member', verified: true },
@@ -73,19 +76,15 @@ export default function Community() {
   const [loading, setLoading] = useState(false);
   const [postLoading, setPostLoading] = useState(false);
   const [communityPosts, setCommunityPosts] = useState([]);
+  const [activeCommentPostId, setActiveCommentPostId] = useState(null);
   const user = JSON.parse(localStorage.getItem('user'))
 
-  // console.log(user,'user')
+  const { currentUser } = useUser()
 
-  const newPost = {
-    description: post,
-    authorId: user?.id,
-    postImage: preview,
-    name: "Daniel Arun",
-    city: "Saathi Community",
-    time: "Just now",
-    initials: "DA", verified: true,
-  };
+  const SAFFRON = "#E8650A";
+  const SAFFRON_LIGHT = "#FDF0E8";
+  const CARD_BORDER = "1px solid #F0E6DC";
+
 
   const handleCreatePost = async () => {
     try {
@@ -103,7 +102,6 @@ export default function Community() {
         formData.append("postImage", media);
       }
 
-      console.log(formData, 'formData')
 
       const res = await axios.post(Api + "/community/", formData, {
         headers: {
@@ -111,7 +109,6 @@ export default function Community() {
         },
       });
 
-      console.log(res.data, "post created");
 
       setPost("");
       setMedia(null);
@@ -128,17 +125,24 @@ export default function Community() {
   const getCommmunityPost = async () => {
     try {
       setPostLoading(true);
-      const data = await axios.get(Api + '/community/')
-        .then((res) => {
-          console.log(res);
-          setCommunityPosts(res?.data?.data)
-        })
+
+      const postsRes = await axios.get(Api + "/community/");
+      const likesRes = await axios.get(Api + `/likes/liked-posts/${user.id}`);
+
+      const likedPostIds = likesRes?.data?.data || [];
+
+      const updatedPosts = postsRes?.data?.data?.map((post) => ({
+        ...post,
+        isLiked: likedPostIds.includes(post._id),
+      }));
+
+      setCommunityPosts(updatedPosts);
     } catch (error) {
       console.error(error.message);
     } finally {
-      setPostLoading(false)
+      setPostLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     getCommmunityPost();
@@ -157,6 +161,46 @@ export default function Community() {
     })
 
   }
+
+  const addLike = async (id) => {
+    try {
+      const res = await axios.post(Api + `/likes/${id}/${user.id}`);
+
+      setCommunityPosts((prev) =>
+        prev.map((post) =>
+          post._id === id
+            ? {
+              ...post,
+              isLiked: res.data.isLiked,
+              likes: res.data.likesCount,
+            }
+            : post
+        )
+      );
+    } catch (error) {
+      // toast.error(error.message);
+    }
+  };
+
+  const removeLike = async (id) => {
+    try {
+      const res = await axios.delete(Api + `/likes/${id}/${user.id}`);
+      setCommunityPosts((prev) =>
+        prev.map((post) =>
+          post._id === id
+            ? {
+              ...post,
+              isLiked: res.data.isLiked,
+              likes: res.data.likesCount,
+            }
+            : post
+        )
+      );
+    } catch (error) {
+      // toast.error(error.message)
+    }
+  }
+
 
 
   return (
@@ -206,11 +250,28 @@ export default function Community() {
               >
                 <Box sx={{ display: "flex", gap: 1.5, alignItems: "flex-start" }}>
                   <UserAvatar
-                    name="Daniel Arun"
-                    initials="DA"
                     size={42}
                     verified
+                    currentUser={currentUser}
                   />
+
+                  {/* <UserAvatar
+                    src={user?.profileImage || ""}
+                    sx={{
+                      width: { xs: 40, sm: 42, md: 42 },
+                      height: { xs: 40, sm: 42, md: 42 },
+                      bgcolor: SAFFRON,
+                      color: "#fff",
+                      fontWeight: 800,
+                      fontSize: { xs: "0.85rem", sm: "1rem", md: "1.15rem" },
+                      flexShrink: 0,
+                    }}
+                    size={42}
+                    verified
+                  >
+                    {!user?.profileImage &&
+                      `${user?.firstName?.[0] || ""}${user?.lastName?.[0] || ""}`}
+                  </UserAvatar> */}
 
                   <TextField
                     fullWidth
@@ -340,12 +401,21 @@ export default function Community() {
                       <Box sx={{ p: 2 }}>
                         {/* Header */}
                         <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5 }}>
-                          <UserAvatar
-                            name={post?.authorId?.firstName}
-                            initials={post.initials}
-                            size={44}
-                            verified={post.verified}
-                          />
+                          <Avatar
+                            src={post?.authorId?.profileImage}
+                            sx={{
+                              width: { xs: 40, sm: 42, md: 42 },
+                              height: { xs: 40, sm: 42, md: 42 },
+                              bgcolor: SAFFRON,
+                              color: "#fff",
+                              fontWeight: 800,
+                              fontSize: { xs: "0.85rem", sm: "1rem", md: "1.15rem" },
+                              flexShrink: 0,
+                            }}
+                          >
+                            {!currentUser?.profileImage &&
+                              `${currentUser?.firstName?.[0] || ""}${currentUser?.lastName?.[0] || ""}`}
+                          </Avatar>
 
                           <Box sx={{ flex: 1 }}>
                             <Typography fontWeight={700} fontSize="0.95rem">
@@ -380,19 +450,35 @@ export default function Community() {
                       <Divider />
 
                       {/* Actions */}
-                      <Stack direction="row" sx={{ py: 0.5 , marginLeft:2, gap : 5}}>
+                      <Stack direction="row" sx={{ py: 0.5, marginLeft: 2, gap: 5 }}>
                         <Button
-                          startIcon={<ThumbUpOffAltIcon />}
+                          onClick={() => {
+                            post.isLiked ?
+                              removeLike(post._id) :
+                              addLike(post._id)
+                          }}
+                          startIcon={
+                            post.isLiked ? (
+                              <ThumbUpIcon sx={{ color: "#0084ffff" }} />
+                            ) : (
+                              <ThumbUpOffAltIcon />
+                            )
+                          }
                           sx={{ textTransform: "none", color: "text.secondary" }}
                         >
-                          Like
+                          Like {post?.likes || 0}
                         </Button>
 
                         <Button
-                          startIcon={<ChatIcon />}
+                          startIcon={activeCommentPostId === post._id ? <ChatIcon sx={{ color: "#0084ffff" }} /> : <ChatIcon />}
+                          onClick={() => {
+                            setActiveCommentPostId((prev) =>
+                              prev === post._id ? null : post._id
+                            );
+                          }}
                           sx={{ textTransform: "none", color: "text.secondary" }}
                         >
-                          Comment
+                          Comments
                         </Button>
 
                         <Button
@@ -402,6 +488,13 @@ export default function Community() {
                           Share
                         </Button>
                       </Stack>
+                      <Divider />
+
+                      {activeCommentPostId === post._id && (
+                        <Box sx={{ margin: 1.5 }}>
+                          <CommunityComments post={post} user={user} />
+                        </Box>
+                      )}
                     </Paper>
                   ))}
                 </>
@@ -501,6 +594,6 @@ export default function Community() {
           </Grid>
         </Box>
       </Stack>
-    </PageLayout>
+    </PageLayout >
   );
 }

@@ -10,11 +10,9 @@ export const ReferralProvider = ({ children }) => {
 
   const getPendingReferralCount = async () => {
     try {
-    //   const res = await axios.get(Api + "/referral/my-referrals");
       const res = await axios.get(
                 Api + `/referrals/${user?.id}`
             );
-      console.log(res,'res')
 
       const waitingList = res?.data?.data?.filter(
         (item) => item.refApprove === "Waiting"
