@@ -174,11 +174,11 @@ const handleRequestSubmit = async () => {
   console.log("Selected Ride:", selectedRide);
   console.log("Request Data:", requestData);
   console.log("API Payload:", payload);
-
+  console.log("Ride ID:", selectedRide?._id);
   try {
-    const res = await axios.post(`${Api}/bookride/request/create/${selectedRide._id}`,payload);
-
-    console.log("API Response:", res.data);
+    axios.post(`${Api}/bookride/${selectedRide._id}`,payload);
+console.log("selectedRide", selectedRide);
+console.log("selectedRide._id", selectedRide?._id);
 
     toast.success(
       selectedRide.modeOfTravel === "Flight"
