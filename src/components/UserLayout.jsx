@@ -4,20 +4,23 @@ import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import TopNav from "./Navbar";
 import { useState } from "react";
+import MobileBottomNav from "../pages/MobileBottomNav";
 
 const UserLayout = () => {
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up("lg")); // 1024+
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
   return (
     <Box
       sx={{
         height: "100dvh",
-        overflow: "hidden",
         display: "flex",
         flexDirection: "column",
         bgcolor: "#fbfaf8ff",
+        overflow: "hidden",
       }}
     >
       <TopNav onMenuClick={() => setMobileOpen(true)} />
@@ -45,15 +48,17 @@ const UserLayout = () => {
           component="main"
           sx={{
             flex: 1,
-            minHeight: 0,
             overflowY: "auto",
             px: { xs: 1.5, sm: 2, md: 3 },
             pt: 1.5,
+            pb: { xs: "50px", sm: 2 }, // Prevent content from hiding behind navbar
           }}
         >
           <Outlet />
         </Box>
       </Box>
+
+      {isMobile && <MobileBottomNav />}
     </Box>
   );
 };

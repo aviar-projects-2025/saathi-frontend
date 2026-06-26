@@ -749,7 +749,7 @@ export default function RideCard({ ride }) {
 
   return (
     <>
-      <Box sx={{ mb: 2, mx: { xs: 0.5, sm: 0 }, maxWidth: 1000, width: "100%" }}>
+      <Box sx={{ mb: 2, mx: { xs: 0, sm: 0 }, maxWidth: 1000, width: "100%" }}>
 
         {/* ── Light orange-tinted header strip ── */}
         <Box sx={{
