@@ -206,24 +206,26 @@ export default function Community() {
   return (
     // <Box sx={{ maxWidth: 1000, mx: 'auto', px: { xs: 2, md: 3 }, py: 3 }}>
     <PageLayout>
-      <Typography variant="h5" fontWeight={800} mb={0.5}>
-        Saathi <span style={{ color: '#E8650A' }}>Community</span>
-      </Typography>
-      <Typography color="text.secondary" mb={3}>
-        Built on trust, referrals, and shared roots 🙏
-      </Typography>
-
       <Stack direction={'row'}
         sx={{
-          mt: 3,
           justifyContent: 'space-between'
         }}>
+
         <Box
           sx={{
             width: '110%',
             flexShrink: 0,
           }}
         >
+
+          <Typography variant="h5" fontWeight={800} mb={0.5}>
+            Saathi <span style={{ color: '#E8650A' }}>Community</span>
+          </Typography>
+          <Typography color="text.secondary" sx={{ mb: 2 }}>
+            Built on trust, referrals, and shared roots
+          </Typography>
+
+
           {/* left Post Feed */}
           <Grid
             xs={12}

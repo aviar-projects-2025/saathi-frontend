@@ -283,13 +283,28 @@ const pillBtn = {
 
 const Settings = () => {
   const theme = useTheme();
-  const { currentUser } = useUser()
+  const { currentUser, getuserData } = useUser()
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [editProfile, setEditProfile] = useState(false)
   const [profileImage, setProfileImage] = useState(currentUser?.profileImage || "");
   const [profileFile, setProfileFile] = useState(null);
   const [submitLoading, setSubmitLoading] = useState(false)
+  const [passwordModel, setPasswordModel] = useState('')
   const user = JSON.parse(localStorage.getItem('user'))
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+
+    setPasswordData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
   console.log(currentUser, 'currentUser')
   const [formData, setFormData] = useState({
@@ -300,23 +315,26 @@ const Settings = () => {
     dob: currentUser?.dob ? dayjs(currentUser.dob) : null,
     gender: currentUser?.gender || "",
     bio: currentUser?.bio || "",
+    profileImage: currentUser?.profileImage || "",
   });
 
   useEffect(() => {
-  if (currentUser) {
-    setFormData({
-      firstName: currentUser?.firstName || "",
-      lastName: currentUser?.lastName || "",
-      email: currentUser?.email || "",
-      mobile: currentUser?.mobile || "",
-      dob: currentUser?.dob ? dayjs(currentUser.dob) : null,
-      gender: currentUser?.gender || "",
-      bio: currentUser?.bio || "",
-    });
+    if (currentUser) {
+      setFormData({
+        firstName: currentUser?.firstName || "",
+        lastName: currentUser?.lastName || "",
+        email: currentUser?.email || "",
+        mobile: currentUser?.mobile || "",
+        dob: currentUser?.dob ? dayjs(currentUser.dob) : null,
+        gender: currentUser?.gender || "",
+        bio: currentUser?.bio || "",
+        profileImage: currentUser?.profileImage || "",
+      });
 
-    setProfileImage(currentUser?.profileImage || "");
-  }
-}, [currentUser]);
+      setProfileImage(currentUser?.profileImage || "");
+      setProfileFile(null);
+    }
+  }, [currentUser]);
 
   const logout = () => {
     localStorage.clear();
@@ -358,6 +376,7 @@ const Settings = () => {
       data.append("bio", formData.bio);
 
       await axios.post(Api + `/users/update/${user?.id}`, data)
+      getuserData()
       toast.success("Profile updated")
       setEditProfile(false)
     } catch (error) {
@@ -366,6 +385,7 @@ const Settings = () => {
       setSubmitLoading(false)
     }
   };
+
   return (
     <PageLayout>
       <Box sx={{ maxWidth: 860, mx: "auto", px: { xs: 1.5, sm: 2, md: 0 } }}>
@@ -498,6 +518,7 @@ const Settings = () => {
 
               <Button
                 variant="outlined"
+                onClick={() => { setPasswordModel(true) }}
                 sx={{
                   ...pillBtn,
                   width: { xs: "auto", sm: "auto" },
@@ -687,13 +708,18 @@ const Settings = () => {
 
                 <Stack alignItems="center" spacing={1}>
                   <Avatar
-                    src={profileImage || formData?.profileImage}
+                    src={profileImage || formData.profileImage || ""}
                     sx={{
                       width: 90,
                       height: 90,
                       fontSize: 32,
+                      bgcolor: SAFFRON,
                     }}
-                  />
+                  >
+                    {!profileImage &&
+                      !formData.profileImage &&
+                      `${formData?.firstName?.[0] || ""}${formData?.lastName?.[0] || ""}`}
+                  </Avatar>
 
                   <Button
                     variant="outlined"
@@ -821,6 +847,97 @@ const Settings = () => {
           </Box>
         }
       />
+
+      <Modal
+        open={passwordModel}
+        onClose={() => setPasswordModel(false)}
+      >
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            width: "100%",
+            height: "100vh",
+            p: 2,
+          }}
+        >
+          <Box
+            sx={{
+              bgcolor: "#fff",
+              width: { xs: "100%", sm: 420 },
+              borderRadius: 3,
+              p: 3,
+              boxShadow: 24,
+            }}
+          >
+            <Typography variant="h6" fontWeight={700} mb={3}>
+              Change Password
+            </Typography>
+
+            <Stack spacing={2}>
+              <TextField
+                label="Current Password"
+                name="currentPassword"
+                type="password"
+                size="small"
+                fullWidth
+                value={passwordData.currentPassword}
+                onChange={handlePasswordChange}
+              />
+
+              <TextField
+                label="New Password"
+                name="newPassword"
+                type="password"
+                size="small"
+                fullWidth
+                value={passwordData.newPassword}
+                onChange={handlePasswordChange}
+              />
+
+              <TextField
+                label="Confirm Password"
+                name="confirmPassword"
+                type="password"
+                size="small"
+                fullWidth
+                value={passwordData.confirmPassword}
+                onChange={handlePasswordChange}
+              />
+
+              <Stack
+                direction="row"
+                justifyContent="flex-end"
+                spacing={2}
+              >
+                <Button
+                  variant="outlined"
+                  onClick={() => {
+                    setPasswordModel(false)
+                    setPasswordData({
+                      confirmPassword: '',
+                      currentPassword: '',
+                      newPassword: ''
+                    })
+                  }}
+                >
+                  Cancel
+                </Button>
+
+                <Button
+                  variant="contained"
+                  onClick={() => handleChangePassword()}
+                >
+                  Update Password
+                </Button>
+              </Stack>
+            </Stack>
+          </Box>
+        </Box>
+      </Modal>
+
+
     </PageLayout>
   );
 };
