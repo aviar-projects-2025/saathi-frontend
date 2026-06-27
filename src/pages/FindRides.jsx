@@ -17,7 +17,7 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-
+import { useUser } from "../context/userConetext";
 import SearchIcon from "@mui/icons-material/Search";
 import TuneIcon from "@mui/icons-material/Tune";
 import CloseIcon from "@mui/icons-material/Close";
@@ -95,7 +95,7 @@ const NAVBAR_HEIGHT = 64; // px
 export default function FindRides() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
+  const { currentUser } = useUser();
   const [rides, setRides] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filtersOpen, setFiltersOpen] = useState(!isMobile);
@@ -112,6 +112,7 @@ export default function FindRides() {
   const fetchRides = async () => {
     try {
       const res = await axios.get(`${Api}/rides/get`);
+ 
       setRides(res.data.data || []);
     } catch (error) {
       console.log(error);
@@ -136,7 +137,9 @@ export default function FindRides() {
     language && { key: "lang", label: `Lang: ${language}`, clear: () => setLanguage("") },
   ].filter(Boolean);
 
-  const filteredRides = rides.filter((ride) => {
+const filteredRides = rides
+  .filter((ride) => ride.createdBy?._id !== currentUser?._id)
+  .filter((ride) => {
     const fromValue =
       ride.modeOfTravel === "Flight"
         ? `${ride.fromAirport || ""} ${ride.fromCountry || ""} ${ride.from || ""}`
@@ -152,11 +155,20 @@ export default function FindRides() {
     const transportMatch = !transportMode || ride.modeOfTravel === transportMode;
     const genderMatch = !gender || ride.genderPreference === gender;
     const fuelMatch =
-      fuelSharing === "" || ride.modeOfTravel === "Flight" ||
+      fuelSharing === "" ||
+      ride.modeOfTravel === "Flight" ||
       ride.fuelSharing?.toString() === fuelSharing;
-    const languageMatch = !language || ride.language?.toLowerCase().includes(language.toLowerCase());
+    const languageMatch =
+      !language || ride.language?.toLowerCase().includes(language.toLowerCase());
 
-    return fromMatch && destinationMatch && transportMatch && genderMatch && fuelMatch && languageMatch;
+    return (
+      fromMatch &&
+      destinationMatch &&
+      transportMatch &&
+      genderMatch &&
+      fuelMatch &&
+      languageMatch
+    );
   });
 
   if (loading) {
@@ -619,11 +631,17 @@ export default function FindRides() {
           {/* ── Ride cards ── */}
           {filteredRides.length > 0 ? (
             <Grid spacing={{ xs: 1, sm: 2 }}>
-              {filteredRides.map((ride) => (
-                <Grid item xs={12} sm={6} md={4} key={ride._id}>
-                  <RideCard ride={ride} />
-                </Grid>
-              ))}
+              {filteredRides.map((ride) => {
+                const isOwnRide = ride.createdBy?._id === currentUser?._id;
+                return (
+                  <Grid item xs={12} sm={6} md={4} key={ride._id}>
+                    <RideCard
+                      ride={ride}
+                      isOwnRide={isOwnRide}
+                    />
+                  </Grid>
+                );
+              })}
             </Grid>
           ) : (
             <Box

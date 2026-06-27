@@ -619,7 +619,7 @@ const ORANGE_BG = "#FFF9F2";
 const ORANGE_BORDER = "rgba(255,153,51,0.25)";
 const ORANGE_DIVIDER = "rgba(255,153,51,0.2)";
 
-export default function RideCard({ ride }) {
+export default function RideCard ({ ride, isOwnRide }) {
   const [expanded, setExpanded] = useState(false);
   const [openRequestModal, setOpenRequestModal] = useState(false);
   const [selectedRide, setSelectedRide] = useState(null);
@@ -653,7 +653,27 @@ export default function RideCard({ ride }) {
   const resetRequestData = () => {
     setRequestData({ seatsRequested: 1, phone: "", message: "", membersCount: 1, members: [{ name: "", age: "" }] });
   };
+const handleRequestSeat = (ride) => {
+  if (ride.createdBy?._id === currentUser?._id) {
+    alert("You cannot request a seat for your own ride.");
+    return;
+  }
 
+  // Existing logic
+  setSelectedRide(ride);
+  setOpenRequestModal(true);
+};
+
+const handleRequestCompanion = (ride) => {
+  if (ride.createdBy?._id === currentUser?._id) {
+    alert("You cannot request a companion for your own flight.");
+    return;
+  }
+
+  // Existing logic
+  setSelectedRide(ride);
+  setOpenRequestModal(true);
+};
   console.log("Ride ==> ", ride);
 
   const handleMembersCountChange = (value) => {
@@ -948,35 +968,33 @@ console.log("selectedRide._id", selectedRide?._id);
               </IconButton>
 
 
-              <Button
-                variant="contained"
-                size={isMobile ? "small" : "medium"}
-                disabled={!isFlight && Number(ride.availableSeats) <= 0}
-                onClick={() => {
-                  setSelectedRide(ride);
-                  resetRequestData();
-                  setOpenRequestModal(true);
-                }}
-                sx={{
-                  bgcolor: ORANGE,
-                  "&:hover": { bgcolor: "#e68a00" },
-                  "&.Mui-disabled": { bgcolor: "#e0e0e0" },
-                  fontWeight: 700,
-                  fontSize: { xs: "0.7rem", sm: "0.875rem" },
-                  px: { xs: 1.5, sm: 3 },
-                  py: { xs: 0.5, sm: 1 },
-                  borderRadius: 2,
-                  whiteSpace: "nowrap",
-                  boxShadow: "none",
-                  textTransform: "none",
-                }}
-              >
-                {!isFlight && Number(ride.availableSeats) <= 0
-                  ? "No Seats"
-                  : isFlight
-                    ? "Request Companion"
-                    : "Request Seat"}
-              </Button>
+              {!isOwnRide && (
+  <Button
+    variant="contained"
+    size={isMobile ? "small" : "medium"}
+    disabled={!isFlight && Number(ride.availableSeats) <= 0}
+    onClick={() => {
+      setSelectedRide(ride);
+      resetRequestData();
+      setOpenRequestModal(true);
+    }}
+    sx={{
+      bgcolor: ORANGE,
+      "&:hover": { bgcolor: "#e68a00" },
+      "&.Mui-disabled": { bgcolor: "#e0e0e0" },
+      fontWeight: 700,
+      fontSize: { xs: "0.7rem", sm: "0.875rem" },
+      px: { xs: 1.5, sm: 3 },
+      py: { xs: 0.5, sm: 1 },
+      borderRadius: 2,
+      whiteSpace: "nowrap",
+      boxShadow: "none",
+      textTransform: "none",
+    }}
+  >
+    {isFlight ? "Request Companion" : "Request Seat"}
+  </Button>
+)}
             </Box>
 
             {/* Expanded details */}
