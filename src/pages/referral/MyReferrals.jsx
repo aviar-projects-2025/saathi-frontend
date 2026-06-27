@@ -747,8 +747,8 @@ const MyReferrals = () => {
                         "& .MuiTab-root": {
                             textTransform: "none",
                             fontWeight: 600,
-                            fontSize: { xs: 11, sm: 14 },
-                            minHeight: { xs: 50, sm: 48 },
+                            fontSize: { xs: 10.3, sm: 14 },
+                            minHeight: { xs: 40, sm: 48 },
                             color: "text.secondary",
                         },
                         "& .Mui-selected": {
@@ -763,9 +763,9 @@ const MyReferrals = () => {
                 >
                     <Tab
                         label={
-                            <Stack direction="row" spacing={0.75} alignItems="center">
-                                <span>Pending Approvals</span>
-                                {referrals.length > 0 && (
+                            <Stack direction="row" alignItems="center">
+                                <span>{`Pending Approvals (${referrals.length})`} </span>
+                                {/* {referrals.length > 0 && (
                                     <Box
                                         component="span"
                                         sx={{
@@ -781,15 +781,15 @@ const MyReferrals = () => {
                                     >
                                         {referrals.length}
                                     </Box>
-                                )}
+                                )} */}
                             </Stack>
                         }
                     />
                     <Tab
                         label={
-                            <Stack direction="row" spacing={0.75} alignItems="center">
-                                <span>Approved Referrals</span>
-                                {approvedReferrals.length > 0 && (
+                            <Stack direction="row" alignItems="center">
+                                <span>{`Approved Referrals (${approvedReferrals.length})`} </span>
+                                {/* {approvedReferrals.length > 0 && (
                                     <Box
                                         component="span"
                                         sx={{
@@ -805,7 +805,7 @@ const MyReferrals = () => {
                                     >
                                         {approvedReferrals.length}
                                     </Box>
-                                )}
+                                )} */}
                             </Stack>
                         }
                     />

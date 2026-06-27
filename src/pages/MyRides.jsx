@@ -462,7 +462,7 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete }) {
       <Box
         onClick={() => setDetailsOpen(true)}
         sx={{
-          p: { xs: 0.75, sm: 1.5 },
+          p: { xs: 0.01, sm: 0 },
           width: '100%',
           maxWidth: 1000,
           mx: "auto",
@@ -471,6 +471,7 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete }) {
           "&:hover": {
             transform: { xs: 'none', sm: 'translateY(-4px)' },
           },
+          mb:2
         }}
       >
         {/* ── Top header: name + status ── */}
@@ -797,22 +798,33 @@ const MyRides = () => {
         sx={{
           width: '100%',
           maxWidth: { xs: '100%', sm: 720 },
-          px: { xs: 1.5, sm: 3 },
-          py: { xs: 2, sm: 3 },
+          px: { xs: 0, sm: 3 },
+          py: { xs: 0, sm: 3 },
           boxSizing: 'border-box',
+          // On mobile: full height with flex column so list fills remaining space
+          display: 'flex',
+          flexDirection: 'column',
+          height: { xs: '100dvh', sm: 'auto' },
         }}
       >
-        <Typography variant="h5" fontWeight={800} sx={{ fontSize: { xs: '1.2rem', sm: '1.5rem' }, mb: 2 }}>
-          My Rides
-        </Typography>
+        <Box sx={{ px: { xs: 1.5, sm: 0 }, pt: { xs: 2, sm: 0 }, mb: 2, flexShrink: 0 }}>
+          <Typography variant="h5" fontWeight={800} sx={{ fontSize: { xs: '1.2rem', sm: '1.5rem' } }}>
+            My Rides
+          </Typography>
+        </Box>
 
-        {/* ── Tabs: centered, all 4 visible, no scroll ── */}
+        {/* ── Tabs: sticky on mobile ── */}
         <Box
           sx={{
             width: '100%',
             borderBottom: '1px solid',
             borderColor: 'divider',
-            mb: 2.5,
+            mb: 0,
+            flexShrink: 0,
+            position: { xs: 'sticky', sm: 'sticky' },
+            top: { xs: -10, sm: -12 },
+            zIndex: { xs: 10, sm: 10 },
+            bgcolor: 'background.paper',
           }}
         >
           <Tabs
@@ -821,18 +833,15 @@ const MyRides = () => {
             variant="fullWidth"
             sx={{
               minHeight: { xs: 50, sm: 48 },
-
               "& .MuiTab-root": {
                 minWidth: 0,
                 padding: { xs: "4px 2px", sm: "12px 16px" },
-                fontSize: { xs: "0.7rem", sm: "0.82rem" }, // smaller text
+                fontSize: { xs: "0.7rem", sm: "0.82rem" },
                 fontWeight: 600,
                 textTransform: "none",
                 minHeight: { xs: 38, sm: 48 },
                 lineHeight: 1.1,
-
               },
-
               "& .MuiTabs-indicator": {
                 height: 3,
               },
@@ -850,30 +859,10 @@ const MyRides = () => {
                         fontWeight: 'inherit',
                         lineHeight: 1.2,
                         whiteSpace: 'nowrap',
-
                       }}
                     >
                       {`${short} ( ${count} )`}
                     </Typography>
-                    {/* <Box
-                      sx={{
-                        bgcolor: tab === i ? "primary.main" : "#E0E0E0",
-                        color: tab === i ? "#fff" : "text.secondary",
-                        borderRadius: "10px",
-                        mt: 1,
-                        mb: 1,
-                        px: "7px",
-                        minWidth: 16,
-                        height: 20,
-                        fontSize: "0.5rem",
-                        fontWeight: 700,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      {count}
-                    </Box> */}
                   </Box>
                 }
               />
@@ -881,46 +870,61 @@ const MyRides = () => {
           </Tabs>
         </Box>
 
-        {loading ? (
-          <Box sx={{ width: '100%', mt: '5rem', display: 'flex', justifyContent: 'center' }}>
-            <CircularProgress size={50} />
-          </Box>
-        ) : (
-          <>
-            {tab === 0 && (
-              <Box>
-                {currentRide.length > 0
-                  ? renderList(currentRide, false, false)
-                  : <EmptyState emoji="🚗" message="You don't have any active rides at the moment" actionLabel="Share a Ride" actionHref="/offer" />
-                }
-              </Box>
-            )}
+        {/* ── Scrollable content area ── */}
+        <Box
+          sx={{
+            flex: 1,
+            overflowY: { xs: 'auto', sm: 'visible' },
+            px: { xs: 1.5, sm: 0 },
+            pt: 2.5,
+            pb: { xs: 3, sm: 0 },
+            // Hide scrollbar visually but keep functionality
+            '&::-webkit-scrollbar': { width: '4px' },
+            '&::-webkit-scrollbar-track': { bgcolor: 'transparent' },
+            '&::-webkit-scrollbar-thumb': { bgcolor: 'divider', borderRadius: '4px' },
+          }}
+        >
+          {loading ? (
+            <Box sx={{ width: '100%', mt: '5rem', display: 'flex', justifyContent: 'center' }}>
+              <CircularProgress size={50} />
+            </Box>
+          ) : (
+            <>
+              {tab === 0 && (
+                <Box>
+                  {currentRide.length > 0
+                    ? renderList(currentRide, false, false)
+                    : <EmptyState emoji="🚗" message="You don't have any active rides at the moment" actionLabel="Share a Ride" actionHref="/offer" />
+                  }
+                </Box>
+              )}
 
-            {tab === 1 && (
-              <Box>
-                {upcoming.length > 0
-                  ? renderList(upcoming, true, true)
-                  : <EmptyState emoji="🗓️" message="No upcoming rides" actionLabel="Find a ride" actionHref="/find" />}
-              </Box>
-            )}
+              {tab === 1 && (
+                <Box>
+                  {upcoming.length > 0
+                    ? renderList(upcoming, true, true)
+                    : <EmptyState emoji="🗓️" message="No upcoming rides" actionLabel="Find a ride" actionHref="/find" />}
+                </Box>
+              )}
 
-            {tab === 2 && (
-              <Box>
-                {mypost.length > 0
-                  ? renderList(mypost, true, true)
-                  : <EmptyState emoji="🚗" message="You haven't posted any rides yet" actionLabel="Post your first ride" actionHref="/offer" />}
-              </Box>
-            )}
+              {tab === 2 && (
+                <Box>
+                  {mypost.length > 0
+                    ? renderList(mypost, true, true)
+                    : <EmptyState emoji="🚗" message="You haven't posted any rides yet" actionLabel="Post your first ride" actionHref="/offer" />}
+                </Box>
+              )}
 
-            {tab === 3 && (
-              <Box>
-                {history.length > 0
-                  ? renderList(history, false, false)
-                  : <EmptyState emoji="🕰️" message="No past rides yet" />}
-              </Box>
-            )}
-          </>
-        )}
+              {tab === 3 && (
+                <Box>
+                  {history.length > 0
+                    ? renderList(history, false, false)
+                    : <EmptyState emoji="🕰️" message="No past rides yet" />}
+                </Box>
+              )}
+            </>
+          )}
+        </Box>
 
         {editRide && (
           <EditRideModal ride={editRide} onSave={handleEdit} onClose={() => setEditRide(null)} />
