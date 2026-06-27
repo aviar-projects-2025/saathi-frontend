@@ -1,30 +1,41 @@
 import { Box, Drawer, useMediaQuery } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { Outlet } from "react-router-dom";
+import { useState } from "react";
+
 import Sidebar from "./Sidebar";
 import TopNav from "./Navbar";
-import { useState } from "react";
+import Footer from "../Navbar/footer.jsx";
 
 const UserLayout = () => {
   const theme = useTheme();
-  const isDesktop = useMediaQuery(theme.breakpoints.up("lg")); // 1024+
+  const isDesktop = useMediaQuery(theme.breakpoints.up("lg"));
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <Box
       sx={{
-        height: "100dvh",
-        overflow: "hidden",
         display: "flex",
         flexDirection: "column",
+        minHeight: "100vh",
         bgcolor: "#fbfaf8ff",
       }}
     >
+      {/* Top Navigation */}
       <TopNav onMenuClick={() => setMobileOpen(true)} />
 
-      <Box sx={{ display: "flex", flex: 1, minHeight: 0 }}>
+      {/* Content Area */}
+      <Box
+        sx={{
+          display: "flex",
+          flex: 1,
+          minHeight: 0,
+        }}
+      >
+        {/* Desktop Sidebar */}
         {isDesktop && <Sidebar />}
 
+        {/* Mobile Sidebar */}
         {!isDesktop && (
           <Drawer
             anchor="left"
@@ -37,23 +48,30 @@ const UserLayout = () => {
               },
             }}
           >
-            <Sidebar onItemClick={() => setMobileOpen(false)} isMobile />
+            <Sidebar
+              isMobile
+              onItemClick={() => setMobileOpen(false)}
+            />
           </Drawer>
         )}
 
+        {/* Main Content */}
         <Box
           component="main"
           sx={{
             flex: 1,
-            minHeight: 0,
             overflowY: "auto",
             px: { xs: 1.5, sm: 2, md: 3 },
-            pt: 1.5,
+            pt: 2,
+            pb: 2,
           }}
         >
           <Outlet />
         </Box>
       </Box>
+
+      {/* Footer */}
+      <Footer />
     </Box>
   );
 };
