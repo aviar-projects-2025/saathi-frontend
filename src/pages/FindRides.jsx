@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import {
   Container,
@@ -92,22 +92,40 @@ const FUEL_OPTIONS = [
 // ── How tall is your navbar? Adjust this value to match. ──────────────────
 const NAVBAR_HEIGHT = 64; // px
 
+// Pixels the results area must scroll before the open filter panel
+// auto-collapses. Small enough to feel responsive, large enough to
+// ignore accidental micro-scrolls/bounce.
+const SCROLL_COLLAPSE_THRESHOLD = 24;
+
+const emptyFilters = {
+  transportMode: "",
+  gender: "",
+  fuelSharing: "",
+  language: "",
+};
+
 export default function FindRides() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const [rides, setRides] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filtersOpen, setFiltersOpen] = useState(!isMobile);
+  const [filtersOpen, setFiltersOpen] = useState(false); // collapsed by default
 
   const [searchFrom, setSearchFrom] = useState("");
   const [searchDestination, setSearchDestination] = useState("");
-  const [transportMode, setTransportMode] = useState("");
-  const [gender, setGender] = useState("");
-  const [fuelSharing, setFuelSharing] = useState("");
-  const [language, setLanguage] = useState("");
 
-  useEffect(() => { fetchRides(); }, []);
+  // Staged filter values: edited live inside the panel, but only
+  // committed to `appliedFilters` (and therefore the results) on Apply.
+  const [draftFilters, setDraftFilters] = useState(emptyFilters);
+  const [appliedFilters, setAppliedFilters] = useState(emptyFilters);
+
+  const resultsRef = useRef(null);
+  const scrollStartRef = useRef(0);
+
+  useEffect(() => {
+    fetchRides();
+  }, []);
 
   const fetchRides = async () => {
     try {
@@ -120,22 +138,101 @@ export default function FindRides() {
     }
   };
 
-  const clearFilters = () => {
-    setSearchFrom("");
-    setSearchDestination("");
-    setTransportMode("");
-    setGender("");
-    setFuelSharing("");
-    setLanguage("");
+  // ── Filter panel open/close + scroll-to-collapse ──────────────────────
+  const openFilters = () => {
+    scrollStartRef.current = resultsRef.current ? resultsRef.current.scrollTop : 0;
+    setFiltersOpen(true);
   };
 
+  const closeFilters = () => setFiltersOpen(false);
+
+  const toggleFilters = () => {
+    if (filtersOpen) closeFilters();
+    else openFilters();
+  };
+
+  const handleResultsScroll = (e) => {
+    if (!filtersOpen) return;
+    const delta = Math.abs(e.target.scrollTop - scrollStartRef.current);
+    if (delta > SCROLL_COLLAPSE_THRESHOLD) {
+      closeFilters();
+    }
+  };
+
+  // ── Apply / clear ──────────────────────────────────────────────────────
+  const applyFilters = () => {
+    setAppliedFilters(draftFilters);
+    closeFilters();
+  };
+
+  const clearFilters = () => {
+    setDraftFilters(emptyFilters);
+    setAppliedFilters(emptyFilters);
+  };
+
+  const updateDraft = (key, value) => {
+    setDraftFilters((prev) => {
+      const next = { ...prev, [key]: value };
+      // Language only applies to Flight; drop it if mode changes away from Flight
+      if (key === "transportMode" && value !== "Flight") next.language = "";
+      return next;
+    });
+  };
+
+  const { transportMode, gender, fuelSharing, language } = draftFilters;
+  const {
+    transportMode: appliedTransportMode,
+    gender: appliedGender,
+    fuelSharing: appliedFuelSharing,
+    language: appliedLanguage,
+  } = appliedFilters;
+
+  // Chips reflect APPLIED filters (what's actually affecting results),
+  // each chip's clear button removes that filter immediately and re-applies.
   const activeFilters = [
-    transportMode && { key: "transport", label: transportMode, clear: () => setTransportMode("") },
-    gender && { key: "gender", label: gender, clear: () => setGender("") },
-    fuelSharing !== "" && { key: "fuel", label: `Fuel: ${fuelSharing === "true" ? "Yes" : "No"}`, clear: () => setFuelSharing("") },
-    language && { key: "lang", label: `Lang: ${language}`, clear: () => setLanguage("") },
+    appliedTransportMode && {
+      key: "transport",
+      label: appliedTransportMode,
+      clear: () => {
+        const next = { ...appliedFilters, transportMode: "", language: "" };
+        setAppliedFilters(next);
+        setDraftFilters(next);
+      },
+    },
+    appliedGender && {
+      key: "gender",
+      label: appliedGender,
+      clear: () => {
+        const next = { ...appliedFilters, gender: "" };
+        setAppliedFilters(next);
+        setDraftFilters(next);
+      },
+    },
+    appliedFuelSharing !== "" && {
+      key: "fuel",
+      label: `Fuel: ${appliedFuelSharing === "true" ? "Yes" : "No"}`,
+      clear: () => {
+        const next = { ...appliedFilters, fuelSharing: "" };
+        setAppliedFilters(next);
+        setDraftFilters(next);
+      },
+    },
+    appliedLanguage && {
+      key: "lang",
+      label: `Lang: ${appliedLanguage}`,
+      clear: () => {
+        const next = { ...appliedFilters, language: "" };
+        setAppliedFilters(next);
+        setDraftFilters(next);
+      },
+    },
   ].filter(Boolean);
 
+  const draftFilterCount = [transportMode, gender, fuelSharing !== "" ? fuelSharing : "", language].filter(
+    Boolean
+  ).length;
+
+  // ── Filtering uses APPLIED filters + live search text ─────────────────
   const filteredRides = rides.filter((ride) => {
     const fromValue =
       ride.modeOfTravel === "Flight"
@@ -149,22 +246,29 @@ export default function FindRides() {
 
     const fromMatch = fromValue.toLowerCase().includes(searchFrom.toLowerCase());
     const destinationMatch = destinationValue.toLowerCase().includes(searchDestination.toLowerCase());
-    const transportMatch = !transportMode || ride.modeOfTravel === transportMode;
-    const genderMatch = !gender || ride.genderPreference === gender;
+    const transportMatch = !appliedTransportMode || ride.modeOfTravel === appliedTransportMode;
+    const genderMatch = !appliedGender || ride.genderPreference === appliedGender;
     const fuelMatch =
-      fuelSharing === "" || ride.modeOfTravel === "Flight" ||
-      ride.fuelSharing?.toString() === fuelSharing;
-    const languageMatch = !language || ride.language?.toLowerCase().includes(language.toLowerCase());
+      appliedFuelSharing === "" ||
+      ride.modeOfTravel === "Flight" ||
+      ride.fuelSharing?.toString() === appliedFuelSharing;
+    const languageMatch =
+      !appliedLanguage || ride.language?.toLowerCase().includes(appliedLanguage.toLowerCase());
 
     return fromMatch && destinationMatch && transportMatch && genderMatch && fuelMatch && languageMatch;
   });
 
   if (loading) {
     return (
-      <Box sx={{
-        minHeight: "100vh", display: "flex", alignItems: "center",
-        justifyContent: "center", background: saffron[50]
-      }}>
+      <Box
+        sx={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: saffron[50],
+        }}
+      >
         <CircularProgress sx={{ color: saffron[500] }} />
       </Box>
     );
@@ -179,21 +283,21 @@ export default function FindRides() {
         flexDirection: "column",
         width: "100%",
         maxWidth: { xs: "100%", sm: 720 },
-        // mx: "auto",
         boxSizing: "border-box",
         overflowX: "hidden",
       }}
     >
-
-      {/* ── Sticky block: Hero + Filter Panel ────────────────── */}
+      {/* ── Sticky block: ONLY the hero + From/To/Filter search bar.
+             The expanded filter panel lives OUTSIDE this sticky block,
+             so it scrolls/collapses away instead of staying pinned. ── */}
       <Box
         sx={{
           position: "sticky",
           top: 0,
           zIndex: 100,
-          background: saffron[50],
-          flexShrink: 0,          // never shrink; results area absorbs remaining space
-          pb: filtersOpen ? 0 : 1,
+          flexShrink: 0,
+          // background: saffron[50],
+          pb: 1,
         }}
       >
         {/* ── Hero ───────────────────────────────────────────── */}
@@ -201,12 +305,11 @@ export default function FindRides() {
           sx={{
             color: "#000000",
             pt: { xs: 2.5, sm: 4, md: 5 },
-            pb: { xs: 6, sm: 6, md: 7 },
+            pb: { xs: 2.5, sm: 3, md: 3.5 },
             px: { xs: 1.5, sm: 3 },
           }}
         >
           <Container maxWidth="md" disableGutters sx={{ px: { xs: 0, sm: 2 } }}>
-
             {/* Title */}
             <Typography
               fontWeight={800}
@@ -219,7 +322,7 @@ export default function FindRides() {
               Find Rides & Flight Companions
             </Typography>
 
-            {/* Search row */}
+            {/* Search row: From / To / Filter — this is what stays sticky */}
             <Box
               sx={{
                 display: "flex",
@@ -289,7 +392,7 @@ export default function FindRides() {
 
               {/* Filter toggle button */}
               <Button
-                onClick={() => setFiltersOpen((o) => !o)}
+                onClick={toggleFilters}
                 sx={{
                   flexShrink: 0,
                   borderRadius: "50px",
@@ -318,7 +421,8 @@ export default function FindRides() {
                 {isMobile && activeFilters.length > 0 && (
                   <Box
                     sx={{
-                      width: 6, height: 6,
+                      width: 6,
+                      height: 6,
                       borderRadius: "50%",
                       background: "#fff",
                       flexShrink: 0,
@@ -327,22 +431,68 @@ export default function FindRides() {
                 )}
               </Button>
             </Box>
+
+            {/* Applied filter chips live just under the sticky search row
+                 so the user can see/clear them without opening the panel. */}
+            {activeFilters.length > 0 && (
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: { xs: 0.5, sm: 0.75 }, mt: 1.25 }}>
+                {activeFilters.map((f) => (
+                  <Chip
+                    key={f.key}
+                    label={f.label}
+                    onDelete={f.clear}
+                    deleteIcon={<CloseIcon />}
+                    size="small"
+                    sx={{
+                      background: "rgba(255,255,255,0.9)",
+                      border: `1px solid ${saffron[300]}`,
+                      color: saffron[800],
+                      fontWeight: 600,
+                      fontSize: { xs: "0.65rem", sm: "0.75rem" },
+                      height: { xs: 22, sm: 26 },
+                      "& .MuiChip-deleteIcon": { color: saffron[500], fontSize: { xs: "0.8rem", sm: "0.95rem" } },
+                      "& .MuiChip-label": { px: { xs: 0.75, sm: 1 } },
+                    }}
+                  />
+                ))}
+              </Box>
+            )}
           </Container>
         </Box>
+      </Box>
 
-        {/* ── Filter Panel (sticky, overlays results) ───────── */}
-        <Collapse in={filtersOpen}>
-          <Container maxWidth="md" disableGutters sx={{ px: { xs: 1.5, sm: 3 } }}>
-            <Box sx={{
-              background: "#fff",
-              borderRadius: { xs: 3, md: 4 },
-              border: `1.5px solid ${saffron[100]}`,
-              p: { xs: 1.75, sm: 3 },
-              mt: { xs: -4.5, sm: -3, md: -4 },
-              // subtle shadow so it visually "floats" above the scrolling list
-              boxShadow: `0 4px 20px rgba(245,147,0,0.10)`,
-            }}>
-
+      {/* ── Scrollable results area. The filter panel renders as the
+             FIRST thing inside this scrollable area (not in the sticky
+             block), so: scrolling naturally moves it out of view, AND
+             we additionally force-collapse it past a small scroll delta
+             so it doesn't loiter half-visible. ── */}
+      <Box
+        ref={resultsRef}
+        onScroll={handleResultsScroll}
+        sx={{
+          flex: 1,
+          overflowY: "auto",
+          overflowX: "hidden",
+          pb: { xs: 4, sm: 6 },
+          "&::-webkit-scrollbar": { width: 5 },
+          "&::-webkit-scrollbar-track": { background: saffron[50] },
+          "&::-webkit-scrollbar-thumb": { background: saffron[300], borderRadius: 4 },
+        }}
+      >
+        <Container maxWidth="md" disableGutters sx={{ px: { xs: 1.5, sm: 3 } }}>
+          {/* ── Filter Panel (not sticky — scrolls/collapses away) ──── */}
+          <Collapse in={filtersOpen}>
+            <Box
+              sx={{
+                background: "#fff",
+                borderRadius: { xs: 3, md: 4 },
+                border: `1.5px solid ${saffron[100]}`,
+                // boxShadow: `0 4px 20px rgba(245,147,0,0.10)`,
+                p: { xs: 1.75, sm: 3 },
+                mt: { xs: 1.5, sm: 2 },
+                mb: { xs: 1.5, sm: 2 },
+              }}
+            >
               {/* Transport chips */}
               <Box mb={2}>
                 <Typography
@@ -355,7 +505,6 @@ export default function FindRides() {
                     color: saffron[700],
                     display: "block",
                     mb: 1,
-                    mt: -1,
                   }}
                 >
                   Mode of Travel
@@ -368,7 +517,7 @@ export default function FindRides() {
                         key={opt.value}
                         label={opt.label}
                         icon={opt.icon}
-                        onClick={() => setTransportMode(opt.value)}
+                        onClick={() => updateDraft("transportMode", opt.value)}
                         sx={{
                           borderRadius: "20px",
                           border: `1.5px solid ${selected ? saffron[500] : saffron[200]}`,
@@ -409,7 +558,8 @@ export default function FindRides() {
                       letterSpacing: "0.08em",
                       color: saffron[700],
                       display: "block",
-                      mt: 1, mb: 1,
+                      mt: 1,
+                      mb: 1,
                     }}
                   >
                     Gender
@@ -418,7 +568,7 @@ export default function FindRides() {
                     <Select
                       value={gender}
                       displayEmpty
-                      onChange={(e) => setGender(e.target.value)}
+                      onChange={(e) => updateDraft("gender", e.target.value)}
                       sx={{ ...selectSx, fontSize: { xs: "0.7rem", sm: "0.82rem" }, height: { xs: 30, sm: 36 } }}
                     >
                       {GENDER_OPTIONS.map((g) => (
@@ -441,7 +591,8 @@ export default function FindRides() {
                       letterSpacing: "0.08em",
                       color: saffron[700],
                       display: "block",
-                      mt: 1, mb: 1,
+                      mt: 1,
+                      mb: 1,
                     }}
                   >
                     Fuel Sharing
@@ -450,7 +601,7 @@ export default function FindRides() {
                     <Select
                       value={fuelSharing}
                       displayEmpty
-                      onChange={(e) => setFuelSharing(e.target.value)}
+                      onChange={(e) => updateDraft("fuelSharing", e.target.value)}
                       sx={{ ...selectSx, fontSize: { xs: "0.7rem", sm: "0.82rem" }, height: { xs: 30, sm: 36 } }}
                     >
                       {FUEL_OPTIONS.map((f) => (
@@ -484,7 +635,7 @@ export default function FindRides() {
                       size="small"
                       placeholder="Tamil, English, Hindi…"
                       value={language}
-                      onChange={(e) => setLanguage(e.target.value)}
+                      onChange={(e) => updateDraft("language", e.target.value)}
                       sx={{
                         ...inputFieldSx,
                         "& .MuiOutlinedInput-root": {
@@ -504,9 +655,9 @@ export default function FindRides() {
                 sx={{
                   display: "flex",
                   alignItems: "center",
-                  justifyContent: { xs: "space-between", sm: "flex-end" },
+                  justifyContent: "space-between",
                   gap: 1,
-                  mt: { xs: 1.2, sm: 2 },
+                  mt: { xs: 1.5, sm: 2.5 },
                 }}
               >
                 <Button
@@ -527,47 +678,28 @@ export default function FindRides() {
                   Clear all
                 </Button>
 
-                {isMobile && (
-                  <Button
-                    onClick={() => setFiltersOpen(false)}
-                    sx={{
-                      borderRadius: "50px",
-                      border: `1.5px solid ${saffron[300]}`,
-                      bgcolor: "#ffff",
-                      color: saffron[700],
-                      fontWeight: 600,
-                      fontSize: { xs: "0.7rem", sm: "0.82rem" },
-                      px: { xs: 1.5, sm: 2.5 },
-                      height: { xs: 30, sm: 36 },
-                      textTransform: "none",
-                      "&:hover": {
-                        background: `linear-gradient(90deg, ${saffron[600]} 0%, ${saffron[700]} 100%)`,
-                      },
-                    }}
-                  >
-                    Show {filteredRides.length} results
-                  </Button>
-                )}
+                <Button
+                  onClick={applyFilters}
+                  sx={{
+                    borderRadius: "50px",
+                    border: "none",
+                    background: saffron[500],
+                    color: "#fff",
+                    fontWeight: 700,
+                    fontSize: { xs: "0.72rem", sm: "0.85rem" },
+                    px: { xs: 2, sm: 3 },
+                    height: { xs: 32, sm: 38 },
+                    textTransform: "none",
+                    boxShadow: "none",
+                    "&:hover": { background: saffron[600] },
+                  }}
+                >
+                  Apply
+                  {/* {draftFilterCount > 0 ? ` (${draftFilterCount})` : ""} */}
+                </Button>
               </Box>
             </Box>
-          </Container>
-        </Collapse>
-      </Box>
-
-      {/* ── Scrollable results area ───────────────────────────── */}
-      <Box
-        sx={{
-          flex: 1,              // fills all remaining height
-          overflowY: "auto",    // only this area scrolls
-          overflowX: "hidden",
-          pb: { xs: 4, sm: 6 },
-          // thin saffron-tinted scrollbar
-          "&::-webkit-scrollbar": { width: 5 },
-          "&::-webkit-scrollbar-track": { background: saffron[50] },
-          "&::-webkit-scrollbar-thumb": { background: saffron[300], borderRadius: 4 },
-        }}
-      >
-        <Container maxWidth="md" disableGutters sx={{ px: { xs: 1.5, sm: 3 } }}>
+          </Collapse>
 
           {/* ── Results bar ── */}
           <Box
@@ -578,47 +710,20 @@ export default function FindRides() {
               flexWrap: "wrap",
               gap: { xs: 0.75, sm: 1 },
               mb: { xs: 1.5, sm: 2 },
-              mt: { xs: 2, sm: 3 },
+              mt: { xs: 1, sm: 1.5 },
             }}
           >
-            <Typography
-              fontWeight={700}
-              sx={{ color: saffron[800], fontSize: { xs: "0.9rem", sm: "1rem" } }}
-            >
+            <Typography fontWeight={700} sx={{ color: saffron[800], fontSize: { xs: "0.9rem", sm: "1rem" } }}>
               {filteredRides.length}{" "}
               <Typography component="span" fontWeight={400} color="text.secondary" fontSize="inherit">
                 {filteredRides.length === 1 ? "result" : "results"} found
               </Typography>
             </Typography>
-
-            {activeFilters.length > 0 && (
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: { xs: 0.5, sm: 0.75 } }}>
-                {activeFilters.map((f) => (
-                  <Chip
-                    key={f.key}
-                    label={f.label}
-                    onDelete={f.clear}
-                    deleteIcon={<CloseIcon />}
-                    size="small"
-                    sx={{
-                      background: saffron[50],
-                      border: `1px solid ${saffron[300]}`,
-                      color: saffron[800],
-                      fontWeight: 600,
-                      fontSize: { xs: "0.65rem", sm: "0.75rem" },
-                      height: { xs: 22, sm: 26 },
-                      "& .MuiChip-deleteIcon": { color: saffron[500], fontSize: { xs: "0.8rem", sm: "0.95rem" } },
-                      "& .MuiChip-label": { px: { xs: 0.75, sm: 1 } },
-                    }}
-                  />
-                ))}
-              </Box>
-            )}
           </Box>
 
           {/* ── Ride cards ── */}
           {filteredRides.length > 0 ? (
-            <Grid spacing={{ xs: 1, sm: 2 }}>
+            <Grid container spacing={{ xs: 1, sm: 2 }}>
               {filteredRides.map((ride) => (
                 <Grid item xs={12} sm={6} md={4} key={ride._id}>
                   <RideCard ride={ride} />
@@ -636,7 +741,9 @@ export default function FindRides() {
                 px: { xs: 2, sm: 4 },
               }}
             >
-              <Typography fontSize={{ xs: "2rem", sm: "2.5rem" }} mb={0.75}>🔍</Typography>
+              <Typography fontSize={{ xs: "2rem", sm: "2.5rem" }} mb={0.75}>
+                🔍
+              </Typography>
               <Typography fontWeight={700} color={saffron[700]} mb={0.5} fontSize={{ xs: "0.9rem", sm: "1rem" }}>
                 No rides found
               </Typography>
