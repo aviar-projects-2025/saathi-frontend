@@ -177,26 +177,50 @@ export default function RideCard({ ride }) {
     console.log("Request Data:", requestData);
     console.log("API Payload:", payload);
 
-    try {
-      const res = await axios.post(`${Api}/bookride/request/create/${selectedRide._id}`, payload);
+  //   try {
+  //     const res = await axios.post(`${Api}/bookride/request/create/${selectedRide._id}`, payload);
 
-      console.log("API Response:", res.data);
+  //     console.log("API Response:", res.data);
 
-      toast.success(
-        selectedRide.modeOfTravel === "Flight"
-          ? "Companion request sent"
-          : "Seat request sent"
-      );
+  //     toast.success(
+  //       selectedRide.modeOfTravel === "Flight"
+  //         ? "Companion request sent"
+  //         : "Seat request sent"
+  //     );
 
-      setOpenRequestModal(false);
-      resetRequestData();
-    } catch (error) {
-      console.log("Full Error:", error);
-      console.log("Error Response:", error.response?.data);
+  //     setOpenRequestModal(false);
+  //     resetRequestData();
+  //   } catch (error) {
+  //     console.log("Full Error:", error);
+  //     console.log("Error Response:", error.response?.data);
 
-      toast.error(error.response?.data?.message || "Request failed");
-    }
-  };
+  //     toast.error(error.response?.data?.message || "Request failed");
+  //   }
+  // };
+
+  console.log("Request Data:", requestData);
+  console.log("API Payload:", payload);
+  console.log("Ride ID:", selectedRide?._id);
+  try {
+    axios.post(`${Api}/bookride/${selectedRide._id}`,payload);
+console.log("selectedRide", selectedRide);
+console.log("selectedRide._id", selectedRide?._id);
+
+    toast.success(
+      selectedRide.modeOfTravel === "Flight"
+        ? "Companion request sent"
+        : "Seat request sent"
+    );
+
+    setOpenRequestModal(false);
+    resetRequestData();
+  } catch (error) {
+    console.log("Full Error:", error);
+    console.log("Error Response:", error.response?.data);
+
+    toast.error(error.response?.data?.message || "Request failed");
+  }
+};
 
   return (
     <Card
