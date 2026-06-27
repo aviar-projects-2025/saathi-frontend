@@ -2,23 +2,27 @@ import { Box, Drawer, useMediaQuery } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { Outlet } from "react-router-dom";
 import { useState } from "react";
-
 import Sidebar from "./Sidebar";
 import TopNav from "./Navbar";
-import Footer from "../Navbar/footer.jsx";
+
 
 const UserLayout = () => {
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up("lg"));
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
   return (
     <Box
       sx={{
+        height: "100dvh",
+        overflow: "hidden",
         display: "flex",
         flexDirection: "column",
         minHeight: "100vh",
         bgcolor: "#fbfaf8ff",
+        overflow: "hidden",
       }}
     >
       {/* Top Navigation */}
@@ -62,16 +66,12 @@ const UserLayout = () => {
             flex: 1,
             overflowY: "auto",
             px: { xs: 1.5, sm: 2, md: 3 },
-            pt: 2,
-            pb: 2,
+            pt: 1.5,
           }}
         >
           <Outlet />
         </Box>
       </Box>
-
-      {/* Footer */}
-      <Footer />
     </Box>
   );
 };
