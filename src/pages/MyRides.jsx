@@ -442,6 +442,7 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete }) {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const user = JSON.parse(localStorage.getItem('user'))
 
   const status = statusConfig[statusMap[ride?.status]] || statusConfig.pending;
 
@@ -455,8 +456,20 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete }) {
 
   const fuelLabel = ride.fuelSharing ? "Yes" : "No";
 
-  // console.log("Api Data ===> ", ride);
+  const getRideReqLists = () => {
+    try {
+      axios.get(Api + `/bookride/${user.id}?type=received`)
+        .then((res) => {
+          console.log(res)
+        })
+    } catch (error) {
 
+    }
+  }
+
+  useEffect(() => {
+    getRideReqLists();
+  }, [])
   return (
     <>
       <Box
@@ -471,7 +484,7 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete }) {
           "&:hover": {
             transform: { xs: 'none', sm: 'translateY(-4px)' },
           },
-          mb:2
+          mb: 2
         }}
       >
         {/* ── Top header: name + status ── */}

@@ -28,7 +28,7 @@ import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import TrainIcon from "@mui/icons-material/Train";
 import FilterListOffIcon from "@mui/icons-material/FilterListOff";
 
-import RideCard from "../components/RideCard.jsx";
+import RideCard from "./RideCard.jsx";
 import Api from "../Api";
 
 // ── Saffron design tokens ──────────────────────────────────────────────────
