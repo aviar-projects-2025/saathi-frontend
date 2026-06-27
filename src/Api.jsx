@@ -1,7 +1,7 @@
 
 
 
-const Api = "http://localhost:3000/api/v1"
+const Api = import.meta.env.VITE_API_URL;
 
 
 export default Api; 
