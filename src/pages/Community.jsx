@@ -534,7 +534,12 @@ export default function Community() {
   const { currentUser } = useUser();
 
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
+  const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
+
+  // Show sidebar on tablet (sm+) and desktop (md+)
+  const showSidebar = useMediaQuery(theme.breakpoints.up('sm'));
 
   const SAFFRON = "#E8650A";
   const CARD_BORDER = "1px solid #F0E6DC";
@@ -545,6 +550,13 @@ export default function Community() {
   const bodyFontSize = isMobile ? '0.8rem' : '0.8rem';
   const captionSize = isMobile ? '0.6rem' : '0.6rem';
   const avatarFontSize = isMobile ? '0.6rem' : '1.1rem';
+
+  // ── Scroll behavior ────────────────────────────────────────────────────
+  // Only the SIDEBAR gets its own independent scroll container (fixed height).
+  // The feed/main content scrolls with the page itself (normal page scroll),
+  // so scrolling anywhere on the page scrolls the page/feed, except when the
+  // cursor is over the sidebar, which scrolls independently.
+  const SIDEBAR_SCROLL_HEIGHT = 'calc(100vh - 130px)';
 
   const handleCreatePost = async () => {
     try {
@@ -629,20 +641,130 @@ export default function Community() {
     } catch (error) { }
   };
 
-  return (
-    <PageLayout>
-      <Stack direction={'row'}
-        sx={{
-          justifyContent: 'space-between'
+  // ── Discover data ──────────────────────────────────────────────────────────────
+  const topMembers = [
+    { name: "Vijay Patel", initials: "VP", rides: 67, city: "Frisco", badge: "🏅 Founding member", verified: true },
+    { name: "Deepa Iyer", initials: "DI", rides: 42, city: "Plano", badge: "⭐ Community elder", verified: true },
+    { name: "Rahul Sharma", initials: "RS", rides: 34, city: "Dallas", badge: null, verified: true },
+    { name: "Ananya Krishnan", initials: "AK", rides: 18, city: "Houston", badge: null, verified: true },
+    { name: "Sunita Mehta", initials: "SM", rides: 12, city: "Chicago", badge: null, verified: false },
+  ];
+
+  const activities = [
+    { text: "Vijay P. gave a free temple ride to 4 members", time: "2h ago", icon: "🛕" },
+    { text: "Deepa I. helped Neel K.'s parents from the airport", time: "5h ago", icon: "✈️" },
+    { text: "Rahul S. completed his 34th community ride!", time: "1d ago", icon: "🎉" },
+    { text: "3 new members joined from Houston", time: "2d ago", icon: "👋" },
+    { text: "Sunita M. got 5 ride offers for her family trip", time: "3d ago", icon: "🙏" },
+  ];
+
+  // ── Small avatar used in the leaderboard ─────────────────────────────────────
+  const LeaderAvatar = ({ initials, verified }) => (
+    <Box sx={{
+      width: 36, height: 36, borderRadius: '50%', background: '#FFE8D6',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontWeight: 800, fontSize: 13, position: 'relative', flexShrink: 0
+    }}>
+      {initials}
+      {verified && (
+        <Box sx={{
+          position: 'absolute', right: -2, bottom: -2, background: '#2196f3',
+          color: '#fff', borderRadius: '50%', width: 13, height: 13, fontSize: 9,
+          display: 'flex', alignItems: 'center', justifyContent: 'center'
         }}>
+          ✓
+        </Box>
+      )}
+    </Box>
+  );
 
-        <Box
+  // ── Sidebar content extracted for reuse ──────────────────────────────────────
+  const SidebarContent = () => (
+    <Box sx={{ width: '100%' }}>
+      {/* Top Members */}
+      <Paper elevation={0} sx={{ p: 2, borderRadius: 3, border: '1px solid #F0E6DC', mb: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+          <EmojiEventsIcon sx={{ color: '#F4A261', fontSize: 20 }} />
+          <Typography fontWeight={700} fontSize="0.9rem">Top Community Members</Typography>
+        </Box>
+
+        {topMembers.map((member, index) => (
+          <Box key={member.name}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2, py: 1 }}>
+              <Typography sx={{ width: 18, fontWeight: 800, color: 'text.secondary', fontSize: 12 }}>
+                {index + 1}
+              </Typography>
+              <LeaderAvatar initials={member.initials} verified={member.verified} />
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography fontWeight={600} fontSize="0.8rem" noWrap>{member.name}</Typography>
+                <Typography variant="caption" color="text.secondary" fontSize="0.68rem">
+                  {member.city}
+                </Typography>
+                {member.badge && (
+                  <Typography variant="caption" sx={{
+                    display: 'block', color: '#E8650A',
+                    fontWeight: 600, fontSize: '0.65rem'
+                  }}>
+                    {member.badge}
+                  </Typography>
+                )}
+              </Box>
+              <Box textAlign="right" sx={{ flexShrink: 0 }}>
+                <Typography fontWeight={700} color="primary.main" fontSize={13}>
+                  {member.rides}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" fontSize="0.65rem">
+                  rides
+                </Typography>
+              </Box>
+            </Box>
+            {index !== topMembers.length - 1 && <Divider />}
+          </Box>
+        ))}
+      </Paper>
+
+      {/* Recent Activity */}
+      <Paper elevation={0} sx={{ p: 2, borderRadius: 3, border: '1px solid #F0E6DC', mb: 2 }}>
+        <Typography fontWeight={700} fontSize="0.9rem" mb={1.5} sx={{mb:2}}>Recent Activity</Typography>
+        {activities.map((a, i) => (
+          <Box key={i} sx={{ display: 'flex', gap: 1, mb: 1.2 }}>
+            <Typography fontSize={16}>{a.icon}</Typography>
+            <Box>
+              <Typography variant="body2" fontSize="0.78rem">{a.text}</Typography>
+              <Typography variant="caption" color="text.secondary" fontSize="0.65rem">{a.time}</Typography>
+            </Box>
+          </Box>
+        ))}
+      </Paper>
+
+      {/* Invite */}
+      <Paper elevation={0} sx={{
+        p: 2, borderRadius: 3,
+        background: 'linear-gradient(135deg, #E8650A, #FF8C42)', color: '#fff'
+      }}>
+        <Typography fontWeight={800} mb={0.5} fontSize="0.9rem">Invite a friend 🙏</Typography>
+        <Typography variant="body2" sx={{ opacity: 0.9, mb: 1.5, fontSize: '0.78rem' }}>
+          Saathi grows through trust. Invite someone from your community to join.
+        </Typography>
+        <Button size="small" variant="contained"
           sx={{
-            width: '110%',
-            flexShrink: 0,
-          }}
-        >
+            background: '#fff', color: '#E8650A', fontWeight: 700,
+            '&:hover': { background: '#FFF8F2' }, fontSize: '0.75rem'
+          }}>
+          Share invite link
+        </Button>
+      </Paper>
+    </Box>
+  );
 
+  return (
+    <>
+      <Box sx={{
+        display: "flex",
+        gap: 5
+      }}>
+        <PageLayout>
+          {/* Page header */}
           <Typography variant="h5" fontWeight={800} mb={0.5}>
             Saathi <span style={{ color: '#E8650A' }}>Community</span>
           </Typography>
@@ -650,235 +772,275 @@ export default function Community() {
             Built on trust, referrals, and shared roots
           </Typography>
 
-
-          {/* left Post Feed */}
-          <Grid
-            xs={12}
-            md={7}
-            lg={6}
+          {/* Main layout: feed + sidebar side by side on sm+ */}
+          <Box
             sx={{
-              p: isMobile ? 1.5 : 2,
-              borderRadius: 3,
-              border: CARD_BORDER,
-              mb: 2,
+              display: 'flex',
+              gap: { xs: 0, sm: 2, md: 3 },
+              alignItems: 'flex-start',
+              width: '100%',
+              maxWidth: "1200px"
             }}
           >
-            <Box sx={{ display: 'flex', gap: isMobile ? 1 : 1.5, alignItems: 'flex-start' }}>
-              <UserAvatar
-                size={avatarSize}
-                verified
-                currentUser={currentUser}
-              />
-
-              <TextField
-                fullWidth
-                multiline
-                minRows={1}
-                maxRows={5}
-                value={post}
-                onChange={(e) => setPost(e.target.value)}
-                placeholder="Make a post "
-                variant="outlined"
-                size={isMobile ? 'small' : 'medium'}
-                inputProps={{ style: { fontSize: bodyFontSize } }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 3,
-                    alignItems: 'flex-start',
-                    fontSize:{xs:"11px", sm:"13px"}
-                  },
-                }}
-              />
-            </Box>
-
-            {/* Image preview */}
-            {preview && (
+            {/* ── Left: Post Feed (scrolls with the page, no independent scroll) ── */}
+            <Box
+              sx={{
+                flex: 1,
+                minWidth: 0, // prevents flex child from overflowing
+                pr: isMobile ? 0.5 : 1,
+              }}
+            >
+              {/* Create post box */}
               <Box
                 sx={{
-                  mt: 2,
-                  position: 'relative',
+                  p: isMobile ? 1.5 : 2,
                   borderRadius: 3,
-                  overflow: 'hidden',
-                  border: '1px solid #eee',
+                  border: CARD_BORDER,
+                  mb: 2,
                 }}
               >
-                <Box
-                  component="img"
-                  src={preview}
-                  alt="preview"
-                  sx={{
-                    width: '100%',
-                    maxHeight: isMobile ? 200 : 300,
-                    objectFit: 'cover',
-                    display: 'block',
-                  }}
-                />
-                <Button
-                  size="small"
-                  onClick={() => { setMedia(null); setPreview(""); }}
-                  sx={{
-                    position: 'absolute', top: 8, right: 8,
-                    minWidth: 0, bgcolor: '#fff', borderRadius: '50%',
-                    width: isMobile ? 28 : 34, height: isMobile ? 28 : 34,
-                  }}
-                >
-                  <CloseIcon fontSize={iconFontSize} />
-                </Button>
-              </Box>
-            )}
+                <Box sx={{ display: 'flex', gap: isMobile ? 1 : 1.5, alignItems: 'flex-start' }}>
+                  <UserAvatar
+                    size={avatarSize}
+                    verified
+                    currentUser={currentUser}
+                  />
 
-            <Divider sx={{ my: 1.5 }} />
+                  <TextField
+                    fullWidth
+                    multiline
+                    minRows={1}
+                    maxRows={5}
+                    value={post}
+                    onChange={(e) => setPost(e.target.value)}
+                    placeholder="Make a post"
+                    variant="outlined"
+                    size={isMobile ? 'small' : 'medium'}
+                    inputProps={{ style: { fontSize: bodyFontSize } }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: 3,
+                        alignItems: 'flex-start',
+                        fontSize: { xs: "11px", sm: "13px" }
+                      },
+                    }}
+                  />
+                </Box>
 
-            <Stack direction="row" alignItems="center">
-              <Button
-                component="label"
-                startIcon={<PermMediaIcon fontSize={iconFontSize} />}
-                size={isMobile ? 'small' : 'medium'}
-                sx={{ textTransform: 'none', fontSize: btnFontSize }}
-              >
-                Media
-                <input
-                  hidden
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files[0];
-                    if (file) { setMedia(file); setPreview(URL.createObjectURL(file)); }
-                  }}
-                />
-              </Button>
-
-              <Button
-                variant="contained"
-                disabled={loading || (!post.trim() && !media)}
-                onClick={handleCreatePost}
-                size={isMobile ? 'small' : 'medium'}
-                sx={{
-                  borderRadius: 999,
-                  textTransform: 'none',
-                  bgcolor: '#E8650A',
-                  fontSize: btnFontSize,
-                  ml: 'auto',
-                }}
-              >
-                {loading ? 'Posting…' : 'Post'}
-              </Button>
-            </Stack>
-          </Grid>
-
-          {/* ── Posts list ── */}
-          {postLoading ? (
-            <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', py: 4 }}>
-              <CircularProgress size={isMobile ? 36 : 50} />
-            </Box>
-          ) : (
-            communityPosts?.map((post, index) => (
-              <Paper
-                key={index}
-                elevation={0}
-                sx={{ borderRadius: 3, border: CARD_BORDER, mb: 2, overflow: 'hidden' }}
-              >
-                <Box sx={{ p: isMobile ? 1.5 : 2 }}>
-                  {/* Post header */}
-                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: isMobile ? 1 : 1.5 }}>
-                    <Avatar
-                      src={post?.authorId?.profileImage}
+                {/* Image preview */}
+                {preview && (
+                  <Box
+                    sx={{
+                      mt: 2,
+                      position: 'relative',
+                      borderRadius: 3,
+                      overflow: 'hidden',
+                      border: '1px solid #eee',
+                    }}
+                  >
+                    <Box
+                      component="img"
+                      src={preview}
+                      alt="preview"
                       sx={{
-                        width: avatarSize,
-                        height: avatarSize,
-                        bgcolor: SAFFRON,
-                        color: '#fff',
-                        fontWeight: 800,
-                        fontSize: avatarFontSize,
-                        flexShrink: 0,
+                        width: '100%',
+                        maxHeight: isMobile ? 200 : 300,
+                        objectFit: 'cover',
+                        display: 'block',
+                      }}
+                    />
+                    <Button
+                      size="small"
+                      onClick={() => { setMedia(null); setPreview(""); }}
+                      sx={{
+                        position: 'absolute', top: 8, right: 8,
+                        minWidth: 0, bgcolor: '#fff', borderRadius: '50%',
+                        width: isMobile ? 28 : 34, height: isMobile ? 28 : 34,
                       }}
                     >
-                      {!currentUser?.profileImage &&
-                        `${currentUser?.firstName?.[0] || ''}${currentUser?.lastName?.[0] || ''}`}
-                    </Avatar>
+                      <CloseIcon fontSize={iconFontSize} />
+                    </Button>
+                  </Box>
+                )}
 
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <Typography fontWeight={700} fontSize={isMobile ? '0.82rem' : '0.95rem'} noWrap>
-                        {post?.authorId?.firstName} {post?.authorId?.lastName}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary" fontSize={captionSize}>
-                        {'tvm'} | {formattedDateTime(post?.createdAt)}
+                <Divider sx={{ my: 1.5 }} />
+
+                <Stack direction="row" alignItems="center">
+                  <Button
+                    component="label"
+                    startIcon={<PermMediaIcon fontSize={iconFontSize} />}
+                    size={isMobile ? 'small' : 'medium'}
+                    sx={{ textTransform: 'none', fontSize: btnFontSize }}
+                  >
+                    Media
+                    <input
+                      hidden
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) { setMedia(file); setPreview(URL.createObjectURL(file)); }
+                      }}
+                    />
+                  </Button>
+
+                  <Button
+                    variant="contained"
+                    disabled={loading || (!post.trim() && !media)}
+                    onClick={handleCreatePost}
+                    size={isMobile ? 'small' : 'medium'}
+                    sx={{
+                      borderRadius: 999,
+                      textTransform: 'none',
+                      bgcolor: '#E8650A',
+                      fontSize: btnFontSize,
+                      ml: 'auto',
+                    }}
+                  >
+                    {loading ? 'Posting…' : 'Post'}
+                  </Button>
+                </Stack>
+              </Box>
+
+              {/* Posts list */}
+              {postLoading ? (
+                <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', py: 4 }}>
+                  <CircularProgress size={isMobile ? 36 : 50} />
+                </Box>
+              ) : (
+                communityPosts?.map((post, index) => (
+                  <Paper
+                    key={index}
+                    elevation={0}
+                    sx={{ borderRadius: 3, border: CARD_BORDER, mb: 2, overflow: 'hidden' }}
+                  >
+                    <Box sx={{ p: isMobile ? 1.5 : 2 }}>
+                      {/* Post header */}
+                      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: isMobile ? 1 : 1.5 }}>
+                        <Avatar
+                          src={post?.authorId?.profileImage}
+                          sx={{
+                            width: avatarSize,
+                            height: avatarSize,
+                            bgcolor: SAFFRON,
+                            color: '#fff',
+                            fontWeight: 800,
+                            fontSize: avatarFontSize,
+                            flexShrink: 0,
+                          }}
+                        >
+                          {!currentUser?.profileImage &&
+                            `${currentUser?.firstName?.[0] || ''}${currentUser?.lastName?.[0] || ''}`}
+                        </Avatar>
+
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                          <Typography fontWeight={700} fontSize={isMobile ? '0.82rem' : '0.95rem'} noWrap>
+                            {post?.authorId?.firstName} {post?.authorId?.lastName}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary" fontSize={captionSize}>
+                            {'tvm'} | {formattedDateTime(post?.createdAt)}
+                          </Typography>
+                        </Box>
+
+                        <MoreHorizIcon fontSize={iconFontSize} sx={{ color: 'text.secondary', flexShrink: 0 }} />
+                      </Box>
+
+                      {/* Post body */}
+                      <Typography sx={{ mt: 1.5, fontSize: bodyFontSize, lineHeight: 1.6 }}>
+                        {post.description}
                       </Typography>
                     </Box>
 
-                    <MoreHorizIcon fontSize={iconFontSize} sx={{ color: 'text.secondary', flexShrink: 0 }} />
-                  </Box>
+                    {/* Post image */}
+                    {post.postImage && <CommunityImage src={post.postImage} />}
 
-                  {/* Post body */}
-                  <Typography sx={{ mt: 1.5, fontSize: bodyFontSize, lineHeight: 1.6 }}>
-                    {post.description}
-                  </Typography>
-                </Box>
+                    <Divider />
 
-                {/* Post image */}
-                {post.postImage && <CommunityImage src={post.postImage} />}
+                    {/* Action buttons */}
+                    <Stack
+                      direction="row"
+                      sx={{
+                        py: isMobile ? 0.25 : 0.5,
+                        px: isMobile ? 0.5 : 2,
+                        gap: isMobile ? 0 : 5,
+                        justifyContent: isMobile ? 'space-around' : 'flex-start',
+                      }}
+                    >
+                      <Button
+                        onClick={() => post.isLiked ? removeLike(post._id) : addLike(post._id)}
+                        startIcon={
+                          post.isLiked
+                            ? <ThumbUpIcon fontSize={iconFontSize} sx={{ color: '#0084ff' }} />
+                            : <ThumbUpOffAltIcon fontSize={iconFontSize} />
+                        }
+                        size={isMobile ? 'small' : 'medium'}
+                        sx={{ textTransform: 'none', color: 'text.secondary', fontSize: btnFontSize }}
+                      >
+                        Like {post?.likes || 0}
+                      </Button>
 
-                <Divider />
+                      <Button
+                        startIcon={
+                          activeCommentPostId === post._id
+                            ? <ChatIcon fontSize={iconFontSize} sx={{ color: '#0084ff' }} />
+                            : <ChatIcon fontSize={iconFontSize} />
+                        }
+                        onClick={() =>
+                          setActiveCommentPostId((prev) => prev === post._id ? null : post._id)
+                        }
+                        size={isMobile ? 'small' : 'medium'}
+                        sx={{ textTransform: 'none', color: 'text.secondary', fontSize: btnFontSize }}
+                      >
+                        Comments
+                      </Button>
 
-                {/* Action buttons */}
-                <Stack
-                  direction="row"
-                  sx={{
-                    py: isMobile ? 0.25 : 0.5,
-                    px: isMobile ? 0.5 : 2,
-                    gap: isMobile ? 0 : 5,
-                    justifyContent: isMobile ? 'space-around' : 'flex-start',
-                  }}
-                >
-                  <Button
-                    onClick={() => post.isLiked ? removeLike(post._id) : addLike(post._id)}
-                    startIcon={
-                      post.isLiked
-                        ? <ThumbUpIcon fontSize={iconFontSize} sx={{ color: '#0084ff' }} />
-                        : <ThumbUpOffAltIcon fontSize={iconFontSize} />
-                    }
-                    size={isMobile ? 'small' : 'medium'}
-                    sx={{ textTransform: 'none', color: 'text.secondary', fontSize: btnFontSize }}
-                  >
-                    Like {post?.likes || 0}
-                  </Button>
+                      <Button
+                        startIcon={<ShareIcon fontSize={iconFontSize} />}
+                        size={isMobile ? 'small' : 'medium'}
+                        sx={{ textTransform: 'none', color: 'text.secondary', fontSize: btnFontSize }}
+                      >
+                        Share
+                      </Button>
+                    </Stack>
 
-                  <Button
-                    startIcon={
-                      activeCommentPostId === post._id
-                        ? <ChatIcon fontSize={iconFontSize} sx={{ color: '#0084ff' }} />
-                        : <ChatIcon fontSize={iconFontSize} />
-                    }
-                    onClick={() =>
-                      setActiveCommentPostId((prev) => prev === post._id ? null : post._id)
-                    }
-                    size={isMobile ? 'small' : 'medium'}
-                    sx={{ textTransform: 'none', color: 'text.secondary', fontSize: btnFontSize }}
-                  >
-                    Comments
-                  </Button>
+                    <Divider />
 
-                  <Button
-                    startIcon={<ShareIcon fontSize={iconFontSize} />}
-                    size={isMobile ? 'small' : 'medium'}
-                    sx={{ textTransform: 'none', color: 'text.secondary', fontSize: btnFontSize }}
-                  >
-                    Share
-                  </Button>
-                </Stack>
+                    {activeCommentPostId === post._id && (
+                      <Box sx={{ margin: isMobile ? 1 : 1.5 }}>
+                        <CommunityComments post={post} user={user} />
+                      </Box>
+                    )}
+                  </Paper>
+                ))
+              )}
+            </Box>
+          </Box>
+        </PageLayout>
 
-                <Divider />
+        {/* ── Right: Sidebar (visible on sm and up, independent fixed scroll) ── */}
+        {showSidebar && (
+          <Grid
+            sx={{
+              mt:12,
+              width: { sm: '280px', md: '340px', lg: '380px' },
+              minWidth: { sm: '280px', md: '340px', lg: '380px' },
+              flexShrink: 0,
+              position: 'sticky',
+              top: 20,
+              height: SIDEBAR_SCROLL_HEIGHT,
+              overflowY: 'auto',
+              overflowX: 'hidden',
+              pr: 1,
+              '&::-webkit-scrollbar': { width: 6 },
+              '&::-webkit-scrollbar-thumb': { backgroundColor: '#E0D4C8', borderRadius: 4 },
+            }}
+          >
+            <SidebarContent />
+          </Grid>
+        )}
+      </Box>
+    </>
 
-                {activeCommentPostId === post._id && (
-                  <Box sx={{ margin: isMobile ? 1 : 1.5 }}>
-                    <CommunityComments post={post} user={user} />
-                  </Box>
-                )}
-              </Paper>
-            ))
-          )}
-        </Box>
-      </Stack>
-    </PageLayout>
+
   );
 }
