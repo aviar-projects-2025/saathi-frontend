@@ -11,8 +11,8 @@ export const UserProvider = ({ children }) => {
     const [currentUser, setCurrentUser] = useState(null)
 
     useEffect(() => {
-        getuserData()
-    }, [user?.id])
+        getuserData();
+    }, []);
 
     const getuserData = () => {
         try {
@@ -29,7 +29,8 @@ export const UserProvider = ({ children }) => {
         <UserContext.Provider
             value={{
                 currentUser,
-                setCurrentUser
+                setCurrentUser,
+                getuserData,
             }}
         >
             {children}

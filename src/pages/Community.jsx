@@ -631,50 +631,31 @@ export default function Community() {
 
   return (
     <PageLayout>
-      {/* ── Page heading ── */}
-      <Typography
-        variant={isMobile ? "h5" : "h4"}
-        mb={0.5}
+      <Stack direction={'row'}
         sx={{
-          fontWeight: 700,
-          fontStyle: "italic",
-          fontSize: { xs: "1.2rem", sm: "1.5rem" },
-          mb: 1
-        }}
-      >
-        Saathi <span style={{ color: "#E8650A" }}>Community</span>
-      </Typography>
-      <Typography
-        color="text.secondary"
-        mb={3}
-        sx={{
-          fontWeight: 600,
-          fontStyle: "italic",
-          fontSize: { xs: "0.9rem", sm: "1rem" },
-          mb: 2
-        }}
-      >
-        Built on
-        <span style={{ color: "#E8650A" }}> Trust</span>,
-        <span style={{ color: "#E8650A" }}> Referrals</span>,
-        <span style={{ color: "#E8650A" }} > Community</span><br />&
-        <span style={{ color: "#E8650A" }} >  shared roots 🙏</span>
-      </Typography>
+          justifyContent: 'space-between'
+        }}>
 
-      {/* ── Feed column ── */}
-      <Box
-        sx={{
-          width: '100%',
-          maxWidth: 700,
-          mx: 'auto',
-        }}
-      >
-        {/* ✅ Scroll fix: removed height + overflowY so PageLayout handles scrolling */}
-        <Box sx={{ pr: isMobile ? 0 : 1 }}>
+        <Box
+          sx={{
+            width: '110%',
+            flexShrink: 0,
+          }}
+        >
 
-          {/* ── Create Post Card ── */}
-          <Paper
-            elevation={0}
+          <Typography variant="h5" fontWeight={800} mb={0.5}>
+            Saathi <span style={{ color: '#E8650A' }}>Community</span>
+          </Typography>
+          <Typography color="text.secondary" sx={{ mb: 2 }}>
+            Built on trust, referrals, and shared roots
+          </Typography>
+
+
+          {/* left Post Feed */}
+          <Grid
+            xs={12}
+            md={7}
+            lg={6}
             sx={{
               p: isMobile ? 1.5 : 2,
               borderRadius: 3,
@@ -783,7 +764,7 @@ export default function Community() {
                 {loading ? 'Posting…' : 'Post'}
               </Button>
             </Stack>
-          </Paper>
+          </Grid>
 
           {/* ── Posts list ── */}
           {postLoading ? (
@@ -897,7 +878,7 @@ export default function Community() {
             ))
           )}
         </Box>
-      </Box>
+      </Stack>
     </PageLayout>
   );
 }
