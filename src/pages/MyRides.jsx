@@ -708,7 +708,27 @@ const MyRides = () => {
 
   // const theme = useTheme();
   // const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+//  useEffect(()=>{
+// getBookRide()
+//  },[])
 
+// const getBookRide = async () => {
+//   try {
+//     const response = await axios.get(`${Api}/bookride/request/`);
+
+//     console.log("Response:", response.data);
+
+//     setOpenRequestModal(false);
+//     resetRequestData();
+
+//     toast.success(response?.data?.message || "Request successful");
+//   } catch (error) {
+//     console.log("Full Error:", error);
+//     console.log("Error Response:", error.response?.data);
+
+//     toast.error(error.response?.data?.message || "Request failed");
+//   }
+// };
   useEffect(() => {
     const fetchRides = async () => {
       const currentDateTime = new Date();
