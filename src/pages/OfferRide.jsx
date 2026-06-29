@@ -42,6 +42,29 @@ export default function OfferRide() {
   const [showErrors, setShowErrors] = useState(false);
 
   const user = JSON.parse(localStorage.getItem("user"));
+const [hasActiveRide, setHasActiveRide] = useState(false);
+
+useEffect(() => {
+  const checkRide = async () => {
+    try {
+      const { data } = await axios.get(
+        `${Api}/rides/active/${user.id}`
+      );
+
+      setHasActiveRide(data.hasActiveRide);
+
+      if (data.hasActiveRide) {
+        toast.error(
+          "You already have an active ride. Complete or cancel it before creating another."
+        );
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  checkRide();
+}, []);
 
   const [form, setForm] = useState({
     from: "",
