@@ -80,6 +80,7 @@ function App() {
 
         {/*Both ADMIN and USER */}
         <Route element={<ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.USER]} />}>
+       
           <Route element={<UserLayout />}>
             <Route path="/invite" element={<Invite />} />
             <Route path="/community" element={<Community />} />
@@ -94,6 +95,7 @@ function App() {
         <Route path="*" element={<Navigate to="/login" replace />} />
 
       </Routes>
+      
     </BrowserRouter>
   );
 }

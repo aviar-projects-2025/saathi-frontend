@@ -119,7 +119,7 @@ const Settings = () => {
     }));
   };
 
-  console.log(currentUser, 'currentUser')
+ 
   const [formData, setFormData] = useState({
     firstName: currentUser?.firstName || "",
     lastName: currentUser?.lastName || "",
@@ -129,6 +129,7 @@ const Settings = () => {
     gender: currentUser?.gender || "",
     bio: currentUser?.bio || "",
     profileImage: currentUser?.profileImage || "",
+    id: currentUser?._id || ""
   });
 
   useEffect(() => {
@@ -142,6 +143,7 @@ const Settings = () => {
         gender: currentUser?.gender || "",
         bio: currentUser?.bio || "",
         profileImage: currentUser?.profileImage || "",
+        id: currentUser?._id || ""
       });
 
       setProfileImage(currentUser?.profileImage || "");
@@ -189,6 +191,7 @@ const Settings = () => {
       data.append("bio", formData.bio);
 
       await axios.post(Api + `/users/update/${user?.id}`, data)
+ 
       getuserData()
       toast.success("Profile updated")
       setEditProfile(false)
