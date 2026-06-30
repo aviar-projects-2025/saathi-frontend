@@ -33,7 +33,6 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
-import socket from '../socket'
 
 const statusConfig = {
   confirmed: { label: 'Filled', color: '#2D6A4F', bg: '#E8F5E9', icon: '✅' },
@@ -446,24 +445,15 @@ function RequestItem({ request, onApprove, onReject }) {
   const [expanded, setExpanded] = useState(false);
 
   const getStatusColor = (status) => {
-    switch (status?.toUpperCase()) {
-      case 'ACCEPTED': return 'success';
-      case 'APPROVED': return 'success';
-      case 'REJECTED': return 'error';
-      case 'PENDING': return 'warning';
+    switch (status?.toLowerCase()) {
+      case 'approved': return 'success';
+      case 'rejected': return 'error';
+      case 'pending': return 'warning';
       default: return 'default';
     }
   };
 
-  const getStatusLabel = (status) => {
-    switch (status?.toUpperCase()) {
-      case 'ACCEPTED': return 'Approved ✓';
-      case 'APPROVED': return 'Approved ✓';
-      case 'REJECTED': return 'Rejected ✗';
-      case 'PENDING': return 'Pending ⏳';
-      default: return status || 'Pending';
-    }
-  };
+  console.log(request, 'request')
 
   return (
     <Card sx={{ mb: 2, borderRadius: 2, border: '1px solid #f0e6dc' }}>
@@ -472,56 +462,70 @@ function RequestItem({ request, onApprove, onReject }) {
           <Box sx={{ flex: 1 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
               <Avatar sx={{ width: 32, height: 32, bgcolor: '#FF9933', fontSize: '0.9rem' }}>
-                {request.requestedBy?.firstName?.[0] || 'U'}
+                {request.requestedBy?.firstName?.[0]}
               </Avatar>
               <Typography fontWeight={700} fontSize="0.95rem">
-                {request.requestedBy?.firstName} {request.requestedBy?.lastName || ''}
+                {request.requestedBy?.firstName} {request.requestedBy?.lastName}
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, ml: 5 }}>
               <Chip
                 size="small"
-                label={`${request?.seatsRequested || 1} seat${request?.seatsRequested > 1 ? 's' : ''}`}
+                label={`${request?.seatsRequested} seat${request?.seatsRequested > 1 ? 's' : ''}`}
                 icon={<EventSeatIcon sx={{ fontSize: 14 }} />}
                 sx={{ fontSize: '0.7rem' }}
               />
               <Chip
                 size="small"
-                label={getStatusLabel(request?.status)}
+                label={request?.status}
                 color={getStatusColor(request?.status)}
                 sx={{ fontSize: '0.7rem' }}
               />
             </Box>
           </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            {request.status?.toUpperCase() === 'PENDING' && (
-              <>
-                <Button
-                  variant="contained"
+          {request.status === 'PENDING' && (
+                <Stack direction="row" spacing={2} mt={1}>
+                  <Button
+                    variant="contained"
+                    color="success"
+                    size="small"
+                    startIcon={<CheckCircleIcon />}
+                    onClick={() => onApprove(request._id)}
+                    sx={{ textTransform: 'none' }}
+                  >
+                    Approve
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    size="small"
+                    startIcon={<CancelIcon />}
+                    onClick={() => onReject(request._id)}
+                    sx={{ textTransform: 'none' }}
+                  >
+                    Reject
+                  </Button>
+                </Stack>
+              )}
+              {request.status === 'approved' && (
+                <Chip
+                  label="Approved ✓"
                   color="success"
                   size="small"
-                  startIcon={<CheckCircleIcon />}
-                  onClick={() => onApprove(request._id)}
-                  sx={{ textTransform: 'none', fontSize: '0.7rem' }}
-                >
-                  Approve
-                </Button>
-                <Button
-                  variant="outlined"
+                  sx={{ fontWeight: 600 }}
+                />
+              )}
+              {request.status === 'rejected' && (
+                <Chip
+                  label="Rejected ✗"
                   color="error"
                   size="small"
-                  startIcon={<CancelIcon />}
-                  onClick={() => onReject(request._id)}
-                  sx={{ textTransform: 'none', fontSize: '0.7rem' }}
-                >
-                  Reject
-                </Button>
-              </>
-            )}
-            <IconButton size="small" onClick={() => setExpanded(!expanded)}>
-              {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-            </IconButton>
-          </Box>
+                  sx={{ fontWeight: 600 }}
+                />
+              )}
+          <IconButton size="small" onClick={() => setExpanded(!expanded)}>
+            {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+          </IconButton>
         </Box>
 
         <Collapse in={expanded}>
@@ -552,9 +556,13 @@ function RequestItem({ request, onApprove, onReject }) {
 }
 
 // ── Ride Card ────────────────────────────────────────────────────────────────
-function RideCard({ ride, showEdit, showDelete, onEdit, onDelete, allRequests, setAllRequests }) {
+function RideCard({ ride, showEdit, showDelete, onEdit, onDelete }) {
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const user = JSON.parse(localStorage.getItem('user'));
   const [showRequests, setShowRequests] = useState(false);
+  const [requests, setRequests] = useState([]);
   const [loadingRequests, setLoadingRequests] = useState(false);
 
   const status = statusConfig[statusMap[ride?.status]] || statusConfig.pending;
@@ -569,20 +577,34 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete, allRequests, s
 
   const fuelLabel = ride.fuelSharing ? "Yes" : "No";
 
-  // Get requests for this specific ride
-  const rideRequests = allRequests?.filter(
-    (req) => req.rideId?.toString() === ride._id?.toString()
-  ) || [];
 
-  const pendingCount = rideRequests.filter(
-    r => r.status?.toUpperCase() === 'PENDING'
-  ).length;
+  const fetchRequests = async () => {
+    // if (requests.length > 0) {
+    //   setShowRequests(!showRequests);
+    //   return;
+    // }
+
+    setLoadingRequests(true);
+    try {
+      const res = await axios.get(`${Api}/bookride/${user.id}?type=received`);
+      setRequests(res.data.data || []);
+    } catch (error) {
+      toast.error('Failed to load requests');
+    } finally {
+      setLoadingRequests(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRequests();
+  }, [])
 
   const handleApprove = async (requestId) => {
     try {
+      console.log(requestId,'requestId approve')
       await axios.patch(`${Api}/bookride/${requestId}/status?type=Approve`, { status: 'ACCEPTED' });
-      setAllRequests(prev => prev.map(req =>
-        req._id === requestId ? { ...req, status: 'ACCEPTED' } : req
+      setRequests(prev => prev.map(req =>
+        req._id === requestId ? { ...req, status: 'approved' } : req
       ));
       toast.success('Request approved successfully!');
     } catch (error) {
@@ -593,14 +615,24 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete, allRequests, s
   const handleReject = async (requestId) => {
     try {
       await axios.patch(`${Api}/bookride/${requestId}/status?type=Reject`, { status: 'REJECTED' });
-      setAllRequests(prev => prev.map(req =>
-        req._id === requestId ? { ...req, status: 'REJECTED' } : req
+      setRequests(prev => prev.map(req =>
+        req._id === requestId ? { ...req, status: 'rejected' } : req
       ));
       toast.success('Request rejected');
     } catch (error) {
       toast.error('Failed to reject request');
     }
   };
+
+
+
+
+
+  const filteredRequests = requests.filter(
+    (req) => req.rideId === ride._id
+  );
+
+  console.log(filteredRequests,'filteredRequests')
 
   return (
     <>
@@ -660,16 +692,26 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete, allRequests, s
               }}
             />
 
-            {rideRequests.length > 0 && (
+            {requests.some(r => r.rideId === ride._id) && (
               <Badge
-                badgeContent={pendingCount}
+                badgeContent={
+                  requests.filter(
+                    r => r.status === 'PENDING' && r.rideId === ride._id
+                  ).length
+                }
                 color="error"
-                invisible={pendingCount === 0}
+                invisible={
+                  requests.filter(
+                    r => r.status === 'PENDING' && r.rideId === ride._id
+                  ).length === 0
+                }
               >
                 <Button
                   size="small"
                   variant="outlined"
-                  onClick={() => setShowRequests(!showRequests)}
+                  onClick={() => {
+                    setShowRequests(!showRequests)
+                  }}
                   sx={{
                     color: '#FF9933',
                     borderColor: '#FF9933',
@@ -684,7 +726,7 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete, allRequests, s
                     }
                   }}
                 >
-                  {showRequests ? 'Hide Requests' : 'View Requests'}
+                  View Requests
                 </Button>
               </Badge>
             )}
@@ -807,28 +849,42 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete, allRequests, s
                 </Stack>
               </Box>
             </Box>
-
-            {/* Requests section */}
-            {showRequests && rideRequests.length > 0 && (
-              <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid rgba(255,153,51,0.2)' }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                  <Typography fontWeight={700} sx={{ fontSize: '0.9rem' }}>
-                    Requests ({rideRequests.length})
-                  </Typography>
-                </Box>
-
-                {rideRequests.map((req) => (
-                  <RequestItem
-                    key={req._id}
-                    request={req}
-                    onApprove={handleApprove}
-                    onReject={handleReject}
-                  />
-                ))}
-              </Box>
-            )}
           </CardContent>
         </Card>
+        {/* Requests section */}
+        {showRequests && (
+          <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid rgba(255,153,51,0.2)' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography fontWeight={700} sx={{ fontSize: '0.9rem' }}>
+                Requests ({requests.length})
+              </Typography>
+              <Button
+                size="small"
+                onClick={() => setShowRequests(false)}
+                sx={{ textTransform: 'none' }}
+              >
+                Close
+              </Button>
+            </Box>
+
+            {filteredRequests.length === 0 ? (
+              <Paper sx={{ p: 2, bgcolor: '#ffffffff', textAlign: 'center', borderRadius: 2 }}>
+                <Typography color="text.secondary" fontSize="0.85rem">
+                  No requests yet for this ride
+                </Typography>
+              </Paper>
+            ) : (
+              filteredRequests.map((req) => (
+                <RequestItem
+                  key={req._id}
+                  request={req}
+                  onApprove={handleApprove}
+                  onReject={handleReject}
+                />
+              ))
+            )}
+          </Box>
+        )}
       </Box>
 
       {detailsOpen && (
@@ -855,96 +911,50 @@ const MyRides = () => {
   const [deleteRide, setDeleteRide] = useState(null);
   const [currentRide, setCurrentRide] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [allRequests, setAllRequests] = useState([]);
 
   const user = JSON.parse(localStorage.getItem('user'));
 
-  const fetchRides = async () => {
-    const currentDateTime = new Date();
-    try {
-      const response = await axios.get(`${Api}/rides/get`);
-      const all = (response.data.data || []).sort(
-        (a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
-      );
-
-      setMypost(all.filter((item) => item?.createdBy?._id === user.id));
-
-      setUpcoming(
-        all.filter((ride) => {
-          const rideStartTime = new Date(ride?.startTime);
-          return ride?.createdBy?._id === user.id && !isNaN(rideStartTime) && rideStartTime > currentDateTime;
-        })
-      );
-
-      setHistory(
-        all.filter((ride) => {
-          const rideStartTime = new Date(ride?.startTime);
-          const rideEndTime = new Date(rideStartTime.getTime() + 3 * 60 * 60 * 1000);
-          return ride?.createdBy?._id === user.id && !isNaN(rideStartTime) && rideEndTime < currentDateTime;
-        })
-      );
-
-      setCurrentRide(
-        all.filter((ride) => {
-          const rideStartTime = new Date(ride?.startTime);
-          const rideEndTime = new Date(rideStartTime.getTime() + 3 * 60 * 60 * 1000);
-          return ride?.createdBy?._id === user.id && rideStartTime <= currentDateTime && rideEndTime >= currentDateTime;
-        })
-      );
-    } catch (error) {
-      console.error('Error fetching rides:', error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchAllRequests = async () => {
-    try {
-      const res = await axios.get(`${Api}/bookride/${user.id}?type=received`);
-      setAllRequests(res.data.data || []);
-    } catch (error) {
-      console.error('Error fetching requests:', error);
-    }
-  };
-
   useEffect(() => {
-    fetchRides();
-    fetchAllRequests();
-  }, []);
+    const fetchRides = async () => {
+      const currentDateTime = new Date();
+      try {
+        const response = await axios.get(`${Api}/rides/get`);
+        const all = (response.data.data || []).sort(
+          (a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
+        );
 
-  // Socket connection for real-time updates
-  useEffect(() => {
-    if (user?.id) {
-      socket.emit("join", user.id);
-      console.log("✅ Joined room:", user.id);
-    }
+        setMypost(all.filter((item) => item?.createdBy?._id === user.id));
 
-    // Listen for new requests
-    socket.on("new_request", (newRequest) => {
-      console.log("🔥 New request received:", newRequest);
-      setAllRequests((prev) => {
-        const exists = prev.find(r => r._id === newRequest._id);
-        if (exists) return prev;
-        return [newRequest, ...prev];
-      });
-      toast.info('New ride request received!');
-    });
+        setUpcoming(
+          all.filter((ride) => {
+            const rideStartTime = new Date(ride?.startTime);
+            return ride?.createdBy?._id === user.id && !isNaN(rideStartTime) && rideStartTime > currentDateTime;
+          })
+        );
 
-    // Listen for status updates
-    socket.on("request_status_updated", (updatedRequest) => {
-      console.log("⚡ Status update:", updatedRequest);
-      setAllRequests((prev) =>
-        prev.map((r) =>
-          r._id === updatedRequest._id ? updatedRequest : r
-        )
-      );
-    });
+        setHistory(
+          all.filter((ride) => {
+            const rideStartTime = new Date(ride?.startTime);
+            const rideEndTime = new Date(rideStartTime.getTime() + 3 * 60 * 60 * 1000);
+            return ride?.createdBy?._id === user.id && !isNaN(rideStartTime) && rideEndTime < currentDateTime;
+          })
+        );
 
-    return () => {
-      socket.off("new_request");
-      socket.off("request_status_updated");
+        setCurrentRide(
+          all.filter((ride) => {
+            const rideStartTime = new Date(ride?.startTime);
+            const rideEndTime = new Date(rideStartTime.getTime() + 3 * 60 * 60 * 1000);
+            return ride?.createdBy?._id === user.id && rideStartTime <= currentDateTime && rideEndTime >= currentDateTime;
+          })
+        );
+      } catch (error) {
+        console.error('Error fetching rides:', error.message);
+      } finally {
+        setLoading(false);
+      }
     };
-  }, [user?.id]);
+    fetchRides();
+  }, []);
 
   const handleEdit = (updated) => {
     const id = updated._id || updated.id;
@@ -976,8 +986,6 @@ const MyRides = () => {
         showDelete={showDelete}
         onEdit={setEditRide}
         onDelete={setDeleteRide}
-        allRequests={allRequests}
-        setAllRequests={setAllRequests}
       />
     ));
 
