@@ -601,7 +601,8 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete }) {
 
   const handleApprove = async (requestId) => {
     try {
-      await axios.patch(`${Api}/bookride/${requestId}/status`, { status: 'approved' });
+      console.log(requestId,'requestId approve')
+      await axios.patch(`${Api}/bookride/${requestId}/status?type=Approve`, { status: 'ACCEPTED' });
       setRequests(prev => prev.map(req =>
         req._id === requestId ? { ...req, status: 'approved' } : req
       ));
@@ -613,7 +614,7 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete }) {
 
   const handleReject = async (requestId) => {
     try {
-      await axios.patch(`${Api}/bookride/${requestId}/status`, { status: 'rejected' });
+      await axios.patch(`${Api}/bookride/${requestId}/status?type=Reject`, { status: 'REJECTED' });
       setRequests(prev => prev.map(req =>
         req._id === requestId ? { ...req, status: 'rejected' } : req
       ));
