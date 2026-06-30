@@ -144,7 +144,7 @@ const Web = () => {
         {/* Hero */}
         <Grid container spacing={8} alignItems="center">
           <Grid item xs={12} md={6}>
-            <Box sx={{ animation: `${fadeUp} 0.8s ease both` }}>
+            <Stack sx={{ animation: `${fadeUp} 0.8s ease both` }}>
               <Chip
                 icon={<VerifiedUserIcon />}
                 label="Referral Based Trusted Community"
@@ -170,7 +170,7 @@ const Web = () => {
                 }}
               >
                 Join Community
-              </Button>
+              </Typography>
 
               <Button
                 variant="outlined"
