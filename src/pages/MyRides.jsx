@@ -5,6 +5,7 @@ import {
   TextField, IconButton, Stack, FormControl, Grid,
   InputLabel, Select, MenuItem, FormControlLabel, Switch, Slider,
   CircularProgress, Card, CardContent, Divider, useMediaQuery,
+  Badge, Collapse, Avatar
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
@@ -28,8 +29,10 @@ import TrainIcon from "@mui/icons-material/Train";
 import PersonIcon from '@mui/icons-material/Person';
 import WomanIcon from '@mui/icons-material/Woman';
 import GroupsIcon from '@mui/icons-material/Groups';
-
-
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
 
 const statusConfig = {
   confirmed: { label: 'Filled', color: '#2D6A4F', bg: '#E8F5E9', icon: '✅' },
@@ -437,12 +440,130 @@ function RideDetailsModal({ ride, showEdit, showDelete, onEdit, onDelete, onClos
   );
 }
 
+// ── Request Item Component ──────────────────────────────────────────────────
+function RequestItem({ request, onApprove, onReject }) {
+  const [expanded, setExpanded] = useState(false);
+
+  const getStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'approved': return 'success';
+      case 'rejected': return 'error';
+      case 'pending': return 'warning';
+      default: return 'default';
+    }
+  };
+
+  console.log(request, 'request')
+
+  return (
+    <Card sx={{ mb: 2, borderRadius: 2, border: '1px solid #f0e6dc' }}>
+      <CardContent sx={{ p: 2 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <Box sx={{ flex: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+              <Avatar sx={{ width: 32, height: 32, bgcolor: '#FF9933', fontSize: '0.9rem' }}>
+                {request.requestedBy?.firstName?.[0]}
+              </Avatar>
+              <Typography fontWeight={700} fontSize="0.95rem">
+                {request.requestedBy?.firstName} {request.requestedBy?.lastName}
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, ml: 5 }}>
+              <Chip
+                size="small"
+                label={`${request?.seatsRequested} seat${request?.seatsRequested > 1 ? 's' : ''}`}
+                icon={<EventSeatIcon sx={{ fontSize: 14 }} />}
+                sx={{ fontSize: '0.7rem' }}
+              />
+              <Chip
+                size="small"
+                label={request?.status}
+                color={getStatusColor(request?.status)}
+                sx={{ fontSize: '0.7rem' }}
+              />
+            </Box>
+          </Box>
+          {request.status === 'PENDING' && (
+                <Stack direction="row" spacing={2} mt={1}>
+                  <Button
+                    variant="contained"
+                    color="success"
+                    size="small"
+                    startIcon={<CheckCircleIcon />}
+                    onClick={() => onApprove(request._id)}
+                    sx={{ textTransform: 'none' }}
+                  >
+                    Approve
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    size="small"
+                    startIcon={<CancelIcon />}
+                    onClick={() => onReject(request._id)}
+                    sx={{ textTransform: 'none' }}
+                  >
+                    Reject
+                  </Button>
+                </Stack>
+              )}
+              {request.status === 'approved' && (
+                <Chip
+                  label="Approved ✓"
+                  color="success"
+                  size="small"
+                  sx={{ fontWeight: 600 }}
+                />
+              )}
+              {request.status === 'rejected' && (
+                <Chip
+                  label="Rejected ✗"
+                  color="error"
+                  size="small"
+                  sx={{ fontWeight: 600 }}
+                />
+              )}
+          <IconButton size="small" onClick={() => setExpanded(!expanded)}>
+            {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+          </IconButton>
+        </Box>
+
+        <Collapse in={expanded}>
+          <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid #f0e6dc' }}>
+            <Stack spacing={1}>
+              <Typography fontSize="0.85rem">
+                <strong>Message:</strong> {request.message || 'No message'}
+              </Typography>
+              <Typography fontSize="0.85rem">
+                <strong>Phone:</strong> {request.phone || 'Not provided'}
+              </Typography>
+              {request.members?.length > 0 && (
+                <>
+                  <Typography fontSize="0.85rem" fontWeight={700}>Members:</Typography>
+                  {request.members.map((m, i) => (
+                    <Typography key={i} fontSize="0.82rem" sx={{ ml: 2 }}>
+                      • {m.name} ({m.age} yrs)
+                    </Typography>
+                  ))}
+                </>
+              )}
+            </Stack>
+          </Box>
+        </Collapse>
+      </CardContent>
+    </Card>
+  );
+}
+
 // ── Ride Card ────────────────────────────────────────────────────────────────
 function RideCard({ ride, showEdit, showDelete, onEdit, onDelete }) {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const user = JSON.parse(localStorage.getItem('user'))
+  const user = JSON.parse(localStorage.getItem('user'));
+  const [showRequests, setShowRequests] = useState(false);
+  const [requests, setRequests] = useState([]);
+  const [loadingRequests, setLoadingRequests] = useState(false);
 
   const status = statusConfig[statusMap[ride?.status]] || statusConfig.pending;
 
@@ -456,30 +577,70 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete }) {
 
   const fuelLabel = ride.fuelSharing ? "Yes" : "No";
 
-  const getRideReqLists = () => {
-    try {
-      axios.get(Api + `/bookride/${user.id}?type=received`)
-        .then((res) => {
-          console.log(res)
-        })
-    } catch (error) {
 
+  const fetchRequests = async () => {
+    // if (requests.length > 0) {
+    //   setShowRequests(!showRequests);
+    //   return;
+    // }
+
+    setLoadingRequests(true);
+    try {
+      const res = await axios.get(`${Api}/bookride/${user.id}?type=received`);
+      setRequests(res.data.data || []);
+    } catch (error) {
+      toast.error('Failed to load requests');
+    } finally {
+      setLoadingRequests(false);
     }
-  }
+  };
 
   useEffect(() => {
-    getRideReqLists();
+    fetchRequests();
   }, [])
+
+  const handleApprove = async (requestId) => {
+    try {
+      await axios.patch(`${Api}/bookride/${requestId}/status`, { status: 'approved' });
+      setRequests(prev => prev.map(req =>
+        req._id === requestId ? { ...req, status: 'approved' } : req
+      ));
+      toast.success('Request approved successfully!');
+    } catch (error) {
+      toast.error('Failed to approve request');
+    }
+  };
+
+  const handleReject = async (requestId) => {
+    try {
+      await axios.patch(`${Api}/bookride/${requestId}/status`, { status: 'rejected' });
+      setRequests(prev => prev.map(req =>
+        req._id === requestId ? { ...req, status: 'rejected' } : req
+      ));
+      toast.success('Request rejected');
+    } catch (error) {
+      toast.error('Failed to reject request');
+    }
+  };
+
+
+
+
+
+  const filteredRequests = requests.filter(
+    (req) => req.rideId === ride._id
+  );
+
+  console.log(filteredRequests,'filteredRequests')
+
   return (
     <>
       <Box
-        onClick={() => setDetailsOpen(true)}
         sx={{
           p: { xs: 0.01, sm: 0 },
           width: '100%',
           maxWidth: 1000,
           mx: "auto",
-          cursor: "pointer",
           transition: "transform .25s ease",
           "&:hover": {
             transform: { xs: 'none', sm: 'translateY(-4px)' },
@@ -501,7 +662,6 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete }) {
             gap: 1,
           }}
         >
-          {/* Name */}
           <Box sx={{ minWidth: 0, flex: 1 }}>
             <Typography
               fontWeight={700}
@@ -517,23 +677,64 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete }) {
             </Typography>
           </Box>
 
-          {/* Status chip */}
-          <Chip
-            size="small"
-            label={`${status.icon} ${status.label}`}
-            sx={{
-              bgcolor: status.bg,
-              color: status.color,
-              fontWeight: 700,
-              fontSize: { xs: '0.62rem', sm: '0.7rem' },
-              height: { xs: 22, sm: 24 },
-              flexShrink: 0,
-            }}
-          />
+          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+            <Chip
+              size="small"
+              label={`${status.icon} ${status.label}`}
+              sx={{
+                bgcolor: status.bg,
+                color: status.color,
+                fontWeight: 700,
+                fontSize: { xs: '0.62rem', sm: '0.7rem' },
+                height: { xs: 22, sm: 24 },
+                flexShrink: 0,
+              }}
+            />
+
+            {requests.some(r => r.rideId === ride._id) && (
+              <Badge
+                badgeContent={
+                  requests.filter(
+                    r => r.status === 'PENDING' && r.rideId === ride._id
+                  ).length
+                }
+                color="error"
+                invisible={
+                  requests.filter(
+                    r => r.status === 'PENDING' && r.rideId === ride._id
+                  ).length === 0
+                }
+              >
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => {
+                    setShowRequests(!showRequests)
+                  }}
+                  sx={{
+                    color: '#FF9933',
+                    borderColor: '#FF9933',
+                    textTransform: 'none',
+                    fontSize: { xs: '0.6rem', sm: '0.7rem' },
+                    minHeight: 24,
+                    height: { xs: 24, sm: 28 },
+                    px: 1,
+                    '&:hover': {
+                      borderColor: '#FF9933',
+                      backgroundColor: 'rgba(255, 153, 51, 0.1)',
+                    }
+                  }}
+                >
+                  View Requests
+                </Button>
+              </Badge>
+            )}
+          </Box>
         </Box>
 
         {/* ── Card body ── */}
         <Card
+          onClick={() => setDetailsOpen(true)}
           elevation={0}
           sx={{
             borderRadius: "0 0 14px 14px",
@@ -541,9 +742,6 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete }) {
             borderTop: 0,
             bgcolor: "#FFF9F2",
             transition: "box-shadow .25s ease",
-            // "&:hover": {
-            //   boxShadow: { xs: 'none', sm: "0 8px 24px rgba(255,153,51,.2)" },
-            // },
           }}
         >
           <CardContent
@@ -563,7 +761,6 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete }) {
                 borderBottom: '1px solid rgba(255,153,51,0.2)',
               }}
             >
-              {/* FROM */}
               <Box sx={{ minWidth: 0, flex: 1 }}>
                 <Typography
                   variant="caption"
@@ -585,7 +782,6 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete }) {
 
               <ArrowForwardIcon sx={{ color: '#FF9933', fontSize: { xs: 16, sm: 20 }, flexShrink: 0 }} />
 
-              {/* TO */}
               <Box sx={{ minWidth: 0, flex: 1, textAlign: 'right' }}>
                 <Typography
                   variant="caption"
@@ -606,7 +802,7 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete }) {
               </Box>
             </Box>
 
-            {/* Details grid — Date&time / Seats / Travel mode / Fuel / Gender pref */}
+            {/* Details grid */}
             <Box
               sx={{
                 display: 'grid',
@@ -614,7 +810,6 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete }) {
                 gap: { xs: '12px 8px', sm: 3 },
               }}
             >
-              {/* Date & time */}
               <Box>
                 <Typography sx={{ fontSize: { xs: '0.65rem', sm: '0.7rem' }, color: 'text.secondary', mb: 0.5 }}>
                   Date &amp; time
@@ -627,10 +822,9 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete }) {
                 </Stack>
               </Box>
 
-              {/* Seats needed */}
               <Box>
                 <Typography sx={{ fontSize: { xs: '0.65rem', sm: '0.7rem' }, color: 'text.secondary', mb: 0.5 }}>
-                  Seats needed
+                  Seats available
                 </Typography>
                 <Stack direction="row" spacing={1} alignItems="center">
                   <EventSeatIcon sx={{ color: "#FF9933", fontSize: { xs: 15, sm: 18 } }} />
@@ -640,7 +834,6 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete }) {
                 </Stack>
               </Box>
 
-              {/* Travel mode */}
               <Box>
                 <Typography sx={{ fontSize: { xs: '0.65rem', sm: '0.7rem' }, color: 'text.secondary', mb: 0.5 }}>
                   Travel mode
@@ -654,42 +847,43 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete }) {
                   </Typography>
                 </Stack>
               </Box>
-
-              {/* Gender pref */}
-              <Box>
-                <Typography sx={{ fontSize: { xs: '0.65rem', sm: '0.7rem' }, color: 'text.secondary', mb: 0.5 }}>
-                  Gender pref
-                </Typography>
-                <Stack direction="row" spacing={1} alignItems="center">
-                  {React.cloneElement(genderIcon[ride.genderPreference] || genderIcon.Any, {
-                    sx: { color: "#FF9933", fontSize: { xs: 15, sm: 18 } },
-                  })}
-                  <Typography sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, fontWeight: 600 }}>
-                    {ride.genderPreference}
-                  </Typography>
-                </Stack>
-              </Box>
-
-              {/* Fuel sharing */}
-              <Box>
-                <Typography sx={{ fontSize: { xs: '0.65rem', sm: '0.7rem' }, color: 'text.secondary', mb: 0.5 }}>
-                  Fuel sharing
-                </Typography>
-                <Chip
-                  icon={<LocalGasStationIcon sx={{ fontSize: { xs: 14, sm: 16 } }} />}
-                  label={fuelLabel}
-                  size="small"
-                  sx={{
-                    bgcolor: fuelLabel === "Yes" ? "#FFF0DD" : "#F3F4F6",
-                    color: "#000",
-                    fontWeight: 600,
-                    fontSize: { xs: '0.65rem', sm: '0.75rem' },
-                  }}
-                />
-              </Box>
             </Box>
           </CardContent>
         </Card>
+        {/* Requests section */}
+        {showRequests && (
+          <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid rgba(255,153,51,0.2)' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography fontWeight={700} sx={{ fontSize: '0.9rem' }}>
+                Requests ({requests.length})
+              </Typography>
+              <Button
+                size="small"
+                onClick={() => setShowRequests(false)}
+                sx={{ textTransform: 'none' }}
+              >
+                Close
+              </Button>
+            </Box>
+
+            {filteredRequests.length === 0 ? (
+              <Paper sx={{ p: 2, bgcolor: '#ffffffff', textAlign: 'center', borderRadius: 2 }}>
+                <Typography color="text.secondary" fontSize="0.85rem">
+                  No requests yet for this ride
+                </Typography>
+              </Paper>
+            ) : (
+              filteredRequests.map((req) => (
+                <RequestItem
+                  key={req._id}
+                  request={req}
+                  onApprove={handleApprove}
+                  onReject={handleReject}
+                />
+              ))
+            )}
+          </Box>
+        )}
       </Box>
 
       {detailsOpen && (
@@ -718,9 +912,6 @@ const MyRides = () => {
   const [loading, setLoading] = useState(true);
 
   const user = JSON.parse(localStorage.getItem('user'));
-
-  // const theme = useTheme();
-  // const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
     const fetchRides = async () => {
@@ -797,7 +988,6 @@ const MyRides = () => {
       />
     ));
 
-  // Short tab labels so all 4 fit on any screen
   const tabLabels = [
     { short: 'Current', count: currentRide.length },
     { short: 'Upcoming', count: upcoming.length },
@@ -814,7 +1004,6 @@ const MyRides = () => {
           px: { xs: 0, sm: 3 },
           py: { xs: 0, sm: 3 },
           boxSizing: 'border-box',
-          // On mobile: full height with flex column so list fills remaining space
           display: 'flex',
           flexDirection: 'column',
           height: { xs: '100dvh', sm: 'auto' },
@@ -826,7 +1015,6 @@ const MyRides = () => {
           </Typography>
         </Box>
 
-        {/* ── Tabs: sticky on mobile ── */}
         <Box
           sx={{
             width: '100%',
@@ -883,7 +1071,6 @@ const MyRides = () => {
           </Tabs>
         </Box>
 
-        {/* ── Scrollable content area ── */}
         <Box
           sx={{
             flex: 1,
@@ -891,7 +1078,6 @@ const MyRides = () => {
             px: { xs: 1.5, sm: 0 },
             pt: 2.5,
             pb: { xs: 3, sm: 0 },
-            // Hide scrollbar visually but keep functionality
             '&::-webkit-scrollbar': { width: '4px' },
             '&::-webkit-scrollbar-track': { bgcolor: 'transparent' },
             '&::-webkit-scrollbar-thumb': { bgcolor: 'divider', borderRadius: '4px' },
