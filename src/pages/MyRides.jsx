@@ -35,18 +35,18 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 
 const statusConfig = {
-  confirmed: { label: 'Filled', color: '#2D6A4F', bg: '#E8F5E9', icon: '✅' },
-  pending: { label: 'Opened', color: '#E8650A', bg: '#FFF3E0', icon: '⏳' },
-  completed: { label: 'Closed', color: '#555577', bg: '#F5F5F5', icon: '🏁' },
-  cancelled: { label: 'Cancelled', color: '#9B2226', bg: '#FFEBEE', icon: '❌' },
+  FULL: { label: 'Filled', color: '#2D6A4F', bg: '#E8F5E9', icon: '✅' },
+  OPEN: { label: 'Opened', color: '#E8650A', bg: '#FFF3E0', icon: '⏳' },
+  // CLOSED: { label: 'Closed', color: '#555577', bg: '#F5F5F5', icon: '🏁' },
+  CLOSED: { label: 'Cancelled', color: '#9B2226', bg: '#FFEBEE', icon: '❌' },
 };
 
-const statusMap = {
-  OPEN: 'pending',
-  FULL: 'confirmed',
-  CLOSED: 'completed',
-  CANCELLED: 'cancelled',
-};
+// const statusMap = {
+//   OPEN: 'pending',
+//   FULL: 'confirmed',
+//   CLOSED: 'completed',
+//   CANCELLED: 'cancelled',
+// };
 
 const travelIcons = {
   Car: <DirectionsCarIcon sx={{ color: "#FF9933" }} />,
@@ -132,8 +132,16 @@ function EditRideModal({ ride, onSave, onClose }) {
   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
   const startDate = new Date(ride.startTime);
-  const initialDate = !isNaN(startDate) ? startDate.toISOString().split('T')[0] : '';
-  const initialTime = !isNaN(startDate) ? startDate.toISOString().split('T')[1].slice(0, 5) : '';
+
+  // Use local date/time components (not toISOString, which is UTC) so the
+  // displayed value matches what gets sent to the server when saving.
+  const pad = (n) => String(n).padStart(2, '0');
+  const initialDate = !isNaN(startDate)
+    ? `${startDate.getFullYear()}-${pad(startDate.getMonth() + 1)}-${pad(startDate.getDate())}`
+    : '';
+  const initialTime = !isNaN(startDate)
+    ? `${pad(startDate.getHours())}:${pad(startDate.getMinutes())}`
+    : '';
 
   const [form, setForm] = useState({
     from: ride.from ?? '',
@@ -155,8 +163,22 @@ function EditRideModal({ ride, onSave, onClose }) {
   const handleEdit = async () => {
     setSaving(true);
     setError('');
+
+    if (!form.date || !form.time) {
+      setError('Please select both a date and time.');
+      setSaving(false);
+      return;
+    }
+
+    const combined = new Date(`${form.date}T${form.time}:00`);
+    if (isNaN(combined)) {
+      setError('Invalid date or time. Please check your input.');
+      setSaving(false);
+      return;
+    }
+
     try {
-      const startTime = new Date(`${form.date}T${form.time}:00`).toISOString();
+      const startTime = combined.toISOString();
       const { date, time, ...rest } = form;
       const payload = { ...rest, startTime };
       const response = await axios.patch(`${Api}/rides/edit/${ride._id || ride.id}`, payload);
@@ -256,16 +278,17 @@ function EditRideModal({ ride, onSave, onClose }) {
   );
 }
 
+
 // ── Delete Confirm Dialog ────────────────────────────────────────────────────
 function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
-  const [deleting, setDeleting] = useState(false);
+  const [cancel, setCancel] = useState(false);
   const [error, setError] = useState('');
 
-  const isPost = ride.role === 'offered' && (ride.status === 'pending' || ride.status === 'confirmed');
-  const label = isPost ? 'Remove post' : 'Cancel ride';
-  const body = isPost
-    ? 'This will remove your ride post. Passengers who requested this ride will be notified.'
-    : 'This will cancel your booking. The driver will be notified.';
+  // const isPost = ride.role === 'offered' && (ride.status === 'pending' || ride.status === 'confirmed');
+  // const label = isPost ? 'Remove Post' : 'Cancel Ride';
+  // const body = isPost
+  //   ? 'This will remove your ride post. Passengers who requested this ride will be notified.'
+  //   : 'This will cancel your booking. The driver will be notified.';
 
   const startDate = new Date(ride.startTime);
   const dateLabel = !isNaN(startDate)
@@ -273,16 +296,16 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
     : '—';
 
   const handleConfirm = async () => {
-    setDeleting(true);
+    setCancel(true);
     setError('');
-    try {
-      await axios.delete(`${Api}/rides/${ride._id || ride.id}`);
-      onConfirm(ride);
-    } catch (err) {
-      setError(err?.response?.data?.message || 'Failed to delete ride. Please try again.');
-    } finally {
-      setDeleting(false);
-    }
+    // try {
+    //   await axios.delete(`${Api}/rides/${ride.id || ride._id}`);
+    //   onConfirm(ride);
+    // } catch (err) {
+    //   setError(err?.response?.data?.message || 'Failed to delete ride. Please try again.');
+    // } finally {
+    //   setDeleting(false);
+    // }
   };
 
   return (
@@ -294,14 +317,14 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
       PaperProps={{ sx: { borderRadius: 3, mx: { xs: 2, sm: 'auto' }, width: { xs: 'calc(100% - 32px)', sm: '100%' } } }}
     >
       <DialogTitle sx={{ fontWeight: 800, pr: 5 }}>
-        {label}?
+        Cancel Ride ?
         <IconButton onClick={onClose} aria-label="Close" sx={{ position: 'absolute', right: 8, top: 8, color: 'text.secondary', width: 44, height: 44 }}>
           <CloseIcon fontSize="small" />
         </IconButton>
       </DialogTitle>
 
       <DialogContent>
-        <Typography color="text.secondary" fontSize="0.9rem">{body}</Typography>
+        <Typography color="text.secondary" fontSize="0.9rem">This will cancel your booking. The driver will be notified.</Typography>
         <Paper sx={{ mt: 2, p: 1.5, bgcolor: '#FFF8F2', border: '1px solid #F0E6DC', borderRadius: 2 }} elevation={0}>
           <Typography fontSize="0.85rem" fontWeight={700} sx={{ wordBreak: 'break-word' }}>
             {formFrom(ride)} → {formTo(ride)}
@@ -315,8 +338,8 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
         <Button onClick={onClose} variant="outlined" sx={{ borderRadius: 2, textTransform: 'none', flex: { xs: '1 1 auto', sm: '0 0 auto' }, minHeight: 44 }}>
           Keep it
         </Button>
-        <Button onClick={handleConfirm} variant="contained" color="error" disabled={deleting} sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700, flex: { xs: '1 1 auto', sm: '0 0 auto' }, minHeight: 44 }}>
-          {deleting ? 'Deleting...' : label}
+        <Button onClick={handleConfirm} variant="contained" color="error" disabled={cancel} sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700, flex: { xs: '1 1 auto', sm: '0 0 auto' }, minHeight: 44 }}>
+          Cancel Ride
         </Button>
       </DialogActions>
     </Dialog>
@@ -336,7 +359,7 @@ function RideDetailsModal({ ride, showEdit, showDelete, onEdit, onDelete, onClos
     ? startDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
     : '—';
 
-  const status = statusConfig[statusMap[ride?.status]] || statusConfig.pending;
+  const status = statusConfig[ride?.status];
 
   const Row = ({ icon, label, value }) => (
     <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.25, py: 0.5 }}>
@@ -484,45 +507,45 @@ function RequestItem({ request, onApprove, onReject }) {
             </Box>
           </Box>
           {request.status === 'PENDING' && (
-                <Stack direction="row" spacing={2} mt={1}>
-                  <Button
-                    variant="contained"
-                    color="success"
-                    size="small"
-                    startIcon={<CheckCircleIcon />}
-                    onClick={() => onApprove(request._id)}
-                    sx={{ textTransform: 'none' }}
-                  >
-                    Approve
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    color="error"
-                    size="small"
-                    startIcon={<CancelIcon />}
-                    onClick={() => onReject(request._id)}
-                    sx={{ textTransform: 'none' }}
-                  >
-                    Reject
-                  </Button>
-                </Stack>
-              )}
-              {request.status === 'approved' && (
-                <Chip
-                  label="Approved ✓"
-                  color="success"
-                  size="small"
-                  sx={{ fontWeight: 600 }}
-                />
-              )}
-              {request.status === 'rejected' && (
-                <Chip
-                  label="Rejected ✗"
-                  color="error"
-                  size="small"
-                  sx={{ fontWeight: 600 }}
-                />
-              )}
+            <Stack direction="row" spacing={2} mt={1}>
+              <Button
+                variant="contained"
+                color="success"
+                size="small"
+                startIcon={<CheckCircleIcon />}
+                onClick={() => onApprove(request._id)}
+                sx={{ textTransform: 'none' }}
+              >
+                Approve
+              </Button>
+              <Button
+                variant="outlined"
+                color="error"
+                size="small"
+                startIcon={<CancelIcon />}
+                onClick={() => onReject(request._id)}
+                sx={{ textTransform: 'none' }}
+              >
+                Reject
+              </Button>
+            </Stack>
+          )}
+          {request.status === 'approved' && (
+            <Chip
+              label="Approved ✓"
+              color="success"
+              size="small"
+              sx={{ fontWeight: 600 }}
+            />
+          )}
+          {request.status === 'rejected' && (
+            <Chip
+              label="Rejected ✗"
+              color="error"
+              size="small"
+              sx={{ fontWeight: 600 }}
+            />
+          )}
           <IconButton size="small" onClick={() => setExpanded(!expanded)}>
             {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
           </IconButton>
@@ -565,7 +588,7 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete }) {
   const [requests, setRequests] = useState([]);
   const [loadingRequests, setLoadingRequests] = useState(false);
 
-  const status = statusConfig[statusMap[ride?.status]] || statusConfig.pending;
+  const status = statusConfig[ride?.status];
 
   const startDate = new Date(ride.startTime);
   const date = !isNaN(startDate)
@@ -631,7 +654,7 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete }) {
     (req) => req.rideId === ride._id
   );
 
-  console.log(filteredRequests,'filteredRequests')
+  console.log(filteredRequests, 'filteredRequests')
 
   return (
     <>
@@ -935,7 +958,7 @@ const MyRides = () => {
           all.filter((ride) => {
             const rideStartTime = new Date(ride?.startTime);
             const rideEndTime = new Date(rideStartTime.getTime() + 3 * 60 * 60 * 1000);
-            return ride?.createdBy?._id === user.id && !isNaN(rideStartTime) && rideEndTime < currentDateTime;
+            return ride?.createdBy?._id === user.id && !isNaN(rideStartTime) && rideEndTime < currentDateTime && ride?.status == "CLOSED";
           })
         );
 
@@ -954,6 +977,8 @@ const MyRides = () => {
     };
     fetchRides();
   }, []);
+
+  console.log("Ride List ===> ", mypost);
 
   const handleEdit = (updated) => {
     const id = updated._id || updated.id;
