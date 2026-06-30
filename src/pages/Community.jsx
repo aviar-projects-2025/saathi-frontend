@@ -492,8 +492,6 @@
 //   );
 // }
 
-
-
 import React, { useEffect, useState } from 'react';
 import {
   Box, Typography, Grid, Paper, Chip, Avatar, Button,
@@ -727,7 +725,7 @@ export default function Community() {
 
       {/* Recent Activity */}
       <Paper elevation={0} sx={{ p: 2, borderRadius: 3, border: '1px solid #F0E6DC', mb: 2 }}>
-        <Typography fontWeight={700} fontSize="0.9rem" mb={1.5} sx={{ mb: 2 }}>Recent Activity</Typography>
+        <Typography fontWeight={700} fontSize="0.9rem" mb={1.5} sx={{mb:2}}>Recent Activity</Typography>
         {activities.map((a, i) => (
           <Box key={i} sx={{ display: 'flex', gap: 1, mb: 1.2 }}>
             <Typography fontSize={16}>{a.icon}</Typography>
@@ -1023,29 +1021,21 @@ export default function Community() {
         {showSidebar && (
           <Grid
             sx={{
-              mt: { sm: 8, md: 12 },
-              width: { sm: '260px', md: '320px', lg: '380px' },
-              minWidth: { sm: '260px', md: '320px', lg: '380px' },
+              mt:12,
+              width: { sm: '280px', md: '340px', lg: '380px' },
+              minWidth: { sm: '280px', md: '340px', lg: '380px' },
               flexShrink: 0,
               position: 'sticky',
               top: 20,
-              alignSelf: 'flex-start',
               height: SIDEBAR_SCROLL_HEIGHT,
+              overflowY: 'auto',
+              overflowX: 'hidden',
+              pr: 1,
+              '&::-webkit-scrollbar': { width: 6 },
+              '&::-webkit-scrollbar-thumb': { backgroundColor: '#E0D4C8', borderRadius: 4 },
             }}
           >
-            {/* Independent scroll container for the sidebar content only */}
-            <Box
-              sx={{
-                height: '100%',
-                overflowY: 'auto',
-                overflowX: 'hidden',
-                pr: 1,
-                '&::-webkit-scrollbar': { width: 6 },
-                '&::-webkit-scrollbar-thumb': { backgroundColor: '#E0D4C8', borderRadius: 4 },
-              }}
-            >
-              <SidebarContent />
-            </Box>
+            <SidebarContent />
           </Grid>
         )}
       </Box>

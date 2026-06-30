@@ -1,45 +1,33 @@
 import { Box, Drawer, useMediaQuery } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { Outlet } from "react-router-dom";
-import { useState } from "react";
 import Sidebar from "./Sidebar";
 import TopNav from "./Navbar";
-
+import { useState } from "react";
+import MobileBottomNav from "../pages/MobileBottomNav";
 
 const UserLayout = () => {
   const theme = useTheme();
-  const isDesktop = useMediaQuery(theme.breakpoints.up("lg"));
+  const isDesktop = useMediaQuery(theme.breakpoints.up("lg")); // 1024+
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   return (
     <Box
       sx={{
         height: "100dvh",
-        overflow: "hidden",
         display: "flex",
         flexDirection: "column",
-        minHeight: "100vh",
         bgcolor: "#fbfaf8ff",
         overflow: "hidden",
       }}
     >
-      {/* Top Navigation */}
       <TopNav onMenuClick={() => setMobileOpen(true)} />
 
-      {/* Content Area */}
-      <Box
-        sx={{
-          display: "flex",
-          flex: 1,
-          minHeight: 0,
-        }}
-      >
-        {/* Desktop Sidebar */}
+      <Box sx={{ display: "flex", flex: 1, minHeight: 0 }}>
         {isDesktop && <Sidebar />}
 
-        {/* Mobile Sidebar */}
         {!isDesktop && (
           <Drawer
             anchor="left"
@@ -52,14 +40,10 @@ const UserLayout = () => {
               },
             }}
           >
-            <Sidebar
-              isMobile
-              onItemClick={() => setMobileOpen(false)}
-            />
+            <Sidebar onItemClick={() => setMobileOpen(false)} isMobile />
           </Drawer>
         )}
 
-        {/* Main Content */}
         <Box
           component="main"
           sx={{
@@ -67,11 +51,14 @@ const UserLayout = () => {
             overflowY: "auto",
             px: { xs: 1.5, sm: 2, md: 3 },
             pt: 1.5,
+            pb: { xs: "50px", sm: 2 }, // Prevent content from hiding behind navbar
           }}
         >
           <Outlet />
         </Box>
       </Box>
+
+      {isMobile && <MobileBottomNav />}
     </Box>
   );
 };

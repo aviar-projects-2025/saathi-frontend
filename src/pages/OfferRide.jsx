@@ -42,29 +42,6 @@ export default function OfferRide() {
   const [showErrors, setShowErrors] = useState(false);
 
   const user = JSON.parse(localStorage.getItem("user"));
-const [hasActiveRide, setHasActiveRide] = useState(false);
-
-useEffect(() => {
-  const checkRide = async () => {
-    try {
-      const { data } = await axios.get(
-        `${Api}/rides/active/${user.id}`
-      );
-
-      setHasActiveRide(data.hasActiveRide);
-
-      if (data.hasActiveRide) {
-        toast.error(
-          "You already have an active ride. Complete or cancel it before creating another."
-        );
-      }
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
-  checkRide();
-}, []);
 
   const [form, setForm] = useState({
     from: "",
@@ -87,6 +64,7 @@ useEffect(() => {
     travellerType: "",
     language: "",
     ageGroupPreference: "Any",
+
     medicalAssistance: false,
     languageSupport: false,
     transitHelp: false,
@@ -156,29 +134,31 @@ useEffect(() => {
       status: "OPEN",
       ...(isFlight
         ? {
-          fromCountry: form.fromCountry, fromAirport: form.fromAirport,
-          toCountry: form.toCountry, toAirport: form.toAirport,
-          from: form.fromAirport, destination: form.toAirport,
-          flightNumber: form.flightNumber, airlineName: form.airlineName,
-          transitAirport: form.transitAirport, travellerType: form.travellerType,
-          language: form.language, ageGroupPreference: form.ageGroupPreference,
-          medicalAssistance: form.medicalAssistance, languageSupport: form.languageSupport,
-          transitHelp: form.transitHelp, baggageHelp: form.baggageHelp,
-        }
+            fromCountry: form.fromCountry, fromAirport: form.fromAirport,
+            toCountry: form.toCountry, toAirport: form.toAirport,
+            from: form.fromAirport, destination: form.toAirport,
+            flightNumber: form.flightNumber, airlineName: form.airlineName,
+            transitAirport: form.transitAirport, travellerType: form.travellerType,
+            language: form.language, ageGroupPreference: form.ageGroupPreference,
+            medicalAssistance: form.medicalAssistance, languageSupport: form.languageSupport,
+            transitHelp: form.transitHelp, baggageHelp: form.baggageHelp,
+          }
         : {
-          from: form.from, destination: form.destination,
-          availableSeats: form.availableSeats, fuelSharing: form.fuelSharing,
-        }),
+            from: form.from, destination: form.destination,
+            availableSeats: form.availableSeats, fuelSharing: form.fuelSharing,
+          }),
     };
 
-   try {
-  await axios.post(`${Api}/rides/`, payload);
-  toast.success("Ride Created Successfully...!");
-  setStep(0);
-  formReset();
-} catch (error) {
-  toast.error(error.response?.data?.message || error.message);
-}
+    try {
+      await axios.post(`${Api}/rides/`, payload);
+      toast.success("Ride Created Successfully...!");
+      setStep(0);
+      formReset();
+      setSubmitted(true);
+      setShowErrors(false);
+    } catch (error) {
+      toast.error(error.response?.data?.message || error.message);
+    }
   };
 
   useEffect(() => {
@@ -454,17 +434,6 @@ useEffect(() => {
                 error={!form.description && showErrors}
                 helperText={!form.description && showErrors ? "Required" : ""}
                 sx={tfSx} />
-              <TextField
-                label="Journey Duration"
-                fullWidth
-                size={inputSize}
-                value={form.duration}
-                onChange={(e) => update("duration", e.target.value)}
-                placeholder="e.g. 2h 30m"
-                error={!form.duration && showErrors}
-                helperText={!form.duration && showErrors ? "Required" : ""}
-                sx={tfSx}
-              />
             </Stack>
           )}
 
@@ -481,8 +450,8 @@ useEffect(() => {
                       sx={selectSx}>
                       {["First-time traveller", "Senior citizen support", "Student travel companion",
                         "Women-only companion", "Family companion"].map((v) => (
-                          <MenuItem key={v} value={v} sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>{v}</MenuItem>
-                        ))}
+                        <MenuItem key={v} value={v} sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>{v}</MenuItem>
+                      ))}
                     </Select>
                     {!form.travellerType && showErrors && (
                       <FormHelperText sx={{ fontSize: { xs: "0.62rem", sm: "0.7rem" } }}>Required</FormHelperText>
@@ -541,7 +510,6 @@ useEffect(() => {
                       />
                     ))}
                   </Box>
-
                 </>
               ) : (
                 <>
@@ -597,29 +565,29 @@ useEffect(() => {
               <Stack spacing={0}>
                 {(isFlight
                   ? [
-                    ["Route", `${form.fromAirport || "—"} → ${form.toAirport || "—"}`],
-                    ["Country", `${form.fromCountry || "—"} → ${form.toCountry || "—"}`],
-                    ["Date & Departure", `${form.date || "—"} at ${form.time || "—"}`],
-                    ["Flight Number", form.flightNumber || "—"],
-                    ["Airline Name", form.airlineName || "—"],
-                    ["Transit Airport", form.transitAirport || "No transit"],
-                    ["Traveller Type", form.travellerType || "—"],
-                    ["Language", form.language || "—"],
-                    ["Gender Preference", form.genderPreference],
-                    ["Age Group Preference", form.ageGroupPreference],
-                    ["Medical Assistance", form.medicalAssistance ? "Yes" : "No"],
-                    ["Language Support", form.languageSupport ? "Yes" : "No"],
-                    ["Transit Help", form.transitHelp ? "Yes" : "No"],
-                    ["Baggage Help", form.baggageHelp ? "Yes" : "No"],
-                  ]
+                      ["Route", `${form.fromAirport || "—"} → ${form.toAirport || "—"}`],
+                      ["Country", `${form.fromCountry || "—"} → ${form.toCountry || "—"}`],
+                      ["Date & Departure", `${form.date || "—"} at ${form.time || "—"}`],
+                      ["Flight Number", form.flightNumber || "—"],
+                      ["Airline Name", form.airlineName || "—"],
+                      ["Transit Airport", form.transitAirport || "No transit"],
+                      ["Traveller Type", form.travellerType || "—"],
+                      ["Language", form.language || "—"],
+                      ["Gender Preference", form.genderPreference],
+                      ["Age Group Preference", form.ageGroupPreference],
+                      ["Medical Assistance", form.medicalAssistance ? "Yes" : "No"],
+                      ["Language Support", form.languageSupport ? "Yes" : "No"],
+                      ["Transit Help", form.transitHelp ? "Yes" : "No"],
+                      ["Baggage Help", form.baggageHelp ? "Yes" : "No"],
+                    ]
                   : [
-                    ["From → Destination", `${form.from || "—"} → ${form.destination || "—"}`],
-                    ["Date & Time", `${form.date || "—"} at ${form.time || "—"}`],
-                    ["Mode of Travel", form.modeOfTravel],
-                    ["Available Seats", form.availableSeats],
-                    ["Fuel Sharing", form.fuelSharing ? "Yes" : "No"],
-                    ["Gender Preference", form.genderPreference],
-                  ]
+                      ["From → Destination", `${form.from || "—"} → ${form.destination || "—"}`],
+                      ["Date & Time", `${form.date || "—"} at ${form.time || "—"}`],
+                      ["Mode of Travel", form.modeOfTravel],
+                      ["Available Seats", form.availableSeats],
+                      ["Fuel Sharing", form.fuelSharing ? "Yes" : "No"],
+                      ["Gender Preference", form.genderPreference],
+                    ]
                 ).map(([label, value]) => (
                   <ReviewRow key={label} label={label} value={value} />
                 ))}

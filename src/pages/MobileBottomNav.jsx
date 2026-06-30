@@ -79,7 +79,7 @@ export default function MobileBottomNav({ pendingNotificationCount = 0 }) {
                     bottom: 0,
                     left: 0,
                     right: 0,
-                    zIndex: 100,
+                    zIndex: 1300,
                 }}
             >
                 <BottomNavigation

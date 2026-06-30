@@ -83,18 +83,15 @@ const pillBtn = {
   fontSize: { xs: "0.60rem", sm: "0.8rem", md: "0.875rem" },
   color: SAFFRON,
   fontWeight: 600,
-};
-
-// Shared wrapper that centers any modal content on every screen size
-const modalCenterWrapper = {
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "center",
-  width: "100%",
-  height: "100%",
-  minHeight: "100vh",
-  p: { xs: 1, sm: 2, md: 3 },
-  outline: "none",
+  // "&:hover": {
+  //   bgcolor: "#FDF0E8",
+  //   borderColor: SAFFRON,
+  //   border: `1.5px solid ${SAFFRON}`
+  // },
+  // minHeight: { xs: 32, sm: 36, md: 40 },
+  // borderRadius: { xs: "999px", sm: "8px" },
+  // px: { xs: 0.7, sm: 2, md: 2.5 },
+  // py: { xs: 0.5, sm: 0.75 },
 };
 
 const Settings = () => {
@@ -122,7 +119,7 @@ const Settings = () => {
     }));
   };
 
- 
+  console.log(currentUser, 'currentUser')
   const [formData, setFormData] = useState({
     firstName: currentUser?.firstName || "",
     lastName: currentUser?.lastName || "",
@@ -132,7 +129,6 @@ const Settings = () => {
     gender: currentUser?.gender || "",
     bio: currentUser?.bio || "",
     profileImage: currentUser?.profileImage || "",
-    id: currentUser?._id || ""
   });
 
   useEffect(() => {
@@ -146,7 +142,6 @@ const Settings = () => {
         gender: currentUser?.gender || "",
         bio: currentUser?.bio || "",
         profileImage: currentUser?.profileImage || "",
-        id: currentUser?._id || ""
       });
 
       setProfileImage(currentUser?.profileImage || "");
@@ -194,7 +189,6 @@ const Settings = () => {
       data.append("bio", formData.bio);
 
       await axios.post(Api + `/users/update/${user?.id}`, data)
- 
       getuserData()
       toast.success("Profile updated")
       setEditProfile(false)
@@ -480,6 +474,10 @@ const Settings = () => {
                   sx={{
                     ...pillBtn,
                     width: { xs: "100%", sm: "auto" },
+                    // border: "1.5px solid #E24B4A",
+                    // color: "#A32D2D",
+                    // bgcolor: "#FFFAFA",
+                    // "&:hover": { bgcolor: "#FCEBEB", borderColor: "#E24B4A" },
                   }}
                 >
                   Delete Account
@@ -491,32 +489,33 @@ const Settings = () => {
         </Stack>
       </Box>
 
-      {/* ── Edit Profile Modal ── */}
       <Modal
         open={editProfile}
         children={
-          <Box sx={modalCenterWrapper}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              width: "100%",
+              height: "100vh",
+              p: 2,
+            }}
+          >
             <Box
               sx={{
                 bgcolor: "white",
-                width: { xs: "100%", sm: "85%", md: 480, lg: 500 },
-                maxWidth: 500,
+                width: { xs: "100%", sm: 450 },
                 borderRadius: 2,
                 boxShadow: 24,
-                p: { xs: 2, sm: 3 },
-                maxHeight: { xs: "92vh", sm: "90vh" },
+                p: 3,
+                maxHeight: "90vh",
                 overflowY: "auto",
+                justifyContent: 'center', alignItems: 'center', display: 'flex'
               }}
             >
-              <Stack spacing={{ xs: 2, sm: 2.5 }} sx={{ width: "100%" }}>
-                <Typography
-                  variant="h6"
-                  fontWeight={700}
-                  sx={{
-                    fontSize: { xs: "1.05rem", sm: "1.2rem", md: "1.25rem" },
-                    mb: { xs: 0.5, sm: 1 },
-                  }}
-                >
+              <Stack spacing={2.5} >
+                <Typography variant="h6" fontWeight={700} mb={3}>
                   Edit Profile
                 </Typography>
 
@@ -524,9 +523,9 @@ const Settings = () => {
                   <Avatar
                     src={profileImage || formData.profileImage || ""}
                     sx={{
-                      width: { xs: 70, sm: 80, md: 90 },
-                      height: { xs: 70, sm: 80, md: 90 },
-                      fontSize: { xs: 24, sm: 28, md: 32 },
+                      width: 90,
+                      height: 90,
+                      fontSize: 32,
                       bgcolor: SAFFRON,
                     }}
                   >
@@ -535,8 +534,12 @@ const Settings = () => {
                       `${formData?.firstName?.[0] || ""}${formData?.lastName?.[0] || ""}`}
                   </Avatar>
 
-                  <Button variant="outlined" component="label" size="small">
+                  <Button
+                    variant="outlined"
+                    component="label"
+                  >
                     Change Photo
+
                     <input
                       hidden
                       type="file"
@@ -546,40 +549,32 @@ const Settings = () => {
                   </Button>
                 </Stack>
 
-                <Stack
-                  direction={{ xs: "column", sm: "row" }}
-                  spacing={2}
-                  sx={{ width: "100%" }}
-                >
+                <Box sx={{ display: 'flex', gap: 2 }}>
                   <TextField
                     name="firstName"
                     label="First Name"
                     size="small"
-                    fullWidth
                     value={formData?.firstName}
                     onChange={handleChange}
+                    sx={{ width: "48%" }}
                   />
 
                   <TextField
                     label="Last Name"
                     name="lastName"
+                    sx={{ width: "48%" }}
                     size="small"
-                    fullWidth
                     value={formData?.lastName}
                     onChange={handleChange}
                   />
-                </Stack>
+                </Box>
 
-                <Stack
-                  direction={{ xs: "column", sm: "row" }}
-                  spacing={2}
-                  sx={{ width: "100%" }}
-                >
+                <Box sx={{ display: 'flex', gap: 2 }}>
                   <TextField
                     label="Email"
                     name="email"
+                    sx={{ width: "48%" }}
                     size="small"
-                    fullWidth
                     value={formData?.email}
                     onChange={handleChange}
                     disabled
@@ -588,18 +583,14 @@ const Settings = () => {
                   <TextField
                     label="Mobile Number"
                     name="mobile"
+                    sx={{ width: "48%" }}
                     size="small"
-                    fullWidth
                     value={formData?.mobile}
                     onChange={handleChange}
                   />
-                </Stack>
+                </Box>
 
-                <Stack
-                  direction={{ xs: "column", sm: "row" }}
-                  spacing={2}
-                  sx={{ width: "100%" }}
-                >
+                <Box sx={{ display: 'flex', gap: 2 }}>
                   <LocalizationProvider dateAdapter={AdapterDayjs}>
                     <DatePicker
                       label="Date of Birth"
@@ -613,10 +604,9 @@ const Settings = () => {
                       slotProps={{
                         textField: {
                           size: "small",
-                          fullWidth: true,
+                          sx: { width: "48%" },
                         },
                       }}
-                      sx={{ width: { xs: "100%", sm: "48%" } }}
                     />
                   </LocalizationProvider>
 
@@ -624,9 +614,8 @@ const Settings = () => {
                     select
                     label="Gender"
                     name="gender"
+                    sx={{ width: "48%" }}
                     size="small"
-                    fullWidth
-                    sx={{ width: { xs: "100%", sm: "48%" } }}
                     value={formData?.gender}
                     onChange={handleChange}
                   >
@@ -634,7 +623,7 @@ const Settings = () => {
                     <MenuItem value="Female">Female</MenuItem>
                     <MenuItem value="Other">Other</MenuItem>
                   </TextField>
-                </Stack>
+                </Box>
 
                 <TextField
                   label="Bio"
@@ -646,18 +635,12 @@ const Settings = () => {
                   onChange={handleChange}
                 />
 
-                <Stack
-                  direction={{ xs: "column-reverse", sm: "row" }}
-                  spacing={1.5}
-                  justifyContent="flex-end"
-                  sx={{ width: "100%" }}
-                >
+                <Stack direction="row" spacing={2} justifyContent="flex-end">
                   <Button
                     variant="outlined"
-                    sx={{ width: { xs: "100%", sm: "auto" } }}
                     onClick={() => {
-                      setProfileImage("");
-                      setEditProfile(false);
+                      setProfileImage('')
+                      setEditProfile(false)
                     }}
                   >
                     Cancel
@@ -665,45 +648,43 @@ const Settings = () => {
 
                   <Button
                     variant="contained"
-                    sx={{ width: { xs: "100%", sm: "auto" } }}
                     onClick={handleUpdateProfile}
                     disabled={submitLoading}
                   >
                     Save Changes
                   </Button>
                 </Stack>
+
               </Stack>
             </Box>
           </Box>
         }
       />
 
-      {/* ── Change Password Modal ── */}
       <Modal
         open={passwordModel}
         onClose={() => setPasswordModel(false)}
       >
-        <Box sx={modalCenterWrapper}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            width: "100%",
+            height: "100vh",
+            p: 2,
+          }}
+        >
           <Box
             sx={{
               bgcolor: "#fff",
-              width: { xs: "100%", sm: "85%", md: 420 },
-              maxWidth: 420,
-              borderRadius: { xs: 2, sm: 3 },
-              p: { xs: 2, sm: 3 },
+              width: { xs: "100%", sm: 420 },
+              borderRadius: 3,
+              p: 3,
               boxShadow: 24,
-              maxHeight: { xs: "92vh", sm: "90vh" },
-              overflowY: "auto",
             }}
           >
-            <Typography
-              variant="h6"
-              fontWeight={700}
-              sx={{
-                fontSize: { xs: "1.05rem", sm: "1.2rem", md: "1.25rem" },
-                mb: { xs: 2, sm: 3 },
-              }}
-            >
+            <Typography variant="h6" fontWeight={700} mb={3}>
               Change Password
             </Typography>
 
@@ -739,13 +720,12 @@ const Settings = () => {
               />
 
               <Stack
-                direction={{ xs: "column-reverse", sm: "row" }}
+                direction="row"
                 justifyContent="flex-end"
-                spacing={1.5}
+                spacing={2}
               >
                 <Button
                   variant="outlined"
-                  sx={{ width: { xs: "100%", sm: "auto" } }}
                   onClick={() => {
                     setPasswordModel(false)
                     setPasswordData({
@@ -760,7 +740,6 @@ const Settings = () => {
 
                 <Button
                   variant="contained"
-                  sx={{ width: { xs: "100%", sm: "auto" } }}
                   onClick={() => handleChangePassword()}
                 >
                   Update Password
