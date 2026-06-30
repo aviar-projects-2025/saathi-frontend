@@ -11,7 +11,7 @@ const UserLayout = () => {
   const isDesktop = useMediaQuery(theme.breakpoints.up("lg")); // 1024+
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   return (
     <Box

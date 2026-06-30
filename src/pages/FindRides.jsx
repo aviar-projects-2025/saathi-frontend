@@ -723,7 +723,7 @@ export default function FindRides() {
 
           {/* ── Ride cards ── */}
           {filteredRides.length > 0 ? (
-            <Grid container spacing={{ xs: 1, sm: 2 }}>
+            <Grid spacing={{ xs: 1, sm: 2 }}>
               {filteredRides.map((ride) => (
                 <Grid item xs={12} sm={6} md={4} key={ride._id}>
                   <RideCard ride={ride} />
