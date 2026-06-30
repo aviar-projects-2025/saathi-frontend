@@ -1,4 +1,3 @@
-// Web.jsx
 import React from "react";
 import {
   Box,
@@ -8,9 +7,7 @@ import {
   Paper,
   Stack,
   Typography,
-  Chip,
 } from "@mui/material";
-
 import ShieldIcon from "@mui/icons-material/Shield";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import GroupsIcon from "@mui/icons-material/Groups";
@@ -44,46 +41,16 @@ const BG = "#FFF8F2";
 const BORDER = "#F0E6DC";
 const TEXT_SECONDARY = "#6B6259";
 
-const navy = "#0B1F3A";
-const saffron = "#F28C28";
-const lightBg = "#F7FAFF";
-const softSaffron = "#FFF1E0";
-
-const float = keyframes`
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-14px); }
-`;
-
-const fadeUp = keyframes`
-  from {
-    opacity: 0;
-    transform: translateY(35px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-`;
-
-const pulse = keyframes`
-  0%, 100% {
-    box-shadow: 0 0 0 0 rgba(242, 140, 40, 0.28);
-  }
-  50% {
-    box-shadow: 0 0 0 18px rgba(242, 140, 40, 0);
-  }
-`;
-
 const features = [
   {
     icon: <ShieldIcon fontSize="medium" />,
     title: "Verified Members",
-    text: "Every member joins through referrals and community-based approval.",
+    text: "Members join through referrals and community approval.",
   },
   {
     icon: <DirectionsCarIcon fontSize="medium" />,
     title: "Shared Travel",
-    text: "Find safe travel companions , share rides with trusted people.",
+    text: "Find trusted companions and share rides safely.",
   },
   {
     icon: <GroupsIcon fontSize="medium" />,
@@ -93,7 +60,7 @@ const features = [
   {
     icon: <ChatIcon fontSize="medium" />,
     title: "Community Feed",
-    text: "Post updates, request help, share tips, and support each other.",
+    text: "Share updates, ask for help, and support others.",
   },
 ];
 
@@ -207,7 +174,7 @@ const Web = () => {
                 fontSize: { xs: "1rem", md: "1.1rem" },
                 lineHeight: 1.8,
                 color: TEXT_SECONDARY,
-                // maxWidth: 480,
+                maxWidth: 480,
               }}
             >
               Saathi is a trusted community platform where verified members can
@@ -240,14 +207,11 @@ const Web = () => {
                   },
                 }}
               >
-                Travel Together,
-                <br />
-                <Box component="span" sx={{ color: saffron }}>
-                  Connect Safely.
-                </Box>
-              </Typography>
+                Join Community
+              </Button>
 
-              <Typography
+              <Button
+                variant="outlined"
                 sx={{
                   borderRadius: 999,
                   px: 4,
@@ -268,54 +232,9 @@ const Web = () => {
                   },
                 }}
               >
-                Saathi helps verified members find trusted travel companions,
-                share rides, build connections, and support each other through a
-                secure referral-based community.
-              </Typography>
-
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={2.5} mt={4}>
-                <Button
-                  variant="contained"
-                  endIcon={<ArrowForwardIcon />}
-                  onClick={() => navigate("/signup")}
-                  sx={{
-                    bgcolor: saffron,
-                    color: "#fff",
-                    borderRadius: 999,
-                    px: 4,
-                    py: 1.3,
-                    textTransform: "none",
-                    fontWeight: 900,
-                    boxShadow: "0 14px 35px rgba(242,140,40,.30)",
-                    "&:hover": {
-                      bgcolor: "#D97706",
-                      transform: "translateY(-2px)",
-                    },
-                  }}
-                >
-                  Join Community
-                </Button>
-
-                <Button
-                  variant="outlined"
-                  sx={{
-                    borderRadius: 999,
-                    px: 4,
-                    py: 1.3,
-                    textTransform: "none",
-                    fontWeight: 900,
-                    borderColor: navy,
-                    color: navy,
-                    "&:hover": {
-                      borderColor: navy,
-                      bgcolor: "#EEF4FF",
-                    },
-                  }}
-                >
-                  Learn More
-                </Button>
-              </Stack>
-            </Box>
+                Learn More
+              </Button>
+            </Stack>
           </Grid>
 
           <Grid
@@ -453,164 +372,6 @@ const Web = () => {
             </Grid>
           ))}
         </Grid>
-
-<Grid sx={{mt:10}}>
-        {/* Why Saathi */}
-        <Grid container spacing={9} alignItems="stretch" mb={5}>
-          <Grid item xs={12} md={5}>
-            <Paper
-              elevation={0}
-              sx={{
-                p: 4,
-                borderRadius: 6,
-                bgcolor: navy,
-                color: "#fff",
-                position: "relative",
-                overflow: "hidden",
-                height: "100%",
-                minHeight: 420,
-              }}
-            >
-              <TravelExploreIcon
-                sx={{
-                  fontSize: 90,
-                  color: "rgba(255,255,255,0.10)",
-                  position: "absolute",
-                  right: 20,
-                  top: 20,
-                }}
-              />
-
-              <Typography fontSize={14} fontWeight={900} color={saffron}>
-                WHY CHOOSE SAATHI?
-              </Typography>
-
-              <Typography variant="h4" fontWeight={900} mt={1}>
-                Built for trust, not just travel.
-              </Typography>
-
-              <Typography mt={2} lineHeight={1.8} color="rgba(255,255,255,.78)">
-                Ordinary ride-sharing platforms connect strangers. Saathi
-                connects people through referrals, verification, and community
-                confidence.
-              </Typography>
-
-              <Stack spacing={1.6} mt={3}>
-                <Typography>✅ Referral-based access</Typography>
-                <Typography>✅ Member approval system</Typography>
-                <Typography>✅ Safer ride companion discovery</Typography>
-                <Typography>✅ Community-first travel experience</Typography>
-              </Stack>
-            </Paper>
-          </Grid>
-
-
-          <Grid item xs={12} md={7}>
-            <Grid container spacing={4} >
-              {steps.map((step, index) => (
-                <Grid item xs={12} sm={6} key={step} sx={{mt:7}}>
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      p: 4,
-                      borderRadius: 5,
-                      bgcolor: "#fff",
-                      border: "1px solid #DDE7F3",
-                      minHeight: 190,
-                      height: "100%",
-                      transition: "0.3s",
-                      "&:hover": {
-                        bgcolor: "#F7FAFF",
-                        transform: "scale(1.03)",
-                        borderColor: saffron,
-                      },
-                    }}
-                  >
-                    <Typography
-                      sx={{
-                        width: 42,
-                        height: 42,
-                        borderRadius: "50%",
-                        bgcolor: saffron,
-                        color: "#fff",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontWeight: 900,
-                        mb: 2,
-                      }}
-                    >
-                      {index + 1}
-                    </Typography>
-
-                    <Typography fontWeight={900} color={navy}>
-                      {step}
-                    </Typography>
-
-                    <Typography mt={1} fontSize={14} sx={{ color: navy, opacity: 0.75 }}>
-                      Saathi keeps every step simple, safe, and community
-                      focused.
-                    </Typography>
-                  </Paper>
-                </Grid>
-              ))}
-            </Grid>
-          </Grid>
-        </Grid>
-</Grid>
-        {/* Final CTA */}
-        <Paper
-          elevation={0}
-          sx={{
-            mt: 10,
-            p: { xs: 4, md: 6 },
-            borderRadius: 7,
-            textAlign: "center",
-            background: "linear-gradient(135deg,#0B1F3A 0%,#102D52 100%)",
-            border: `1px solid ${saffron}`,
-            color: "#fff",
-          }}
-        >
-          <FavoriteIcon sx={{ color: saffron, fontSize: 42, mb: 1 }} />
-
-          <Typography
-            variant="h3"
-            fontWeight={900}
-            sx={{ fontSize: { xs: "2rem", md: "3rem" }, color: "#fff" }}
-          >
-            Start your safer travel journey with Saathi.
-          </Typography>
-
-          <Typography
-            sx={{
-              mt: 2,
-              color: "rgba(255,255,255,.78)",
-              maxWidth: 720,
-              mx: "auto",
-              lineHeight: 1.8,
-            }}
-          >
-            Join a trusted community where every ride, referral, and connection
-            is built with care, safety, and real human trust.
-          </Typography>
-
-          <Button
-            variant="contained"
-            onClick={() => navigate("/signup")}
-            sx={{
-              mt: 4,
-              bgcolor: saffron,
-              borderRadius: 999,
-              px: 5,
-              py: 1.4,
-              textTransform: "none",
-              fontWeight: 900,
-              "&:hover": { bgcolor: "#D97706" },
-            }}
-          >
-            Get Started Now
-          </Button>
-        </Paper>
       </Container>
     </Box>
   );
