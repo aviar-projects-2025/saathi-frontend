@@ -74,6 +74,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
         flexDirection: "column",
         justifyContent: "space-between",
         borderRight: isMobile ? "none" : "1px solid #f1e4d7",
+        zIndex:200
       }}
     >
       <Stack spacing={1.2}
