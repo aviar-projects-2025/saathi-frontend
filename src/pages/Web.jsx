@@ -12,7 +12,42 @@ import ShieldIcon from "@mui/icons-material/Shield";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import GroupsIcon from "@mui/icons-material/Groups";
 import ChatIcon from "@mui/icons-material/Chat";
+import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
+import TravelExploreIcon from "@mui/icons-material/TravelExplore";
+import FavoriteIcon from "@mui/icons-material/Favorite";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import { keyframes } from "@mui/system";
 import { useNavigate } from "react-router-dom";
+
+const navy = "#0B1F3A";
+const saffron = "#F28C28";
+const lightBg = "#F7FAFF";
+const softSaffron = "#FFF1E0";
+
+const float = keyframes`
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-14px); }
+`;
+
+const fadeUp = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(35px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
+
+const pulse = keyframes`
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(242, 140, 40, 0.28);
+  }
+  50% {
+    box-shadow: 0 0 0 18px rgba(242, 140, 40, 0);
+  }
+`;
 
 const features = [
   {
@@ -27,8 +62,8 @@ const features = [
   },
   {
     icon: <GroupsIcon />,
-    title: "Trusted Community",
-    text: "Build real connections through a verified network.",
+    title: "Trusted Network",
+    text: "Build real community connections through a verified referral system.",
   },
   {
     icon: <ChatIcon />,
@@ -37,92 +72,115 @@ const features = [
   },
 ];
 
+const steps = [
+  "Create your profile",
+  "Get referred by a member",
+  "Join the verified community",
+  "Find rides and travel safely",
+];
+
 const Web = () => {
   const navigate = useNavigate();
 
   return (
-    <Box sx={{ minHeight: "100vh", bgcolor: "#FFF8F2" }}>
+    <Box sx={{ minHeight: "100vh", bgcolor: lightBg, overflow: "hidden" }}>
       {/* Navbar */}
       <Box
         sx={{
           py: 2,
-          px: { xs: 2, md: 5 },
+          px: { xs: 2, md: 6 },
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          bgcolor: "#fff",
-          borderBottom: "1px solid #F0E6DC",
+          bgcolor: "rgba(255,255,255,0.94)",
+          backdropFilter: "blur(14px)",
+          borderBottom: "1px solid #DDE7F3",
+          position: "sticky",
+          top: 0,
+          zIndex: 10,
         }}
       >
-        <Typography variant="h5" fontWeight={900} color="#E8650A">
-          Saathi
-        </Typography>
+        <Stack direction="row" alignItems="center" spacing={1}>
+          <Box
+            sx={{
+              width: 44,
+              height: 44,
+              borderRadius: "50%",
+              bgcolor: saffron,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#fff",
+              animation: `${pulse} 2.5s infinite`,
+            }}
+          >
+            <DirectionsCarIcon />
+          </Box>
+
+          <Typography variant="h5" fontWeight={900} color={navy}>
+            Saathi
+          </Typography>
+        </Stack>
 
         <Button
           variant="contained"
           onClick={() => navigate("/login")}
           sx={{
-            bgcolor: "#E8650A",
+            bgcolor: navy,
+            color: "#fff",
             borderRadius: 999,
             px: 3,
             textTransform: "none",
-            fontWeight: 700,
+            fontWeight: 800,
+            boxShadow: "0 10px 25px rgba(11,31,58,.25)",
+            "&:hover": { bgcolor: "#07172B" },
           }}
         >
           Login
         </Button>
       </Box>
 
-      {/* Hero */}
       <Container maxWidth="lg" sx={{ py: { xs: 6, md: 10 } }}>
-        <Grid container spacing={5} alignItems="center">
+        {/* Hero */}
+        <Grid container spacing={8} alignItems="center">
           <Grid item xs={12} md={6}>
-            <Typography
-              variant="h2"
-              fontWeight={900}
-              sx={{ fontSize: { xs: "2.5rem", md: "4rem" }, lineHeight: 1.1 }}
-            >
-              Travel Together,{" "}
-              <Box component="span" sx={{ color: "#E8650A" }}>
-                Connect Safely.
-              </Box>
-            </Typography>
-
-            <Typography
-              color="text.secondary"
-              sx={{ mt: 2, fontSize: "1.1rem", lineHeight: 1.8 }}
-            >
-              Saathi is a trusted community platform where verified members can
-              find travel companions, share rides, build connections, and
-              support each other through referrals.
-            </Typography>
-
-            <Stack direction={{ xs: "column", sm: "row" }} spacing={2} mt={4}>
-              <Button
-                variant="contained"
-                onClick={() => navigate("/signup")}
+            <Stack sx={{ animation: `${fadeUp} 0.8s ease both` }}>
+              <Chip
+                icon={<VerifiedUserIcon />}
+                label="Referral Based Trusted Community"
                 sx={{
-                  bgcolor: "#E8650A",
-                  borderRadius: 999,
-                  px: 4,
-                  py: 1.2,
-                  textTransform: "none",
-                  fontWeight: 800,
+                  bgcolor: softSaffron,
+                  color: navy,
+                  fontWeight: 900,
+                  mb: 2,
+                  border: `1px solid ${saffron}`,
+                  "& .MuiChip-icon": {
+                    color: saffron,
+                  },
+                }}
+              />
+
+              <Typography
+                variant="h2"
+                fontWeight={900}
+                sx={{
+                  fontSize: { xs: "2.4rem", sm: "3rem", md: "4.3rem" },
+                  lineHeight: 1.08,
+                  color: navy,
                 }}
               >
                 Join Community
-              </Button>
+              </Typography>
 
               <Button
                 variant="outlined"
                 sx={{
-                  borderRadius: 999,
-                  px: 4,
-                  py: 1.2,
-                  textTransform: "none",
-                  fontWeight: 800,
-                  borderColor: "#E8650A",
-                  color: "#E8650A",
+                  mt: 2.5,
+                  fontSize: { xs: "1rem", md: "1.12rem" },
+                  lineHeight: 1.9,
+                  color: navy,
+                  maxWidth: 560,
+                  opacity: 0.82,
                 }}
               >
                 Learn More
@@ -131,52 +189,143 @@ const Web = () => {
           </Grid>
 
           <Grid item xs={12} md={6}>
-            <Paper
-              elevation={0}
+            <Box
               sx={{
-                p: 4,
-                borderRadius: 5,
-                border: "1px solid #F0E6DC",
-                bgcolor: "#fff",
+                position: "relative",
+                animation: `${float} 4s ease-in-out infinite`,
               }}
             >
-              <Typography variant="h5" fontWeight={900} mb={2}>
-                Why Saathi?
-              </Typography>
+              <Paper
+                elevation={0}
+                sx={{
+                  p: { xs: 3, md: 4 },
+                  borderRadius: "36px",
+                  bgcolor: "#fff",
+                  border: "1px solid #DDE7F3",
+                  boxShadow: "0 30px 80px rgba(11,31,58,0.13)",
+                  position: "relative",
+                  overflow: "hidden",
+                }}
+              >
+                <Box
+                  sx={{
+                    position: "absolute",
+                    width: 190,
+                    height: 190,
+                    bgcolor: softSaffron,
+                    borderRadius: "50%",
+                    right: -60,
+                    top: -60,
+                  }}
+                />
 
-              <Typography color="text.secondary" lineHeight={1.8}>
-                Unlike ordinary ride-sharing platforms, Saathi is built on
-                trust. Every member is connected through referrals and verified
-                by the community before gaining full access.
-              </Typography>
+                <Box
+                  component="img"
+                  src="https://cdn-icons-png.flaticon.com/512/854/854878.png"
+                  alt="travel community"
+                  sx={{
+                    width: "100%",
+                    maxWidth: 330,
+                    display: "block",
+                    mx: "auto",
+                    position: "relative",
+                    zIndex: 1,
+                  }}
+                />
 
-              <Stack spacing={1.5} mt={3}>
-                <Typography>✅ Referral-based access</Typography>
-                <Typography>✅ Member approval system</Typography>
-                <Typography>✅ Trusted ride companions</Typography>
-                <Typography>✅ Community-first travel experience</Typography>
-              </Stack>
-            </Paper>
+                <Stack spacing={2.5} mt={3} position="relative" zIndex={1}>
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 2.2,
+                      borderRadius: 4,
+                      bgcolor: "#F7FAFF",
+                      border: "1px solid #DDE7F3",
+                    }}
+                  >
+                    <Typography fontWeight={900} color={navy}>
+                      Safe Ride Match
+                    </Typography>
+                    <Typography fontSize={13} color={navy} sx={{ opacity: 0.75 }}>
+                      Connect with verified members before starting your trip.
+                    </Typography>
+                  </Paper>
+
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 2.2,
+                      borderRadius: 4,
+                      bgcolor: softSaffron,
+                      border: `1px solid ${saffron}`,
+                    }}
+                  >
+                    <Typography fontWeight={900} color={navy}>
+                      Community Approved
+                    </Typography>
+                    <Typography fontSize={13} color={navy} sx={{ opacity: 0.75 }}>
+                      Trust starts from referrals and member verification.
+                    </Typography>
+                  </Paper>
+                </Stack>
+              </Paper>
+            </Box>
           </Grid>
         </Grid>
 
         {/* Features */}
-        <Grid container spacing={3} mt={6}>
-          {features.map((item) => (
-            <Grid item xs={12} sm={6} md={3} key={item.title}>
+        <Grid container spacing={9} mt={9}>
+          {features.map((item, index) => (
+            <Grid item xs={12} sm={6} md={6} key={item.title}>
               <Paper
                 elevation={0}
                 sx={{
-                  p: 3,
+                  p: 4,
+                  minHeight: 230,
                   height: "100%",
-                  borderRadius: 4,
-                  border: "1px solid #F0E6DC",
+                  borderRadius: 5,
+                  border: "1px solid #DDE7F3",
                   bgcolor: "#fff",
+                  animation: `${fadeUp} .8s ease both`,
+                  animationDelay: `${index * 0.12}s`,
+                  transition: "0.3s ease",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "flex-start",
+                  "&:hover": {
+                    transform: "translateY(-10px)",
+                    boxShadow: "0 22px 55px rgba(11,31,58,.15)",
+                    borderColor: saffron,
+                  },
                 }}
               >
-                <Box sx={{ color: "#E8650A", mb: 1 }}>{item.icon}</Box>
-                <Typography fontWeight={800}>{item.title}</Typography>
-                <Typography variant="body2" color="text.secondary" mt={1}>
+                <Box
+                  sx={{
+                    width: 58,
+                    height: 58,
+                    borderRadius: 3,
+                    bgcolor: softSaffron,
+                    color: saffron,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    mb: 2.5,
+                    "& svg": { fontSize: 30 },
+                  }}
+                >
+                  {item.icon}
+                </Box>
+
+                <Typography fontWeight={900} color={navy} fontSize={20}>
+                  {item.title}
+                </Typography>
+
+                <Typography
+                  variant="body2"
+                  mt={1.3}
+                  lineHeight={1.8}
+                  sx={{ color: navy, opacity: 0.78 }}
+                >
                   {item.text}
                 </Typography>
               </Paper>
