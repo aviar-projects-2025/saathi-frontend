@@ -17,7 +17,7 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-
+import { useUser } from "../context/userConetext";
 import SearchIcon from "@mui/icons-material/Search";
 import TuneIcon from "@mui/icons-material/Tune";
 import CloseIcon from "@mui/icons-material/Close";
@@ -107,7 +107,7 @@ const emptyFilters = {
 export default function FindRides() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
+  const { currentUser } = useUser();
   const [rides, setRides] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filtersOpen, setFiltersOpen] = useState(false); // collapsed by default
@@ -233,7 +233,9 @@ export default function FindRides() {
   ).length;
 
   // ── Filtering uses APPLIED filters + live search text ─────────────────
-  const filteredRides = rides.filter((ride) => {
+const filteredRides = rides
+  .filter((ride) => ride.createdBy?._id !== currentUser?._id)
+  .filter((ride) => {
     const fromValue =
       ride.modeOfTravel === "Flight"
         ? `${ride.fromAirport || ""} ${ride.fromCountry || ""} ${ride.from || ""}`
@@ -723,12 +725,18 @@ export default function FindRides() {
 
           {/* ── Ride cards ── */}
           {filteredRides.length > 0 ? (
-            <Grid container spacing={{ xs: 1, sm: 2 }}>
-              {filteredRides.map((ride) => (
-                <Grid item xs={12} sm={6} md={4} key={ride._id}>
-                  <RideCard ride={ride} />
-                </Grid>
-              ))}
+                    <Grid spacing={{ xs: 1, sm: 2 }}>
+              {filteredRides.map((ride) => {
+                const isOwnRide = ride.createdBy?._id === currentUser?._id;
+                return (
+                  <Grid item xs={12} sm={6} md={4} key={ride._id}>
+                    <RideCard
+                      ride={ride}
+                      isOwnRide={isOwnRide}
+                    />
+                  </Grid>
+                );
+              })}
             </Grid>
           ) : (
             <Box
