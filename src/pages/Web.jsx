@@ -8,7 +8,6 @@ import {
   Paper,
   Stack,
   Typography,
-  Chip
 } from "@mui/material";
 import ShieldIcon from "@mui/icons-material/Shield";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
