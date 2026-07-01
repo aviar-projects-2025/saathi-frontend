@@ -693,7 +693,6 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete, allRequests, s
 
         {/* ── Card body ── */}
         <Card
-          onClick={() => setDetailsOpen(true)}
           elevation={0}
           sx={{
             borderRadius: "0 0 14px 14px",
@@ -708,103 +707,107 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete, allRequests, s
               p: { xs: '12px !important', sm: '20px 24px !important' },
             }}
           >
-            {/* FROM / TO row */}
             <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: 1,
-                pb: { xs: 1.25, sm: 2 },
-                mb: { xs: 1.25, sm: 2 },
-                borderBottom: '1px solid rgba(255,153,51,0.2)',
-              }}
+              onClick={() => setDetailsOpen(true)}
             >
-              <Box sx={{ minWidth: 0, flex: 1 }}>
-                <Typography
-                  variant="caption"
-                  sx={{ color: "#FF9933", fontWeight: 700, letterSpacing: 0.8, fontSize: { xs: '0.6rem', sm: '0.7rem' } }}
-                >
-                  FROM
-                </Typography>
-                <Typography
-                  fontWeight={700}
-                  sx={{
-                    wordBreak: 'break-word',
-                    fontSize: { xs: '0.82rem', sm: '0.95rem' },
-                    lineHeight: 1.3,
-                  }}
-                >
-                  📍 {formFrom(ride)}
-                </Typography>
-              </Box>
-
-              <ArrowForwardIcon sx={{ color: '#FF9933', fontSize: { xs: 16, sm: 20 }, flexShrink: 0 }} />
-
-              <Box sx={{ minWidth: 0, flex: 1, textAlign: 'right' }}>
-                <Typography
-                  variant="caption"
-                  sx={{ color: "#FF9933", fontWeight: 700, letterSpacing: 0.8, fontSize: { xs: '0.6rem', sm: '0.7rem' } }}
-                >
-                  TO
-                </Typography>
-                <Typography
-                  fontWeight={700}
-                  sx={{
-                    wordBreak: 'break-word',
-                    fontSize: { xs: '0.82rem', sm: '0.95rem' },
-                    lineHeight: 1.3,
-                  }}
-                >
-                  📍 {formTo(ride)}
-                </Typography>
-              </Box>
-            </Box>
-
-            {/* Details grid */}
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(3, 1fr)' },
-                gap: { xs: '12px 8px', sm: 3 },
-              }}
-            >
-              <Box>
-                <Typography sx={{ fontSize: { xs: '0.65rem', sm: '0.7rem' }, color: 'text.secondary', mb: 0.5 }}>
-                  Date &amp; time
-                </Typography>
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <CalendarTodayIcon sx={{ color: "#FF9933", fontSize: { xs: 15, sm: 18 } }} />
-                  <Typography sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, fontWeight: 600 }}>
-                    {date} · {time}
+              {/* FROM / TO row */}
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 1,
+                  pb: { xs: 1.25, sm: 2 },
+                  mb: { xs: 1.25, sm: 2 },
+                  borderBottom: '1px solid rgba(255,153,51,0.2)',
+                }}
+              >
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                  <Typography
+                    variant="caption"
+                    sx={{ color: "#FF9933", fontWeight: 700, letterSpacing: 0.8, fontSize: { xs: '0.6rem', sm: '0.7rem' } }}
+                  >
+                    FROM
                   </Typography>
-                </Stack>
+                  <Typography
+                    fontWeight={700}
+                    sx={{
+                      wordBreak: 'break-word',
+                      fontSize: { xs: '0.82rem', sm: '0.95rem' },
+                      lineHeight: 1.3,
+                    }}
+                  >
+                    📍 {formFrom(ride)}
+                  </Typography>
+                </Box>
+
+                <ArrowForwardIcon sx={{ color: '#FF9933', fontSize: { xs: 16, sm: 20 }, flexShrink: 0 }} />
+
+                <Box sx={{ minWidth: 0, flex: 1, textAlign: 'right' }}>
+                  <Typography
+                    variant="caption"
+                    sx={{ color: "#FF9933", fontWeight: 700, letterSpacing: 0.8, fontSize: { xs: '0.6rem', sm: '0.7rem' } }}
+                  >
+                    TO
+                  </Typography>
+                  <Typography
+                    fontWeight={700}
+                    sx={{
+                      wordBreak: 'break-word',
+                      fontSize: { xs: '0.82rem', sm: '0.95rem' },
+                      lineHeight: 1.3,
+                    }}
+                  >
+                    📍 {formTo(ride)}
+                  </Typography>
+                </Box>
               </Box>
 
-              <Box>
-                <Typography sx={{ fontSize: { xs: '0.65rem', sm: '0.7rem' }, color: 'text.secondary', mb: 0.5 }}>
-                  Seats available
-                </Typography>
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <EventSeatIcon sx={{ color: "#FF9933", fontSize: { xs: 15, sm: 18 } }} />
-                  <Typography sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, fontWeight: 600 }}>
-                    {ride.availableSeats} seat{ride.availableSeats === 1 ? '' : 's'}
+              {/* Details grid */}
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(3, 1fr)' },
+                  gap: { xs: '12px 8px', sm: 3 },
+                }}
+              >
+                <Box>
+                  <Typography sx={{ fontSize: { xs: '0.65rem', sm: '0.7rem' }, color: 'text.secondary', mb: 0.5 }}>
+                    Date &amp; time
                   </Typography>
-                </Stack>
-              </Box>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <CalendarTodayIcon sx={{ color: "#FF9933", fontSize: { xs: 15, sm: 18 } }} />
+                    <Typography sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, fontWeight: 600 }}>
+                      {date} · {time}
+                    </Typography>
+                  </Stack>
+                </Box>
 
-              <Box>
-                <Typography sx={{ fontSize: { xs: '0.65rem', sm: '0.7rem' }, color: 'text.secondary', mb: 0.5 }}>
-                  Travel mode
-                </Typography>
-                <Stack direction="row" spacing={1} alignItems="center">
-                  {React.cloneElement(travelIcons[ride.modeOfTravel] || travelIcons.Car, {
-                    sx: { color: "#FF9933", fontSize: { xs: 15, sm: 18 } },
-                  })}
-                  <Typography sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, fontWeight: 600 }}>
-                    {ride.modeOfTravel}
+                <Box>
+                  <Typography sx={{ fontSize: { xs: '0.65rem', sm: '0.7rem' }, color: 'text.secondary', mb: 0.5 }}>
+                    Seats available
                   </Typography>
-                </Stack>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <EventSeatIcon sx={{ color: "#FF9933", fontSize: { xs: 15, sm: 18 } }} />
+                    <Typography sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, fontWeight: 600 }}>
+                      {ride.availableSeats} seat{ride.availableSeats === 1 ? '' : 's'}
+                    </Typography>
+                  </Stack>
+                </Box>
+
+                <Box>
+                  <Typography sx={{ fontSize: { xs: '0.65rem', sm: '0.7rem' }, color: 'text.secondary', mb: 0.5 }}>
+                    Travel mode
+                  </Typography>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    {React.cloneElement(travelIcons[ride.modeOfTravel] || travelIcons.Car, {
+                      sx: { color: "#FF9933", fontSize: { xs: 15, sm: 18 } },
+                    })}
+                    <Typography sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, fontWeight: 600 }}>
+                      {ride.modeOfTravel}
+                    </Typography>
+                  </Stack>
+                </Box>
               </Box>
             </Box>
 

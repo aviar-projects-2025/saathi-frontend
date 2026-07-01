@@ -110,6 +110,13 @@ const Settings = () => {
     confirmPassword: "",
   });
 
+  const [openShare, setOpenShare] = useState(false);
+
+  const handleOpenShare = () => setOpenShare(true);
+  const handleCloseShare = () => setOpenShare(false);
+
+  const shareLink = `${window.location.origin}/register?ref=${user?.referralCode}`;
+
   const handlePasswordChange = (e) => {
     const { name, value } = e.target;
 
@@ -197,6 +204,12 @@ const Settings = () => {
     } finally {
       setSubmitLoading(false)
     }
+  };
+
+
+  const handleCopy = (value) => {
+    navigator.clipboard.writeText(value);
+    toast.success("Copied to clipboard!");
   };
 
   return (
@@ -421,6 +434,7 @@ const Settings = () => {
               <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
                 <Button
                   variant="outlined"
+                  onClick={() => handleCopy(user?.referralCode)}
                   startIcon={<ContentCopyIcon sx={{ fontSize: { xs: 14, sm: 16 } }} />}
                   sx={{
                     ...pillBtn,
@@ -431,6 +445,7 @@ const Settings = () => {
                 </Button>
                 <Button
                   variant="outlined"
+                  onClick={handleOpenShare}
                   startIcon={<ShareIcon sx={{ fontSize: { xs: 14, sm: 16 } }} />}
                   sx={{
                     ...pillBtn,
@@ -480,7 +495,7 @@ const Settings = () => {
                     // "&:hover": { bgcolor: "#FCEBEB", borderColor: "#E24B4A" },
                   }}
                 >
-                  Delete Account
+                  Hide Account From Users
                 </Button>
               </Stack>
             </Grid>
@@ -747,6 +762,60 @@ const Settings = () => {
               </Stack>
             </Stack>
           </Box>
+        </Box>
+      </Modal>
+
+      <Modal open={openShare} onClose={handleCloseShare}>
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            bgcolor: "white",
+            p: 3,
+            borderRadius: 2,
+            width: 320,
+          }}
+        >
+          <Typography fontWeight={600} mb={2}>
+            Share your referral link
+          </Typography>
+
+          <TextField
+            fullWidth
+            value={shareLink}
+            size="small"
+            InputProps={{ readOnly: true }}
+          />
+
+          <Stack direction="row" spacing={1} mt={2}>
+            <Button
+              fullWidth
+              variant="contained"
+              onClick={() => handleCopy(shareLink)}
+            >
+              Copy Link
+            </Button>
+
+            <Button
+              fullWidth
+              variant="outlined"
+              onClick={() => {
+                if (navigator.share) {
+                  navigator.share({
+                    title: "Join using my referral",
+                    text: "Use my referral link",
+                    url: shareLink,
+                  });
+                } else {
+                  toast.info("Sharing not supported on this device");
+                }
+              }}
+            >
+              Share
+            </Button>
+          </Stack>
         </Box>
       </Modal>
 

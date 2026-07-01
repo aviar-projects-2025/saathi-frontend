@@ -8,26 +8,32 @@ import {
   Badge,
   Button,
   Avatar,
+  CircularProgress,
+  Stack,
 } from "@mui/material";
-    import {
+import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions,                                                                  
+  DialogActions,
 
 
 } from "@mui/material";
-   import OfferRide from "../pages/OfferRide.jsx";
+import OfferRide from "../pages/OfferRide.jsx";
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
 import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
 import AddIcon from "@mui/icons-material/Add";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import saathilogo1 from "../assets/saathilogo1.png";
+import { useUser } from "../context/userConetext.jsx";
 
 const TopNav = ({ onMenuClick }) => {
-   const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  const { completion, currentUser } = useUser();
+
   return (
     <AppBar
       position="sticky"
@@ -59,7 +65,7 @@ const TopNav = ({ onMenuClick }) => {
             <MenuIcon />
           </IconButton>
 
-          <Box sx={{ display: "flex", alignItems: "center" , cursor:'pointer'}} >
+          <Box sx={{ display: "flex", alignItems: "center", cursor: 'pointer' }} >
             <img
               src={saathilogo1}
               alt="saathi"
@@ -79,6 +85,7 @@ const TopNav = ({ onMenuClick }) => {
           </Box>
         </Box>
 
+
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.2 }}>
           <IconButton component={Link} to="/notification" sx={{ color: "#5f4632" }}>
             <Badge badgeContent={2} color="error">
@@ -86,15 +93,15 @@ const TopNav = ({ onMenuClick }) => {
             </Badge>
           </IconButton>
 
-       <Button
-        
+          <Button
+
             onClick={() => setOpen(true)}
             startIcon={<AddIcon />}
             sx={{
               display: { xs: "none", sm: "flex" },
               textTransform: "none",
               borderRadius: 2,
-              backgroundColor:"#f97316",
+              backgroundColor: "#f97316",
               color: "#ffffff",
               fontWeight: 700,
             }}
@@ -130,15 +137,15 @@ const TopNav = ({ onMenuClick }) => {
                 <CloseIcon />
               </IconButton>
             </DialogTitle>
- 
+
             <DialogContent sx={{
               display: "flex",
               justifyContent: "center",
             }}>
-              <OfferRide />                    
+              <OfferRide />
 
             </DialogContent>
-          </Dialog>    
+          </Dialog>
 
           <IconButton
             component={Link}
@@ -153,17 +160,39 @@ const TopNav = ({ onMenuClick }) => {
             <AddIcon fontSize="small" />
           </IconButton>
 
-          <Avatar
-            sx={{
-              bgcolor: "#f97316",
-              width: 34,
-              height: 34,
-              fontSize: 14,
-              fontWeight: 800,
-            }}
-          >
-            SA
-          </Avatar>
+          <Stack>
+            <Box sx={{ position: "relative", width: 44, height: 44 }}>
+              <CircularProgress
+                variant="determinate"
+                value={completion}
+                size={44}
+                thickness={3}
+                sx={{
+                  color: completion === 100 ? "#a33916ff" : "#f97316",
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                }}
+              />
+
+              <Avatar
+                src={currentUser?.profileImage || ""}
+                sx={{
+                  bgcolor: "#f97316",
+                  width: 34,
+                  height: 34,
+                  fontSize: 14,
+                  fontWeight: 800,
+                  position: "absolute",
+                  top: "50%",
+                  left: "50%",
+                  transform: "translate(-50%, -50%)",
+                }}
+              >
+                {!currentUser?.profileImage && (currentUser?.firstName?.[0] || "U")}
+              </Avatar>
+            </Box>
+          </Stack>
         </Box>
       </Toolbar>
     </AppBar>
