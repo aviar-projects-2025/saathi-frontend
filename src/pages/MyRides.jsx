@@ -34,6 +34,7 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import socket from '../socket'
+import notificationSound from '../sounds/notifysound.wav'
 
 const statusConfig = {
   FULL: { label: 'Filled', color: '#2D6A4F', bg: '#E8F5E9', icon: '✅' },
@@ -907,7 +908,6 @@ const MyRides = () => {
   const fetchAllRequests = async () => {
     try {
       const res = await axios.get(`${Api}/bookride/${user.id}?type=received`);
-      console.log("Resdfghj", res)
       setAllRequests(res.data.data || []);
     } catch (error) {
       console.error('Error fetching requests:', error);
@@ -918,7 +918,6 @@ const MyRides = () => {
       const res = await axios.get(`${Api}/bookride/send/${user.id}`);
 
       setAllMyRequests(res.data.data || []);
-      console.log("AllMyREquestbnm", allMyRequests)
     } catch (error) {
       console.error('Error fetching requests:', error);
     }
@@ -945,7 +944,11 @@ const MyRides = () => {
 
     // Listen for new requests
     socket.on("new_request", (newRequest) => {
+
       console.log("🔥 New request received:", newRequest);
+      const audio = new Audio(notificationSound);
+      audio.currentTime = 0;
+      audio.play();
       setAllRequests((prev) => {
         const exists = prev.find(r => r._id === newRequest._id);
         if (exists) return prev;
