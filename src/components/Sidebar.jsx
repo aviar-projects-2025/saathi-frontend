@@ -69,17 +69,17 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
         height: isMobile ? "100dvh" : "98%",
         bgcolor: "#ffffff",
         borderRadius: 0,
-        p: 2,
+        // p: 2,
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
         borderRight: isMobile ? "none" : "1px solid #f1e4d7",
-        zIndex:200
+        zIndex: 200
       }}
     >
       <Stack spacing={1.2}
         sx={{
-          marginTop: isMobile ? 7 : 0,
+          marginTop: isMobile ? 10 : 0,
         }}
       >
         <Typography
@@ -92,7 +92,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
           }}
         >
           Saathi Menu
-        </Typography> 
+        </Typography>
 
         {menuItems.map((item) => {
           const active = location.pathname === item.link;
@@ -104,26 +104,27 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
               sx={{
                 display: "flex",
                 alignItems: "center",
-                gap: 1.5,
-                px: 1.5,
-                py: 1.2,
-                borderRadius: 3,
+                gap: 2,
+                px: 2.5,
+                py: 1,
+                borderRadius: 7,
                 cursor: "pointer",
                 transition: "0.2s ease",
                 bgcolor: active ? "#fff0df" : "transparent",
                 color: active ? "#d97706" : "#5f4632",
                 border: active ? "1px solid #ffd7aa" : "1px solid transparent",
-                "& svg": { fontSize: 21 },
+                "& svg": { fontSize: 20 },
                 "&:hover": {
                   bgcolor: "#fff0df",
                   color: "#d97706",
                   transform: "translateX(3px)",
+                
                 },
               }}
             >
               {item.icon}
 
-              <Typography sx={{ fontSize: 14, fontWeight: 700 }}>
+              <Typography sx={{ fontSize: 12, fontWeight: 700 }}>
                 {item.label}
               </Typography>
             </Box>
@@ -137,7 +138,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
           display: "flex",
           alignItems: "center",
           gap: 1.5,
-          px: 1.5,
+          px: 2.5,
           py: 1.2,
           borderRadius: 2,
           cursor: "pointer",
