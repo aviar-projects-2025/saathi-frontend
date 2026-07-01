@@ -231,15 +231,11 @@ const Login = () => {
                     minHeight: isTab ? "42px" : "52px",
                 },
             });
-            if (data?.user.refApprove === "Approved") {
-                if (data.user.role === ROLES.ADMIN) {
-                    navigate("/admin/dashboard");
-                } else {
-                    navigate("/community");
-                }
-            } else {
-                navigate("/waiting-approval");
-            }
+            window.location.href = data?.user.role === ROLES.ADMIN
+                ? "/admin/dashboard"
+                : data?.user.refApprove === "Approved"
+                    ? "/community"
+                    : "/waiting-approval";
         } catch (error) {
             toast.error(error.message);
         }

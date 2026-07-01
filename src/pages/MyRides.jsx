@@ -34,6 +34,7 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import socket from '../socket'
+import notificationSound from '../sounds/notifysound.wav'
 
 const statusConfig = {
   FULL: { label: 'Filled', color: '#2D6A4F', bg: '#E8F5E9', icon: '✅' },
@@ -95,6 +96,7 @@ const noZoomInputSx = {
   },
 };
 
+
 // ── Empty State ──────────────────────────────────────────────────────────────
 function EmptyState({ emoji, message, actionLabel, actionHref }) {
   return (
@@ -102,6 +104,7 @@ function EmptyState({ emoji, message, actionLabel, actionHref }) {
       sx={{
         p: { xs: 3, sm: 4 },
         textAlign: 'center',
+
         border: '1px dashed #E0D5CC',
         bgcolor: '#FFF8F2',
         borderRadius: 2,
@@ -859,6 +862,7 @@ const MyRides = () => {
   const [currentRide, setCurrentRide] = useState([]);
   const [loading, setLoading] = useState(true);
   const [allRequests, setAllRequests] = useState([]);
+  const [allMyRequests, setAllMyRequests] = useState([]);
 
   const user = JSON.parse(localStorage.getItem('user'));
 
@@ -909,12 +913,28 @@ const MyRides = () => {
       console.error('Error fetching requests:', error);
     }
   };
+  const fetchAllSends = async () => {
+    try {
+      const res = await axios.get(`${Api}/bookride/send/${user.id}`);
+
+      setAllMyRequests(res.data.data || []);
+    } catch (error) {
+      console.error('Error fetching requests:', error);
+    }
+  };
 
   useEffect(() => {
     fetchRides();
+    fetchAllSends();
     fetchAllRequests();
   }, []);
 
+
+  // const getBookRideStatus =(`${Api}/bookride/`)=>{
+  //   try{
+  //     const res = await axios.get()
+  //   }
+  // }
   // Socket connection for real-time updates
   useEffect(() => {
     if (user?.id) {
@@ -924,7 +944,11 @@ const MyRides = () => {
 
     // Listen for new requests
     socket.on("new_request", (newRequest) => {
+
       console.log("🔥 New request received:", newRequest);
+      const audio = new Audio(notificationSound);
+      audio.currentTime = 0;
+      audio.play();
       setAllRequests((prev) => {
         const exists = prev.find(r => r._id === newRequest._id);
         if (exists) return prev;
@@ -937,6 +961,38 @@ const MyRides = () => {
     socket.on("request_status_updated", (updatedRequest) => {
       console.log("⚡ Status update:", updatedRequest);
       setAllRequests((prev) =>
+        prev.map((r) =>
+          r._id === updatedRequest._id ? updatedRequest : r
+        )
+      );
+    });
+    return () => {
+      socket.off("new_request");
+      socket.off("request_status_updated");
+    };
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (user?.id) {
+      socket.emit("join", user.id);
+      console.log("✅ Joined room:", user.id);
+    }
+
+    // Listen for new requests
+    socket.on("new_request", (newRequest) => {
+      console.log("🔥 New request received:", newRequest);
+      setAllMyRequests((prev) => {
+        const exists = prev.find(r => r._id === newRequest._id);
+        if (exists) return prev;
+        return [newRequest, ...prev];
+      });
+      toast.info('New ride request received!');
+    });
+
+    // Listen for status updates
+    socket.on("request_status_updated", (updatedRequest) => {
+      console.log("⚡ Status update:", updatedRequest);
+      setAllMyRequests((prev) =>
         prev.map((r) =>
           r._id === updatedRequest._id ? updatedRequest : r
         )
@@ -992,7 +1048,14 @@ const MyRides = () => {
   ];
 
   return (
-    <>
+    <Box
+      sx={{
+        display: "flex",
+        gap: 3,
+        alignItems: "flex-start",
+        flexDirection: { xs: "column", lg: "row", md: "row" },
+      }}
+    >
       <Box
         sx={{
           width: '100%',
@@ -1129,7 +1192,78 @@ const MyRides = () => {
           <DeleteConfirmDialog ride={deleteRide} onConfirm={handleDelete} onClose={() => setDeleteRide(null)} />
         )}
       </Box>
-    </>
+      <Box
+        sx={{
+          flex: 1,
+          minWidth: { lg: 340 },
+          maxHeight: "90vh",
+          overflowY: "auto",
+          position: "sticky",
+          top: 20,
+        }}
+      >
+        <Typography variant="h6" fontWeight={700} mb={2}>
+          My Requests
+        </Typography>
+
+        {allMyRequests.map((request) => (
+          <Card
+            key={request._id}
+            sx={{
+              mb: 2,
+              borderRadius: 3,
+            }}
+          >
+            <CardContent>
+              <Typography fontWeight={600}>
+                {request.rideId?.from} → {request.rideId?.to}
+              </Typography>
+
+              <Typography variant="body2">
+                Rider: {request.rideId?.createdBy?.firstName}{" "}
+                {request.rideId?.createdBy?.lastName}
+              </Typography>
+
+              <Typography variant="body2">
+                Date: {new Date(request.createdAt).toLocaleDateString()}
+              </Typography>
+
+              <Typography variant="body2">
+                Time: {new Date(request.createdAt).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </Typography>
+
+              <Typography
+                variant="body2"
+                sx={{
+                  mt: 1,
+                  display: "-webkit-box",
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                }}
+              >
+                Description: {request.rideId?.description}
+              </Typography>
+
+              <Chip
+                label={request.status}
+                color={
+                  request.status === "Accepted"
+                    ? "success"
+                    : request.status === "Rejected"
+                      ? "error"
+                      : "warning"
+                }
+                sx={{ mt: 2 }}
+              />
+            </CardContent>
+          </Card>
+        ))}
+      </Box>
+    </Box>
   );
 };
 

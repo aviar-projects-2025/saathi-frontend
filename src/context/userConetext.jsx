@@ -45,7 +45,6 @@ export const UserProvider = ({ children }) => {
         try {
             const res = await axios.get(`${Api}/users/${storedUser.id}`);
             setCurrentUser(res.data.data);
-            console.log(res.data.data)
         } catch (error) {
             console.log(error);
         }
