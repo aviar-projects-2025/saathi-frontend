@@ -9,13 +9,15 @@ export const AuthProvider = ({ children }) => {
 
     const [token, setToken] = useState(localStorage.getItem("token"));
     const [role, setRole] = useState(localStorage.getItem("role"));
+    const [user, setUser] = useState(
+        JSON.parse(localStorage.getItem("user"))
+    );
 
 
 
     const login = async (credentials) => {
         try {
             const res = await axios.post(`${Api}/users/login`, credentials);
-
             const user = res.data.user;
             const token = res.data.token;
 
@@ -25,6 +27,7 @@ export const AuthProvider = ({ children }) => {
 
             setToken(token);
             setRole(user.role);
+            setUser(user);
 
             return {
                 success: true,
@@ -42,13 +45,13 @@ export const AuthProvider = ({ children }) => {
     };
 
     const logout = () => {
-        localStorage.removeItem("token");
-        localStorage.removeItem("role");
         localStorage.clear();
-        window.location.replace('/login')
 
         setToken(null);
         setRole(null);
+        setUser(null);
+
+        window.location.replace("/login");
     };
 
     return (
@@ -56,6 +59,7 @@ export const AuthProvider = ({ children }) => {
             value={{
                 token,
                 role,
+                user,
                 login,
                 logout,
                 isAuthenticated: !!token,

@@ -36,18 +36,17 @@ const Login = () => {
     const loginSubmit = async (values) => {
         try {
             const data = await login(values);
-            toast.success("Login Success")
-            if (data?.user.refApprove === "Approved") {
-                if (data.user.role === ROLES.ADMIN) {
-                    navigate("/admin/dashboard");
-                } else {
-                    navigate("/community");
-                }
-            } else {
-                navigate("/waiting-approval")
-            }
+
+            toast.success("Login Success");
+
+            window.location.href = data?.user.role === ROLES.ADMIN
+                ? "/admin/dashboard"
+                : data?.user.refApprove === "Approved"
+                    ? "/community"
+                    : "/waiting-approval";
+
         } catch (error) {
-            toast.error(error.message)
+            toast.error(error.message);
         }
     };
     return (
