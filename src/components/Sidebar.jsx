@@ -34,7 +34,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
 
   const menuItems = [
     { label: "Community", icon: <DashboardIcon />, link: "/community" },
-    { label: "Offer Ride", icon: <DirectionsCarIcon />, link: "/offer-ride" },
+    // { label: "Offer Ride", icon: <DirectionsCarIcon />, link: "/offer-ride" },
     { label: "Find Ride", icon: <SearchIcon />, link: "/find-ride" },
     { label: "My Rides", icon: <RouteIcon />, link: "/myride" },
     {

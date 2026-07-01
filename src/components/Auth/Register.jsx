@@ -16,16 +16,18 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import Api from "../../Api";
 import { toast } from "react-toastify";
+import { useSearchParams } from "react-router-dom";
 
 const Register = () => {
   const navigate = useNavigate();
   const [serverError, setServerError] = useState("");
+  const [searchParams] = useSearchParams();
+  const referralFromUrl = searchParams.get("ref") || "";
 
   const validationSchema = Yup.object({
     firstName: Yup.string().required("First name is required"),
     lastName: Yup.string().required("Last name is required"),
     email: Yup.string().email("Invalid email").required("Email is required"),
-    dob: Yup.string().required("Date of birth is required"),
     referralCode: Yup.string().required('Referral Code is MUST'),
     password: Yup.string()
       .min(6, "Password must be at least 6 characters")
@@ -35,14 +37,15 @@ const Register = () => {
   const registerSubmit = async (values, { setSubmitting }) => {
     try {
       setServerError("");
-      axios.post(`${Api}/users/`, values)
-        .then((res) => {
-          toast.success("Registration Success - Waiting for approval!");
-          console.log(res)
-          if (res?.data?.data?.refApprove === "Waiting") {
-            navigate("/waiting-approval");
-          }
-        })
+
+      const res = await axios.post(`${Api}/users/`, values);
+
+      toast.success("Registration Success - Waiting for approval!");
+
+      if (res?.data?.data?.refApprove === "Waiting") {
+        navigate("/waiting-approval");
+      }
+
     } catch (error) {
       setServerError(error.response?.data?.message || "Registration failed");
     } finally {
@@ -92,6 +95,7 @@ const Register = () => {
         )}
 
         <Formik
+          enableReinitialize
           initialValues={{
             firstName: "",
             lastName: "",
@@ -99,7 +103,7 @@ const Register = () => {
             dob: "",
             password: "",
             role: "USER",
-            referralCode: "",
+            referralCode: referralFromUrl,
           }}
           validationSchema={validationSchema}
           onSubmit={registerSubmit}
@@ -151,7 +155,7 @@ const Register = () => {
                   helperText={touched.email && errors.email}
                 />
 
-                <TextField
+                {/* <TextField
                   fullWidth
                   // label="Date of Birth"
                   name="dob"
@@ -164,7 +168,7 @@ const Register = () => {
                   InputLabelProps={{
                     shrink: true,
                   }}
-                />
+                /> */}
 
                 <TextField
                   fullWidth
@@ -184,6 +188,9 @@ const Register = () => {
                   name="referralCode"
                   type="text"
                   value={values.referralCode}
+                  InputProps={{
+                    readOnly: !!referralFromUrl,
+                  }}
                   onChange={handleChange}
                   onBlur={handleBlur}
                   error={touched.referralCode && Boolean(errors.referralCode)}

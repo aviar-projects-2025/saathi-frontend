@@ -9,16 +9,27 @@ import {
 } from "@mui/material";
 import HourglassTopIcon from "@mui/icons-material/HourglassTop";
 import LogoutIcon from "@mui/icons-material/Logout";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export default function WaitingApproval() {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+  const navigate = useNavigate();
+
+  const handleCheckStatus = () => {
+    // Option 1: force re-login
+    logout();
+    navigate("/login");
+
+    // Option 2 (better UX if you have API):
+    // call API to refresh user status instead of logout
+  };
 
   return (
     <Box
       sx={{
         minHeight: "100vh",
-        bgcolor: "#FFF8F2",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -53,13 +64,38 @@ export default function WaitingApproval() {
           Waiting for Approval
         </Typography>
 
-        <Typography color="text.secondary" sx={{ mt: 1, mb: 1 }} >
+        <Typography color="text.secondary" sx={{ mt: 1, mb: 2 }}>
           Your Saathi account has been created successfully.
-          Saathi is built on trust and referrals.
           Your account is awaiting verification from the member who referred you.
-          Once confirmed, you'll gain full access to the community and ride-sharing features.
         </Typography>
 
+        {/* 🔥 Referral Contact Section */}
+        <Box
+          sx={{
+            bgcolor: "#FFF3E8",
+            border: "1px solid #FFD9B8",
+            borderRadius: 3,
+            p: 2,
+            mb: 2,
+          }}
+        >
+          <Typography fontWeight={700} color="#E8650A" mb={0.5}>
+            Need faster approval?
+          </Typography>
+
+          <Typography variant="body2" color="text.secondary">
+            Contact your referral person and ask them to approve your account.
+          </Typography>
+
+          {/* OPTIONAL: show referral details */}
+          {user?.referredBy && (
+            <Typography mt={1} fontWeight={600}>
+              Referred by: {user.referredBy.name}
+            </Typography>
+          )}
+        </Box>
+
+        {/* Existing Info */}
         <Box
           sx={{
             bgcolor: "#FFF8F2",
@@ -79,8 +115,11 @@ export default function WaitingApproval() {
         </Box>
 
         <Stack spacing={1.5}>
+          {/* 🔥 Updated Check Status */}
           <Button
             variant="contained"
+            startIcon={<RefreshIcon />}
+            onClick={handleCheckStatus}
             sx={{
               bgcolor: "#E8650A",
               borderRadius: 999,
@@ -92,7 +131,7 @@ export default function WaitingApproval() {
             Check Status
           </Button>
 
-          <Button
+          {/* <Button
             variant="outlined"
             startIcon={<LogoutIcon />}
             onClick={logout}
@@ -105,7 +144,7 @@ export default function WaitingApproval() {
             }}
           >
             Logout
-          </Button>
+          </Button> */}
         </Stack>
       </Paper>
     </Box>

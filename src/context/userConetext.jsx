@@ -1,5 +1,4 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { currentUser } from "../data/mockData";
 import Api from "../Api";
 import axios from "axios";
 
@@ -7,23 +6,50 @@ const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
 
-    const user = JSON.parse(localStorage.getItem('user'))
-    const [currentUser, setCurrentUser] = useState(null)
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    const [currentUser, setCurrentUser] = useState(null);
+
+    const requiredFields = [
+        "firstName",
+        "lastName",
+        "bio",
+        "email",
+        "mobile",
+        "profileImage",
+        "gender",
+    ];
+
+    const calculateProfileCompletion = (user) => {
+        if (!user) return 0;
+
+        let completed = 0;
+
+        requiredFields.forEach((field) => {
+            if (user[field] && user[field].toString().trim() !== "") {
+                completed++;
+            }
+        });
+
+        return Math.round((completed / requiredFields.length) * 100);
+    };
+
+    const completion = calculateProfileCompletion(currentUser);
 
     useEffect(() => {
-        getuserData();
+        if (storedUser?.id) {
+            getuserData();
+        }
     }, []);
 
-    const getuserData = () => {
+    const getuserData = async () => {
         try {
-            axios.get(Api + `/users/${user?.id}`)
-                .then((res) => {
-                    setCurrentUser(res.data.data)
-                })
+            const res = await axios.get(`${Api}/users/${storedUser.id}`);
+            setCurrentUser(res.data.data);
+            console.log(res.data.data)
         } catch (error) {
-            console.log(error)
+            console.log(error);
         }
-    }
+    };
 
     return (
         <UserContext.Provider
@@ -31,18 +57,19 @@ export const UserProvider = ({ children }) => {
                 currentUser,
                 setCurrentUser,
                 getuserData,
+                completion,
             }}
         >
             {children}
         </UserContext.Provider>
-    )
+    );
 };
 
 export const useUser = () => {
     const context = useContext(UserContext);
 
     if (!context) {
-        throw new Error("useUser must be used inside AppProvider");
+        throw new Error("useUser must be used inside UserProvider");
     }
 
     return context;
