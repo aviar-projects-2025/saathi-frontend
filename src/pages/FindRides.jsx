@@ -268,7 +268,7 @@ const filteredRides = rides
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: saffron[50],
+          // background: saffron[50],
         }}
       >
         <CircularProgress sx={{ color: saffron[500] }} />
