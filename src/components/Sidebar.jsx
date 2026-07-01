@@ -69,7 +69,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
         height: isMobile ? "100dvh" : "98%",
         bgcolor: "#ffffff",
         borderRadius: 0,
-        // p: 2,
+        p: {xs: 0, sm:-2},
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",

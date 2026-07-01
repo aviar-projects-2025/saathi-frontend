@@ -147,7 +147,7 @@ const TopNav = ({ onMenuClick }) => {
             </DialogContent>
           </Dialog>
 
-          <IconButton
+          {/* <IconButton
             component={Link}
             to="/offer-ride"
             sx={{
@@ -158,7 +158,7 @@ const TopNav = ({ onMenuClick }) => {
             }}
           >
             <AddIcon fontSize="small" />
-          </IconButton>
+          </IconButton> */}
 
           <Stack>
             <Box sx={{ position: "relative", width: 44, height: 44 }}>

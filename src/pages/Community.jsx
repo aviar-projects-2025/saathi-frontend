@@ -946,7 +946,7 @@ export default function Community() {
                       </Box>
 
                       {/* Post body */}
-                      <Typography sx={{ mt: 1.5, fontSize: bodyFontSize, lineHeight: 1.6 }}>
+                      <Typography sx={{ mt: 1.5, fontSize: bodyFontSize, lineHeight: 1.6}}>
                         {post.description}
                       </Typography>
                     </Box>

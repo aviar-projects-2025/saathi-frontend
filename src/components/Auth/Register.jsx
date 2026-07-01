@@ -1,7 +1,249 @@
+// import { Formik } from "formik";
+// import * as Yup from "yup";
+// import axios from "axios";
+// import {
+//   Box,
+//   Button,
+//   Container,
+//   Paper,
+//   TextField,
+//   Typography,
+//   Link as MuiLink,
+//   Stack,
+//   Alert,
+// } from "@mui/material";
+// import { Link, useNavigate } from "react-router-dom";
+// import { useState } from "react";
+// import Api from "../../Api";
+// import { toast } from "react-toastify";
+// import { useSearchParams } from "react-router-dom";
+
+// const Register = () => {
+//   const navigate = useNavigate();
+//   const [serverError, setServerError] = useState("");
+//   const [searchParams] = useSearchParams();
+//   const referralFromUrl = searchParams.get("ref") || "";
+
+//   const validationSchema = Yup.object({
+//     firstName: Yup.string().required("First name is required"),
+//     lastName: Yup.string().required("Last name is required"),
+//     email: Yup.string().email("Invalid email").required("Email is required"),
+//     referralCode: Yup.string().required('Referral Code is MUST'),
+//     password: Yup.string()
+//       .min(6, "Password must be at least 6 characters")
+//       .required("Password is required"),
+//   });
+
+//   const registerSubmit = async (values, { setSubmitting }) => {
+//     try {
+//       setServerError("");
+
+//       const res = await axios.post(`${Api}/users/`, values);
+
+//       toast.success("Registration Success - Waiting for approval!");
+
+//       if (res?.data?.data?.refApprove === "Waiting") {
+//         navigate("/waiting-approval");
+//       }
+
+//     } catch (error) {
+//       setServerError(error.response?.data?.message || "Registration failed");
+//     } finally {
+//       setSubmitting(false);
+//     }
+//   };
+
+//   return (
+//     <Container
+//       maxWidth={false}
+//       sx={{
+//         minHeight: "100vh",
+//         display: "flex",
+//         justifyContent: "center",
+//         alignItems: "center",
+//         bgcolor: "linear-gradient(135deg, #eef2ff 0%, #f8fafc 100%)",
+//         px: 2,
+//       }}
+//     >
+//       <Paper
+//         elevation={8}
+//         sx={{
+//           width: "100%",
+//           maxWidth: 460,
+//           p: { xs: 3, sm: 4 },
+//           borderRadius: 4,
+//         }}
+//       >
+//         <Typography variant="h4" align="center" fontWeight="bold">
+//           Create Account
+//         </Typography>
+
+//         <Typography
+//           variant="body2"
+//           align="center"
+//           color="text.secondary"
+//           mt={1}
+//           mb={3}
+//         >
+//           Join and start finding your rides easily
+//         </Typography>
+
+//         {serverError && (
+//           <Alert severity="error" sx={{ mb: 2 }}>
+//             {serverError}
+//           </Alert>
+//         )}
+
+//         <Formik
+//           enableReinitialize
+//           initialValues={{
+//             firstName: "",
+//             lastName: "",
+//             email: "",
+//             dob: "",
+//             password: "",
+//             role: "USER",
+//             referralCode: referralFromUrl,
+//           }}
+//           validationSchema={validationSchema}
+//           onSubmit={registerSubmit}
+//         >
+//           {({
+//             values,
+//             errors,
+//             touched,
+//             handleChange,
+//             handleBlur,
+//             handleSubmit,
+//             isSubmitting,
+//           }) => (
+//             <form onSubmit={handleSubmit}>
+//               <Stack spacing={2}>
+//                 <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+//                   <TextField
+//                     fullWidth
+//                     label="First Name"
+//                     name="firstName"
+//                     value={values.firstName}
+//                     onChange={handleChange}
+//                     onBlur={handleBlur}
+//                     error={touched.firstName && Boolean(errors.firstName)}
+//                     helperText={touched.firstName && errors.firstName}
+//                   />
+
+//                   <TextField
+//                     fullWidth
+//                     label="Last Name"
+//                     name="lastName"
+//                     value={values.lastName}
+//                     onChange={handleChange}
+//                     onBlur={handleBlur}
+//                     error={touched.lastName && Boolean(errors.lastName)}
+//                     helperText={touched.lastName && errors.lastName}
+//                   />
+//                 </Stack>
+
+//                 <TextField
+//                   fullWidth
+//                   label="Email"
+//                   name="email"
+//                   type="email"
+//                   value={values.email}
+//                   onChange={handleChange}
+//                   onBlur={handleBlur}
+//                   error={touched.email && Boolean(errors.email)}
+//                   helperText={touched.email && errors.email}
+//                 />
+
+//                 {/* <TextField
+//                   fullWidth
+//                   // label="Date of Birth"
+//                   name="dob"
+//                   type="date"
+//                   value={values.dob}
+//                   onChange={handleChange}
+//                   onBlur={handleBlur}
+//                   error={touched.dob && Boolean(errors.dob)}
+//                   helperText={touched.dob && errors.dob}
+//                   InputLabelProps={{
+//                     shrink: true,
+//                   }}
+//                 /> */}
+
+//                 <TextField
+//                   fullWidth
+//                   label="Password"
+//                   name="password"
+//                   type="password"
+//                   value={values.password}
+//                   onChange={handleChange}
+//                   onBlur={handleBlur}
+//                   error={touched.password && Boolean(errors.password)}
+//                   helperText={touched.password && errors.password}
+//                 />
+
+//                 <TextField
+//                   fullWidth
+//                   label="Referral Code"
+//                   name="referralCode"
+//                   type="text"
+//                   value={values.referralCode}
+//                   InputProps={{
+//                     readOnly: !!referralFromUrl,
+//                   }}
+//                   onChange={handleChange}
+//                   onBlur={handleBlur}
+//                   error={touched.referralCode && Boolean(errors.referralCode)}
+//                   helperText={touched.referralCode && errors.referralCode}
+//                 />
+
+//                 <Button
+//                   fullWidth
+//                   type="submit"
+//                   variant="contained"
+//                   disabled={isSubmitting}
+//                   sx={{
+//                     py: 1.4,
+//                     borderRadius: 2,
+//                     textTransform: "none",
+//                     fontSize: "16px",
+//                     fontWeight: 700,
+//                   }}
+//                 >
+//                   {isSubmitting ? "Creating Account..." : "Create Account"}
+//                 </Button>
+//               </Stack>
+//             </form>
+//           )}
+//         </Formik>
+
+//         <Box sx={{ textAlign: "center", mt: 3 }}>
+//           <Typography variant="body2" color="text.secondary">
+//             Already have an account?
+//           </Typography>
+
+//           <MuiLink
+//             component={Link}
+//             to="/login"
+//             underline="hover"
+//             sx={{ fontWeight: 600 }}
+//           >
+//             Login
+//           </MuiLink>
+//         </Box>
+//       </Paper>
+//     </Container>
+//   );
+// };
+
+// export default Register;
+
+
 import { Formik } from "formik";
 import * as Yup from "yup";
 import axios from "axios";
 import {
+  Avatar,
   Box,
   Button,
   Container,
@@ -11,18 +253,26 @@ import {
   Link as MuiLink,
   Stack,
   Alert,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useState } from "react";
 import Api from "../../Api";
 import { toast } from "react-toastify";
-import { useSearchParams } from "react-router-dom";
+import Saathi from '../../assets/saathilogo.png';
+
+// LAYOUT 4: Card with a colored top banner and a centered avatar badge
+// straddling the seam — matches the Login page styling.
 
 const Register = () => {
   const navigate = useNavigate();
   const [serverError, setServerError] = useState("");
   const [searchParams] = useSearchParams();
   const referralFromUrl = searchParams.get("ref") || "";
+
+  const theme = useTheme();
+  const isTab = useMediaQuery(theme.breakpoints.down("sm"));
 
   const validationSchema = Yup.object({
     firstName: Yup.string().required("First name is required"),
@@ -39,13 +289,23 @@ const Register = () => {
       setServerError("");
 
       const res = await axios.post(`${Api}/users/`, values);
-
-      toast.success("Registration Success - Waiting for approval!");
+      toast.success("Registration Success - Waiting for approval!", {
+        position: isTab ? "top-center" : "top-right",
+        autoClose: 1000,
+        hideProgressBar: true,
+        closeButton: false,
+        style: {
+          width: isTab ? "280px" : "360px",
+          fontSize: isTab ? "13px" : "15px",
+          padding: isTab ? "8px 12px" : "12px 16px",
+          borderRadius: isTab ? "8px" : "10px",
+          minHeight: isTab ? "42px" : "52px",
+        },
+      });
 
       if (res?.data?.data?.refApprove === "Waiting") {
         navigate("/waiting-approval");
       }
-
     } catch (error) {
       setServerError(error.response?.data?.message || "Registration failed");
     } finally {
@@ -53,186 +313,234 @@ const Register = () => {
     }
   };
 
+  const inputSx = {
+    '& .MuiOutlinedInput-root': {
+      backgroundColor: '#FFFFFF',
+      borderRadius: '12px',
+      '& input:-webkit-autofill': {
+        WebkitBoxShadow: '0 0 0 1000px #FFFFFF inset',
+        WebkitTextFillColor: '#000000',
+      },
+      '& .MuiOutlinedInput-notchedOutline': {
+        borderRadius: '12px',
+      },
+      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+        borderColor: '#FF9933',
+      },
+    },
+    '& .MuiInputLabel-root.Mui-focused': {
+      color: '#FF9933',
+    },
+  };
+
   return (
-    <Container
-      maxWidth={false}
+    <Box
       sx={{
         minHeight: "100vh",
         display: "flex",
-        justifyContent: "center",
         alignItems: "center",
-        bgcolor: "linear-gradient(135deg, #eef2ff 0%, #f8fafc 100%)",
-        px: 2,
+        justifyContent: "center",
+        p: 2,
       }}
     >
-      <Paper
-        elevation={8}
-        sx={{
-          width: "100%",
-          maxWidth: 460,
-          p: { xs: 3, sm: 4 },
-          borderRadius: 4,
-        }}
-      >
-        <Typography variant="h4" align="center" fontWeight="bold">
-          Create Account
-        </Typography>
-
-        <Typography
-          variant="body2"
-          align="center"
-          color="text.secondary"
-          mt={1}
-          mb={3}
-        >
-          Join and start finding your rides easily
-        </Typography>
-
-        {serverError && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {serverError}
-          </Alert>
-        )}
-
-        <Formik
-          enableReinitialize
-          initialValues={{
-            firstName: "",
-            lastName: "",
-            email: "",
-            dob: "",
-            password: "",
-            role: "USER",
-            referralCode: referralFromUrl,
+      <Container maxWidth="xs">
+        <Paper
+          elevation={3}
+          sx={{
+            borderRadius: 4,
+            overflow: "hidden",
           }}
-          validationSchema={validationSchema}
-          onSubmit={registerSubmit}
         >
-          {({
-            values,
-            errors,
-            touched,
-            handleChange,
-            handleBlur,
-            handleSubmit,
-            isSubmitting,
-          }) => (
-            <form onSubmit={handleSubmit}>
-              <Stack spacing={2}>
-                <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-                  <TextField
-                    fullWidth
-                    label="First Name"
-                    name="firstName"
-                    value={values.firstName}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    error={touched.firstName && Boolean(errors.firstName)}
-                    helperText={touched.firstName && errors.firstName}
-                  />
+          {/* Banner */}
+          <Box
+            sx={{
+              height: 110,
+              background: "#FF9933",
+              position: "relative",
+            }}
+          />
 
-                  <TextField
-                    fullWidth
-                    label="Last Name"
-                    name="lastName"
-                    value={values.lastName}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    error={touched.lastName && Boolean(errors.lastName)}
-                    helperText={touched.lastName && errors.lastName}
-                  />
-                </Stack>
+          {/* Avatar straddling the seam */}
+          <Box sx={{ display: "flex", justifyContent: "center", mt: "-50px" }}>
+            <Avatar
+              src={Saathi}
+              alt="Profile"
+              sx={{
+                width: 125,
+                height: 143,
+                border: "4px solid #fff",
+                backgroundColor: "#1A1A1A",
+              }}
+            />
+          </Box>
 
-                <TextField
-                  fullWidth
-                  label="Email"
-                  name="email"
-                  type="email"
-                  value={values.email}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  error={touched.email && Boolean(errors.email)}
-                  helperText={touched.email && errors.email}
-                />
+          <Box sx={{ px: 4, pb: 4, pt: 2 }}>
+            <Typography
+              variant="h5"
+              align="center"
+              fontWeight={800}
+              sx={{ mb: 1 }}
+            >
+              Create Account
+            </Typography>
 
-                {/* <TextField
-                  fullWidth
-                  // label="Date of Birth"
-                  name="dob"
-                  type="date"
-                  value={values.dob}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  error={touched.dob && Boolean(errors.dob)}
-                  helperText={touched.dob && errors.dob}
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                /> */}
+            <Typography
+              variant="body2"
+              align="center"
+              sx={{ color: "#666", mb: 2 }}
+            >
+              Join and start finding your rides easily
+            </Typography>
 
-                <TextField
-                  fullWidth
-                  label="Password"
-                  name="password"
-                  type="password"
-                  value={values.password}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  error={touched.password && Boolean(errors.password)}
-                  helperText={touched.password && errors.password}
-                />
+            {serverError && (
+              <Alert severity="error" sx={{ mb: 2, borderRadius: '12px' }}>
+                {serverError}
+              </Alert>
+            )}
 
-                <TextField
-                  fullWidth
-                  label="Referral Code"
-                  name="referralCode"
-                  type="text"
-                  value={values.referralCode}
-                  InputProps={{
-                    readOnly: !!referralFromUrl,
-                  }}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  error={touched.referralCode && Boolean(errors.referralCode)}
-                  helperText={touched.referralCode && errors.referralCode}
-                />
+            <Formik
+              enableReinitialize
+              initialValues={{
+                firstName: "",
+                lastName: "",
+                email: "",
+                dob: "",
+                password: "",
+                role: "USER",
+                referralCode: referralFromUrl,
+              }}
+              validationSchema={validationSchema}
+              onSubmit={registerSubmit}
+            >
+              {({
+                values,
+                errors,
+                touched,
+                handleChange,
+                handleBlur,
+                handleSubmit,
+                isSubmitting,
+              }) => (
+                <form onSubmit={handleSubmit}>
+                  <Stack spacing={3.5}>
+                    <Stack direction={{ xs: "column", sm: "row" }} spacing={3}>
+                      <TextField
+                        fullWidth
+                        label="First Name"
+                        name="firstName"
+                        value={values.firstName}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        error={touched.firstName && Boolean(errors.firstName)}
+                        helperText={touched.firstName && errors.firstName}
+                        margin="normal"
+                        size="small"
+                        sx={inputSx}
+                      />
 
-                <Button
-                  fullWidth
-                  type="submit"
-                  variant="contained"
-                  disabled={isSubmitting}
-                  sx={{
-                    py: 1.4,
-                    borderRadius: 2,
-                    textTransform: "none",
-                    fontSize: "16px",
-                    fontWeight: 700,
-                  }}
+                      <TextField
+                        fullWidth
+                        label="Last Name"
+                        name="lastName"
+                        value={values.lastName}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        error={touched.lastName && Boolean(errors.lastName)}
+                        helperText={touched.lastName && errors.lastName}
+                        margin="normal"
+                        size="small"
+                        sx={inputSx}
+                      />
+                    </Stack>
+
+                    <TextField
+                      fullWidth
+                      label="Email"
+                      name="email"
+                      type="email"
+                      value={values.email}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      error={touched.email && Boolean(errors.email)}
+                      helperText={touched.email && errors.email}
+                      margin="normal"
+                      size="small"
+                      sx={inputSx}
+                    />
+
+                    <TextField
+                      fullWidth
+                      type="password"
+                      label="Password"
+                      name="password"
+                      value={values.password}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      error={touched.password && Boolean(errors.password)}
+                      helperText={touched.password && errors.password}
+                      margin="normal"
+                      size="small"
+                      sx={inputSx}
+                    />
+
+                    <TextField
+                      fullWidth
+                      label="Referral Code"
+                      name="referralCode"
+                      type="text"
+                      value={values.referralCode}
+                      InputProps={{
+                        readOnly: !!referralFromUrl,
+                      }}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      error={touched.referralCode && Boolean(errors.referralCode)}
+                      helperText={touched.referralCode && errors.referralCode}
+                      margin="normal"
+                      size="small"
+                      sx={inputSx}
+                    />
+
+                    <Button
+                      type="submit"
+                      fullWidth
+                      disabled={isSubmitting}
+                      sx={{
+                        mt: 2,
+                        py: 1.2,
+                        background: "#FF9933",
+                        color: "#000",
+                        textTransform: "none",
+                        fontSize: "14px",
+                        fontWeight: 700,
+                        borderRadius: "999px",
+                        "&:hover": { background: "#e6862c" },
+                      }}
+                    >
+                      {isSubmitting ? "Creating Account..." : "Create Account"}
+                    </Button>
+                  </Stack>
+                </form>
+              )}
+            </Formik>
+
+            <Box sx={{ textAlign: "center", mt: 3 }}>
+              <Typography variant="body2" sx={{ color: "#333" }}>
+                Already have an account?{" "}
+                <MuiLink
+                  component={Link}
+                  to="/login"
+                  underline="hover"
+                  sx={{ fontWeight: 600, color: "#FF9933" }}
                 >
-                  {isSubmitting ? "Creating Account..." : "Create Account"}
-                </Button>
-              </Stack>
-            </form>
-          )}
-        </Formik>
-
-        <Box sx={{ textAlign: "center", mt: 3 }}>
-          <Typography variant="body2" color="text.secondary">
-            Already have an account?
-          </Typography>
-
-          <MuiLink
-            component={Link}
-            to="/login"
-            underline="hover"
-            sx={{ fontWeight: 600 }}
-          >
-            Login
-          </MuiLink>
-        </Box>
-      </Paper>
-    </Container>
+                  Login
+                </MuiLink>
+              </Typography>
+            </Box>
+          </Box>
+        </Paper>
+      </Container>
+    </Box>
   );
 };
 

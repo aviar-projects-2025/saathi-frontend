@@ -1052,9 +1052,9 @@ const MyRides = () => {
                     <Typography
                       component="span"
                       sx={{
-                        fontSize: { xs: '0.55rem', sm: "0.8rem" },
-                        fontWeight: 'inherit',
-                        lineHeight: 1.2,
+                        fontSize: { xs: '0.65rem', sm: "0.8rem" },
+                        fontWeight: "bold",
+                        lineHeight: 1.5,
                         whiteSpace: 'nowrap',
                       }}
                     >

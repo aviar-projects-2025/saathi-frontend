@@ -1,29 +1,211 @@
+// import { Formik } from "formik";
+// import * as Yup from "yup";
+// import {
+//     Box,
+//     Button,
+//     Container,
+//     Paper,
+//     Stack,
+//     TextField,
+//     Typography,
+//     Link as MuiLink,
+// } from "@mui/material";
+// import { Link, useNavigate } from "react-router-dom";
+// import { useAuth } from "./../../context/AuthContext";
+// import ROLES from "../../context/Role";
+// import { toast } from "react-toastify";
+
+
+
+
+// const Login = () => {
+
+//     const { login } = useAuth();
+//     const role = localStorage.getItem('role');
+
+//     const navigate = useNavigate();
+//     const validationSchema = Yup.object({
+//         email: Yup.string()
+//             .min(3, "email must be at least 3 characters")
+//             .required("email is required"),
+//         password: Yup.string()
+//             .min(6, "Password must be at least 6 characters")
+//             .required("Password is required"),
+//     });
+
+//     const loginSubmit = async (values) => {
+//         try {
+//             const data = await login(values);
+//             toast.success("Login Success")
+//             if (data?.user.refApprove === "Approved") {
+//                 if (data.user.role === ROLES.ADMIN) {
+//                     navigate("/admin/dashboard");
+//                 } else {
+//                     navigate("/community");
+//                 }
+//             } else {
+//                 navigate("/waiting-approval")
+//             }
+//         } catch (error) {
+//             toast.error(error.message)
+//         }
+//     };
+//     return (
+//         <Container
+//             maxWidth={false}
+//             sx={{
+//                 minHeight: "100vh",
+//                 display: "flex",
+//                 justifyContent: "center",
+//                 alignItems: "center",
+//             }}
+//         >
+//             <Paper
+//                 elevation={6}
+//                 sx={{
+//                     width: 380,
+//                     p: 4,
+//                     borderRadius: 3,
+//                 }}
+//             >
+//                 <Formik
+//                     initialValues={{
+//                         email: "",
+//                         password: "",
+//                     }}
+//                     validationSchema={validationSchema}
+//                     onSubmit={(values) => {
+//                         loginSubmit(values);
+//                     }}
+//                 >
+//                     {({
+//                         values,
+//                         errors,
+//                         touched,
+//                         handleChange,
+//                         handleBlur,
+//                         handleSubmit,
+//                     }) => (
+//                         <form onSubmit={handleSubmit}>
+//                             <Typography
+//                                 variant="h4"
+//                                 align="center"
+//                                 fontWeight="bold"
+//                                 mb={4}
+//                             >
+//                                 Login
+//                             </Typography>
+
+//                             {/* Email */}
+//                             <TextField
+//                                 fullWidth
+//                                 label="Email"
+//                                 name="email"
+//                                 value={values.email}
+//                                 onChange={handleChange}
+//                                 onBlur={handleBlur}
+//                                 error={
+//                                     touched.email && Boolean(errors.email)
+//                                 }
+//                                 helperText={
+//                                     touched.email && errors.email
+//                                 }
+//                                 margin="normal"
+//                             />
+
+//                             {/* Password */}
+//                             <TextField
+//                                 fullWidth
+//                                 type="password"
+//                                 label="Password"
+//                                 name="password"
+//                                 value={values.password}
+//                                 onChange={handleChange}
+//                                 onBlur={handleBlur}
+//                                 error={
+//                                     touched.password && Boolean(errors.password)
+//                                 }
+//                                 helperText={
+//                                     touched.password && errors.password
+//                                 }
+//                                 margin="normal"
+//                             />
+
+//                             {/* Login Button */}
+//                             <Button
+//                                 fullWidth
+//                                 type="submit"
+//                                 variant="contained"
+//                                 sx={{
+//                                     mt: 1,
+//                                     py: 1.5,
+//                                     textTransform: "none",
+//                                     fontSize: "16px",
+//                                     fontWeight: 600,
+//                                 }}
+//                             >
+//                                 LOGIN
+//                             </Button>
+
+//                             {/* Register */}
+//                             <Box style={{ textAlign: "center" }} mt={4}>
+//                                 <Typography variant="body2" mt={4}>
+//                                     Don't have an account?
+//                                 </Typography>
+
+//                                 <MuiLink
+//                                     component={Link}
+//                                     to="/register"
+//                                     underline="hover"
+//                                     sx={{
+//                                         fontWeight: 500,
+//                                         cursor: "pointer",
+//                                     }}
+//                                 >
+//                                     Sign Up
+//                                 </MuiLink>
+//                             </Box>
+//                         </form>
+//                     )}
+//                 </Formik>
+//             </Paper>
+//         </Container>
+//     );
+// }
+
+// export default Login;
+
+
 import { Formik } from "formik";
 import * as Yup from "yup";
 import {
+    Avatar,
     Box,
     Button,
     Container,
     Paper,
-    Stack,
     TextField,
     Typography,
     Link as MuiLink,
 } from "@mui/material";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "./../../context/AuthContext";
 import ROLES from "../../context/Role";
 import { toast } from "react-toastify";
+import Saathi from '../../assets/saathilogo.png';
+import { useTheme, useMediaQuery } from "@mui/material";
 
-
-
+// LAYOUT 4: Card with a colored top banner and a centered avatar badge
+// straddling the seam — a classic "app-like" login card, softly modernized.
 
 const Login = () => {
-
     const { login } = useAuth();
-    const role = localStorage.getItem('role');
-
     const navigate = useNavigate();
+
+    const theme = useTheme();
+    const isTab = useMediaQuery(theme.breakpoints.down("sm"));
+
     const validationSchema = Yup.object({
         email: Yup.string()
             .min(3, "email must be at least 3 characters")
@@ -36,7 +218,19 @@ const Login = () => {
     const loginSubmit = async (values) => {
         try {
             const data = await login(values);
-            toast.success("Login Success")
+            toast.success("Ride created successfully!", {
+                position: isTab ? "top-center" : "top-right",
+                autoClose: 1000,
+                hideProgressBar: true,
+                closeButton: false,
+                style: {
+                    width: isTab ? "280px" : "360px",
+                    fontSize: isTab ? "13px" : "15px",
+                    padding: isTab ? "8px 12px" : "12px 16px",
+                    borderRadius: isTab ? "8px" : "10px",
+                    minHeight: isTab ? "42px" : "52px",
+                },
+            });
             if (data?.user.refApprove === "Approved") {
                 if (data.user.role === ROLES.ADMIN) {
                     navigate("/admin/dashboard");
@@ -44,133 +238,176 @@ const Login = () => {
                     navigate("/community");
                 }
             } else {
-                navigate("/waiting-approval")
+                navigate("/waiting-approval");
             }
         } catch (error) {
-            toast.error(error.message)
+            toast.error(error.message);
         }
     };
+
     return (
-        <Container
-            maxWidth={false}
+        <Box
             sx={{
                 minHeight: "100vh",
+                // background: "#F1EFEA",
                 display: "flex",
-                justifyContent: "center",
                 alignItems: "center",
+                justifyContent: "center",
+                p: 2,
             }}
         >
-            <Paper
-                elevation={6}
-                sx={{
-                    width: 380,
-                    p: 4,
-                    borderRadius: 3,
-                }}
-            >
-                <Formik
-                    initialValues={{
-                        email: "",
-                        password: "",
-                    }}
-                    validationSchema={validationSchema}
-                    onSubmit={(values) => {
-                        loginSubmit(values);
+            <Container maxWidth="xs">
+                <Paper
+                    elevation={3}
+                    sx={{
+                        borderRadius: 4,
+                        overflow: "hidden",
                     }}
                 >
-                    {({
-                        values,
-                        errors,
-                        touched,
-                        handleChange,
-                        handleBlur,
-                        handleSubmit,
-                    }) => (
-                        <form onSubmit={handleSubmit}>
-                            <Typography
-                                variant="h4"
-                                align="center"
-                                fontWeight="bold"
-                                mb={4}
-                            >
-                                Login
-                            </Typography>
+                    {/* Banner */}
+                    <Box
+                        sx={{
+                            height: 110,
+                            background: "#FF9933",
+                            position: "relative",
+                        }}
+                    />
 
-                            {/* Email */}
-                            <TextField
-                                fullWidth
-                                label="Email"
-                                name="email"
-                                value={values.email}
-                                onChange={handleChange}
-                                onBlur={handleBlur}
-                                error={
-                                    touched.email && Boolean(errors.email)
-                                }
-                                helperText={
-                                    touched.email && errors.email
-                                }
-                                margin="normal"
-                            />
+                    {/* Avatar straddling the seam */}
+                    <Box sx={{ display: "flex", justifyContent: "center", mt: "-50px" }}>
+                        <Avatar
+                            src={Saathi}
+                            alt="Profile"
+                            sx={{
+                                width: 125,
+                                height: 143,
+                                border: "4px solid #fff",
+                                backgroundColor: "#1A1A1A",
+                            }}
+                        />
+                    </Box>
 
-                            {/* Password */}
-                            <TextField
-                                fullWidth
-                                type="password"
-                                label="Password"
-                                name="password"
-                                value={values.password}
-                                onChange={handleChange}
-                                onBlur={handleBlur}
-                                error={
-                                    touched.password && Boolean(errors.password)
-                                }
-                                helperText={
-                                    touched.password && errors.password
-                                }
-                                margin="normal"
-                            />
+                    <Box sx={{ px: 4, pb: 4, pt: 2 }}>
+                        <Formik
+                            initialValues={{ email: "", password: "" }}
+                            validationSchema={validationSchema}
+                            onSubmit={(values) => loginSubmit(values)}
+                        >
+                            {({ values, errors, touched, handleChange, handleBlur, handleSubmit }) => (
+                                <form onSubmit={handleSubmit}>
+                                    <Typography
+                                        variant="h5"
+                                        align="center"
+                                        fontWeight={800}
+                                        sx={{ mb: 3 }}
+                                    >
+                                        Account Login
+                                    </Typography>
 
-                            {/* Login Button */}
-                            <Button
-                                fullWidth
-                                type="submit"
-                                variant="contained"
-                                sx={{
-                                    mt: 1,
-                                    py: 1.5,
-                                    textTransform: "none",
-                                    fontSize: "16px",
-                                    fontWeight: 600,
-                                }}
-                            >
-                                LOGIN
-                            </Button>
+                                    <TextField
+                                        fullWidth
+                                        label="Email"
+                                        name="email"
+                                        value={values.email}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
+                                        error={touched.email && Boolean(errors.email)}
+                                        helperText={touched.email && errors.email}
+                                        margin="normal"
+                                        size="small"
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                backgroundColor: '#FFFFFF',
+                                                borderRadius: '12px',
+                                                '& input:-webkit-autofill': {
+                                                    WebkitBoxShadow: '0 0 0 1000px #FFFFFF inset',
+                                                    WebkitTextFillColor: '#000000',
+                                                },
+                                                '& .MuiOutlinedInput-notchedOutline': {
+                                                    borderRadius: '12px',
+                                                },
+                                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                    borderColor: '#FF9933',
+                                                },
+                                            },
+                                            '& .MuiInputLabel-root.Mui-focused': {
+                                                color: '#FF9933',
+                                            },
+                                        }}
+                                    />
 
-                            {/* Register */}
-                            <Box style={{ textAlign: "center" }} mt={4}>
-                                <Typography variant="body2" mt={4}>
-                                    Don't have an account?
-                                </Typography>
+                                    <TextField
+                                        fullWidth
+                                        type="password"
+                                        label="Password"
+                                        name="password"
+                                        value={values.password}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
+                                        error={touched.password && Boolean(errors.password)}
+                                        helperText={touched.password && errors.password}
+                                        margin="normal"
+                                        size="small"
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                backgroundColor: '#FFFFFF',
+                                                borderRadius: '12px',
+                                                '& input:-webkit-autofill': {
+                                                    WebkitBoxShadow: '0 0 0 1000px #FFFFFF inset',
+                                                    WebkitTextFillColor: '#000000',
+                                                },
+                                                '& .MuiOutlinedInput-notchedOutline': {
+                                                    borderRadius: '12px',
+                                                },
+                                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                    borderColor: '#FF9933',
+                                                },
+                                            },
+                                            '& .MuiInputLabel-root.Mui-focused': {
+                                                color: '#FF9933',
+                                            },
+                                        }}
+                                    />
 
-                                <MuiLink
-                                    component={Link}
-                                    to="/register"
-                                    underline="hover"
-                                    sx={{
-                                        fontWeight: 500,
-                                        cursor: "pointer",
-                                    }}
-                                >
-                                    Sign Up
-                                </MuiLink>
-                            </Box>
-                        </form>
-                    )}
-                </Formik>
-            </Paper>
-        </Container>
+                                    <Button
+                                        type="submit"
+                                        fullWidth
+                                        sx={{
+                                            mt: 3,
+                                            py: 1.2,
+                                            background: "#FF9933",
+                                            color: "#000",
+                                            textTransform: "none",
+                                            fontSize: "14px",
+                                            fontWeight: 700,
+                                            borderRadius: "999px",
+                                            "&:hover": { background: "#e6862c" },
+                                        }}
+                                    >
+                                        Login
+                                    </Button>
+
+                                    <Box sx={{ textAlign: "center", mt: 3 }}>
+                                        <Typography variant="body2" sx={{ color: "#333" }}>
+                                            Don't have an account?{" "}
+                                            <MuiLink
+                                                component={Link}
+                                                to="/register"
+                                                underline="hover"
+                                                sx={{ fontWeight: 600, color: "#FF9933" }}
+                                            >
+                                                Sign Up
+                                            </MuiLink>
+                                        </Typography>
+                                    </Box>
+                                </form>
+                            )}
+                        </Formik>
+                    </Box>
+                </Paper>
+            </Container>
+        </Box>
     );
-}
+};
 
 export default Login;
