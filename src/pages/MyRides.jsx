@@ -36,18 +36,18 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import socket from '../socket'
 
 const statusConfig = {
-  confirmed: { label: 'Filled', color: '#2D6A4F', bg: '#E8F5E9', icon: '✅' },
-  pending: { label: 'Opened', color: '#E8650A', bg: '#FFF3E0', icon: '⏳' },
-  completed: { label: 'Closed', color: '#555577', bg: '#F5F5F5', icon: '🏁' },
-  cancelled: { label: 'Cancelled', color: '#9B2226', bg: '#FFEBEE', icon: '❌' },
+  FULL: { label: 'Filled', color: '#2D6A4F', bg: '#E8F5E9', icon: '✅' },
+  OPEN: { label: 'Opened', color: '#E8650A', bg: '#FFF3E0', icon: '⏳' },
+  // CLOSED: { label: 'Closed', color: '#555577', bg: '#F5F5F5', icon: '🏁' },
+  CLOSED: { label: 'Cancelled', color: '#9B2226', bg: '#FFEBEE', icon: '❌' },
 };
 
-const statusMap = {
-  OPEN: 'pending',
-  FULL: 'confirmed',
-  CLOSED: 'completed',
-  CANCELLED: 'cancelled',
-};
+// const statusMap = {
+//   OPEN: 'pending',
+//   FULL: 'confirmed',
+//   CLOSED: 'completed',
+//   CANCELLED: 'cancelled',
+// };
 
 const travelIcons = {
   Car: <DirectionsCarIcon sx={{ color: "#FF9933" }} />,
@@ -337,7 +337,7 @@ function RideDetailsModal({ ride, showEdit, showDelete, onEdit, onDelete, onClos
     ? startDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
     : '—';
 
-  const status = statusConfig[statusMap[ride?.status]] || statusConfig.pending;
+  const status = statusConfig[ride?.status];
 
   const Row = ({ icon, label, value }) => (
     <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.25, py: 0.5 }}>
@@ -557,7 +557,7 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete, allRequests, s
   const [showRequests, setShowRequests] = useState(false);
   const [loadingRequests, setLoadingRequests] = useState(false);
 
-  const status = statusConfig[statusMap[ride?.status]] || statusConfig.pending;
+  const status = statusConfig[ride?.status];
 
   const startDate = new Date(ride.startTime);
   const date = !isNaN(startDate)
