@@ -937,70 +937,44 @@ const MyRides = () => {
   // }
   // Socket connection for real-time updates
   useEffect(() => {
-    if (user?.id) {
-      socket.emit("join", user.id);
-      console.log("✅ Joined room:", user.id);
-    }
+    if (!user?.id) return;
 
-    // Listen for new requests
-    socket.on("new_request", (newRequest) => {
+    socket.emit("join", user.id);
 
-      console.log("🔥 New request received:", newRequest);
+    const handleNewRequest = (newRequest) => {
       const audio = new Audio(notificationSound);
       audio.currentTime = 0;
       audio.play();
+
       setAllRequests((prev) => {
         const exists = prev.find(r => r._id === newRequest._id);
         if (exists) return prev;
         return [newRequest, ...prev];
       });
-      toast.info('New ride request received!');
-    });
 
-    // Listen for status updates
-    socket.on("request_status_updated", (updatedRequest) => {
-      console.log("⚡ Status update:", updatedRequest);
-      setAllRequests((prev) =>
-        prev.map((r) =>
-          r._id === updatedRequest._id ? updatedRequest : r
-        )
-      );
-    });
-    return () => {
-      socket.off("new_request");
-      socket.off("request_status_updated");
-    };
-  }, [user?.id]);
-
-  useEffect(() => {
-    if (user?.id) {
-      socket.emit("join", user.id);
-      console.log("✅ Joined room:", user.id);
-    }
-
-    // Listen for new requests
-    socket.on("new_request", (newRequest) => {
-      console.log("🔥 New request received:", newRequest);
       setAllMyRequests((prev) => {
         const exists = prev.find(r => r._id === newRequest._id);
         if (exists) return prev;
         return [newRequest, ...prev];
       });
-      toast.info('New ride request received!');
-    });
 
-    // Listen for status updates
-    socket.on("request_status_updated", (updatedRequest) => {
-      console.log("⚡ Status update:", updatedRequest);
+      toast.info("New ride request received!");
+    };
+
+    socket.on("new_request", handleNewRequest);
+
+    socket.on("request_status_updated", (updated) => {
+      setAllRequests((prev) =>
+        prev.map(r => r._id === updated._id ? updated : r)
+      );
+
       setAllMyRequests((prev) =>
-        prev.map((r) =>
-          r._id === updatedRequest._id ? updatedRequest : r
-        )
+        prev.map(r => r._id === updated._id ? updated : r)
       );
     });
 
     return () => {
-      socket.off("new_request");
+      socket.off("new_request", handleNewRequest);
       socket.off("request_status_updated");
     };
   }, [user?.id]);
