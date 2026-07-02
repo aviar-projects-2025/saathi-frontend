@@ -51,10 +51,13 @@
       };
     }, []);
 
-    return (
+    return (  
       <BrowserRouter>
         <ToastContainer
-          position="top-right"
+          hideProgressBar
+          draggable={true}
+          closeButton={false}
+          position="top-center"
           autoClose={3000}
           theme="light"
         />
