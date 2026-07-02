@@ -233,32 +233,32 @@ export default function FindRides() {
   ).length;
 
   // ── Filtering uses APPLIED filters + live search text ─────────────────
-const filteredRides = rides
-  .filter((ride) => ride.createdBy?._id !== currentUser?._id)
-  .filter((ride) => {
-    const fromValue =
-      ride.modeOfTravel === "Flight"
-        ? `${ride.fromAirport || ""} ${ride.fromCountry || ""} ${ride.from || ""}`
-        : ride.from || "";
+  const filteredRides = rides
+    .filter((ride) => ride.createdBy?._id !== currentUser?._id)
+    .filter((ride) => {
+      const fromValue =
+        ride.modeOfTravel === "Flight"
+          ? `${ride.fromAirport || ""} ${ride.fromCountry || ""} ${ride.from || ""}`
+          : ride.from || "";
 
-    const destinationValue =
-      ride.modeOfTravel === "Flight"
-        ? `${ride.toAirport || ""} ${ride.toCountry || ""} ${ride.destination || ""}`
-        : ride.destination || "";
+      const destinationValue =
+        ride.modeOfTravel === "Flight"
+          ? `${ride.toAirport || ""} ${ride.toCountry || ""} ${ride.destination || ""}`
+          : ride.destination || "";
 
-    const fromMatch = fromValue.toLowerCase().includes(searchFrom.toLowerCase());
-    const destinationMatch = destinationValue.toLowerCase().includes(searchDestination.toLowerCase());
-    const transportMatch = !appliedTransportMode || ride.modeOfTravel === appliedTransportMode;
-    const genderMatch = !appliedGender || ride.genderPreference === appliedGender;
-    const fuelMatch =
-      appliedFuelSharing === "" ||
-      ride.modeOfTravel === "Flight" ||
-      ride.fuelSharing?.toString() === appliedFuelSharing;
-    const languageMatch =
-      !appliedLanguage || ride.language?.toLowerCase().includes(appliedLanguage.toLowerCase());
+      const fromMatch = fromValue.toLowerCase().includes(searchFrom.toLowerCase());
+      const destinationMatch = destinationValue.toLowerCase().includes(searchDestination.toLowerCase());
+      const transportMatch = !appliedTransportMode || ride.modeOfTravel === appliedTransportMode;
+      const genderMatch = !appliedGender || ride.genderPreference === appliedGender;
+      const fuelMatch =
+        appliedFuelSharing === "" ||
+        ride.modeOfTravel === "Flight" ||
+        ride.fuelSharing?.toString() === appliedFuelSharing;
+      const languageMatch =
+        !appliedLanguage || ride.language?.toLowerCase().includes(appliedLanguage.toLowerCase());
 
-    return fromMatch && destinationMatch && transportMatch && genderMatch && fuelMatch && languageMatch;
-  });
+      return fromMatch && destinationMatch && transportMatch && genderMatch && fuelMatch && languageMatch;
+    });
 
   if (loading) {
     return (
@@ -725,7 +725,7 @@ const filteredRides = rides
 
           {/* ── Ride cards ── */}
           {filteredRides.length > 0 ? (
-                    <Grid spacing={{ xs: 1, sm: 2 }}>
+            <Grid spacing={{ xs: 1, sm: 2 }}>
               {filteredRides.map((ride) => {
                 const isOwnRide = ride.createdBy?._id === currentUser?._id;
                 return (

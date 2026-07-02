@@ -4,7 +4,7 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, IconButton, Stack, FormControl, Grid,
   InputLabel, Select, MenuItem, FormControlLabel, Switch, Slider,
-  CircularProgress, Card, CardContent, Divider, useMediaQuery,
+  CircularProgress, Card, CardContent, Divider, useMediaQuery, DialogContentText,
   Badge, Collapse, Avatar
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
@@ -1101,7 +1101,8 @@ const MyRides = () => {
     setDeleteRide(null);
     toast.success('Ride Deleted Successfully...!');
   };
-
+  const [openCancelDialog, setOpenCancelDialog] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState(null);
   const renderList = (list, showEdit = false, showDelete = false) =>
     list.map((ride) => (
       <RideCard
@@ -1116,7 +1117,31 @@ const MyRides = () => {
       />
     ));
 
+  const handleCancelClick = (request) => {
+    setSelectedRequest(request);
+    setOpenCancelDialog(true);
+  };
 
+  const handleCloseDialog = () => {
+    setOpenCancelDialog(false);
+    setSelectedRequest(null);
+  };
+
+  const handleConfirmCancel = async () => {
+    try {
+      // Call your delete/cancel API here
+      await axios.delete(`${Api}/bookride/${selectedRequest._id}`);
+
+      console.log("Cancelled:", selectedRequest._id);
+
+      handleCloseDialog();
+
+      // Refresh request list
+      getMyRequests();
+    } catch (err) {
+      console.error(err);
+    }
+  };
   // Rides you've requested/booked that haven't happened yet
   const upcomingRequests = useMemo(() => {
     const now = new Date();
@@ -1326,8 +1351,20 @@ const MyRides = () => {
             sx={{
               mb: 2,
               borderRadius: 3,
+              position: "relative",
             }}
           >
+            <IconButton
+              color="error"
+              onClick={() => handleCancelClick(request)}
+              sx={{
+                position: "absolute",
+                top: 10,
+                right: 10,
+              }}
+            >
+              <DeleteIcon />
+            </IconButton>
             <CardContent>
               <Typography fontWeight={600}>
                 {request.rideId?.from} → {request.rideId?.destination}
@@ -1376,6 +1413,36 @@ const MyRides = () => {
             </CardContent>
           </Card>
         ))}
+        <Dialog
+          open={openCancelDialog}
+          onClose={handleCloseDialog}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle>Cancel Ride Request</DialogTitle>
+
+          <DialogContent>
+            <DialogContentText>
+              Are you sure you want to cancel this ride request?
+              <br />
+              This action cannot be undone.
+            </DialogContentText>
+          </DialogContent>
+
+          <DialogActions>
+            <Button onClick={handleCloseDialog}>
+              No
+            </Button>
+
+            <Button
+              color="error"
+              variant="contained"
+              onClick={handleConfirmCancel}
+            >
+              Yes, Cancel
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Box>
     </Box>
   );
