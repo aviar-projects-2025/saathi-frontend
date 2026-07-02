@@ -4,7 +4,7 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, IconButton, Stack, FormControl, Grid,
   InputLabel, Select, MenuItem, FormControlLabel, Switch, Slider,
-  CircularProgress, Card, CardContent, Divider, useMediaQuery,
+  CircularProgress, Card, CardContent, Divider, useMediaQuery, DialogContentText,
   Badge, Collapse, Avatar
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
@@ -19,6 +19,9 @@ import EventSeatIcon from '@mui/icons-material/EventSeat';
 import WcIcon from '@mui/icons-material/Wc';
 import axios from 'axios';
 import Api from '../Api';
+
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlineOutlined";
+
 import { toast } from 'react-toastify';
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
@@ -863,7 +866,27 @@ const MyRides = () => {
   const [loading, setLoading] = useState(true);
   const [allRequests, setAllRequests] = useState([]);
   const [allMyRequests, setAllMyRequests] = useState([]);
+  const [openCancelDialog, setOpenCancelDialog] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const handleCancelClick = (request) => {
+    setSelectedRequest(request);
+    setOpenCancelDialog(true);
+  };
 
+  const handleCloseDialog = () => {
+    setOpenCancelDialog(false);
+    setSelectedRequest(null);
+  };
+
+  const handleConfirmCancel = async () => {
+    try {
+      const res = await axios.delete(`${Api}/bookride/${selectedRequest._id}`);
+      handleCloseDialog();
+      getMyRequests();
+    } catch (err) {
+      console.error(err);
+    }
+  };
   const user = JSON.parse(localStorage.getItem('user'));
 
   const fetchRides = async () => {
@@ -1192,6 +1215,7 @@ const MyRides = () => {
           <DeleteConfirmDialog ride={deleteRide} onConfirm={handleDelete} onClose={() => setDeleteRide(null)} />
         )}
       </Box>
+
       <Box
         sx={{
           flex: 1,
@@ -1207,61 +1231,59 @@ const MyRides = () => {
         </Typography>
 
         {allMyRequests.map((request) => (
-          <Card
-            key={request._id}
-            sx={{
-              mb: 2,
-              borderRadius: 3,
-            }}
-          >
+          <Card key={request._id} sx={{ mb: 2, borderRadius: 3, position: "relative", }} >
+
             <CardContent>
-              <Typography fontWeight={600}>
-                {request.rideId?.from} → {request.rideId?.to}
-              </Typography>
-
-              <Typography variant="body2">
-                Rider: {request.rideId?.createdBy?.firstName}{" "}
-                {request.rideId?.createdBy?.lastName}
-              </Typography>
-
-              <Typography variant="body2">
-                Date: {new Date(request.createdAt).toLocaleDateString()}
-              </Typography>
-
-              <Typography variant="body2">
-                Time: {new Date(request.createdAt).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </Typography>
-
-              <Typography
-                variant="body2"
+              <IconButton
+                color="error"
+                onClick={() => handleCancelClick(request)}
                 sx={{
-                  mt: 1,
-                  display: "-webkit-box",
-                  WebkitLineClamp: 2,
-                  WebkitBoxOrient: "vertical",
-                  overflow: "hidden",
+                  position: "absolute",
+                  top: 10,
+                  right: 10,
                 }}
               >
-                Description: {request.rideId?.description}
-              </Typography>
-
-              <Chip
-                label={request.status}
-                color={
-                  request.status === "Accepted"
-                    ? "success"
-                    : request.status === "Rejected"
-                      ? "error"
-                      : "warning"
-                }
-                sx={{ mt: 2 }}
-              />
+                <DeleteOutlineIcon />
+              </IconButton>
+              <Typography fontWeight={600}>{request.rideId?.from} → {request.rideId?.destination} </Typography>
+              <Typography variant="body2"> Rider: {request.rideId?.createdBy?.firstName}{" "} {request.rideId?.createdBy?.lastName} </Typography>
+              <Typography variant="body2"> Date: {new Date(request.createdAt).toLocaleDateString()} </Typography>
+              <Typography variant="body2"> Time: {new Date(request.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", })} </Typography>
+              <Typography variant="body2" sx={{ mt: 1, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", }} > Description: {request.rideId?.description} </Typography>
+              <Chip label={request.status} color={request.status === "ACCEPTED" ? "success" : request.status === "REJECTED" ? "error" : "warning"} sx={{ mt: 2 }} />
             </CardContent>
-          </Card>
-        ))}
+          </Card>))}
+
+        <Dialog
+          open={openCancelDialog}
+          onClose={handleCloseDialog}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle>Cancel Ride Request</DialogTitle>
+
+          <DialogContent>
+            <DialogContentText>
+              Are you sure you want to cancel this ride request?
+              <br />
+              This action cannot be undone.
+            </DialogContentText>
+          </DialogContent>
+
+          <DialogActions>
+            <Button onClick={handleCloseDialog}>
+              No
+            </Button>
+
+            <Button
+              color="error"
+              variant="contained"
+              onClick={handleConfirmCancel}
+            >
+              Yes, Cancel
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Box>
     </Box>
   );
