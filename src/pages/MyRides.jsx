@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   Box, Typography, Tabs, Tab, Paper, Chip, Button, Alert,
   Dialog, DialogTitle, DialogContent, DialogActions,
@@ -852,6 +852,98 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete, allRequests, s
   );
 }
 
+// ── Booking Card (rides the user has requested/booked) ──────────────────────
+function BookingCard({ request, showCancel, onCancel }) {
+  const ride = request.rideId || {};
+  const startDate = new Date(ride.startTime);
+  const date = !isNaN(startDate)
+    ? startDate.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+    : "—";
+  const time = !isNaN(startDate)
+    ? startDate.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })
+    : "—";
+
+  const statusMap = {
+    ACCEPTED: { label: 'Approved ✓', color: '#2D6A4F', bg: '#E8F5E9' },
+    APPROVED: { label: 'Approved ✓', color: '#2D6A4F', bg: '#E8F5E9' },
+    REJECTED: { label: 'Rejected ✗', color: '#9B2226', bg: '#FFEBEE' },
+    PENDING: { label: 'Pending ⏳', color: '#E8650A', bg: '#FFF3E0' },
+  };
+  const status = statusMap[request.status?.toUpperCase()] || statusMap.PENDING;
+
+  return (
+    <Box sx={{ width: '100%', maxWidth: 1000, mx: 'auto', mb: 2 }}>
+      <Box
+        sx={{
+          background: "#111", color: "#fff", borderRadius: "14px 14px 0 0",
+          px: { xs: 1.5, sm: 2.5 }, py: { xs: 1.1, sm: 1.4 },
+          display: "flex", justifyContent: "space-between", alignItems: "center", gap: 1,
+        }}
+      >
+        <Typography
+          fontWeight={700}
+          sx={{ fontSize: { xs: '0.85rem', sm: '1rem' }, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+        >
+          {ride.createdBy?.firstName} {ride.createdBy?.lastName}
+        </Typography>
+        <Chip
+          size="small"
+          label={status.label}
+          sx={{ bgcolor: status.bg, color: status.color, fontWeight: 700, fontSize: { xs: '0.62rem', sm: '0.7rem' } }}
+        />
+      </Box>
+
+      <Card elevation={0} sx={{ borderRadius: "0 0 14px 14px", border: "1px solid rgba(255,153,51,0.25)", borderTop: 0, bgcolor: "#FFF9F2" }}>
+        <CardContent sx={{ p: { xs: '12px !important', sm: '20px 24px !important' } }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, pb: { xs: 1.25, sm: 2 }, mb: { xs: 1.25, sm: 2 }, borderBottom: '1px solid rgba(255,153,51,0.2)' }}>
+            <Box sx={{ minWidth: 0, flex: 1 }}>
+              <Typography variant="caption" sx={{ color: "#FF9933", fontWeight: 700, letterSpacing: 0.8, fontSize: { xs: '0.6rem', sm: '0.7rem' } }}>FROM</Typography>
+              <Typography fontWeight={700} sx={{ wordBreak: 'break-word', fontSize: { xs: '0.82rem', sm: '0.95rem' } }}>📍 {formFrom(ride)}</Typography>
+            </Box>
+            <ArrowForwardIcon sx={{ color: '#FF9933', fontSize: { xs: 16, sm: 20 }, flexShrink: 0 }} />
+            <Box sx={{ minWidth: 0, flex: 1, textAlign: 'right' }}>
+              <Typography variant="caption" sx={{ color: "#FF9933", fontWeight: 700, letterSpacing: 0.8, fontSize: { xs: '0.6rem', sm: '0.7rem' } }}>TO</Typography>
+              <Typography fontWeight={700} sx={{ wordBreak: 'break-word', fontSize: { xs: '0.82rem', sm: '0.95rem' } }}>📍 {formTo(ride)}</Typography>
+            </Box>
+          </Box>
+
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(3, 1fr)' }, gap: { xs: '12px 8px', sm: 3 } }}>
+            <Box>
+              <Typography sx={{ fontSize: { xs: '0.65rem', sm: '0.7rem' }, color: 'text.secondary', mb: 0.5 }}>Date &amp; time</Typography>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <CalendarTodayIcon sx={{ color: "#FF9933", fontSize: { xs: 15, sm: 18 } }} />
+                <Typography sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, fontWeight: 600 }}>{date} · {time}</Typography>
+              </Stack>
+            </Box>
+            <Box>
+              <Typography sx={{ fontSize: { xs: '0.65rem', sm: '0.7rem' }, color: 'text.secondary', mb: 0.5 }}>Seats requested</Typography>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <EventSeatIcon sx={{ color: "#FF9933", fontSize: { xs: 15, sm: 18 } }} />
+                <Typography sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, fontWeight: 600 }}>{request.seatsRequested || 1}</Typography>
+              </Stack>
+            </Box>
+            <Box>
+              <Typography sx={{ fontSize: { xs: '0.65rem', sm: '0.7rem' }, color: 'text.secondary', mb: 0.5 }}>Travel mode</Typography>
+              <Stack direction="row" spacing={1} alignItems="center">
+                {React.cloneElement(travelIcons[ride.modeOfTravel] || travelIcons.Car, { sx: { color: "#FF9933", fontSize: { xs: 15, sm: 18 } } })}
+                <Typography sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, fontWeight: 600 }}>{ride.modeOfTravel}</Typography>
+              </Stack>
+            </Box>
+          </Box>
+
+          {showCancel && request.status?.toUpperCase() === 'PENDING' && (
+            <Box sx={{ mt: 2, textAlign: 'right' }}>
+              <Button size="small" color="error" variant="outlined" startIcon={<DeleteIcon />}
+                onClick={() => onCancel(request)} sx={{ textTransform: 'none', borderRadius: 2 }}>
+                Cancel request
+              </Button>
+            </Box>
+          )}
+        </CardContent>
+      </Card>
+    </Box>
+  );
+}
 // ── Main Component ───────────────────────────────────────────────────────────
 const MyRides = () => {
   const [tab, setTab] = useState(0);
@@ -1024,11 +1116,30 @@ const MyRides = () => {
       />
     ));
 
+
+  // Rides you've requested/booked that haven't happened yet
+  const upcomingRequests = useMemo(() => {
+    const now = new Date();
+    return allMyRequests.filter((booking) => {
+      const rideStart = booking.rideId?.startTime ? new Date(booking.rideId.startTime) : null;
+      return rideStart && !isNaN(rideStart.getTime()) && rideStart > now;
+    });
+  }, [allMyRequests]);
+
+  // Rides you've requested/booked that already happened (with approve/reject outcome)
+  const pastRequests = useMemo(() => {
+    const now = new Date();
+    return allMyRequests.filter((booking) => {
+      const rideStart = booking.rideId?.startTime ? new Date(booking.rideId.startTime) : null;
+      return rideStart && !isNaN(rideStart.getTime()) && rideStart <= now;
+    });
+  }, [allMyRequests]);
+
   const tabLabels = [
     { short: 'Current', count: currentRide.length },
-    { short: 'Upcoming', count: upcoming.length },
+    { short: 'Upcoming', count: upcoming.length + upcomingRequests.length },
     { short: 'My Posts', count: mypost.length },
-    { short: 'History', count: history.length },
+    { short: 'History', count: history.length + pastRequests.length },
   ];
 
   return (
@@ -1143,9 +1254,21 @@ const MyRides = () => {
 
               {tab === 1 && (
                 <Box>
-                  {upcoming.length > 0
-                    ? renderList(upcoming, true, true)
-                    : <EmptyState emoji="🗓️" message="No upcoming rides" actionLabel="Find a ride" actionHref="/find" />}
+                  {(upcoming.length > 0 || upcomingRequests.length > 0) ? (
+                    <>
+                      {renderList(upcoming, true, true)}
+                      {upcomingRequests.map((req) => (
+                        <BookingCard
+                          key={req._id}
+                          request={req}
+                          showCancel
+                        // onCancel={handleCancelClick}
+                        />
+                      ))}
+                    </>
+                  ) : (
+                    <EmptyState emoji="🗓️" message="No upcoming rides" actionLabel="Find a ride" actionHref="/find" />
+                  )}
                 </Box>
               )}
 
@@ -1159,9 +1282,16 @@ const MyRides = () => {
 
               {tab === 3 && (
                 <Box>
-                  {history.length > 0
-                    ? renderList(history, false, false)
-                    : <EmptyState emoji="🕰️" message="No past rides yet" />}
+                  {(history.length > 0 || pastRequests.length > 0) ? (
+                    <>
+                      {renderList(history, false, false)}
+                      {pastRequests.map((req) => (
+                        <BookingCard key={req._id} request={req} showCancel={false} />
+                      ))}
+                    </>
+                  ) : (
+                    <EmptyState emoji="🕰️" message="No past rides yet" />
+                  )}
                 </Box>
               )}
             </>
@@ -1200,7 +1330,7 @@ const MyRides = () => {
           >
             <CardContent>
               <Typography fontWeight={600}>
-                {request.rideId?.from} → {request.rideId?.to}
+                {request.rideId?.from} → {request.rideId?.destination}
               </Typography>
 
               <Typography variant="body2">
