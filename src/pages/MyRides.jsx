@@ -583,7 +583,8 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete, allRequests, s
 
   const handleApprove = async (requestId) => {
     try {
-      await axios.patch(`${Api}/bookride/${requestId}/status?type=Approve`, { status: 'ACCEPTED' });
+      const res = await axios.patch(`${Api}/bookride/${requestId}/status?type=Approve`, { status: 'ACCEPTED' });
+      // console.log(res.data.succes, 'res')
       setAllRequests(prev => prev.map(req =>
         req._id === requestId ? { ...req, status: 'ACCEPTED' } : req
       ));
@@ -961,9 +962,12 @@ const MyRides = () => {
       toast.info("New ride request received!");
     };
 
-    socket.on("new_request", handleNewRequest);
+    const handleNewRequestUpdate = (updated) => {
+      console.log("updated", updated)
+      const audio = new Audio(notificationSound);
+      audio.currentTime = 0;
+      audio.play();
 
-    socket.on("request_status_updated", (updated) => {
       setAllRequests((prev) =>
         prev.map(r => r._id === updated._id ? updated : r)
       );
@@ -971,11 +975,17 @@ const MyRides = () => {
       setAllMyRequests((prev) =>
         prev.map(r => r._id === updated._id ? updated : r)
       );
-    });
+
+      toast.info("Request status received!");
+
+    }
+
+    socket.on("new_request", handleNewRequest);
+    socket.on("request_update", handleNewRequestUpdate);
 
     return () => {
       socket.off("new_request", handleNewRequest);
-      socket.off("request_status_updated");
+      socket.off("request_update", handleNewRequestUpdate);
     };
   }, [user?.id]);
 
