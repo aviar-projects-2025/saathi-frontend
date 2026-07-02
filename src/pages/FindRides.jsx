@@ -233,32 +233,32 @@ export default function FindRides() {
   ).length;
 
   // ── Filtering uses APPLIED filters + live search text ─────────────────
-const filteredRides = rides
-  .filter((ride) => ride.createdBy?._id !== currentUser?._id)
-  .filter((ride) => {
-    const fromValue =
-      ride.modeOfTravel === "Flight"
-        ? `${ride.fromAirport || ""} ${ride.fromCountry || ""} ${ride.from || ""}`
-        : ride.from || "";
+  const filteredRides = rides
+    .filter((ride) => ride.createdBy?._id !== currentUser?._id)
+    .filter((ride) => {
+      const fromValue =
+        ride.modeOfTravel === "Flight"
+          ? `${ride.fromAirport || ""} ${ride.fromCountry || ""} ${ride.from || ""}`
+          : ride.from || "";
 
-    const destinationValue =
-      ride.modeOfTravel === "Flight"
-        ? `${ride.toAirport || ""} ${ride.toCountry || ""} ${ride.destination || ""}`
-        : ride.destination || "";
+      const destinationValue =
+        ride.modeOfTravel === "Flight"
+          ? `${ride.toAirport || ""} ${ride.toCountry || ""} ${ride.destination || ""}`
+          : ride.destination || "";
 
-    const fromMatch = fromValue.toLowerCase().includes(searchFrom.toLowerCase());
-    const destinationMatch = destinationValue.toLowerCase().includes(searchDestination.toLowerCase());
-    const transportMatch = !appliedTransportMode || ride.modeOfTravel === appliedTransportMode;
-    const genderMatch = !appliedGender || ride.genderPreference === appliedGender;
-    const fuelMatch =
-      appliedFuelSharing === "" ||
-      ride.modeOfTravel === "Flight" ||
-      ride.fuelSharing?.toString() === appliedFuelSharing;
-    const languageMatch =
-      !appliedLanguage || ride.language?.toLowerCase().includes(appliedLanguage.toLowerCase());
+      const fromMatch = fromValue.toLowerCase().includes(searchFrom.toLowerCase());
+      const destinationMatch = destinationValue.toLowerCase().includes(searchDestination.toLowerCase());
+      const transportMatch = !appliedTransportMode || ride.modeOfTravel === appliedTransportMode;
+      const genderMatch = !appliedGender || ride.genderPreference === appliedGender;
+      const fuelMatch =
+        appliedFuelSharing === "" ||
+        ride.modeOfTravel === "Flight" ||
+        ride.fuelSharing?.toString() === appliedFuelSharing;
+      const languageMatch =
+        !appliedLanguage || ride.language?.toLowerCase().includes(appliedLanguage.toLowerCase());
 
-    return fromMatch && destinationMatch && transportMatch && genderMatch && fuelMatch && languageMatch;
-  });
+      return fromMatch && destinationMatch && transportMatch && genderMatch && fuelMatch && languageMatch;
+    });
 
   if (loading) {
     return (
@@ -299,7 +299,6 @@ const filteredRides = rides
           zIndex: 100,
           flexShrink: 0,
           // background: saffron[50],
-          pb: 1,
         }}
       >
         {/* ── Hero ───────────────────────────────────────────── */}
@@ -307,18 +306,20 @@ const filteredRides = rides
           sx={{
             color: "#000000",
             pt: { xs: 2.5, sm: 4, md: 5 },
-            pb: { xs: 2.5, sm: 3, md: 3.5 },
-            px: { xs: 1.5, sm: 3 },
+            pb: { xs: 0, sm: 3, md: 3.5 },
+            px: { xs: 0, sm: 3 },
+
           }}
         >
-          <Container maxWidth="md" disableGutters sx={{ px: { xs: 0, sm: 2 } }}>
+          <Container maxWidth="md" disableGutters sx={{ px: { xs: 0, sm: 2 }, mt: { xs: -2, sm: -3 } }}>
             {/* Title */}
             <Typography
               fontWeight={800}
               sx={{
                 fontSize: { xs: "1rem", sm: "1.45rem", md: "1.8rem" },
-                letterSpacing: "0.2px",
-                lineHeight: 1.25,
+                letterSpacing: "0.3px",
+                lineHeight: 1.7,
+                mb: 2
               }}
             >
               Find Rides & Flight Companions
@@ -481,7 +482,7 @@ const filteredRides = rides
           "&::-webkit-scrollbar-thumb": { background: saffron[300], borderRadius: 4 },
         }}
       >
-        <Container maxWidth="md" disableGutters sx={{ px: { xs: 1.5, sm: 3 } }}>
+        <Container maxWidth="md" disableGutters sx={{ px: { xs: 0, sm: 3 } }}>
           {/* ── Filter Panel (not sticky — scrolls/collapses away) ──── */}
           <Collapse in={filtersOpen}>
             <Box
@@ -713,72 +714,73 @@ const filteredRides = rides
               gap: { xs: 0.75, sm: 1 },
               mb: { xs: 1.5, sm: 2 },
               mt: { xs: 1, sm: 1.5 },
+
             }}
           >
-            <Typography fontWeight={700} sx={{ color: saffron[800], fontSize: { xs: "0.9rem", sm: "1rem" } }}>
+            <Typography fontWeight={700} sx={{ color: saffron[800], fontSize: { xs: "0.83rem", sm: "1rem" } }}>
               {filteredRides.length}{" "}
-              <Typography component="span" fontWeight={400} color="text.secondary" fontSize="inherit">
-                {filteredRides.length === 1 ? "result" : "results"} found
-              </Typography>
+              <Typography component="span" fontWeight={400} color="text.secondary" sx= {{ fontSize: { xs: "0.83rem", sm: "1rem" }}}>
+              {filteredRides.length === 1 ? "result" : "results"} found
             </Typography>
-          </Box>
-
-          {/* ── Ride cards ── */}
-          {filteredRides.length > 0 ? (
-                    <Grid spacing={{ xs: 1, sm: 2 }}>
-              {filteredRides.map((ride) => {
-                const isOwnRide = ride.createdBy?._id === currentUser?._id;
-                return (
-                  <Grid item xs={12} sm={6} md={4} key={ride._id}>
-                    <RideCard
-                      ride={ride}
-                      isOwnRide={isOwnRide}
-                    />
-                  </Grid>
-                );
-              })}
-            </Grid>
-          ) : (
-            <Box
-              sx={{
-                background: "#fff",
-                borderRadius: { xs: 3, sm: 4 },
-                border: `1.5px dashed ${saffron[200]}`,
-                textAlign: "center",
-                py: { xs: 3, sm: 5 },
-                px: { xs: 2, sm: 4 },
-              }}
-            >
-              <Typography fontSize={{ xs: "2rem", sm: "2.5rem" }} mb={0.75}>
-                🔍
-              </Typography>
-              <Typography fontWeight={700} color={saffron[700]} mb={0.5} fontSize={{ xs: "0.9rem", sm: "1rem" }}>
-                No rides found
-              </Typography>
-              <Typography color="text.secondary" fontSize={{ xs: "0.78rem", sm: "0.88rem" }}>
-                Try adjusting your filters or search terms
-              </Typography>
-              <Button
-                onClick={clearFilters}
-                sx={{
-                  mt: 2,
-                  borderRadius: "50px",
-                  border: `1.5px solid ${saffron[300]}`,
-                  color: saffron[700],
-                  fontWeight: 600,
-                  fontSize: { xs: "0.75rem", sm: "0.82rem" },
-                  px: { xs: 2, sm: 2.5 },
-                  height: { xs: 32, sm: 36 },
-                  textTransform: "none",
-                  "&:hover": { background: saffron[50], borderColor: saffron[500] },
-                }}
-              >
-                Clear filters
-              </Button>
-            </Box>
-          )}
-        </Container>
+          </Typography>
       </Box>
-    </Box>
+
+      {/* ── Ride cards ── */}
+      {filteredRides.length > 0 ? (
+        <Grid spacing={{ xs: 1, sm: 2 }}>
+          {filteredRides.map((ride) => {
+            const isOwnRide = ride.createdBy?._id === currentUser?._id;
+            return (
+              <Grid item xs={12} sm={6} md={4} key={ride._id}>
+                <RideCard
+                  ride={ride}
+                  isOwnRide={isOwnRide}
+                />
+              </Grid>
+            );
+          })}
+        </Grid>
+      ) : (
+        <Box
+          sx={{
+            background: "#fff",
+            borderRadius: { xs: 3, sm: 4 },
+            border: `1.5px dashed ${saffron[200]}`,
+            textAlign: "center",
+            py: { xs: 3, sm: 5 },
+            px: { xs: 2, sm: 4 },
+          }}
+        >
+          <Typography fontSize={{ xs: "2rem", sm: "2.5rem" }} mb={0.75}>
+            🔍
+          </Typography>
+          <Typography fontWeight={700} color={saffron[700]} mb={0.5} fontSize={{ xs: "0.9rem", sm: "1rem" }}>
+            No rides found
+          </Typography>
+          <Typography color="text.secondary" fontSize={{ xs: "0.78rem", sm: "0.88rem" }}>
+            Try adjusting your filters or search terms
+          </Typography>
+          <Button
+            onClick={clearFilters}
+            sx={{
+              mt: 2,
+              borderRadius: "50px",
+              border: `1.5px solid ${saffron[300]}`,
+              color: saffron[700],
+              fontWeight: 600,
+              fontSize: { xs: "0.75rem", sm: "0.82rem" },
+              px: { xs: 2, sm: 2.5 },
+              height: { xs: 32, sm: 36 },
+              textTransform: "none",
+              "&:hover": { background: saffron[50], borderColor: saffron[500] },
+            }}
+          >
+            Clear filters
+          </Button>
+        </Box>
+      )}
+    </Container>
+      </Box >
+    </Box >
   );
 }

@@ -209,7 +209,7 @@
             border: `1px solid ${ORANGE_BORDER}`,
             borderBottom: 0,
             borderRadius: "14px 14px 0 0",
-            px: { xs: 1.5, sm: 2.5 },
+            px: { xs: 1, sm: 2.5 },
             py: { xs: 1, sm: 1.4 },
             display: "flex",
             justifyContent: "space-between",

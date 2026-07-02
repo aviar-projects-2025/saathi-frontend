@@ -217,7 +217,7 @@ const Settings = () => {
 
   return (
     <PageLayout>
-      <Box sx={{ maxWidth: 860, mx: "auto", px: { xs: 1.5, sm: 2, md: 0 } }}>
+      <Box sx={{ maxWidth: 860, mx: "auto", px: { xs: 0, sm: 2, md: 0 } }}>
         {/* Page heading */}
         <Typography
           variant="h5"

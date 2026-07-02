@@ -623,11 +623,11 @@ export default function OfferRide() {
           <Stack direction="row" spacing={{ xs: 1, sm: 1.5 }} sx={{ mt: { xs: 2, sm: 3 } }}>
             {step > 0 && (
               <Button variant="outlined" onClick={() => setStep((s) => s - 1)}
-                size={isMobile ? "small" : "medium"}
+                size="small" 
                 sx={{
                   flex: 1, minWidth: 0,
-                  fontSize: { xs: "0.72rem", sm: "0.8rem", md: "0.875rem" },
-                  py: { xs: 0.75, sm: 1, md: 1.1 },
+                  fontSize: { xs: "0.7rem", sm: "0.8rem", md: "0.875rem" },
+                  py: { xs: 0, sm: 1, md: 1.1 },
                   px: { xs: 1, sm: 2 },
                 }}>
                 Back
@@ -649,7 +649,7 @@ export default function OfferRide() {
             ) : (
               <Button variant="contained"
                 onClick={handleSubmit}
-                size={isMobile ? "small" : "medium"}
+                size="small"
                 sx={{
                   flex: 1, minWidth: 0,
                   fontSize: { xs: "0.72rem", sm: "0.8rem", md: "0.875rem" },

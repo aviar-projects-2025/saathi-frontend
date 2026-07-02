@@ -8,8 +8,9 @@ const PageLayout = ({ children }) => {
                 width: '100%',
                 maxWidth: { xs: '100%', sm: 620 },
                 // mx: 'auto',
-                px: { xs: 2, sm: 3 },
-                py: { xs: 2, sm: 3 },
+                px: { xs: 0, sm: 2 },
+                py: { xs: 0, sm: 2 },
+                pb: { xs: 2, sm: 3 },
                 boxSizing: 'border-box',
             }}
         >
