@@ -498,11 +498,11 @@ const MyReferrals = () => {
 
     const EmptyState = ({ message }) => (
         <Box sx={{ py: { xs: 6, sm: 10 }, textAlign: "center" }}>
-            <PeopleAltOutlinedIcon sx={{ fontSize: 48, color: "text.disabled", mb: 1 }} />
+            <PeopleAltOutlinedIcon sx={{ fontSize: 35, color: "text.disabled", mb: 1 }} />
             <Typography fontWeight={600} color="text.secondary" sx={{ fontSize: { xs: 15, sm: 16 } }}>
                 No referrals found
             </Typography>
-            <Typography variant="body2" color="text.disabled" sx={{ mt: 0.5, fontSize: { xs: 12, sm: 13 } }}>
+            <Typography variant="body2" color="text.disabled" sx={{ mt: 0.5, fontSize: { xs: 11, sm: 13 } }}>
                 {message}
             </Typography>
             <Button
@@ -513,7 +513,7 @@ const MyReferrals = () => {
                     textTransform: "none",
                     borderRadius: 5,
                     fontWeight: 600,
-                    fontSize: 13,
+                    fontSize: 12,
                     px: 3,
                     borderColor: "primary.main",
                     color: "primary.main",
@@ -530,7 +530,7 @@ const MyReferrals = () => {
             key={u._id}
             elevation={0}
             sx={{
-                p: { xs: 1.5, sm: 2 },
+                p: { xs: 0.8, sm: 2 },
                 borderRadius: 2,
                 border: "1px solid",
                 borderColor: "divider",
@@ -548,13 +548,14 @@ const MyReferrals = () => {
                 <Stack direction="row" spacing={1.5} alignItems="center" sx={{ minWidth: 0, flex: 1 }}>
                     <Avatar
                         sx={{
-                            bgcolor: "#E8F0FE",
-                            color: "#1A73E8",
+                            bgcolor: "#f0ebe3",
+                            color: "#ff8400",
                             fontWeight: 700,
-                            fontSize: { xs: 13, sm: 14 },
+                            fontSize: { xs: 12, sm: 14 },
                             width: { xs: 40, sm: 44 },
                             height: { xs: 40, sm: 44 },
                             flexShrink: 0,
+
                         }}
                     >
                         {getInitials(u.firstName, u.lastName)}
@@ -576,13 +577,13 @@ const MyReferrals = () => {
                         >
                             {u.email}
                         </Typography>
-                        <Typography
+                        {/* <Typography
                             variant="caption"
                             color="text.disabled"
                             sx={{ fontSize: { xs: 10, sm: 11 }, display: { xs: "block", sm: "none" }, mt: 0.25 }}
                         >
                             Requested {u.joinedAt}
-                        </Typography>
+                        </Typography> */}
                     </Box>
                 </Stack>
 
@@ -641,6 +642,7 @@ const MyReferrals = () => {
                                     px: 2,
                                     height: 32,
                                     "&:hover": { bgcolor: "#176D30" },
+                                    mt: 0.5
                                 }}
                             >
                                 Approve
@@ -660,6 +662,7 @@ const MyReferrals = () => {
                                     px: 2,
                                     height: 32,
                                     "&:hover": { bgcolor: "#FCE8E8", borderColor: "#B3261E" },
+                                    mt: 0.5
                                 }}
                             >
                                 Decline
@@ -677,9 +680,9 @@ const MyReferrals = () => {
                             gap: 0.5,
                             bgcolor: "#E6F4EA",
                             color: "#1E8E3E",
-                            fontSize: 12,
+                            fontSize: 11,
                             fontWeight: 600,
-                            px: 1.5,
+                            px: 1,
                             py: 0.5,
                             borderRadius: 5,
                             flexShrink: 0,
@@ -692,7 +695,7 @@ const MyReferrals = () => {
             </Stack>
 
             {/* Timestamp – desktop only for pending */}
-            {showActions && (
+            {/* {showActions && (
                 <Typography
                     variant="caption"
                     color="text.disabled"
@@ -700,7 +703,7 @@ const MyReferrals = () => {
                 >
                     Requested {u.joinedAt}
                 </Typography>
-            )}
+            )} */}
         </Paper>
     );
 
@@ -712,21 +715,21 @@ const MyReferrals = () => {
 
     return (
         <PageLayout>
-            <Box sx={{ maxWidth: 680, mx: "auto", px: { xs: 1.5, sm: 2, md: 0 }, pb: 6 }}>
+            <Box sx={{ maxWidth: 680, mx: "auto", px: { xs: 0, sm: 2, md: 0 }, pb: 6 }}>
 
                 {/* Header */}
-                <Box sx={{ mb: 3 }}>
+                <Box sx={{ mb: 1.5 }}>
                     <Typography
                         variant="h5"
                         fontWeight={700}
-                        sx={{ fontSize: { xs: 18, sm: 22 }, color: "text.primary" }}
+                        sx={{ fontSize: { xs: 16, sm: 22 }, color: "text.primary" }}
                     >
                         My Referrals
                     </Typography>
                     <Typography
                         variant="body2"
                         color="text.secondary"
-                        sx={{ mt: 1, fontSize: { xs: 12, sm: 16 } }}
+                        sx={{ mt: 1, fontSize: { xs: 11, sm: 15 } }}
                     >
                         Review and approve members who joined using your referral code.
                     </Typography>
@@ -741,13 +744,13 @@ const MyReferrals = () => {
                     variant="fullWidth"
                     centered
                     sx={{
-                        mb: 3,
+                        mb: 2,
                         // borderBottom: "1px solid",
                         // borderColor: "divider",
                         "& .MuiTab-root": {
                             textTransform: "none",
                             fontWeight: 600,
-                            fontSize: { xs: 10.3, sm: 14 },
+                            fontSize: { xs: 10.2, sm: 12 },
                             minHeight: { xs: 40, sm: 48 },
                             color: "text.secondary",
                         },

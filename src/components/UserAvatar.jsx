@@ -42,8 +42,8 @@ export default function UserAvatar({ name, profile, firstName, lastName, initial
       <Avatar
         src={ profile || currentUser?.profileImage || ""}
         sx={{
-          width: { xs: 40, sm: 42, md: 42 },
-          height: { xs: 40, sm: 42, md: 42 },
+          width: { xs: 30, sm: 50, md: 50 },
+          height: { xs: 30, sm: 50, md: 50 },
           bgcolor: SAFFRON,
           color: "#fff",
           fontWeight: 800,

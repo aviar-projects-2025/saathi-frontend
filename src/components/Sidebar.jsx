@@ -64,8 +64,8 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
     <Paper
       elevation={0}
       sx={{
-        width: isMobile ? "100%" : 220,
-        minWidth: isMobile ? "100%" : 220,
+        width: isMobile ? "100%" : 200,
+        minWidth: isMobile ? "100%" : 200,
         height: isMobile ? "100dvh" : "98%",
         bgcolor: "#ffffff",
         borderRadius: 0,
@@ -77,9 +77,9 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
         zIndex: 200
       }}
     >
-      <Stack spacing={1.2}
+      <Stack spacing={{xs:1.3 , sm:2}}
         sx={{
-          marginTop: isMobile ? 10 : 0,
+          marginTop: isMobile ? 10 : 3,
         }}
       >
         <Typography
@@ -117,7 +117,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
                 "&:hover": {
                   bgcolor: "#fff0df",
                   color: "#d97706",
-                  transform: "translateX(3px)",
+                  // transform: "translateX(3px)",
                 
                 },
               }}
