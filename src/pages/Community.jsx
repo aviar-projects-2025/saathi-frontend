@@ -782,30 +782,21 @@ export default function Community() {
               maxWidth: "1200px"
             }}
           >
-            {/* ── Left: Post Feed ── */}
+            {/* ── Left: Post Feed (scrolls with the page, no independent scroll) ── */}
             <Box
               sx={{
                 flex: 1,
                 minWidth: 0, // prevents flex child from overflowing
                 pr: isMobile ? 0.5 : 1,
-                display: 'flex',
-                flexDirection: 'column',
-                // Adjust 64px / 96px to match your header/navbar height
-                height: isMobile ? 'calc(100vh - 64px)' : 'calc(100vh - 96px)',
               }}
             >
-              {/* Create post box — STICKY */}
+              {/* Create post box */}
               <Box
                 sx={{
                   p: isMobile ? 1.5 : 2,
                   borderRadius: 3,
                   border: CARD_BORDER,
                   mb: 2,
-                  position: 'sticky',
-                  top: 0,
-                  zIndex: 5,
-                  bgcolor: 'background.paper', // required so scrolling content doesn't show through
-                  flexShrink: 0,
                 }}
               >
                 <Box sx={{ display: 'flex', gap: isMobile ? 1 : 1.5, alignItems: 'flex-start' }}>
@@ -854,7 +845,7 @@ export default function Community() {
                       sx={{
                         width: '100%',
                         maxHeight: isMobile ? 200 : 300,
-                        objectFit: 'contain',
+                        objectFit: 'cover',
                         display: 'block',
                       }}
                     />
@@ -911,131 +902,119 @@ export default function Community() {
                 </Stack>
               </Box>
 
-              {/* Posts list — SCROLLABLE */}
-              <Box
-                sx={{
-                  flex: 1,
-                  minHeight: 0, // required for overflow to work inside a flex column
-                  overflowY: 'auto',
-                  overflowX: 'hidden',
-                  // Optional: nicer scrollbar
-                  '&::-webkit-scrollbar': { width: 6 },
-                  '&::-webkit-scrollbar-thumb': { backgroundColor: '#ccc', borderRadius: 3 },
-                  pr: 0.5,
-                }}
-              >
-                {postLoading ? (
-                  <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', py: 4 }}>
-                    <CircularProgress size={isMobile ? 36 : 50} />
-                  </Box>
-                ) : (
-                  communityPosts?.map((post, index) => (
-                    <Paper
-                      key={index}
-                      elevation={0}
-                      sx={{ borderRadius: 3, border: CARD_BORDER, mb: 2, overflow: 'hidden' }}
-                    >
-                      <Box sx={{ p: isMobile ? 1.5 : 2 }}>
-                        {/* Post header */}
-                        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: isMobile ? 1 : 1.5 }}>
-                          <Avatar
-                            src={post?.authorId?.profileImage}
-                            sx={{
-                              width: avatarSize,
-                              height: avatarSize,
-                              bgcolor: SAFFRON,
-                              color: '#fff',
-                              fontWeight: 800,
-                              fontSize: avatarFontSize,
-                              flexShrink: 0,
-                              mt: { xs: 1, sm: 0.5 }
-                            }}
-                          >
-                            {!currentUser?.profileImage &&
-                              `${currentUser?.firstName?.[0] || ''}${currentUser?.lastName?.[0] || ''}`}
-                          </Avatar>
+              {/* Posts list */}
+              {postLoading ? (
+                <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', py: 4 }}>
+                  <CircularProgress size={isMobile ? 36 : 50} />
+                </Box>
+              ) : (
+                communityPosts?.map((post, index) => (
+                  <Paper
+                    key={index}
+                    elevation={0}
+                    sx={{ borderRadius: 3, border: CARD_BORDER, mb: 2, overflow: 'hidden' }}
+                  >
+                    <Box sx={{ p: isMobile ? 1.5 : 2 }}>
+                      {/* Post header */}
+                      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: isMobile ? 1 : 1.5 }}>
+                        <Avatar
+                          src={post?.authorId?.profileImage}
+                          sx={{
+                            width: avatarSize,
+                            height: avatarSize,
+                            bgcolor: SAFFRON,
+                            color: '#fff',
+                            fontWeight: 800,
+                            fontSize: avatarFontSize,
+                            flexShrink: 0,
+                            mt: { xs: 1, sm: 0.5 }
+                          }}
+                        >
+                          {!currentUser?.profileImage &&
+                            `${currentUser?.firstName?.[0] || ''}${currentUser?.lastName?.[0] || ''}`}
+                        </Avatar>
 
-                          <Box sx={{ flex: 1, minWidth: 0 }}>
-                            <Typography fontWeight={700} fontSize={isMobile ? '0.82rem' : '0.95rem'} noWrap>
-                              {post?.authorId?.firstName} {post?.authorId?.lastName}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary" fontSize={captionSize}>
-                              {'tvm'} | {formattedDateTime(post?.createdAt)}
-                            </Typography>
-                          </Box>
-
-                          <MoreHorizIcon fontSize={iconFontSize} sx={{ color: 'text.secondary', flexShrink: 0 }} />
+                        <Box sx={{ flex: 1, minWidth: 0}}>
+                          <Typography fontWeight={700} fontSize={isMobile ? '0.75rem' : '0.95rem'} noWrap>
+                            {post?.authorId?.firstName} {post?.authorId?.lastName}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary" fontSize={captionSize}>
+                            {'tvm'} | {formattedDateTime(post?.createdAt)}
+                          </Typography>
                         </Box>
 
-                        {/* Post body */}
-                        <Typography sx={{ mt: 1.5, fontSize: bodyFontSize, lineHeight: 1.6 }}>
-                          {post.description}
-                        </Typography>
+                        <MoreHorizIcon fontSize={iconFontSize} sx={{ color: 'text.secondary', flexShrink: 0 }} />
                       </Box>
 
-                      {/* Post image */}
-                      {post.postImage && <CommunityImage src={post.postImage} />}
+                      {/* Post body */}
+                      <Typography sx={{ mt: 1.5, fontSize: bodyFontSize, lineHeight: 1.6 }}>
+                        {post.description}
+                      </Typography>
+                    </Box>
 
-                      <Divider />
+                    {/* Post image */}
+                    {post.postImage && <CommunityImage src={post.postImage} />}
 
-                      {/* Action buttons */}
-                      <Stack
-                        direction="row"
-                        sx={{
-                          py: isMobile ? 0.25 : 0.5,
-                          px: isMobile ? 0.5 : 2,
-                          gap: isMobile ? 0 : 5,
-                          justifyContent: 'space-around',
-                        }}
+                    <Divider />
+
+                    {/* Action buttons */}
+                    <Stack
+                      direction="row"
+                      sx={{
+                        py: isMobile ? 0.25 : 0.5,
+                        px: isMobile ? 0.5 : 2,
+                        gap: isMobile ? 0 : 5,
+                        // justifyContent: isMobile ? 'space-around' : 'flex-start',
+                        justifyContent: 'space-around',
+                      }}
+                    >
+                      <Button
+                        onClick={() => post.isLiked ? removeLike(post._id) : addLike(post._id)}
+                        startIcon={
+                          post.isLiked
+                            ? <ThumbUpIcon fontSize={iconFontSize} sx={{ color: '#0084ff' }} />
+                            : <ThumbUpOffAltIcon fontSize={iconFontSize} />
+                        }
+                        size={isMobile ? 'small' : 'medium'}
+                        sx={{ textTransform: 'none', color: 'text.secondary', fontSize: btnFontSize }}
                       >
-                        <Button
-                          onClick={() => post.isLiked ? removeLike(post._id) : addLike(post._id)}
-                          startIcon={
-                            post.isLiked
-                              ? <ThumbUpIcon fontSize={iconFontSize} sx={{ color: '#0084ff' }} />
-                              : <ThumbUpOffAltIcon fontSize={iconFontSize} />
-                          }
-                          size={isMobile ? 'small' : 'medium'}
-                          sx={{ textTransform: 'none', color: 'text.secondary', fontSize: btnFontSize }}
-                        >
-                          Like {post?.likes || 0}
-                        </Button>
+                        Like {post?.likes || 0}
+                      </Button>
 
-                        <Button
-                          startIcon={
-                            activeCommentPostId === post._id
-                              ? <ChatIcon fontSize={iconFontSize} sx={{ color: '#0084ff' }} />
-                              : <ChatIcon fontSize={iconFontSize} />
-                          }
-                          onClick={() =>
-                            setActiveCommentPostId((prev) => prev === post._id ? null : post._id)
-                          }
-                          size={isMobile ? 'small' : 'medium'}
-                          sx={{ textTransform: 'none', color: 'text.secondary', fontSize: btnFontSize }}
-                        >
-                          Comments
-                        </Button>
+                      <Button
+                        startIcon={
+                          activeCommentPostId === post._id
+                            ? <ChatIcon fontSize={iconFontSize} sx={{ color: '#0084ff' }} />
+                            : <ChatIcon fontSize={iconFontSize} />
+                        }
+                        onClick={() =>
+                          setActiveCommentPostId((prev) => prev === post._id ? null : post._id)
+                        }
+                        size={isMobile ? 'small' : 'medium'}
+                        sx={{ textTransform: 'none', color: 'text.secondary', fontSize: btnFontSize }}
+                      >
+                        Comments
+                      </Button>
 
-                        <Button
-                          startIcon={<ShareIcon fontSize={iconFontSize} />}
-                          size={isMobile ? 'small' : 'medium'}
-                          sx={{ textTransform: 'none', color: 'text.secondary', fontSize: btnFontSize }}
-                        >
-                          Share
-                        </Button>
-                      </Stack>
+                      <Button
+                        startIcon={<ShareIcon fontSize={iconFontSize} />}
+                        size={isMobile ? 'small' : 'medium'}
+                        sx={{ textTransform: 'none', color: 'text.secondary', fontSize: btnFontSize }}
+                      >
+                        Share
+                      </Button>
+                    </Stack>
 
-                      <Divider />
+                    <Divider />
 
-                      {activeCommentPostId === post._id && (
-                        <Box sx={{ margin: isMobile ? 1 : 1.5 }}>
-                          <CommunityComments post={post} user={user} />
-                        </Box>
-                      )}
-                    </Paper>
-                  ))
-                )}
-              </Box>
+                    {activeCommentPostId === post._id && (
+                      <Box sx={{ margin: isMobile ? 1 : 1.5 }}>
+                        <CommunityComments post={post} user={user} />
+                      </Box>
+                    )}
+                  </Paper>
+                ))
+              )}
             </Box>
           </Box>
         </PageLayout>
