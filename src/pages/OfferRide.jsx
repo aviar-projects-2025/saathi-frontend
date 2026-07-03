@@ -93,9 +93,30 @@ export default function OfferRide() {
         if (!form.from.trim()) { toast.error("Please enter From location"); return false; }
         if (!form.destination.trim()) { toast.error("Please enter Destination"); return false; }
       }
-      if (!form.date) { toast.error("Please select Date"); return false; }
-      if (!form.time) { toast.error("Please select Time"); return false; }
-      if (!form.description.trim()) { toast.error("Please enter Description"); return false; }
+      if (!form.date) {
+        toast.error("Please select Date");
+        return false;
+      }
+
+      if (!form.time) {
+        toast.error("Please select Time");
+        return false;
+      }
+
+      // Prevent past date & time
+      const selectedDateTime = new Date(`${form.date}T${form.time}`);
+      const now = new Date();
+
+      if (selectedDateTime <= now) {
+        toast.error("Please select a future date and time");
+        return false;
+      }
+
+      if (!form.description.trim()) {
+        toast.error("Please enter Description");
+        return false;
+      }
+
     }
 
     if (step === 1) {
@@ -623,7 +644,7 @@ export default function OfferRide() {
           <Stack direction="row" spacing={{ xs: 1, sm: 1.5 }} sx={{ mt: { xs: 2, sm: 3 } }}>
             {step > 0 && (
               <Button variant="outlined" onClick={() => setStep((s) => s - 1)}
-                size="small" 
+                size="small"
                 sx={{
                   flex: 1, minWidth: 0,
                   fontSize: { xs: "0.7rem", sm: "0.8rem", md: "0.875rem" },
