@@ -13,6 +13,8 @@ import { useNotifications } from '../context/NotificationContext';
 export default function NotificationTab() {
     const { tabNotification } = useNotifications();
 
+    console.log(tabNotification,'tabNotification')
+
     return (
         <List
             sx={{
@@ -42,8 +44,8 @@ export default function NotificationTab() {
                                 }}
                             >
                                 <ListItemAvatar>
-                                    <Avatar src={item?.requestedById?.profileImage}>
-                                        {item?.requestedById?.firstName?.[0] || "U"}
+                                    <Avatar src={item?.actorId?.profileImage}>
+                                        {item?.actorId?.firstName?.[0] || "U"}
                                     </Avatar>
                                 </ListItemAvatar>
                                 <Box sx={{

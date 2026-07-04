@@ -142,7 +142,7 @@ const TopNav = ({ onMenuClick }) => {
               overflowY: "auto"
             }}>
               <NotificationTab />
-              {tabNotification.length > 0 &&
+              {tabNotification.length > 6 &&
                 <Typography sx={{ fontSize: 14, position: 'absolute', bottom: 1 }}>
                   <KeyboardDoubleArrowUpIcon />
                   Scroll to see more
