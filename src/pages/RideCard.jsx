@@ -113,6 +113,7 @@ export default function RideCard({ ride }) {
       if (!requestData.members[i].age) { toast.error(`Please enter Member ${i + 1} age`); return; }
     }
     const payload = {
+      firstName : storedUser?.firstName,
       requestedBy: storedUser?.id,
       seatsRequested: selectedRide.modeOfTravel === "Flight" ? null : Number(requestData.seatsRequested),
       membersCount: Number(requestData.membersCount),
