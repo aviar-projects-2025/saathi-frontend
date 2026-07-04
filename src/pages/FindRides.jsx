@@ -325,21 +325,20 @@ export default function FindRides() {
         <Box
           sx={{
             color: "#000000",
-            pt: { xs: 2.5, sm: 4, md: 5 },
+            pt: { xs: 1, sm: 2, md: 5 },
             pb: { xs: 0, sm: 3, md: 3.5 },
-            px: { xs: 0, sm: 3 },
+            px: { xs: 0, sm: 2 },
 
           }}
         >
-          <Container maxWidth="md" disableGutters sx={{ px: { xs: 0, sm: 2 }, mt: { xs: -2, sm: -3 } }}>
+          <Container maxWidth="md" disableGutters sx={{ px: { xs: 0, sm: 2 }}}>
             {/* Title */}
             <Typography
               fontWeight={800}
               sx={{
                 fontSize: { xs: "1rem", sm: "1.45rem", md: "1.8rem" },
                 letterSpacing: "0.3px",
-                lineHeight: 1.7,
-                mb: 2
+                lineHeight: 1.2,
               }}
             >
               Find Rides & Flight Companions
@@ -349,10 +348,10 @@ export default function FindRides() {
             <Box
               sx={{
                 display: "flex",
-                gap: { xs: 0.75, sm: 1.25 },
+                gap: { xs: 0.7, sm: 1.25 },
                 alignItems: "center",
                 flexDirection: "row",
-                mt: { xs: 1, sm: 1.5 },
+                mt: { xs: 2.3, sm: 1.5 },
               }}
             >
               {/* From */}
@@ -733,7 +732,7 @@ export default function FindRides() {
               flexWrap: "wrap",
               gap: { xs: 0.75, sm: 1 },
               mb: { xs: 1.5, sm: 2 },
-              mt: { xs: 1, sm: 1.5 },
+              mt: { xs: 2, sm: 1.5 },
 
             }}
           >

@@ -1,41 +1,874 @@
-import React, { useEffect, useState } from "react";
+// import React, { useEffect, useState } from "react";
+// import {
+//   Box,
+//   Typography,
+//   Paper,
+//   TextField,
+//   Button,
+//   Select,
+//   MenuItem,
+//   FormControl,
+//   InputLabel,
+//   FormControlLabel,
+//   Switch,
+//   Slider,
+//   Stack,
+//   Alert,
+//   Stepper,
+//   Step,
+//   StepLabel,
+//   Checkbox,
+//   FormHelperText,
+//   useMediaQuery,
+// } from "@mui/material";
+// import { useTheme } from "@mui/material/styles";
+
+// import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+// import { useNavigate } from "react-router-dom";
+// import PageLayout from "../components/PageLayout";
+// import axios from "axios";
+// import Api from "../Api";
+// import { toast } from "react-toastify";
+
+// const steps = ["Trip details", "Preferences", "Review & post"];
+
+// export default function OfferRide() {
+//   const navigate = useNavigate();
+//   const theme = useTheme();
+//   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+//   const [step, setStep] = useState(0);
+//   const [submitted, setSubmitted] = useState(false);
+//   const [showErrors, setShowErrors] = useState(false);
+
+//   const user = JSON.parse(localStorage.getItem("user"));
+
+//   const [form, setForm] = useState({
+//     from: "",
+//     destination: "",
+//     date: "",
+//     time: "",
+//     modeOfTravel: "Car",
+//     availableSeats: 1,
+//     fuelSharing: false,
+//     description: "",
+//     genderPreference: "Any",
+
+//     fromCountry: "",
+//     fromAirport: "",
+//     toCountry: "",
+//     toAirport: "",
+//     flightNumber: "",
+//     airlineName: "",
+//     transitAirport: "",
+//     travellerType: "",
+//     language: "",
+//     ageGroupPreference: "Any",
+
+//     medicalAssistance: false,
+//     languageSupport: false,
+//     transitHelp: false,
+//     baggageHelp: false,
+//   });
+
+//   const isFlight = form.modeOfTravel === "Flight";
+
+//   const update = (key, val) => {
+//     setForm((prev) => ({ ...prev, [key]: val }));
+//   };
+
+//   const validateStep = () => {
+//     setShowErrors(true);
+
+//     if (step === 0) {
+//       if (!form.modeOfTravel) { toast.error("Please select mode of travel"); return false; }
+//       if (isFlight) {
+//         if (!form.fromCountry.trim()) { toast.error("Please enter From Country"); return false; }
+//         if (!form.fromAirport.trim()) { toast.error("Please enter From Airport"); return false; }
+//         if (!form.toCountry.trim()) { toast.error("Please enter To Country"); return false; }
+//         if (!form.toAirport.trim()) { toast.error("Please enter To Airport"); return false; }
+//         if (!form.flightNumber.trim()) { toast.error("Please enter Flight Number"); return false; }
+//         if (!form.airlineName.trim()) { toast.error("Please enter Airline Name"); return false; }
+//       } else {
+//         if (!form.from.trim()) { toast.error("Please enter From location"); return false; }
+//         if (!form.destination.trim()) { toast.error("Please enter Destination"); return false; }
+//       }
+//       if (!form.date) {
+//         toast.error("Please select Date");
+//         return false;
+//       }
+
+//       if (!form.time) {
+//         toast.error("Please select Time");
+//         return false;
+//       }
+
+//       // Prevent past date & time
+//       const selectedDateTime = new Date(`${form.date}T${form.time}`);
+//       const now = new Date();
+
+//       if (selectedDateTime <= now) {
+//         toast.error("Please select a future date and time");
+//         return false;
+//       }
+
+//       if (!form.description.trim()) {
+//         toast.error("Please enter Description");
+//         return false;
+//       }
+
+//     }
+
+//     if (step === 1) {
+//       if (!form.genderPreference) { toast.error("Please select Gender Preference"); return false; }
+//       if (isFlight) {
+//         if (!form.travellerType) { toast.error("Please select Traveller Type"); return false; }
+//         if (!form.language.trim()) { toast.error("Please enter Language"); return false; }
+//       } else {
+//         if (form.availableSeats < 1) { toast.error("Available seats should be at least 1"); return false; }
+//       }
+//     }
+
+//     return true;
+//   };
+
+//   const formReset = () => {
+//     setForm({
+//       from: "", destination: "", date: "", time: "",
+//       modeOfTravel: "Car", availableSeats: 1, fuelSharing: false,
+//       description: "", genderPreference: "Any",
+//       fromCountry: "", fromAirport: "", toCountry: "", toAirport: "",
+//       flightNumber: "", airlineName: "", transitAirport: "",
+//       travellerType: "", language: "", ageGroupPreference: "Any",
+//       medicalAssistance: false, languageSupport: false,
+//       transitHelp: false, baggageHelp: false,
+//     });
+//   };
+
+//   const handleSubmit = async () => {
+//     const payload = {
+//       createdBy: user?.id,
+//       modeOfTravel: form.modeOfTravel,
+//       startTime: new Date(`${form.date}T${form.time}`).toISOString(),
+//       description: form.description,
+//       genderPreference: form.genderPreference,
+//       status: "OPEN",
+//       ...(isFlight
+//         ? {
+//           fromCountry: form.fromCountry, fromAirport: form.fromAirport,
+//           toCountry: form.toCountry, toAirport: form.toAirport,
+//           from: form.fromAirport, destination: form.toAirport,
+//           flightNumber: form.flightNumber, airlineName: form.airlineName,
+//           transitAirport: form.transitAirport, travellerType: form.travellerType,
+//           language: form.language, ageGroupPreference: form.ageGroupPreference,
+//           medicalAssistance: form.medicalAssistance, languageSupport: form.languageSupport,
+//           transitHelp: form.transitHelp, baggageHelp: form.baggageHelp,
+//         }
+//         : {
+//           from: form.from, destination: form.destination,
+//           availableSeats: form.availableSeats, fuelSharing: form.fuelSharing,
+//         }),
+//     };
+
+//     try {
+//       await axios.post(`${Api}/rides/`, payload);
+//       toast.success("Ride Created Successfully...!");
+//       setStep(0);
+//       formReset();
+//       setSubmitted(true);
+//       setShowErrors(false);
+//     } catch (error) {
+//       toast.error(error.response?.data?.message || error.message);
+//     }
+//   };
+
+//   useEffect(() => {
+//     if (submitted) {
+//       const timer = setTimeout(() => setSubmitted(false), 3000);
+//       return () => clearTimeout(timer);
+//     }
+//   }, [submitted]);
+
+//   /* ── shared input size prop ── */
+//   const inputSize = isMobile ? "small" : "small";
+
+//   /* ── shared label font size ── */
+//   const labelSx = {
+//     fontSize: { xs: "0.72rem", sm: "0.8rem", md: "0.875rem" },
+//   };
+
+//   /* ── shared TextField sx override ── */
+//   const tfSx = {
+//     "& .MuiInputBase-input": {
+//       fontSize: { xs: "0.75rem", sm: "0.8rem", md: "0.875rem" },
+//       py: { xs: "6px", sm: "7px" },
+//     },
+//     "& .MuiInputLabel-root": {
+//       fontSize: { xs: "0.72rem", sm: "0.8rem", md: "0.875rem" },
+//     },
+//     "& .MuiFormHelperText-root": {
+//       fontSize: { xs: "0.62rem", sm: "0.7rem" },
+//       mx: 0,
+//     },
+//   };
+
+//   /* ── shared Select sx override ── */
+//   const selectSx = {
+//     fontSize: { xs: "0.75rem", sm: "0.8rem", md: "0.875rem" },
+//     "& .MuiSelect-select": {
+//       py: { xs: "6px", sm: "7px" },
+//     },
+//   };
+
+//   /* ── shared InputLabel sx override ── */
+//   const ilSx = { fontSize: { xs: "0.72rem", sm: "0.8rem", md: "0.875rem" } };
+
+//   /* ── review row component ── */
+//   const ReviewRow = ({ label, value }) => (
+//     <Stack
+//       direction={{ xs: "row", sm: "row" }}
+//       justifyContent="space-between"
+//       alignItems="flex-start"
+//       spacing={1}
+//       sx={{ py: { xs: 0.5, sm: 0.75 }, borderBottom: "1px solid #F0E6DC" }}
+//     >
+//       <Typography
+//         variant="body2"
+//         color="text.secondary"
+//         fontWeight={500}
+//         sx={{ fontSize: { xs: "0.7rem", sm: "0.8rem", md: "0.875rem" }, flexShrink: 0, minWidth: { xs: "42%", sm: "auto" } }}
+//       >
+//         {label}
+//       </Typography>
+//       <Typography
+//         variant="body2"
+//         fontWeight={600}
+//         textAlign="right"
+//         sx={{ fontSize: { xs: "0.72rem", sm: "0.8rem", md: "0.875rem" }, wordBreak: "break-word" }}
+//       >
+//         {value}
+//       </Typography>
+//     </Stack>
+//   );
+
+//   /* ──────────────── SUCCESS SCREEN ──────────────── */
+//   if (submitted) {
+//     return (
+//       <Box
+//         sx={{
+//           maxWidth: 520,
+//           width: "100%",
+//           mx: "auto",
+//           px: { xs: 2, sm: 3 },
+//           py: { xs: 4, sm: 6 },
+//           textAlign: "center",
+//         }}
+//       >
+//         <CheckCircleIcon sx={{ fontSize: { xs: 48, sm: 72 }, color: "#52B788", mb: 1.5 }} />
+//         <Typography variant="h5" fontWeight={800} gutterBottom sx={{ fontSize: { xs: "1.1rem", sm: "1.5rem" } }}>
+//           Ride posted! 🙏
+//         </Typography>
+//         <Typography color="text.secondary" mb={3} sx={{ fontSize: { xs: "0.8rem", sm: "1rem" } }}>
+//           Your ride is now visible to the Saathi community.
+//         </Typography>
+//       </Box>
+//     );
+//   }
+
+//   /* ──────────────── MAIN RENDER ──────────────── */
+//   return (
+//     <PageLayout>
+//       <Box
+//         sx={{
+//           width: "100%",
+//           maxWidth: { xs: "100%", sm: 600, md: 720 },
+//           mx: "auto",
+//           px: { xs: 0, sm: 0 },
+//         }}
+//       >
+//         {/* Page title */}
+//         <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: { xs: 1.5, sm: 3 } }}>
+//           <Typography
+//             variant="h5"
+//             fontWeight={800}
+//             sx={{ fontSize: { xs: "1rem", sm: "1.25rem", md: "1.5rem" } }}
+//           >
+//             Offer a Ride
+//           </Typography>
+//         </Box>
+
+//         {/* Stepper */}
+//         <Stepper
+//           activeStep={step}
+//           alternativeLabel
+//           sx={{
+//             mb: { xs: 2, sm: 3 },
+//             "& .MuiStepLabel-label": {
+//               fontSize: { xs: "0.58rem", sm: "0.72rem", md: "0.8rem" },
+//               mt: { xs: 0.4, sm: 0.75 },
+//             },
+//             "& .MuiStepIcon-root": {
+//               fontSize: { xs: "1.25rem", sm: "1.5rem", md: "1.75rem" },
+//             },
+//             "& .MuiStepConnector-line": { minWidth: { xs: 4, sm: 16 } },
+//           }}
+//         >
+//           {steps.map((label) => (
+//             <Step key={label}>
+//               <StepLabel>{label}</StepLabel>
+//             </Step>
+//           ))}
+//         </Stepper>
+
+//         {/* Form paper */}
+//         <Paper
+//           sx={{
+//             p: { xs: 1.5, sm: 2.5, md: 3.5 },
+//             borderRadius: { xs: 2, sm: 3 },
+//             width: "100%",
+//             boxSizing: "border-box",
+//             overflow: "hidden",
+//           }}
+//         >
+
+//           {/* ── STEP 0 : Trip details ── */}
+//           {step === 0 && (
+//             <Stack spacing={{ xs: 1.5, sm: 2, md: 2.5 }}>
+
+//               {/* Mode of Travel */}
+//               <FormControl fullWidth size={inputSize}>
+//                 <InputLabel sx={ilSx}>Mode of Travel</InputLabel>
+//                 <Select
+//                   value={form.modeOfTravel}
+//                   label="Mode of Travel"
+//                   onChange={(e) => update("modeOfTravel", e.target.value)}
+//                   sx={selectSx}
+//                 >
+//                   <MenuItem value="Car" sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>🚗 Car</MenuItem>
+//                   <MenuItem value="Bus" sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>🚌 Bus</MenuItem>
+//                   <MenuItem value="Bike" sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>🏍️ Bike</MenuItem>
+//                   <MenuItem value="Flight" sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>✈️ Flight</MenuItem>
+//                   <MenuItem value="Train" sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>🚆 Train</MenuItem>
+//                 </Select>
+//               </FormControl>
+
+//               {/* Flight fields */}
+//               {isFlight ? (
+//                 <>
+//                   <Typography fontWeight={700} color="primary" sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" } }}>
+//                     Flight Details
+//                   </Typography>
+
+//                   <Stack direction={{ xs: "column", sm: "row" }} spacing={{ xs: 1.5, sm: 2 }}>
+//                     <TextField label="From Country" fullWidth size={inputSize} value={form.fromCountry}
+//                       onChange={(e) => update("fromCountry", e.target.value)}
+//                       error={!form.fromCountry && showErrors}
+//                       helperText={!form.fromCountry && showErrors ? "Required" : ""}
+//                       sx={tfSx} />
+//                     <TextField label="From Airport" fullWidth size={inputSize} value={form.fromAirport}
+//                       onChange={(e) => update("fromAirport", e.target.value)}
+//                       error={!form.fromAirport && showErrors}
+//                       helperText={!form.fromAirport && showErrors ? "Required" : ""}
+//                       sx={tfSx} />
+//                   </Stack>
+
+//                   <Stack direction={{ xs: "column", sm: "row" }} spacing={{ xs: 1.5, sm: 2 }}>
+//                     <TextField label="To Country" fullWidth size={inputSize} value={form.toCountry}
+//                       onChange={(e) => update("toCountry", e.target.value)}
+//                       error={!form.toCountry && showErrors}
+//                       helperText={!form.toCountry && showErrors ? "Required" : ""}
+//                       sx={tfSx} />
+//                     <TextField label="To Airport" fullWidth size={inputSize} value={form.toAirport}
+//                       onChange={(e) => update("toAirport", e.target.value)}
+//                       error={!form.toAirport && showErrors}
+//                       helperText={!form.toAirport && showErrors ? "Required" : ""}
+//                       sx={tfSx} />
+//                   </Stack>
+
+//                   <Stack direction={{ xs: "column", sm: "row" }} spacing={{ xs: 1.5, sm: 2 }}>
+//                     <TextField label="Flight Number" fullWidth size={inputSize} value={form.flightNumber}
+//                       onChange={(e) => update("flightNumber", e.target.value)}
+//                       error={!form.flightNumber && showErrors}
+//                       helperText={!form.flightNumber && showErrors ? "Required" : ""}
+//                       sx={tfSx} />
+//                     <TextField label="Airline Name" fullWidth size={inputSize} value={form.airlineName}
+//                       onChange={(e) => update("airlineName", e.target.value)}
+//                       error={!form.airlineName && showErrors}
+//                       helperText={!form.airlineName && showErrors ? "Required" : ""}
+//                       sx={tfSx} />
+//                   </Stack>
+
+//                   <TextField label="Transit Airport (Optional)" fullWidth size={inputSize}
+//                     value={form.transitAirport}
+//                     onChange={(e) => update("transitAirport", e.target.value)}
+//                     sx={tfSx} />
+//                 </>
+//               ) : (
+//                 /* Non-flight from/destination */
+//                 <Stack direction={{ xs: "column", sm: "row" }} spacing={{ xs: 1.5, sm: 2 }}>
+//                   <TextField label="From" fullWidth size={inputSize} value={form.from}
+//                     onChange={(e) => update("from", e.target.value)}
+//                     placeholder="Chennai"
+//                     error={!form.from && showErrors}
+//                     helperText={!form.from && showErrors ? "Required" : ""}
+//                     sx={tfSx} />
+//                   <TextField label="Destination" fullWidth size={inputSize} value={form.destination}
+//                     onChange={(e) => update("destination", e.target.value)}
+//                     placeholder="Bangalore"
+//                     error={!form.destination && showErrors}
+//                     helperText={!form.destination && showErrors ? "Required" : ""}
+//                     sx={tfSx} />
+//                 </Stack>
+//               )}
+
+//               {/* Date & Time */}
+//               <Stack direction={{ xs: "column", sm: "row" }} spacing={{ xs: 1.5, sm: 2 }}>
+//                 <Stack sx={{ flex: 1, minWidth: 0 }}>
+//                   <InputLabel sx={labelSx}>Date</InputLabel>
+//                   <TextField fullWidth size={inputSize} type="date" value={form.date}
+//                     onChange={(e) => update("date", e.target.value)}
+//                     error={!form.date && showErrors}
+//                     helperText={!form.date && showErrors ? "Required" : ""}
+//                     sx={tfSx} />
+//                 </Stack>
+//                 <Stack sx={{ flex: 1, minWidth: 0 }}>
+//                   <InputLabel sx={labelSx}>{isFlight ? "Departure Time" : "Time"}</InputLabel>
+//                   <TextField fullWidth size={inputSize} type="time" value={form.time}
+//                     onChange={(e) => update("time", e.target.value)}
+//                     error={!form.time && showErrors}
+//                     helperText={!form.time && showErrors ? "Required" : ""}
+//                     sx={tfSx} />
+//                 </Stack>
+//               </Stack>
+
+//               {/* Description */}
+//               <TextField label="Description" fullWidth multiline
+//                 rows={isMobile ? 2 : 3}
+//                 size={inputSize}
+//                 value={form.description}
+//                 onChange={(e) => update("description", e.target.value)}
+//                 placeholder={
+//                   isFlight
+//                     ? "Need companion for airport, transit, baggage or language support..."
+//                     : "Traveling to Bangalore for a weekend trip..."
+//                 }
+//                 error={!form.description && showErrors}
+//                 helperText={!form.description && showErrors ? "Required" : ""}
+//                 sx={tfSx} />
+//               <TextField
+//                 label="Journey Duration"
+//                 fullWidth
+//                 size={inputSize}
+//                 value={form.duration}
+//                 onChange={(e) => update("duration", e.target.value)}
+//                 placeholder="e.g. 2h 30m"
+//                 error={!form.duration && showErrors}
+//                 helperText={!form.duration && showErrors ? "Required" : ""}
+//                 sx={tfSx}
+//               />
+//             </Stack>
+//           )}
+
+//           {/* ── STEP 1 : Preferences ── */}
+//           {step === 1 && (
+//             <Stack spacing={{ xs: 2, sm: 2.5, md: 3 }}>
+//               {isFlight ? (
+//                 <>
+//                   {/* Traveller Type */}
+//                   <FormControl fullWidth size={inputSize} error={!form.travellerType && showErrors}>
+//                     <InputLabel sx={ilSx}>Traveller Type</InputLabel>
+//                     <Select value={form.travellerType} label="Traveller Type"
+//                       onChange={(e) => update("travellerType", e.target.value)}
+//                       sx={selectSx}>
+//                       {["First-time traveller", "Senior citizen support", "Student travel companion",
+//                         "Women-only companion", "Family companion"].map((v) => (
+//                           <MenuItem key={v} value={v} sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>{v}</MenuItem>
+//                         ))}
+//                     </Select>
+//                     {!form.travellerType && showErrors && (
+//                       <FormHelperText sx={{ fontSize: { xs: "0.62rem", sm: "0.7rem" } }}>Required</FormHelperText>
+//                     )}
+//                   </FormControl>
+
+//                   {/* Language */}
+//                   <TextField label="Language" fullWidth size={inputSize} value={form.language}
+//                     onChange={(e) => update("language", e.target.value)}
+//                     placeholder="Tamil, English"
+//                     error={!form.language && showErrors}
+//                     helperText={!form.language && showErrors ? "Required" : ""}
+//                     sx={tfSx} />
+
+//                   {/* Age Group */}
+//                   <FormControl fullWidth size={inputSize}>
+//                     <InputLabel sx={ilSx}>Age Group Preference</InputLabel>
+//                     <Select value={form.ageGroupPreference} label="Age Group Preference"
+//                       onChange={(e) => update("ageGroupPreference", e.target.value)}
+//                       sx={selectSx}>
+//                       {["Any", "18-25", "26-40", "41-60", "60+"].map((v) => (
+//                         <MenuItem key={v} value={v} sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>{v}</MenuItem>
+//                       ))}
+//                     </Select>
+//                   </FormControl>
+
+//                   {/* Checkboxes */}
+//                   <Box
+//                     sx={{
+//                       display: "grid",
+//                       gridTemplateColumns: { xs: "1fr 1fr", sm: "1fr 1fr" },
+//                       gap: { xs: 0, sm: 0 },
+//                     }}
+//                   >
+//                     {[
+//                       ["medicalAssistance", "Medical Assistance"],
+//                       ["languageSupport", "Language Support"],
+//                       ["transitHelp", "Transit Help"],
+//                       ["baggageHelp", "Baggage Help"],
+//                     ].map(([key, label]) => (
+//                       <FormControlLabel
+//                         key={key}
+//                         control={
+//                           <Checkbox
+//                             checked={form[key]}
+//                             onChange={(e) => update(key, e.target.checked)}
+//                             size={isMobile ? "small" : "medium"}
+//                           />
+//                         }
+//                         label={
+//                           <Typography sx={{ fontSize: { xs: "0.72rem", sm: "0.8rem", md: "0.875rem" } }}>
+//                             {label}
+//                           </Typography>
+//                         }
+//                         sx={{ mr: 0 }}
+//                       />
+//                     ))}
+//                   </Box>
+//                 </>
+//               ) : (
+//                 <>
+//                   {/* Seats slider */}
+//                   <Box>
+//                     <Typography variant="subtitle2" fontWeight={700} gutterBottom
+//                       sx={{ fontSize: { xs: "0.75rem", sm: "0.825rem", md: "0.875rem" } }}>
+//                       Available seats: {form.availableSeats}
+//                     </Typography>
+//                     <Slider value={form.availableSeats}
+//                       onChange={(_, value) => update("availableSeats", value)}
+//                       min={1} max={7} step={1} marks valueLabelDisplay="auto"
+//                       sx={{ mx: { xs: 0.25, sm: 0 }, "& .MuiSlider-markLabel": { fontSize: { xs: "0.62rem", sm: "0.7rem" } } }} />
+//                   </Box>
+
+//                   {/* Fuel sharing */}
+//                   <FormControlLabel
+//                     control={
+//                       <Switch checked={form.fuelSharing}
+//                         onChange={(e) => update("fuelSharing", e.target.checked)}
+//                         color="primary"
+//                         size={isMobile ? "small" : "medium"} />
+//                     }
+//                     label={
+//                       <Typography sx={{ fontSize: { xs: "0.8rem", sm: "0.875rem" } }}>Fuel Sharing</Typography>
+//                     }
+//                   />
+//                 </>
+//               )}
+
+//               {/* Gender Preference */}
+//               <FormControl fullWidth size={inputSize}>
+//                 <InputLabel sx={ilSx}>Gender Preference</InputLabel>
+//                 <Select value={form.genderPreference} label="Gender Preference"
+//                   onChange={(e) => update("genderPreference", e.target.value)}
+//                   sx={selectSx}>
+//                   {["Any", "Male", "Female"].map((v) => (
+//                     <MenuItem key={v} value={v} sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>{v}</MenuItem>
+//                   ))}
+//                 </Select>
+//               </FormControl>
+//             </Stack>
+//           )}
+
+//           {/* ── STEP 2 : Review ── */}
+//           {step === 2 && (
+//             <Box>
+//               <Alert severity="info"
+//                 sx={{ mb: { xs: 1.5, sm: 2 }, borderRadius: 2, fontSize: { xs: "0.72rem", sm: "0.8rem", md: "0.875rem" } }}>
+//                 Please review your details before posting.
+//               </Alert>
+
+//               <Stack spacing={0}>
+//                 {(isFlight
+//                   ? [
+//                     ["Route", `${form.fromAirport || "—"} → ${form.toAirport || "—"}`],
+//                     ["Country", `${form.fromCountry || "—"} → ${form.toCountry || "—"}`],
+//                     ["Date & Departure", `${form.date || "—"} at ${form.time || "—"}`],
+//                     ["Flight Number", form.flightNumber || "—"],
+//                     ["Airline Name", form.airlineName || "—"],
+//                     ["Transit Airport", form.transitAirport || "No transit"],
+//                     ["Traveller Type", form.travellerType || "—"],
+//                     ["Language", form.language || "—"],
+//                     ["Gender Preference", form.genderPreference],
+//                     ["Age Group Preference", form.ageGroupPreference],
+//                     ["Medical Assistance", form.medicalAssistance ? "Yes" : "No"],
+//                     ["Language Support", form.languageSupport ? "Yes" : "No"],
+//                     ["Transit Help", form.transitHelp ? "Yes" : "No"],
+//                     ["Baggage Help", form.baggageHelp ? "Yes" : "No"],
+//                   ]
+//                   : [
+//                     ["From → Destination", `${form.from || "—"} → ${form.destination || "—"}`],
+//                     ["Date & Time", `${form.date || "—"} at ${form.time || "—"}`],
+//                     ["Mode of Travel", form.modeOfTravel],
+//                     ["Available Seats", form.availableSeats],
+//                     ["Fuel Sharing", form.fuelSharing ? "Yes" : "No"],
+//                     ["Gender Preference", form.genderPreference],
+//                   ]
+//                 ).map(([label, value]) => (
+//                   <ReviewRow key={label} label={label} value={value} />
+//                 ))}
+//               </Stack>
+
+//               {form.description && (
+//                 <Box sx={{ bgcolor: "#FFF8F2", borderRadius: 2, p: { xs: 1, sm: 1.5 }, mt: 1.5 }}>
+//                   <Typography variant="caption" color="text.secondary" fontWeight={700}
+//                     sx={{ fontSize: { xs: "0.62rem", sm: "0.7rem" } }}>
+//                     DESCRIPTION
+//                   </Typography>
+//                   <Typography variant="body2" mt={0.5}
+//                     sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" }, wordBreak: "break-word" }}>
+//                     {form.description}
+//                   </Typography>
+//                 </Box>
+//               )}
+//             </Box>
+//           )}
+
+//           {/* ── Navigation buttons ── */}
+//           <Stack direction="row" spacing={{ xs: 1, sm: 1.5 }} sx={{ mt: { xs: 2, sm: 3 } }}>
+//             {step > 0 && (
+//               <Button variant="outlined" onClick={() => setStep((s) => s - 1)}
+//                 size="small"
+//                 sx={{
+//                   flex: 1, minWidth: 0,
+//                   fontSize: { xs: "0.7rem", sm: "0.8rem", md: "0.875rem" },
+//                   py: { xs: 0, sm: 1, md: 1.1 },
+//                   px: { xs: 1, sm: 2 },
+//                 }}>
+//                 Back
+//               </Button>
+//             )}
+
+//             {step < 2 ? (
+//               <Button variant="contained"
+//                 onClick={() => { if (validateStep()) { setShowErrors(false); setStep((s) => s + 1); } }}
+//                 size={isMobile ? "small" : "medium"}
+//                 sx={{
+//                   flex: 1, minWidth: 0,
+//                   fontSize: { xs: "0.72rem", sm: "0.8rem", md: "0.875rem" },
+//                   py: { xs: 0.75, sm: 1, md: 1.1 },
+//                   px: { xs: 1, sm: 2 },
+//                 }}>
+//                 Continue
+//               </Button>
+//             ) : (
+//               <Button variant="contained"
+//                 onClick={handleSubmit}
+//                 size="small"
+//                 sx={{
+//                   flex: 1, minWidth: 0,
+//                   fontSize: { xs: "0.72rem", sm: "0.8rem", md: "0.875rem" },
+//                   py: { xs: 0.75, sm: 1, md: 1.1 },
+//                   px: { xs: 1, sm: 2 },
+//                   bgcolor: "#52B788",
+//                   "&:hover": { bgcolor: "#2D6A4F" },
+//                 }}>
+//                 🙏 Post to community
+//               </Button>
+//             )}
+//           </Stack>
+//         </Paper>
+//       </Box>
+//     </PageLayout>
+//   );
+// }
+
+import { useEffect, useState } from "react";
 import {
   Box,
-  Typography,
   Paper,
-  TextField,
-  Button,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  FormControlLabel,
-  Switch,
-  Slider,
+  Card,
+  CardContent,
   Stack,
-  Alert,
   Stepper,
   Step,
   StepLabel,
-  Checkbox,
+  Typography,
+  TextField,
+  MenuItem,
+  Select,
+  InputLabel,
+  FormControl,
   FormHelperText,
+  FormControlLabel,
+  Checkbox,
+  Switch,
+  Slider,
+  Button,
+  Alert,
+  Divider,
   useMediaQuery,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
+import {
+  Car,
+  Plane,
+  MapPin,
+  Calendar,
+  Clock,
+  FileText,
+  Users,
+  Fuel,
+  ShieldCheck,
+  Languages,
+  Luggage,
+  HeartPulse,
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+} from "lucide-react";
 
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import { useNavigate } from "react-router-dom";
 import PageLayout from "../components/PageLayout";
 import axios from "axios";
 import Api from "../Api";
 import { toast } from "react-toastify";
 
-const steps = ["Trip details", "Preferences", "Review & post"];
+/* ──────────────── THEME TOKENS ──────────────── */
+// Saffron accent — swap these two if you ever want to re-theme.
+const ACCENT = "#FF9933";
+const ACCENT_DARK = "#CC7722";
+const ACCENT_TINT = "rgba(255,153,51,0.12)";
+
+const steps = ["Trip Details", "Preferences", "Review"];
+
+const TRAVELLER_TYPES = [
+  "First-time traveller",
+  "Senior citizen support",
+  "Student travel companion",
+  "Women-only companion",
+  "Family companion",
+];
+
+const AGE_GROUPS = ["Any", "18-25", "26-40", "41-60", "60+"];
+const GENDER_OPTIONS = ["Any", "Male", "Female"];
+
+const INITIAL_FORM = {
+  from: "",
+  destination: "",
+  date: "",
+  time: "",
+  duration: "",
+  modeOfTravel: "Car",
+  availableSeats: 1,
+  fuelSharing: false,
+  description: "",
+  genderPreference: "Any",
+
+  fromCountry: "",
+  fromAirport: "",
+  toCountry: "",
+  toAirport: "",
+  flightNumber: "",
+  airlineName: "",
+  transitAirport: "",
+  travellerType: "",
+  language: "",
+  ageGroupPreference: "Any",
+
+  medicalAssistance: false,
+  languageSupport: false,
+  transitHelp: false,
+  baggageHelp: false,
+};
+
+/* ──────────────── STYLE HELPERS ──────────────── */
+const tfSx = {
+  "& .MuiInputBase-input": { fontSize: { xs: "0.8rem", sm: "0.9rem" } },
+};
+const selectSx = { fontSize: { xs: "0.8rem", sm: "0.9rem" } };
+const ilSx = { fontSize: { xs: "0.8rem", sm: "0.9rem" } };
+const labelSx = { fontSize: { xs: "0.72rem", sm: "0.8rem" }, mb: 0.5, color: "text.secondary" };
+const menuItemSx = { fontSize: { xs: "0.75rem", sm: "0.875rem" } };
+
+/* ──────────────── PRESENTATIONAL HELPERS ──────────────── */
+function SectionHeader({ icon: Icon, title, subtitle }) {
+  return (
+    <Stack direction="row" spacing={1.25} alignItems="center" sx={{ mb: { xs: 1.5, sm: 2 } }}>
+      <Box
+        sx={{
+          width: { xs: 32, sm: 36 },
+          height: { xs: 32, sm: 36 },
+          borderRadius: "10px",
+          bgcolor: ACCENT_TINT,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+        }}
+      >
+        <Icon size={18} color={ACCENT_DARK} />
+      </Box>
+      <Box>
+        <Typography fontWeight={700} sx={{ fontSize: { xs: "0.85rem", sm: "0.95rem", md: "1rem" }, lineHeight: 1.2 }}>
+          {title}
+        </Typography>
+        {subtitle && (
+          <Typography color="text.secondary" sx={{ fontSize: { xs: "0.68rem", sm: "0.75rem" } }}>
+            {subtitle}
+          </Typography>
+        )}
+      </Box>
+    </Stack>
+  );
+}
+
+function ReviewItem({ icon: Icon, label, value }) {
+  return (
+    <Stack
+      direction="row"
+      spacing={1.25}
+      alignItems="flex-start"
+      sx={{
+        py: 1,
+        borderBottom: "1px solid",
+        borderColor: "divider",
+        "&:last-of-type": { borderBottom: "none" },
+      }}
+    >
+      {Icon && (
+        <Box sx={{ mt: 0.25, color: ACCENT_DARK, flexShrink: 0 }}>
+          <Icon size={16} />
+        </Box>
+      )}
+      <Box sx={{ minWidth: 0, flex: 1 }}>
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{ fontSize: { xs: "0.62rem", sm: "0.68rem" }, textTransform: "uppercase", letterSpacing: 0.4 }}
+        >
+          {label}
+        </Typography>
+        <Typography sx={{ fontSize: { xs: "0.78rem", sm: "0.875rem" }, fontWeight: 600, wordBreak: "break-word" }}>
+          {value}
+        </Typography>
+      </Box>
+    </Stack>
+  );
+}
 
 export default function OfferRide() {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTiny = useMediaQuery("(max-width:300px)");
+  const inputSize = isMobile ? "small" : "medium";
 
   const [step, setStep] = useState(0);
   const [submitted, setSubmitted] = useState(false);
@@ -43,45 +876,21 @@ export default function OfferRide() {
 
   const user = JSON.parse(localStorage.getItem("user"));
 
-  const [form, setForm] = useState({
-    from: "",
-    destination: "",
-    date: "",
-    time: "",
-    modeOfTravel: "Car",
-    availableSeats: 1,
-    fuelSharing: false,
-    description: "",
-    genderPreference: "Any",
-
-    fromCountry: "",
-    fromAirport: "",
-    toCountry: "",
-    toAirport: "",
-    flightNumber: "",
-    airlineName: "",
-    transitAirport: "",
-    travellerType: "",
-    language: "",
-    ageGroupPreference: "Any",
-
-    medicalAssistance: false,
-    languageSupport: false,
-    transitHelp: false,
-    baggageHelp: false,
-  });
+  const [form, setForm] = useState(INITIAL_FORM);
 
   const isFlight = form.modeOfTravel === "Flight";
 
-  const update = (key, val) => {
-    setForm((prev) => ({ ...prev, [key]: val }));
-  };
+  const update = (key, val) => setForm((prev) => ({ ...prev, [key]: val }));
 
+  /* ──────────────── VALIDATION (unchanged logic) ──────────────── */
   const validateStep = () => {
     setShowErrors(true);
 
     if (step === 0) {
-      if (!form.modeOfTravel) { toast.error("Please select mode of travel"); return false; }
+      if (!form.modeOfTravel) {
+        toast.error("Please select mode of travel");
+        return false;
+      }
       if (isFlight) {
         if (!form.fromCountry.trim()) { toast.error("Please enter From Country"); return false; }
         if (!form.fromAirport.trim()) { toast.error("Please enter From Airport"); return false; }
@@ -93,30 +902,18 @@ export default function OfferRide() {
         if (!form.from.trim()) { toast.error("Please enter From location"); return false; }
         if (!form.destination.trim()) { toast.error("Please enter Destination"); return false; }
       }
-      if (!form.date) {
-        toast.error("Please select Date");
-        return false;
-      }
+      if (!form.date) { toast.error("Please select Date"); return false; }
+      if (!form.time) { toast.error("Please select Time"); return false; }
 
-      if (!form.time) {
-        toast.error("Please select Time");
-        return false;
-      }
-
-      // Prevent past date & time
       const selectedDateTime = new Date(`${form.date}T${form.time}`);
       const now = new Date();
-
       if (selectedDateTime <= now) {
         toast.error("Please select a future date and time");
         return false;
       }
 
-      if (!form.description.trim()) {
-        toast.error("Please enter Description");
-        return false;
-      }
-
+      if (!form.description.trim()) { toast.error("Please enter Description"); return false; }
+      if (!form.duration.trim()) { toast.error("Please enter Journey Duration"); return false; }
     }
 
     if (step === 1) {
@@ -132,18 +929,7 @@ export default function OfferRide() {
     return true;
   };
 
-  const formReset = () => {
-    setForm({
-      from: "", destination: "", date: "", time: "",
-      modeOfTravel: "Car", availableSeats: 1, fuelSharing: false,
-      description: "", genderPreference: "Any",
-      fromCountry: "", fromAirport: "", toCountry: "", toAirport: "",
-      flightNumber: "", airlineName: "", transitAirport: "",
-      travellerType: "", language: "", ageGroupPreference: "Any",
-      medicalAssistance: false, languageSupport: false,
-      transitHelp: false, baggageHelp: false,
-    });
-  };
+  const formReset = () => setForm(INITIAL_FORM);
 
   const handleSubmit = async () => {
     const payload = {
@@ -151,23 +937,34 @@ export default function OfferRide() {
       modeOfTravel: form.modeOfTravel,
       startTime: new Date(`${form.date}T${form.time}`).toISOString(),
       description: form.description,
+      duration: form.duration,
       genderPreference: form.genderPreference,
       status: "OPEN",
       ...(isFlight
         ? {
-          fromCountry: form.fromCountry, fromAirport: form.fromAirport,
-          toCountry: form.toCountry, toAirport: form.toAirport,
-          from: form.fromAirport, destination: form.toAirport,
-          flightNumber: form.flightNumber, airlineName: form.airlineName,
-          transitAirport: form.transitAirport, travellerType: form.travellerType,
-          language: form.language, ageGroupPreference: form.ageGroupPreference,
-          medicalAssistance: form.medicalAssistance, languageSupport: form.languageSupport,
-          transitHelp: form.transitHelp, baggageHelp: form.baggageHelp,
-        }
+            fromCountry: form.fromCountry,
+            fromAirport: form.fromAirport,
+            toCountry: form.toCountry,
+            toAirport: form.toAirport,
+            from: form.fromAirport,
+            destination: form.toAirport,
+            flightNumber: form.flightNumber,
+            airlineName: form.airlineName,
+            transitAirport: form.transitAirport,
+            travellerType: form.travellerType,
+            language: form.language,
+            ageGroupPreference: form.ageGroupPreference,
+            medicalAssistance: form.medicalAssistance,
+            languageSupport: form.languageSupport,
+            transitHelp: form.transitHelp,
+            baggageHelp: form.baggageHelp,
+          }
         : {
-          from: form.from, destination: form.destination,
-          availableSeats: form.availableSeats, fuelSharing: form.fuelSharing,
-        }),
+            from: form.from,
+            destination: form.destination,
+            availableSeats: form.availableSeats,
+            fuelSharing: form.fuelSharing,
+          }),
     };
 
     try {
@@ -189,89 +986,29 @@ export default function OfferRide() {
     }
   }, [submitted]);
 
-  /* ── shared input size prop ── */
-  const inputSize = isMobile ? "small" : "small";
-
-  /* ── shared label font size ── */
-  const labelSx = {
-    fontSize: { xs: "0.72rem", sm: "0.8rem", md: "0.875rem" },
-  };
-
-  /* ── shared TextField sx override ── */
-  const tfSx = {
-    "& .MuiInputBase-input": {
-      fontSize: { xs: "0.75rem", sm: "0.8rem", md: "0.875rem" },
-      py: { xs: "6px", sm: "7px" },
-    },
-    "& .MuiInputLabel-root": {
-      fontSize: { xs: "0.72rem", sm: "0.8rem", md: "0.875rem" },
-    },
-    "& .MuiFormHelperText-root": {
-      fontSize: { xs: "0.62rem", sm: "0.7rem" },
-      mx: 0,
-    },
-  };
-
-  /* ── shared Select sx override ── */
-  const selectSx = {
-    fontSize: { xs: "0.75rem", sm: "0.8rem", md: "0.875rem" },
-    "& .MuiSelect-select": {
-      py: { xs: "6px", sm: "7px" },
-    },
-  };
-
-  /* ── shared InputLabel sx override ── */
-  const ilSx = { fontSize: { xs: "0.72rem", sm: "0.8rem", md: "0.875rem" } };
-
-  /* ── review row component ── */
-  const ReviewRow = ({ label, value }) => (
-    <Stack
-      direction={{ xs: "row", sm: "row" }}
-      justifyContent="space-between"
-      alignItems="flex-start"
-      spacing={1}
-      sx={{ py: { xs: 0.5, sm: 0.75 }, borderBottom: "1px solid #F0E6DC" }}
-    >
-      <Typography
-        variant="body2"
-        color="text.secondary"
-        fontWeight={500}
-        sx={{ fontSize: { xs: "0.7rem", sm: "0.8rem", md: "0.875rem" }, flexShrink: 0, minWidth: { xs: "42%", sm: "auto" } }}
-      >
-        {label}
-      </Typography>
-      <Typography
-        variant="body2"
-        fontWeight={600}
-        textAlign="right"
-        sx={{ fontSize: { xs: "0.72rem", sm: "0.8rem", md: "0.875rem" }, wordBreak: "break-word" }}
-      >
-        {value}
-      </Typography>
-    </Stack>
-  );
-
   /* ──────────────── SUCCESS SCREEN ──────────────── */
   if (submitted) {
     return (
-      <Box
-        sx={{
-          maxWidth: 520,
-          width: "100%",
-          mx: "auto",
-          px: { xs: 2, sm: 3 },
-          py: { xs: 4, sm: 6 },
-          textAlign: "center",
-        }}
-      >
-        <CheckCircleIcon sx={{ fontSize: { xs: 48, sm: 72 }, color: "#52B788", mb: 1.5 }} />
-        <Typography variant="h5" fontWeight={800} gutterBottom sx={{ fontSize: { xs: "1.1rem", sm: "1.5rem" } }}>
-          Ride posted! 🙏
-        </Typography>
-        <Typography color="text.secondary" mb={3} sx={{ fontSize: { xs: "0.8rem", sm: "1rem" } }}>
-          Your ride is now visible to the Saathi community.
-        </Typography>
-      </Box>
+      <PageLayout>
+        <Box
+          sx={{
+            maxWidth: 520,
+            width: "100%",
+            // mx: "auto",
+            px: { xs: 2, sm: 3 },
+            py: { xs: 6, sm: 10 },
+            textAlign: "center",
+          }}
+        >
+          <CheckCircle2 size={isMobile ? 56 : 72} color="#52B788" style={{ marginBottom: 12 }} />
+          <Typography variant="h5" fontWeight={800} gutterBottom sx={{ fontSize: { xs: "1.15rem", sm: "1.5rem" } }}>
+            Ride posted! 🙏
+          </Typography>
+          <Typography color="text.secondary" sx={{ fontSize: { xs: "0.85rem", sm: "1rem" } }}>
+            Your ride is now visible to the Saathi community.
+          </Typography>
+        </Box>
+      </PageLayout>
     );
   }
 
@@ -281,61 +1018,112 @@ export default function OfferRide() {
       <Box
         sx={{
           width: "100%",
-          maxWidth: { xs: "100%", sm: 600, md: 720 },
+          maxWidth: { xs: "100%", sm: 620, md: 760 },
           mx: "auto",
-          px: { xs: 0, sm: 0 },
+          px: { xs: isTiny ? 1 : 1.5, sm: 0 },
+          pb: { xs: 3, sm: 4 },
+          boxSizing: "border-box",
+          overflowX: "hidden",
         }}
       >
-        {/* Page title */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: { xs: 1.5, sm: 3 } }}>
-          <Typography
-            variant="h5"
-            fontWeight={800}
-            sx={{ fontSize: { xs: "1rem", sm: "1.25rem", md: "1.5rem" } }}
+        {/* Page header */}
+        <Stack
+          direction="row"
+          spacing={{ xs: 1, sm: 1.25 }}
+          alignItems="center"
+          flexWrap="wrap"
+          sx={{ mb: { xs: 2, sm: 3 }, rowGap: 0.5 }}
+        >
+          <Box
+            sx={{
+              width: { xs: 34, sm: 44 },
+              height: { xs: 34, sm: 44 },
+              borderRadius: "12px",
+              bgcolor: ACCENT,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
           >
-            Offer a Ride
-          </Typography>
-        </Box>
+            <Car size={isTiny ? 18 : 22} color="#fff" />
+          </Box>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography
+              variant="h5"
+              fontWeight={800}
+              sx={{ fontSize: { xs: "0.95rem", sm: "1.3rem", md: "1.5rem" }, lineHeight: 1.25 }}
+            >
+              Offer a Ride
+            </Typography>
+            <Typography color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.8rem" } }}>
+              Share your journey with the community
+            </Typography>
+          </Box>
+        </Stack>
 
         {/* Stepper */}
-        <Stepper
-          activeStep={step}
-          alternativeLabel
-          sx={{
-            mb: { xs: 2, sm: 3 },
-            "& .MuiStepLabel-label": {
-              fontSize: { xs: "0.58rem", sm: "0.72rem", md: "0.8rem" },
-              mt: { xs: 0.4, sm: 0.75 },
-            },
-            "& .MuiStepIcon-root": {
-              fontSize: { xs: "1.25rem", sm: "1.5rem", md: "1.75rem" },
-            },
-            "& .MuiStepConnector-line": { minWidth: { xs: 4, sm: 16 } },
-          }}
-        >
-          {steps.map((label) => (
-            <Step key={label}>
-              <StepLabel>{label}</StepLabel>
-            </Step>
-          ))}
-        </Stepper>
-
-        {/* Form paper */}
         <Paper
+          elevation={0}
           sx={{
-            p: { xs: 1.5, sm: 2.5, md: 3.5 },
-            borderRadius: { xs: 2, sm: 3 },
-            width: "100%",
-            boxSizing: "border-box",
+            p: { xs: 1, sm: 2 },
+            mb: { xs: 1.5, sm: 3 },
+            borderRadius: 3,
+            border: "1px solid",
+            borderColor: "divider",
             overflow: "hidden",
           }}
         >
+          <Stepper
+            activeStep={step}
+            alternativeLabel
+            sx={{
+              "& .MuiStepLabel-label": {
+                fontSize: { xs: "0.52rem", sm: "0.72rem", md: "0.8rem" },
+                mt: { xs: 0.35, sm: 0.75 },
+                fontWeight: 600,
+                whiteSpace: { xs: "normal", sm: "nowrap" },
+                lineHeight: 1.2,
+              },
+              "& .MuiStepIcon-root": {
+                fontSize: { xs: "1.1rem", sm: "1.6rem", md: "1.8rem" },
+              },
+              "& .MuiStepIcon-root.Mui-active, & .MuiStepIcon-root.Mui-completed": {
+                color: ACCENT,
+              },
+              "& .MuiStepConnector-line": { minWidth: { xs: 2, sm: 16 } },
+              "& .MuiStep-root": { px: { xs: 0.25, sm: 1 } },
+            }}
+          >
+            {steps.map((label) => (
+              <Step key={label}>
+                <StepLabel>{label}</StepLabel>
+              </Step>
+            ))}
+          </Stepper>
+        </Paper>
 
+        {/* Form card */}
+        <Paper
+          sx={{
+            p: { xs: 1.5, sm: 3, md: 4 },
+            borderRadius: { xs: 2.5, sm: 4 },
+            width: "100%",
+            boxSizing: "border-box",
+            border: "1px solid",
+            borderColor: "divider",
+            overflow: "hidden",
+          }}
+        >
           {/* ── STEP 0 : Trip details ── */}
           {step === 0 && (
-            <Stack spacing={{ xs: 1.5, sm: 2, md: 2.5 }}>
+            <Stack spacing={{ xs: 2.5, sm: 3 }}>
+              <SectionHeader
+                icon={isFlight ? Plane : Car}
+                title="Trip Details"
+                subtitle="Tell us how and when you're travelling"
+              />
 
-              {/* Mode of Travel */}
               <FormControl fullWidth size={inputSize}>
                 <InputLabel sx={ilSx}>Mode of Travel</InputLabel>
                 <Select
@@ -344,68 +1132,70 @@ export default function OfferRide() {
                   onChange={(e) => update("modeOfTravel", e.target.value)}
                   sx={selectSx}
                 >
-                  <MenuItem value="Car" sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>🚗 Car</MenuItem>
-                  <MenuItem value="Bus" sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>🚌 Bus</MenuItem>
-                  <MenuItem value="Bike" sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>🏍️ Bike</MenuItem>
-                  <MenuItem value="Flight" sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>✈️ Flight</MenuItem>
-                  <MenuItem value="Train" sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>🚆 Train</MenuItem>
+                  <MenuItem value="Car" sx={menuItemSx}>🚗 Car</MenuItem>
+                  <MenuItem value="Bus" sx={menuItemSx}>🚌 Bus</MenuItem>
+                  <MenuItem value="Bike" sx={menuItemSx}>🏍️ Bike</MenuItem>
+                  <MenuItem value="Flight" sx={menuItemSx}>✈️ Flight</MenuItem>
+                  <MenuItem value="Train" sx={menuItemSx}>🚆 Train</MenuItem>
                 </Select>
               </FormControl>
 
-              {/* Flight fields */}
               {isFlight ? (
-                <>
-                  <Typography fontWeight={700} color="primary" sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" } }}>
-                    Flight Details
-                  </Typography>
+                <Card variant="outlined" sx={{ borderRadius: 3, borderStyle: "dashed" }}>
+                  <CardContent sx={{ p: { xs: 1.25, sm: 2.5 }, "&:last-child": { pb: { xs: 1.25, sm: 2.5 } } }}>
+                    <Stack spacing={{ xs: 1.5, sm: 2 }}>
+                      <Typography fontWeight={700} sx={{ color: ACCENT_DARK, fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" } }}>
+                        ✈️ Flight Details
+                      </Typography>
 
-                  <Stack direction={{ xs: "column", sm: "row" }} spacing={{ xs: 1.5, sm: 2 }}>
-                    <TextField label="From Country" fullWidth size={inputSize} value={form.fromCountry}
-                      onChange={(e) => update("fromCountry", e.target.value)}
-                      error={!form.fromCountry && showErrors}
-                      helperText={!form.fromCountry && showErrors ? "Required" : ""}
-                      sx={tfSx} />
-                    <TextField label="From Airport" fullWidth size={inputSize} value={form.fromAirport}
-                      onChange={(e) => update("fromAirport", e.target.value)}
-                      error={!form.fromAirport && showErrors}
-                      helperText={!form.fromAirport && showErrors ? "Required" : ""}
-                      sx={tfSx} />
-                  </Stack>
+                      <Stack direction={{ xs: "column", sm: "row" }} spacing={{ xs: 1.5, sm: 2 }}>
+                        <TextField label="From Country" fullWidth size={inputSize} value={form.fromCountry}
+                          onChange={(e) => update("fromCountry", e.target.value)}
+                          error={!form.fromCountry && showErrors}
+                          helperText={!form.fromCountry && showErrors ? "Required" : ""}
+                          sx={tfSx} />
+                        <TextField label="From Airport" fullWidth size={inputSize} value={form.fromAirport}
+                          onChange={(e) => update("fromAirport", e.target.value)}
+                          error={!form.fromAirport && showErrors}
+                          helperText={!form.fromAirport && showErrors ? "Required" : ""}
+                          sx={tfSx} />
+                      </Stack>
 
-                  <Stack direction={{ xs: "column", sm: "row" }} spacing={{ xs: 1.5, sm: 2 }}>
-                    <TextField label="To Country" fullWidth size={inputSize} value={form.toCountry}
-                      onChange={(e) => update("toCountry", e.target.value)}
-                      error={!form.toCountry && showErrors}
-                      helperText={!form.toCountry && showErrors ? "Required" : ""}
-                      sx={tfSx} />
-                    <TextField label="To Airport" fullWidth size={inputSize} value={form.toAirport}
-                      onChange={(e) => update("toAirport", e.target.value)}
-                      error={!form.toAirport && showErrors}
-                      helperText={!form.toAirport && showErrors ? "Required" : ""}
-                      sx={tfSx} />
-                  </Stack>
+                      <Stack direction={{ xs: "column", sm: "row" }} spacing={{ xs: 1.5, sm: 2 }}>
+                        <TextField label="To Country" fullWidth size={inputSize} value={form.toCountry}
+                          onChange={(e) => update("toCountry", e.target.value)}
+                          error={!form.toCountry && showErrors}
+                          helperText={!form.toCountry && showErrors ? "Required" : ""}
+                          sx={tfSx} />
+                        <TextField label="To Airport" fullWidth size={inputSize} value={form.toAirport}
+                          onChange={(e) => update("toAirport", e.target.value)}
+                          error={!form.toAirport && showErrors}
+                          helperText={!form.toAirport && showErrors ? "Required" : ""}
+                          sx={tfSx} />
+                      </Stack>
 
-                  <Stack direction={{ xs: "column", sm: "row" }} spacing={{ xs: 1.5, sm: 2 }}>
-                    <TextField label="Flight Number" fullWidth size={inputSize} value={form.flightNumber}
-                      onChange={(e) => update("flightNumber", e.target.value)}
-                      error={!form.flightNumber && showErrors}
-                      helperText={!form.flightNumber && showErrors ? "Required" : ""}
-                      sx={tfSx} />
-                    <TextField label="Airline Name" fullWidth size={inputSize} value={form.airlineName}
-                      onChange={(e) => update("airlineName", e.target.value)}
-                      error={!form.airlineName && showErrors}
-                      helperText={!form.airlineName && showErrors ? "Required" : ""}
-                      sx={tfSx} />
-                  </Stack>
+                      <Stack direction={{ xs: "column", sm: "row" }} spacing={{ xs: 1.5, sm: 2 }}>
+                        <TextField label="Flight Number" fullWidth size={inputSize} value={form.flightNumber}
+                          onChange={(e) => update("flightNumber", e.target.value)}
+                          error={!form.flightNumber && showErrors}
+                          helperText={!form.flightNumber && showErrors ? "Required" : ""}
+                          sx={tfSx} />
+                        <TextField label="Airline Name" fullWidth size={inputSize} value={form.airlineName}
+                          onChange={(e) => update("airlineName", e.target.value)}
+                          error={!form.airlineName && showErrors}
+                          helperText={!form.airlineName && showErrors ? "Required" : ""}
+                          sx={tfSx} />
+                      </Stack>
 
-                  <TextField label="Transit Airport (Optional)" fullWidth size={inputSize}
-                    value={form.transitAirport}
-                    onChange={(e) => update("transitAirport", e.target.value)}
-                    sx={tfSx} />
-                </>
+                      <TextField label="Transit Airport (Optional)" fullWidth size={inputSize}
+                        value={form.transitAirport}
+                        onChange={(e) => update("transitAirport", e.target.value)}
+                        sx={tfSx} />
+                    </Stack>
+                  </CardContent>
+                </Card>
               ) : (
-                /* Non-flight from/destination */
-                <Stack direction={{ xs: "column", sm: "row" }} spacing={{ xs: 1.5, sm: 2 }}>
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={{ xs: 2, sm: 2 }}>
                   <TextField label="From" fullWidth size={inputSize} value={form.from}
                     onChange={(e) => update("from", e.target.value)}
                     placeholder="Chennai"
@@ -421,27 +1211,49 @@ export default function OfferRide() {
                 </Stack>
               )}
 
-              {/* Date & Time */}
+              <Divider sx={{ my: { xs: 0.5, sm: 1 } }} />
+
               <Stack direction={{ xs: "column", sm: "row" }} spacing={{ xs: 1.5, sm: 2 }}>
                 <Stack sx={{ flex: 1, minWidth: 0 }}>
-                  <InputLabel sx={labelSx}>Date</InputLabel>
+                  <InputLabel sx={labelSx}>
+                    <Stack direction="row" spacing={0.5} alignItems="center">
+                      <Calendar size={14} /> <span>Date</span>
+                    </Stack>
+                  </InputLabel>
                   <TextField fullWidth size={inputSize} type="date" value={form.date}
                     onChange={(e) => update("date", e.target.value)}
                     error={!form.date && showErrors}
                     helperText={!form.date && showErrors ? "Required" : ""}
+                    InputLabelProps={{ shrink: true }}
                     sx={tfSx} />
                 </Stack>
                 <Stack sx={{ flex: 1, minWidth: 0 }}>
-                  <InputLabel sx={labelSx}>{isFlight ? "Departure Time" : "Time"}</InputLabel>
+                  <InputLabel sx={labelSx}>
+                    <Stack direction="row" spacing={0.5} alignItems="center">
+                      <Clock size={14} /> <span>{isFlight ? "Departure Time" : "Time"}</span>
+                    </Stack>
+                  </InputLabel>
                   <TextField fullWidth size={inputSize} type="time" value={form.time}
                     onChange={(e) => update("time", e.target.value)}
                     error={!form.time && showErrors}
                     helperText={!form.time && showErrors ? "Required" : ""}
+                    InputLabelProps={{ shrink: true }}
                     sx={tfSx} />
                 </Stack>
               </Stack>
 
-              {/* Description */}
+              <TextField
+                label="Journey Duration"
+                fullWidth
+                size={inputSize}
+                value={form.duration}
+                onChange={(e) => update("duration", e.target.value)}
+                placeholder="e.g. 2h 30m"
+                error={!form.duration && showErrors}
+                helperText={!form.duration && showErrors ? "Required" : ""}
+                sx={tfSx}
+              />
+
               <TextField label="Description" fullWidth multiline
                 rows={isMobile ? 2 : 3}
                 size={inputSize}
@@ -455,42 +1267,34 @@ export default function OfferRide() {
                 error={!form.description && showErrors}
                 helperText={!form.description && showErrors ? "Required" : ""}
                 sx={tfSx} />
-              <TextField
-                label="Journey Duration"
-                fullWidth
-                size={inputSize}
-                value={form.duration}
-                onChange={(e) => update("duration", e.target.value)}
-                placeholder="e.g. 2h 30m"
-                error={!form.duration && showErrors}
-                helperText={!form.duration && showErrors ? "Required" : ""}
-                sx={tfSx}
-              />
             </Stack>
           )}
 
           {/* ── STEP 1 : Preferences ── */}
           {step === 1 && (
-            <Stack spacing={{ xs: 2, sm: 2.5, md: 3 }}>
+            <Stack spacing={{ xs: 2.5, sm: 3 }}>
+              <SectionHeader
+                icon={Users}
+                title="Preferences"
+                subtitle={isFlight ? "Help us match the right companion" : "Set your ride preferences"}
+              />
+
               {isFlight ? (
                 <>
-                  {/* Traveller Type */}
                   <FormControl fullWidth size={inputSize} error={!form.travellerType && showErrors}>
                     <InputLabel sx={ilSx}>Traveller Type</InputLabel>
                     <Select value={form.travellerType} label="Traveller Type"
                       onChange={(e) => update("travellerType", e.target.value)}
                       sx={selectSx}>
-                      {["First-time traveller", "Senior citizen support", "Student travel companion",
-                        "Women-only companion", "Family companion"].map((v) => (
-                          <MenuItem key={v} value={v} sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>{v}</MenuItem>
-                        ))}
+                      {TRAVELLER_TYPES.map((v) => (
+                        <MenuItem key={v} value={v} sx={menuItemSx}>{v}</MenuItem>
+                      ))}
                     </Select>
                     {!form.travellerType && showErrors && (
                       <FormHelperText sx={{ fontSize: { xs: "0.62rem", sm: "0.7rem" } }}>Required</FormHelperText>
                     )}
                   </FormControl>
 
-                  {/* Language */}
                   <TextField label="Language" fullWidth size={inputSize} value={form.language}
                     onChange={(e) => update("language", e.target.value)}
                     placeholder="Tamil, English"
@@ -498,88 +1302,123 @@ export default function OfferRide() {
                     helperText={!form.language && showErrors ? "Required" : ""}
                     sx={tfSx} />
 
-                  {/* Age Group */}
                   <FormControl fullWidth size={inputSize}>
                     <InputLabel sx={ilSx}>Age Group Preference</InputLabel>
                     <Select value={form.ageGroupPreference} label="Age Group Preference"
                       onChange={(e) => update("ageGroupPreference", e.target.value)}
                       sx={selectSx}>
-                      {["Any", "18-25", "26-40", "41-60", "60+"].map((v) => (
-                        <MenuItem key={v} value={v} sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>{v}</MenuItem>
+                      {AGE_GROUPS.map((v) => (
+                        <MenuItem key={v} value={v} sx={menuItemSx}>{v}</MenuItem>
                       ))}
                     </Select>
                   </FormControl>
 
-                  {/* Checkboxes */}
-                  <Box
-                    sx={{
-                      display: "grid",
-                      gridTemplateColumns: { xs: "1fr 1fr", sm: "1fr 1fr" },
-                      gap: { xs: 0, sm: 0 },
-                    }}
-                  >
-                    {[
-                      ["medicalAssistance", "Medical Assistance"],
-                      ["languageSupport", "Language Support"],
-                      ["transitHelp", "Transit Help"],
-                      ["baggageHelp", "Baggage Help"],
-                    ].map(([key, label]) => (
-                      <FormControlLabel
-                        key={key}
-                        control={
-                          <Checkbox
-                            checked={form[key]}
-                            onChange={(e) => update(key, e.target.checked)}
-                            size={isMobile ? "small" : "medium"}
+                  <Card variant="outlined" sx={{ borderRadius: 3 }}>
+                    <CardContent sx={{ p: { xs: 1.1, sm: 2 }, "&:last-child": { pb: { xs: 1.1, sm: 2 } } }}>
+                      <Typography
+                        variant="caption"
+                        fontWeight={700}
+                        color="text.secondary"
+                        sx={{ fontSize: { xs: "0.62rem", sm: "0.72rem" }, textTransform: "uppercase", letterSpacing: 0.4 }}
+                      >
+                        Assistance Needed
+                      </Typography>
+                      <Box
+                        sx={{
+                          mt: 1,
+                          display: "grid",
+                          gridTemplateColumns: {
+                            xs: "repeat(auto-fit, minmax(130px, 1fr))",
+                            sm: "1fr 1fr",
+                          },
+                          gap: { xs: 0.25, sm: 0.5 },
+                        }}
+                      >
+                        {[
+                          ["medicalAssistance", "Medical Assistance", HeartPulse],
+                          ["languageSupport", "Language Support", Languages],
+                          ["transitHelp", "Transit Help", MapPin],
+                          ["baggageHelp", "Baggage Help", Luggage],
+                        ].map(([key, label, Icon]) => (
+                          <FormControlLabel
+                            key={key}
+                            control={
+                              <Checkbox
+                                checked={form[key]}
+                                onChange={(e) => update(key, e.target.checked)}
+                                size={isMobile ? "small" : "medium"}
+                                sx={{ "&.Mui-checked": { color: ACCENT } }}
+                              />
+                            }
+                            label={
+                              <Stack direction="row" spacing={0.5} alignItems="center" sx={{ minWidth: 0 }}>
+                                <Icon size={14} color={ACCENT_DARK} style={{ flexShrink: 0 }} />
+                                <Typography
+                                  sx={{
+                                    fontSize: { xs: "0.68rem", sm: "0.8rem", md: "0.875rem" },
+                                    wordBreak: "break-word",
+                                  }}
+                                >
+                                  {label}
+                                </Typography>
+                              </Stack>
+                            }
+                            sx={{ mr: 0, ml: 0, alignItems: "flex-start" }}
                           />
-                        }
-                        label={
-                          <Typography sx={{ fontSize: { xs: "0.72rem", sm: "0.8rem", md: "0.875rem" } }}>
-                            {label}
-                          </Typography>
-                        }
-                        sx={{ mr: 0 }}
-                      />
-                    ))}
-                  </Box>
+                        ))}
+                      </Box>
+                    </CardContent>
+                  </Card>
                 </>
               ) : (
                 <>
-                  {/* Seats slider */}
-                  <Box>
-                    <Typography variant="subtitle2" fontWeight={700} gutterBottom
-                      sx={{ fontSize: { xs: "0.75rem", sm: "0.825rem", md: "0.875rem" } }}>
-                      Available seats: {form.availableSeats}
-                    </Typography>
-                    <Slider value={form.availableSeats}
-                      onChange={(_, value) => update("availableSeats", value)}
-                      min={1} max={7} step={1} marks valueLabelDisplay="auto"
-                      sx={{ mx: { xs: 0.25, sm: 0 }, "& .MuiSlider-markLabel": { fontSize: { xs: "0.62rem", sm: "0.7rem" } } }} />
-                  </Box>
+                  <Card variant="outlined" sx={{ borderRadius: 3 }}>
+                    <CardContent sx={{ p: { xs: 1.25, sm: 2.5 }, "&:last-child": { pb: { xs: 1.25, sm: 2.5 } } }}>
+                      <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5 }}>
+                        <Users size={16} color={ACCENT_DARK} />
+                        <Typography variant="subtitle2" fontWeight={700}
+                          sx={{ fontSize: { xs: "0.75rem", sm: "0.825rem", md: "0.875rem" } }}>
+                          Available seats: {form.availableSeats}
+                        </Typography>
+                      </Stack>
+                      <Slider value={form.availableSeats}
+                        onChange={(_, value) => update("availableSeats", value)}
+                        min={1} max={7} step={1} marks valueLabelDisplay="auto"
+                        sx={{
+                          mx: { xs: 0.5, sm: 0.5 },
+                          color: ACCENT,
+                          "& .MuiSlider-markLabel": { fontSize: { xs: "0.62rem", sm: "0.7rem" } },
+                        }} />
+                    </CardContent>
+                  </Card>
 
-                  {/* Fuel sharing */}
                   <FormControlLabel
                     control={
                       <Switch checked={form.fuelSharing}
                         onChange={(e) => update("fuelSharing", e.target.checked)}
-                        color="primary"
-                        size={isMobile ? "small" : "medium"} />
+                        size={isMobile ? "small" : "medium"}
+                        sx={{
+                          "& .MuiSwitch-switchBase.Mui-checked": { color: ACCENT },
+                          "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": { backgroundColor: ACCENT },
+                        }} />
                     }
                     label={
-                      <Typography sx={{ fontSize: { xs: "0.8rem", sm: "0.875rem" } }}>Fuel Sharing</Typography>
+                      <Stack direction="row" spacing={0.6} alignItems="center">
+                        <Fuel size={16} color={ACCENT_DARK} />
+                        <Typography sx={{ fontSize: { xs: "0.8rem", sm: "0.875rem" } }}>Fuel Sharing</Typography>
+                      </Stack>
                     }
                   />
                 </>
               )}
 
-              {/* Gender Preference */}
               <FormControl fullWidth size={inputSize}>
                 <InputLabel sx={ilSx}>Gender Preference</InputLabel>
                 <Select value={form.genderPreference} label="Gender Preference"
                   onChange={(e) => update("genderPreference", e.target.value)}
                   sx={selectSx}>
-                  {["Any", "Male", "Female"].map((v) => (
-                    <MenuItem key={v} value={v} sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>{v}</MenuItem>
+                  {GENDER_OPTIONS.map((v) => (
+                    <MenuItem key={v} value={v} sx={menuItemSx}>{v}</MenuItem>
                   ))}
                 </Select>
               </FormControl>
@@ -589,49 +1428,62 @@ export default function OfferRide() {
           {/* ── STEP 2 : Review ── */}
           {step === 2 && (
             <Box>
-              <Alert severity="info"
+              <SectionHeader icon={ShieldCheck} title="Review & Confirm" subtitle="Double-check before you post" />
+
+              <Alert
+                icon={<CheckCircle2 size={18} />}
+                severity="info"
                 sx={{ mb: { xs: 1.5, sm: 2 }, borderRadius: 2, fontSize: { xs: "0.72rem", sm: "0.8rem", md: "0.875rem" } }}>
                 Please review your details before posting.
               </Alert>
 
-              <Stack spacing={0}>
-                {(isFlight
-                  ? [
-                    ["Route", `${form.fromAirport || "—"} → ${form.toAirport || "—"}`],
-                    ["Country", `${form.fromCountry || "—"} → ${form.toCountry || "—"}`],
-                    ["Date & Departure", `${form.date || "—"} at ${form.time || "—"}`],
-                    ["Flight Number", form.flightNumber || "—"],
-                    ["Airline Name", form.airlineName || "—"],
-                    ["Transit Airport", form.transitAirport || "No transit"],
-                    ["Traveller Type", form.travellerType || "—"],
-                    ["Language", form.language || "—"],
-                    ["Gender Preference", form.genderPreference],
-                    ["Age Group Preference", form.ageGroupPreference],
-                    ["Medical Assistance", form.medicalAssistance ? "Yes" : "No"],
-                    ["Language Support", form.languageSupport ? "Yes" : "No"],
-                    ["Transit Help", form.transitHelp ? "Yes" : "No"],
-                    ["Baggage Help", form.baggageHelp ? "Yes" : "No"],
-                  ]
-                  : [
-                    ["From → Destination", `${form.from || "—"} → ${form.destination || "—"}`],
-                    ["Date & Time", `${form.date || "—"} at ${form.time || "—"}`],
-                    ["Mode of Travel", form.modeOfTravel],
-                    ["Available Seats", form.availableSeats],
-                    ["Fuel Sharing", form.fuelSharing ? "Yes" : "No"],
-                    ["Gender Preference", form.genderPreference],
-                  ]
-                ).map(([label, value]) => (
-                  <ReviewRow key={label} label={label} value={value} />
-                ))}
-              </Stack>
+              <Card variant="outlined" sx={{ borderRadius: 3 }}>
+                <CardContent sx={{ p: { xs: 1.1, sm: 2.25 }, "&:last-child": { pb: { xs: 1.1, sm: 2.25 } } }}>
+                  <Stack spacing={0}>
+                    {(isFlight
+                      ? [
+                          [MapPin, "Route", `${form.fromAirport || "—"} → ${form.toAirport || "—"}`],
+                          [MapPin, "Country", `${form.fromCountry || "—"} → ${form.toCountry || "—"}`],
+                          [Calendar, "Date & Departure", `${form.date || "—"} at ${form.time || "—"}`],
+                          [Clock, "Journey Duration", form.duration || "—"],
+                          [Plane, "Flight Number", form.flightNumber || "—"],
+                          [Plane, "Airline Name", form.airlineName || "—"],
+                          [MapPin, "Transit Airport", form.transitAirport || "No transit"],
+                          [Users, "Traveller Type", form.travellerType || "—"],
+                          [Languages, "Language", form.language || "—"],
+                          [Users, "Gender Preference", form.genderPreference],
+                          [Users, "Age Group Preference", form.ageGroupPreference],
+                          [HeartPulse, "Medical Assistance", form.medicalAssistance ? "Yes" : "No"],
+                          [Languages, "Language Support", form.languageSupport ? "Yes" : "No"],
+                          [MapPin, "Transit Help", form.transitHelp ? "Yes" : "No"],
+                          [Luggage, "Baggage Help", form.baggageHelp ? "Yes" : "No"],
+                        ]
+                      : [
+                          [MapPin, "From → Destination", `${form.from || "—"} → ${form.destination || "—"}`],
+                          [Calendar, "Date & Time", `${form.date || "—"} at ${form.time || "—"}`],
+                          [Clock, "Journey Duration", form.duration || "—"],
+                          [Car, "Mode of Travel", form.modeOfTravel],
+                          [Users, "Available Seats", form.availableSeats],
+                          [Fuel, "Fuel Sharing", form.fuelSharing ? "Yes" : "No"],
+                          [Users, "Gender Preference", form.genderPreference],
+                        ]
+                    ).map(([Icon, label, value]) => (
+                      <ReviewItem key={label} icon={Icon} label={label} value={value} />
+                    ))}
+                  </Stack>
+                </CardContent>
+              </Card>
 
               {form.description && (
-                <Box sx={{ bgcolor: "#FFF8F2", borderRadius: 2, p: { xs: 1, sm: 1.5 }, mt: 1.5 }}>
-                  <Typography variant="caption" color="text.secondary" fontWeight={700}
-                    sx={{ fontSize: { xs: "0.62rem", sm: "0.7rem" } }}>
-                    DESCRIPTION
-                  </Typography>
-                  <Typography variant="body2" mt={0.5}
+                <Box sx={{ bgcolor: "#FFF8F2", borderRadius: 2, p: { xs: 1, sm: 1.75 }, mt: 1.5 }}>
+                  <Stack direction="row" spacing={0.6} alignItems="center" sx={{ mb: 0.5 }}>
+                    <FileText size={14} color={ACCENT_DARK} />
+                    <Typography variant="caption" color="text.secondary" fontWeight={700}
+                      sx={{ fontSize: { xs: "0.62rem", sm: "0.7rem" } }}>
+                      DESCRIPTION
+                    </Typography>
+                  </Stack>
+                  <Typography variant="body2"
                     sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" }, wordBreak: "break-word" }}>
                     {form.description}
                   </Typography>
@@ -641,15 +1493,23 @@ export default function OfferRide() {
           )}
 
           {/* ── Navigation buttons ── */}
-          <Stack direction="row" spacing={{ xs: 1, sm: 1.5 }} sx={{ mt: { xs: 2, sm: 3 } }}>
+          <Stack direction="row" spacing={{ xs: 1, sm: 1.5 }} sx={{ mt: { xs: 2.5, sm: 4 } }}>
             {step > 0 && (
-              <Button variant="outlined" onClick={() => setStep((s) => s - 1)}
+              <Button
+                variant="outlined"
+                onClick={() => setStep((s) => s - 1)}
                 size="small"
+                startIcon={<ArrowLeft size={16} />}
                 sx={{
                   flex: 1, minWidth: 0,
-                  fontSize: { xs: "0.7rem", sm: "0.8rem", md: "0.875rem" },
-                  py: { xs: 0, sm: 1, md: 1.1 },
-                  px: { xs: 1, sm: 2 },
+                  fontSize: { xs: "0.68rem", sm: "0.8rem", md: "0.875rem" },
+                  py: { xs: 0.9, sm: 1, md: 1.1 },
+                  px: { xs: 0.75, sm: 2 },
+                  minHeight: 40,
+                  borderRadius: 2.5,
+                  borderColor: "divider",
+                  color: "text.primary",
+                  whiteSpace: "nowrap",
                 }}>
                 Back
               </Button>
@@ -659,11 +1519,18 @@ export default function OfferRide() {
               <Button variant="contained"
                 onClick={() => { if (validateStep()) { setShowErrors(false); setStep((s) => s + 1); } }}
                 size={isMobile ? "small" : "medium"}
+                endIcon={<ArrowRight size={16} />}
                 sx={{
                   flex: 1, minWidth: 0,
-                  fontSize: { xs: "0.72rem", sm: "0.8rem", md: "0.875rem" },
-                  py: { xs: 0.75, sm: 1, md: 1.1 },
-                  px: { xs: 1, sm: 2 },
+                  fontSize: { xs: "0.7rem", sm: "0.8rem", md: "0.875rem" },
+                  py: { xs: 0.9, sm: 1, md: 1.1 },
+                  px: { xs: 0.75, sm: 2 },
+                  minHeight: 40,
+                  borderRadius: 2.5,
+                  bgcolor: ACCENT,
+                  boxShadow: "none",
+                  whiteSpace: "nowrap",
+                  "&:hover": { bgcolor: ACCENT_DARK, boxShadow: "none" },
                 }}>
                 Continue
               </Button>
@@ -673,11 +1540,15 @@ export default function OfferRide() {
                 size="small"
                 sx={{
                   flex: 1, minWidth: 0,
-                  fontSize: { xs: "0.72rem", sm: "0.8rem", md: "0.875rem" },
-                  py: { xs: 0.75, sm: 1, md: 1.1 },
-                  px: { xs: 1, sm: 2 },
-                  bgcolor: "#52B788",
-                  "&:hover": { bgcolor: "#2D6A4F" },
+                  fontSize: { xs: "0.56rem", sm: "0.8rem", md: "0.875rem" },
+                  py: { xs: 0.9, sm: 1, md: 1.1 },
+                  px: { xs: 0.75, sm: 2 },
+                  minHeight: 40,
+                  borderRadius: 2.5,
+                  bgcolor: ACCENT,
+                  boxShadow: "none",
+                  whiteSpace: "nowrap",
+                  "&:hover": { bgcolor: ACCENT_DARK, boxShadow: "none" },
                 }}>
                 🙏 Post to community
               </Button>

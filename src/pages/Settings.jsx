@@ -507,7 +507,19 @@ const Settings = () => {
       <Modal
         open={editProfile}
         children={
-          <Box sx={modalCenterWrapper}>
+          <Box
+            sx={{
+              position: "fixed",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: { xs: "92%", sm: "100%" },
+              px: { xs: 2, sm: 0 },
+            }}
+          >
             <Box
               sx={{
                 bgcolor: "white",
@@ -516,16 +528,16 @@ const Settings = () => {
                 borderRadius: 2,
                 boxShadow: 24,
                 p: { xs: 2, sm: 3 },
-                maxHeight: { xs: "92vh", sm: "90vh" },
+                maxHeight: { xs: "85vh", sm: "90vh" },
                 overflowY: "auto",
               }}
             >
-              <Stack spacing={{ xs: 2, sm: 2.5 }} sx={{ width: "100%" }}>
+              <Stack spacing={{ xs: 1.5, sm: 2.5 }} sx={{ width: "100%" }}>
                 <Typography
                   variant="h6"
                   fontWeight={700}
                   sx={{
-                    fontSize: { xs: "1.05rem", sm: "1.2rem", md: "1.25rem" },
+                    fontSize: { xs: "0.95rem", sm: "1.1rem", md: "1.25rem" },
                     mb: { xs: 0.5, sm: 1 },
                   }}
                 >
@@ -536,9 +548,9 @@ const Settings = () => {
                   <Avatar
                     src={profileImage || formData.profileImage || ""}
                     sx={{
-                      width: { xs: 70, sm: 80, md: 90 },
-                      height: { xs: 70, sm: 80, md: 90 },
-                      fontSize: { xs: 24, sm: 28, md: 32 },
+                      width: { xs: 60, sm: 75, md: 90 },
+                      height: { xs: 60, sm: 75, md: 90 },
+                      fontSize: { xs: 18, sm: 24, md: 32 },
                       bgcolor: SAFFRON,
                     }}
                   >
@@ -547,7 +559,12 @@ const Settings = () => {
                       `${formData?.firstName?.[0] || ""}${formData?.lastName?.[0] || ""}`}
                   </Avatar>
 
-                  <Button variant="outlined" component="label" size="small">
+                  <Button
+                    variant="outlined"
+                    component="label"
+                    size="small"
+                    sx={{ fontSize: { xs: "0.7rem", sm: "0.8125rem" } }}
+                  >
                     Change Photo
                     <input
                       hidden
@@ -560,7 +577,7 @@ const Settings = () => {
 
                 <Stack
                   direction={{ xs: "column", sm: "row" }}
-                  spacing={2}
+                  spacing={{ xs: 1.5, sm: 2 }}
                   sx={{ width: "100%" }}
                 >
                   <TextField
@@ -570,6 +587,8 @@ const Settings = () => {
                     fullWidth
                     value={formData?.firstName}
                     onChange={handleChange}
+                    InputProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
+                    InputLabelProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
                   />
 
                   <TextField
@@ -579,12 +598,14 @@ const Settings = () => {
                     fullWidth
                     value={formData?.lastName}
                     onChange={handleChange}
+                    InputProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
+                    InputLabelProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
                   />
                 </Stack>
 
                 <Stack
                   direction={{ xs: "column", sm: "row" }}
-                  spacing={2}
+                  spacing={{ xs: 1.5, sm: 2 }}
                   sx={{ width: "100%" }}
                 >
                   <TextField
@@ -595,6 +616,8 @@ const Settings = () => {
                     value={formData?.email}
                     onChange={handleChange}
                     disabled
+                    InputProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
+                    InputLabelProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
                   />
 
                   <TextField
@@ -604,12 +627,14 @@ const Settings = () => {
                     fullWidth
                     value={formData?.mobile}
                     onChange={handleChange}
+                    InputProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
+                    InputLabelProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
                   />
                 </Stack>
 
                 <Stack
                   direction={{ xs: "column", sm: "row" }}
-                  spacing={2}
+                  spacing={{ xs: 1.5, sm: 2 }}
                   sx={{ width: "100%" }}
                 >
                   <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -626,6 +651,8 @@ const Settings = () => {
                         textField: {
                           size: "small",
                           fullWidth: true,
+                          InputProps: { sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } },
+                          InputLabelProps: { sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } },
                         },
                       }}
                       sx={{ width: { xs: "100%", sm: "48%" } }}
@@ -641,10 +668,12 @@ const Settings = () => {
                     sx={{ width: { xs: "100%", sm: "48%" } }}
                     value={formData?.gender}
                     onChange={handleChange}
+                    InputProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
+                    InputLabelProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
                   >
-                    <MenuItem value="Male">Male</MenuItem>
-                    <MenuItem value="Female">Female</MenuItem>
-                    <MenuItem value="Other">Other</MenuItem>
+                    <MenuItem value="Male" sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem" } }}>Male</MenuItem>
+                    <MenuItem value="Female" sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem" } }}>Female</MenuItem>
+                    <MenuItem value="Other" sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem" } }}>Other</MenuItem>
                   </TextField>
                 </Stack>
 
@@ -656,17 +685,27 @@ const Settings = () => {
                   fullWidth
                   value={formData?.bio}
                   onChange={handleChange}
+                  InputProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
+                  InputLabelProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
                 />
 
                 <Stack
-                  direction={{ xs: "column-reverse", sm: "row" }}
-                  spacing={1.5}
-                  justifyContent="flex-end"
-                  sx={{ width: "100%" }}
+                  direction={{ xs: "row-reverse", sm: "row" }}
+                  spacing={{ xs: 1, sm: 1.5 }}
+                  // justifyContent="flex-end"
+                  // alignItems="center"
+                  sx={{ width: "100%", mt: { xs: 0.5, sm: 1 }, display: "flex", justifyContent: "end" }}
                 >
                   <Button
                     variant="outlined"
-                    sx={{ width: { xs: "100%", sm: "auto" } }}
+                    size="small"
+                    sx={{
+                      width: { xs: "100%", sm: "auto" },
+                      fontSize: { xs: "0.75rem", sm: "0.85rem" },
+                      py: { xs: 0.5, sm: 0.75 },
+                      px: { xs: 1.5, sm: 2.5 },
+                      minWidth: { xs: "auto", sm: 90 },
+                    }}
                     onClick={() => {
                       setProfileImage("");
                       setEditProfile(false);
@@ -677,7 +716,14 @@ const Settings = () => {
 
                   <Button
                     variant="contained"
-                    sx={{ width: { xs: "100%", sm: "auto" } }}
+                    size="small"
+                    sx={{
+                      width: { xs: "100%", sm: "auto" },
+                      fontSize: { xs: "0.75rem", sm: "0.85rem" },
+                      py: { xs: 0.5, sm: 0.75 },
+                      px: { xs: 1.5, sm: 2.5 },
+                      minWidth: { xs: "auto", sm: 110 },
+                    }}
                     onClick={handleUpdateProfile}
                     disabled={submitLoading}
                   >
@@ -690,12 +736,25 @@ const Settings = () => {
         }
       />
 
+
       {/* ── Change Password Modal ── */}
       <Modal
         open={passwordModel}
         onClose={() => setPasswordModel(false)}
       >
-        <Box sx={modalCenterWrapper}>
+        <Box
+          sx={{
+            position: "fixed",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: { xs: "92%", sm: "100%" },
+            px: { xs: 2, sm: 0 },
+          }}
+        >
           <Box
             sx={{
               bgcolor: "#fff",
@@ -704,7 +763,7 @@ const Settings = () => {
               borderRadius: { xs: 2, sm: 3 },
               p: { xs: 2, sm: 3 },
               boxShadow: 24,
-              maxHeight: { xs: "92vh", sm: "90vh" },
+              maxHeight: { xs: "85vh", sm: "90vh" },
               overflowY: "auto",
             }}
           >
@@ -712,14 +771,14 @@ const Settings = () => {
               variant="h6"
               fontWeight={700}
               sx={{
-                fontSize: { xs: "1.05rem", sm: "1.2rem", md: "1.25rem" },
-                mb: { xs: 2, sm: 3 },
+                fontSize: { xs: "0.95rem", sm: "1.1rem", md: "1.25rem" },
+                mb: { xs: 1.5, sm: 3 },
               }}
             >
               Change Password
             </Typography>
 
-            <Stack spacing={2}>
+            <Stack spacing={{ xs: 1.5, sm: 2 }}>
               <TextField
                 label="Current Password"
                 name="currentPassword"
@@ -728,6 +787,8 @@ const Settings = () => {
                 fullWidth
                 value={passwordData.currentPassword}
                 onChange={handlePasswordChange}
+                InputProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
+                InputLabelProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
               />
 
               <TextField
@@ -738,6 +799,8 @@ const Settings = () => {
                 fullWidth
                 value={passwordData.newPassword}
                 onChange={handlePasswordChange}
+                InputProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
+                InputLabelProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
               />
 
               <TextField
@@ -748,16 +811,27 @@ const Settings = () => {
                 fullWidth
                 value={passwordData.confirmPassword}
                 onChange={handlePasswordChange}
+                InputProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
+                InputLabelProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
               />
 
               <Stack
                 direction={{ xs: "column-reverse", sm: "row" }}
                 justifyContent="flex-end"
-                spacing={1.5}
+                alignItems="center"
+                spacing={{ xs: 1, sm: 1.5 }}
+                sx={{ mt: { xs: 0.5, sm: 1 } }}
               >
                 <Button
                   variant="outlined"
-                  sx={{ width: { xs: "100%", sm: "auto" } }}
+                  size="small"
+                  sx={{
+                    width: { xs: "100%", sm: "auto" },
+                    fontSize: { xs: "0.75rem", sm: "0.85rem" },
+                    py: { xs: 0.5, sm: 0.75 },
+                    px: { xs: 1.5, sm: 2.5 },
+                    minWidth: { xs: "auto", sm: 90 },
+                  }}
                   onClick={() => {
                     setPasswordModel(false)
                     setPasswordData({
@@ -772,7 +846,14 @@ const Settings = () => {
 
                 <Button
                   variant="contained"
-                  sx={{ width: { xs: "100%", sm: "auto" } }}
+                  size="small"
+                  sx={{
+                    width: { xs: "100%", sm: "auto" },
+                    fontSize: { xs: "0.75rem", sm: "0.85rem" },
+                    py: { xs: 0.5, sm: 0.75 },
+                    px: { xs: 1.5, sm: 2.5 },
+                    minWidth: { xs: "auto", sm: 130 },
+                  }}
                   onClick={() => handleChangePassword()}
                 >
                   Update Password
@@ -786,54 +867,89 @@ const Settings = () => {
       <Modal open={openShare} onClose={handleCloseShare}>
         <Box
           sx={{
-            position: "absolute",
+            position: "fixed",
             top: "50%",
             left: "50%",
             transform: "translate(-50%, -50%)",
-            bgcolor: "white",
-            p: 3,
-            borderRadius: 2,
-            width: 320,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: { xs: "92%", sm: "100%" },
+            px: { xs: 2, sm: 0 },
           }}
         >
-          <Typography fontWeight={600} mb={2}>
-            Share your referral link
-          </Typography>
-
-          <TextField
-            fullWidth
-            value={shareLink}
-            size="small"
-            InputProps={{ readOnly: true }}
-          />
-
-          <Stack direction="row" spacing={1} mt={2}>
-            <Button
-              fullWidth
-              variant="contained"
-              onClick={() => handleCopy(shareLink)}
-            >
-              Copy Link
-            </Button>
-
-            <Button
-              fullWidth
-              variant="outlined"
-              onClick={() => {
-                if (navigator.share) {
-                  navigator.share({
-                    title: "Join using my referral",
-                    text: "Use my referral link",
-                    url: shareLink,
-                  });
-                } else {
-                  toast.info("Sharing not supported on this device");
-                }
+          <Box
+            sx={{
+              bgcolor: "white",
+              width: { xs: "100%", sm: 320 },
+              maxWidth: 320,
+              borderRadius: { xs: 2, sm: 2 },
+              p: { xs: 2, sm: 3 },
+              boxShadow: 24,
+            }}
+          >
+            <Typography
+              fontWeight={600}
+              sx={{
+                fontSize: { xs: "0.9rem", sm: "1rem" },
+                mb: { xs: 1.5, sm: 2 },
               }}
             >
-              Share
-            </Button>
-          </Stack>
+              Share your referral link
+            </Typography>
+
+            <TextField
+              fullWidth
+              value={shareLink}
+              size="small"
+              InputProps={{
+                readOnly: true,
+                sx: { fontSize: { xs: "0.75rem", sm: "0.85rem" } },
+              }}
+            />
+
+            <Stack
+              direction="row"
+              spacing={{ xs: 1, sm: 1 }}
+              sx={{ mt: { xs: 1.5, sm: 2 } }}
+            >
+              <Button
+                fullWidth
+                variant="contained"
+                size="small"
+                sx={{
+                  fontSize: { xs: "0.75rem", sm: "0.85rem" },
+                  py: { xs: 0.5, sm: 0.75 },
+                }}
+                onClick={() => handleCopy(shareLink)}
+              >
+                Copy Link
+              </Button>
+
+              <Button
+                fullWidth
+                variant="outlined"
+                size="small"
+                sx={{
+                  fontSize: { xs: "0.75rem", sm: "0.85rem" },
+                  py: { xs: 0.5, sm: 0.75 },
+                }}
+                onClick={() => {
+                  if (navigator.share) {
+                    navigator.share({
+                      title: "Join using my referral",
+                      text: "Use my referral link",
+                      url: shareLink,
+                    });
+                  } else {
+                    toast.info("Sharing not supported on this device");
+                  }
+                }}
+              >
+                Share
+              </Button>
+            </Stack>
+          </Box>
         </Box>
       </Modal>
 

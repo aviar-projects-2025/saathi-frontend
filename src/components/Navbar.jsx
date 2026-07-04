@@ -106,13 +106,13 @@ const TopNav = ({ onMenuClick }) => {
               fontWeight: 700,
             }}
           >
-            Post a ride
+            Post Ride
           </Button>
           <Dialog
             open={open}
             onClose={() => setOpen(false)}
             fullWidth
-            maxWidth="md"
+            maxWidth="sm"
           >
             <DialogTitle
               sx={{

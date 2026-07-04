@@ -237,7 +237,7 @@ export default function RideCard({ ride }) {
           <Box display="flex" alignItems="center" gap={{ xs: 1, sm: 1.5 }} sx={{ minWidth: 0, flex: 1 }}>
             <Avatar sx={{
               bgcolor: isFlight ? "#1A3C5E" : "#2D6A4F",
-              width: { xs: 30, sm: 38 }, height: { xs: 30, sm: 38 },
+              width: { xs: 25, sm: 38 }, height: { xs: 25, sm: 38 },
               fontSize: { xs: "0.8rem", sm: "1.1rem" }, flexShrink: 0,
             }}>
               {userName.charAt(0)}
@@ -245,16 +245,16 @@ export default function RideCard({ ride }) {
             <Box sx={{ minWidth: 0 }}>
               <Typography fontWeight={700} sx={{
 
-                fontSize: { xs: "0.9rem", sm: "0.95rem" }, lineHeight: 1.2, mt: 0.5,
+                fontSize: { xs: "0.8rem", sm: "0.95rem" }, lineHeight: 1.2, mt: 0.5,
                 whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
               }}>
                 {userName}
               </Typography>
               <Box display="flex" alignItems="center" gap={0.5}>
-                <VerifiedIcon color="success" sx={{ fontSize: { xs: 10, sm: 14 }, mt: 0.5 }} />
+                {/* <VerifiedIcon color="success" sx={{ fontSize: { xs: 10, sm: 14 }, mt: 0.5 }} />
                 <Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.6rem", sm: "0.7rem" } }}>
                   Verified User
-                </Typography>
+                </Typography> */}
               </Box>
             </Box>
           </Box>
@@ -262,7 +262,7 @@ export default function RideCard({ ride }) {
           {/* Mode chip */}
           <Chip
             icon={isFlight
-              ? <FlightTakeoffIcon sx={{ fontSize: { xs: 11, sm: 14 } }} />
+              ? <FlightTakeoffIcon sx={{ fontSize: { xs: 10, sm: 14 } }} />
               : travelIcons[ride.modeOfTravel]}
             label={isFlight ? "Flight Companion" : "Ride Available"}
             size="small"
