@@ -164,29 +164,14 @@ const Settings = () => {
     window.location.replace("/login");
   };
 
-const handleProfileImage = (e) => {
-  const file = e.target.files[0];
+  const handleProfileImage = (e) => {
+    const file = e.target.files[0];
 
-  if (!file) return;
+    if (!file) return;
 
-  // Allow only image files
-  if (!file.type.startsWith("image/")) {
-    alert("Please upload a valid image.");
-    e.target.value = "";
-    return;
-  }
-
-  // Optional: Max 5 MB
-  if (file.size > 5 * 1024 * 1024) {
-    alert("Image size must be less than 5 MB.");
-    e.target.value = "";
-    return;
-  }
-
-  // Upload or preview
-  setProfileImage(URL.createObjectURL(file));
-  setSelectedFile(file);
-};
+    setProfileFile(file);
+    setProfileImage(URL.createObjectURL(file));
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;

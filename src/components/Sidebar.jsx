@@ -65,6 +65,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
     // { label: "Offer Ride", icon: <DirectionsCarIcon />, link: "/offer-ride" },
     { label: "Find Ride", icon: <SearchIcon />, link: "/find-ride" },
     { label: "My Rides", icon: <RouteIcon />, link: "/myride" },
+        { label: "My Post", icon: <RouteIcon />, link: "/mypost" },
     {
       label: (
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>

@@ -19,7 +19,7 @@
   import FindRides from "./pages/FindRides.jsx";
   import Profile from "./pages/Profile.jsx";
   import Community from "./pages/Community.jsx";
-
+  import Mypost from "./pages/Mypost.jsx";
   import Discover from "./pages/Discover.jsx";
 
   // import myRides from "./pages/MyRides.jsx";
@@ -87,6 +87,7 @@
               <Route path="/find-ride" element={<FindRides />} />
               <Route path="/offer-ride" element={<OfferRide />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/mypost" element ={<Mypost/>}/>
               <Route path="/myride" element={<MyRides />} />
               <Route path="/notification" element={<Notification />} />
               <Route path="/discover" element={<Discover />} />
