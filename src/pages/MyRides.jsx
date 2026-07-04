@@ -8,6 +8,8 @@ import {
   Badge, Collapse, Avatar
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import LocationOnIcon from "@mui/icons-material/LocationOn";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -610,29 +612,29 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete, allRequests, s
     <>
       <Box
         sx={{
-          p: { xs: 0.01, sm: 0 },
-          width: '100%',
+          p: { xs: 0.5, sm: 0 },
+          width: "100%",
           maxWidth: 1000,
           mx: "auto",
-          transition: "transform .25s ease",
+          mb: 2.5,
+          transition: "all .3s ease",
           "&:hover": {
-            transform: { xs: 'none', sm: 'translateY(-4px)' },
+            transform: { xs: "none", sm: "translateY(-6px)" },
           },
-          mb: 2
         }}
       >
         {/* ── Top header: name + status ── */}
         <Box
           sx={{
-            background: "#111",
+            background: "linear-gradient(135deg, #0e0e3b, #271c45)",
             color: "#fff",
-            borderRadius: "14px 14px 0 0",
-            px: { xs: 1.5, sm: 2.5 },
-            py: { xs: 1.1, sm: 1.4 },
+            borderRadius: "18px 18px 0 0",
+            px: { xs: 2, sm: 3 },
+            py: { xs: 1.5, sm: 2 },
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            gap: 1,
+            boxShadow: "0 6px 15px rgba(255,153,51,.25)",
           }}
         >
           <Box sx={{ minWidth: 0, flex: 1 }}>
@@ -684,7 +686,7 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete, allRequests, s
                     px: 1,
                     '&:hover': {
                       borderColor: '#FF9933',
-                      backgroundColor: 'rgba(255, 153, 51, 0.1)',
+                      backgroundColor: 'rgba(27, 15, 88, 0.1)',
                     }
                   }}
                 >
@@ -699,11 +701,16 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete, allRequests, s
         <Card
           elevation={0}
           sx={{
-            borderRadius: "0 0 14px 14px",
-            border: "1px solid rgba(255,153,51,0.25)",
-            borderTop: 0,
-            bgcolor: "#FFF9F2",
-            transition: "box-shadow .25s ease",
+            borderRadius: "0 0 18px 18px",
+            background: "#fff",
+            border: "1px solid #FFE2C2",
+            boxShadow: "0 10px 30px rgba(255,153,51,.12)",
+            overflow: "hidden",
+            transition: ".3s",
+            "&:hover": {
+              transform: "translateY(-5px)",
+              boxShadow: "0 18px 40px rgba(255,153,51,.22)"
+            }
           }}
         >
           <CardContent
@@ -1231,64 +1238,136 @@ const MyRides = () => {
           top: 20,
         }}
       >
-        <Typography variant="h6" fontWeight={700} mb={2}>
+        <Typography variant="h6" fontWeight={900} mb={2}>
           My Requests
         </Typography>
-
         {allMyRequests.map((request) => (
           <Card
             key={request._id}
             sx={{
-              mb: 2,
-              borderRadius: 3,
+              mb: 3,
+              borderRadius: "20px",
+              overflow: "hidden",
+              background: "linear-gradient(135deg, #ffffff 0%, #f8fbff 100%)",
+              boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
+              transition: "0.3s",
               position: "relative",
+              "&:hover": {
+                transform: "translateY(-4px)",
+                boxShadow: "0 18px 40px rgba(0,0,0,0.12)",
+              },
             }}
           >
+            {/* Delete Button */}
             <IconButton
               color="error"
               onClick={() => handleCancelClick(request)}
               sx={{
                 position: "absolute",
-                top: 10,
-                right: 10,
+                top: 15,
+                right: 15,
+                bgcolor: "#fff",
+                boxShadow: 2,
+                "&:hover": {
+                  bgcolor: "#ffebee",
+                },
               }}
             >
               <DeleteIcon />
             </IconButton>
-            <CardContent>
-              <Typography fontWeight={600}>
-                {request.rideId?.from} → {request.rideId?.destination}
-              </Typography>
 
-              <Typography variant="body2">
-                Rider: {request.rideId?.createdBy?.firstName}{" "}
-                {request.rideId?.createdBy?.lastName}
-              </Typography>
-
-              <Typography variant="body2">
-                Date: {new Date(request.createdAt).toLocaleDateString()}
-              </Typography>
-
-              <Typography variant="body2">
-                Time: {new Date(request.createdAt).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </Typography>
-
-              <Typography
-                variant="body2"
+            <CardContent
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                gap: 2,
+                p: 2.5,
+                pr: 8, // Space for delete button
+              }}
+            >
+              {/* Rider */}
+              <Box
                 sx={{
-                  mt: 1,
-                  display: "-webkit-box",
-                  WebkitLineClamp: 2,
-                  WebkitBoxOrient: "vertical",
-                  overflow: "hidden",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  minWidth: 220,
                 }}
               >
-                Description: {request.rideId?.description}
-              </Typography>
+                <Avatar
+                  sx={{
+                    bgcolor: "#FF9933",
+                    width: 42,
+                    height: 42,
+                  }}
+                >
+                  <PersonIcon />
+                </Avatar>
 
+                <Typography fontWeight={700}>
+                  {request.rideId?.createdBy?.firstName}{" "}
+                  {request.rideId?.createdBy?.lastName}
+                </Typography>
+              </Box>
+
+              {/* Route */}
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  minWidth: 250,
+                }}
+              >
+                <LocationOnIcon sx={{ color: "#FF9933" }} />
+
+                <Typography fontWeight={600}>
+                  {request.rideId?.from}
+                </Typography>
+
+                <ArrowForwardIcon sx={{ color: "#FF9933" }} />
+
+                <Typography fontWeight={600}>
+                  {request.rideId?.destination}
+                </Typography>
+              </Box>
+
+              {/* Date */}
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                }}
+              >
+                <CalendarMonthIcon sx={{ color: "#FF9933" }} />
+
+                <Typography>
+                  {new Date(request.createdAt).toLocaleDateString()}
+                </Typography>
+              </Box>
+
+              {/* Time */}
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                }}
+              >
+                <AccessTimeIcon sx={{ color: "#FF9933" }} />
+
+                <Typography>
+                  {new Date(request.createdAt).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </Typography>
+              </Box>
+
+              {/* Status */}
               <Chip
                 label={request.status}
                 color={
@@ -1298,7 +1377,10 @@ const MyRides = () => {
                       ? "error"
                       : "warning"
                 }
-                sx={{ mt: 2 }}
+                sx={{
+                  fontWeight: 700,
+                  borderRadius: 5,
+                }}
               />
             </CardContent>
           </Card>
@@ -1334,6 +1416,7 @@ const MyRides = () => {
           </DialogActions>
         </Dialog>
       </Box>
+
     </Box>
   );
 };
