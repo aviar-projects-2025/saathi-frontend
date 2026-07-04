@@ -2,20 +2,40 @@ import { createContext, useContext, useEffect, useState } from "react";
 import notificationSound from "../sounds/notifysound.wav";
 import { toast } from "react-toastify";
 import socket from "../socket";
+import axios from "axios";
+import Api from "../Api";
 
 const NotificationContext = createContext();
 
-export const NotificationProvider = ({ children}) => {
+export const NotificationProvider = ({ children }) => {
     const [allRequests, setAllRequests] = useState([]);
     const [allMyRequests, setAllMyRequests] = useState([]);
     const [notifications, setNotifications] = useState([]);
     const user = JSON.parse(localStorage.getItem('user'))
+    const [tabNotification, setTabNotification] = useState([]);
 
-    console.log(user,'user from notificaiton')
+    const fetchNotifications = async () => {
+        try {
+            const res = await axios.get(Api + `/notification/${user.id}/`)
+            console.log(res, 'res')
+            setTabNotification(res?.data?.data)
+        } catch (error) {
+            toast.error(error.message)
+            console.log(error)
+        }
+    }
+
+    useEffect(() => {
+        if (user?.id) {
+            fetchNotifications();
+        }
+    }, [user?.id])
+
+
     useEffect(() => {
         if (!user?.id) return;
         socket.emit("join", user.id);
-        console.log('joined ',user.id)
+        console.log('joined ', user.id)
         const handleEvent = (payload) => {
             const { type, data, message, category } = payload;
 
@@ -68,6 +88,7 @@ export const NotificationProvider = ({ children}) => {
                 allMyRequests,
                 setAllMyRequests,
                 notifications,
+                tabNotification,
             }}
         >
             {children}

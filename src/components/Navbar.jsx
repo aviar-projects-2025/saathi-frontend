@@ -6,6 +6,7 @@ import {
   Typography,
   IconButton,
   Badge,
+  Menu,
   Button,
   Avatar,
   CircularProgress,
@@ -28,11 +29,29 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import saathilogo1 from "../assets/saathilogo1.png";
 import { useUser } from "../context/userConetext.jsx";
+import NotificationTab from "../pages/NotificationTab.jsx";
+import { useNotifications } from "../context/NotificationContext.jsx";
+import KeyboardDoubleArrowUpIcon from '@mui/icons-material/KeyboardDoubleArrowUp';
 
 const TopNav = ({ onMenuClick }) => {
   const [open, setOpen] = useState(false);
+  const { tabNotification } = useNotifications();
+  const unreadCount = tabNotification?.filter(n => !n.isRead).length;
 
+  console.log(tabNotification.length, 'tabNotification')
   const { completion, currentUser } = useUser();
+
+  const [anchorEl, setAnchorEl] = useState(null);
+
+  const handleOpenNotifications = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleCloseNotifications = () => {
+    setAnchorEl(null);
+  };
+
+  const openNotifications = Boolean(anchorEl);
 
   return (
     <AppBar
@@ -85,13 +104,52 @@ const TopNav = ({ onMenuClick }) => {
           </Box>
         </Box>
 
-
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.2 }}>
-          <IconButton component={Link} to="/notification" sx={{ color: "#5f4632" }}>
-            <Badge badgeContent={2} color="error">
-              <NotificationsNoneIcon />
+          <IconButton onClick={handleOpenNotifications} sx={{ color: "#5f4632" }}>
+            <Badge color="error" badgeContent={unreadCount} invisible={unreadCount === 0}>
+              <NotificationsNoneIcon
+                sx={{
+                  color: openNotifications ? '#f97316' : '#5f4632', // ✅ FIXED
+                  transition: '0.2s'
+                }}
+              />
             </Badge>
           </IconButton>
+          <Menu
+            anchorEl={anchorEl}
+            open={openNotifications}
+            onClose={handleCloseNotifications}
+            anchorOrigin={{
+              vertical: "bottom",
+              horizontal: "right",
+            }}
+            transformOrigin={{
+              vertical: "top",
+              horizontal: "right",
+            }}
+          >
+            <Typography sx={{ pl: 2, fontSize: 14, }}>
+              Notifications
+            </Typography>
+            <Box sx={{
+              display: "flex",
+              flexDirection: 'column',
+              justifyContent: "center",
+              alignItems: "center",
+              width: 320,
+              p: 1,
+              maxHeight: 400,
+              overflowY: "auto"
+            }}>
+              <NotificationTab />
+              {tabNotification.length > 0 &&
+                <Typography sx={{ fontSize: 14, position: 'absolute', bottom: 1 }}>
+                  <KeyboardDoubleArrowUpIcon />
+                  Scroll to see more
+                </Typography>
+              }
+            </Box>
+          </Menu>
 
           <Button
 
