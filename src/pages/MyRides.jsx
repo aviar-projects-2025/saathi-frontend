@@ -1235,12 +1235,13 @@ const MyRides = () => {
           maxHeight: "90vh",
           overflowY: "auto",
           position: "sticky",
-          top: 20,
+          top: 30,
         }}
       >
-        <Typography variant="h6" fontWeight={900} mb={2}>
+          <Typography variant="h5" fontWeight={800} sx={{ fontSize: { xs: '1.2rem', sm: '1.5rem' } }}>
           My Requests
         </Typography>
+        <br/>
         {allMyRequests.map((request) => (
           <Card
             key={request._id}
