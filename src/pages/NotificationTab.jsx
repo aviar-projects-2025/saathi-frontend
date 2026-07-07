@@ -22,7 +22,6 @@ export default function NotificationTab({ handleCloseNotifications }) {
                 width: '100%',
                 maxWidth: 360,
                 bgcolor: 'background.paper',
-                mt: 30
             }}
         >
             {tabNotification?.length === 0 ? (

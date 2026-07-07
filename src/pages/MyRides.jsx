@@ -37,7 +37,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import socket from '../socket'
 import notificationSound from '../sounds/notifysound.wav'
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const statusConfig = {
   FULL: { label: 'Filled', color: '#2D6A4F', bg: '#E8F5E9', icon: '✅' },
@@ -558,10 +558,13 @@ function RequestItem({ request, onApprove, onReject }) {
 }
 
 // ── Ride Card ────────────────────────────────────────────────────────────────
-function RideCard({ ride, showEdit, showDelete, onEdit, onDelete, allRequests, setAllRequests }) {
+function RideCard({ ride, showEdit, showDelete, onEdit, notificationRide, setNotificationRide, onDelete, allRequests, setAllRequests }) {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [showRequests, setShowRequests] = useState(false);
   const [loadingRequests, setLoadingRequests] = useState(false);
+  const navigate = useNavigate();
+
+  console.log(ride, 'ride')
 
   const status = statusConfig[ride?.status];
 
@@ -608,6 +611,18 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete, allRequests, s
       toast.error('Failed to reject request');
     }
   };
+
+  useEffect(() => {
+    if (!notificationRide) return;
+
+    if (ride?._id && ride._id.toString() === notificationRide.toString()) {
+      setDetailsOpen(true);
+
+      setNotificationRide(null);
+
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [notificationRide, ride]);
 
   return (
     <>
@@ -870,6 +885,7 @@ const MyRides = () => {
   const [editRide, setEditRide] = useState(null);
   const [deleteRide, setDeleteRide] = useState(null);
   const [currentRide, setCurrentRide] = useState([]);
+  const [notificationRide, setNotificationRide] = useState(null);
   const [loading, setLoading] = useState(true);
   const [allRequests, setAllRequests] = useState([]);
   const [allMyRequests, setAllMyRequests] = useState([]);
@@ -879,7 +895,8 @@ const MyRides = () => {
   useEffect(() => {
     if (location.state?.tab !== undefined) {
       setTab(location.state.tab);
-      console.log(location.state.rideId)
+      console.log(location.state.rideId, 'location.state.rideId')
+      setNotificationRide(location.state.rideId)
     }
   }, [location.state]);
 
@@ -1032,6 +1049,8 @@ const MyRides = () => {
       <RideCard
         key={ride._id || ride.id}
         ride={ride}
+        notificationRide={notificationRide}
+        setNotificationRide={setNotificationRide}
         showEdit={showEdit}
         showDelete={showDelete}
         onEdit={setEditRide}
