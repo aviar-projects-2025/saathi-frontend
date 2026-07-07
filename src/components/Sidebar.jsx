@@ -16,7 +16,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useReferral } from "../context/ReferralContext";
 import ArticleIcon from "@mui/icons-material/Article";
 
-
+  import PersonIcon from "@mui/icons-material/Person";
 export default function Sidebar({ onItemClick, isMobile = false }) {
   const { currentUser, getuserData } = useUser()
   const { completion } = useUser();
@@ -65,7 +65,9 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
     // { label: "Offer Ride", icon: <DirectionsCarIcon />, link: "/offer-ride" },
     { label: "Find Ride", icon: <SearchIcon />, link: "/find-ride" },
     { label: "My Rides", icon: <RouteIcon />, link: "/myride" },
-    { label: "My Post", icon: <ArticleIcon />, link: "/mypost" },
+
+
+{ label: "My Profile", icon: <PersonIcon />, link: "/user-profile" },
     {
       label: (
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -86,7 +88,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
       icon: <HandshakeIcon />,
       link: "/my-referalls",
     },
-    { label: "Settings", icon: <SettingsIcon />, link: "/settings" },
+    { label: "Settings", icon: <SettingsIcon />, link: "/myprofile" },
   ];
 
   return (
