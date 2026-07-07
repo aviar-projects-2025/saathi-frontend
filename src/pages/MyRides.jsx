@@ -38,6 +38,7 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import socket from '../socket'
 import notificationSound from '../sounds/notifysound.wav'
 import { useLocation } from 'react-router-dom';
+import RideDetailsModal from './RideDetails'
 
 const statusConfig = {
   FULL: { label: 'Filled', color: '#2D6A4F', bg: '#E8F5E9', icon: '✅' },
@@ -331,121 +332,121 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
 }
 
 // ── Ride Details Modal ───────────────────────────────────────────────────────
-function RideDetailsModal({ ride, showEdit, showDelete, onEdit, onDelete, onClose }) {
-  const theme = useTheme();
-  const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
+// function RideDetailsModal({ ride, showEdit, showDelete, onEdit, onDelete, onClose }) {
+//   const theme = useTheme();
+//   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
-  const startDate = new Date(ride.startTime);
-  const dateLabel = !isNaN(startDate)
-    ? startDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
-    : '—';
-  const timeLabel = !isNaN(startDate)
-    ? startDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
-    : '—';
+//   const startDate = new Date(ride.startTime);
+//   const dateLabel = !isNaN(startDate)
+//     ? startDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+//     : '—';
+//   const timeLabel = !isNaN(startDate)
+//     ? startDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
+//     : '—';
 
-  const status = statusConfig[ride?.status];
+//   const status = statusConfig[ride?.status];
 
-  const Row = ({ icon, label, value }) => (
-    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.25, py: 0.5 }}>
-      <Typography fontSize="1.1rem" lineHeight={1.4}>{icon}</Typography>
-      <Box sx={{ minWidth: 0 }}>
-        <Typography variant="caption" color="text.secondary" display="block">{label}</Typography>
-        <Typography fontWeight={600} fontSize="0.92rem" sx={{ wordBreak: 'break-word' }}>{value}</Typography>
-      </Box>
-    </Box>
-  );
+//   const Row = ({ icon, label, value }) => (
+//     <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.25, py: 0.5 }}>
+//       <Typography fontSize="1.1rem" lineHeight={1.4}>{icon}</Typography>
+//       <Box sx={{ minWidth: 0 }}>
+//         <Typography variant="caption" color="text.secondary" display="block">{label}</Typography>
+//         <Typography fontWeight={600} fontSize="0.92rem" sx={{ wordBreak: 'break-word' }}>{value}</Typography>
+//       </Box>
+//     </Box>
+//   );
 
-  return (
-    <Dialog open onClose={onClose} fullWidth maxWidth="sm" fullScreen={fullScreen} PaperProps={{ sx: { borderRadius: { xs: 0, sm: 3 } } }}>
-      <DialogTitle sx={{ fontWeight: 800, pb: 1, pr: 5 }}>
-        Ride Details
-        <IconButton onClick={onClose} aria-label="Close" sx={{ position: 'absolute', right: 8, top: 8, color: 'text.secondary', width: 44, height: 44 }}>
-          <CloseIcon fontSize="small" />
-        </IconButton>
-      </DialogTitle>
+//   return (
+//     <Dialog open onClose={onClose} fullWidth maxWidth="sm" fullScreen={fullScreen} PaperProps={{ sx: { borderRadius: { xs: 0, sm: 3 } } }}>
+//       <DialogTitle sx={{ fontWeight: 800, pb: 1, pr: 5 }}>
+//         Ride Details
+//         <IconButton onClick={onClose} aria-label="Close" sx={{ position: 'absolute', right: 8, top: 8, color: 'text.secondary', width: 44, height: 44 }}>
+//           <CloseIcon fontSize="small" />
+//         </IconButton>
+//       </DialogTitle>
 
-      <DialogContent dividers sx={{ pt: 2 }}>
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: { xs: 'column', sm: 'row' },
-            alignItems: { xs: 'flex-start', sm: 'center' },
-            justifyContent: 'space-between',
-            gap: 1,
-            mb: 2,
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap', minWidth: 0 }}>
-            <Typography fontWeight={800} fontSize="1.05rem" sx={{ wordBreak: 'break-word' }}>{formFrom(ride)}</Typography>
-            <ArrowForwardIcon sx={{ fontSize: 18, color: 'primary.main' }} />
-            <Typography fontWeight={800} fontSize="1.05rem" sx={{ wordBreak: 'break-word' }}>{formTo(ride)}</Typography>
-          </Box>
-          <Chip
-            label={`${status?.icon} ${status?.label}`}
-            size="small"
-            sx={{ bgcolor: status?.bg, color: status?.color, fontWeight: 700, fontSize: '0.72rem' }}
-          />
-        </Box>
+//       <DialogContent dividers sx={{ pt: 2 }}>
+//         <Box
+//           sx={{
+//             display: 'flex',
+//             flexDirection: { xs: 'column', sm: 'row' },
+//             alignItems: { xs: 'flex-start', sm: 'center' },
+//             justifyContent: 'space-between',
+//             gap: 1,
+//             mb: 2,
+//           }}
+//         >
+//           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap', minWidth: 0 }}>
+//             <Typography fontWeight={800} fontSize="1.05rem" sx={{ wordBreak: 'break-word' }}>{formFrom(ride)}</Typography>
+//             <ArrowForwardIcon sx={{ fontSize: 18, color: 'primary.main' }} />
+//             <Typography fontWeight={800} fontSize="1.05rem" sx={{ wordBreak: 'break-word' }}>{formTo(ride)}</Typography>
+//           </Box>
+//           <Chip
+//             label={`${status?.icon} ${status?.label}`}
+//             size="small"
+//             sx={{ bgcolor: status?.bg, color: status?.color, fontWeight: 700, fontSize: '0.72rem' }}
+//           />
+//         </Box>
 
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
-            gap: 0.5,
-            bgcolor: '#FFF8F2',
-            border: '1px solid #F0E6DC',
-            borderRadius: 2,
-            p: { xs: 1.5, sm: 2 },
-          }}
-        >
-          <Row icon="📅" label="Date" value={dateLabel} />
-          <Row icon="🕐" label="Time" value={timeLabel} />
-          <Row icon={travelIcon[ride.modeOfTravel] || '🚗'} label="Mode of travel" value={ride.modeOfTravel || '—'} />
-          <Row icon="🪑" label="Available seats" value={ride.availableSeats ?? ride.seats ?? '—'} />
-          <Row icon={genderIcons[ride.genderPreference] || '👥'} label="Gender preference" value={ride.genderPreference || 'Any'} />
-          <Row icon="⛽" label="Fuel sharing" value={ride.fuelSharing ? 'Yes' : 'No'} />
-        </Box>
+//         <Box
+//           sx={{
+//             display: 'grid',
+//             gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
+//             gap: 0.5,
+//             bgcolor: '#FFF8F2',
+//             border: '1px solid #F0E6DC',
+//             borderRadius: 2,
+//             p: { xs: 1.5, sm: 2 },
+//           }}
+//         >
+//           <Row icon="📅" label="Date" value={dateLabel} />
+//           <Row icon="🕐" label="Time" value={timeLabel} />
+//           <Row icon={travelIcon[ride.modeOfTravel] || '🚗'} label="Mode of travel" value={ride.modeOfTravel || '—'} />
+//           <Row icon="🪑" label="Available seats" value={ride.availableSeats ?? ride.seats ?? '—'} />
+//           <Row icon={genderIcons[ride.genderPreference] || '👥'} label="Gender preference" value={ride.genderPreference || 'Any'} />
+//           <Row icon="⛽" label="Fuel sharing" value={ride.fuelSharing ? 'Yes' : 'No'} />
+//         </Box>
 
-        {ride.description && (
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
-              📝 Description
-            </Typography>
-            <Typography fontSize="0.9rem" sx={{ wordBreak: 'break-word' }}>{ride.description}</Typography>
-          </Box>
-        )}
-      </DialogContent>
+//         {ride.description && (
+//           <Box sx={{ mt: 2 }}>
+//             <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+//               📝 Description
+//             </Typography>
+//             <Typography fontSize="0.9rem" sx={{ wordBreak: 'break-word' }}>{ride.description}</Typography>
+//           </Box>
+//         )}
+//       </DialogContent>
 
-      <DialogActions sx={{ px: { xs: 2, sm: 3 }, py: 2, gap: 1, flexWrap: 'wrap' }}>
-        {showEdit && (
-          <Button
-            variant="outlined"
-            startIcon={<EditIcon />}
-            onClick={() => { onEdit(ride); onClose(); }}
-            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700, flex: { xs: '1 1 auto', sm: '0 0 auto' }, minHeight: 44 }}
-          >
-            Edit
-          </Button>
-        )}
-        {showDelete && (
-          <Button
-            variant="outlined"
-            color="error"
-            startIcon={<DeleteIcon />}
-            onClick={() => { onDelete(ride); onClose(); }}
-            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700, flex: { xs: '1 1 auto', sm: '0 0 auto' }, minHeight: 44 }}
-          >
-            Delete
-          </Button>
-        )}
-        <Box sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }} />
-        <Button variant="outlined" onClick={onClose} sx={{ borderRadius: 2, textTransform: 'none', flex: { xs: '1 1 auto', sm: '0 0 auto' }, minHeight: 44 }}>
-          Close
-        </Button>
-      </DialogActions>
-    </Dialog>
-  );
-}
+//       <DialogActions sx={{ px: { xs: 2, sm: 3 }, py: 2, gap: 1, flexWrap: 'wrap' }}>
+//         {showEdit && (
+//           <Button
+//             variant="outlined"
+//             startIcon={<EditIcon />}
+//             onClick={() => { onEdit(ride); onClose(); }}
+//             sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700, flex: { xs: '1 1 auto', sm: '0 0 auto' }, minHeight: 44 }}
+//           >
+//             Edit
+//           </Button>
+//         )}
+//         {showDelete && (
+//           <Button
+//             variant="outlined"
+//             color="error"
+//             startIcon={<DeleteIcon />}
+//             onClick={() => { onDelete(ride); onClose(); }}
+//             sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700, flex: { xs: '1 1 auto', sm: '0 0 auto' }, minHeight: 44 }}
+//           >
+//             Delete
+//           </Button>
+//         )}
+//         <Box sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }} />
+//         <Button variant="outlined" onClick={onClose} sx={{ borderRadius: 2, textTransform: 'none', flex: { xs: '1 1 auto', sm: '0 0 auto' }, minHeight: 44 }}>
+//           Close
+//         </Button>
+//       </DialogActions>
+//     </Dialog>
+//   );
+// }
 
 // ── Request Item Component ──────────────────────────────────────────────────
 function RequestItem({ request, onApprove, onReject }) {
@@ -562,6 +563,7 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete, allRequests, s
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [showRequests, setShowRequests] = useState(false);
   const [loadingRequests, setLoadingRequests] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState([]);
 
   const status = statusConfig[ride?.status];
 
@@ -623,6 +625,7 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete, allRequests, s
             transform: { xs: "none", sm: "translateY(-6px)" },
           },
         }}
+        onClick={() => setDetailsOpen(true)}
       >
         {/* ── Top header: name + status ── */}
         <Box
@@ -708,10 +711,10 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete, allRequests, s
             boxShadow: "0 10px 30px rgba(255,153,51,.12)",
             overflow: "hidden",
             transition: ".3s",
-            "&:hover": {
-              transform: "translateY(-5px)",
-              boxShadow: "0 18px 40px rgba(255,153,51,.22)"
-            }
+            // "&:hover": {
+            //   transform: "translateY(-5px)",
+            //   boxShadow: "0 18px 40px rgba(255,153,51,.22)"
+            // }
           }}
         >
           <CardContent
@@ -719,9 +722,7 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete, allRequests, s
               p: { xs: '12px !important', sm: '20px 24px !important' },
             }}
           >
-            <Box
-              onClick={() => setDetailsOpen(true)}
-            >
+            <Box>
               {/* FROM / TO row */}
               <Box
                 sx={{
@@ -831,22 +832,13 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete, allRequests, s
                     Requests ({rideRequests.length})
                   </Typography>
                 </Box>
-
-                {rideRequests.map((req) => (
-                  <RequestItem
-                    key={req._id}
-                    request={req}
-                    onApprove={handleApprove}
-                    onReject={handleReject}
-                  />
-                ))}
               </Box>
             )}
           </CardContent>
         </Card>
       </Box>
 
-      {detailsOpen && (
+      {/* {detailsOpen && (
         <RideDetailsModal
           ride={ride}
           showEdit={showEdit}
@@ -854,7 +846,33 @@ function RideCard({ ride, showEdit, showDelete, onEdit, onDelete, allRequests, s
           onEdit={onEdit}
           onDelete={onDelete}
           onClose={() => setDetailsOpen(false)}
+          request={[selectedRequest]}
+          onApprove={handleApprove}
+          onReject={handleReject}
         />
+      )} */}
+
+      {detailsOpen && (
+        // rideRequests.map((req) => (
+        // <RequestItem
+        //   key={req._id}
+        //   request={req}
+        //   onApprove={handleApprove}
+        //   onReject={handleReject}
+        // />
+
+        <RideDetailsModal
+          ride={ride}
+          showEdit={showEdit}
+          showDelete={showDelete}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onClose={() => setDetailsOpen(false)}
+          requests={rideRequests}
+          onApprove={handleApprove}
+          onReject={handleReject}
+        />
+
       )}
     </>
   );

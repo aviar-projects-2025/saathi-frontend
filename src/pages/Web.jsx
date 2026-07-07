@@ -1,351 +1,3 @@
-// import React from "react";
-// import {
-//   Box,
-//   Button,
-//   Chip,
-//   Container,
-//   Grid,
-//   Paper,
-//   Stack,
-//   Typography,
-// } from "@mui/material";
-// import ShieldIcon from "@mui/icons-material/Shield";
-// import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
-// import GroupsIcon from "@mui/icons-material/Groups";
-// import ChatIcon from "@mui/icons-material/Chat";
-// import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
-// import TravelExploreIcon from "@mui/icons-material/TravelExplore";
-// import FavoriteIcon from "@mui/icons-material/Favorite";
-// import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-// import { keyframes } from "@mui/system";
-// import { useNavigate } from "react-router-dom";
-
-// const navy = "#0B1F3A";
-// const saffron = "#F28C28";
-// const lightBg = "#F7FAFF";
-// const softSaffron = "#FFF1E0";
-
-// const float = keyframes`
-//   0%, 100% { transform: translateY(0px); }
-//   50% { transform: translateY(-14px); }
-// `;
-
-// const fadeUp = keyframes`
-//   from {
-//     opacity: 0;
-//     transform: translateY(35px);
-//   }
-//   to {
-//     opacity: 1;
-//     transform: translateY(0);
-//   }
-// `;
-
-// const pulse = keyframes`
-//   0%, 100% {
-//     box-shadow: 0 0 0 0 rgba(242, 140, 40, 0.28);
-//   }
-//   50% {
-//     box-shadow: 0 0 0 18px rgba(242, 140, 40, 0);
-//   }
-// `;
-
-// const features = [
-//   {
-//     icon: <ShieldIcon />,
-//     title: "Verified Members",
-//     text: "Members join through referrals and community approval.",
-//   },
-//   {
-//     icon: <DirectionsCarIcon />,
-//     title: "Shared Travel",
-//     text: "Find trusted companions and share rides safely.",
-//   },
-//   {
-//     icon: <GroupsIcon />,
-//     title: "Trusted Network",
-//     text: "Build real community connections through a verified referral system.",
-//   },
-//   {
-//     icon: <ChatIcon />,
-//     title: "Community Feed",
-//     text: "Share updates, ask for help, and support others.",
-//   },
-// ];
-
-// const steps = [
-//   "Create your profile",
-//   "Get referred by a member",
-//   "Join the verified community",
-//   "Find rides and travel safely",
-// ];
-
-// const Web = () => {
-//   const navigate = useNavigate();
-
-//   return (
-//     <Box sx={{ minHeight: "100vh", bgcolor: lightBg, overflow: "hidden" }}>
-//       {/* Navbar */}
-//       <Box
-//         sx={{
-//           py: 2,
-//           px: { xs: 2, md: 6 },
-//           display: "flex",
-//           justifyContent: "space-between",
-//           alignItems: "center",
-//           bgcolor: "rgba(255,255,255,0.94)",
-//           backdropFilter: "blur(14px)",
-//           borderBottom: "1px solid #DDE7F3",
-//           position: "sticky",
-//           top: 0,
-//           zIndex: 10,
-//         }}
-//       >
-//         <Stack direction="row" alignItems="center" spacing={1}>
-//           <Box
-//             sx={{
-//               width: 44,
-//               height: 44,
-//               borderRadius: "50%",
-//               bgcolor: saffron,
-//               display: "flex",
-//               alignItems: "center",
-//               justifyContent: "center",
-//               color: "#fff",
-//               animation: `${pulse} 2.5s infinite`,
-//             }}
-//           >
-//             <DirectionsCarIcon />
-//           </Box>
-
-//           <Typography variant="h5" fontWeight={900} color={navy}>
-//             Saathi
-//           </Typography>
-//         </Stack>
-
-//         <Button
-//           variant="contained"
-//           onClick={() => navigate("/login")}
-//           sx={{
-//             bgcolor: navy,
-//             color: "#fff",
-//             borderRadius: 999,
-//             px: 3,
-//             textTransform: "none",
-//             fontWeight: 800,
-//             boxShadow: "0 10px 25px rgba(11,31,58,.25)",
-//             "&:hover": { bgcolor: "#07172B" },
-//           }}
-//         >
-//           Login
-//         </Button>
-//       </Box>
-
-//       <Container maxWidth="lg" sx={{ py: { xs: 6, md: 10 } }}>
-//         {/* Hero */}
-//         <Grid container spacing={8} alignItems="center">
-//           <Grid item xs={12} md={6}>
-//             <Stack sx={{ animation: `${fadeUp} 0.8s ease both` }}>
-//               <Chip
-//                 icon={<VerifiedUserIcon />}
-//                 label="Referral Based Trusted Community"
-//                 sx={{
-//                   bgcolor: softSaffron,
-//                   color: navy,
-//                   fontWeight: 900,
-//                   mb: 2,
-//                   border: `1px solid ${saffron}`,
-//                   "& .MuiChip-icon": {
-//                     color: saffron,
-//                   },
-//                 }}
-//               />
-
-//               <Typography
-//                 variant="h2"
-//                 fontWeight={900}
-//                 sx={{
-//                   fontSize: { xs: "2.4rem", sm: "3rem", md: "4.3rem" },
-//                   lineHeight: 1.08,
-//                   color: navy,
-//                 }}
-//               >
-//                 Join Community
-//               </Typography>
-
-//               <Button
-//                 variant="outlined"
-//                 sx={{
-//                   mt: 2.5,
-//                   fontSize: { xs: "1rem", md: "1.12rem" },
-//                   lineHeight: 1.9,
-//                   color: navy,
-//                   maxWidth: 560,
-//                   opacity: 0.82,
-//                 }}
-//               >
-//                 Learn More
-//               </Button>
-//             </Stack>
-//           </Grid>
-
-//           <Grid item xs={12} md={6}>
-//             <Box
-//               sx={{
-//                 position: "relative",
-//                 animation: `${float} 4s ease-in-out infinite`,
-//               }}
-//             >
-//               <Paper
-//                 elevation={0}
-//                 sx={{
-//                   p: { xs: 3, md: 4 },
-//                   borderRadius: "36px",
-//                   bgcolor: "#fff",
-//                   border: "1px solid #DDE7F3",
-//                   boxShadow: "0 30px 80px rgba(11,31,58,0.13)",
-//                   position: "relative",
-//                   overflow: "hidden",
-//                 }}
-//               >
-//                 <Box
-//                   sx={{
-//                     position: "absolute",
-//                     width: 190,
-//                     height: 190,
-//                     bgcolor: softSaffron,
-//                     borderRadius: "50%",
-//                     right: -60,
-//                     top: -60,
-//                   }}
-//                 />
-
-//                 <Box
-//                   component="img"
-//                   src="https://cdn-icons-png.flaticon.com/512/854/854878.png"
-//                   alt="travel community"
-//                   sx={{
-//                     width: "100%",
-//                     maxWidth: 330,
-//                     display: "block",
-//                     mx: "auto",
-//                     position: "relative",
-//                     zIndex: 1,
-//                   }}
-//                 />
-
-//                 <Stack spacing={2.5} mt={3} position="relative" zIndex={1}>
-//                   <Paper
-//                     elevation={0}
-//                     sx={{
-//                       p: 2.2,
-//                       borderRadius: 4,
-//                       bgcolor: "#F7FAFF",
-//                       border: "1px solid #DDE7F3",
-//                     }}
-//                   >
-//                     <Typography fontWeight={900} color={navy}>
-//                       Safe Ride Match
-//                     </Typography>
-//                     <Typography fontSize={13} color={navy} sx={{ opacity: 0.75 }}>
-//                       Connect with verified members before starting your trip.
-//                     </Typography>
-//                   </Paper>
-
-//                   <Paper
-//                     elevation={0}
-//                     sx={{
-//                       p: 2.2,
-//                       borderRadius: 4,
-//                       bgcolor: softSaffron,
-//                       border: `1px solid ${saffron}`,
-//                     }}
-//                   >
-//                     <Typography fontWeight={900} color={navy}>
-//                       Community Approved
-//                     </Typography>
-//                     <Typography fontSize={13} color={navy} sx={{ opacity: 0.75 }}>
-//                       Trust starts from referrals and member verification.
-//                     </Typography>
-//                   </Paper>
-//                 </Stack>
-//               </Paper>
-//             </Box>
-//           </Grid>
-//         </Grid>
-
-//         {/* Features */}
-//         <Grid container spacing={9} mt={9}>
-//           {features.map((item, index) => (
-//             <Grid item xs={12} sm={6} md={6} key={item.title}>
-//               <Paper
-//                 elevation={0}
-//                 sx={{
-//                   p: 4,
-//                   minHeight: 230,
-//                   height: "100%",
-//                   borderRadius: 5,
-//                   border: "1px solid #DDE7F3",
-//                   bgcolor: "#fff",
-//                   animation: `${fadeUp} .8s ease both`,
-//                   animationDelay: `${index * 0.12}s`,
-//                   transition: "0.3s ease",
-//                   display: "flex",
-//                   flexDirection: "column",
-//                   justifyContent: "flex-start",
-//                   "&:hover": {
-//                     transform: "translateY(-10px)",
-//                     boxShadow: "0 22px 55px rgba(11,31,58,.15)",
-//                     borderColor: saffron,
-//                   },
-//                 }}
-//               >
-//                 <Box
-//                   sx={{
-//                     width: 58,
-//                     height: 58,
-//                     borderRadius: 3,
-//                     bgcolor: softSaffron,
-//                     color: saffron,
-//                     display: "flex",
-//                     alignItems: "center",
-//                     justifyContent: "center",
-//                     mb: 2.5,
-//                     "& svg": { fontSize: 30 },
-//                   }}
-//                 >
-//                   {item.icon}
-//                 </Box>
-
-//                 <Typography fontWeight={900} color={navy} fontSize={20}>
-//                   {item.title}
-//                 </Typography>
-
-//                 <Typography
-//                   variant="body2"
-//                   mt={1.3}
-//                   lineHeight={1.8}
-//                   sx={{ color: navy, opacity: 0.78 }}
-//                 >
-//                   {item.text}
-//                 </Typography>
-//               </Paper>
-//             </Grid>
-//           ))}
-//         </Grid>
-//       </Container>
-//     </Box>
-//   );
-// };
-
-// export default Web;
-
-
-// Web.jsx - Premium Travel Startup Landing Page
-// Saathi - Your Travel Companion
-// Fixed: responsive breakpoints, deprecated MUI APIs, alignment/spacing bugs,
-// reduced-motion support, and mobile CTA/button consistency.
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Box,
@@ -419,6 +71,7 @@ import {
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { keyframes } from '@mui/system';
 import { useNavigate } from "react-router-dom";
+import SaathiLogo from '../assets/saathilogo.png';
 
 // ──────────────────────────────────────────────
 // Custom Premium Theme
@@ -690,25 +343,27 @@ const Navbar = ({ scrolled, onDrawerToggle }) => {
             sx={{
               display: "flex",
               alignItems: "center",
-              gap: 1.5,
+              gap: 1,
             }}
           >
-            {/* Mobile Menu */}
-            {/* {isMobile && (
-              <IconButton
-                onClick={onDrawerToggle}
-                sx={{ color: "inherit" }}
-              >
-                <MenuIcon />
-              </IconButton>
-            )} */}
+            <Avatar
+              src={SaathiLogo}
+              alt="Saathi"
+              sx={{
+                width: { xs: 30, md: 35 },
+                height: { xs: 30, md: 35 },
+                bgcolor: "transparent",
+
+              }}
+            />
 
             <Typography
               variant="h5"
               sx={{
-                fontWeight: 800,
+                fontWeight: 900,
                 letterSpacing: "-0.03em",
                 color: "inherit",
+                fontSize: {xs:"1.3rem", md: "1.8rem" }
               }}
             >
               Saathi
@@ -724,33 +379,9 @@ const Navbar = ({ scrolled, onDrawerToggle }) => {
               px: 1,
               py: 0.5,
               borderRadius: "50px",
-              // background: scrolled
-              //   ? "rgba(245,245,245,.9)"
-              //   : "rgba(255,255,255,.12)",
-              // backdropFilter: "blur(12px)",
-              // border: scrolled
-              //   ? "1px solid rgba(0,0,0,.08)"
-              //   : "1px solid rgba(255,255,255,.18)",
+
             }}
           >
-            {/* Notification */}
-            <IconButton
-              sx={{
-                color: "inherit",
-                // bgcolor: scrolled
-                //   ? "#fff"
-                //   : "rgba(255,255,255,.08)",
-                // "&:hover": {
-                //   bgcolor: scrolled
-                //     ? "#f5f5f5"
-                //     : "rgba(255,255,255,.18)",
-                // },
-              }}
-            >
-              <Badge badgeContent={2} color="error">
-                <NotificationsIcon />
-              </Badge>
-            </IconButton>
 
             {/* Sign In */}
             <Button
@@ -760,8 +391,8 @@ const Navbar = ({ scrolled, onDrawerToggle }) => {
               size="small"
               sx={{
                 borderRadius: "30px",
-                px: { xs: 2, md: 3.5 },
-                py: 0.3,
+                px: { xs: 2, md: 4 },
+                py: 0.5,
                 fontWeight: 700,
                 textTransform: "none",
                 borderWidth: "2px",
@@ -803,7 +434,7 @@ const HeroSection = ({ onSearchClick }) => {
         minHeight: { xs: '100vh', sm: '90vh', md: '92vh' },
         display: 'flex',
         alignItems: 'center',
-        backgroundImage: `url(https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=2070&auto=format&fit=crop)`,
+        backgroundImage: `url(https://images.unsplash.com/photo-1612925498765-67c53ae41782?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NzZ8fFRyYXZlbCUyMHdpdGglMjBjb21wYW5pb24lMjBwZXJzb24lMjB3aXRoJTIwdmVoaWNsZXxlbnwwfHwwfHx8MA%3D%3D)`,
         backgroundSize: 'cover',
         backgroundPosition: 'center 30%',
         backgroundRepeat: 'no-repeat',
@@ -851,9 +482,9 @@ const HeroSection = ({ onSearchClick }) => {
                       filter: 'brightness(1.15)',
                     }}
                   >
-                    split costs,
+                    Split costs,
                   </Box>{' '}
-                  explore together.
+                  Explore together.
                 </Typography>
 
                 <Typography
@@ -959,94 +590,6 @@ const HeroSection = ({ onSearchClick }) => {
               </Box>
             </Fade>
           </Grid>
-
-          {/* Right: floating search card (hidden below md to avoid a squeezed layout) */}
-          {/* {!isMobile && (
-            <Grid item xs={12} md={5}>
-              <Zoom in timeout={1100}>
-                <Paper
-                  elevation={10}
-                  sx={{
-                    p: 3.5,
-                    borderRadius: '24px',
-                    bgcolor: 'rgba(255,255,255,0.97)',
-                    backdropFilter: 'blur(20px)',
-                    animation: `${floatSlow} 7s ease-in-out infinite`,
-                    boxShadow: '0 24px 64px rgba(0,0,0,0.22)',
-                  }}
-                >
-                  <Typography variant="h6" fontWeight={700} mb={3} color="text.primary">
-                    Search Your Ride
-                  </Typography>
-                  <Stack spacing={2}>
-                    <TextField
-                      fullWidth
-                      placeholder="Leaving from..."
-                      size="small"
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <LocationIcon sx={{ color: 'primary.main', fontSize: 20 }} />
-                          </InputAdornment>
-                        ),
-                      }}
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          borderRadius: '12px',
-                          bgcolor: '#F7F5F2',
-                        },
-                      }}
-                    />
-                    <TextField
-                      fullWidth
-                      placeholder="Going to..."
-                      size="small"
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <LocationIcon sx={{ color: 'secondary.main', fontSize: 20 }} />
-                          </InputAdornment>
-                        ),
-                      }}
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          borderRadius: '12px',
-                          bgcolor: '#F7F5F2',
-                        },
-                      }}
-                    />
-                    <TextField
-                      fullWidth
-                      type="date"
-                      size="small"
-                      defaultValue="2026-07-10"
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <CalendarIcon sx={{ color: 'info.main', fontSize: 20 }} />
-                          </InputAdornment>
-                        ),
-                      }}
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          borderRadius: '12px',
-                          bgcolor: '#F7F5F2',
-                        },
-                      }}
-                    />
-                    <Button
-                      fullWidth
-                      variant="contained"
-                      size="large"
-                      sx={{ py: 1.6, fontSize: '1rem', fontWeight: 700, borderRadius: '12px', mt: 0.5 }}
-                    >
-                      Search Rides
-                    </Button>
-                  </Stack>
-                </Paper>
-              </Zoom>
-            </Grid>
-          )} */}
         </Grid>
       </Container>
     </Box>
@@ -1225,19 +768,19 @@ const DestinationsSection = () => {
                   sx={{
                     position: "relative",
                     height: { xs: 250, sm: 280, md: 300 },
-                    borderRadius: 4,
+                    borderRadius: 1,
                     overflow: "hidden",
                     cursor: "pointer",
                     transition: "all .35s ease",
                     boxShadow: 3,
 
                     "&:hover": {
-                      transform: "translateY(-8px)",
+                      transform: "translateY(-4px)",
                       boxShadow: 10,
                     },
 
                     "&:hover .dest-image": {
-                      transform: "scale(1.1)",
+                      transform: "scale(1.05)",
                     },
 
                     "&:hover .dest-overlay": {
@@ -1390,7 +933,7 @@ const HowItWorksSection = () => (
   >
     <Container maxWidth="lg">
       {/* Heading */}
-      <Box textAlign="center" mb={{ xs: 6, md: 8 }}>
+      <Box sx={{ textAlign: "center" }} mb={{ xs: 6, md: 8 }}>
         {/* <SectionBadge>How It Works</SectionBadge> */}
 
         <Typography
@@ -1410,14 +953,15 @@ const HowItWorksSection = () => (
         <Typography
           color="text.secondary"
           sx={{
-            maxWidth: 650,
+            // maxWidth: 650,
+            textAlign: "center",
             // mx: "auto",
             lineHeight: 1.8,
             fontSize: {
               xs: "1rem",
               md: "1.15rem",
             },
-            m: 2
+            m: 2.5
           }}
         >
           Getting started with Saathi is simple. Find, book, and travel —
@@ -1426,7 +970,7 @@ const HowItWorksSection = () => (
       </Box>
 
       {/* Cards */}
-      <Grid container spacing={4} sx={{ display: "flex", justifyContent: "space-around" }}>
+      <Grid container spacing={7} sx={{ display: "flex", justifyContent: "space-around" }}>
         {steps.map((step, index) => (
           <Grid item xs={12} sm={6} md={4} key={step.title}>
             <Fade in timeout={500 + index * 200}>
@@ -1435,8 +979,8 @@ const HowItWorksSection = () => (
                 sx={{
                   height: "100%",
                   minHeight: 360,
-                  p: 1.2,
-                  borderRadius: 4,
+                  p: 1.3,
+                  borderRadius: 3,
                   border: "1px solid",
                   borderColor: "divider",
                   textAlign: "center",
@@ -1520,241 +1064,6 @@ const HowItWorksSection = () => (
   </Box>
 );
 
-// // ──────────────────────────────────────────────
-// // Live Rides / Trips Section
-// // ──────────────────────────────────────────────
-// const liveTrips = [
-//   {
-//     id: 1,
-//     driver: 'Rahul Sharma',
-//     driverAvatar:
-//       'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1974&auto=format&fit=crop&crop=face',
-//     from: 'Mumbai',
-//     to: 'Goa',
-//     date: 'Jul 12',
-//     time: '7:00 AM',
-//     seats: 3,
-//     price: '₹1,500',
-//     rating: 4.8,
-//     verified: true,
-//     car: 'Honda City',
-//     amenities: ['AC', 'Music', 'Snacks'],
-//   },
-//   {
-//     id: 2,
-//     driver: 'Priya Patel',
-//     driverAvatar:
-//       'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=1974&auto=format&fit=crop&crop=face',
-//     from: 'Delhi',
-//     to: 'Manali',
-//     date: 'Jul 15',
-//     time: '5:30 AM',
-//     seats: 4,
-//     price: '₹2,500',
-//     rating: 4.9,
-//     verified: true,
-//     car: 'Innova Crysta',
-//     amenities: ['Blankets', 'Hot Drinks', 'First Aid'],
-//   },
-//   {
-//     id: 3,
-//     driver: 'Amrit Singh',
-//     driverAvatar:
-//       'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=1970&auto=format&fit=crop&crop=face',
-//     from: 'Chandigarh',
-//     to: 'Amritsar',
-//     date: 'Jul 18',
-//     time: '8:00 AM',
-//     seats: 2,
-//     price: '₹800',
-//     rating: 4.7,
-//     verified: true,
-//     car: 'Swift Dzire',
-//     amenities: ['Water', 'Charging', 'Maps'],
-//   },
-//   {
-//     id: 4,
-//     driver: 'Ananya Nair',
-//     driverAvatar:
-//       'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=2070&auto=format&fit=crop&crop=face',
-//     from: 'Chennai',
-//     to: 'Kerala',
-//     date: 'Jul 20',
-//     time: '6:00 AM',
-//     seats: 5,
-//     price: '₹3,000',
-//     rating: 4.9,
-//     verified: true,
-//     car: 'XUV 700',
-//     amenities: ['AC', 'Music', 'Food Stops'],
-//   },
-// ];
-
-// const LiveTripsSection = () => (
-//   <Box sx={{ py: { xs: 8, md: 11 }, bgcolor: '#F7F5F2' }}>
-//     <Container maxWidth="lg">
-//       <Box textAlign="center" mb={7}>
-//         <SectionBadge>Live Rides</SectionBadge>
-//         <Typography variant="h2" fontWeight={800} mb={2}>
-//           Available trips near you
-//         </Typography>
-//         <Typography
-//           variant="body1"
-//           color="text.secondary"
-//           sx={{ maxWidth: 520, mx: 'auto', lineHeight: 1.7 }}
-//         >
-//           Real rides from verified drivers. Book now and start your next adventure.
-//         </Typography>
-//       </Box>
-
-//       <Grid container spacing={3} alignItems="stretch">
-//         {liveTrips.map((trip, index) => (
-//           <Grid item xs={12} sm={6} lg={3} key={trip.id}>
-//             <Slide direction="up" in timeout={400 + index * 120}>
-//               <Card
-//                 elevation={2}
-//                 sx={{
-//                   height: '100%',
-//                   display: 'flex',
-//                   flexDirection: 'column',
-//                   '&:hover': {
-//                     transform: 'translateY(-6px)',
-//                     boxShadow: '0 16px 48px rgba(0,0,0,0.12)',
-//                   },
-//                 }}
-//               >
-//                 <CardContent sx={{ p: 2.5, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-//                   {/* Driver info */}
-//                   <Box display="flex" alignItems="center" gap={1.5} mb={2.5}>
-//                     <Badge
-//                       overlap="circular"
-//                       anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-//                       badgeContent={
-//                         trip.verified ? (
-//                           <CheckCircleIcon
-//                             sx={{ fontSize: 16, color: 'success.main', bgcolor: '#FFF', borderRadius: '50%' }}
-//                           />
-//                         ) : null
-//                       }
-//                     >
-//                       <Avatar
-//                         src={trip.driverAvatar}
-//                         sx={{ width: 46, height: 46, border: '2px solid', borderColor: 'primary.main' }}
-//                       />
-//                     </Badge>
-//                     <Box sx={{ minWidth: 0 }}>
-//                       <Typography
-//                         variant="subtitle2"
-//                         fontWeight={700}
-//                         noWrap
-//                       >
-//                         {trip.driver}
-//                       </Typography>
-//                       <Box display="flex" alignItems="center" gap={0.5}>
-//                         <StarIcon sx={{ fontSize: 13, color: '#FFD700' }} />
-//                         <Typography variant="caption" fontWeight={600} color="text.secondary">
-//                           {trip.rating}
-//                         </Typography>
-//                         <Typography variant="caption" color="text.disabled" noWrap>
-//                           · {trip.car}
-//                         </Typography>
-//                       </Box>
-//                     </Box>
-//                   </Box>
-
-//                   {/* Route */}
-//                   <Box
-//                     sx={{ bgcolor: '#F7F5F2', borderRadius: '12px', p: 1.8, mb: 2 }}
-//                   >
-//                     <Stack direction="row" alignItems="center" spacing={1} justifyContent="space-between">
-//                       <Box sx={{ minWidth: 0 }}>
-//                         <Typography variant="caption" color="text.disabled" fontWeight={700} display="block">
-//                           FROM
-//                         </Typography>
-//                         <Typography variant="body2" fontWeight={700} noWrap>
-//                           {trip.from}
-//                         </Typography>
-//                       </Box>
-//                       <ArrowForwardIcon sx={{ color: 'primary.main', fontSize: 18, flexShrink: 0 }} />
-//                       <Box sx={{ minWidth: 0, textAlign: 'right' }}>
-//                         <Typography variant="caption" color="text.disabled" fontWeight={700} display="block">
-//                           TO
-//                         </Typography>
-//                         <Typography variant="body2" fontWeight={700} noWrap>
-//                           {trip.to}
-//                         </Typography>
-//                       </Box>
-//                     </Stack>
-//                   </Box>
-
-//                   {/* Date / seats / price chips */}
-//                   <Stack direction="row" spacing={0.7} flexWrap="wrap" useFlexGap mb={1.8}>
-//                     <GradientChip
-//                       icon={<CalendarIcon sx={{ fontSize: 12 }} />}
-//                       label={`${trip.date} · ${trip.time}`}
-//                     />
-//                     <GradientChip
-//                       icon={<PeopleIcon sx={{ fontSize: 12 }} />}
-//                       label={`${trip.seats} seats`}
-//                       color="secondary"
-//                     />
-//                     <GradientChip
-//                       icon={<MoneyIcon sx={{ fontSize: 12 }} />}
-//                       label={trip.price}
-//                     />
-//                   </Stack>
-
-//                   {/* Amenities */}
-//                   <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap mb={2.5}>
-//                     {trip.amenities.map((amenity) => (
-//                       <Chip
-//                         key={amenity}
-//                         label={amenity}
-//                         size="small"
-//                         variant="outlined"
-//                         sx={{ borderRadius: '8px', fontSize: '0.68rem', fontWeight: 500, height: 22 }}
-//                       />
-//                     ))}
-//                   </Stack>
-
-//                   <Box sx={{ mt: 'auto' }}>
-//                     <Button
-//                       fullWidth
-//                       variant="contained"
-//                       endIcon={<ArrowForwardIcon />}
-//                       sx={{ py: 1.2, fontWeight: 700, fontSize: '0.9rem' }}
-//                     >
-//                       Book Seat
-//                     </Button>
-//                   </Box>
-//                 </CardContent>
-//               </Card>
-//             </Slide>
-//           </Grid>
-//         ))}
-//       </Grid>
-
-//       <Box textAlign="center" mt={6}>
-//         <Button
-//           variant="outlined"
-//           size="large"
-//           endIcon={<ArrowForwardIcon />}
-//           sx={{
-//             px: 5,
-//             py: 1.4,
-//             fontWeight: 700,
-//             borderRadius: 50,
-//             borderWidth: 2,
-//             '&:hover': { borderWidth: 2 },
-//           }}
-//         >
-//           View All Trips
-//         </Button>
-//       </Box>
-//     </Container>
-//   </Box>
-// );
-
 // ──────────────────────────────────────────────
 // Testimonials Section
 // ──────────────────────────────────────────────
@@ -1820,6 +1129,7 @@ const TestimonialsSection = () => (
             key={testimonial.name}
             sx={{
               display: "flex",
+
             }}
           >
             <Zoom in timeout={500 + index * 150} style={{ width: "100%" }}>
@@ -1828,13 +1138,13 @@ const TestimonialsSection = () => (
                 sx={{
                   width: "100%",
                   display: "flex",
-                  borderRadius: 4,
+                  borderRadius: 3,
                   transition: "all .3s ease",
                   "&:hover": {
                     transform: "translateY(-8px)",
                     boxShadow: "0 20px 40px rgba(0,0,0,0.12)",
                   },
-                  mt: 3
+                  mt: 5
                 }}
               >
                 <CardContent
@@ -1958,10 +1268,9 @@ const safetyFeatures = [
 ];
 
 const SafetySection = () => (
-
-  <Box sx={{ p: 5 }}>
+  <Box sx={{ bgcolor: "#fff" }}>
     <Box sx={{ textAlign: "center" }}>
-      <Typography variant="h2" fontWeight={800} sx={{ mt: 2 }}>
+      <Typography variant="h2" fontWeight={800}>
         Travel with complete confidence
       </Typography>
       <Typography
@@ -1972,7 +1281,7 @@ const SafetySection = () => (
       </Typography>
     </Box>
 
-    <Grid container spacing={5} sx={{ display: "flex", justifyContent: "space-evenly" }}>
+    <Grid container spacing={{ xs: 7, md: 3 }} sx={{ display: "flex", justifyContent: "space-evenly" }}>
       {safetyFeatures.map((step, index) => (
         <Grid item xs={12} sm={6} md={4} key={step.title}>
           <Fade in timeout={500 + index * 200}>
@@ -1981,8 +1290,8 @@ const SafetySection = () => (
               sx={{
                 height: "100%",
                 minHeight: 360,
-                p: 1.4,
-                borderRadius: 4,
+                p: 1,
+                borderRadius: 2,
                 border: "1px solid",
 
                 textAlign: "center",
@@ -2194,137 +1503,165 @@ const CTASection = () => (
 // ──────────────────────────────────────────────
 // Footer
 // ─────────────────────────────────────────────
+
+const socialIcons = [
+  {
+    name: "Instagram",
+    icon: InstagramIcon,
+    link: "#",
+  },
+  {
+    name: "Facebook",
+    icon: FacebookIcon,
+    link: "#",
+  },
+  {
+    name: "Twitter",
+    icon: TwitterIcon,
+    link: "#",
+  },
+  {
+    name: "YouTube",
+    icon: YouTubeIcon,
+    link: "#",
+  },
+];
+
 const Footer = () => (
   <Box
     component="footer"
     sx={{
-      bgcolor: '#0D1117',
-      color: '#fff',
-      pt: { xs: 7, md: 10 },
+      bgcolor: "#0D1117",
+      color: "#fff",
+      pt: { xs: 7, md: 9 },
       pb: 4,
     }}
   >
     <Container maxWidth="lg">
-      <Grid
-        container
-        spacing={{ xs: 5, md: 6 }}
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          textAlign: { xs: 'center', sm: 'left' },
-        }}
-      >
-        {/* Brand - LEFT */}
-        <Grid
-          item
-          xs={12}
-          sm={7}
-          md={8}
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: { xs: 'center', sm: 'flex-start' },
-          }}
-        >
-          <Box sx={{ display: 'flex', gap: 1.5, mb: 2 }}>
+      <Grid container spacing={{ xs: 5, md: 8 }}>
+        {/* Brand Section */}
+        <Grid item xs={12}>
+          <Stack
+            spacing={3}
+            alignItems="center"
+            textAlign="center"
+          >
             <Box
               sx={{
-                width: { xs: 56, md: 75 },
-                height: { xs: 56, md: 75 },
-                borderRadius: 2,
-                background: 'linear-gradient(135deg, #FF6B35, #FF9F1C)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+                width: { xs: 64, md: 72 },
+                height: { xs: 64, md: 72 },
+                borderRadius: 3,
+                background:
+                  "linear-gradient(135deg,#FF6B35,#FF9F1C)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
                 fontWeight: 800,
-                fontSize: { xs: '1.5rem', md: '2rem' },
-                flexShrink: 0,
+                fontSize: { xs: "1.8rem", md: "2rem" },
               }}
             >
               S
             </Box>
-            <Box sx={{ textAlign: { xs: 'center', sm: 'left' } }}>
-              <Typography variant="h5" fontWeight={800}>
+
+            <Box>
+              <Typography
+                variant="h4"
+                fontWeight={800}
+                gutterBottom
+              >
                 Saathi
               </Typography>
+
               <Typography
-                variant="body2"
+                variant="body1"
                 sx={{
-                  color: '#fa7406',
-                  maxWidth: 360,
-                  lineHeight: 1.7,
-                  mt: 0.5,
-                  fontSize: { xs: '0.85rem', md: '0.9rem' },
+                  maxWidth: 600,
+                  mx: "auto",
+                  color: "rgba(255,255,255,.68)",
+                  lineHeight: 1.8,
                 }}
               >
-                India&rsquo;s most trusted travel companion platform. Connect,
-                share rides, split costs, and explore together with verified
-                travelers.
+                India's most trusted travel companion platform.
+                Connect, share rides, split costs, and explore
+                together with verified travelers.
               </Typography>
             </Box>
-          </Box>
 
-          <Stack direction="row" spacing={1}>
-            {[InstagramIcon, FacebookIcon, TwitterIcon, YouTubeIcon].map(
-              (Icon, i) => (
+            <Stack
+              direction="row"
+              spacing={1.5}
+              justifyContent="center"
+            >
+              {socialIcons.map(({ name, icon: Icon, link }) => (
                 <IconButton
-                  key={i}
-                  size="small"
+                  key={name}
+                  component="a"
+                  href={link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={name}
                   sx={{
-                    width: 36,
-                    height: 36,
-                    color: 'rgba(255,255,255,0.6)',
-                    border: '1px solid rgba(255,255,255,0.12)',
-                    transition: '0.2s',
-                    '&:hover': {
-                      color: '#FF6B35',
-                      borderColor: '#FF6B35',
-                      transform: 'translateY(-2px)',
+                    width: 42,
+                    height: 42,
+                    border:
+                      "1px solid rgba(255,255,255,.12)",
+                    color: "rgba(255,255,255,.6)",
+                    transition: ".3s",
+
+                    "&:hover": {
+                      color: "#FF6B35",
+                      borderColor: "#FF6B35",
+                      transform: "translateY(-4px)",
                     },
                   }}
                 >
                   <Icon fontSize="small" />
                 </IconButton>
-              )
-            )}
+              ))}
+            </Stack>
           </Stack>
         </Grid>
 
-        {/* Contact - RIGHT */}
-        <Grid
-          item
-          xs={12}
-          sm={5}
-          md={4}
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: { xs: 'center', sm: 'flex-end' },
-          }}
-        >
-          <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 2.5 }}>
-            Contact
-          </Typography>
-
-          <Stack spacing={2}>
+        {/* Contact Section */}
+        <Grid item xs={12}>
+          <Stack
+            direction={{ xs: "column", md: "row" }}
+            spacing={{ xs: 3, md: 6 }}
+            justifyContent="center"
+            alignItems="center"
+          >
             {[
-              { Icon: PhoneIcon, text: '+91 98765 43210' },
-              { Icon: EmailIcon, text: 'hello@saathi.com' },
-              { Icon: LocationIcon, text: 'Bangalore, India' },
+              {
+                Icon: PhoneIcon,
+                text: "+91 98765 43210",
+              },
+              {
+                Icon: EmailIcon,
+                text: "hello@saathi.com",
+              },
+              {
+                Icon: LocationIcon,
+                text: "Bangalore, India",
+              },
             ].map(({ Icon, text }) => (
               <Stack
                 key={text}
                 direction="row"
-                spacing={1}
+                spacing={1.5}
                 alignItems="center"
-                sx={{
-                  flexDirection: { xs: 'row', sm: 'row-reverse' },
-                }}
               >
-                <Icon sx={{ fontSize: 18, color: 'rgba(255,255,255,0.5)' }} />
+                <Icon
+                  sx={{
+                    color: "#FF6B35",
+                    fontSize: 20,
+                  }}
+                />
+
                 <Typography
                   variant="body2"
-                  sx={{ color: 'rgba(255,255,255,0.55)', fontSize: '0.9rem' }}
+                  sx={{
+                    color: "rgba(255,255,255,.68)",
+                  }}
                 >
                   {text}
                 </Typography>
@@ -2334,213 +1671,43 @@ const Footer = () => (
         </Grid>
       </Grid>
 
-      <Divider sx={{ my: 4, bgcolor: 'rgba(255,255,255,0.08)' }} />
+      <Divider
+        sx={{
+          my: { xs: 5, md: 6 },
+          bgcolor: "rgba(255,255,255,.08)",
+        }}
+      />
 
-      <Box
-        display="flex"
-        flexDirection={{ xs: 'column', sm: 'row' }}
-        justifyContent={{ xs: 'center', sm: 'space-between' }}
+      <Stack
+        direction={{ xs: "column", sm: "row" }}
+        spacing={1}
+        justifyContent="center"
         alignItems="center"
-        gap={2}
       >
-        <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem' }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "rgba(255,255,255,.45)",
+            textAlign: "center",
+          }}
+        >
           © 2026 Saathi Technologies Pvt Ltd
         </Typography>
 
-        <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem' }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "rgba(255,255,255,.45)",
+            textAlign: "center",
+          }}
+        >
           Made with ❤️ in India
         </Typography>
-      </Box>
+      </Stack>
     </Container>
   </Box>
 );
 
-// // ──────────────────────────────────────────────
-// // Login Modal
-// // ──────────────────────────────────────────────
-// const LoginModal = ({ open, onClose }) => {
-//   const [loading, setLoading] = useState(false);
-
-//   const handleSubmit = () => {
-//     setLoading(true);
-//     setTimeout(() => {
-//       setLoading(false);
-//       onClose();
-//     }, 1500);
-//   };
-
-//   return (
-//     <Dialog
-//       open={open}
-//       onClose={onClose}
-//       maxWidth="xs"
-//       fullWidth
-//       PaperProps={{ sx: { borderRadius: '24px', overflow: 'hidden', m: { xs: 2, sm: 3 } } }}
-//     >
-//       {/* Header */}
-//       <Box
-//         sx={{
-//           background: 'linear-gradient(135deg, #FF6B35 0%, #FF9F1C 100%)',
-//           p: { xs: 3.5, sm: 4 },
-//           textAlign: 'center',
-//           color: '#FFF',
-//         }}
-//       >
-//         <Box
-//           sx={{
-//             width: 52,
-//             height: 52,
-//             borderRadius: '14px',
-//             bgcolor: 'rgba(255,255,255,0.22)',
-//             display: 'flex',
-//             alignItems: 'center',
-//             justifyContent: 'center',
-//             mx: 'auto',
-//             mb: 2,
-//             fontSize: '1.5rem',
-//             fontWeight: 800,
-//           }}
-//         >
-//           S
-//         </Box>
-//         <Typography variant="h5" fontWeight={800}>
-//           Welcome Back
-//         </Typography>
-//         <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.80)', mt: 0.5 }}>
-//           Sign in to continue your journey
-//         </Typography>
-//       </Box>
-
-//       {/* Form */}
-//       <DialogContent sx={{ p: { xs: 3, sm: 4 } }}>
-//         <Stack spacing={2.5}>
-//           <TextField
-//             fullWidth
-//             label="Email Address"
-//             variant="outlined"
-//             placeholder="you@example.com"
-//             size="small"
-//           />
-//           <TextField
-//             fullWidth
-//             label="Password"
-//             type="password"
-//             variant="outlined"
-//             placeholder="••••••••"
-//             size="small"
-//           />
-//           <Typography
-//             variant="body2"
-//             color="primary"
-//             sx={{
-//               cursor: 'pointer',
-//               textAlign: 'right',
-//               fontWeight: 600,
-//               '&:hover': { textDecoration: 'underline' },
-//             }}
-//           >
-//             Forgot Password?
-//           </Typography>
-//         </Stack>
-//       </DialogContent>
-
-//       <DialogActions sx={{ p: { xs: 3, sm: 4 }, pt: 0, flexDirection: 'column', gap: 1.5 }}>
-//         <Button
-//           fullWidth
-//           variant="contained"
-//           size="large"
-//           onClick={handleSubmit}
-//           disabled={loading}
-//           sx={{ py: 1.6, fontWeight: 700, fontSize: '1rem', borderRadius: '12px' }}
-//         >
-//           {loading ? <CircularProgress size={22} color="inherit" /> : 'Sign In'}
-//         </Button>
-//         <Typography variant="body2" color="text.secondary" textAlign="center">
-//           Don't have an account?{' '}
-//           <Box component="span" color="primary.main" fontWeight={700} sx={{ cursor: 'pointer' }}>
-//             Sign Up
-//           </Box>
-//         </Typography>
-//       </DialogActions>
-//     </Dialog>
-//   );
-// };
-
-// ──────────────────────────────────────────────
-// Mobile Drawer
-// ──────────────────────────────────────────────
-// const MobileDrawer = ({ open, onClose, onLoginOpen }) => (
-//   <Drawer anchor="left" open={open} onClose={onClose}>
-//     <Box sx={{ width: 270, height: '100%', display: 'flex', flexDirection: 'column' }}>
-//       {/* Header */}
-//       <Box
-//         sx={{
-//           p: 3,
-//           background: 'linear-gradient(135deg, #FF6B35 0%, #FF9F1C 100%)',
-//           color: '#FFF',
-//         }}
-//       >
-//         <Box display="flex" alignItems="center" gap={1.5} mb={0.8}>
-//           <Box
-//             sx={{
-//               width: 38,
-//               height: 38,
-//               borderRadius: '11px',
-//               bgcolor: 'rgba(255,255,255,0.22)',
-//               display: 'flex',
-//               alignItems: 'center',
-//               justifyContent: 'center',
-//               fontWeight: 800,
-//               fontSize: '1.05rem',
-//               flexShrink: 0,
-//             }}
-//           >
-//             S
-//           </Box>
-//           <Typography variant="h5" fontWeight={800}>
-//             Saathi
-//           </Typography>
-//         </Box>
-//         <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.78)' }}>
-//           Your Travel Companion
-//         </Typography>
-//       </Box>
-
-//       {/* Nav items — ListItemButton replaces the deprecated `<ListItem button>` API */}
-//       <List sx={{ py: 1.5, flexGrow: 1 }}>
-//         {[
-//           { label: 'Discover Rides', icon: <SearchIcon /> },
-//           { label: 'Offer a Ride', icon: <CarIcon /> },
-//           { label: 'How It Works', icon: <RouteIcon /> },
-//           { label: 'Community', icon: <GroupIcon /> },
-//           { label: 'Safety', icon: <ShieldIcon /> },
-//         ].map((item) => (
-//           <ListItemButton
-//             key={item.label}
-//             sx={{ px: 3, py: 1.4, '&:hover': { bgcolor: 'rgba(255,107,53,0.06)' } }}
-//             onClick={onClose}
-//           >
-//             <ListItemIcon sx={{ minWidth: 38, color: 'primary.main' }}>{item.icon}</ListItemIcon>
-//             <ListItemText
-//               primary={item.label}
-//               primaryTypographyProps={{ fontWeight: 600, fontSize: '0.95rem' }}
-//             />
-//           </ListItemButton>
-//         ))}
-//         <Divider sx={{ my: 1.5 }} />
-//         <ListItemButton
-//           sx={{ px: 3, py: 1.4, '&:hover': { bgcolor: 'rgba(255,107,53,0.06)' } }}
-//           onClick={() => { onClose(); onLoginOpen(); }}
-//         >
-//           <ListItemText
-//             primary="Sign In"
-//             primaryTypographyProps={{ fontWeight: 700, color: 'primary.main', fontSize: '0.95rem' }}
-//           />
-//         </ListItemButton>
-//       </List>
-//     </Box>
-//   </Drawer>
-// );
 
 // ──────────────────────────────────────────────
 // Main Web Component
@@ -2558,10 +1725,7 @@ const Web = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // const handleLoginOpen = useCallback(() => {
-  //   setLoginOpen(true);
-  //   setSnackbarOpen(true);
-  // }, []);
+
 
   const handleLoginClose = useCallback(() => setLoginOpen(false), []);
   const handleDrawerToggle = useCallback(() => setDrawerOpen((prev) => !prev), []);
@@ -2574,7 +1738,7 @@ const Web = () => {
       <GlobalStyles styles={reducedMotionStyles} />
       <Box sx={{ bgcolor: 'background.default', overflowX: 'hidden' }}>
         <Navbar scrolled={scrolled} onDrawerToggle={handleDrawerToggle} />
-        {/* <MobileDrawer open={drawerOpen} onClose={handleDrawerToggle} onLoginOpen={handleLoginOpen} /> */}
+
 
         <HeroSection onSearchClick={handleSearchClick} />
         <TrustStrip />
@@ -2584,48 +1748,10 @@ const Web = () => {
         </Box>
 
         <HowItWorksSection />
-        {/* <LiveTripsSection /> */}
         <SafetySection />
         <TestimonialsSection />
         <CTASection />
         <Footer />
-
-        {/* <LoginModal open={loginOpen} onClose={handleLoginClose} /> */}
-        {/* 
-        <Snackbar
-          open={snackbarOpen}
-          autoHideDuration={4000}
-          onClose={() => setSnackbarOpen(false)}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-        >
-          <Alert
-            severity="success"
-            variant="filled"
-            onClose={() => setSnackbarOpen(false)}
-            sx={{ borderRadius: '12px', fontWeight: 600, fontSize: '0.9rem' }}
-          >
-            🎉 Welcome to Saathi! Your journey starts here.
-          </Alert>
-        </Snackbar> */}
-
-        {/* Back to top FAB */}
-        {/* <Zoom in={scrolled}>
-          <Fab
-            color="primary"
-            size="medium"
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            aria-label="Back to top"
-            sx={{
-              position: 'fixed',
-              bottom: { xs: 20, md: 28 },
-              right: { xs: 20, md: 28 },
-              zIndex: 10,
-              animation: scrolled ? `${breathe} 2.2s ease-in-out infinite` : 'none',
-            }}
-          >
-            <ArrowForwardIcon sx={{ transform: 'rotate(-90deg)' }} />
-          </Fab>
-        </Zoom> */}
       </Box>
     </ThemeProvider>
   );
