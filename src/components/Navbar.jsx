@@ -35,7 +35,7 @@ import KeyboardDoubleArrowUpIcon from '@mui/icons-material/KeyboardDoubleArrowUp
 
 const TopNav = ({ onMenuClick }) => {
   const [open, setOpen] = useState(false);
-  const { tabNotification } = useNotifications();
+  const { tabNotification, notifications } = useNotifications();
   const unreadCount = tabNotification?.filter(n => !n.isRead).length;
 
   console.log(tabNotification.length, 'tabNotification')
@@ -109,7 +109,7 @@ const TopNav = ({ onMenuClick }) => {
             <Badge color="error" badgeContent={unreadCount} invisible={unreadCount === 0}>
               <NotificationsNoneIcon
                 sx={{
-                  color: openNotifications ? '#f97316' : '#5f4632', // ✅ FIXED
+                  color: openNotifications ? '#f97316' : '#5f4632',
                   transition: '0.2s'
                 }}
               />
@@ -141,7 +141,7 @@ const TopNav = ({ onMenuClick }) => {
               maxHeight: 400,
               overflowY: "auto"
             }}>
-              <NotificationTab />
+              <NotificationTab handleCloseNotifications={handleCloseNotifications} />
               {tabNotification.length > 6 &&
                 <Typography sx={{ fontSize: 14, position: 'absolute', bottom: 1 }}>
                   <KeyboardDoubleArrowUpIcon />
