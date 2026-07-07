@@ -37,6 +37,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import socket from '../socket'
 import notificationSound from '../sounds/notifysound.wav'
+import { useLocation } from 'react-router-dom';
 
 const statusConfig = {
   FULL: { label: 'Filled', color: '#2D6A4F', bg: '#E8F5E9', icon: '✅' },
@@ -874,6 +875,13 @@ const MyRides = () => {
   const [allMyRequests, setAllMyRequests] = useState([]);
 
   const user = JSON.parse(localStorage.getItem('user'));
+  const location = useLocation();
+  useEffect(() => {
+    if (location.state?.tab !== undefined) {
+      setTab(location.state.tab);
+      console.log(location.state.rideId)
+    }
+  }, [location.state]);
 
   const fetchRides = async () => {
     const currentDateTime = new Date();
@@ -1238,10 +1246,10 @@ const MyRides = () => {
           top: 30,
         }}
       >
-          <Typography variant="h5" fontWeight={800} sx={{ fontSize: { xs: '1.2rem', sm: '1.5rem' } }}>
+        <Typography variant="h5" fontWeight={800} sx={{ fontSize: { xs: '1.2rem', sm: '1.5rem' } }}>
           My Requests
         </Typography>
-        <br/>
+        <br />
         {allMyRequests.map((request) => (
           <Card
             key={request._id}
