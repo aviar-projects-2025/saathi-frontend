@@ -9,11 +9,12 @@ import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import moment from 'moment';
 import { useNotifications } from '../context/NotificationContext';
+import { data, useNavigate } from 'react-router-dom';
 
-export default function NotificationTab() {
+export default function NotificationTab({ handleCloseNotifications }) {
     const { tabNotification } = useNotifications();
-
-    console.log(tabNotification,'tabNotification')
+    const navigate = useNavigate();
+    console.log(tabNotification, 'tabNotification')
 
     return (
         <List
@@ -21,17 +22,24 @@ export default function NotificationTab() {
                 width: '100%',
                 maxWidth: 360,
                 bgcolor: 'background.paper',
+                mt: 30
             }}
         >
             {tabNotification?.length === 0 ? (
-                <Typography sx={{ p: 2, textAlign:'center' }}>No notifications</Typography>
+                <Typography sx={{ p: 2, textAlign: 'center' }}>No notifications</Typography>
             ) : (
                 tabNotification.map((item) => {
                     const isUnread = !item.isRead;
 
                     return (
-                        <React.Fragment key={item._id}>
+                        <React.Fragment
+                            key={item._id} >
                             <ListItem
+                                onClick={() => {
+                                    navigate("/myride", { state: { tab: 2, rideId : item.data.rideId} })
+                                    handleCloseNotifications();
+
+                                }}
                                 alignItems="flex-start"
                                 sx={{
                                     borderRadius: 3,
