@@ -35,7 +35,7 @@ import KeyboardDoubleArrowUpIcon from '@mui/icons-material/KeyboardDoubleArrowUp
 
 const TopNav = ({ onMenuClick }) => {
   const [open, setOpen] = useState(false);
-  const { tabNotification } = useNotifications();
+  const { tabNotification, notifications } = useNotifications();
   const unreadCount = tabNotification?.filter(n => !n.isRead).length;
 
   console.log(tabNotification.length, 'tabNotification')
