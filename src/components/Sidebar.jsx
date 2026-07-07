@@ -65,7 +65,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
     // { label: "Offer Ride", icon: <DirectionsCarIcon />, link: "/offer-ride" },
     { label: "Find Ride", icon: <SearchIcon />, link: "/find-ride" },
     { label: "My Rides", icon: <RouteIcon />, link: "/myride" },
- { label: "My Post", icon: <ArticleIcon />, link: "/mypost" },
+    { label: "My Post", icon: <ArticleIcon />, link: "/mypost" },
     {
       label: (
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -200,10 +200,19 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
             </Paper>
             <Button
               size="small"
-              variant="outlined"
+              variant="contained"
               onClick={() => navigate("/settings")}
+              sx={{
+                bgcolor: "#FF9933", // Saffron
+                color: "#fff",
+                fontWeight: 600,
+                textTransform: "none",
+                "&:hover": {
+                  bgcolor: "#e68a00",
+                },
+              }}
             >
-              Update Pofile
+              Update Profile
             </Button>
           </Box>
         </SectionCard>
