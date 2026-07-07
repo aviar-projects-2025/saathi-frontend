@@ -93,47 +93,46 @@ const Myprofile = () => {
     localStorage.clear();
     window.location.replace("/login");
   };
-     const [communityPosts, setCommunityPosts] = useState([]);
+  const [communityPosts, setCommunityPosts] = useState([]);
 
-    console.log("CommunityPost", communityPosts.map((item) => item.postImage))
-    useEffect(() => {
-        if (currentUser?._id) {
-            getCommunityPost();
-        }
-    }, [currentUser]);
-    const getCommunityPost = async () => {
-        console.log("sdfghjkl;")
-        try {
+  useEffect(() => {
+    if (currentUser?._id) {
+      getCommunityPost();
+    }
+  }, [currentUser]);
+  const getCommunityPost = async () => {
+
+    try {
 
 
-            const postsRes = await axios.get(Api + "/community/");
+      const postsRes = await axios.get(Api + "/community/");
 
-            // Only current user's posts
-            const myPosts = postsRes.data.data.filter(
-                (item) => item.authorId?._id === currentUser?._id
-            );
-            console.log("sdfghjkl;")
-            setCommunityPosts(myPosts);
-            console.log("Mypostsdfgn", myPosts)
-        } catch (error) {
-            console.error(error);
-        }
-    };
+      // Only current user's posts
+      const myPosts = postsRes.data.data.filter(
+        (item) => item.authorId?._id === currentUser?._id
+      );
+
+      setCommunityPosts(myPosts);
+
+    } catch (error) {
+      console.error(error);
+    }
+  };
   const StatBlock = ({ value, label }) => (
-      <Box sx={{ textAlign: "center", minWidth: { xs: 52, sm: 64 } }}>
-          <Typography
-              fontWeight={800}
-              sx={{ fontSize: { xs: "0.85rem", sm: "0.95rem", md: "1.05rem" }, lineHeight: 1.2 }}
-          >
-              {value}
-          </Typography>
-          <Typography
-              color="text.secondary"
-              sx={{ fontSize: { xs: "0.62rem", sm: "0.7rem", md: "0.75rem" } }}
-          >
-              {label}
-          </Typography>
-      </Box>
+    <Box sx={{ textAlign: "center", minWidth: { xs: 52, sm: 64 } }}>
+      <Typography
+        fontWeight={800}
+        sx={{ fontSize: { xs: "0.85rem", sm: "0.95rem", md: "1.05rem" }, lineHeight: 1.2 }}
+      >
+        {value}
+      </Typography>
+      <Typography
+        color="text.secondary"
+        sx={{ fontSize: { xs: "0.62rem", sm: "0.7rem", md: "0.75rem" } }}
+      >
+        {label}
+      </Typography>
+    </Box>
   );
   const shareLink = `${window.location.origin}/register?ref=${user?.referralCode}`;
   return (
@@ -145,58 +144,58 @@ const Myprofile = () => {
         py: 3,
       }}
     >
-          <Stack
-                                      direction="row"
-                                      spacing={{ xs: 2, sm: 3 }}
-                                      alignItems="center"
-                                      sx={{ flex: 1 }}
-                                  >
-                                      <Avatar
-                                          src={currentUser?.profileImage || ""}
-                                          sx={{
-                                              width: { xs: 64, sm: 84, md: 96 },
-                                              height: { xs: 64, sm: 84, md: 96 },
-                                              bgcolor: SAFFRON,
-                                              color: "#fff",
-                                              fontWeight: 800,
-                                              fontSize: { xs: "1rem", sm: "1.3rem", md: "1.5rem" },
-                                              flexShrink: 0,
-                                          }}
-                                      >
-                                          {!currentUser?.profileImage &&
-                                              `${currentUser?.firstName?.[0] || ""}${currentUser?.lastName?.[0] || ""}`}
-                                      </Avatar>
-      
-                                      <Box sx={{ flex: 1, minWidth: 0 }}>
-                                          <Typography
-                                              fontWeight={700}
-                                              sx={{
-                                                  fontSize: { xs: "0.82rem", sm: "0.9rem", md: "1rem" },
-                                                  whiteSpace: "nowrap",
-                                                  overflow: "hidden",
-                                                  textOverflow: "ellipsis",
-                                              }}
-                                          >
-                                              {currentUser?.firstName} {currentUser?.lastName}
-                                          </Typography>
-      
-                                          <Typography
-                                              variant="body2"
-                                              color="text.secondary"
-                                              sx={{
-                                                  fontSize: { xs: "0.68rem", sm: "0.75rem", md: "0.8rem" },
-                                                  whiteSpace: "nowrap",
-                                                  overflow: "hidden",
-                                                  textOverflow: "ellipsis",
-                                                  mb: { xs: 1, sm: 1.5 },
-                                              }}
-                                          >
-                                              {currentUser?.email}
-                                          </Typography>
-      
-                                         
-                                      </Box>
-                                  </Stack>
+      <Stack
+        direction="row"
+        spacing={{ xs: 2, sm: 3 }}
+        alignItems="center"
+        sx={{ flex: 1 }}
+      >
+        <Avatar
+          src={currentUser?.profileImage || ""}
+          sx={{
+            width: { xs: 64, sm: 84, md: 96 },
+            height: { xs: 64, sm: 84, md: 96 },
+            bgcolor: SAFFRON,
+            color: "#fff",
+            fontWeight: 800,
+            fontSize: { xs: "1rem", sm: "1.3rem", md: "1.5rem" },
+            flexShrink: 0,
+          }}
+        >
+          {!currentUser?.profileImage &&
+            `${currentUser?.firstName?.[0] || ""}${currentUser?.lastName?.[0] || ""}`}
+        </Avatar>
+
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography
+            fontWeight={700}
+            sx={{
+              fontSize: { xs: "0.82rem", sm: "0.9rem", md: "1rem" },
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
+            {currentUser?.firstName} {currentUser?.lastName}
+          </Typography>
+
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{
+              fontSize: { xs: "0.68rem", sm: "0.75rem", md: "0.8rem" },
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              mb: { xs: 1, sm: 1.5 },
+            }}
+          >
+            {currentUser?.email}
+          </Typography>
+
+
+        </Box>
+      </Stack>
       <SectionCard>
         <SectionHeader icon={<PersonIcon />} label="Account" />
         <Divider sx={{ mt: 1 }} />

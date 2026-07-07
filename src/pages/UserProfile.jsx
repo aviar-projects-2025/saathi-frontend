@@ -144,7 +144,7 @@ const UserProfile = () => {
         }));
     };
 
-    console.log(currentUser, 'currentUser')
+
     const [formData, setFormData] = useState({
         firstName: currentUser?.firstName || "",
         lastName: currentUser?.lastName || "",
@@ -212,14 +212,14 @@ const UserProfile = () => {
     };
     const [communityPosts, setCommunityPosts] = useState([]);
 
-    console.log("CommunityPost", communityPosts.map((item) => item.postImage))
+
     useEffect(() => {
         if (currentUser?._id) {
             getCommunityPost();
         }
     }, [currentUser]);
     const getCommunityPost = async () => {
-        console.log("sdfghjkl;")
+
         try {
 
 
@@ -229,9 +229,9 @@ const UserProfile = () => {
             const myPosts = postsRes.data.data.filter(
                 (item) => item.authorId?._id === currentUser?._id
             );
-            console.log("sdfghjkl;")
+
             setCommunityPosts(myPosts);
-            console.log("Mypostsdfgn", myPosts)
+
         } catch (error) {
             console.error(error);
         }
