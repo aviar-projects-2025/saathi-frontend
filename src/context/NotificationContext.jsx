@@ -49,11 +49,12 @@ export const NotificationProvider = ({ children }) => {
                 category: category || "general",
                 data,
                 message,
-                read: false,
+                isRead: false,
                 createdAt: new Date()
             };
 
             setNotifications((prev) => [newNotification, ...prev]);
+            setTabNotification((prev) => [newNotification, ...prev]);
 
             toast.info(message || "New notification");
 

@@ -12,9 +12,9 @@ import { useNotifications } from '../context/NotificationContext';
 import { data, useNavigate } from 'react-router-dom';
 
 export default function NotificationTab({ handleCloseNotifications }) {
-    const { tabNotification } = useNotifications();
+    const { tabNotification, notifications } = useNotifications();
+
     const navigate = useNavigate();
-    console.log(tabNotification, 'tabNotification')
 
     return (
         <List
@@ -35,7 +35,7 @@ export default function NotificationTab({ handleCloseNotifications }) {
                             key={item._id} >
                             <ListItem
                                 onClick={() => {
-                                    navigate("/myride", { state: { tab: 2, rideId : item.data.rideId} })
+                                    navigate("/myride", { state: { tab: 2, rideId: item.data.rideId } })
                                     handleCloseNotifications();
 
                                 }}

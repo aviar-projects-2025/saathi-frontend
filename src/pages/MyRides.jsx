@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import {
   Box, Typography, Tabs, Tab, Paper, Chip, Button, Alert,
   Dialog, DialogTitle, DialogContent, DialogActions,
@@ -38,6 +38,7 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import socket from '../socket'
 import notificationSound from '../sounds/notifysound.wav'
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useNotifications } from '../context/NotificationContext';
 
 const statusConfig = {
   FULL: { label: 'Filled', color: '#2D6A4F', bg: '#E8F5E9', icon: '✅' },
@@ -564,9 +565,9 @@ function RideCard({ ride, showEdit, showDelete, onEdit, notificationRide, setNot
   const [loadingRequests, setLoadingRequests] = useState(false);
   const navigate = useNavigate();
 
-  console.log(ride, 'ride')
-
   const status = statusConfig[ride?.status];
+
+  // console.log(ride, 'ride inside ridecard')
 
   const startDate = new Date(ride.startTime);
   const date = !isNaN(startDate)
@@ -876,7 +877,7 @@ function RideCard({ ride, showEdit, showDelete, onEdit, notificationRide, setNot
 }
 
 
-// ── Main Component ───────────────────────────────────────────────────────────
+// ── Main Component ─────────────────────────────────────────────────────────
 const MyRides = () => {
   const [tab, setTab] = useState(0);
   const [mypost, setMypost] = useState([]);
@@ -889,13 +890,70 @@ const MyRides = () => {
   const [loading, setLoading] = useState(true);
   const [allRequests, setAllRequests] = useState([]);
   const [allMyRequests, setAllMyRequests] = useState([]);
+  const { notifications } = useNotifications();
+
+  const processedIds = useRef(new Set());
+
+  // console.log(notifications, 'from my rides')
+
+  // useEffect(() => {
+  //   if (!notifications?.length) return;
+
+  //   const latest = notifications[0];
+  //   if (latest.type === "request_update" || latest.type === "new_request" || latest.type === "request_accepted") {
+  //     const requestData = latest;
+
+  //     setAllMyRequests((prev) => {
+  //       console.log(prev, 'prev')
+  //       console.log(requestData, 'requestData')
+
+  //       const exists = prev.find(r => r.rideId._id === requestData.data.rideId);
+
+  //       if (exists) {
+  //         return prev.map(r =>
+  //           r.rideId._id === requestData.data.rideId ? requestData : r
+  //         );
+  //       }
+
+  //       return [requestData, ...prev];
+  //     });
+  //   }
+
+  // }, [notifications]);
+
+  useEffect(() => {
+    if (!notifications?.length) return;
+
+    const newNotifs = notifications.filter(
+      (n) => !processedIds.current.has(n.id)
+    );
+
+    if (!newNotifs.length) return;
+
+    newNotifs.forEach((n) => processedIds.current.add(n.id));
+
+    const shouldRefetch = newNotifs.some((n) =>
+      ["request_update", "request_accepted", "request_rejected"].includes(n.type)
+    );
+
+    const shouldRefetchReceived = newNotifs.some((n) =>
+      n.type === "new_request"
+    );
+
+    if (shouldRefetchReceived) {
+      fetchAllRequests();
+    }
+
+    if (shouldRefetch) {
+      fetchAllSends();
+    }
+  }, [notifications]);
 
   const user = JSON.parse(localStorage.getItem('user'));
   const location = useLocation();
   useEffect(() => {
     if (location.state?.tab !== undefined) {
       setTab(location.state.tab);
-      console.log(location.state.rideId, 'location.state.rideId')
       setNotificationRide(location.state.rideId)
     }
   }, [location.state]);
@@ -970,57 +1028,57 @@ const MyRides = () => {
   //   }
   // }
   // Socket connection for real-time updates
-  useEffect(() => {
-    if (!user?.id) return;
+  // useEffect(() => {
+  //   if (!user?.id) return;
 
-    socket.emit("join", user.id);
+  //   socket.emit("join", user.id);
 
-    const handleNewRequest = (newRequest) => {
-      const audio = new Audio(notificationSound);
-      audio.currentTime = 0;
-      audio.play();
+  //   const handleNewRequest = (newRequest) => {
+  //     const audio = new Audio(notificationSound);
+  //     audio.currentTime = 0;
+  //     audio.play();
 
-      setAllRequests((prev) => {
-        const exists = prev.find(r => r._id === newRequest._id);
-        if (exists) return prev;
-        return [newRequest, ...prev];
-      });
+  //     setAllRequests((prev) => {
+  //       const exists = prev.find(r => r._id === newRequest._id);
+  //       if (exists) return prev;
+  //       return [newRequest, ...prev];
+  //     });
 
-      setAllMyRequests((prev) => {
-        const exists = prev.find(r => r._id === newRequest._id);
-        if (exists) return prev;
-        return [newRequest, ...prev];
-      });
+  //     setAllMyRequests((prev) => {
+  //       const exists = prev.find(r => r._id === newRequest._id);
+  //       if (exists) return prev;
+  //       return [newRequest, ...prev];
+  //     });
 
-      toast.info("New ride request received!");
-    };
+  //     toast.info("New ride request received!");
+  //   };
 
-    const handleNewRequestUpdate = (updated) => {
-      console.log("updated", updated)
-      const audio = new Audio(notificationSound);
-      audio.currentTime = 0;
-      audio.play();
+  //   const handleNewRequestUpdate = (updated) => {
+  //     console.log("updated", updated)
+  //     const audio = new Audio(notificationSound);
+  //     audio.currentTime = 0;
+  //     audio.play();
 
-      setAllRequests((prev) =>
-        prev.map(r => r._id === updated._id ? updated : r)
-      );
+  //     setAllRequests((prev) =>
+  //       prev.map(r => r._id === updated._id ? updated : r)
+  //     );
 
-      setAllMyRequests((prev) =>
-        prev.map(r => r._id === updated._id ? updated : r)
-      );
+  //     setAllMyRequests((prev) =>
+  //       prev.map(r => r._id === updated._id ? updated : r)
+  //     );
 
-      toast.info("Request status received!");
+  //     toast.info("Request status received!");
 
-    }
+  //   }
 
-    socket.on("new_request", handleNewRequest);
-    socket.on("request_update", handleNewRequestUpdate);
+  //   socket.on("new_request", handleNewRequest);
+  //   socket.on("request_update", handleNewRequestUpdate);
 
-    return () => {
-      socket.off("new_request", handleNewRequest);
-      socket.off("request_update", handleNewRequestUpdate);
-    };
-  }, [user?.id]);
+  //   return () => {
+  //     socket.off("new_request", handleNewRequest);
+  //     socket.off("request_update", handleNewRequestUpdate);
+  //   };
+  // }, [user?.id]);
 
   const handleEdit = (updated) => {
     const id = updated._id || updated.id;
@@ -1075,7 +1133,6 @@ const MyRides = () => {
       // Call your delete/cancel API here
       await axios.delete(`${Api}/bookride/${selectedRequest._id}`);
 
-      console.log("Cancelled:", selectedRequest._id);
 
       handleCloseDialog();
 
@@ -1269,150 +1326,152 @@ const MyRides = () => {
           My Requests
         </Typography>
         <br />
-        {allMyRequests.map((request) => (
-          <Card
-            key={request._id}
-            sx={{
-              mb: 3,
-              borderRadius: "20px",
-              overflow: "hidden",
-              background: "linear-gradient(135deg, #ffffff 0%, #f8fbff 100%)",
-              boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-              transition: "0.3s",
-              position: "relative",
-              "&:hover": {
-                transform: "translateY(-4px)",
-                boxShadow: "0 18px 40px rgba(0,0,0,0.12)",
-              },
-            }}
-          >
-            {/* Delete Button */}
-            <IconButton
-              color="error"
-              onClick={() => handleCancelClick(request)}
+        {allMyRequests
+          .filter(req => req?.rideId)
+          .map((request) => (
+            <Card
+              key={request._id}
               sx={{
-                position: "absolute",
-                top: 15,
-                right: 15,
-                bgcolor: "#fff",
-                boxShadow: 2,
+                mb: 3,
+                borderRadius: "20px",
+                overflow: "hidden",
+                background: "linear-gradient(135deg, #ffffff 0%, #f8fbff 100%)",
+                boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
+                transition: "0.3s",
+                position: "relative",
                 "&:hover": {
-                  bgcolor: "#ffebee",
+                  transform: "translateY(-4px)",
+                  boxShadow: "0 18px 40px rgba(0,0,0,0.12)",
                 },
               }}
             >
-              <DeleteIcon />
-            </IconButton>
+              {/* Delete Button */}
+              <IconButton
+                color="error"
+                onClick={() => handleCancelClick(request)}
+                sx={{
+                  position: "absolute",
+                  top: 15,
+                  right: 15,
+                  bgcolor: "#fff",
+                  boxShadow: 2,
+                  "&:hover": {
+                    bgcolor: "#ffebee",
+                  },
+                }}
+              >
+                <DeleteIcon />
+              </IconButton>
 
-            <CardContent
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                flexWrap: "wrap",
-                gap: 2,
-                p: 2.5,
-                pr: 8, // Space for delete button
-              }}
-            >
-              {/* Rider */}
-              <Box
+              <CardContent
                 sx={{
                   display: "flex",
                   alignItems: "center",
-                  gap: 1,
-                  minWidth: 220,
+                  justifyContent: "space-between",
+                  flexWrap: "wrap",
+                  gap: 2,
+                  p: 2.5,
+                  pr: 8, // Space for delete button
                 }}
               >
-                <Avatar
+                {/* Rider */}
+                <Box
                   sx={{
-                    bgcolor: "#FF9933",
-                    width: 42,
-                    height: 42,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    minWidth: 220,
                   }}
                 >
-                  <PersonIcon />
-                </Avatar>
+                  <Avatar
+                    sx={{
+                      bgcolor: "#FF9933",
+                      width: 42,
+                      height: 42,
+                    }}
+                  >
+                    <PersonIcon />
+                  </Avatar>
 
-                <Typography fontWeight={700}>
-                  {request.rideId?.createdBy?.firstName}{" "}
-                  {request.rideId?.createdBy?.lastName}
-                </Typography>
-              </Box>
+                  <Typography fontWeight={700}>
+                    {request.rideId?.createdBy?.firstName}{" "}
+                    {request.rideId?.createdBy?.lastName}
+                  </Typography>
+                </Box>
 
-              {/* Route */}
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 1,
-                  minWidth: 250,
-                }}
-              >
-                <LocationOnIcon sx={{ color: "#FF9933" }} />
+                {/* Route */}
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    minWidth: 250,
+                  }}
+                >
+                  <LocationOnIcon sx={{ color: "#FF9933" }} />
 
-                <Typography fontWeight={600}>
-                  {request.rideId?.from}
-                </Typography>
+                  <Typography fontWeight={600}>
+                    {request.rideId?.from}
+                  </Typography>
 
-                <ArrowForwardIcon sx={{ color: "#FF9933" }} />
+                  <ArrowForwardIcon sx={{ color: "#FF9933" }} />
 
-                <Typography fontWeight={600}>
-                  {request.rideId?.destination}
-                </Typography>
-              </Box>
+                  <Typography fontWeight={600}>
+                    {request.rideId?.destination}
+                  </Typography>
+                </Box>
 
-              {/* Date */}
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 1,
-                }}
-              >
-                <CalendarMonthIcon sx={{ color: "#FF9933" }} />
+                {/* Date */}
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                  }}
+                >
+                  <CalendarMonthIcon sx={{ color: "#FF9933" }} />
 
-                <Typography>
-                  {new Date(request.createdAt).toLocaleDateString()}
-                </Typography>
-              </Box>
+                  <Typography>
+                    {new Date(request.createdAt).toLocaleDateString()}
+                  </Typography>
+                </Box>
 
-              {/* Time */}
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 1,
-                }}
-              >
-                <AccessTimeIcon sx={{ color: "#FF9933" }} />
+                {/* Time */}
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                  }}
+                >
+                  <AccessTimeIcon sx={{ color: "#FF9933" }} />
 
-                <Typography>
-                  {new Date(request.createdAt).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </Typography>
-              </Box>
+                  <Typography>
+                    {new Date(request.createdAt).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </Typography>
+                </Box>
 
-              {/* Status */}
-              <Chip
-                label={request.status}
-                color={
-                  request.status === "ACCEPTED"
-                    ? "success"
-                    : request.status === "REJECTED"
-                      ? "error"
-                      : "warning"
-                }
-                sx={{
-                  fontWeight: 700,
-                  borderRadius: 5,
-                }}
-              />
-            </CardContent>
-          </Card>
-        ))}
+                {/* Status */}
+                <Chip
+                  label={request.status}
+                  color={
+                    request.status === "ACCEPTED"
+                      ? "success"
+                      : request.status === "REJECTED"
+                        ? "error"
+                        : "warning"
+                  }
+                  sx={{
+                    fontWeight: 700,
+                    borderRadius: 5,
+                  }}
+                />
+              </CardContent>
+            </Card>
+          ))}
         <Dialog
           open={openCancelDialog}
           onClose={handleCloseDialog}
