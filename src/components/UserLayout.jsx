@@ -18,6 +18,8 @@ const UserLayout = () => {
       sx={{
         height: "100dvh",
         display: "flex",
+        alignItems:'center', 
+        justifyContent:'center',
         flexDirection: "column",
         bgcolor: "#fbfaf8ff",
         overflow: "hidden",

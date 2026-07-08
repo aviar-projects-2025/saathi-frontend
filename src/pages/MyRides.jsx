@@ -40,6 +40,7 @@ import notificationSound from '../sounds/notifysound.wav'
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useNotifications } from '../context/NotificationContext';
 import RideDetailsModal from './RideDetails'
+import moment from 'moment';
 
 const statusConfig = {
   FULL: { label: 'Filled', color: '#2D6A4F', bg: '#E8F5E9', icon: '✅' },
@@ -559,8 +560,9 @@ function RequestItem({ request, onApprove, onReject }) {
   );
 }
 
+
 // ── Ride Card ────────────────────────────────────────────────────────────────
-function RideCard({ ride, showEdit, showDelete, onEdit, notificationRide, setNotificationRide, onDelete, allRequests, setAllRequests }) {
+function RideCard({ ride,fetchRides, confirmRide, setConfirmRide, showEdit, showDelete, onEdit, isCurrentRide, notificationRide, setNotificationRide, onDelete, allRequests, setAllRequests }) {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [showRequests, setShowRequests] = useState(false);
   const [loadingRequests, setLoadingRequests] = useState(false);
@@ -598,6 +600,7 @@ function RideCard({ ride, showEdit, showDelete, onEdit, notificationRide, setNot
       setAllRequests(prev => prev.map(req =>
         req._id === requestId ? { ...req, status: 'ACCEPTED' } : req
       ));
+      fetchRides();
       toast.success('Request approved successfully!');
     } catch (error) {
       toast.error('Failed to approve request');
@@ -611,8 +614,31 @@ function RideCard({ ride, showEdit, showDelete, onEdit, notificationRide, setNot
         req._id === requestId ? { ...req, status: 'REJECTED' } : req
       ));
       toast.success('Request rejected');
+      fetchRides()
     } catch (error) {
       toast.error('Failed to reject request');
+    }
+  };
+
+  const handleEdit = async (rideId, status) => {
+    try {
+      console.log(rideId)
+      console.log(status, 'status')
+      if (status === 'Waiting') {
+        const response = await axios.patch(`${Api}/rides/edit/${rideId}`, { travelStatus: 'Started', startTime: new Date().toISOString() })
+        console.log(response)
+        setConfirmRide(null)
+        fetchRides()
+        toast.success('Ride Started');
+      } else if (status === "Started") {
+        const response = await axios.patch(`${Api}/rides/edit/${rideId}`, { travelStatus: 'Completed', endTime: new Date().toISOString() })
+        console.log(response)
+        setConfirmRide(null)
+        fetchRides()
+        toast.success('Ride Completed');
+      }
+    } catch (error) {
+      toast.error('Failed');
     }
   };
 
@@ -628,6 +654,8 @@ function RideCard({ ride, showEdit, showDelete, onEdit, notificationRide, setNot
     }
   }, [notificationRide, ride]);
 
+
+
   return (
     <>
       <Box
@@ -642,7 +670,6 @@ function RideCard({ ride, showEdit, showDelete, onEdit, notificationRide, setNot
             transform: { xs: "none", sm: "translateY(-6px)" },
           },
         }}
-        onClick={() => setDetailsOpen(true)}
       >
         {/* ── Top header: name + status ── */}
         <Box
@@ -674,6 +701,20 @@ function RideCard({ ride, showEdit, showDelete, onEdit, notificationRide, setNot
           </Box>
 
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+            {isCurrentRide && ride?.travelStatus != "Completed" && (
+              <Button
+                onClick={() => { handleEdit(ride._id, ride.travelStatus) }}
+                sx={{
+                  color: 'white',
+                  background: ride?.travelStatus != "Started" ? "Orange" : "Red",
+                  width: '100%',
+                  height: '30px',
+                  fontSize: 13,
+                }}
+              >
+                {ride?.travelStatus === "Started" ? "Complete Ride" : "Start Ride"}
+              </Button>
+            )}
             <Chip
               size="small"
               label={`${status.icon} ${status.label}`}
@@ -721,6 +762,7 @@ function RideCard({ ride, showEdit, showDelete, onEdit, notificationRide, setNot
         {/* ── Card body ── */}
         <Card
           elevation={0}
+          onClick={() => setDetailsOpen(true)}
           sx={{
             borderRadius: "0 0 18px 18px",
             background: "#fff",
@@ -889,12 +931,28 @@ function RideCard({ ride, showEdit, showDelete, onEdit, notificationRide, setNot
           onApprove={handleApprove}
           onReject={handleReject}
         />
-
       )}
+
+      <Dialog open={!!confirmRide}>
+        <DialogContent>
+          Looks like your ride is starting 🚗
+        </DialogContent>
+        <DialogContent>
+          <Typography>From : {confirmRide?.from}</Typography>
+          <Typography>To : {confirmRide?.destination}</Typography>
+          <Typography>Time : {moment(confirmRide?.startTime).format("DD MMM YYYY, hh:mm A")}</Typography>
+
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmRide(null)}>not yet</Button>
+          <Button onClick={() => handleEdit(confirmRide._id, confirmRide.travelStatus)}>
+            Started
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 }
-
 
 // ── Main Component ─────────────────────────────────────────────────────────
 const MyRides = () => {
@@ -910,8 +968,34 @@ const MyRides = () => {
   const [allRequests, setAllRequests] = useState([]);
   const [allMyRequests, setAllMyRequests] = useState([]);
   const { notifications } = useNotifications();
+  const [confirmRide, setConfirmRide] = useState(null)
 
   const processedIds = useRef(new Set());
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = new Date();
+
+      currentRide?.forEach((ride) => {
+        if (["Started", "Completed"].includes(ride?.travelStatus)) return;
+
+        const start = new Date(ride.startTime);
+
+        if (
+          now >= start &&
+          !processedIds.current.has(ride._id)
+        ) {
+          toast.info("Your ride is starting now 🚗");
+
+          setConfirmRide(ride);
+
+          processedIds.current.add(ride._id);
+        }
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [currentRide]);
 
   // console.log(notifications, 'from my rides')
 
@@ -1121,15 +1205,19 @@ const MyRides = () => {
   };
   const [openCancelDialog, setOpenCancelDialog] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
-  const renderList = (list, showEdit = false, showDelete = false) =>
+  const renderList = (list, showEdit = false, showDelete = false, isCurrentRide = false) =>
     list.map((ride) => (
       <RideCard
         key={ride._id || ride.id}
         ride={ride}
         notificationRide={notificationRide}
+        isCurrentRide={isCurrentRide}
         setNotificationRide={setNotificationRide}
         showEdit={showEdit}
+        confirmRide={confirmRide}
+        setConfirmRide={setConfirmRide}
         showDelete={showDelete}
+        fetchRides={fetchRides}
         onEdit={setEditRide}
         onDelete={setDeleteRide}
         allRequests={allRequests}
@@ -1290,7 +1378,7 @@ const MyRides = () => {
               {tab === 0 && (
                 <Box>
                   {currentRide.length > 0
-                    ? renderList(currentRide, false, false)
+                    ? renderList(currentRide, false, false, true)
                     : <EmptyState emoji="🚗" message="You don't have any active rides at the moment" actionLabel="Share a Ride" actionHref="/offer" />
                   }
                 </Box>
