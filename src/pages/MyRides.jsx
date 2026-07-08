@@ -703,7 +703,7 @@ function RideCard({ ride,fetchRides, confirmRide, setConfirmRide, showEdit, show
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
             {isCurrentRide && ride?.travelStatus != "Completed" && (
               <Button
-                onClick={() => { handleEdit(ride._id, ride.travelStatus) }}
+                onClick={() => { handleEdit(ride._id, ride?.travelStatus) }}
                 sx={{
                   color: 'white',
                   background: ride?.travelStatus != "Started" ? "Orange" : "Red",
@@ -884,7 +884,7 @@ function RideCard({ ride,fetchRides, confirmRide, setConfirmRide, showEdit, show
             </Box>
 
             {/* Requests section */}
-            {showRequests && rideRequests.length > 0 && (
+            {/* {showRequests && rideRequests.length > 0 && (
               <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid rgba(255,153,51,0.2)' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                   <Typography fontWeight={700} sx={{ fontSize: '0.9rem' }}>
@@ -892,7 +892,7 @@ function RideCard({ ride,fetchRides, confirmRide, setConfirmRide, showEdit, show
                   </Typography>
                 </Box>
               </Box>
-            )}
+            )} */}
           </CardContent>
         </Card>
       </Box>
@@ -1252,7 +1252,7 @@ const MyRides = () => {
   // Rides you've requested/booked that haven't happened yet
   const upcomingRequests = useMemo(() => {
     const now = new Date();
-    return allMyRequests.filter((booking) => {
+  return allMyRequests.filter((booking) => {
       const rideStart = booking.rideId?.startTime ? new Date(booking.rideId.startTime) : null;
       return rideStart && !isNaN(rideStart.getTime()) && rideStart > now;
     });
@@ -1269,7 +1269,7 @@ const MyRides = () => {
 
   const tabLabels = [
     { short: 'Current', count: currentRide.length },
-    { short: 'Upcoming', count: upcoming.length + upcomingRequests.length },
+    { short: 'Upcoming', count: upcomingRequests.length },
     { short: 'My Posts', count: mypost.length },
     { short: 'History', count: history.length + pastRequests.length },
   ];
