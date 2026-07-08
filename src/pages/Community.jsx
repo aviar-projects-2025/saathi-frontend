@@ -6,7 +6,8 @@ import {
   TextField,
   CircularProgress,
   useMediaQuery,
-  useTheme
+  useTheme,
+  IconButton
 } from '@mui/material';
 import GroupsIcon from '@mui/icons-material/Groups';
 import StarIcon from '@mui/icons-material/Star';
@@ -23,6 +24,16 @@ import PermMediaIcon from '@mui/icons-material/PermMedia';
 import CloseIcon from '@mui/icons-material/Close';
 import Api from '../Api.jsx';
 import axios from 'axios';
+
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import {
+  Dialog, DialogTitle, DialogContent, DialogActions,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
+} from "@mui/material";
 import { toast } from 'react-toastify';
 import CommunityImage from '../components/CommunityImage.jsx';
 import CommunityComments from './CommunityComments.jsx';
@@ -37,8 +48,9 @@ export default function Community() {
   const [communityPosts, setCommunityPosts] = useState([]);
   const [activeCommentPostId, setActiveCommentPostId] = useState(null);
   const user = JSON.parse(localStorage.getItem('user'));
-
-  const { currentUser } = useUser();
+  const [postId, setPostId] = useState([])
+  const [editImage, setEditImage] = useState(null);
+  const [previewImage, setPreviewImage] = useState("");
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -57,6 +69,22 @@ export default function Community() {
   const bodyFontSize = isMobile ? '0.8rem' : '0.8rem';
   const captionSize = isMobile ? '0.6rem' : '0.6rem';
   const avatarFontSize = isMobile ? '0.6rem' : '1.1rem';
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [selectedPost, setSelectedPost] = useState(null);
+
+  const currentUser = JSON.parse(localStorage.getItem("user"));
+
+  const handleMenuOpen = (event, post) => {
+    setAnchorEl(event.currentTarget);
+    setSelectedPost(post);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+    setSelectedPost(null);
+  };
+  const [editOpen, setEditOpen] = useState(false);
+  const [editDescription, setEditDescription] = useState("");
 
   // ── Scroll behavior ────────────────────────────────────────────────────
   // Only the SIDEBAR gets its own independent scroll container (fixed height).
@@ -64,7 +92,56 @@ export default function Community() {
   // so scrolling anywhere on the page scrolls the page/feed, except when the
   // cursor is over the sidebar, which scrolls independently.
   const SIDEBAR_SCROLL_HEIGHT = 'calc(100vh - 130px)';
+  const handleEdit = (post) => {
+    setSelectedPost(post);
+    setEditDescription(post.description);
+    setPreviewImage(post.postImage);
+    setEditImage(null);
+    setEditOpen(true);
+  };
+  const handleUpdate = async () => {
+    try {
+      const user = JSON.parse(localStorage.getItem("user"));
 
+      const formData = new FormData();
+      formData.append("userId", user.id);
+      formData.append("description", editDescription);
+
+      if (editImage) {
+        formData.append("postImage", editImage);
+      }
+
+      const res = await axios.put(
+        `${Api}/community/${selectedPost._id}`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      setCommunityPosts((prev) =>
+        prev.map((post) =>
+          post._id === selectedPost._id
+            ? {
+              ...post,
+              description: res.data.data.description,
+              postImage: res.data.data.postImage,
+            }
+            : post
+        )
+      );
+
+      toast.success(res.data.message);
+
+      setEditOpen(false);
+      setSelectedPost(null);
+      setEditImage(null);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to update post");
+    }
+  };
   const handleCreatePost = async () => {
     try {
       setLoading(true);
@@ -104,7 +181,12 @@ export default function Community() {
         ...post,
         isLiked: likedPostIds.includes(post._id),
       }));
+      const postIds = postsRes.data.data.map((item) => item._id
+
+      )
       setCommunityPosts(updatedPosts);
+      setPostId(postIds)
+
     } catch (error) {
       console.error(error.message);
     } finally {
@@ -115,6 +197,7 @@ export default function Community() {
   useEffect(() => {
     getCommmunityPost();
   }, []);
+
 
   const formattedDateTime = (createdAt) =>
     new Date(createdAt).toLocaleString("en-IN", {
@@ -135,6 +218,23 @@ export default function Community() {
     } catch (error) { }
   };
 
+  const handleDelete = async (postId) => {
+    try {
+      const user = JSON.parse(localStorage.getItem("user"));
+
+      const res = await axios.delete(`${Api}/community/${postId}`, {
+        data: {
+          userId: user.id,
+        },
+      });
+
+      toast.success(res.data.message);
+
+      setCommunityPosts((prev) => prev.filter((post) => post._id !== postId));
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to delete post");
+    }
+  };
   const removeLike = async (id) => {
     try {
       const res = await axios.delete(Api + `/likes/${id}/${user.id}`);
@@ -441,7 +541,7 @@ export default function Community() {
                             `${currentUser?.firstName?.[0] || ''}${currentUser?.lastName?.[0] || ''}`}
                         </Avatar>
 
-                        <Box sx={{ flex: 1, minWidth: 0}}>
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
                           <Typography fontWeight={700} fontSize={isMobile ? '0.75rem' : '0.95rem'} noWrap>
                             {post?.authorId?.firstName} {post?.authorId?.lastName}
                           </Typography>
@@ -450,7 +550,160 @@ export default function Community() {
                           </Typography>
                         </Box>
 
-                        <MoreHorizIcon fontSize={iconFontSize} sx={{ color: 'text.secondary', flexShrink: 0 }} />
+                        {post?.authorId?._id === currentUser.id && (
+                          <>
+                            <IconButton onClick={(e) => handleMenuOpen(e, post)}>
+                              <MoreHorizIcon
+                                fontSize={iconFontSize}
+                                sx={{ color: "text.secondary" }}
+                              />
+                            </IconButton>
+
+                            <Menu
+                              anchorEl={anchorEl}
+                              open={Boolean(anchorEl)}
+                              onClose={handleMenuClose}
+                            >
+                              <MenuItem
+                                onClick={() => {
+                                  handleMenuClose();
+                                  handleEdit(selectedPost);
+                                }}
+                              >
+                                <ListItemIcon>
+                                  <EditIcon fontSize="small" />
+                                </ListItemIcon>
+                                <ListItemText>Edit</ListItemText>
+                              </MenuItem>
+
+                              <MenuItem
+                                onClick={() => {
+                                  handleMenuClose();
+                                  handleDelete(selectedPost._id);
+                                }}
+                              >
+                                <ListItemIcon>
+                                  <DeleteIcon fontSize="small" color="error" />
+                                </ListItemIcon>
+                                <ListItemText>Delete</ListItemText>
+                              </MenuItem>
+                            </Menu>
+                            <Dialog open={editOpen} onClose={() => setEditOpen(false)} fullWidth maxWidth="sm">
+                              <DialogTitle>Edit Post</DialogTitle>
+
+                              <DialogContent>
+                                <TextField
+                                  fullWidth
+                                  multiline
+                                  minRows={4}
+                                  margin="dense"
+                                  label="Description"
+                                  value={editDescription}
+                                  onChange={(e) => setEditDescription(e.target.value)}
+                                />
+                              </DialogContent>
+
+                              <DialogActions>
+                                <Box sx={{ mb: 2 }}>
+                                  <img
+                                    src={editImage ? URL.createObjectURL(editImage) : previewImage}
+                                    alt="Post"
+                                    style={{
+                                      width: "100%",
+                                      maxHeight: "250px",
+                                      objectFit: "cover",
+                                      borderRadius: "8px",
+                                      marginBottom: "16px",
+                                    }}
+                                  />
+
+                                  <Box
+                                    sx={{
+                                      display: "flex",
+                                      justifyContent: "space-between",
+                                      alignItems: "center",
+                                      flexWrap: "wrap",
+                                      gap: 2,
+                                    }}
+                                  >
+                                    <Button
+                                      variant="contained"
+                                      component="label"
+                                      sx={{
+                                        bgcolor: "#FF9933",
+                                        color: "#fff",
+                                        fontWeight: 600,
+                                        textTransform: "none",
+                                        "&:hover": {
+                                          bgcolor: "#e68a00",
+                                        },
+                                      }}
+                                    >
+                                      Change Image
+                                      <input
+                                        hidden
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) => {
+                                          const file = e.target.files[0];
+                                          if (file) {
+                                            setEditImage(file);
+                                            setPreviewImage(URL.createObjectURL(file));
+                                          }
+                                        }}
+                                      />
+                                    </Button>
+
+                                    <Box
+                                      sx={{
+                                        display: "flex",
+                                        gap: 2,
+                                      }}
+                                    >
+                                      <Button
+                                        onClick={() => setEditOpen(false)}
+                                        variant="contained"
+                                        sx={{
+                                          bgcolor: "#9E9E9E",
+                                          color: "#fff",
+                                          "&:hover": {
+                                            bgcolor: "#757575",
+                                          },
+                                        }}
+                                      >
+                                        Cancel
+                                      </Button>
+
+                                      <Button
+                                        variant="contained"
+                                        onClick={handleUpdate}
+                                        sx={{
+                                          bgcolor: "#FF9933",
+                                          "&:hover": {
+                                            bgcolor: "#e68a00",
+                                          },
+                                        }}
+                                      >
+                                        Save
+                                      </Button>
+                                    </Box>
+                                  </Box>
+                                </Box>
+
+
+                              </DialogActions>
+                            </Dialog>
+                            {editImage && (
+                              <img
+                                src={URL.createObjectURL(editImage)}
+                                alt="Preview"
+                                width={150}
+                                style={{ marginTop: 10, borderRadius: 8 }}
+                              />
+                            )}
+                          </>
+                        )}
+
                       </Box>
 
                       {/* Post body */}
