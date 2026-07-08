@@ -203,7 +203,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
             <Button
               size="small"
               variant="contained"
-              onClick={() => navigate("/settings")}
+              onClick={() => navigate("/user-profile")}
               sx={{
                 bgcolor: "#FF9933", // Saffron
                 color: "#fff",
