@@ -160,64 +160,67 @@ const Myprofile = () => {
     <Box
       sx={{
         maxWidth: 700,
-        mx: "auto",
+        // mx: "auto",
         px: 2,
         py: 3,
       }}
     >
-      <Stack
-        direction="row"
-        spacing={{ xs: 2, sm: 3 }}
-        alignItems="center"
-        sx={{ flex: 1 }}
-      >
-        <Avatar
-          src={currentUser?.profileImage || ""}
-          sx={{
-            width: { xs: 64, sm: 84, md: 96 },
-            height: { xs: 64, sm: 84, md: 96 },
-            bgcolor: SAFFRON,
-            color: "#fff",
-            fontWeight: 800,
-            fontSize: { xs: "1rem", sm: "1.3rem", md: "1.5rem" },
-            flexShrink: 0,
-          }}
+      <SectionCard >
+        <Stack
+          direction="row"
+          spacing={{ xs: 2, sm: 3 }}
+          alignItems="center"
+          sx={{ flex: 1 }}
         >
-          {!currentUser?.profileImage &&
-            `${currentUser?.firstName?.[0] || ""}${currentUser?.lastName?.[0] || ""}`}
-        </Avatar>
-
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography
-            fontWeight={700}
+          <Avatar
+            src={currentUser?.profileImage || ""}
             sx={{
-              fontSize: { xs: "0.82rem", sm: "0.9rem", md: "1rem" },
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
+              width: { xs: 64, sm: 84, md: 96 },
+              height: { xs: 64, sm: 84, md: 96 },
+              bgcolor: SAFFRON,
+              color: "#fff",
+              fontWeight: 800,
+              fontSize: { xs: "1rem", sm: "1.3rem", md: "1.5rem" },
+              flexShrink: 0,
             }}
           >
-            {currentUser?.firstName} {currentUser?.lastName}
-          </Typography>
+            {!currentUser?.profileImage &&
+              `${currentUser?.firstName?.[0] || ""}${currentUser?.lastName?.[0] || ""}`}
+          </Avatar>
 
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{
-              fontSize: { xs: "0.68rem", sm: "0.75rem", md: "0.8rem" },
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              mb: { xs: 1, sm: 1.5 },
-            }}
-          >
-            {currentUser?.email}
-          </Typography>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography
+              fontWeight={700}
+              sx={{
+                fontSize: { xs: "0.82rem", sm: "1.1rem", md: "1rem" },
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                mt: 1.5
+              }}
+            >
+              {currentUser?.firstName} {currentUser?.lastName}
+            </Typography>
+
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{
+                fontSize: { xs: "0.68rem", sm: "1rem", md: "0.8rem" },
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                mt: { xs: 0.7, sm: 0 },
+              }}
+            >
+              {currentUser?.email}
+            </Typography>
+          </Box>
+        </Stack>
+      </SectionCard>
 
 
-        </Box>
-      </Stack>
-      <SectionCard>
+      <SectionCard sx={{ mt: 3 }}>
         <SectionHeader icon={<PersonIcon />} label="Account" />
         <Divider sx={{ mt: 1 }} />
         <Stack>
@@ -252,7 +255,7 @@ const Myprofile = () => {
 
       {/* ── Security ── */}
 
-      <SectionCard>
+      <SectionCard sx={{ mt: 3 }}>
         <SectionHeader icon={<LockIcon />} label="Security" />
         <Divider sx={{ mt: 1 }} />
         <Grid sx={{
@@ -491,7 +494,7 @@ const Myprofile = () => {
       </Modal>
 
       {/* ── Notifications ── */}
-      <SectionCard>
+      <SectionCard sx={{ mt: 3 }}>
         <SectionHeader icon={<NotificationsIcon />} label="Notifications" />
         <Divider sx={{ mt: 1 }} />
         <Stack spacing={0} divider={<Divider />}>
@@ -531,7 +534,7 @@ const Myprofile = () => {
       </SectionCard>
 
       {/* ── Referral ── */}
-      <SectionCard>
+      <SectionCard sx={{ mt: 3 }}>
         <SectionHeader icon={<CardGiftcardIcon />} label="Referral" />
         <Divider sx={{ mt: 1.5 }} />
 
@@ -563,7 +566,7 @@ const Myprofile = () => {
             />
           </Grid>
 
-          <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
             <Button
               variant="outlined"
               onClick={() => handleCopy(user?.referralCode)}
@@ -589,10 +592,10 @@ const Myprofile = () => {
           </Stack>
 
         </Grid>
-      </SectionCard>
+      </SectionCard >
 
       {/* ── Account Actions ── */}
-      <SectionCard>
+      <SectionCard sx={{ mt: 3 }}>
         <SectionHeader icon={<SettingsIcon />} label="Account actions" />
         <Divider sx={{ mt: 1 }} />
         <Grid
