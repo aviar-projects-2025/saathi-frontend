@@ -217,7 +217,7 @@ export default function OfferRide() {
 
       const selectedDateTime = new Date(`${form.date}T${form.time}`);
       const now = new Date();
-      if (selectedDateTime <= now) {
+      if (selectedDateTime < now) {
         toast.error("Please select a future date and time");
         return false;
       }
