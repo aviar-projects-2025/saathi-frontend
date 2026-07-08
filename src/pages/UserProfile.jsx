@@ -797,7 +797,7 @@ const UserProfile = () => {
 
 
             {/* ── Change Password Modal ── */}
-            <Modal
+            {/* <Modal
                 open={passwordModel}
                 onClose={() => setPasswordModel(false)}
             >
@@ -921,96 +921,9 @@ const UserProfile = () => {
                         </Stack>
                     </Box>
                 </Box>
-            </Modal>
+            </Modal> */}
 
-            <Modal open={openShare} onClose={handleCloseShare}>
-                <Box
-                    sx={{
-                        position: "fixed",
-                        top: "50%",
-                        left: "50%",
-                        transform: "translate(-50%, -50%)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        width: { xs: "92%", sm: "100%" },
-                        px: { xs: 2, sm: 0 },
-                    }}
-                >
-                    <Box
-                        sx={{
-                            bgcolor: "white",
-                            width: { xs: "100%", sm: 320 },
-                            maxWidth: 320,
-                            borderRadius: { xs: 2, sm: 2 },
-                            p: { xs: 2, sm: 3 },
-                            boxShadow: 24,
-                        }}
-                    >
-                        <Typography
-                            fontWeight={600}
-                            sx={{
-                                fontSize: { xs: "0.9rem", sm: "1rem" },
-                                mb: { xs: 1.5, sm: 2 },
-                            }}
-                        >
-                            Share your referral link
-                        </Typography>
-
-                        <TextField
-                            fullWidth
-                            value={shareLink}
-                            size="small"
-                            InputProps={{
-                                readOnly: true,
-                                sx: { fontSize: { xs: "0.75rem", sm: "0.85rem" } },
-                            }}
-                        />
-
-                        <Stack
-                            direction="row"
-                            spacing={{ xs: 1, sm: 1 }}
-                            sx={{ mt: { xs: 1.5, sm: 2 } }}
-                        >
-                            <Button
-                                fullWidth
-                                variant="contained"
-                                size="small"
-                                sx={{
-                                    fontSize: { xs: "0.75rem", sm: "0.85rem" },
-                                    py: { xs: 0.5, sm: 0.75 },
-                                }}
-                                onClick={() => handleCopy(shareLink)}
-                            >
-                                Copy Link
-                            </Button>
-
-                            <Button
-                                fullWidth
-                                variant="outlined"
-                                size="small"
-                                sx={{
-                                    fontSize: { xs: "0.75rem", sm: "0.85rem" },
-                                    py: { xs: 0.5, sm: 0.75 },
-                                }}
-                                onClick={() => {
-                                    if (navigator.share) {
-                                        navigator.share({
-                                            title: "Join using my referral",
-                                            text: "Use my referral link",
-                                            url: shareLink,
-                                        });
-                                    } else {
-                                        toast.info("Sharing not supported on this device");
-                                    }
-                                }}
-                            >
-                                Share
-                            </Button>
-                        </Stack>
-                    </Box>
-                </Box>
-            </Modal>
+          
 
 
         </PageLayout>
