@@ -12,6 +12,8 @@ import {
   useMediaQuery,
   Stack,
   Switch,
+  Modal,
+  TextField,
   Chip,
   useTheme,
   Grid,
@@ -34,6 +36,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import SettingsIcon from "@mui/icons-material/Settings";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
+import { toast } from "react-toastify";
 
 const SAFFRON = "#E8650A";
 const SAFFRON_LIGHT = "#FDF0E8";
@@ -88,13 +91,31 @@ const Myprofile = () => {
   const { currentUser, getuserData } = useUser()
   const handleOpenShare = () => setOpenShare(true);
   const handleCloseShare = () => setOpenShare(false);
+  const [openShare, setOpenShare] = useState(false);
   const feedRef = useRef(null);
+  const [passwordModel, setPasswordModel] = useState('')
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+
+    setPasswordData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
   const logout = () => {
     localStorage.clear();
     window.location.replace("/login");
   };
   const [communityPosts, setCommunityPosts] = useState([]);
-
+  const handleCopy = (value) => {
+    navigator.clipboard.writeText(value);
+    toast.success("Copied to clipboard!");
+  };
   useEffect(() => {
     if (currentUser?._id) {
       getCommunityPost();
@@ -254,7 +275,220 @@ const Myprofile = () => {
         </Grid>
       </SectionCard>
 
+      {/* ── Change Password Modal ── */}
+      <Modal
+        open={passwordModel}
+        onClose={() => setPasswordModel(false)}
+      >
+        <Box
+          sx={{
+            position: "fixed",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: { xs: "92%", sm: "100%" },
+            px: { xs: 2, sm: 0 },
+          }}
+        >
+          <Box
+            sx={{
+              bgcolor: "#fff",
+              width: { xs: "100%", sm: "85%", md: 420 },
+              maxWidth: 420,
+              borderRadius: { xs: 2, sm: 3 },
+              p: { xs: 2, sm: 3 },
+              boxShadow: 24,
+              maxHeight: { xs: "85vh", sm: "90vh" },
+              overflowY: "auto",
+            }}
+          >
+            <Typography
+              variant="h6"
+              fontWeight={700}
+              sx={{
+                fontSize: { xs: "0.95rem", sm: "1.1rem", md: "1.25rem" },
+                mb: { xs: 1.5, sm: 3 },
+              }}
+            >
+              Change Password
+            </Typography>
 
+            <Stack spacing={{ xs: 1.5, sm: 2 }}>
+              <TextField
+                label="Current Password"
+                name="currentPassword"
+                type="password"
+                size="small"
+                fullWidth
+                value={passwordData.currentPassword}
+                onChange={handlePasswordChange}
+                InputProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
+                InputLabelProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
+              />
+
+              <TextField
+                label="New Password"
+                name="newPassword"
+                type="password"
+                size="small"
+                fullWidth
+                value={passwordData.newPassword}
+                onChange={handlePasswordChange}
+                InputProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
+                InputLabelProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
+              />
+
+              <TextField
+                label="Confirm Password"
+                name="confirmPassword"
+                type="password"
+                size="small"
+                fullWidth
+                value={passwordData.confirmPassword}
+                onChange={handlePasswordChange}
+                InputProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
+                InputLabelProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
+              />
+
+              <Stack
+                direction={{ xs: "column-reverse", sm: "row" }}
+                justifyContent="flex-end"
+                alignItems="center"
+                spacing={{ xs: 1, sm: 1.5 }}
+                sx={{ mt: { xs: 0.5, sm: 1 } }}
+              >
+                <Button
+                  variant="outlined"
+                  size="small"
+                  sx={{
+                    width: { xs: "100%", sm: "auto" },
+                    fontSize: { xs: "0.75rem", sm: "0.85rem" },
+                    py: { xs: 0.5, sm: 0.75 },
+                    px: { xs: 1.5, sm: 2.5 },
+                    minWidth: { xs: "auto", sm: 90 },
+                  }}
+                  onClick={() => {
+                    setPasswordModel(false)
+                    setPasswordData({
+                      confirmPassword: '',
+                      currentPassword: '',
+                      newPassword: ''
+                    })
+                  }}
+                >
+                  Cancel
+                </Button>
+
+                <Button
+                  variant="contained"
+                  size="small"
+                  sx={{
+                    width: { xs: "100%", sm: "auto" },
+                    fontSize: { xs: "0.75rem", sm: "0.85rem" },
+                    py: { xs: 0.5, sm: 0.75 },
+                    px: { xs: 1.5, sm: 2.5 },
+                    minWidth: { xs: "auto", sm: 130 },
+                  }}
+                  onClick={() => handleChangePassword()}
+                >
+                  Update Password
+                </Button>
+              </Stack>
+            </Stack>
+          </Box>
+        </Box>
+      </Modal>
+      <Modal open={openShare} onClose={handleCloseShare}>
+        <Box
+          sx={{
+            position: "fixed",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: { xs: "92%", sm: "100%" },
+            px: { xs: 2, sm: 0 },
+          }}
+        >
+          <Box
+            sx={{
+              bgcolor: "white",
+              width: { xs: "100%", sm: 320 },
+              maxWidth: 320,
+              borderRadius: { xs: 2, sm: 2 },
+              p: { xs: 2, sm: 3 },
+              boxShadow: 24,
+            }}
+          >
+            <Typography
+              fontWeight={600}
+              sx={{
+                fontSize: { xs: "0.9rem", sm: "1rem" },
+                mb: { xs: 1.5, sm: 2 },
+              }}
+            >
+              Share your referral link
+            </Typography>
+
+            <TextField
+              fullWidth
+              value={shareLink}
+              size="small"
+              InputProps={{
+                readOnly: true,
+                sx: { fontSize: { xs: "0.75rem", sm: "0.85rem" } },
+              }}
+            />
+
+            <Stack
+              direction="row"
+              spacing={{ xs: 1, sm: 1 }}
+              sx={{ mt: { xs: 1.5, sm: 2 } }}
+            >
+              <Button
+                fullWidth
+                variant="contained"
+                size="small"
+                sx={{
+                  fontSize: { xs: "0.75rem", sm: "0.85rem" },
+                  py: { xs: 0.5, sm: 0.75 },
+                }}
+                onClick={() => handleCopy(shareLink)}
+              >
+                Copy Link
+              </Button>
+
+              <Button
+                fullWidth
+                variant="outlined"
+                size="small"
+                sx={{
+                  fontSize: { xs: "0.75rem", sm: "0.85rem" },
+                  py: { xs: 0.5, sm: 0.75 },
+                }}
+                onClick={() => {
+                  if (navigator.share) {
+                    navigator.share({
+                      title: "Join using my referral",
+                      text: "Use my referral link",
+                      url: shareLink,
+                    });
+                  } else {
+                    toast.info("Sharing not supported on this device");
+                  }
+                }}
+              >
+                Share
+              </Button>
+            </Stack>
+          </Box>
+        </Box>
+      </Modal>
 
       {/* ── Notifications ── */}
       <SectionCard>
