@@ -57,7 +57,7 @@ export default function Community() {
   const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
 
-  // Show sidebar on tablet (sm+) and desktop (md+)
+
   const showSidebar = useMediaQuery(theme.breakpoints.up('sm'));
 
   const SAFFRON = "#E8650A";
@@ -81,8 +81,8 @@ export default function Community() {
 
   const handleMenuClose = () => {
     setAnchorEl(null);
-    setSelectedPost(null);
   };
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editDescription, setEditDescription] = useState("");
 
@@ -217,7 +217,6 @@ export default function Community() {
       );
     } catch (error) { }
   };
-
   const handleDelete = async (postId) => {
     try {
       const user = JSON.parse(localStorage.getItem("user"));
@@ -228,11 +227,15 @@ export default function Community() {
         },
       });
 
-      toast.success(res.data.message);
+      setCommunityPosts((prev) =>
+        prev.filter((post) => post._id !== postId)
+      );
 
-      setCommunityPosts((prev) => prev.filter((post) => post._id !== postId));
+      toast.success(res.data.message);
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to delete post");
+      toast.error(
+        error.response?.data?.message || "Failed to delete post"
+      );
     }
   };
   const removeLike = async (id) => {
@@ -579,7 +582,7 @@ export default function Community() {
                               <MenuItem
                                 onClick={() => {
                                   handleMenuClose();
-                                  handleDelete(selectedPost._id);
+                                  setDeleteOpen(true);
                                 }}
                               >
                                 <ListItemIcon>
@@ -588,6 +591,48 @@ export default function Community() {
                                 <ListItemText>Delete</ListItemText>
                               </MenuItem>
                             </Menu>
+                            <Dialog
+                              open={deleteOpen}
+                              onClose={() => setDeleteOpen(false)}
+                              maxWidth="xs"
+                              fullWidth
+                            >
+                              <DialogTitle>Delete Post</DialogTitle>
+
+                              <DialogContent>
+                                <Typography>
+                                  Are you sure you want to delete this post?
+                                </Typography>
+                              </DialogContent>
+
+                              <DialogActions sx={{ px: 3, pb: 2 }}>
+                                <Button
+                                  variant="contained"
+                                  onClick={() => setDeleteOpen(false)}
+                                  sx={{
+                                    bgcolor: "grey.500",
+                                    color: "#fff",
+                                    "&:hover": {
+                                      bgcolor: "grey.700",
+                                    },
+                                  }}
+                                >
+                                  Cancel
+                                </Button>
+                                <Button
+                                  variant="contained"
+                                  color="error"
+                                  onClick={() => {
+                                    const postId = selectedPost._id;
+                                    handleMenuClose();
+                                    handleDelete(postId);
+                                    setDeleteOpen(false);
+                                  }}
+                                >
+                                  Delete
+                                </Button>
+                              </DialogActions>
+                            </Dialog>
                             <Dialog open={editOpen} onClose={() => setEditOpen(false)} fullWidth maxWidth="sm">
                               <DialogTitle>Edit Post</DialogTitle>
 
