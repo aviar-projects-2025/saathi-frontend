@@ -66,7 +66,7 @@ export default function Community() {
   const avatarSize = isMobile ? 30 : 35;
   const iconFontSize = isMobile ? 'small' : 'medium';
   const btnFontSize = isMobile ? '0.5rem' : '0.7rem';
-  const bodyFontSize = isMobile ? '0.8rem' : '0.8rem';
+  const bodyFontSize = isMobile ? '0.7rem' : '0.8rem';
   const captionSize = isMobile ? '0.6rem' : '0.6rem';
   const avatarFontSize = isMobile ? '0.6rem' : '1.1rem';
   const [anchorEl, setAnchorEl] = useState(null);
@@ -375,10 +375,10 @@ export default function Community() {
       }}>
         <PageLayout>
           {/* Page header */}
-          <Typography variant="h5" fontWeight={800} sx={{ mb: 0.5 }}>
+          <Typography variant="h5" fontWeight={800} sx={{ mb: { xs: 0.5, sm: 0.5 }, fontSize: { xs: "1rem", sm: "1.5rem" } }}>
             Saathi <span style={{ color: '#E8650A' }}>Community</span>
           </Typography>
-          <Typography color="text.secondary" sx={{ mb: 2 }}>
+          <Typography color="text.secondary" sx={{ mb: { xs: 1, sm: 2 }, fontSize: { xs: "0.7rem", sm: "1.2rem" } }}>
             Built on trust, referrals, and shared roots
           </Typography>
 
@@ -479,17 +479,27 @@ export default function Community() {
                   <Button
                     component="label"
                     startIcon={<PermMediaIcon fontSize={iconFontSize} />}
-                    size={isMobile ? 'small' : 'medium'}
-                    sx={{ textTransform: 'none', fontSize: btnFontSize }}
+                    size={isMobile ? "small" : "medium"}
+                    sx={{
+                      textTransform: "none",
+                      fontSize: btnFontSize,
+                    }}
                   >
                     Media
                     <input
                       hidden
                       type="file"
                       accept="image/*"
+                      capture="environment" // Opens camera option on supported devices
                       onChange={(e) => {
-                        const file = e.target.files[0];
-                        if (file) { setMedia(file); setPreview(URL.createObjectURL(file)); }
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+
+                        setMedia(file);
+                        setPreview(URL.createObjectURL(file));
+
+                        // Reset so the same file can be selected again
+                        e.target.value = "";
                       }}
                     />
                   </Button>
@@ -537,7 +547,7 @@ export default function Community() {
                             fontWeight: 800,
                             fontSize: avatarFontSize,
                             flexShrink: 0,
-                            mt: { xs: 1, sm: 0.5 }
+                            mt: { xs: 0.4, sm: 0.5 }
                           }}
                         >
                           {!currentUser?.profileImage &&
@@ -545,10 +555,13 @@ export default function Community() {
                         </Avatar>
 
                         <Box sx={{ flex: 1, minWidth: 0 }}>
-                          <Typography fontWeight={700} fontSize={isMobile ? '0.75rem' : '0.95rem'} noWrap>
+                          <Typography fontWeight={700}
+                            sx={{ fontSize: { xs: "0.7rem", sm: "0.92rem" } }}
+                            noWrap>
                             {post?.authorId?.firstName} {post?.authorId?.lastName}
                           </Typography>
-                          <Typography variant="caption" color="text.secondary" fontSize={captionSize}>
+                          <Typography variant="caption" color="text.secondary" fontSize={captionSize}
+                            sx={{ fontSize: { xs: "0.6rem", sm: "0.72rem" } }}>
                             {'tvm'} | {formattedDateTime(post?.createdAt)}
                           </Typography>
                         </Box>

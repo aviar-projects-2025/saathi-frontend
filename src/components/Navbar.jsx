@@ -179,15 +179,13 @@ const TopNav = ({ onMenuClick }) => {
                 fontWeight: 700,
               }}
             >
-              Post a Ride
-
               <IconButton
                 aria-label="close"
                 onClick={() => setOpen(false)}
                 sx={{
                   position: "absolute",
                   right: 12,
-                  top: "50%",
+                  top: "80%",
                   transform: "translateY(-50%)",
                   color: "grey.600",
                 }}

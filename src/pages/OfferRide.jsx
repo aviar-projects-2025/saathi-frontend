@@ -183,6 +183,7 @@ export default function OfferRide() {
   const [step, setStep] = useState(0);
   const [submitted, setSubmitted] = useState(false);
   const [showErrors, setShowErrors] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   const user = JSON.parse(localStorage.getItem("user"));
 
@@ -252,32 +253,33 @@ export default function OfferRide() {
       status: "OPEN",
       ...(isFlight
         ? {
-            fromCountry: form.fromCountry,
-            fromAirport: form.fromAirport,
-            toCountry: form.toCountry,
-            toAirport: form.toAirport,
-            from: form.fromAirport,
-            destination: form.toAirport,
-            flightNumber: form.flightNumber,
-            airlineName: form.airlineName,
-            transitAirport: form.transitAirport,
-            travellerType: form.travellerType,
-            language: form.language,
-            ageGroupPreference: form.ageGroupPreference,
-            medicalAssistance: form.medicalAssistance,
-            languageSupport: form.languageSupport,
-            transitHelp: form.transitHelp,
-            baggageHelp: form.baggageHelp,
-          }
+          fromCountry: form.fromCountry,
+          fromAirport: form.fromAirport,
+          toCountry: form.toCountry,
+          toAirport: form.toAirport,
+          from: form.fromAirport,
+          destination: form.toAirport,
+          flightNumber: form.flightNumber,
+          airlineName: form.airlineName,
+          transitAirport: form.transitAirport,
+          travellerType: form.travellerType,
+          language: form.language,
+          ageGroupPreference: form.ageGroupPreference,
+          medicalAssistance: form.medicalAssistance,
+          languageSupport: form.languageSupport,
+          transitHelp: form.transitHelp,
+          baggageHelp: form.baggageHelp,
+        }
         : {
-            from: form.from,
-            destination: form.destination,
-            availableSeats: form.availableSeats,
-            fuelSharing: form.fuelSharing,
-          }),
+          from: form.from,
+          destination: form.destination,
+          availableSeats: form.availableSeats,
+          fuelSharing: form.fuelSharing,
+        }),
     };
 
     try {
+      setIsSubmitted(true);
       await axios.post(`${Api}/rides/`, payload);
       toast.success("Ride Created Successfully...!");
       setStep(0);
@@ -286,12 +288,14 @@ export default function OfferRide() {
       setShowErrors(false);
     } catch (error) {
       toast.error(error.response?.data?.message || error.message);
+    } finally {
+      setIsSubmitted(false);
     }
   };
 
   useEffect(() => {
     if (submitted) {
-      const timer = setTimeout(() => setSubmitted(false), 3000);
+      const timer = setTimeout(() => setSubmitted(false), 1200000);
       return () => clearTimeout(timer);
     }
   }, [submitted]);
@@ -299,29 +303,67 @@ export default function OfferRide() {
   /* ──────────────── SUCCESS SCREEN ──────────────── */
   if (submitted) {
     return (
-      <PageLayout>
         <Box
           sx={{
-            maxWidth: 520,
+            minHeight: "35dvh",
             width: "100%",
-            // mx: "auto",
-            px: { xs: 2, sm: 3 },
-            py: { xs: 6, sm: 10 },
-            textAlign: "center",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            // overflow: "hidden",
+            boxSizing: "border-box",
+            // px: { xs: 2, sm: 3 },
           }}
         >
-          <CheckCircle2 size={isMobile ? 56 : 72} color="#52B788" style={{ marginBottom: 12 }} />
-          <Typography variant="h5" fontWeight={800} gutterBottom sx={{ fontSize: { xs: "1.15rem", sm: "1.5rem" } }}>
-            Ride posted! 🙏
-          </Typography>
-          <Typography color="text.secondary" sx={{ fontSize: { xs: "0.85rem", sm: "1rem" } }}>
-            Your ride is now visible to the Saathi community.
-          </Typography>
+          <Box
+            sx={{
+              maxWidth: 480,
+              width: "100%",
+              textAlign: "center",
+            }}
+          >
+            {/* Icon in a soft circular badge */}
+            <Box
+              sx={{
+                width: isMobile ? 72 : 88,
+                height: isMobile ? 72 : 88,
+                borderRadius: "50%",
+                bgcolor: "rgba(82, 183, 136, 0.12)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                mx: "auto",
+                // mb: 3,
+              }}
+            >
+              <CheckCircle2 size={isMobile ? 40 : 48} color="#52B788" strokeWidth={2.2} />
+            </Box>
+
+            <Typography
+              variant="h5"
+              fontWeight={800}
+              sx={{ fontSize: { xs: "1.25rem", sm: "1.6rem" }, mb: 1 }}
+            >
+              You're all set!
+            </Typography>
+
+            <Typography
+              color="text.secondary"
+              sx={{ fontSize: { xs: "0.88rem", sm: "1rem" }, mb: 0.5 }}
+            >
+              Your ride has been shared with the Saathi community.
+            </Typography>
+
+            <Typography
+              color="text.secondary"
+              sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem" }, mb: 4 }}
+            >
+              We'll notify you when someone requests to join.
+            </Typography>
+          </Box>
         </Box>
-      </PageLayout>
     );
   }
-
   /* ──────────────── MAIN RENDER ──────────────── */
   return (
     <PageLayout>
@@ -752,31 +794,31 @@ export default function OfferRide() {
                   <Stack spacing={0}>
                     {(isFlight
                       ? [
-                          [MapPin, "Route", `${form.fromAirport || "—"} → ${form.toAirport || "—"}`],
-                          [MapPin, "Country", `${form.fromCountry || "—"} → ${form.toCountry || "—"}`],
-                          [Calendar, "Date & Departure", `${form.date || "—"} at ${form.time || "—"}`],
-                          [Clock, "Journey Duration", form.duration || "—"],
-                          [Plane, "Flight Number", form.flightNumber || "—"],
-                          [Plane, "Airline Name", form.airlineName || "—"],
-                          [MapPin, "Transit Airport", form.transitAirport || "No transit"],
-                          [Users, "Traveller Type", form.travellerType || "—"],
-                          [Languages, "Language", form.language || "—"],
-                          [Users, "Gender Preference", form.genderPreference],
-                          [Users, "Age Group Preference", form.ageGroupPreference],
-                          [HeartPulse, "Medical Assistance", form.medicalAssistance ? "Yes" : "No"],
-                          [Languages, "Language Support", form.languageSupport ? "Yes" : "No"],
-                          [MapPin, "Transit Help", form.transitHelp ? "Yes" : "No"],
-                          [Luggage, "Baggage Help", form.baggageHelp ? "Yes" : "No"],
-                        ]
+                        [MapPin, "Route", `${form.fromAirport || "—"} → ${form.toAirport || "—"}`],
+                        [MapPin, "Country", `${form.fromCountry || "—"} → ${form.toCountry || "—"}`],
+                        [Calendar, "Date & Departure", `${form.date || "—"} at ${form.time || "—"}`],
+                        [Clock, "Journey Duration", form.duration || "—"],
+                        [Plane, "Flight Number", form.flightNumber || "—"],
+                        [Plane, "Airline Name", form.airlineName || "—"],
+                        [MapPin, "Transit Airport", form.transitAirport || "No transit"],
+                        [Users, "Traveller Type", form.travellerType || "—"],
+                        [Languages, "Language", form.language || "—"],
+                        [Users, "Gender Preference", form.genderPreference],
+                        [Users, "Age Group Preference", form.ageGroupPreference],
+                        [HeartPulse, "Medical Assistance", form.medicalAssistance ? "Yes" : "No"],
+                        [Languages, "Language Support", form.languageSupport ? "Yes" : "No"],
+                        [MapPin, "Transit Help", form.transitHelp ? "Yes" : "No"],
+                        [Luggage, "Baggage Help", form.baggageHelp ? "Yes" : "No"],
+                      ]
                       : [
-                          [MapPin, "From → Destination", `${form.from || "—"} → ${form.destination || "—"}`],
-                          [Calendar, "Date & Time", `${form.date || "—"} at ${form.time || "—"}`],
-                          [Clock, "Journey Duration", form.duration || "—"],
-                          [Car, "Mode of Travel", form.modeOfTravel],
-                          [Users, "Available Seats", form.availableSeats],
-                          [Fuel, "Fuel Sharing", form.fuelSharing ? "Yes" : "No"],
-                          [Users, "Gender Preference", form.genderPreference],
-                        ]
+                        [MapPin, "From → Destination", `${form.from || "—"} → ${form.destination || "—"}`],
+                        [Calendar, "Date & Time", `${form.date || "—"} at ${form.time || "—"}`],
+                        [Clock, "Journey Duration", form.duration || "—"],
+                        [Car, "Mode of Travel", form.modeOfTravel],
+                        [Users, "Available Seats", form.availableSeats],
+                        [Fuel, "Fuel Sharing", form.fuelSharing ? "Yes" : "No"],
+                        [Users, "Gender Preference", form.genderPreference],
+                      ]
                     ).map(([Icon, label, value]) => (
                       <ReviewItem key={label} icon={Icon} label={label} value={value} />
                     ))}
@@ -860,7 +902,7 @@ export default function OfferRide() {
                   whiteSpace: "nowrap",
                   "&:hover": { bgcolor: ACCENT_DARK, boxShadow: "none" },
                 }}>
-                🙏 Post to community
+                {isSubmitted ? " Ride Posting... " : " Post Your Ride "}
               </Button>
             )}
           </Stack>
