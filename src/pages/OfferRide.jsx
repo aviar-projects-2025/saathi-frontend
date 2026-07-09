@@ -325,6 +325,7 @@ export default function OfferRide() {
             textAlign: "center",
           }}
         >
+          {console.log("cfvgbhn")}
           {/* Icon in a soft circular badge */}
           <Box
             sx={{
