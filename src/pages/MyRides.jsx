@@ -562,7 +562,7 @@ function RequestItem({ request, onApprove, onReject }) {
 
 
 // ── Ride Card ────────────────────────────────────────────────────────────────
-function RideCard({ ride,fetchRides, confirmRide, setConfirmRide, showEdit, showDelete, onEdit, isCurrentRide, notificationRide, setNotificationRide, onDelete, allRequests, setAllRequests }) {
+function RideCard({ ride, fetchRides, confirmRide, setConfirmRide, showEdit, showDelete, onEdit, isCurrentRide, notificationRide, setNotificationRide, onDelete, allRequests, setAllRequests }) {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [showRequests, setShowRequests] = useState(false);
   const [loadingRequests, setLoadingRequests] = useState(false);
@@ -1083,16 +1083,16 @@ const MyRides = () => {
         all.filter((ride) => {
           console.log(ride,'ride histroy')
           const rideStartTime = new Date(ride?.startTime);
-          const rideEndTime = new Date(ride?.endTime);
-          return ride?.createdBy?._id === user.id && !isNaN(rideStartTime) && rideEndTime < currentDateTime;
+          // const rideEndTime = new Date(rideStartTime.getTime() + 3 * 60 * 60 * 1000);
+          return ride?.createdBy?._id === user.id && !isNaN(rideStartTime) && ride?.travelStatus === "Completed";
         })
       );
 
       setCurrentRide(
         all.filter((ride) => {
           const rideStartTime = new Date(ride?.startTime);
-          const rideEndTime = ride.endTime ? new Date(ride.endTime) : new Date(ride.endTimerideStartTime.getTime() + 3 * 60 * 60 * 1000);
-          return ride?.createdBy?._id === user.id && rideStartTime <= currentDateTime && rideEndTime >= currentDateTime;
+          // const rideEndTime = new Date(rideStartTime.getTime() + 3 * 60 * 60 * 1000);
+          return ride?.createdBy?._id === user.id && rideStartTime <= currentDateTime && ride?.travelStatus !== "Completed";
         })
       );
     } catch (error) {
@@ -1254,7 +1254,7 @@ const MyRides = () => {
   // Rides you've requested/booked that haven't happened yet
   const upcomingRequests = useMemo(() => {
     const now = new Date();
-  return allMyRequests.filter((booking) => {
+    return allMyRequests.filter((booking) => {
       const rideStart = booking.rideId?.startTime ? new Date(booking.rideId.startTime) : null;
       return rideStart && !isNaN(rideStart.getTime()) && rideStart > now;
     });
@@ -1271,9 +1271,9 @@ const MyRides = () => {
 
   const tabLabels = [
     { short: 'Current', count: currentRide.length },
-    { short: 'Upcoming', count: upcomingRequests.length },
+    { short: 'Upcoming', count: upcoming.length },
     { short: 'My Posts', count: mypost.length },
-    { short: 'History', count: history.length + pastRequests.length },
+    { short: 'History', count: history.length },
   ];
 
   return (
