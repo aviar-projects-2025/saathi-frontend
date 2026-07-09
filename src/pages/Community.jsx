@@ -478,7 +478,7 @@ export default function Community() {
 
                 <Divider sx={{ my: 1.5 }} />
 
-                <Stack direction="row" alignItems="center">
+                <Stack direction="row" alignItems="center" justifyContent="space-between">
                   <Tooltip
                     title={
                       !isProfileComplete
@@ -523,21 +523,44 @@ export default function Community() {
                     </Box>
                   </Tooltip>
 
-                  <Button
-                    variant="contained"
-                    disabled={loading || (!post.trim() && !media)}
-                    onClick={handleCreatePost}
-                    size={isMobile ? 'small' : 'medium'}
-                    sx={{
-                      borderRadius: 999,
-                      textTransform: 'none',
-                      bgcolor: '#E8650A',
-                      fontSize: btnFontSize,
-                      ml: 'auto',
-                    }}
+                  <Tooltip
+                    title={
+                      !isProfileComplete
+                        ? "Complete your profile to 100% before creating a post."
+                        : ""
+                    }
+                    arrow
                   >
-                    {loading ? 'Posting…' : 'Post'}
-                  </Button>
+                    <Box component="span" sx={{ ml: "auto" }}>
+                      <Button
+                        variant="contained"
+                        disabled={
+                          loading ||
+                          (!post.trim() && !media) ||
+                          !isProfileComplete
+                        }
+                        onClick={handleCreatePost}
+                        size={isMobile ? "small" : "medium"}
+                        sx={{
+                          borderRadius: 999,
+                          textTransform: "none",
+                          bgcolor: "#E8650A",
+                          fontSize: btnFontSize,
+
+                          "&:hover": {
+                            bgcolor: "#c85608",
+                          },
+
+                          "&.Mui-disabled": {
+                            bgcolor: "#d1d5db",
+                            color: "#6b7280",
+                          },
+                        }}
+                      >
+                        {loading ? "Posting…" : "Post"}
+                      </Button>
+                    </Box>
+                  </Tooltip>
                 </Stack>
               </Box>
 
