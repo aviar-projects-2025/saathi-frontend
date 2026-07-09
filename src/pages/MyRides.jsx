@@ -36,6 +36,7 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import socket from '../socket'
+import { useRide } from "../context/RideContext";
 import notificationSound from '../sounds/notifysound.wav'
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useNotifications } from '../context/NotificationContext';
@@ -333,123 +334,6 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
   );
 }
 
-// ── Ride Details Modal ───────────────────────────────────────────────────────
-// function RideDetailsModal({ ride, showEdit, showDelete, onEdit, onDelete, onClose }) {
-//   const theme = useTheme();
-//   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
-
-//   const startDate = new Date(ride.startTime);
-//   const dateLabel = !isNaN(startDate)
-//     ? startDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
-//     : '—';
-//   const timeLabel = !isNaN(startDate)
-//     ? startDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
-//     : '—';
-
-//   const status = statusConfig[ride?.status];
-
-//   const Row = ({ icon, label, value }) => (
-//     <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.25, py: 0.5 }}>
-//       <Typography fontSize="1.1rem" lineHeight={1.4}>{icon}</Typography>
-//       <Box sx={{ minWidth: 0 }}>
-//         <Typography variant="caption" color="text.secondary" display="block">{label}</Typography>
-//         <Typography fontWeight={600} fontSize="0.92rem" sx={{ wordBreak: 'break-word' }}>{value}</Typography>
-//       </Box>
-//     </Box>
-//   );
-
-//   return (
-//     <Dialog open onClose={onClose} fullWidth maxWidth="sm" fullScreen={fullScreen} PaperProps={{ sx: { borderRadius: { xs: 0, sm: 3 } } }}>
-//       <DialogTitle sx={{ fontWeight: 800, pb: 1, pr: 5 }}>
-//         Ride Details
-//         <IconButton onClick={onClose} aria-label="Close" sx={{ position: 'absolute', right: 8, top: 8, color: 'text.secondary', width: 44, height: 44 }}>
-//           <CloseIcon fontSize="small" />
-//         </IconButton>
-//       </DialogTitle>
-
-//       <DialogContent dividers sx={{ pt: 2 }}>
-//         <Box
-//           sx={{
-//             display: 'flex',
-//             flexDirection: { xs: 'column', sm: 'row' },
-//             alignItems: { xs: 'flex-start', sm: 'center' },
-//             justifyContent: 'space-between',
-//             gap: 1,
-//             mb: 2,
-//           }}
-//         >
-//           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap', minWidth: 0 }}>
-//             <Typography fontWeight={800} fontSize="1.05rem" sx={{ wordBreak: 'break-word' }}>{formFrom(ride)}</Typography>
-//             <ArrowForwardIcon sx={{ fontSize: 18, color: 'primary.main' }} />
-//             <Typography fontWeight={800} fontSize="1.05rem" sx={{ wordBreak: 'break-word' }}>{formTo(ride)}</Typography>
-//           </Box>
-//           <Chip
-//             label={`${status?.icon} ${status?.label}`}
-//             size="small"
-//             sx={{ bgcolor: status?.bg, color: status?.color, fontWeight: 700, fontSize: '0.72rem' }}
-//           />
-//         </Box>
-
-//         <Box
-//           sx={{
-//             display: 'grid',
-//             gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
-//             gap: 0.5,
-//             bgcolor: '#FFF8F2',
-//             border: '1px solid #F0E6DC',
-//             borderRadius: 2,
-//             p: { xs: 1.5, sm: 2 },
-//           }}
-//         >
-//           <Row icon="📅" label="Date" value={dateLabel} />
-//           <Row icon="🕐" label="Time" value={timeLabel} />
-//           <Row icon={travelIcon[ride.modeOfTravel] || '🚗'} label="Mode of travel" value={ride.modeOfTravel || '—'} />
-//           <Row icon="🪑" label="Available seats" value={ride.availableSeats ?? ride.seats ?? '—'} />
-//           <Row icon={genderIcons[ride.genderPreference] || '👥'} label="Gender preference" value={ride.genderPreference || 'Any'} />
-//           <Row icon="⛽" label="Fuel sharing" value={ride.fuelSharing ? 'Yes' : 'No'} />
-//         </Box>
-
-//         {ride.description && (
-//           <Box sx={{ mt: 2 }}>
-//             <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
-//               📝 Description
-//             </Typography>
-//             <Typography fontSize="0.9rem" sx={{ wordBreak: 'break-word' }}>{ride.description}</Typography>
-//           </Box>
-//         )}
-//       </DialogContent>
-
-//       <DialogActions sx={{ px: { xs: 2, sm: 3 }, py: 2, gap: 1, flexWrap: 'wrap' }}>
-//         {showEdit && (
-//           <Button
-//             variant="outlined"
-//             startIcon={<EditIcon />}
-//             onClick={() => { onEdit(ride); onClose(); }}
-//             sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700, flex: { xs: '1 1 auto', sm: '0 0 auto' }, minHeight: 44 }}
-//           >
-//             Edit
-//           </Button>
-//         )}
-//         {showDelete && (
-//           <Button
-//             variant="outlined"
-//             color="error"
-//             startIcon={<DeleteIcon />}
-//             onClick={() => { onDelete(ride); onClose(); }}
-//             sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700, flex: { xs: '1 1 auto', sm: '0 0 auto' }, minHeight: 44 }}
-//           >
-//             Delete
-//           </Button>
-//         )}
-//         <Box sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }} />
-//         <Button variant="outlined" onClick={onClose} sx={{ borderRadius: 2, textTransform: 'none', flex: { xs: '1 1 auto', sm: '0 0 auto' }, minHeight: 44 }}>
-//           Close
-//         </Button>
-//       </DialogActions>
-//     </Dialog>
-//   );
-// }
-
 // ── Request Item Component ──────────────────────────────────────────────────
 function RequestItem({ request, onApprove, onReject }) {
   const [expanded, setExpanded] = useState(false);
@@ -562,7 +446,7 @@ function RequestItem({ request, onApprove, onReject }) {
 
 
 // ── Ride Card ────────────────────────────────────────────────────────────────
-function RideCard({ ride,fetchRides, confirmRide, setConfirmRide, showEdit, showDelete, onEdit, isCurrentRide, notificationRide, setNotificationRide, onDelete, allRequests, setAllRequests }) {
+function RideCard({ ride, fetchRides, confirmRide, setConfirmRide, showEdit, showDelete, onEdit, isCurrentRide, notificationRide, setNotificationRide, onDelete, allRequests, setAllRequests }) {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [showRequests, setShowRequests] = useState(false);
   const [loadingRequests, setLoadingRequests] = useState(false);
@@ -622,17 +506,16 @@ function RideCard({ ride,fetchRides, confirmRide, setConfirmRide, showEdit, show
 
   const handleEdit = async (rideId, status) => {
     try {
-      console.log(rideId)
-      console.log(status, 'status')
+
       if (status === 'Waiting') {
         const response = await axios.patch(`${Api}/rides/edit/${rideId}`, { travelStatus: 'Started', startTime: new Date().toISOString() })
-        console.log(response)
+
         setConfirmRide(null)
         fetchRides()
         toast.success('Ride Started');
       } else if (status === "Started") {
         const response = await axios.patch(`${Api}/rides/edit/${rideId}`, { travelStatus: 'Completed', endTime: new Date().toISOString() })
-        console.log(response)
+
         setConfirmRide(null)
         fetchRides()
         toast.success('Ride Completed');
@@ -1061,8 +944,10 @@ const MyRides = () => {
       setNotificationRide(location.state.rideId)
     }
   }, [location.state]);
+  const { refreshRide } = useRide();
 
   const fetchRides = async () => {
+
     const currentDateTime = new Date();
     try {
       const response = await axios.get(`${Api}/rides/get`);
@@ -1101,6 +986,9 @@ const MyRides = () => {
       setLoading(false);
     }
   };
+  useEffect(() => {
+    fetchRides();
+  }, [refreshRide]);
 
   const fetchAllRequests = async () => {
     try {
@@ -1121,7 +1009,7 @@ const MyRides = () => {
   };
 
   useEffect(() => {
-    fetchRides();
+
     fetchAllSends();
     fetchAllRequests();
   }, []);
@@ -1254,7 +1142,7 @@ const MyRides = () => {
   // Rides you've requested/booked that haven't happened yet
   const upcomingRequests = useMemo(() => {
     const now = new Date();
-  return allMyRequests.filter((booking) => {
+    return allMyRequests.filter((booking) => {
       const rideStart = booking.rideId?.startTime ? new Date(booking.rideId.startTime) : null;
       return rideStart && !isNaN(rideStart.getTime()) && rideStart > now;
     });
