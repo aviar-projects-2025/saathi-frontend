@@ -37,7 +37,6 @@ const TopNav = ({ onMenuClick }) => {
   const { tabNotification, notifications } = useNotifications();
   const unreadCount = tabNotification?.filter(n => !n.isRead).length;
 
-  console.log(tabNotification.length, 'tabNotification')
   const { completion, currentUser } = useUser();
 
   const [anchorEl, setAnchorEl] = useState(null);

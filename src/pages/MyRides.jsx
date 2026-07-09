@@ -957,8 +957,10 @@ const MyRides = () => {
 
       setMypost(all.filter((item) => item?.createdBy?._id === user.id));
 
+
       setUpcoming(
         all.filter((ride) => {
+          console.log(ride, 'upcoming ride settting')
           const rideStartTime = new Date(ride?.startTime);
           return ride?.createdBy?._id === user.id && !isNaN(rideStartTime) && rideStartTime > currentDateTime;
         })
@@ -966,7 +968,6 @@ const MyRides = () => {
 
       setHistory(
         all.filter((ride) => {
-          console.log(ride,'ride histroy')
           const rideStartTime = new Date(ride?.startTime);
           // const rideEndTime = new Date(rideStartTime.getTime() + 3 * 60 * 60 * 1000);
           return ride?.createdBy?._id === user.id && !isNaN(rideStartTime) && ride?.travelStatus === "Completed";
@@ -990,6 +991,27 @@ const MyRides = () => {
     fetchRides();
   }, [refreshRide]);
 
+  useEffect(() => {
+    console.log(allMyRequests?.length, "hello")
+    if (!allMyRequests?.length) return;
+    console.log("hello")
+    const currentDateTime = new Date();
+
+    const acceptedRides = allMyRequests
+      .filter((ride) => ride?.status?.trim() === "ACCEPTED" && ride.rideId)
+      .map((ride) => ride.rideId);
+
+    const myUpcoming = mypost.filter((ride) => {
+      const rideStartTime = new Date(ride?.startTime);
+      return (
+        !isNaN(rideStartTime) &&
+        rideStartTime > currentDateTime
+      );
+    });
+
+    setUpcoming([...acceptedRides, ...myUpcoming]);
+  }, [allMyRequests, mypost]);
+
   const fetchAllRequests = async () => {
     try {
       const res = await axios.get(`${Api}/bookride/${user.id}?type=received`);
@@ -1001,7 +1023,7 @@ const MyRides = () => {
   const fetchAllSends = async () => {
     try {
       const res = await axios.get(`${Api}/bookride/send/${user.id}`);
-
+      console.log(res.data.data, 'res.data.data')
       setAllMyRequests(res.data.data || []);
     } catch (error) {
       console.error('Error fetching requests:', error);
@@ -1429,7 +1451,7 @@ const MyRides = () => {
                   <CalendarMonthIcon sx={{ color: "#FF9933" }} />
 
                   <Typography>
-                    {new Date(request.createdAt).toLocaleDateString()}
+                    {new Date(request?.rideId?.startTime).toLocaleDateString()}
                   </Typography>
                 </Box>
 

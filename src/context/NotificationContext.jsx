@@ -17,7 +17,6 @@ export const NotificationProvider = ({ children }) => {
     const fetchNotifications = async () => {
         try {
             const res = await axios.get(Api + `/notification/${user.id}/`)
-            console.log(res, 'res')
             setTabNotification(res?.data?.data)
         } catch (error) {
             toast.error(error.message)
@@ -35,7 +34,7 @@ export const NotificationProvider = ({ children }) => {
     useEffect(() => {
         if (!user?.id) return;
         socket.emit("join", user.id);
-        console.log('joined ', user.id)
+        // console.log('joined ', user.id)
         const handleEvent = (payload) => {
             const { type, data, message, category } = payload;
             const audio = new Audio(notificationSound);
