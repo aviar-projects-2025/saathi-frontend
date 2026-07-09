@@ -7,6 +7,7 @@ import {
   IconButton,
   Badge,
   Menu,
+  Tooltip,
   Button,
   Avatar,
   CircularProgress,
@@ -17,8 +18,6 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-
-
 } from "@mui/material";
 import OfferRide from "../pages/OfferRide.jsx";
 import MenuIcon from "@mui/icons-material/Menu";
@@ -32,14 +31,18 @@ import { useUser } from "../context/userConetext.jsx";
 import NotificationTab from "../pages/NotificationTab.jsx";
 import { useNotifications } from "../context/NotificationContext.jsx";
 import KeyboardDoubleArrowUpIcon from '@mui/icons-material/KeyboardDoubleArrowUp';
+import { useNavigate } from "react-router-dom";
+
+
 
 const TopNav = ({ onMenuClick }) => {
   const [open, setOpen] = useState(false);
   const { tabNotification, notifications } = useNotifications();
   const unreadCount = tabNotification?.filter(n => !n.isRead).length;
 
-  console.log(tabNotification.length, 'tabNotification')
   const { completion, currentUser } = useUser();
+
+  const navigate = useNavigate();
 
   const [anchorEl, setAnchorEl] = useState(null);
 
@@ -51,6 +54,8 @@ const TopNav = ({ onMenuClick }) => {
     setAnchorEl(null);
   };
 
+
+  const isProfileComplete = completion === 100;
   const openNotifications = Boolean(anchorEl);
 
   return (
@@ -142,30 +147,53 @@ const TopNav = ({ onMenuClick }) => {
               overflowY: "auto"
             }}>
               <NotificationTab handleCloseNotifications={handleCloseNotifications} />
-              {tabNotification.length > 6 &&
+              {/* {tabNotification.length > 6 &&
                 <Typography sx={{ fontSize: 14, position: 'absolute', bottom: 1 }}>
                   <KeyboardDoubleArrowUpIcon />
                   Scroll to see more
                 </Typography>
-              }
+              } */}
             </Box>
           </Menu>
 
-          <Button
 
-            onClick={() => setOpen(true)}
-            startIcon={<AddIcon />}
-            sx={{
-              display: { xs: "none", sm: "flex" },
-              textTransform: "none",
-              borderRadius: 2,
-              backgroundColor: "#f97316",
-              color: "#ffffff",
-              fontWeight: 700,
-            }}
+
+          <Tooltip
+            title={
+              !isProfileComplete
+                ? "Complete your profile to 100% before posting a ride."
+                : ""
+            }
+            arrow
           >
-            Post Ride
-          </Button>
+            <Box component="span">
+              <Button
+                onClick={() => setOpen(true)}
+                disabled={!isProfileComplete}
+                startIcon={<AddIcon />}
+                sx={{
+                  display: { xs: "none", sm: "flex" },
+                  textTransform: "none",
+                  borderRadius: 2,
+                  backgroundColor: "#f97316",
+                  color: "#ffffff",
+                  fontWeight: 700,
+
+                  "&:hover": {
+                    backgroundColor: "#f5c4a1",
+                  },
+
+                  "&.Mui-disabled": {
+                    backgroundColor: "#d1d5db",
+                    color: "#6b7280",
+                    cursor: "not-allowed",
+                  },
+                }}
+              >
+                Post Ride
+              </Button>
+            </Box>
+          </Tooltip>
           <Dialog
             open={open}
             onClose={() => setOpen(false)}
@@ -179,15 +207,13 @@ const TopNav = ({ onMenuClick }) => {
                 fontWeight: 700,
               }}
             >
-              Post a Ride
-
               <IconButton
                 aria-label="close"
                 onClick={() => setOpen(false)}
                 sx={{
                   position: "absolute",
                   right: 12,
-                  top: "50%",
+                  top: "80%",
                   transform: "translateY(-50%)",
                   color: "grey.600",
                 }}
@@ -235,6 +261,7 @@ const TopNav = ({ onMenuClick }) => {
 
               <Avatar
                 src={currentUser?.profileImage || ""}
+                onClick={() => navigate("/user-profile")}
                 sx={{
                   bgcolor: "#f97316",
                   width: 34,

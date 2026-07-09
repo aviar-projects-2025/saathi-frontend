@@ -1,53 +1,39 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  Paper, Stack, Typography, Box, Badge, Button, CircularProgress,
+  Paper, Stack, Typography, Box, Button, CircularProgress,
   Avatar
 } from "@mui/material";
 
-import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import SearchIcon from "@mui/icons-material/Search";
 import RouteIcon from "@mui/icons-material/Route";
 import SettingsIcon from "@mui/icons-material/Settings";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import LogoutIcon from "@mui/icons-material/Logout";
 import HandshakeIcon from "@mui/icons-material/Handshake";
+import PersonIcon from "@mui/icons-material/Person";
 import { useUser } from "../context/userConetext";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useReferral } from "../context/ReferralContext";
-import ArticleIcon from "@mui/icons-material/Article";
-
+import { useNotifications } from "../context/NotificationContext";
 
 export default function Sidebar({ onItemClick, isMobile = false }) {
-  const { currentUser, getuserData } = useUser()
-  const { completion } = useUser();
+  const { currentUser, completion } = useUser();
   const navigate = useNavigate();
   const location = useLocation();
   const { pendingReferralCount } = useReferral();
-  const SAFFRON = "#E8650A";
-  const SAFFRON_LIGHT = "#FDF0E8";
-  const CARD_BORDER = "1px solid #F0E6DC";
-  const pillBtn = {
-    textTransform: "none",
-    border: "none",
-    fontSize: { xs: "0.60rem", sm: "0.8rem", md: "0.875rem" },
-    color: SAFFRON,
-    fontWeight: 600,
-  };
-  const SectionCard = ({ children, sx = {} }) => (
-    <Paper
-      elevation={0}
-      sx={{
-        p: { xs: "12px 14px", sm: "16px 18px", md: "20px 24px" },
-        borderRadius: { xs: 2, sm: 3 },
-        border: CARD_BORDER,
-        ...sx,
-      }}
-    >
-      {children}
-    </Paper>
-  );
+  const { notifications } = useNotifications();
+  const [notificationLengthcount, setNotificationLengthcount] = useState(0);
+  const [openDropdown, setOpenDropdown] = useState(null);
 
-  console.log(pendingReferralCount,)
+  useEffect(() => {
+    const total =
+      (pendingReferralCount || 0) + (notifications?.length || 0);
+
+    setNotificationLengthcount(total);
+  }, [notifications, pendingReferralCount]);
+
+  const SAFFRON = "#E8650A";
+  const CARD_BORDER = "1px solid #F0E6DC";
 
   const goTo = (link) => {
     navigate(link);
@@ -60,25 +46,31 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
     onItemClick?.();
   };
 
+  // NOTE: every item now has a stable, unique `id` string.
+  // Use `id` (not `label`) for React keys and for the openDropdown
+  // comparison — `label` can be JSX (see "referrals") and JSX is not
+  // a valid/stable value for keys or state equality checks.
   const menuItems = [
-    { label: "Community", icon: <DashboardIcon />, link: "/community" },
-    // { label: "Offer Ride", icon: <DirectionsCarIcon />, link: "/offer-ride" },
-    { label: "Find Ride", icon: <SearchIcon />, link: "/find-ride" },
-    { label: "My Rides", icon: <RouteIcon />, link: "/myride" },
-    { label: "My Post", icon: <ArticleIcon />, link: "/mypost" },
+    { id: "community", label: "Community", icon: <DashboardIcon />, link: "/community" },
     {
+      id: "find-ride",
+      label: "Find Ride",
+      icon: <SearchIcon />,
+      children: [
+        { id: "search-ride", label: "Search Ride", link: "/find-ride" },
+        { id: "requested-rides", label: "Requested Rides", link: "/request-ride" },
+      ],
+    },
+    { id: "my-rides", label: "My Rides", icon: <RouteIcon />, link: "/myride" },
+    { id: "my-profile", label: "My Profile", icon: <PersonIcon />, link: "/user-profile" },
+    {
+      id: "referrals",
       label: (
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <span>My Referrals</span>
-          {pendingReferralCount > 0 && (
-            <Typography
-              sx={{
-                fontSize: 12,
-                fontWeight: 700,
-                color: "#ff0000ff",
-              }}
-            >
-              ({pendingReferralCount})
+          {notificationLengthcount > 0 && (
+            <Typography sx={{ fontSize: 12, fontWeight: 700, color: "#ff0000" }}>
+              ({notificationLengthcount})
             </Typography>
           )}
         </Box>
@@ -86,212 +78,224 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
       icon: <HandshakeIcon />,
       link: "/my-referalls",
     },
-    { label: "Settings", icon: <SettingsIcon />, link: "/settings" },
+    { id: "settings", label: "Settings", icon: <SettingsIcon />, link: "/myprofile" },
   ];
 
   return (
-    <Box>
-
-      <Paper
-        elevation={0}
+    <Paper
+      elevation={0}
+      sx={{
+        // Responsive width: full-bleed on mobile, scales gently across breakpoints on desktop
+        width: isMobile ? "100%" : { sm: 220, md: 240, lg: 260 },
+        minWidth: isMobile ? "100%" : { sm: 220, md: 240, lg: 260 },
+        height: isMobile ? "100dvh" : "100%",
+        maxHeight: isMobile ? "100dvh" : "100vh",
+        bgcolor: "#ffffff",
+        borderRadius: 0,
+        display: "flex",
+        flexDirection: "column",
+        borderRight: isMobile ? "none" : "1px solid #f1e4d7",
+        zIndex: 200,
+        overflow: "hidden", // outer paper never scrolls; inner menu region does
+      }}
+    >
+      {/* ---------- HEADER (fixed) ---------- */}
+      <Box
         sx={{
-          width: isMobile ? "100%" : 200,
-          minWidth: isMobile ? "100%" : 200,
-          height: isMobile ? "100dvh" : "98%",
-          bgcolor: "#ffffff",
-          borderRadius: 0,
-          p: { xs: 0, sm: -2 },
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-between",
-          borderRight: isMobile ? "none" : "1px solid #f1e4d7",
-          zIndex: 200
+          flexShrink: 0,
+          p: { xs: "12px 14px", sm: "16px 18px", md: "20px 20px" },
         }}
       >
-        <SectionCard>
-          <Box sx={{ mb: 2 }}>
-            <Paper
-              elevation={0}
-              sx={{
-                p: 2,
-                borderRadius: 3,
-                // border: "1px solid #F0E6DC",
-              }}
-            >
-              <Stack direction="row" spacing={2} alignItems="center">
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                  }}
-                >
-                  <Box
-                    sx={{
-                      position: "relative",
-                      width: 60,
-                      height: 60,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    {/* Background Ring */}
-                    <CircularProgress
-                      variant="determinate"
-                      value={100}
-                      size={60}
-                      thickness={3}
-                      sx={{
-                        color: "#FFE0B2",
-                        position: "absolute",
-                      }}
-                    />
-                    <CircularProgress
-                      variant="determinate"
-                      value={completion}
-                      size={60}
-                      thickness={3}
-                      sx={{
-                        color: completion === 100 ? "#f97316" : "#e9b691",
-                        position: "absolute",
-                        transform: "rotate(-90deg)",
-                      }}
-                    />
-
-                    <Avatar
-                      src={currentUser?.profileImage}
-                      sx={{
-                        width: 52,
-                        height: 52,
-                        bgcolor: "#E8650A",
-                      }}
-                    >
-                      {!currentUser?.profileImage &&
-                        `${currentUser?.firstName?.[0] || ""}${currentUser?.lastName?.[0] || ""}`}
-                    </Avatar>
-                  </Box>
-
-                  {/* Percentage Below Avatar */}
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      mt: 0.5,
-                      fontWeight: 700,
-                      color: "#E8650A",
-                    }}
-                  >
-                    {Math.round(completion)}%
-                  </Typography>
-                </Box>
-
-              </Stack>
-              <Box>
-                <Typography fontWeight={700}>
-                  {currentUser?.firstName} {currentUser?.lastName}
-                </Typography>
-
-                <Typography variant="body2" color="text.secondary">
-                  {currentUser?.email}
-                </Typography>
-              </Box>
-
-
-            </Paper>
-            <Button
-              size="small"
-              variant="contained"
-              onClick={() => navigate("/settings")}
-              sx={{
-                bgcolor: "#FF9933", // Saffron
-                color: "#fff",
-                fontWeight: 600,
-                textTransform: "none",
-                "&:hover": {
-                  bgcolor: "#e68a00",
-                },
-              }}
-            >
-              Update Profile
-            </Button>
-          </Box>
-        </SectionCard>
-        <Stack spacing={{ xs: 1.3, sm: 2 }}
-          sx={{
-            marginTop: isMobile ? 10 : 3,
-          }}
-        >
-          <Typography
+        <Stack direction="row" spacing={2} alignItems="center">
+          <Box
             sx={{
-              fontSize: 13,
-              fontWeight: 800,
-              color: "#d97706",
-              mb: 1,
-              px: 1,
+              position: "relative",
+              width: 40,
+              height: 60,
+              flexShrink: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
-            Saathi Menu
-          </Typography>
+            <CircularProgress
+              variant="determinate"
+              value={100}
+              size={60}
+              thickness={3}
+              sx={{ color: "#FFE0B2", position: "absolute" }}
+            />
+            <CircularProgress
+              variant="determinate"
+              value={completion}
+              size={60}
+              thickness={3}
+              sx={{
+                color: completion === 100 ? "#f97316" : "#e9b691",
+                position: "absolute",
+                transform: "rotate(-90deg)",
+              }}
+            />
+            <Avatar
+              src={currentUser?.profileImage}
+              sx={{ width: 52, height: 52, bgcolor: SAFFRON }}
+            >
+              {!currentUser?.profileImage &&
+                `${currentUser?.firstName?.[0] || ""}${currentUser?.lastName?.[0] || ""}`}
+            </Avatar>
+          </Box>
 
+          <Box sx={{ minWidth: 0 }}>
+            <Typography fontWeight={700} sx={{ fontSize: { xs: "0.8rem", sm: "1rem" } }} noWrap>
+              {currentUser?.firstName} {currentUser?.lastName}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: "0.75rem", sm: "1rem" } }} noWrap>
+              {currentUser?.email}
+            </Typography>
+            <Typography
+              variant="caption"
+              sx={{ fontWeight: 700, color: SAFFRON, display: "block", mt: 0.25 }}
+            >
+              {Math.round(completion)}% complete
+            </Typography>
+          </Box>
+        </Stack>
+
+        <Button
+          fullWidth
+          size="small"
+          variant="contained"
+          onClick={() => navigate("/user-profile")}
+          sx={{
+            mt: 1,
+            bgcolor: "#FF9933",
+            color: "#fff",
+            fontWeight: 600,
+            borderRadius: 10,
+            textTransform: "none",
+            boxShadow: "none",
+            "&:hover": { bgcolor: "#e68a00", boxShadow: "none" },
+          }}
+        >
+          Update Profile
+        </Button>
+      </Box>
+
+      {/* ---------- MENU (flexible, scrolls independently) ---------- */}
+      <Box
+        sx={{
+          flex: 1,
+          minHeight: 0, // required for overflow to work inside a flex child
+          overflowY: "auto",
+          px: { xs: 1.5, sm: 2 },
+          py: 1,
+        }}
+      >
+        <Typography
+          sx={{ fontSize: { xs: 11, sm: 13 }, fontWeight: 800, color: "#d97706", mb: { xs: 2, sm: 2.5 }, px: 1 }}
+        >
+          Saathi Menu
+        </Typography>
+
+        <Stack spacing={{ xs: 2, sm: 2 }}>
           {menuItems.map((item) => {
-            const active = location.pathname === item.link;
+            const isDropdown = Boolean(item.children);
+            const isOpen = openDropdown === item.id;
+            const isParentActive =
+              location.pathname === item.link ||
+              (isDropdown && item.children.some((c) => c.link === location.pathname));
 
             return (
-              <Box
-                key={item.link}
-                onClick={() => goTo(item.link)}
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 2,
-                  px: 2.5,
-                  py: 1,
-                  borderRadius: 7,
-                  cursor: "pointer",
-                  transition: "0.2s ease",
-                  bgcolor: active ? "#fff0df" : "transparent",
-                  color: active ? "#d97706" : "#5f4632",
-                  border: active ? "1px solid #ffd7aa" : "1px solid transparent",
-                  "& svg": { fontSize: 20 },
-                  "&:hover": {
-                    bgcolor: "#fff0df",
-                    color: "#d97706",
-                    // transform: "translateX(3px)",
+              <Box key={item.id}>
+                {/* Parent Item */}
+                <Box
+                  onClick={() => {
+                    if (isDropdown) {
+                      setOpenDropdown(isOpen ? null : item.id);
+                    } else {
+                      goTo(item.link);
+                    }
+                  }}
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 2,
+                    px: 2,
+                    py: 1,
+                    borderRadius: 7,
+                    cursor: "pointer",
+                    bgcolor: isParentActive ? "#fff0df" : "transparent",
+                    "&:hover": { bgcolor: "#fff0df" },
+                  }}
+                >
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                    {item.icon}
+                    <Typography sx={{ fontSize: 12, fontWeight: 700 }}>
+                      {item.label}
+                    </Typography>
+                  </Box>
 
-                  },
-                }}
-              >
-                {item.icon}
+                  {isDropdown && (
+                    <Typography sx={{ fontSize: 12 }}>
+                      {isOpen ? "▲" : "▼"}
+                    </Typography>
+                  )}
+                </Box>
 
-                <Typography sx={{ fontSize: 12, fontWeight: 700 }}>
-                  {item.label}
-                </Typography>
+                {/* Children */}
+                {isDropdown && isOpen && (
+                  <Stack sx={{ pl: 5, mt: 0.5 }}>
+                    {item.children.map((sub) => {
+                      const active = location.pathname === sub.link;
+
+                      return (
+                        <Box
+                          key={sub.id}
+                          onClick={() => goTo(sub.link)}
+                          sx={{
+                            py: 0.8,
+                            cursor: "pointer",
+                            borderRadius: 2,
+                            color: active ? "#d97706" : "#5f4632",
+                            fontWeight: active ? 700 : 500,
+                            "&:hover": { color: "#d97706" },
+                          }}
+                        >
+                          <Typography sx={{ fontSize: 12 }}>
+                            {sub.label}
+                          </Typography>
+                        </Box>
+                      );
+                    })}
+                  </Stack>
+                )}
               </Box>
             );
           })}
         </Stack>
+      </Box>
 
-        <Box
-          onClick={handleLogout}
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 1.5,
-            px: 2.5,
-            py: 1.2,
-            borderRadius: 2,
-            cursor: "pointer",
-            color: "#b42318",
-            transition: "0.2s ease",
-            "&:hover": {
-              bgcolor: "#fee4e2",
-            },
-          }}
-        >
-          <LogoutIcon sx={{ fontSize: 21 }} />
-          <Typography sx={{ fontSize: 14, fontWeight: 700 }}>Logout</Typography>
-        </Box>
-      </Paper>
-    </Box>
+      {/* ---------- FOOTER (fixed to bottom) ---------- */}
+      <Box
+        onClick={handleLogout}
+        sx={{
+          flexShrink: 0,
+          display: "flex",
+          alignItems: "center",
+          gap: 1.5,
+          px: 2.5,
+          py: 1.5,
+          cursor: "pointer",
+          color: "#b42318",
+          borderTop: CARD_BORDER,
+          transition: "0.2s ease",
+          "&:hover": { bgcolor: "#fee4e2" },
+        }}
+      >
+        <LogoutIcon sx={{ fontSize: 21 }} />
+        <Typography sx={{ fontSize: 14, fontWeight: 700 }}>Logout</Typography>
+      </Box>
+    </Paper>
   );
 }
