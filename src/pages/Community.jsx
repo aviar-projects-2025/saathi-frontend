@@ -5,6 +5,7 @@ import {
   Divider, Stack, LinearProgress,
   TextField,
   CircularProgress,
+  Tooltip,
   useMediaQuery,
   useTheme,
   IconButton
@@ -85,7 +86,9 @@ export default function Community() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editDescription, setEditDescription] = useState("");
+  const { completion } = useUser();
 
+  const isProfileComplete = completion === 100;
   // ── Scroll behavior ────────────────────────────────────────────────────
   // Only the SIDEBAR gets its own independent scroll container (fixed height).
   // The feed/main content scrolls with the page itself (normal page scroll),
@@ -476,33 +479,49 @@ export default function Community() {
                 <Divider sx={{ my: 1.5 }} />
 
                 <Stack direction="row" alignItems="center">
-                  <Button
-                    component="label"
-                    startIcon={<PermMediaIcon fontSize={iconFontSize} />}
-                    size={isMobile ? "small" : "medium"}
-                    sx={{
-                      textTransform: "none",
-                      fontSize: btnFontSize,
-                    }}
+                  <Tooltip
+                    title={
+                      !isProfileComplete
+                        ? "Complete your profile to 100% before creating a post."
+                        : ""
+                    }
+                    arrow
                   >
-                    Media
-                    <input
-                      hidden
-                      type="file"
-                      accept="image/*"
-                      capture="environment" // Opens camera option on supported devices
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (!file) return;
+                    <Box component="span">
+                      <Button
+                        component="label"
+                        disabled={!isProfileComplete}
+                        startIcon={<PermMediaIcon fontSize={iconFontSize} />}
+                        size={isMobile ? "small" : "medium"}
+                        sx={{
+                          textTransform: "none",
+                          fontSize: btnFontSize,
+                          "&.Mui-disabled": {
+                            color: "#9e9e9e",
+                          },
+                        }}
+                      >
+                        Media
+                        <input
+                          hidden
+                          type="file"
+                          accept="image/*"
+                          capture="environment"
+                          disabled={!isProfileComplete}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
 
-                        setMedia(file);
-                        setPreview(URL.createObjectURL(file));
+                            setMedia(file);
+                            setPreview(URL.createObjectURL(file));
 
-                        // Reset so the same file can be selected again
-                        e.target.value = "";
-                      }}
-                    />
-                  </Button>
+                            // Reset so the same file can be selected again
+                            e.target.value = "";
+                          }}
+                        />
+                      </Button>
+                    </Box>
+                  </Tooltip>
 
                   <Button
                     variant="contained"

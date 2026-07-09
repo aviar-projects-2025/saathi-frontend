@@ -7,6 +7,7 @@ import {
   IconButton,
   Badge,
   Menu,
+  Tooltip,
   Button,
   Avatar,
   CircularProgress,
@@ -17,8 +18,6 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-
-
 } from "@mui/material";
 import OfferRide from "../pages/OfferRide.jsx";
 import MenuIcon from "@mui/icons-material/Menu";
@@ -51,6 +50,8 @@ const TopNav = ({ onMenuClick }) => {
     setAnchorEl(null);
   };
 
+
+  const isProfileComplete = completion === 100;
   const openNotifications = Boolean(anchorEl);
 
   return (
@@ -151,21 +152,44 @@ const TopNav = ({ onMenuClick }) => {
             </Box>
           </Menu>
 
-          <Button
 
-            onClick={() => setOpen(true)}
-            startIcon={<AddIcon />}
-            sx={{
-              display: { xs: "none", sm: "flex" },
-              textTransform: "none",
-              borderRadius: 2,
-              backgroundColor: "#f97316",
-              color: "#ffffff",
-              fontWeight: 700,
-            }}
+
+          <Tooltip
+            title={
+              !isProfileComplete
+                ? "Complete your profile to 100% before posting a ride."
+                : ""
+            }
+            arrow
           >
-            Post Ride
-          </Button>
+            <Box component="span">
+              <Button
+                onClick={() => setOpen(true)}
+                disabled={!isProfileComplete}
+                startIcon={<AddIcon />}
+                sx={{
+                  display: { xs: "none", sm: "flex" },
+                  textTransform: "none",
+                  borderRadius: 2,
+                  backgroundColor: "#f97316",
+                  color: "#ffffff",
+                  fontWeight: 700,
+
+                  "&:hover": {
+                    backgroundColor: "#f5c4a1",
+                  },
+
+                  "&.Mui-disabled": {
+                    backgroundColor: "#d1d5db",
+                    color: "#6b7280",
+                    cursor: "not-allowed",
+                  },
+                }}
+              >
+                Post Ride
+              </Button>
+            </Box>
+          </Tooltip>
           <Dialog
             open={open}
             onClose={() => setOpen(false)}

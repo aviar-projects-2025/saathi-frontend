@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import {
-  Card, CardContent, Box, Typography, Avatar, Chip, Button,
+  Card, CardContent, Box, Typography, Avatar, Chip, Button, Tooltip,
   Collapse, Stack, IconButton, Divider, Dialog, DialogTitle,
   DialogContent, DialogActions, TextField, useMediaQuery, useTheme,
 } from "@mui/material";
-
+import { useUser } from "../context/userConetext.jsx";
 import VerifiedIcon from "@mui/icons-material/Verified";
 import EventSeatIcon from "@mui/icons-material/EventSeat";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
@@ -43,7 +43,7 @@ export default function RideCard({ ride }) {
   const [openRequestModal, setOpenRequestModal] = useState(false);
   const [selectedRide, setSelectedRide] = useState(null);
   const [myRequestedRides, setMyRequestedRides] = useState([]);
-
+  const { completion } = useUser();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -62,7 +62,7 @@ export default function RideCard({ ride }) {
   const routeTo = isFlight ? ride.toAirport || ride.destination : ride.destination;
 
   const storedUser = JSON.parse(localStorage.getItem("user"));
-
+  const isProfileComplete = completion === 100;
   const dateObj = ride.startTime ? new Date(ride.startTime) : null;
   const dateStr = dateObj
     ? dateObj.toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" })
@@ -113,7 +113,7 @@ export default function RideCard({ ride }) {
       if (!requestData.members[i].age) { toast.error(`Please enter Member ${i + 1} age`); return; }
     }
     const payload = {
-      firstName : storedUser?.firstName,
+      firstName: storedUser?.firstName,
       requestedBy: storedUser?.id,
       seatsRequested: selectedRide.modeOfTravel === "Flight" ? null : Number(requestData.seatsRequested),
       membersCount: Number(requestData.membersCount),
@@ -377,37 +377,48 @@ export default function RideCard({ ride }) {
                   : <KeyboardArrowDownIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />}
               </IconButton>
 
-              <Button
-                variant="contained"
-                size={isMobile ? "small" : "medium"}
-                disabled={!isFlight && remainingSeats <= 0}
-                onClick={() => {
-                  setSelectedRide(ride);
-                  resetRequestData();
-                  setOpenRequestModal(true);
-                }}
-                sx={{
-                  bgcolor: ORANGE,
-                  "&:hover": { bgcolor: "#e68a00" },
-                  "&.Mui-disabled": { bgcolor: "#e0e0e0" },
-                  fontWeight: 700,
-                  fontSize: { xs: "0.7rem", sm: "0.875rem" },
-                  px: { xs: 1.5, sm: 3 },
-                  py: { xs: 0.5, sm: 1 },
-                  borderRadius: 2,
-                  whiteSpace: "nowrap",
-                  boxShadow: "none",
-                  textTransform: "none",
-                }}
+              <Tooltip
+                title={
+                  !isProfileComplete
+                    ? "Complete your profile to 100% before requesting a ride."
+                    : ""
+                }
+                arrow
               >
-                {isFlight
-                  ? "Request Companion"
-                  : remainingSeats <= 0
-                    ? "No Seats"
-                    : alreadyRequested
-                      ? `Request More (${remainingSeats} left)`
-                      : `Request Seat (${remainingSeats} left)`}
-              </Button>
+                <Box component="span">
+                  <Button
+                    variant="contained"
+                    size={isMobile ? "small" : "medium"}
+                    disabled={!isProfileComplete || (!isFlight && remainingSeats <= 0)}
+                    onClick={() => {
+                      setSelectedRide(ride);
+                      resetRequestData();
+                      setOpenRequestModal(true);
+                    }}
+                    sx={{
+                      bgcolor: ORANGE,
+                      "&:hover": { bgcolor: "#e68a00" },
+                      "&.Mui-disabled": { bgcolor: "#e0e0e0" },
+                      fontWeight: 700,
+                      fontSize: { xs: "0.7rem", sm: "0.875rem" },
+                      px: { xs: 1.5, sm: 3 },
+                      py: { xs: 0.5, sm: 1 },
+                      borderRadius: 2,
+                      whiteSpace: "nowrap",
+                      boxShadow: "none",
+                      textTransform: "none",
+                    }}
+                  >
+                    {!isFlight && remainingSeats <= 0
+                      ? "No Seats"
+                      : isFlight
+                        ? "Request Companion"
+                        : alreadyRequested
+                          ? `Request More (${remainingSeats} left)`
+                          : `Request Seat (${remainingSeats} left)`}
+                  </Button>
+                </Box>
+              </Tooltip>
             </Box>
 
             {/* Expanded details */}
