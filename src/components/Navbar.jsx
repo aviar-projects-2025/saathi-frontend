@@ -222,7 +222,7 @@ const TopNav = ({ onMenuClick }) => {
               display: "flex",
               justifyContent: "center",
             }}>
-              <OfferRide />
+       <OfferRide/>
 
             </DialogContent>
           </Dialog>

@@ -43,7 +43,7 @@ import {
   ArrowRight,
   CheckCircle2,
 } from "lucide-react";
-
+import { useRide } from "../context/RideContext";
 import { useNavigate } from "react-router-dom";
 import PageLayout from "../components/PageLayout";
 import axios from "axios";
@@ -239,6 +239,7 @@ export default function OfferRide() {
 
     return true;
   };
+  const { refreshRides } = useRide();
 
   const formReset = () => setForm(INITIAL_FORM);
 
@@ -281,7 +282,9 @@ export default function OfferRide() {
     try {
       setIsSubmitted(true);
       await axios.post(`${Api}/rides/`, payload);
+
       toast.success("Ride Created Successfully...!");
+      refreshRides();
       setStep(0);
       formReset();
       setSubmitted(true);
@@ -303,65 +306,65 @@ export default function OfferRide() {
   /* ──────────────── SUCCESS SCREEN ──────────────── */
   if (submitted) {
     return (
+      <Box
+        sx={{
+          minHeight: "35dvh",
+          width: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          // overflow: "hidden",
+          boxSizing: "border-box",
+          // px: { xs: 2, sm: 3 },
+        }}
+      >
         <Box
           sx={{
-            minHeight: "35dvh",
+            maxWidth: 480,
             width: "100%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            // overflow: "hidden",
-            boxSizing: "border-box",
-            // px: { xs: 2, sm: 3 },
+            textAlign: "center",
           }}
         >
+          {/* Icon in a soft circular badge */}
           <Box
             sx={{
-              maxWidth: 480,
-              width: "100%",
-              textAlign: "center",
+              width: isMobile ? 72 : 88,
+              height: isMobile ? 72 : 88,
+              borderRadius: "50%",
+              bgcolor: "rgba(82, 183, 136, 0.12)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              mx: "auto",
+              // mb: 3,
             }}
           >
-            {/* Icon in a soft circular badge */}
-            <Box
-              sx={{
-                width: isMobile ? 72 : 88,
-                height: isMobile ? 72 : 88,
-                borderRadius: "50%",
-                bgcolor: "rgba(82, 183, 136, 0.12)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                mx: "auto",
-                // mb: 3,
-              }}
-            >
-              <CheckCircle2 size={isMobile ? 40 : 48} color="#52B788" strokeWidth={2.2} />
-            </Box>
-
-            <Typography
-              variant="h5"
-              fontWeight={800}
-              sx={{ fontSize: { xs: "1.25rem", sm: "1.6rem" }, mb: 1 }}
-            >
-              You're all set!
-            </Typography>
-
-            <Typography
-              color="text.secondary"
-              sx={{ fontSize: { xs: "0.88rem", sm: "1rem" }, mb: 0.5 }}
-            >
-              Your ride has been shared with the Saathi community.
-            </Typography>
-
-            <Typography
-              color="text.secondary"
-              sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem" }, mb: 4 }}
-            >
-              We'll notify you when someone requests to join.
-            </Typography>
+            <CheckCircle2 size={isMobile ? 40 : 48} color="#52B788" strokeWidth={2.2} />
           </Box>
+
+          <Typography
+            variant="h5"
+            fontWeight={800}
+            sx={{ fontSize: { xs: "1.25rem", sm: "1.6rem" }, mb: 1 }}
+          >
+            You're all set!
+          </Typography>
+
+          <Typography
+            color="text.secondary"
+            sx={{ fontSize: { xs: "0.88rem", sm: "1rem" }, mb: 0.5 }}
+          >
+            Your ride has been shared with the Saathi community.
+          </Typography>
+
+          <Typography
+            color="text.secondary"
+            sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem" }, mb: 4 }}
+          >
+            We'll notify you when someone requests to join.
+          </Typography>
         </Box>
+      </Box>
     );
   }
   /* ──────────────── MAIN RENDER ──────────────── */
