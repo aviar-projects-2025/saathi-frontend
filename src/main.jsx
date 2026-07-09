@@ -10,19 +10,19 @@ import { UserProvider } from "./context/userConetext";
 import { NotificationProvider } from "./context/NotificationContext";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <AuthProvider>
+<React.StrictMode>
+  <AuthProvider>
+    <UserProvider>
       <NotificationProvider>
         <RideProvider>
-        <AppProvider>
           <ReferralProvider>
-            <UserProvider>
+            <AppProvider>
               <App />
-            </UserProvider>
+            </AppProvider>
           </ReferralProvider>
-        </AppProvider>
         </RideProvider>
       </NotificationProvider>
-    </AuthProvider>
-  </React.StrictMode>
+    </UserProvider>
+  </AuthProvider>
+</React.StrictMode>
 );
