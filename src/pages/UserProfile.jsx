@@ -13,7 +13,9 @@ import {
     Grid,
     Modal,
     TextField,
-    MenuItem
+    MenuItem,
+    Dialog,
+    DialogContent,
 } from "@mui/material";
 
 import NotificationsIcon from "@mui/icons-material/Notifications";
@@ -47,6 +49,8 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 const SAFFRON = "#E8650A";
 const SAFFRON_LIGHT = "#FDF0E8";
 const CARD_BORDER = "1px solid #F0E6DC";
+
+import CloseIcon from "@mui/icons-material/Close";
 
 import { useNavigate } from "react-router-dom";
 
@@ -132,6 +136,10 @@ const UserProfile = () => {
     const [selectedPost, setSelectedPost] = useState(null);
     const handleOpenShare = () => setOpenShare(true);
     const handleCloseShare = () => setOpenShare(false);
+
+
+    const [openImage, setOpenImage] = useState(false);
+    const [selectedImage, setSelectedImage] = useState("");
 
     const shareLink = `${window.location.origin}/register?ref=${user?.referralCode}`;
 
@@ -281,7 +289,7 @@ const UserProfile = () => {
                     Manage your Saathi account, referrals, and preferences.
                 </Typography>
 
-                <Stack spacing={{ xs: 1.25, sm: 1.75, md: 2 }}
+                <Stack spacing={{ xs: 1.25, sm: 1.75, md: 3 }}
                     sx={{ mt: 2 }}>
 
                     {/* ── Profile (Instagram-style header) ── */}
@@ -396,169 +404,158 @@ const UserProfile = () => {
                         </Stack>
                     </SectionCard>
 
-
-                    <Tabs
-                        value={tab}
-                        onChange={(e, value) => {
-                            setTab(value);
-                            setSelectedPost(null);
-                        }}
-                        centered
-                        sx={{
-                            minHeight: { xs: 36, sm: 44 },
-                            "& .MuiTab-root": { minHeight: { xs: 36, sm: 44 }, py: 0 },
-                            "& .MuiTabs-indicator": { backgroundColor: SAFFRON },
-                            "& .Mui-selected": { color: `${SAFFRON} !important` },
-                        }}
-                    >
-                        <Tab icon={<GridOnIcon fontSize="small" />} />
-                        <Tab icon={<BookmarkBorderIcon fontSize="small" />} />
-                    </Tabs>
-                    {tab === 0 && !selectedPost && (
-                        <Grid container spacing={{ xs: "2px", sm: "3px", md: "6px" }}>
-                            {communityPosts.map((post) => (
-                                <Grid item xs={4} sm={3} key={post._id}>
-                                    <Box
-                                        onClick={() => setSelectedPost(post)}
-                                        sx={{
-                                            position: "relative",
-                                            cursor: "pointer",
-                                            aspectRatio: "1 / 1",
-                                            overflow: "hidden",
-                                            "&:hover .postOverlay": { opacity: 1 },
-                                        }}
-                                    >
-                                        <img
-                                            src={
-                                                Array.isArray(post.postImage)
-                                                    ? post.postImage[0]
-                                                    : post.postImage
-                                            }
-                                            alt=""
-                                            style={{
-                                                width: "100%",
-                                                height: "100%",
-                                                objectFit: "cover",
-                                                display: "block",
-                                            }}
-                                        />
-                                        <Box
-                                            className="postOverlay"
-                                            sx={{
-                                                position: "absolute",
-                                                inset: 0,
-                                                bgcolor: "rgba(0,0,0,0.15)",
-                                                opacity: 0,
-                                                transition: "opacity 0.15s ease",
-                                                display: { xs: "none", sm: "flex" },
-                                                alignItems: "center",
-                                                justifyContent: "center",
-                                            }}
-                                        >
-                                            <Stack direction="row" spacing={2} sx={{ color: "#fff" }}>
-                                                <ThumbUpOffAltIcon fontSize="small" />
-                                                <ChatIcon fontSize="small" />
-                                            </Stack>
-                                        </Box>
-                                    </Box>
-                                </Grid>
-                            ))}
-                        </Grid>
-                    )}
-
-                    {selectedPost && (
-                        <Box
-                            ref={feedRef}
+                    <SectionCard>
+                        <Tabs
+                            value={tab}
+                            onChange={(e, value) => {
+                                setTab(value);
+                                setSelectedPost(null);
+                            }}
+                            centered
                             sx={{
-                                position: "fixed",
-                                inset: 0,
-                                bgcolor: "#fff",
-                                zIndex: 2000,
-                                overflowY: "auto",
-                                p: 2,
+                                minHeight: { xs: 36, sm: 44 },
+                                "& .MuiTab-root": { minHeight: { xs: 36, sm: 44 }, py: 0 },
+                                "& .MuiTabs-indicator": { backgroundColor: SAFFRON },
+                                "& .Mui-selected": { color: `${SAFFRON} !important` },
+                                mb: 3
                             }}
                         >
-                            <Button
-                                variant="contained"
-                                onClick={() => setSelectedPost(null)}
-                                sx={{ mb: 2 }}
-                            >
-                                ← Back
-                            </Button>
-
-                            {communityPosts.map((post) => (
-                                <Grid size={{ xs: 4 }} key={post._id}>
-                                    <Paper
-                                        key={post._id}
-                                        id={`post-${post._id}`}
-                                        sx={{
-                                            maxWidth: 600,
-                                            mx: "auto",
-                                            mb: 3,
-                                            borderRadius: 3,
-                                            overflow: "hidden",
-                                        }}
-                                    >
-                                        {/* Header */}
-                                        <Box sx={{ display: "flex", alignItems: "center", p: 2 }}>
-                                            <Avatar src={post.authorId?.profileImage} />
-
-                                            <Typography ml={2} fontWeight={700}>
-                                                {post.authorId?.firstName} {post.authorId?.lastName}
-                                            </Typography>
-                                        </Box>
-
-                                        {/* Image */}
-                                        <img
-                                            src={
-                                                Array.isArray(post.postImage)
-                                                    ? post.postImage[0]
-                                                    : post.postImage
-                                            }
-                                            alt=""
-                                            style={{
-                                                width: "100%",
-                                                maxHeight: 500,
-                                                objectFit: "cover",
-                                            }}
-                                        />
-
-                                        {/* Caption */}
-                                        <Typography p={2}>{post.description}</Typography>
-
-                                        <Box sx={{ px: 2, py: 1 }}>
+                            <Tab icon={<GridOnIcon fontSize="small" />} />
+                            <Tab icon={<BookmarkBorderIcon fontSize="small" />} />
+                        </Tabs>
+                        {tab === 0 && !selectedPost && (
+                            <Grid container spacing={{ xs: "12px", sm: "15px", md: "20px" }}
+                                sx={{
+                                    display: "flex",
+                                    justifyContent: "center",
+                                    alignContent: "center",
+                                    alignItems: "center"
+                                }} >
+                                {communityPosts.map((post) => (
+                                    <Grid item xs={4} key={post._id} sx={{ mt: 1 }}>
+                                        {post.postImage && (
                                             <Box
-                                                display="flex"
-                                                justifyContent="space-between"
-                                                alignItems="center"
+                                                // onClick={() => setSelectedPost(post)}
+                                                onClick={() => {
+                                                    setSelectedImage(
+                                                        Array.isArray(post.postImage)
+                                                            ? post.postImage[0]
+                                                            : post.postImage
+                                                    );
+                                                    setOpenImage(true);
+                                                }}
+                                                sx={{
+                                                    position: "relative",
+                                                    cursor: "pointer",
+                                                    width: { xs: 90, sm: 100, md: 130, lg: 150 },
+                                                    height: { xs: 110, sm: 130, md: 160, lg: 180 },
+                                                    overflow: "hidden",
+                                                    borderRadius: { xs: 0.5, sm: 1 },
+                                                    "&:hover .postOverlay": { opacity: 1 },
+                                                    display: "flex",
+                                                    justifyContent: "center",
+                                                    alignItems: "center"
+                                                }}
                                             >
-                                                <Typography variant="body2" fontWeight={600}>
-                                                    Comments
-                                                </Typography>
-
-                                                <IconButton onClick={() => handleToggleComments(post._id)}>
-                                                    {openComments[post._id] ? (
-                                                        <ExpandLessIcon />
-                                                    ) : (
-                                                        <ExpandMoreIcon />
-                                                    )}
-                                                </IconButton>
-                                            </Box>
-
-                                            <Collapse in={openComments[post._id]} timeout="auto" unmountOnExit>
-                                                <CommunityComments
-                                                    post={post}
-                                                    user={currentUser}
+                                                <img
+                                                    src={
+                                                        Array.isArray(post.postImage)
+                                                            ? post.postImage[0]
+                                                            : post.postImage
+                                                    }
+                                                    alt=""
+                                                    style={{
+                                                        width: "100%",
+                                                        height: "100%",
+                                                        objectFit: "cover ",
+                                                        display: "block",
+                                                    }}
                                                 />
-                                            </Collapse>
-                                        </Box>
-                                    </Paper>
-                                </Grid>
-                            ))}
-                        </Box>
-                    )}
+                                                <Box
+                                                    className="postOverlay"
+                                                    sx={{
+                                                        position: "absolute",
+                                                        inset: 0,
+                                                        bgcolor: "rgba(0,0,0,0.15)",
+                                                        opacity: 0,
+                                                        transition: "opacity 0.15s ease",
+                                                        display: { xs: "none", sm: "flex" },
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                    }}
+                                                >
+                                                    <Stack direction="row" spacing={2} sx={{ color: "#fff" }}>
+                                                        <ThumbUpOffAltIcon fontSize="small" />
+                                                        <ChatIcon fontSize="small" />
+                                                    </Stack>
+                                                </Box>
+                                            </Box>
+                                        )}
+                                    </Grid>
+                                ))}
+                            </Grid>
+                        )}
 
+                        <Dialog
+                            open={openImage}
+                            onClose={() => setOpenImage(false)}
+                            maxWidth={false}
+                            PaperProps={{
+                                sx: {
+                                    bgcolor: "transparent",
+                                    boxShadow: "none",
+                                    overflow: "hidden",
+                                    width: "auto",
+                                    maxWidth: "95vw",
+                                    maxHeight: "95vh",
+                                    m: 1,
+                                },
+                            }}
+                        >
+                            <IconButton
+                                onClick={() => setOpenImage(false)}
+                                sx={{
+                                    position: "absolute",
+                                    top: 8,
+                                    right: 8,
+                                    color: "#fff",
+                                    bgcolor: "rgba(0,0,0,0.5)",
+                                    "&:hover": {
+                                        bgcolor: "rgba(0,0,0,0.7)",
+                                    },
+                                    zIndex: 10,
+                                }}
+                            >
+                                <CloseIcon />
+                            </IconButton>
 
+                            <DialogContent
+                                sx={{
+                                    p: 0,
+                                    display: "flex",
+                                    justifyContent: "center",
+                                    alignItems: "center",
+                                    bgcolor: "transparent",
+                                }}
+                            >
+                                <Box
+                                    component="img"
+                                    src={selectedImage}
+                                    alt="Post"
+                                    sx={{
+                                        display: "block",
+                                        maxWidth: "95vw",
+                                        maxHeight: "90vh",
+                                        width: "auto",
+                                        height: "auto",
+                                        objectFit: "contain",
+                                        borderRadius: 2,
+                                    }}
+                                />
+                            </DialogContent>
+                        </Dialog>
+
+                    </SectionCard>
                 </Stack>
             </Box>
 
@@ -923,7 +920,7 @@ const UserProfile = () => {
                 </Box>
             </Modal> */}
 
-          
+
 
 
         </PageLayout>
