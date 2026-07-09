@@ -10,11 +10,47 @@ import Box from '@mui/material/Box';
 import moment from 'moment';
 import { useNotifications } from '../context/NotificationContext';
 import { data, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import Api from '../Api';
+import { toast } from 'react-toastify';
 
 export default function NotificationTab({ handleCloseNotifications }) {
-    const { tabNotification, notifications } = useNotifications();
+    const { tabNotification, fetchNotifications } = useNotifications();
 
     const navigate = useNavigate();
+
+    const handleNavigation = (item) => {
+        switch (item.type) {
+            case "new_request":
+            case "request_accepted":
+            case "request_rejected":
+                navigate("/myride", { state: { tab: 2, rideId: item.data?.rideId }, });
+                break;
+
+            case "referral_pending":
+            case "referral_approved":
+            case "referral_rejected":
+                navigate("/my-referalls");
+                break;
+
+            default:
+                navigate("/");
+        }
+    }
+
+    const handleIsRead = (id, item) => {
+        if (item?.isRead) return;
+        try {
+            axios.patch(Api + `/notification/${id}`)
+                .then((res) => {
+                    console.log(res, 'res')
+                    fetchNotifications();
+                })
+        } catch (error) {
+            console.log(error.message)
+        }
+    }
+
 
     return (
         <List
@@ -35,7 +71,8 @@ export default function NotificationTab({ handleCloseNotifications }) {
                             key={item._id} >
                             <ListItem
                                 onClick={() => {
-                                    navigate("/myride", { state: { tab: 2, rideId: item.data.rideId } })
+                                    handleNavigation(item);
+                                    handleIsRead(item._id, item)
                                     handleCloseNotifications();
 
                                 }}

@@ -737,7 +737,8 @@ function RideCard({ ride,fetchRides, confirmRide, setConfirmRide, showEdit, show
                 <Button
                   size="small"
                   variant="outlined"
-                  onClick={() => setShowRequests(!showRequests)}
+                  // onClick={() => setShowRequests(!showRequests)}
+                  onClick={() => setDetailsOpen(true)}
                   sx={{
                     color: '#FF9933',
                     borderColor: '#FF9933',
@@ -1080,8 +1081,9 @@ const MyRides = () => {
 
       setHistory(
         all.filter((ride) => {
+          console.log(ride,'ride histroy')
           const rideStartTime = new Date(ride?.startTime);
-          const rideEndTime = new Date(rideStartTime.getTime() + 3 * 60 * 60 * 1000);
+          const rideEndTime = new Date(ride?.endTime);
           return ride?.createdBy?._id === user.id && !isNaN(rideStartTime) && rideEndTime < currentDateTime;
         })
       );
@@ -1089,7 +1091,7 @@ const MyRides = () => {
       setCurrentRide(
         all.filter((ride) => {
           const rideStartTime = new Date(ride?.startTime);
-          const rideEndTime = new Date(rideStartTime.getTime() + 3 * 60 * 60 * 1000);
+          const rideEndTime = ride.endTime ? new Date(ride.endTime) : new Date(ride.endTimerideStartTime.getTime() + 3 * 60 * 60 * 1000);
           return ride?.createdBy?._id === user.id && rideStartTime <= currentDateTime && rideEndTime >= currentDateTime;
         })
       );

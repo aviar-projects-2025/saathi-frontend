@@ -444,6 +444,7 @@ import PageLayout from "../../components/PageLayout";
 import axios from "axios";
 import Api from "../../Api";
 import { toast } from "react-toastify";
+import { useNotifications } from "../../context/NotificationContext";
 
 const MyReferrals = () => {
 
@@ -451,6 +452,17 @@ const MyReferrals = () => {
     const [approvedReferrals, setApprovedReferrals] = useState([]);
     const [tab, setTab] = useState(0);
     const [loading, setLoading] = useState(false);
+    const { notifications } = useNotifications()
+    console.log(notifications)
+
+    useEffect(() => {
+        if (notifications?.length) {
+            setMyReferrals((pre) => [
+                ...notifications,
+                ...pre
+            ]);
+        }
+    }, [notifications]);
 
     const user = JSON.parse(localStorage.getItem('user'));
 
@@ -525,187 +537,185 @@ const MyReferrals = () => {
         </Box>
     );
 
-    const ReferralCard = ({ user: u, showActions = false }) => (
-        <Paper
-            key={u._id}
-            elevation={0}
-            sx={{
-                p: { xs: 0.8, sm: 2 },
-                borderRadius: 2,
-                border: "1px solid",
-                borderColor: "divider",
-                "&:hover": { borderColor: "primary.light", bgcolor: "action.hover" },
-                transition: "all 0.15s ease",
-            }}
-        >
-            <Stack
-                direction="row"
-                alignItems="center"
-                justifyContent="space-between"
-                spacing={1.5}
+    const ReferralCard = ({ user: u, showActions = false }) => {
+
+        console.log(u, 'u')
+        const userData = {
+            firstName: u?.data?.user?.firstName || u?.firstName || "",
+            lastName: u?.data?.user?.lastName || u?.lastName || "",
+            email: u?.data?.user?.email || u?.email || "",
+            id: u?.data?.userId || u?._id
+        };
+
+        return (
+            <Paper
+                key={userData.id}
+                elevation={0}
+                sx={{
+                    p: { xs: 0.8, sm: 2 },
+                    borderRadius: 2,
+                    border: "1px solid",
+                    borderColor: "divider",
+                    "&:hover": { borderColor: "primary.light", bgcolor: "action.hover" },
+                    transition: "all 0.15s ease",
+                }}
             >
-                {/* Left: Avatar + Info */}
-                <Stack direction="row" spacing={1.5} alignItems="center" sx={{ minWidth: 0, flex: 1 }}>
-                    <Avatar
-                        sx={{
-                            bgcolor: "#f0ebe3",
-                            color: "#ff8400",
-                            fontWeight: 700,
-                            fontSize: { xs: 12, sm: 14 },
-                            width: { xs: 40, sm: 44 },
-                            height: { xs: 40, sm: 44 },
-                            flexShrink: 0,
-
-                        }}
+                <Stack
+                    direction="row"
+                    alignItems="center"
+                    justifyContent="space-between"
+                    spacing={1.5}
+                >
+                    {/* Left: Avatar + Info */}
+                    <Stack
+                        direction="row"
+                        spacing={1.5}
+                        alignItems="center"
+                        sx={{ minWidth: 0, flex: 1 }}
                     >
-                        {getInitials(u.firstName, u.lastName)}
-                    </Avatar>
-
-                    <Box sx={{ minWidth: 0 }}>
-                        <Typography
-                            fontWeight={600}
-                            noWrap
-                            sx={{ fontSize: { xs: 13, sm: 15 }, color: "text.primary" }}
+                        <Avatar
+                            sx={{
+                                bgcolor: "#f0ebe3",
+                                color: "#ff8400",
+                                fontWeight: 700,
+                                fontSize: { xs: 12, sm: 14 },
+                                width: { xs: 40, sm: 44 },
+                                height: { xs: 40, sm: 44 },
+                                flexShrink: 0,
+                            }}
                         >
-                            {u.firstName} {u.lastName}
-                        </Typography>
-                        <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            noWrap
-                            sx={{ fontSize: { xs: 11, sm: 13 } }}
-                        >
-                            {u.email}
-                        </Typography>
-                        {/* <Typography
-                            variant="caption"
-                            color="text.disabled"
-                            sx={{ fontSize: { xs: 10, sm: 11 }, display: { xs: "block", sm: "none" }, mt: 0.25 }}
-                        >
-                            Requested {u.joinedAt}
-                        </Typography> */}
-                    </Box>
-                </Stack>
+                            {getInitials(userData.firstName, userData.lastName)}
+                        </Avatar>
 
-                {/* Right: Actions */}
-                {showActions && (
-                    <Stack direction="row" spacing={0.75} alignItems="center" sx={{ flexShrink: 0 }}>
-                        {/* Mobile: icon-only buttons */}
-                        <Box sx={{ display: { xs: "flex", sm: "none" }, gap: 0.5 }}>
-                            <Tooltip title="Approve">
-                                <IconButton
-                                    size="small"
-                                    onClick={() => approveUser(u._id)}
-                                    sx={{
-                                        bgcolor: "#E6F4EA",
-                                        color: "#1E8E3E",
-                                        width: 34,
-                                        height: 34,
-                                        "&:hover": { bgcolor: "#C8E6C9" },
-                                    }}
-                                >
-                                    <CheckCircleIcon sx={{ fontSize: 18 }} />
-                                </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Decline">
-                                <IconButton
-                                    size="small"
-                                    onClick={() => declineUser(u._id)}
-                                    sx={{
-                                        bgcolor: "#FCE8E8",
-                                        color: "#D93025",
-                                        width: 34,
-                                        height: 34,
-                                        "&:hover": { bgcolor: "#F5C6C6" },
-                                    }}
-                                >
-                                    <CancelIcon sx={{ fontSize: 18 }} />
-                                </IconButton>
-                            </Tooltip>
-                        </Box>
-
-                        {/* Desktop: labeled buttons */}
-                        <Box sx={{ display: { xs: "none", sm: "flex" }, gap: 1 }}>
-                            <Button
-                                variant="contained"
-                                size="small"
-                                startIcon={<CheckCircleIcon sx={{ fontSize: 16 }} />}
-                                onClick={() => approveUser(u._id)}
-                                disableElevation
-                                sx={{
-                                    bgcolor: "#1E8E3E",
-                                    color: "#fff",
-                                    textTransform: "none",
-                                    fontWeight: 600,
-                                    fontSize: 13,
-                                    borderRadius: 5,
-                                    px: 2,
-                                    height: 32,
-                                    "&:hover": { bgcolor: "#176D30" },
-                                    mt: 0.5
-                                }}
+                        <Box sx={{ minWidth: 0 }}>
+                            <Typography
+                                fontWeight={600}
+                                noWrap
+                                sx={{ fontSize: { xs: 13, sm: 15 }, color: "text.primary" }}
                             >
-                                Approve
-                            </Button>
-                            <Button
-                                variant="outlined"
-                                size="small"
-                                startIcon={<CancelIcon sx={{ fontSize: 16 }} />}
-                                onClick={() => declineUser(u._id)}
-                                sx={{
-                                    color: "#D93025",
-                                    borderColor: "#D93025",
-                                    textTransform: "none",
-                                    fontWeight: 600,
-                                    fontSize: 13,
-                                    borderRadius: 5,
-                                    px: 2,
-                                    height: 32,
-                                    "&:hover": { bgcolor: "#FCE8E8", borderColor: "#B3261E" },
-                                    mt: 0.5
-                                }}
+                                {userData.firstName} {userData.lastName}
+                            </Typography>
+
+                            <Typography
+                                variant="body2"
+                                color="text.secondary"
+                                noWrap
+                                sx={{ fontSize: { xs: 11, sm: 13 } }}
                             >
-                                Decline
-                            </Button>
+                                {userData.email}
+                            </Typography>
                         </Box>
                     </Stack>
-                )}
 
-                {/* Approved badge for tab 1 */}
-                {!showActions && (
-                    <Box
-                        sx={{
-                            display: { xs: "none", sm: "flex" },
-                            alignItems: "center",
-                            gap: 0.5,
-                            bgcolor: "#E6F4EA",
-                            color: "#1E8E3E",
-                            fontSize: 11,
-                            fontWeight: 600,
-                            px: 1,
-                            py: 0.5,
-                            borderRadius: 5,
-                            flexShrink: 0,
-                        }}
-                    >
-                        <CheckCircleIcon sx={{ fontSize: 14 }} />
-                        Approved
-                    </Box>
-                )}
-            </Stack>
+                    {/* Right: Actions */}
+                    {showActions && (
+                        <Stack direction="row" spacing={0.75} alignItems="center" sx={{ flexShrink: 0 }}>
+                            {/* Mobile: icon-only buttons */}
+                            <Box sx={{ display: { xs: "flex", sm: "none" }, gap: 0.5 }}>
+                                <Tooltip title="Approve">
+                                    <IconButton
+                                        size="small"
+                                        onClick={() => approveUser(u._id)}
+                                        sx={{
+                                            bgcolor: "#E6F4EA",
+                                            color: "#1E8E3E",
+                                            width: 34,
+                                            height: 34,
+                                            "&:hover": { bgcolor: "#C8E6C9" },
+                                        }}
+                                    >
+                                        <CheckCircleIcon sx={{ fontSize: 18 }} />
+                                    </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Decline">
+                                    <IconButton
+                                        size="small"
+                                        onClick={() => declineUser(u._id)}
+                                        sx={{
+                                            bgcolor: "#FCE8E8",
+                                            color: "#D93025",
+                                            width: 34,
+                                            height: 34,
+                                            "&:hover": { bgcolor: "#F5C6C6" },
+                                        }}
+                                    >
+                                        <CancelIcon sx={{ fontSize: 18 }} />
+                                    </IconButton>
+                                </Tooltip>
+                            </Box>
 
-            {/* Timestamp – desktop only for pending */}
-            {/* {showActions && (
-                <Typography
-                    variant="caption"
-                    color="text.disabled"
-                    sx={{ display: { xs: "none", sm: "block" }, mt: 1.5, fontSize: 11 }}
-                >
-                    Requested {u.joinedAt}
-                </Typography>
-            )} */}
-        </Paper>
-    );
+                            {/* Desktop: labeled buttons */}
+                            <Box sx={{ display: { xs: "none", sm: "flex" }, gap: 1 }}>
+                                <Button
+                                    variant="contained"
+                                    size="small"
+                                    startIcon={<CheckCircleIcon sx={{ fontSize: 16 }} />}
+                                    onClick={() => approveUser(userData?.id)}
+                                    disableElevation
+                                    sx={{
+                                        bgcolor: "#1E8E3E",
+                                        color: "#fff",
+                                        textTransform: "none",
+                                        fontWeight: 600,
+                                        fontSize: 13,
+                                        borderRadius: 5,
+                                        px: 2,
+                                        height: 32,
+                                        "&:hover": { bgcolor: "#176D30" },
+                                        mt: 0.5
+                                    }}
+                                >
+                                    Approve
+                                </Button>
+                                <Button
+                                    variant="outlined"
+                                    size="small"
+                                    startIcon={<CancelIcon sx={{ fontSize: 16 }} />}
+                                    onClick={() => declineUser(userData?.id)}
+                                    sx={{
+                                        color: "#D93025",
+                                        borderColor: "#D93025",
+                                        textTransform: "none",
+                                        fontWeight: 600,
+                                        fontSize: 13,
+                                        borderRadius: 5,
+                                        px: 2,
+                                        height: 32,
+                                        "&:hover": { bgcolor: "#FCE8E8", borderColor: "#B3261E" },
+                                        mt: 0.5
+                                    }}
+                                >
+                                    Decline
+                                </Button>
+                            </Box>
+                        </Stack>
+                    )}
+
+                    {/* Approved badge for tab 1 */}
+                    {!showActions && (
+                        <Box
+                            sx={{
+                                display: { xs: "none", sm: "flex" },
+                                alignItems: "center",
+                                gap: 0.5,
+                                bgcolor: "#E6F4EA",
+                                color: "#1E8E3E",
+                                fontSize: 11,
+                                fontWeight: 600,
+                                px: 1,
+                                py: 0.5,
+                                borderRadius: 5,
+                                flexShrink: 0,
+                            }}
+                        >
+                            <CheckCircleIcon sx={{ fontSize: 14 }} />
+                            Approved
+                        </Box>
+                    )}
+                </Stack>
+            </Paper>
+        );
+    };
 
     const LoadingSpinner = () => (
         <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
@@ -814,7 +824,7 @@ const MyReferrals = () => {
                     />
                 </Tabs>
 
-                {/* Tab: Pending */}
+
                 {tab === 0 && (
                     loading ? <LoadingSpinner /> :
                         referrals.length === 0
