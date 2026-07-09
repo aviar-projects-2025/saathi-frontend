@@ -478,6 +478,7 @@ function RideCard({ ride, fetchRides, confirmRide, setConfirmRide, showEdit, sho
   ).length;
 
   const handleApprove = async (requestId) => {
+    
     try {
       const res = await axios.patch(`${Api}/bookride/${requestId}/status?type=Approve`, { status: 'ACCEPTED' });
       // console.log(res.data.succes, 'res')
