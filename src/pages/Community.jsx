@@ -506,16 +506,12 @@ export default function Community() {
                           hidden
                           type="file"
                           accept="image/*"
-                          capture="environment"
                           disabled={!isProfileComplete}
                           onChange={(e) => {
                             const file = e.target.files?.[0];
                             if (!file) return;
-
                             setMedia(file);
                             setPreview(URL.createObjectURL(file));
-
-                            // Reset so the same file can be selected again
                             e.target.value = "";
                           }}
                         />
