@@ -383,10 +383,14 @@ export default function Community() {
                     <input
                       hidden
                       type="file"
-                      accept="image/*"
+                      accept="image/*,video/*"
+                      capture="environment"
                       onChange={(e) => {
                         const file = e.target.files[0];
-                        if (file) { setMedia(file); setPreview(URL.createObjectURL(file)); }
+                        if (file) {
+                          setMedia(file);
+                          setPreview(URL.createObjectURL(file));
+                        }
                       }}
                     />
                   </Button>
@@ -441,7 +445,7 @@ export default function Community() {
                             `${currentUser?.firstName?.[0] || ''}${currentUser?.lastName?.[0] || ''}`}
                         </Avatar>
 
-                        <Box sx={{ flex: 1, minWidth: 0}}>
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
                           <Typography fontWeight={700} fontSize={isMobile ? '0.75rem' : '0.95rem'} noWrap>
                             {post?.authorId?.firstName} {post?.authorId?.lastName}
                           </Typography>
