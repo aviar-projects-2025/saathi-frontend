@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import {
   Paper, Stack, Typography, Box, Button, CircularProgress,
@@ -18,16 +17,13 @@ import { useReferral } from "../context/ReferralContext";
 import { useNotifications } from "../context/NotificationContext";
 
 export default function Sidebar({ onItemClick, isMobile = false }) {
-  const { currentUser, getuserData } = useUser();
-  const { completion } = useUser();
+  const { currentUser, completion } = useUser();
   const navigate = useNavigate();
   const location = useLocation();
   const { pendingReferralCount } = useReferral();
-  const { notifications } = useNotifications()
+  const { notifications } = useNotifications();
   const [notificationLengthcount, setNotificationLengthcount] = useState(0);
   const [openDropdown, setOpenDropdown] = useState(null);
-
-
 
   useEffect(() => {
     const total =
@@ -50,20 +46,25 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
     onItemClick?.();
   };
 
+  // NOTE: every item now has a stable, unique `id` string.
+  // Use `id` (not `label`) for React keys and for the openDropdown
+  // comparison — `label` can be JSX (see "referrals") and JSX is not
+  // a valid/stable value for keys or state equality checks.
   const menuItems = [
-    { label: "Community", icon: <DashboardIcon />, link: "/community" },
-    // { label: "Find Ride", icon: <SearchIcon />, link: "/find-ride" },
+    { id: "community", label: "Community", icon: <DashboardIcon />, link: "/community" },
     {
+      id: "find-ride",
       label: "Find Ride",
       icon: <SearchIcon />,
       children: [
-        { label: "Search Ride", link: "/find-ride" },
-        { label: "Requested Rides", link: "/myride-requests" },
+        { id: "search-ride", label: "Search Ride", link: "/find-ride" },
+        { id: "requested-rides", label: "Requested Rides", link: "/request-ride" },
       ],
     },
-    { label: "My Rides", icon: <RouteIcon />, link: "/myride" },
-    { label: "My Profile", icon: <PersonIcon />, link: "/user-profile" },
+    { id: "my-rides", label: "My Rides", icon: <RouteIcon />, link: "/myride" },
+    { id: "my-profile", label: "My Profile", icon: <PersonIcon />, link: "/user-profile" },
     {
+      id: "referrals",
       label: (
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <span>My Referrals</span>
@@ -77,7 +78,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
       icon: <HandshakeIcon />,
       link: "/my-referalls",
     },
-    { label: "Settings", icon: <SettingsIcon />, link: "/myprofile" },
+    { id: "settings", label: "Settings", icon: <SettingsIcon />, link: "/myprofile" },
   ];
 
   return (
@@ -93,7 +94,6 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
         borderRadius: 0,
         display: "flex",
         flexDirection: "column",
-        // no more space-between hack — each region controls its own sizing
         borderRight: isMobile ? "none" : "1px solid #f1e4d7",
         zIndex: 200,
         overflow: "hidden", // outer paper never scrolls; inner menu region does
@@ -104,8 +104,6 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
         sx={{
           flexShrink: 0,
           p: { xs: "12px 14px", sm: "16px 18px", md: "20px 20px" },
-          // mt: { xs: 7, sm: 0, md: 0 },
-
         }}
       >
         <Stack direction="row" spacing={2} alignItems="center">
@@ -118,7 +116,6 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-
             }}
           >
             <CircularProgress
@@ -202,16 +199,19 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
 
         <Stack spacing={{ xs: 2, sm: 2 }}>
           {menuItems.map((item) => {
-            const isDropdown = item.children;
-            const isOpen = openDropdown === item.label;
+            const isDropdown = Boolean(item.children);
+            const isOpen = openDropdown === item.id;
+            const isParentActive =
+              location.pathname === item.link ||
+              (isDropdown && item.children.some((c) => c.link === location.pathname));
 
             return (
-              <Box key={item.label}>
+              <Box key={item.id}>
                 {/* Parent Item */}
                 <Box
                   onClick={() => {
                     if (isDropdown) {
-                      setOpenDropdown(isOpen ? null : item.label);
+                      setOpenDropdown(isOpen ? null : item.id);
                     } else {
                       goTo(item.link);
                     }
@@ -225,7 +225,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
                     py: 1,
                     borderRadius: 7,
                     cursor: "pointer",
-                    bgcolor: location.pathname === item.link ? "#fff0df" : "transparent",
+                    bgcolor: isParentActive ? "#fff0df" : "transparent",
                     "&:hover": { bgcolor: "#fff0df" },
                   }}
                 >
@@ -251,7 +251,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
 
                       return (
                         <Box
-                          key={sub.link}
+                          key={sub.id}
                           onClick={() => goTo(sub.link)}
                           sx={{
                             py: 0.8,

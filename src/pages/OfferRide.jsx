@@ -298,7 +298,7 @@ export default function OfferRide() {
 
   useEffect(() => {
     if (submitted) {
-      const timer = setTimeout(() => setSubmitted(false), 1200000);
+      const timer = setTimeout(() => setSubmitted(false), 3000);
       return () => clearTimeout(timer);
     }
   }, [submitted]);

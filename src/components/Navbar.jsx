@@ -31,6 +31,9 @@ import { useUser } from "../context/userConetext.jsx";
 import NotificationTab from "../pages/NotificationTab.jsx";
 import { useNotifications } from "../context/NotificationContext.jsx";
 import KeyboardDoubleArrowUpIcon from '@mui/icons-material/KeyboardDoubleArrowUp';
+import { useNavigate } from "react-router-dom";
+
+
 
 const TopNav = ({ onMenuClick }) => {
   const [open, setOpen] = useState(false);
@@ -38,6 +41,8 @@ const TopNav = ({ onMenuClick }) => {
   const unreadCount = tabNotification?.filter(n => !n.isRead).length;
 
   const { completion, currentUser } = useUser();
+
+  const navigate = useNavigate();
 
   const [anchorEl, setAnchorEl] = useState(null);
 
@@ -142,12 +147,12 @@ const TopNav = ({ onMenuClick }) => {
               overflowY: "auto"
             }}>
               <NotificationTab handleCloseNotifications={handleCloseNotifications} />
-              {tabNotification.length > 6 &&
+              {/* {tabNotification.length > 6 &&
                 <Typography sx={{ fontSize: 14, position: 'absolute', bottom: 1 }}>
                   <KeyboardDoubleArrowUpIcon />
                   Scroll to see more
                 </Typography>
-              }
+              } */}
             </Box>
           </Menu>
 
@@ -221,7 +226,7 @@ const TopNav = ({ onMenuClick }) => {
               display: "flex",
               justifyContent: "center",
             }}>
-       <OfferRide/>
+              <OfferRide />
 
             </DialogContent>
           </Dialog>
@@ -256,6 +261,7 @@ const TopNav = ({ onMenuClick }) => {
 
               <Avatar
                 src={currentUser?.profileImage || ""}
+                onClick={() => navigate("/user-profile")}
                 sx={{
                   bgcolor: "#f97316",
                   width: 34,

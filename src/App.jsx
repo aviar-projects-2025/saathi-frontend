@@ -37,6 +37,7 @@
   import WaitingApproval from "./components/Auth/WaitingApproval.jsx";
   import MyReferrals from "./pages/referral/MyReferrals.jsx";
   import Settings from "./pages/Settings.jsx";
+  import RequestRide from "./pages/RequestRide.jsx";
 
   function App() {
 
@@ -93,6 +94,7 @@
               <Route path ="/user-profile" element={<UserProfile/>}/>
               <Route path="/notification" element={<Notification />} />
               <Route path="/discover" element={<Discover />} />
+              <Route path="/request-ride" element={<RequestRide />} />
 
             </Route>
           </Route>

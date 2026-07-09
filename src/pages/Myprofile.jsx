@@ -37,6 +37,9 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
+
+
 
 const SAFFRON = "#E8650A";
 const SAFFRON_LIGHT = "#FDF0E8";
@@ -54,7 +57,7 @@ const user = JSON.parse(localStorage.getItem('user'))
 const pillBtn = {
   textTransform: "none",
   border: "none",
-  fontSize: { xs: "0.60rem", sm: "0.8rem", md: "0.875rem" },
+  fontSize: { xs: "0.72rem", sm: "0.8rem", md: "0.875rem" },
   color: SAFFRON,
   fontWeight: 600,
 };
@@ -85,6 +88,7 @@ const SectionHeader = ({ icon, label }) => (
     </Typography>
   </Stack>
 );
+
 const Myprofile = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -93,6 +97,7 @@ const Myprofile = () => {
   const handleCloseShare = () => setOpenShare(false);
   const [openShare, setOpenShare] = useState(false);
   const feedRef = useRef(null);
+  const navigate = useNavigate();
   const [passwordModel, setPasswordModel] = useState('')
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
@@ -165,57 +170,92 @@ const Myprofile = () => {
         py: 3,
       }}
     >
-      <SectionCard >
+      <SectionCard
+        sx={{
+          p: { xs: 1, sm: 3 },
+          border: "1px solid",
+          borderColor: "divider",
+          borderRadius: 3,
+          boxShadow: "0 6px 20px rgba(0,0,0,0.06)",
+          transition: "0.3s",
+          "&:hover": {
+            boxShadow: "0 10px 28px rgba(0,0,0,0.10)",
+          },
+        }}
+      >
         <Stack
-          direction="row"
-          spacing={{ xs: 2, sm: 3 }}
-          alignItems="center"
-          sx={{ flex: 1 }}
+          direction={{ xs: "column", sm: "row" }}
+          spacing={3}
+          alignItems={{ xs: "center", sm: "center" }}
+          justifyContent="space-between"
         >
-          <Avatar
-            src={currentUser?.profileImage || ""}
+          <Stack
+            direction="row"
+            spacing={2}
+            alignItems="center"
+            sx={{ flex: 1, width: "100%" }}
+          >
+            <Avatar
+              src={currentUser?.profileImage || ""}
+              sx={{
+                width: { xs: 60, sm: 90, md: 100 },
+                height: { xs: 60, sm: 90, md: 100 },
+                bgcolor: SAFFRON,
+                color: "#fff",
+                fontWeight: 700,
+                fontSize: "2rem",
+                border: "4px solid #fff",
+                boxShadow: "0 6px 18px rgba(0,0,0,0.15)",
+                flexShrink: 0,
+              }}
+            >
+              {!currentUser?.profileImage &&
+                `${currentUser?.firstName?.[0] || ""}${currentUser?.lastName?.[0] || ""
+                }`}
+            </Avatar>
+
+            <Box sx={{ minWidth: 0, flex: 1, }}>
+              <Typography
+                sx={{
+                  fontWeight: 700,
+                  fontSize: { xs: "1rem", sm: "1.3rem" },
+                  color: "text.primary",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  mt:1
+                }}
+              >
+                {currentUser?.firstName} {currentUser?.lastName}
+              </Typography>
+
+              <Typography
+                sx={{
+                  mt: 0.5,
+                  color: "text.secondary",
+                  fontSize: { xs: "0.9rem", sm: "1rem" },
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                {currentUser?.email}
+              </Typography>
+            </Box>
+          </Stack>
+
+          <Button
+            variant="outlined"
+            onClick={() => navigate("/user-profile")}
             sx={{
-              width: { xs: 64, sm: 84, md: 96 },
-              height: { xs: 64, sm: 84, md: 96 },
-              bgcolor: SAFFRON,
-              color: "#fff",
-              fontWeight: 800,
-              fontSize: { xs: "1rem", sm: "1.3rem", md: "1.5rem" },
-              flexShrink: 0,
+              ...pillBtn,
+              // width: { xs: "auto", sm: "auto" },
+              display:"flex",
+              justifyContent:{xs:"flex-end"}
             }}
           >
-            {!currentUser?.profileImage &&
-              `${currentUser?.firstName?.[0] || ""}${currentUser?.lastName?.[0] || ""}`}
-          </Avatar>
-
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography
-              fontWeight={700}
-              sx={{
-                fontSize: { xs: "0.82rem", sm: "1.1rem", md: "1rem" },
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                mt: 1.5
-              }}
-            >
-              {currentUser?.firstName} {currentUser?.lastName}
-            </Typography>
-
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{
-                fontSize: { xs: "0.68rem", sm: "1rem", md: "0.8rem" },
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                mt: { xs: 0.7, sm: 0 },
-              }}
-            >
-              {currentUser?.email}
-            </Typography>
-          </Box>
+            View Profile
+          </Button>
         </Stack>
       </SectionCard>
 
