@@ -331,7 +331,7 @@ export default function FindRides() {
 
           }}
         >
-          <Container maxWidth="md" disableGutters sx={{ px: { xs: 0, sm: 2 }}}>
+          <Container maxWidth="md" disableGutters sx={{ px: { xs: 0, sm: 2 } }}>
             {/* Title */}
             <Typography
               fontWeight={800}

@@ -434,7 +434,7 @@ const HeroSection = ({ onSearchClick }) => {
         minHeight: { xs: '100vh', sm: '90vh', md: '92vh' },
         display: 'flex',
         alignItems: 'center',
-        backgroundImage: `url(https://images.unsplash.com/photo-1612925498765-67c53ae41782?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NzZ8fFRyYXZlbCUyMHdpdGglMjBjb21wYW5pb24lMjBwZXJzb24lMjB3aXRoJTIwdmVoaWNsZXxlbnwwfHwwfHx8MA%3D%3D)`,
+        backgroundImage: `url(https://wallpaperaccess.com/full/185289.jpg)`,
         backgroundSize: 'cover',
         backgroundPosition: 'center 30%',
         backgroundRepeat: 'no-repeat',
