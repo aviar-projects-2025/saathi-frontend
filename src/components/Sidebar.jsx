@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Paper, Stack, Typography, Box, Button, CircularProgress,
   Avatar
@@ -15,6 +15,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import { useUser } from "../context/userConetext";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useReferral } from "../context/ReferralContext";
+import { useNotifications } from "../context/NotificationContext";
 
 export default function Sidebar({ onItemClick, isMobile = false }) {
   const { currentUser, getuserData } = useUser();
@@ -22,6 +23,18 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { pendingReferralCount } = useReferral();
+  const { notifications } = useNotifications()
+  const [notificationLengthcount, setNotificationLengthcount] = useState(0);
+  const [openDropdown, setOpenDropdown] = useState(null);
+
+
+
+  useEffect(() => {
+    const total =
+      (pendingReferralCount || 0) + (notifications?.length || 0);
+
+    setNotificationLengthcount(total);
+  }, [notifications, pendingReferralCount]);
 
   const SAFFRON = "#E8650A";
   const CARD_BORDER = "1px solid #F0E6DC";
@@ -39,16 +52,24 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
 
   const menuItems = [
     { label: "Community", icon: <DashboardIcon />, link: "/community" },
-    { label: "Find Ride", icon: <SearchIcon />, link: "/find-ride" },
+    // { label: "Find Ride", icon: <SearchIcon />, link: "/find-ride" },
+    {
+      label: "Find Ride",
+      icon: <SearchIcon />,
+      children: [
+        { label: "Search Ride", link: "/find-ride" },
+        { label: "Requested Rides", link: "/myride-requests" },
+      ],
+    },
     { label: "My Rides", icon: <RouteIcon />, link: "/myride" },
     { label: "My Profile", icon: <PersonIcon />, link: "/user-profile" },
     {
       label: (
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <span>My Referrals</span>
-          {pendingReferralCount > 0 && (
+          {notificationLengthcount > 0 && (
             <Typography sx={{ fontSize: 12, fontWeight: 700, color: "#ff0000" }}>
-              ({pendingReferralCount})
+              ({notificationLengthcount})
             </Typography>
           )}
         </Box>
@@ -181,31 +202,74 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
 
         <Stack spacing={{ xs: 2, sm: 2 }}>
           {menuItems.map((item) => {
-            const active = location.pathname === item.link;
+            const isDropdown = item.children;
+            const isOpen = openDropdown === item.label;
+
             return (
-              <Box
-                key={item.link}
-                onClick={() => goTo(item.link)}
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 2,
-                  px: 2,
-                  py: 1,
-                  borderRadius: 7,
-                  cursor: "pointer",
-                  transition: "0.2s ease",
-                  bgcolor: active ? "#fff0df" : "transparent",
-                  color: active ? "#d97706" : "#5f4632",
-                  border: active ? "1px solid #ffd7aa" : "1px solid transparent",
-                  "& svg": { fontSize: { xs: 15, sm: 20 } },
-                  "&:hover": { bgcolor: "#fff0df", color: "#d97706" },
-                }}
-              >
-                {item.icon}
-                <Typography sx={{ fontSize: 12, fontWeight: 700 }}>
-                  {item.label}
-                </Typography>
+              <Box key={item.label}>
+                {/* Parent Item */}
+                <Box
+                  onClick={() => {
+                    if (isDropdown) {
+                      setOpenDropdown(isOpen ? null : item.label);
+                    } else {
+                      goTo(item.link);
+                    }
+                  }}
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 2,
+                    px: 2,
+                    py: 1,
+                    borderRadius: 7,
+                    cursor: "pointer",
+                    bgcolor: location.pathname === item.link ? "#fff0df" : "transparent",
+                    "&:hover": { bgcolor: "#fff0df" },
+                  }}
+                >
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                    {item.icon}
+                    <Typography sx={{ fontSize: 12, fontWeight: 700 }}>
+                      {item.label}
+                    </Typography>
+                  </Box>
+
+                  {isDropdown && (
+                    <Typography sx={{ fontSize: 12 }}>
+                      {isOpen ? "▲" : "▼"}
+                    </Typography>
+                  )}
+                </Box>
+
+                {/* Children */}
+                {isDropdown && isOpen && (
+                  <Stack sx={{ pl: 5, mt: 0.5 }}>
+                    {item.children.map((sub) => {
+                      const active = location.pathname === sub.link;
+
+                      return (
+                        <Box
+                          key={sub.link}
+                          onClick={() => goTo(sub.link)}
+                          sx={{
+                            py: 0.8,
+                            cursor: "pointer",
+                            borderRadius: 2,
+                            color: active ? "#d97706" : "#5f4632",
+                            fontWeight: active ? 700 : 500,
+                            "&:hover": { color: "#d97706" },
+                          }}
+                        >
+                          <Typography sx={{ fontSize: 12 }}>
+                            {sub.label}
+                          </Typography>
+                        </Box>
+                      );
+                    })}
+                  </Stack>
+                )}
               </Box>
             );
           })}

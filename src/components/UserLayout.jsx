@@ -22,6 +22,9 @@ const UserLayout = () => {
         height: "100dvh",
         bgcolor: "#fbfaf8ff",
         overflow: "hidden",
+        // display:'flex',
+        // alignItems:'center',
+        // justifyContent:'center'
       }}
     >
       {/* Fixed Top Bar */}

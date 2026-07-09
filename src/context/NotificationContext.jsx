@@ -38,7 +38,6 @@ export const NotificationProvider = ({ children }) => {
         console.log('joined ', user.id)
         const handleEvent = (payload) => {
             const { type, data, message, category } = payload;
-
             const audio = new Audio(notificationSound);
             audio.currentTime = 0;
             audio.play();
@@ -57,21 +56,6 @@ export const NotificationProvider = ({ children }) => {
             setTabNotification((prev) => [newNotification, ...prev]);
 
             toast.info(message || "New notification");
-
-            // switch (type) {
-            //     case "new_request":
-            //         setAllRequests((prev) => [data, ...prev]);
-            //         break;
-
-            //     case "request_update":
-            //         setAllRequests((prev) =>
-            //             prev.map((r) => r._id === data._id ? data : r)
-            //         );
-            //         break;
-
-            //     default:
-            //         console.log("Unhandled event:", type);
-            // }
         };
 
         socket.on("notification", handleEvent);
@@ -90,6 +74,7 @@ export const NotificationProvider = ({ children }) => {
                 setAllMyRequests,
                 notifications,
                 tabNotification,
+                fetchNotifications,
             }}
         >
             {children}
