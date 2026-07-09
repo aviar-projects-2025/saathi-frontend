@@ -142,9 +142,20 @@ function EditRideModal({ ride, onSave, onClose }) {
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
+  // Helper to zero-pad numbers (e.g. 5 -> "05")
+  const pad2 = (n) => String(n).padStart(2, '0');
+
   const startDate = new Date(ride.startTime);
-  const initialDate = !isNaN(startDate) ? startDate.toISOString().split('T')[0] : '';
-  const initialTime = !isNaN(startDate) ? startDate.toISOString().split('T')[1].slice(0, 5) : '';
+
+  // FIX: use LOCAL date/time getters, not toISOString().
+  // toISOString() converts to UTC, which shifts the displayed date/time
+  // away from the actual local time, and causes drift on every save.
+  const initialDate = !isNaN(startDate)
+    ? `${startDate.getFullYear()}-${pad2(startDate.getMonth() + 1)}-${pad2(startDate.getDate())}`
+    : '';
+  const initialTime = !isNaN(startDate)
+    ? `${pad2(startDate.getHours())}:${pad2(startDate.getMinutes())}`
+    : '';
 
   const [form, setForm] = useState({
     from: ride.from ?? '',
@@ -166,8 +177,28 @@ function EditRideModal({ ride, onSave, onClose }) {
   const handleEdit = async () => {
     setSaving(true);
     setError('');
+
+    // Basic guard: don't attempt to save with an empty/invalid date or time.
+    if (!form.date || !form.time) {
+      setError('Please select both a date and a time.');
+      setSaving(false);
+      return;
+    }
+
     try {
-      const startTime = new Date(`${form.date}T${form.time}:00`).toISOString();
+      // form.date and form.time are LOCAL values coming from the inputs.
+      // `new Date('YYYY-MM-DDTHH:mm:00')` (no timezone suffix) is parsed
+      // as local time by the JS engine, so this correctly round-trips with
+      // the local getters used above, then converts to UTC for storage.
+      const localDateTime = new Date(`${form.date}T${form.time}:00`);
+
+      if (isNaN(localDateTime)) {
+        setError('Invalid date or time. Please check your input.');
+        setSaving(false);
+        return;
+      }
+
+      const startTime = localDateTime.toISOString();
       const { date, time, ...rest } = form;
       const payload = { ...rest, startTime };
       const response = await axios.patch(`${Api}/rides/edit/${ride._id || ride.id}`, payload);
@@ -266,6 +297,8 @@ function EditRideModal({ ride, onSave, onClose }) {
     </Dialog>
   );
 }
+
+
 
 // ── Delete Confirm Dialog ────────────────────────────────────────────────────
 function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
@@ -944,7 +977,7 @@ const MyRides = () => {
       setNotificationRide(location.state.rideId)
     }
   }, [location.state]);
-  
+
   const { refreshRide } = useRide();
 
   const fetchRides = async () => {
@@ -1293,9 +1326,9 @@ const MyRides = () => {
                 <Box>
                   {currentRide.length > 0
                     ? renderList(currentRide, false, false, true)
-                    : <EmptyState emoji="🚗" message="You don't have any active rides at the moment" 
-                  
-                     />
+                    : <EmptyState emoji="🚗" message="You don't have any active rides at the moment"
+
+                    />
                   }
                 </Box>
               )}
@@ -1304,7 +1337,7 @@ const MyRides = () => {
                 <Box>
                   {upcoming.length > 0
                     ? renderList(upcoming, true, true)
-                    : <EmptyState emoji="🗓️" message="No upcoming rides"  />}
+                    : <EmptyState emoji="🗓️" message="No upcoming rides" />}
                 </Box>
               )}
 
@@ -1345,194 +1378,194 @@ export default MyRides;
 
 
 //my ride request ui
-  // <Box
-  //       sx={{
-  //         flex: 1,
-  //         minWidth: { lg: 340 },
-  //         maxHeight: "90vh",
-  //         overflowY: "auto",
-  //         position: "sticky",
-  //         top: 30,
-  //       }}
-  //     >
-  //       <Typography variant="h5" fontWeight={800} sx={{ fontSize: { xs: '1.2rem', sm: '1.5rem' } }}>
-  //         My Requests
-  //       </Typography>
-  //       <br />
-  //       {allMyRequests
-  //         .filter(req => req?.rideId)
-  //         .map((request) => (
-  //           <Card
-  //             key={request._id}
-  //             sx={{
-  //               mb: 3,
-  //               borderRadius: "20px",
-  //               overflow: "hidden",
-  //               background: "linear-gradient(135deg, #ffffff 0%, #f8fbff 100%)",
-  //               boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-  //               transition: "0.3s",
-  //               position: "relative",
-  //               "&:hover": {
-  //                 transform: "translateY(-4px)",
-  //                 boxShadow: "0 18px 40px rgba(0,0,0,0.12)",
-  //               },
-  //             }}
-  //           >
-  //             {/* Delete Button */}
-  //             <IconButton
-  //               color="error"
-  //               onClick={() => handleCancelClick(request)}
-  //               sx={{
-  //                 position: "absolute",
-  //                 top: 15,
-  //                 right: 15,
-  //                 bgcolor: "#fff",
-  //                 boxShadow: 2,
-  //                 "&:hover": {
-  //                   bgcolor: "#ffebee",
-  //                 },
-  //               }}
-  //             >
-  //               <DeleteIcon />
-  //             </IconButton>
+// <Box
+//       sx={{
+//         flex: 1,
+//         minWidth: { lg: 340 },
+//         maxHeight: "90vh",
+//         overflowY: "auto",
+//         position: "sticky",
+//         top: 30,
+//       }}
+//     >
+//       <Typography variant="h5" fontWeight={800} sx={{ fontSize: { xs: '1.2rem', sm: '1.5rem' } }}>
+//         My Requests
+//       </Typography>
+//       <br />
+//       {allMyRequests
+//         .filter(req => req?.rideId)
+//         .map((request) => (
+//           <Card
+//             key={request._id}
+//             sx={{
+//               mb: 3,
+//               borderRadius: "20px",
+//               overflow: "hidden",
+//               background: "linear-gradient(135deg, #ffffff 0%, #f8fbff 100%)",
+//               boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
+//               transition: "0.3s",
+//               position: "relative",
+//               "&:hover": {
+//                 transform: "translateY(-4px)",
+//                 boxShadow: "0 18px 40px rgba(0,0,0,0.12)",
+//               },
+//             }}
+//           >
+//             {/* Delete Button */}
+//             <IconButton
+//               color="error"
+//               onClick={() => handleCancelClick(request)}
+//               sx={{
+//                 position: "absolute",
+//                 top: 15,
+//                 right: 15,
+//                 bgcolor: "#fff",
+//                 boxShadow: 2,
+//                 "&:hover": {
+//                   bgcolor: "#ffebee",
+//                 },
+//               }}
+//             >
+//               <DeleteIcon />
+//             </IconButton>
 
-  //             <CardContent
-  //               sx={{
-  //                 display: "flex",
-  //                 alignItems: "center",
-  //                 justifyContent: "space-between",
-  //                 flexWrap: "wrap",
-  //                 gap: 2,
-  //                 p: 2.5,
-  //                 pr: 8, // Space for delete button
-  //               }}
-  //             >
-  //               {/* Rider */}
-  //               <Box
-  //                 sx={{
-  //                   display: "flex",
-  //                   alignItems: "center",
-  //                   gap: 1,
-  //                   minWidth: 220,
-  //                 }}
-  //               >
-  //                 <Avatar
-  //                   sx={{
-  //                     bgcolor: "#FF9933",
-  //                     width: 42,
-  //                     height: 42,
-  //                   }}
-  //                 >
-  //                   <PersonIcon />
-  //                 </Avatar>
+//             <CardContent
+//               sx={{
+//                 display: "flex",
+//                 alignItems: "center",
+//                 justifyContent: "space-between",
+//                 flexWrap: "wrap",
+//                 gap: 2,
+//                 p: 2.5,
+//                 pr: 8, // Space for delete button
+//               }}
+//             >
+//               {/* Rider */}
+//               <Box
+//                 sx={{
+//                   display: "flex",
+//                   alignItems: "center",
+//                   gap: 1,
+//                   minWidth: 220,
+//                 }}
+//               >
+//                 <Avatar
+//                   sx={{
+//                     bgcolor: "#FF9933",
+//                     width: 42,
+//                     height: 42,
+//                   }}
+//                 >
+//                   <PersonIcon />
+//                 </Avatar>
 
-  //                 <Typography fontWeight={700}>
-  //                   {request.rideId?.createdBy?.firstName}{" "}
-  //                   {request.rideId?.createdBy?.lastName}
-  //                 </Typography>
-  //               </Box>
+//                 <Typography fontWeight={700}>
+//                   {request.rideId?.createdBy?.firstName}{" "}
+//                   {request.rideId?.createdBy?.lastName}
+//                 </Typography>
+//               </Box>
 
-  //               {/* Route */}
-  //               <Box
-  //                 sx={{
-  //                   display: "flex",
-  //                   alignItems: "center",
-  //                   gap: 1,
-  //                   minWidth: 250,
-  //                 }}
-  //               >
-  //                 <LocationOnIcon sx={{ color: "#FF9933" }} />
+//               {/* Route */}
+//               <Box
+//                 sx={{
+//                   display: "flex",
+//                   alignItems: "center",
+//                   gap: 1,
+//                   minWidth: 250,
+//                 }}
+//               >
+//                 <LocationOnIcon sx={{ color: "#FF9933" }} />
 
-  //                 <Typography fontWeight={600}>
-  //                   {request.rideId?.from}
-  //                 </Typography>
+//                 <Typography fontWeight={600}>
+//                   {request.rideId?.from}
+//                 </Typography>
 
-  //                 <ArrowForwardIcon sx={{ color: "#FF9933" }} />
+//                 <ArrowForwardIcon sx={{ color: "#FF9933" }} />
 
-  //                 <Typography fontWeight={600}>
-  //                   {request.rideId?.destination}
-  //                 </Typography>
-  //               </Box>
+//                 <Typography fontWeight={600}>
+//                   {request.rideId?.destination}
+//                 </Typography>
+//               </Box>
 
-  //               {/* Date */}
-  //               <Box
-  //                 sx={{
-  //                   display: "flex",
-  //                   alignItems: "center",
-  //                   gap: 1,
-  //                 }}
-  //               >
-  //                 <CalendarMonthIcon sx={{ color: "#FF9933" }} />
+//               {/* Date */}
+//               <Box
+//                 sx={{
+//                   display: "flex",
+//                   alignItems: "center",
+//                   gap: 1,
+//                 }}
+//               >
+//                 <CalendarMonthIcon sx={{ color: "#FF9933" }} />
 
-  //                 <Typography>
-  //                   {new Date(request?.rideId?.startTime).toLocaleDateString()}
-  //                 </Typography>
-  //               </Box>
+//                 <Typography>
+//                   {new Date(request?.rideId?.startTime).toLocaleDateString()}
+//                 </Typography>
+//               </Box>
 
-  //               {/* Time */}
-  //               <Box
-  //                 sx={{
-  //                   display: "flex",
-  //                   alignItems: "center",
-  //                   gap: 1,
-  //                 }}
-  //               >
-  //                 <AccessTimeIcon sx={{ color: "#FF9933" }} />
+//               {/* Time */}
+//               <Box
+//                 sx={{
+//                   display: "flex",
+//                   alignItems: "center",
+//                   gap: 1,
+//                 }}
+//               >
+//                 <AccessTimeIcon sx={{ color: "#FF9933" }} />
 
-  //                 <Typography>
-  //                   {new Date(request.createdAt).toLocaleTimeString([], {
-  //                     hour: "2-digit",
-  //                     minute: "2-digit",
-  //                   })}
-  //                 </Typography>
-  //               </Box>
+//                 <Typography>
+//                   {new Date(request.createdAt).toLocaleTimeString([], {
+//                     hour: "2-digit",
+//                     minute: "2-digit",
+//                   })}
+//                 </Typography>
+//               </Box>
 
-  //               {/* Status */}
-  //               <Chip
-  //                 label={request.status}
-  //                 color={
-  //                   request.status === "ACCEPTED"
-  //                     ? "success"
-  //                     : request.status === "REJECTED"
-  //                       ? "error"
-  //                       : "warning"
-  //                 }
-  //                 sx={{
-  //                   fontWeight: 700,
-  //                   borderRadius: 5,
-  //                 }}
-  //               />
-  //             </CardContent>
-  //           </Card>
-  //         ))}
-  //       <Dialog
-  //         open={openCancelDialog}
-  //         onClose={handleCloseDialog}
-  //         maxWidth="xs"
-  //         fullWidth
-  //       >
-  //         <DialogTitle>Cancel Ride Request</DialogTitle>
+//               {/* Status */}
+//               <Chip
+//                 label={request.status}
+//                 color={
+//                   request.status === "ACCEPTED"
+//                     ? "success"
+//                     : request.status === "REJECTED"
+//                       ? "error"
+//                       : "warning"
+//                 }
+//                 sx={{
+//                   fontWeight: 700,
+//                   borderRadius: 5,
+//                 }}
+//               />
+//             </CardContent>
+//           </Card>
+//         ))}
+//       <Dialog
+//         open={openCancelDialog}
+//         onClose={handleCloseDialog}
+//         maxWidth="xs"
+//         fullWidth
+//       >
+//         <DialogTitle>Cancel Ride Request</DialogTitle>
 
-  //         <DialogContent>
-  //           <DialogContentText>
-  //             Are you sure you want to cancel this ride request?
-  //             <br />
-  //             This action cannot be undone.
-  //           </DialogContentText>
-  //         </DialogContent>
+//         <DialogContent>
+//           <DialogContentText>
+//             Are you sure you want to cancel this ride request?
+//             <br />
+//             This action cannot be undone.
+//           </DialogContentText>
+//         </DialogContent>
 
-  //         <DialogActions>
-  //           <Button onClick={handleCloseDialog}>
-  //             No
-  //           </Button>
+//         <DialogActions>
+//           <Button onClick={handleCloseDialog}>
+//             No
+//           </Button>
 
-  //           <Button
-  //             color="error"
-  //             variant="contained"
-  //             onClick={handleConfirmCancel}
-  //           >
-  //             Yes, Cancel
-  //           </Button>
-  //         </DialogActions>
-  //       </Dialog>
-  //     </Box>
+//           <Button
+//             color="error"
+//             variant="contained"
+//             onClick={handleConfirmCancel}
+//           >
+//             Yes, Cancel
+//           </Button>
+//         </DialogActions>
+//       </Dialog>
+//     </Box>
