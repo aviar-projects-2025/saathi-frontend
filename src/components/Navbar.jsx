@@ -38,7 +38,15 @@ import { useNavigate } from "react-router-dom";
 const TopNav = ({ onMenuClick }) => {
   const [open, setOpen] = useState(false);
   const { tabNotification, notifications } = useNotifications();
-  const unreadCount = tabNotification?.filter(n => !n.isRead).length;
+  // const unreadCount = tabNotification?.filter(n => !n.isRead).length;
+  const unreadCount = Object.values(
+    (tabNotification || []).reduce((acc, curr) => {
+      if (!curr.isRead) {
+        acc[curr._id] = curr; // unique by _id
+      }
+      return acc;
+    }, {})
+  ).length;
 
   const { completion, currentUser } = useUser();
 

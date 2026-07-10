@@ -17,6 +17,15 @@ import { toast } from 'react-toastify';
 export default function NotificationTab({ handleCloseNotifications }) {
     const { tabNotification, fetchNotifications } = useNotifications();
 
+    const uniqueNotifications = Object.values(
+        (tabNotification || []).reduce((acc, curr) => {
+            acc[curr.data.rideId || data.rideId] = curr; // handle both cases
+            return acc;
+        }, {})
+    );
+
+    console.log(tabNotification,'tabNotification')
+
     const navigate = useNavigate();
 
     const handleNavigation = (item) => {
@@ -32,6 +41,10 @@ export default function NotificationTab({ handleCloseNotifications }) {
             case "referral_rejected":
                 navigate("/my-referalls");
                 break;
+            case "ride_started": 
+                console.log(item.type,'item.type')
+                navigate("/myride")
+                break;
 
             default:
                 navigate("/");
@@ -40,6 +53,7 @@ export default function NotificationTab({ handleCloseNotifications }) {
 
     const handleIsRead = (id, item) => {
         if (item?.isRead) return;
+        console.log(id)
         try {
             axios.patch(Api + `/notification/${id}`)
                 .then((res) => {
@@ -65,7 +79,7 @@ export default function NotificationTab({ handleCloseNotifications }) {
                 overflow: 'hidden',
                 display: 'flex',
                 flexDirection: 'column',
-                
+
             }}
         >
             <List
@@ -89,10 +103,10 @@ export default function NotificationTab({ handleCloseNotifications }) {
                     },
                 }}
             >
-                {tabNotification?.length === 0 ? (
+                {uniqueNotifications?.length === 0 ? (
                     <Typography sx={{ p: 2, textAlign: 'center' }}>No notifications</Typography>
                 ) : (
-                    tabNotification.map((item) => {
+                    uniqueNotifications.map((item) => {
                         const isUnread = !item.isRead;
 
                         return (
