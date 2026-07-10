@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   Paper, Stack, Typography, Box, Button, CircularProgress,
-  Avatar
+  Avatar, Collapse
 } from "@mui/material";
 
 import SearchIcon from "@mui/icons-material/Search";
@@ -26,16 +26,16 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
   const [openDropdown, setOpenDropdown] = useState(null);
 
   useEffect(() => {
-  const referralNotificationsCount =
-    notifications?.filter(
-      (n) => n.type === "REFERRAL" // adjust based on your actual type
-    ).length || 0;
+    const referralNotificationsCount =
+      notifications?.filter(
+        (n) => n.type === "REFERRAL" // adjust based on your actual type
+      ).length || 0;
 
-  const total =
-    (pendingReferralCount || 0) + referralNotificationsCount;
+    const total =
+      (pendingReferralCount || 0) + referralNotificationsCount;
 
-  setNotificationLengthcount(total);
-}, [notifications, pendingReferralCount]);
+    setNotificationLengthcount(total);
+  }, [notifications, pendingReferralCount]);
 
   const SAFFRON = "#E8650A";
   const CARD_BORDER = "1px solid #F0E6DC";
@@ -249,31 +249,65 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
                 </Box>
 
                 {/* Children */}
-                {isDropdown && isOpen && (
-                  <Stack sx={{ pl: 5, mt: 0.5 }}>
-                    {item.children.map((sub) => {
-                      const active = location.pathname === sub.link;
-
-                      return (
-                        <Box
-                          key={sub.id}
-                          onClick={() => goTo(sub.link)}
-                          sx={{
-                            py: 0.8,
-                            cursor: "pointer",
-                            borderRadius: 2,
-                            color: active ? "#d97706" : "#5f4632",
-                            fontWeight: active ? 700 : 500,
-                            "&:hover": { color: "#d97706" },
-                          }}
-                        >
-                          <Typography sx={{ fontSize: 12 }}>
-                            {sub.label}
-                          </Typography>
-                        </Box>
-                      );
-                    })}
-                  </Stack>
+                {isDropdown && (
+                  <Collapse in={isOpen} timeout={250} unmountOnExit>
+                    <Stack
+                      sx={{
+                        pl: 2,
+                        pr: 1,
+                        mt: 1,
+                        mb: 0.5,
+                        ml: 2,
+                        // borderLeft: "2px solid #f0e4d7",
+                      }}
+                    >
+                      {item.children.map((sub) => {
+                        const active = location.pathname === sub.link;
+                        return (
+                          <Box
+                            key={sub.id}
+                            onClick={() => goTo(sub.link)}
+                            sx={{
+                              py: 1,
+                              px: 1.5,
+                              mb: 0.3,
+                              cursor: "pointer",
+                              borderRadius: 1.5,
+                              position: "relative",
+                              // backgroundColor: active ? "rgba(217, 119, 6, 0.08)" : "transparent",
+                              transition: "background-color 0.2s ease, color 0.2s ease",
+                              "&:hover": {
+                                // backgroundColor: "rgba(217, 119, 6, 0.06)",
+                              },
+                              "&::before": {
+                                content: '""',
+                                position: "absolute",
+                                left: -2,
+                                top: "50%",
+                                transform: "translateY(-50%)",
+                                width: 2,
+                                height: active ? "70%" : 0,
+                                backgroundColor: "#d97706",
+                                borderRadius: 2,
+                                transition: "height 0.2s ease",
+                              },
+                            }}
+                          >
+                            <Typography
+                              sx={{
+                                fontSize: 12.5,
+                                color: active ? "#d97706" : "#5f4632",
+                                fontWeight: active ? 700 : 500,
+                                transition: "color 0.2s ease",
+                              }}
+                            >
+                              {sub.label}
+                            </Typography>
+                          </Box>
+                        );
+                      })}
+                    </Stack>
+                  </Collapse>
                 )}
               </Box>
             );
