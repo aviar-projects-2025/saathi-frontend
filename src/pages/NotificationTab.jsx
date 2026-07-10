@@ -19,12 +19,12 @@ export default function NotificationTab({ handleCloseNotifications }) {
 
     const uniqueNotifications = Object.values(
         (tabNotification || []).reduce((acc, curr) => {
-            acc[curr.data.rideId || data.rideId] = curr; // handle both cases
+            acc[curr?.data.rideId || curr._id] = curr; // handle both cases
             return acc;
         }, {})
     );
 
-    console.log(tabNotification,'tabNotification')
+    console.log(tabNotification, 'tabNotification')
 
     const navigate = useNavigate();
 
@@ -41,8 +41,8 @@ export default function NotificationTab({ handleCloseNotifications }) {
             case "referral_rejected":
                 navigate("/my-referalls");
                 break;
-            case "ride_started": 
-                console.log(item.type,'item.type')
+            case "ride_started":
+                console.log(item.type, 'item.type')
                 navigate("/myride")
                 break;
 
@@ -53,7 +53,8 @@ export default function NotificationTab({ handleCloseNotifications }) {
 
     const handleIsRead = (id, item) => {
         if (item?.isRead) return;
-        console.log(id)
+        console.log(item,'item notif')
+        console.log(id, 'notif id')
         try {
             axios.patch(Api + `/notification/${id}`)
                 .then((res) => {

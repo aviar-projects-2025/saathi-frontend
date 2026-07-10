@@ -39,10 +39,11 @@ const TopNav = ({ onMenuClick }) => {
   const [open, setOpen] = useState(false);
   const { tabNotification, notifications } = useNotifications();
   // const unreadCount = tabNotification?.filter(n => !n.isRead).length;
+  console.log(tabNotification, 'tabNotification')
   const unreadCount = Object.values(
     (tabNotification || []).reduce((acc, curr) => {
-      if (!curr.isRead) {
-        acc[curr._id] = curr; // unique by _id
+      if (!curr?.isRead) {
+        acc[curr?.data.rideId || curr._id] = curr;
       }
       return acc;
     }, {})
