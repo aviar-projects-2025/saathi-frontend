@@ -1,4 +1,3 @@
-
 import {
   AppBar,
   Toolbar,
@@ -7,13 +6,14 @@ import {
   IconButton,
   Badge,
   Menu,
+  MenuItem,
   Tooltip,
   Button,
   Avatar,
   CircularProgress,
   Stack,
-} from "@mui/material";
-import {
+  ListItemIcon,
+  ListItemText,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -24,16 +24,15 @@ import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
 import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
 import AddIcon from "@mui/icons-material/Add";
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import saathilogo1 from "../assets/saathilogo1.png";
 import { useUser } from "../context/userConetext.jsx";
 import NotificationTab from "../pages/NotificationTab.jsx";
 import { useNotifications } from "../context/NotificationContext.jsx";
-import KeyboardDoubleArrowUpIcon from '@mui/icons-material/KeyboardDoubleArrowUp';
-import { useNavigate } from "react-router-dom";
-
-
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
+import LogoutIcon from "@mui/icons-material/Logout";
 
 const TopNav = ({ onMenuClick }) => {
   const [open, setOpen] = useState(false);
@@ -47,24 +46,70 @@ const TopNav = ({ onMenuClick }) => {
       return acc;
     }, {})
   ).length;
+  const [selectedMenu, setSelectedMenu] = useState("");
+ 
 
   const { completion, currentUser } = useUser();
-
   const navigate = useNavigate();
 
-  const [anchorEl, setAnchorEl] = useState(null);
+  // Separate anchor state for each menu so they don't fight over one another
+  const [notifAnchorEl, setNotifAnchorEl] = useState(null);
+  const [profileAnchorEl, setProfileAnchorEl] = useState(null);
+
+  const openNotifications = Boolean(notifAnchorEl);
+  const openProfileMenu = Boolean(profileAnchorEl);
 
   const handleOpenNotifications = (event) => {
-    setAnchorEl(event.currentTarget);
+    setNotifAnchorEl(event.currentTarget);
   };
 
   const handleCloseNotifications = () => {
-    setAnchorEl(null);
+    setNotifAnchorEl(null);
   };
 
+  const handleOpenProfileMenu = (event) => {
+    setProfileAnchorEl(event.currentTarget);
+  };
+
+  const handleCloseProfileMenu = () => {
+    setProfileAnchorEl(null);
+  };
 
   const isProfileComplete = completion === 100;
-  const openNotifications = Boolean(anchorEl);
+
+  const profileMenuOptions = [
+    {
+      label: "Profile",
+      icon: <AccountCircleIcon fontSize="small" />,
+      link: "/user-profile",
+    },
+    {
+      label: "Settings",
+      icon: <SettingsOutlinedIcon fontSize="small" />,
+      link: "/myprofile",
+    },
+    {
+      label: "Log out",
+      icon: <LogoutIcon fontSize="small" />,
+      link: "/login",
+    },
+  ];
+
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate("/login");
+    // onItemClick?.();
+  };
+
+  const handleSelect = (option) => {
+    setSelectedMenu(option.label);
+    handleCloseProfileMenu();
+    if (option.label === "Log out") {
+      handleLogout();
+    } else if (option.link) {
+      navigate(option.link);
+    }
+  };
 
   return (
     <AppBar
@@ -97,7 +142,7 @@ const TopNav = ({ onMenuClick }) => {
             <MenuIcon />
           </IconButton>
 
-          <Box sx={{ display: "flex", alignItems: "center", cursor: 'pointer' }} >
+          <Box sx={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
             <img
               src={saathilogo1}
               alt="saathi"
@@ -122,14 +167,14 @@ const TopNav = ({ onMenuClick }) => {
             <Badge color="error" badgeContent={unreadCount} invisible={unreadCount === 0}>
               <NotificationsNoneIcon
                 sx={{
-                  color: openNotifications ? '#f97316' : '#5f4632',
-                  transition: '0.2s'
+                  color: openNotifications ? "#f97316" : "#5f4632",
+                  transition: "0.2s",
                 }}
               />
             </Badge>
           </IconButton>
           <Menu
-            anchorEl={anchorEl}
+            anchorEl={notifAnchorEl}
             open={openNotifications}
             onClose={handleCloseNotifications}
             anchorOrigin={{
@@ -141,30 +186,22 @@ const TopNav = ({ onMenuClick }) => {
               horizontal: "right",
             }}
           >
-            <Typography sx={{ pl: 2, fontSize: 14, }}>
-              Notifications
-            </Typography>
-            <Box sx={{
-              display: "flex",
-              flexDirection: 'column',
-              justifyContent: "center",
-              alignItems: "center",
-              width: 320,
-              p: 1,
-              maxHeight: 400,
-              overflowY: "auto"
-            }}>
+            <Typography sx={{ pl: 2, fontSize: 14 }}>Notifications</Typography>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
+                width: 320,
+                p: 1,
+                maxHeight: 400,
+                overflowY: "auto",
+              }}
+            >
               <NotificationTab handleCloseNotifications={handleCloseNotifications} />
-              {/* {tabNotification.length > 6 &&
-                <Typography sx={{ fontSize: 14, position: 'absolute', bottom: 1 }}>
-                  <KeyboardDoubleArrowUpIcon />
-                  Scroll to see more
-                </Typography>
-              } */}
             </Box>
           </Menu>
-
-
 
           <Tooltip
             title={
@@ -202,12 +239,8 @@ const TopNav = ({ onMenuClick }) => {
               </Button>
             </Box>
           </Tooltip>
-          <Dialog
-            open={open}
-            onClose={() => setOpen(false)}
-            fullWidth
-            maxWidth="sm"
-          >
+
+          <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
             <DialogTitle
               sx={{
                 position: "relative",
@@ -230,27 +263,15 @@ const TopNav = ({ onMenuClick }) => {
               </IconButton>
             </DialogTitle>
 
-            <DialogContent sx={{
-              display: "flex",
-              justifyContent: "center",
-            }}>
+            <DialogContent
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+              }}
+            >
               <OfferRide />
-
             </DialogContent>
           </Dialog>
-
-          {/* <IconButton
-            component={Link}
-            to="/offer-ride"
-            sx={{
-              display: { xs: "inline-flex", sm: "none" },
-              border: "1px solid #f97316",
-              borderRadius: 2,
-              color: "#d97706",
-            }}
-          >
-            <AddIcon fontSize="small" />
-          </IconButton> */}
 
           <Stack>
             <Box sx={{ position: "relative", width: 44, height: 44 }}>
@@ -269,7 +290,7 @@ const TopNav = ({ onMenuClick }) => {
 
               <Avatar
                 src={currentUser?.profileImage || ""}
-                onClick={() => navigate("/user-profile")}
+                onClick={handleOpenProfileMenu}
                 sx={{
                   bgcolor: "#f97316",
                   width: 34,
@@ -280,11 +301,47 @@ const TopNav = ({ onMenuClick }) => {
                   top: "50%",
                   left: "50%",
                   transform: "translate(-50%, -50%)",
+                  cursor: "pointer",
                 }}
               >
                 {!currentUser?.profileImage && (currentUser?.firstName?.[0] || "U")}
               </Avatar>
             </Box>
+            <Menu
+              anchorEl={profileAnchorEl}
+              open={openProfileMenu}
+              onClose={handleCloseProfileMenu}
+              anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+              transformOrigin={{ vertical: "top", horizontal: "center" }}
+              sx={{ mt: 1.5 }}
+            >
+              {profileMenuOptions.map((option) => (
+                <MenuItem
+                  key={option.label}
+                  selected={selectedMenu === option.label}
+                  onClick={() => handleSelect(option)}
+                  sx={{
+                    "&.Mui-selected": {
+                      bgcolor: "#fff", // Saffron
+                      color: "#FF9933",
+                    },
+                    "&.Mui-selected:hover": {
+                      color: "#e68a00",
+                    },
+                  }}
+                >
+                  <ListItemIcon
+                    sx={{
+                      color: selectedMenu === option.label ? "#FF9933" : "inherit",
+                    }}
+                  >
+                    {option.icon}
+                  </ListItemIcon>
+
+                  <ListItemText>{option.label}</ListItemText>
+                </MenuItem>
+              ))}
+            </Menu>
           </Stack>
         </Box>
       </Toolbar>

@@ -1,5 +1,4 @@
-
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   Box, Typography, Grid, Paper, Chip, Avatar, Button,
   Divider, Stack, LinearProgress,
@@ -39,6 +38,8 @@ import { toast } from 'react-toastify';
 import CommunityImage from '../components/CommunityImage.jsx';
 import CommunityComments from './CommunityComments.jsx';
 import { useUser } from '../context/userConetext.jsx';
+import CameraAltIcon from "@mui/icons-material/CameraAlt";
+import FolderIcon from "@mui/icons-material/Folder";
 
 export default function Community() {
   const [post, setPost] = useState("");
@@ -52,6 +53,10 @@ export default function Community() {
   const [postId, setPostId] = useState([])
   const [editImage, setEditImage] = useState(null);
   const [previewImage, setPreviewImage] = useState("");
+  const [openMediaDialog, setOpenMediaDialog] = useState(false);
+
+  const cameraInputRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -83,6 +88,18 @@ export default function Community() {
   const handleMenuClose = () => {
     setAnchorEl(null);
   };
+
+  const handleMediaSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setMedia(file);
+    setPreview(URL.createObjectURL(file));
+
+    e.target.value = "";
+    setOpenMediaDialog(false);
+  };
+
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editDescription, setEditDescription] = useState("");
@@ -489,7 +506,8 @@ export default function Community() {
                   >
                     <Box component="span">
                       <Button
-                        component="label"
+                        // onClick={() => setOpenMediaDialog(true)}
+                        onClick={() => setOpenMediaDialog((prev) => !prev)}
                         disabled={!isProfileComplete}
                         startIcon={<PermMediaIcon fontSize={iconFontSize} />}
                         size={isMobile ? "small" : "medium"}
@@ -502,25 +520,131 @@ export default function Community() {
                         }}
                       >
                         Media
-                        <input
-                          hidden
-                          type="file"
-                          accept="image/*"
-                          capture="environment"
-                          disabled={!isProfileComplete}
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (!file) return;
-
-                            setMedia(file);
-                            setPreview(URL.createObjectURL(file));
-
-                            // Reset so the same file can be selected again
-                            e.target.value = "";
-                          }}
-                        />
                       </Button>
+
+                      {openMediaDialog && (
+                        <>
+                          <Stack direction="row" spacing={1.5} sx={{ mt: 1 }}>
+                            <Button
+                              startIcon={<CameraAltIcon />}
+                              onClick={() => cameraInputRef.current?.click()}
+                              size={isMobile ? "small" : "medium"}
+                              sx={{
+                                textTransform: "none",
+                                fontSize: { xs: "9px", sm: "10px" },
+                                borderRadius: 5,
+                                px: 1.5,
+                                bgcolor: "#1976d2",
+                                color: "#fff",
+
+                                "& .MuiButton-startIcon svg": {
+                                  fontSize: { xs: "13px", sm: "14px" } // 14px, 16px, 18px, etc.
+                                },
+
+                                "&:hover": {
+                                  bgcolor: "#1565c0",
+                                },
+                              }}
+                            >
+                              {isMobile ? "Camera" : "Camera / Webcam"}
+                            </Button>
+
+                            <Button
+                              // variant="contained"
+                              startIcon={<FolderIcon />}
+                              onClick={() => fileInputRef.current?.click()}
+                              size={isMobile ? "small" : "medium"}
+                              sx={{
+                                textTransform: "none",
+                                fontSize: { xs: "9px", sm: "10px" },
+                                borderRadius: 5,
+                                px: 1.5,
+                                bgcolor: "#2e7d32",
+                                color: "#fff",
+                                "& .MuiButton-startIcon svg": {
+                                  fontSize: { xs: "13px", sm: "14px" } // 14px, 16px, 18px, etc.
+                                },
+
+                                "&:hover": {
+                                  bgcolor: "#1b5e20",
+
+                                },
+                              }}
+                            >
+                              {isMobile ? "Gallery" : "File"}
+                            </Button>
+                          </Stack>
+
+                          {/* Hidden Camera Input */}
+                          <input
+                            ref={cameraInputRef}
+                            hidden
+                            type="file"
+                            accept="image/*"
+                            capture="environment"
+                            onChange={handleMediaSelect}
+                          />
+
+                          {/* Hidden File Input */}
+                          <input
+                            ref={fileInputRef}
+                            hidden
+                            type="file"
+                            accept="image/*"
+                            onChange={handleMediaSelect}
+                          />
+                        </>
+                      )}
+
                     </Box>
+                    {/* 
+                    <Dialog
+                      open={openMediaDialog}
+                      onClose={() => setOpenMediaDialog(false)}
+                      fullWidth
+                      maxWidth="xs"
+                    >
+                      <DialogTitle>Select Image</DialogTitle>
+
+                      <DialogContent>
+                        <Stack spacing={2} sx={{ py: 1 }}>
+                          <Button
+                            variant="contained"
+                            startIcon={<CameraAltIcon />}
+                            onClick={() => cameraInputRef.current?.click()}
+                          >
+                            {isMobile ? "Camera" : "Camera / Webcam"}
+                          </Button>
+
+                          <Button
+                            variant="outlined"
+                            startIcon={<FolderIcon />}
+                            onClick={() => fileInputRef.current?.click()}
+                          >
+                            {isMobile ? "Gallery" : "File"}
+                          </Button> */}
+                    {/* Hidden Camera Input */}
+                    {/* <input
+                            ref={cameraInputRef}
+                            hidden
+                            type="file"
+                            accept="image/*"
+                            capture="environment"
+                            onChange={handleMediaSelect}
+                          /> */}
+
+                    {/* Hidden File Input */}
+                    {/* <input
+                            ref={fileInputRef}
+                            hidden
+                            type="file"
+                            accept="image/*"
+                            onChange={handleMediaSelect}
+                          />
+                        </Stack>
+                      </DialogContent>
+                    </Dialog> */}
+
                   </Tooltip>
 
                   <Tooltip

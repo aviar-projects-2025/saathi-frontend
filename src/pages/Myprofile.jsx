@@ -166,13 +166,14 @@ const Myprofile = () => {
       sx={{
         maxWidth: 700,
         // mx: "auto",
-        px: 2,
-        py: 3,
+        px: 1.5,
+        py: 2,
+        pb:4
       }}
     >
       <SectionCard
         sx={{
-          p: { xs: 1, sm: 3 },
+          p: { xs: 1, sm: 2 },
           border: "1px solid",
           borderColor: "divider",
           borderRadius: 3,
