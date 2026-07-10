@@ -1,23 +1,43 @@
-
-
 import React, { useEffect, useState } from "react";
 import {
   Box,
   Typography,
   Avatar,
+  useMediaQuery,
+  useTheme,
   Stack,
   Divider,
   TextField,
+  Menu,
+  MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Button,
   CircularProgress,
   IconButton,
 } from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 import SendIcon from "@mui/icons-material/Send";
+import CheckIcon from "@mui/icons-material/Check";
+import CloseIcon from "@mui/icons-material/Close";
 import Api from "../Api";
 import axios from "axios";
 import moment from "moment/moment";
+import UserAvatar from "../components/UserAvatar";
+import ThumbUpAltOutlinedIcon from "@mui/icons-material/ThumbUpAltOutlined";
+import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
+import { toast } from "react-toastify"; // remove if you use a different toast lib
+
+
 
 /* ── defined OUTSIDE so React never remounts it on re-render ── */
 const CommentInput = ({ value, onChange, onSend, placeholder }) => (
+
   <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.5, sm: 1 } }}>
     <TextField
       fullWidth
@@ -52,17 +72,87 @@ const CommentInput = ({ value, onChange, onSend, placeholder }) => (
   </Box>
 );
 
+/* ── inline edit box for a comment/reply, also defined OUTSIDE ── */
+const EditCommentInput = ({ value, onChange, onSave, onCancel }) => (
+  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+    <TextField
+      fullWidth
+      multiline
+      minRows={1}
+      maxRows={4}
+      size="small"
+      autoFocus
+      value={value}
+      onChange={onChange}
+      variant="outlined"
+      sx={{
+        "& .MuiOutlinedInput-root": {
+          borderRadius: 2.5,
+          fontSize: { xs: "0.72rem", sm: "0.78rem", md: "0.82rem" },
+        },
+      }}
+    />
+    <IconButton size="small" color="primary" onClick={onSave}>
+      <CheckIcon sx={{ fontSize: "1rem" }} />
+    </IconButton>
+    <IconButton size="small" onClick={onCancel}>
+      <CloseIcon sx={{ fontSize: "1rem" }} />
+    </IconButton>
+  </Box>
+);
+
 const CommunityComments = ({ post, user }) => {
+  const currentUser = JSON.parse(localStorage.getItem("user"));
   const [comment, setComment] = useState("");
+  const theme = useTheme();
   const [commentsFetched, setCommentsFetched] = useState([]);
   const [loading, setLoading] = useState(false);
   const [reply, setReply] = useState("");
   const [isReply, setIsReply] = useState(null);
   const [visibleReplies, setVisibleReplies] = useState({});
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
+  const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
+  const SAFFRON = "#E8650A";
+  const CARD_BORDER = "1px solid #F0E6DC";
+
+  const showSidebar = useMediaQuery(theme.breakpoints.up('sm'));
+
+  const avatarSize = isMobile ? 30 : 35;
+  const iconFontSize = isMobile ? 'small' : 'medium';
+  const btnFontSize = isMobile ? '0.5rem' : '0.7rem';
+  const bodyFontSize = isMobile ? '0.7rem' : '0.8rem';
+  const captionSize = isMobile ? '0.6rem' : '0.6rem';
+  const avatarFontSize = isMobile ? '0.6rem' : '1.1rem';
+  // three-dot menu state: which comment's menu is open + its anchor element
+  const [menuAnchor, setMenuAnchor] = useState(null);
+  const [menuComment, setMenuComment] = useState(null);
+
+  // inline editing state
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editText, setEditText] = useState("");
+
+  // delete confirmation modal state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [commentToDelete, setCommentToDelete] = useState(null);
 
   useEffect(() => {
     getComments();
   }, [post]);
+
+
+  const getComments = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get(Api + `/community/comments/${post?._id}`);
+
+      setCommentsFetched(res.data.data.comments);
+    } catch (error) {
+      console.log(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const sendComment = async (postId) => {
     try {
@@ -71,18 +161,6 @@ const CommunityComments = ({ post, user }) => {
       getComments();
     } catch (error) {
       console.log(error.message);
-    }
-  };
-
-  const getComments = async () => {
-    try {
-      setLoading(true);
-      const res = await axios.get(Api + `/community/comments/${post?._id}`);
-      setCommentsFetched(res.data.data.comments);
-    } catch (error) {
-      console.log(error.message);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -120,9 +198,140 @@ const CommunityComments = ({ post, user }) => {
     }
   };
 
+  /* ── three-dot menu handlers ── */
+  const handleMenuOpen = (event, commentItem) => {
+    event.stopPropagation();
+    setMenuAnchor(event.currentTarget);
+    setMenuComment(commentItem);
+  };
+
+  const handleMenuClose = () => {
+    setMenuAnchor(null);
+    setMenuComment(null);
+  };
+
+  /* ── edit handlers ── */
+  const handleEditClick = () => {
+    if (!menuComment) return;
+    setEditingCommentId(menuComment._id);
+    setEditText(menuComment.comment);
+    handleMenuClose();
+  };
+
+  const handleEditCancel = () => {
+    setEditingCommentId(null);
+    setEditText("");
+  };
+
+  const handleEditSave = async (commentId) => {
+    try {
+      await axios.patch(
+        `${Api}/community/comments/${commentId}/${user.id}`,
+        {
+          comment: editText,
+        }
+      );
+
+      toast.success("Comment updated");
+      setEditingCommentId(null);
+      setEditText("");
+      getComments();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to update comment");
+    }
+  };
+
+  /* ── delete handlers ── */
+  const handleDeleteClick = () => {
+    setCommentToDelete(menuComment);
+    setDeleteDialogOpen(true);
+    handleMenuClose();
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setCommentToDelete(null);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!commentToDelete) return;
+    try {
+      const res = await axios.delete(
+        `${Api}/community/comments/${commentToDelete._id}/${user.id}`
+      );
+      toast.success("Comment deleted");
+      getComments();
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Failed to delete comment"
+      );
+    } finally {
+      setDeleteDialogOpen(false);
+      setCommentToDelete(null);
+    }
+  };
+
   const parentComments = commentsFetched.filter((c) => c.parentCommentId === null);
   const getReplies = (parentId) =>
     commentsFetched.filter((c) => c.parentCommentId === parentId);
+
+  /* ── reusable renderer for a comment/reply bubble, with menu + edit ── */
+  const renderCommentBody = (item, isChild = false) => {
+    const isOwner = item.userId?._id === user.id;
+    const isEditing = editingCommentId === item._id;
+
+    return (
+      <Box
+        sx={{
+          bgcolor: "#F7F7F7",
+          borderRadius: 2.5,
+          px: { xs: isChild ? 0.9 : 1, sm: isChild ? 1.1 : 1.25 },
+          py: { xs: isChild ? 0.4 : 0.5, sm: isChild ? 0.6 : 0.75 },
+          position: "relative",
+        }}
+      >
+        {isEditing ? (
+          <EditCommentInput
+            value={editText}
+            onChange={(e) => setEditText(e.target.value)}
+            onSave={() => handleEditSave(item._id)}
+            onCancel={handleEditCancel}
+          />
+        ) : (
+          <Stack direction="row" alignItems="flex-start" justifyContent="space-between">
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Typography
+                fontWeight={700}
+                noWrap
+                sx={{ fontSize: { xs: isChild ? "0.65rem" : "0.7rem", sm: isChild ? "0.7rem" : "0.75rem", md: isChild ? "0.75rem" : "0.8rem" } }}
+              >
+                {item.userId?.firstName} {item.userId?.lastName}
+              </Typography>
+              <Typography
+                sx={{
+                  fontSize: { xs: isChild ? "0.68rem" : "0.72rem", sm: isChild ? "0.74rem" : "0.78rem", md: isChild ? "0.78rem" : "0.82rem" },
+                  lineHeight: 1.4,
+                  wordBreak: "break-word",
+                }}
+              >
+                {item.comment}
+              </Typography>
+            </Box>
+
+            {isOwner && (
+              <IconButton
+                size="small"
+                onClick={(e) => handleMenuOpen(e, item)}
+                sx={{ p: 0.25, ml: 0.5, flexShrink: 0 }}
+              >
+                <MoreVertIcon sx={{ fontSize: "1rem" }} />
+              </IconButton>
+            )}
+          </Stack>
+        )}
+      </Box>
+    );
+  };
 
   return (
     <Box sx={{ px: { xs: 0.5, sm: 1 } }}>
@@ -152,45 +361,31 @@ const CommunityComments = ({ post, user }) => {
         <Box sx={{ mt: 0.75 }}>
           {parentComments.map((item, index) => {
             const replies = getReplies(item._id);
+            const CommentUserId = parentComments.map((item) => item.userId)
 
             return (
               <Box key={item._id}>
                 {/* parent comment */}
                 <Stack direction="row" spacing={{ xs: 0.75, sm: 1 }} sx={{ py: 0.75 }}>
                   <Avatar
+                    src={item.userId?.profileImage}
                     sx={{
-                      width: { xs: 24, sm: 28, md: 30 },
-                      height: { xs: 24, sm: 28, md: 30 },
+                      width: avatarSize,
+                      height: avatarSize,
+                      bgcolor: SAFFRON,
+                      color: '#fff',
+                      fontWeight: 800,
+                      fontSize: avatarFontSize,
                       flexShrink: 0,
-                      mt: 0.25,
+                      mt: { xs: 0.4, sm: 0.5 }
                     }}
-                  />
+                  >
+
+                    {!currentUser?.profileImage &&
+                      `${currentUser?.firstName?.[0] || ''}${currentUser?.lastName?.[0] || ''}`}
+                  </Avatar>
                   <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Box
-                      sx={{
-                        bgcolor: "#F7F7F7",
-                        borderRadius: 2.5,
-                        px: { xs: 1, sm: 1.25 },
-                        py: { xs: 0.5, sm: 0.75 },
-                      }}
-                    >
-                      <Typography
-                        fontWeight={700}
-                        noWrap
-                        sx={{ fontSize: { xs: "0.7rem", sm: "0.75rem", md: "0.8rem" } }}
-                      >
-                        {item.userId?.firstName} {item.userId?.lastName}
-                      </Typography>
-                      <Typography
-                        sx={{
-                          fontSize: { xs: "0.72rem", sm: "0.78rem", md: "0.82rem" },
-                          lineHeight: 1.4,
-                          wordBreak: "break-word",
-                        }}
-                      >
-                        {item.comment}
-                      </Typography>
-                    </Box>
+                    {renderCommentBody(item, false)}
 
                     <Box
                       sx={{
@@ -213,14 +408,21 @@ const CommunityComments = ({ post, user }) => {
                         color={item.likedByCurrentUser ? "primary" : "text.secondary"}
                         onClick={() => likeComment(item._id)}
                         sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 0.4,
                           fontSize: { xs: "0.62rem", sm: "0.65rem" },
                           ml: 0.75,
                           cursor: "pointer",
                           userSelect: "none",
                         }}
                       >
-                        · {item.likedByCurrentUser ? "Liked" : "Like"}
-                        {item.likes > 0 ? ` (${item.likes})` : ""} ·
+                        {item.likedByCurrentUser ? (
+                          <ThumbUpAltIcon sx={{ fontSize: 14 }} />
+                        ) : (
+                          <ThumbUpAltOutlinedIcon sx={{ fontSize: 14 }} />
+                        )}
+                        {item.likes > 0 ? `${item.likes}` : ""}
                       </Typography>
                       <Typography
                         variant="caption"
@@ -291,31 +493,7 @@ const CommunityComments = ({ post, user }) => {
                           }}
                         />
                         <Box sx={{ flex: 1, minWidth: 0 }}>
-                          <Box
-                            sx={{
-                              bgcolor: "#F7F7F7",
-                              borderRadius: 2.5,
-                              px: { xs: 0.9, sm: 1.1 },
-                              py: { xs: 0.4, sm: 0.6 },
-                            }}
-                          >
-                            <Typography
-                              fontWeight={700}
-                              noWrap
-                              sx={{ fontSize: { xs: "0.65rem", sm: "0.7rem", md: "0.75rem" } }}
-                            >
-                              {replyItem.userId.firstName} {replyItem.userId.lastName}
-                            </Typography>
-                            <Typography
-                              sx={{
-                                fontSize: { xs: "0.68rem", sm: "0.74rem", md: "0.78rem" },
-                                lineHeight: 1.4,
-                                wordBreak: "break-word",
-                              }}
-                            >
-                              {replyItem.comment}
-                            </Typography>
-                          </Box>
+                          {renderCommentBody(replyItem, true)}
 
                           <Box
                             sx={{
@@ -338,47 +516,25 @@ const CommunityComments = ({ post, user }) => {
                               color={replyItem.likedByCurrentUser ? "primary" : "text.secondary"}
                               onClick={() => likeComment(replyItem._id)}
                               sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 0.4,
                                 fontSize: { xs: "0.58rem", sm: "0.62rem" },
                                 ml: 0.75,
                                 cursor: "pointer",
                                 userSelect: "none",
                               }}
                             >
-                              · {replyItem.likedByCurrentUser ? "Liked" : "Like"}
-                              {replyItem.likes > 0 ? ` (${replyItem.likes})` : ""} ·
-                            </Typography>
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                              onClick={() =>
-                                setIsReply((pre) =>
-                                  pre === replyItem._id ? null : replyItem._id
-                                )
-                              }
-                              sx={{
-                                fontSize: { xs: "0.58rem", sm: "0.62rem" },
-                                ml: 0.75,
-                                cursor: "pointer",
-                                userSelect: "none",
-                              }}
-                            >
-                              Reply
+                              {replyItem.likedByCurrentUser ? (
+                                <ThumbUpAltIcon sx={{ fontSize: 13 }} />
+                              ) : (
+                                <ThumbUpAltOutlinedIcon sx={{ fontSize: 13 }} />
+                              )}
+                              {replyItem.likes > 0 ? `${replyItem.likes}` : ""}
                             </Typography>
                           </Box>
                         </Box>
                       </Stack>
-
-                      {/* nested reply input */}
-                      {isReply === replyItem._id && (
-                        <Box sx={{ ml: { xs: 2.5, sm: 3.5 }, mt: 0.5, mb: 0.75 }}>
-                          <CommentInput
-                            value={reply}
-                            onChange={(e) => setReply(e.target.value)}
-                            onSend={() => replySend(post._id, replyItem._id)}
-                            placeholder="Write a reply…"
-                          />
-                        </Box>
-                      )}
                     </Box>
                   ))}
 
@@ -388,6 +544,34 @@ const CommunityComments = ({ post, user }) => {
           })}
         </Box>
       )}
+
+      {/* three-dot menu (shared across all comments/replies) */}
+      <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={handleMenuClose}>
+        <MenuItem onClick={handleEditClick}>
+          <EditIcon fontSize="small" sx={{ mr: 1 }} />
+          Edit
+        </MenuItem>
+        <MenuItem onClick={handleDeleteClick} sx={{ color: "error.main" }}>
+          <DeleteIcon fontSize="small" sx={{ mr: 1 }} />
+          Delete
+        </MenuItem>
+      </Menu>
+
+      {/* delete confirmation modal */}
+      <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
+        <DialogTitle>Delete comment?</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            This will permanently remove the comment. This action can't be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteCancel}>Cancel</Button>
+          <Button color="error" onClick={() => handleDeleteConfirm(comment._id)}>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

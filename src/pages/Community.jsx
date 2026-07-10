@@ -75,6 +75,7 @@ export default function Community() {
 
   const currentUser = JSON.parse(localStorage.getItem("user"));
 
+
   const handleMenuOpen = (event, post) => {
     setAnchorEl(event.currentTarget);
     setSelectedPost(post);
@@ -838,7 +839,7 @@ export default function Community() {
                         size={isMobile ? 'small' : 'medium'}
                         sx={{ textTransform: 'none', color: 'text.secondary', fontSize: btnFontSize }}
                       >
-                        Like {post?.likes || 0}
+                        {post?.likes || 0}
                       </Button>
 
                       <Button
