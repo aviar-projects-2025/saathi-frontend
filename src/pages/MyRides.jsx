@@ -511,7 +511,7 @@ function RideCard({ ride, fetchRides, confirmRide, setConfirmRide, showEdit, sho
   ).length;
 
   const handleApprove = async (requestId) => {
-    
+
     try {
       const res = await axios.patch(`${Api}/bookride/${requestId}/status?type=Approve`, { status: 'ACCEPTED' });
       // console.log(res.data.succes, 'res')
@@ -888,6 +888,8 @@ const MyRides = () => {
   const { notifications } = useNotifications();
   const [confirmRide, setConfirmRide] = useState(null)
 
+console.log(notifications,'notifications myrides')
+
   const processedIds = useRef(new Set());
 
   useEffect(() => {
@@ -915,33 +917,6 @@ const MyRides = () => {
     return () => clearInterval(interval);
   }, [currentRide]);
 
-  // console.log(notifications, 'from my rides')
-
-  // useEffect(() => {
-  //   if (!notifications?.length) return;
-
-  //   const latest = notifications[0];
-  //   if (latest.type === "request_update" || latest.type === "new_request" || latest.type === "request_accepted") {
-  //     const requestData = latest;
-
-  //     setAllMyRequests((prev) => {
-  //       console.log(prev, 'prev')
-  //       console.log(requestData, 'requestData')
-
-  //       const exists = prev.find(r => r.rideId._id === requestData.data.rideId);
-
-  //       if (exists) {
-  //         return prev.map(r =>
-  //           r.rideId._id === requestData.data.rideId ? requestData : r
-  //         );
-  //       }
-
-  //       return [requestData, ...prev];
-  //     });
-  //   }
-
-  // }, [notifications]);
-
   useEffect(() => {
     if (!notifications?.length) return;
 
@@ -964,6 +939,8 @@ const MyRides = () => {
     if (shouldRefetchReceived) {
       fetchAllRequests();
     }
+
+    fetchRides()
 
     if (shouldRefetch) {
       fetchAllSends();
