@@ -26,7 +26,7 @@ const RequestRide = () => {
     const [openCancelDialog, setOpenCancelDialog] = useState(false);
 
     const [selectedRequest, setSelectedRequest] = useState(null);
-
+    const [userData, setUserData] = useState([]);
     const user = JSON.parse(localStorage.getItem('user'));
 
     const { refreshRide } = useRide();
@@ -52,6 +52,8 @@ const RequestRide = () => {
             if (!user?.id) return;
 
             const res = await axios.get(`${Api}/bookride/send/${user.id}`);
+            const requestUser = res.data.data.map((item) => item.members)
+            setUserData(requestUser);
             setAllMyRequests(res.data?.data || []);
         } catch (error) {
             console.error("Error fetching requests:", error);

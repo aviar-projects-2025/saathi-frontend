@@ -37,8 +37,13 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
 import { toast } from "react-toastify";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import CloseIcon from "@mui/icons-material/Close";
+import {
+  InputAdornment,
+} from "@mui/material";
 import { useNavigate } from "react-router-dom";
-
 
 
 const SAFFRON = "#E8650A";
@@ -104,6 +109,11 @@ const Myprofile = () => {
     newPassword: "",
     confirmPassword: "",
   });
+  const [showPassword, setShowPassword] = useState({
+    current: false,
+    new: false,
+    confirm: false,
+  });
   const handlePasswordChange = (e) => {
     const { name, value } = e.target;
 
@@ -126,18 +136,57 @@ const Myprofile = () => {
       getCommunityPost();
     }
   }, [currentUser]);
-  const getCommunityPost = async () => {
 
+  console.log("author---id", currentUser?._id)
+  const handleChangePassword = async () => {
     try {
+      // Frontend validation
+      if (
+        !passwordData.currentPassword ||
+        !passwordData.newPassword ||
+        !passwordData.confirmPassword
+      ) {
+        return toast.error("All fields are required");
+      }
 
+      if (passwordData.newPassword !== passwordData.confirmPassword) {
+        return toast.error("Passwords do not match");
+      }
 
+      const res = await axios.patch(
+        `${Api}/users/change-password/${currentUser?._id}`,
+        {
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword,
+          confirmPassword: passwordData.confirmPassword,
+        }
+      );
+
+      toast.success(res.data.message);
+
+      setPasswordModel(false);
+      setPasswordData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+
+      console.log("Change Password", res.data);
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.message || "Something went wrong");
+    }
+  };
+
+  const getCommunityPost = async () => {
+    try {
       const postsRes = await axios.get(Api + "/community/");
 
       // Only current user's posts
       const myPosts = postsRes.data.data.filter(
         (item) => item.authorId?._id === currentUser?._id
       );
-
+      console.log("GYFYFUHGU", postRes)
       setCommunityPosts(myPosts);
 
     } catch (error) {
@@ -168,7 +217,7 @@ const Myprofile = () => {
         // mx: "auto",
         px: 1.5,
         py: 2,
-        pb:4
+        pb: 4
       }}
     >
       <SectionCard
@@ -224,7 +273,7 @@ const Myprofile = () => {
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
-                  mt:1
+                  mt: 1
                 }}
               >
                 {currentUser?.firstName} {currentUser?.lastName}
@@ -251,8 +300,8 @@ const Myprofile = () => {
             sx={{
               ...pillBtn,
               // width: { xs: "auto", sm: "auto" },
-              display:"flex",
-              justifyContent:{xs:"flex-end"}
+              display: "flex",
+              justifyContent: { xs: "flex-end" }
             }}
           >
             View Profile
@@ -327,124 +376,166 @@ const Myprofile = () => {
         <Box
           sx={{
             position: "fixed",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
+            inset: 0,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            width: { xs: "92%", sm: "100%" },
-            px: { xs: 2, sm: 0 },
+            bgcolor: "rgba(0,0,0,0.35)",
+
           }}
         >
+
           <Box
             sx={{
               bgcolor: "#fff",
-              width: { xs: "100%", sm: "85%", md: 420 },
-              maxWidth: 420,
-              borderRadius: { xs: 2, sm: 3 },
-              p: { xs: 2, sm: 3 },
-              boxShadow: 24,
-              maxHeight: { xs: "85vh", sm: "90vh" },
-              overflowY: "auto",
+              width: { xs: "100%", sm: 430 },
+              p: 5,
+              borderRadius: 4,
+              boxShadow: 8,
+              overflow: "hidden",
             }}
           >
-            <Typography
-              variant="h6"
-              fontWeight={700}
-              sx={{
-                fontSize: { xs: "0.95rem", sm: "1.1rem", md: "1.25rem" },
-                mb: { xs: 1.5, sm: 3 },
-              }}
-            >
-              Change Password
-            </Typography>
+            {/* Header */}
 
-            <Stack spacing={{ xs: 1.5, sm: 2 }}>
-              <TextField
-                label="Current Password"
-                name="currentPassword"
-                type="password"
-                size="small"
-                fullWidth
-                value={passwordData.currentPassword}
-                onChange={handlePasswordChange}
-                InputProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
-                InputLabelProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
-              />
 
-              <TextField
-                label="New Password"
-                name="newPassword"
-                type="password"
-                size="small"
-                fullWidth
-                value={passwordData.newPassword}
-                onChange={handlePasswordChange}
-                InputProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
-                InputLabelProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
-              />
-
-              <TextField
-                label="Confirm Password"
-                name="confirmPassword"
-                type="password"
-                size="small"
-                fullWidth
-                value={passwordData.confirmPassword}
-                onChange={handlePasswordChange}
-                InputProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
-                InputLabelProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
-              />
-
-              <Stack
-                direction={{ xs: "column-reverse", sm: "row" }}
-                justifyContent="flex-end"
-                alignItems="center"
-                spacing={{ xs: 1, sm: 1.5 }}
-                sx={{ mt: { xs: 0.5, sm: 1 } }}
-              >
-                <Button
-                  variant="outlined"
-                  size="small"
-                  sx={{
-                    width: { xs: "100%", sm: "auto" },
-                    fontSize: { xs: "0.75rem", sm: "0.85rem" },
-                    py: { xs: 0.5, sm: 0.75 },
-                    px: { xs: 1.5, sm: 2.5 },
-                    minWidth: { xs: "auto", sm: 90 },
+            {/* Body */}
+            <Box p={1}>
+              <Stack spacing={2}>
+                <TextField
+                  fullWidth
+                  label="Current Password"
+                  type={showPassword.current ? "text" : "password"}
+                  name="currentPassword"
+                  value={passwordData.currentPassword}
+                  onChange={handlePasswordChange}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() =>
+                            setShowPassword({
+                              ...showPassword,
+                              current: !showPassword.current,
+                            })
+                          }
+                        >
+                          {showPassword.current ? (
+                            <VisibilityOff />
+                          ) : (
+                            <Visibility />
+                          )}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
                   }}
-                  onClick={() => {
-                    setPasswordModel(false)
-                    setPasswordData({
-                      confirmPassword: '',
-                      currentPassword: '',
-                      newPassword: ''
-                    })
+                />
+
+                <TextField
+                  fullWidth
+                  label="New Password"
+                  type={showPassword.new ? "text" : "password"}
+                  name="newPassword"
+                  value={passwordData.newPassword}
+                  onChange={handlePasswordChange}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() =>
+                            setShowPassword({
+                              ...showPassword,
+                              new: !showPassword.new,
+                            })
+                          }
+                        >
+                          {showPassword.new ? (
+                            <VisibilityOff />
+                          ) : (
+                            <Visibility />
+                          )}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
                   }}
+                />
+
+                <TextField
+                  fullWidth
+                  label="Confirm Password"
+                  type={showPassword.confirm ? "text" : "password"}
+                  name="confirmPassword"
+                  value={passwordData.confirmPassword}
+                  onChange={handlePasswordChange}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() =>
+                            setShowPassword({
+                              ...showPassword,
+                              confirm: !showPassword.confirm,
+                            })
+                          }
+                        >
+                          {showPassword.confirm ? (
+                            <VisibilityOff />
+                          ) : (
+                            <Visibility />
+                          )}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+
+                <Stack
+                  direction="row"
+                  spacing={2}
+                  justifyContent="flex-end"
+                  mt={1}
                 >
-                  Cancel
-                </Button>
+                  <Button
+                    variant="outlined"
+                    onClick={() => {
+                      setPasswordModel(false);
+                      setPasswordData({
+                        currentPassword: "",
+                        newPassword: "",
+                        confirmPassword: "",
+                      });
+                    }}
+                    sx={{
+                      borderColor: "#E8650A",
+                      color: "#E8650A",
+                      "&:hover": {
+                        borderColor: "#D65A00",
+                        bgcolor: "#FFF6E5",
+                      },
+                    }}
+                  >
+                    Cancel
+                  </Button>
 
-                <Button
-                  variant="contained"
-                  size="small"
-                  sx={{
-                    width: { xs: "100%", sm: "auto" },
-                    fontSize: { xs: "0.75rem", sm: "0.85rem" },
-                    py: { xs: 0.5, sm: 0.75 },
-                    px: { xs: 1.5, sm: 2.5 },
-                    minWidth: { xs: "auto", sm: 130 },
-                  }}
-                  onClick={() => handleChangePassword()}
-                >
-                  Update Password
-                </Button>
+                  <Button
+                    variant="contained"
+                    onClick={handleChangePassword}
+                    sx={{
+                      bgcolor: "#E8650A",
+                      px: 3,
+                      "&:hover": {
+                        bgcolor: "#D65A00",
+                      },
+                    }}
+                  >
+                    Update Password
+                  </Button>
+                </Stack>
               </Stack>
-            </Stack>
+            </Box>
           </Box>
         </Box>
       </Modal>
+
       <Modal open={openShare} onClose={handleCloseShare}>
         <Box
           sx={{

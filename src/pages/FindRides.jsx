@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
   Container,
@@ -27,7 +28,7 @@ import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import TrainIcon from "@mui/icons-material/Train";
 import FilterListOffIcon from "@mui/icons-material/FilterListOff";
-
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import RideCard from "./RideCard.jsx";
 import Api from "../Api";
 
@@ -44,7 +45,7 @@ const saffron = {
   800: "#7C4500",
   900: "#502C00",
 };
-
+const ORANGE = "#FF9933";
 const inputFieldSx = {
   "& .MuiOutlinedInput-root": {
     borderRadius: "10px",
@@ -111,7 +112,7 @@ export default function FindRides() {
   const [rides, setRides] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filtersOpen, setFiltersOpen] = useState(false); // collapsed by default
-
+  const navigate = useNavigate();
   const [searchFrom, setSearchFrom] = useState("");
   const [searchDestination, setSearchDestination] = useState("");
 
@@ -440,6 +441,7 @@ export default function FindRides() {
                 <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
                   Filters{activeFilters.length > 0 ? ` (${activeFilters.length})` : ""}
                 </Box>
+
                 {isMobile && activeFilters.length > 0 && (
                   <Box
                     sx={{
@@ -451,6 +453,28 @@ export default function FindRides() {
                     }}
                   />
                 )}
+              </Button>
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<VisibilityIcon />}
+                onClick={() => navigate("/request-ride")}
+                sx={{
+                  bgcolor: ORANGE,
+                  color: "#ffffff",
+                  "&:hover": { bgcolor: "#e68a00" },
+                  "&.Mui-disabled": { bgcolor: "#e0e0e0" },
+                  fontWeight: 700,
+                  fontSize: { xs: "0.7rem", sm: "0.875rem" },
+                  px: { xs: 1.5, sm: 3 },
+                  py: { xs: 0.5, sm: 1 },
+                  borderRadius: 2,
+                  whiteSpace: "nowrap",
+                  boxShadow: "none",
+                  textTransform: "none",
+                }}
+              >
+                View Your Requests
               </Button>
             </Box>
 
