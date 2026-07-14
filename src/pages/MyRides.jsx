@@ -530,8 +530,6 @@ function RideCard({ ride, fetchRides, confirmRide, setConfirmRide, showEdit, sho
 
   const status = statusConfig[ride?.status];
 
-  // console.log(ride, 'ride inside ridecard')
-
   const startDate = new Date(ride.startTime);
   const date = !isNaN(startDate)
     ? startDate.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
@@ -1054,12 +1052,23 @@ const MyRides = () => {
       );
 
       setCurrentRide(
+        //   const currentDateTime = new Date();
+        //   const currReqRide = allMyRequests.filter((ride)=>{
+
+        //     const rideStartTime = new Date(ride?.rideId?.startTime);
+        //     return(
+        //       !isNaN(rideStartTime) &&
+        //       rideStartTime <= currentDateTime
+        //     )
+        //   })
+
         all.filter((ride) => {
           const rideStartTime = new Date(ride?.startTime);
           // const rideEndTime = new Date(rideStartTime.getTime() + 3 * 60 * 60 * 1000);
           return ride?.createdBy?._id === user.id && rideStartTime <= currentDateTime && ride?.travelStatus !== "Completed";
         })
       );
+
     } catch (error) {
       console.error('Error fetching rides:', error.message);
     } finally {
@@ -1076,19 +1085,64 @@ const MyRides = () => {
     // console.log("hello")
     const currentDateTime = new Date();
 
-    const acceptedRides = allMyRequests
-      .filter((ride) => ride?.status?.trim() === "ACCEPTED" && ride.rideId)
+    console.log(mypost, 'mypost.....')
+
+    const acceptedRides = allMyRequests.filter((ride) => {
+      // ride?.status?.trim() === "ACCEPTED" && ride.rideId
+      const rideStartTime = new Date(ride?.rideId?.startTime);
+      return (
+        !isNaN(rideStartTime) &&
+        rideStartTime > currentDateTime
+      )
+    })
       .map((ride) => ride.rideId);
+
+    console.log(acceptedRides, 'acceptedRides')
 
     const myUpcoming = mypost.filter((ride) => {
       const rideStartTime = new Date(ride?.startTime);
+      console.log(rideStartTime, 'rideStartTime')
+      console.log(currentDateTime, 'currentDateTime')
       return (
         !isNaN(rideStartTime) &&
         rideStartTime > currentDateTime
       );
     });
 
+    console.log(myUpcoming, 'myUpcoming')
+
     setUpcoming([...acceptedRides, ...myUpcoming]);
+  }, [allMyRequests, mypost]);
+
+
+  useEffect(() => {
+    const currentDateTime = new Date();
+
+    const currReqRide = allMyRequests
+      .filter((ride) => {
+        const rideStartTime = new Date(ride?.rideId?.startTime);
+
+        return (
+          !isNaN(rideStartTime) &&
+          rideStartTime <= currentDateTime
+        );
+      })
+      .map((ride) => ride.rideId);
+
+    console.log(currReqRide, 'currReqRide');
+
+
+    const myrides =  mypost.filter((ride) => {
+      const rideStartTime = new Date(ride?.startTime);
+      console.log(ride,'rides I created')
+      // const rideEndTime = new Date(rideStartTime.getTime() + 3 * 60 * 60 * 1000);
+      return ride?.createdBy?._id === user.id && rideStartTime <= currentDateTime && ride?.travelStatus !== "Completed";
+    })
+
+    console.log(myrides,'myrides')
+
+    setCurrentRide([...currReqRide, ...myrides]);
+
   }, [allMyRequests, mypost]);
 
   const fetchAllRequests = async () => {
