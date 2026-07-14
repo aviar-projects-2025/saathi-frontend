@@ -24,7 +24,7 @@ export default function NotificationTab({ handleCloseNotifications }) {
         }, {})
     );
 
-    console.log(tabNotification, 'tabNotification')
+    // console.log(tabNotification, 'tabNotification')
 
     const navigate = useNavigate();
 
@@ -42,7 +42,7 @@ export default function NotificationTab({ handleCloseNotifications }) {
                 navigate("/my-referalls");
                 break;
             case "ride_started":
-                console.log(item.type, 'item.type')
+                // console.log(item.type, 'item.type')
                 navigate("/myride")
                 break;
 
@@ -53,12 +53,12 @@ export default function NotificationTab({ handleCloseNotifications }) {
 
     const handleIsRead = (id, item) => {
         if (item?.isRead) return;
-        console.log(item,'item notif')
-        console.log(id, 'notif id')
+        // console.log(item,'item notif')
+        // console.log(id, 'notif id')
         try {
             axios.patch(Api + `/notification/${id}`)
                 .then((res) => {
-                    console.log(res, 'res')
+                    // console.log(res, 'res')
                     fetchNotifications();
                 })
         } catch (error) {
