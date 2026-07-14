@@ -19,10 +19,14 @@ export default function NotificationTab({ handleCloseNotifications }) {
 
     const uniqueNotifications = Object.values(
         (tabNotification || []).reduce((acc, curr) => {
-            acc[curr?.data.rideId || curr._id] = curr; // handle both cases
+            acc[curr._id] = curr; // handle both cases
             return acc;
         }, {})
     );
+
+    console.log(uniqueNotifications,'uniqueNotifications')
+    // console.log(tabNotification,'tabNotification')
+
 
     // console.log(tabNotification, 'tabNotification')
 
@@ -52,6 +56,9 @@ export default function NotificationTab({ handleCloseNotifications }) {
     }
 
     const handleIsRead = (id, item) => {
+        console.log(item,'item')
+        console.log(id,'item')
+
         if (item?.isRead) return;
         // console.log(item,'item notif')
         // console.log(id, 'notif id')

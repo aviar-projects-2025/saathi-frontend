@@ -1121,27 +1121,35 @@ const MyRides = () => {
     const currReqRide = allMyRequests
       .filter((ride) => {
         const rideStartTime = new Date(ride?.rideId?.startTime);
-
         return (
           !isNaN(rideStartTime) &&
-          rideStartTime <= currentDateTime
+          rideStartTime <= currentDateTime && ride?.rideId?.travelStatus !== "Completed"
         );
       })
       .map((ride) => ride.rideId);
 
-    console.log(currReqRide, 'currReqRide');
-
-
-    const myrides =  mypost.filter((ride) => {
+    const myrides = mypost.filter((ride) => {
       const rideStartTime = new Date(ride?.startTime);
-      console.log(ride,'rides I created')
+      console.log(ride, 'rides I created')
       // const rideEndTime = new Date(rideStartTime.getTime() + 3 * 60 * 60 * 1000);
       return ride?.createdBy?._id === user.id && rideStartTime <= currentDateTime && ride?.travelStatus !== "Completed";
     })
 
-    console.log(myrides,'myrides')
+    const historyRide = allMyRequests
+      .filter((ride) => ride?.rideId?.travelStatus == "Completed")
+      .map((ride) => ride.rideId);
+
+    console.log(myrides, 'myrides')
+    console.log(historyRide, 'historyRide')
 
     setCurrentRide([...currReqRide, ...myrides]);
+    
+      const histMyPost = mypost.filter((ride) => {
+          const rideStartTime = new Date(ride?.startTime);
+          return ride?.createdBy?._id === user.id && !isNaN(rideStartTime) && ride?.travelStatus === "Completed";
+        })
+
+    setHistory([...historyRide, ...histMyPost]);
 
   }, [allMyRequests, mypost]);
 
