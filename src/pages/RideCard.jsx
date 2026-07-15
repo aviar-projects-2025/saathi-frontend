@@ -171,7 +171,7 @@ export default function RideCard({ ride }) {
       seatsRequested: isFlight ? null : Number(requestData.seatsRequested),
       membersCount: Number(requestData.membersCount),
       members: requestData.members,
-      phone: requestData.phone,
+      // phone: requestData.phone,
       message: requestData.message,
       requestType: isFlight ? "COMPANION" : "SEAT",
     };
