@@ -11,6 +11,7 @@ import {
 import axios from 'axios';
 import Api from '../Api';
 import Ridebook from "./Ridebook.jsx";
+import VerifiedIcon from "@mui/icons-material/Verified";
 import { useRide } from "../context/RideContext";
 import DeleteIcon from "@mui/icons-material/Delete";
 import PersonIcon from "@mui/icons-material/Person";
@@ -99,152 +100,244 @@ const RequestRide = () => {
                 <br />
 
                 {allMyRequests.filter(req => req?.rideId).length === 0 ? (
-                    <Typography
-                        textAlign="center"
-                        color="text.secondary"
-                        sx={{ mt: 4 }}
-                    >
+                    <Typography textAlign="center" color="text.secondary" sx={{ mt: 4 }}>
                         No ride requests found.
                     </Typography>
                 ) : (
-                    allMyRequests
-                        .filter(req => req?.rideId)
-                        .filter((request, index, self) =>
-                            index ===
-                            self.findIndex(
-                                item =>
-                                    item?.rideId?.createdBy?._id ===
-                                    request?.rideId?.createdBy?._id
-                            )
-                        )
-                        .map((request) => {
-                            const requestCount = allMyRequests.filter(
-                                item =>
-                                    item?.rideId &&
-                                    item?.rideId?.createdBy?._id ===
-                                    request?.rideId?.createdBy?._id
-                            ).length;
+                    <>
+
+                        {(() => {
+                            const uniqueRequests = allMyRequests
+                                .filter(req => req?.rideId)
+
+
+
+
+                            const completed = uniqueRequests.filter(
+                                request => request.rideId?.travelStatus === "Completed"
+                            );
+                            const active = uniqueRequests.filter(
+                                request => request.rideId?.travelStatus !== "Completed"
+                            );
 
                             return (
-                                <Card
-                                    key={request._id}
-                                    onClick={() => {
-                                        setSelectedRequest(request);
-                                        setSelectedRide(request.rideId);
-                                        setOpenEditModal(true);
-                                    }}
-                                    sx={{
-                                        mb: 3,
-                                        borderRadius: "16px",
-                                        overflow: "hidden",
-                                        border: "1px solid #f0d9c0",
-                                        boxShadow: "none",
-                                        cursor: "pointer",
-                                    }}
-                                >
-                                    {/* Header bar */}
-                                    <Box
-                                        sx={{
-                                            bgcolor: "#1a1030",
-                                            px: 2.5,
-                                            py: 1.5,
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "space-between",
-                                            gap: 1,
-                                            flexWrap: "wrap",
-                                        }}
-                                    >
-                                        <Typography
-                                            sx={{ color: "#fff", fontWeight: 600, fontSize: 15 }}
+                                <>
+
+                                    {completed.length > 0 && (
+                                        <Box
+                                            sx={{
+                                                mb: 3,
+                                                borderRadius: "16px",
+                                                border: "1px solid #f0d9c0",
+                                                bgcolor: "#fff",
+                                                overflow: "hidden",
+                                            }}
                                         >
-                                            {request.rideId?.createdBy?.firstName}{" "}
-                                            {request.rideId?.createdBy?.lastName}
-                                        </Typography>
+                                            {completed.map((request, idx) => {
+                                                const user = request.rideId?.createdBy || {};
+                                                const initials = `${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`.toUpperCase();
 
-                                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                            <Chip
-                                                label={`${requestCount} Request${requestCount > 1 ? "s" : ""
-                                                    }`}
-                                                size="small"
-                                                sx={{
-                                                    bgcolor: "#E3F2FD",
-                                                    color: "#1565C0",
-                                                    fontWeight: 600,
-                                                }}
-                                            />
+                                                return (
+                                                    <Box
+                                                        key={request._id}
+                                                        onClick={() => {
+                                                            setSelectedRequest(request);
+                                                            setSelectedRide(request.rideId);
+                                                            //   setOpenEditModal(true);
+                                                        }}
+                                                        sx={{
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                            gap: 1.5,
+                                                            px: 2.5,
+                                                            py: 1.5,
+                                                            cursor: "pointer",
+                                                            borderBottom: idx !== completed.length - 1 ? "1px solid #f0e6d8" : "none",
+                                                            "&:hover": { bgcolor: "#FFF9F2" },
+                                                        }}
+                                                    >
+                                                        <Box sx={{ position: "relative" }}>
+                                                            <Avatar
+                                                                sx={{
+                                                                    bgcolor: "#f5ddc2",
+                                                                    color: "#7a4a00",
+                                                                    width: 40,
+                                                                    height: 40,
+                                                                    fontSize: "0.9rem",
+                                                                    fontWeight: 700,
+                                                                }}
+                                                            >
+                                                                {initials || "U"}
+                                                            </Avatar>
+                                                            <VerifiedIcon
+                                                                sx={{
+                                                                    position: "absolute",
+                                                                    bottom: -2,
+                                                                    right: -2,
+                                                                    fontSize: 14,
+                                                                    color: "#1976d2",
+                                                                    bgcolor: "#fff",
+                                                                    borderRadius: "50%",
+                                                                }}
+                                                            />
+                                                        </Box>
 
-                                            <Chip
-                                                label={request.status}
-                                                size="small"
-                                                sx={{
-                                                    fontWeight: 700,
-                                                    borderRadius: "20px",
-                                                    bgcolor:
-                                                        request.status === "ACCEPTED"
-                                                            ? "#e8f7e8"
-                                                            : request.status === "REJECTED"
-                                                                ? "#fbe7e6"
-                                                                : "#fdf1e0",
-                                                    color:
-                                                        request.status === "ACCEPTED"
-                                                            ? "#1e7d1e"
-                                                            : request.status === "REJECTED"
-                                                                ? "#b1362f"
-                                                                : "#b56b0d",
-                                                }}
-                                            />
+                                                        {/* Name + route/subtext */}
+                                                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                                                            <Typography fontWeight={700} fontSize={14} noWrap>
+                                                                {user.firstName} {user.lastName}
+                                                            </Typography>
+                                                            <Typography fontSize={12} color="text.secondary" noWrap>
+                                                                {request.rideId?.from} → {request.rideId?.destination}
+                                                            </Typography>
+                                                        </Box>
 
-                                            <IconButton
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleCancelClick(request);
+                                                        {/* Right side value */}
+                                                        <Box sx={{ textAlign: "right" }}>
+                                                            <Typography fontWeight={700} fontSize={16}>
+                                                                {new Date(request.createdAt).toLocaleDateString()}
+                                                            </Typography>
+                                                            <Typography fontSize={11} color="text.secondary">
+                                                                completed
+                                                            </Typography>
+                                                        </Box>
+                                                    </Box>
+                                                );
+                                            })}
+                                        </Box>
+                                    )}
+
+
+                                    {active.map((request) => {
+                                        const requestCount = allMyRequests.filter(
+                                            item =>
+                                                item?.rideId &&
+                                                item?.rideId?.createdBy?._id === request?.rideId?.createdBy?._id
+                                        ).length;
+
+                                        return (
+                                            <Card
+                                                key={request._id}
+                                                onClick={() => {
+                                                    setSelectedRequest(request);
+                                                    setSelectedRide(request.rideId);
+                                                    setOpenEditModal(true);
                                                 }}
-                                                size="small"
                                                 sx={{
-                                                    bgcolor: "rgba(255,255,255,0.1)",
-                                                    color: "#fff",
-                                                    "&:hover": {
-                                                        bgcolor: "rgba(255,255,255,0.2)",
-                                                    },
+                                                    mb: 3,
+                                                    borderRadius: "16px",
+                                                    overflow: "hidden",
+                                                    border: "1px solid #f0d9c0",
+                                                    boxShadow: "none",
+                                                    cursor: "pointer",
                                                 }}
                                             >
-                                                <DeleteIcon fontSize="small" />
-                                            </IconButton>
-                                        </Box>
+                                                {/* Header bar */}
+                                                <Box
+                                                    sx={{
+                                                        bgcolor: "#1a1030",
+                                                        px: 2.5,
+                                                        py: 1.5,
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "space-between",
+                                                        gap: 1,
+                                                        flexWrap: "wrap",
+                                                    }}
+                                                >
+                                                    <Typography sx={{ color: "#fff", fontWeight: 600, fontSize: 15 }}>
+                                                        {request.rideId?.createdBy?.firstName} {request.rideId?.createdBy?.lastName}
+                                                    </Typography>
 
-                                    </Box>
+                                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                                        {/* <Chip
+                  label={`${requestCount} Request${requestCount > 1 ? "s" : ""}`}
+                  size="small"
+                  sx={{ bgcolor: "#E3F2FD", color: "#1565C0", fontWeight: 600 }}
+                /> */}
 
-                                    <CardContent sx={{ p: 2.5 }}> {/* Route */}
-                                        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1, }} >
-                                            <Box> <Typography sx={{ fontSize: 11, color: "#FF9933", fontWeight: 600 }}> FROM </Typography>
-                                                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                                                    <LocationOnIcon sx={{ color: "#e2483d", fontSize: 18 }} />
-                                                    <Typography fontWeight={600}>{request.rideId?.from}</Typography>
+                                                        <Chip
+                                                            label={request.status}
+                                                            size="small"
+                                                            sx={{
+                                                                fontWeight: 700,
+                                                                borderRadius: "20px",
+                                                                bgcolor:
+                                                                    request.status === "ACCEPTED" ? "#e8f7e8" :
+                                                                        request.status === "REJECTED" ? "#fbe7e6" : "#fdf1e0",
+                                                                color:
+                                                                    request.status === "ACCEPTED" ? "#1e7d1e" :
+                                                                        request.status === "REJECTED" ? "#b1362f" : "#b56b0d",
+                                                            }}
+                                                        />
+
+                                                        <IconButton
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleCancelClick(request);
+                                                            }}
+                                                            size="small"
+                                                            sx={{
+                                                                bgcolor: "rgba(255,255,255,0.1)",
+                                                                color: "#fff",
+                                                                "&:hover": { bgcolor: "rgba(255,255,255,0.2)" },
+                                                            }}
+                                                        >
+                                                            <DeleteIcon fontSize="small" />
+                                                        </IconButton>
+                                                    </Box>
                                                 </Box>
-                                            </Box>
-                                            <ArrowForwardIcon sx={{ color: "#FF9933" }} />
-                                            <Box sx={{ textAlign: "right" }}>
-                                                <Typography sx={{ fontSize: 11, color: "#FF9933", fontWeight: 600 }}> TO </Typography>
-                                                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, justifyContent: "flex-end" }}>
-                                                    <LocationOnIcon sx={{ color: "#e2483d", fontSize: 18 }} />
-                                                    <Typography fontWeight={600}>{request.rideId?.destination}</Typography>
-                                                </Box>
-                                            </Box>
-                                        </Box>
-                                        <Box sx={{ borderTop: "1px solid #f0e6d8", my: 2 }} /> {/* Date & time */}
-                                        <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap" }}> <Box> <Typography sx={{ fontSize: 11, color: "text.secondary" }}> Date </Typography>
-                                            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}> <CalendarMonthIcon sx={{ color: "#FF9933", fontSize: 16 }} />
-                                                <Typography fontWeight={600} fontSize={13}> {new Date(request.createdAt).toLocaleDateString()} </Typography> </Box>
-                                        </Box> <Box> <Typography sx={{ fontSize: 11, color: "text.secondary" }}> Time </Typography>
-                                                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}> <AccessTimeIcon sx={{ color: "#FF9933", fontSize: 16 }} />
-                                                    <Typography fontWeight={600} fontSize={13}> {new Date(request.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", })} </Typography>
-                                                </Box> </Box> </Box>
-                                    </CardContent>
 
-                                </Card>
+                                                <CardContent sx={{ p: 2.5 }}>
+                                                    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
+                                                        <Box>
+                                                            <Typography sx={{ fontSize: 11, color: "#FF9933", fontWeight: 600 }}>FROM</Typography>
+                                                            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                                                                <LocationOnIcon sx={{ color: "#e2483d", fontSize: 18 }} />
+                                                                <Typography fontWeight={600}>{request.rideId?.from}</Typography>
+                                                            </Box>
+                                                        </Box>
+                                                        <ArrowForwardIcon sx={{ color: "#FF9933" }} />
+                                                        <Box sx={{ textAlign: "right" }}>
+                                                            <Typography sx={{ fontSize: 11, color: "#FF9933", fontWeight: 600 }}>TO</Typography>
+                                                            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, justifyContent: "flex-end" }}>
+                                                                <LocationOnIcon sx={{ color: "#e2483d", fontSize: 18 }} />
+                                                                <Typography fontWeight={600}>{request.rideId?.destination}</Typography>
+                                                            </Box>
+                                                        </Box>
+                                                    </Box>
+
+                                                    <Box sx={{ borderTop: "1px solid #f0e6d8", my: 2 }} />
+
+                                                    <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
+                                                        <Box>
+                                                            <Typography sx={{ fontSize: 11, color: "text.secondary" }}>Date</Typography>
+                                                            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                                                                <CalendarMonthIcon sx={{ color: "#FF9933", fontSize: 16 }} />
+                                                                <Typography fontWeight={600} fontSize={13}>
+                                                                    {new Date(request.createdAt).toLocaleDateString()}
+                                                                </Typography>
+                                                            </Box>
+                                                        </Box>
+                                                        <Box>
+                                                            <Typography sx={{ fontSize: 11, color: "text.secondary" }}>Time</Typography>
+                                                            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                                                                <AccessTimeIcon sx={{ color: "#FF9933", fontSize: 16 }} />
+                                                                <Typography fontWeight={600} fontSize={13}>
+                                                                    {new Date(request.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                                                                </Typography>
+                                                            </Box>
+                                                        </Box>
+                                                    </Box>
+                                                </CardContent>
+                                            </Card>
+                                        );
+                                    })}
+                                </>
                             );
-                        })
+                        })()}
+
+                    </>
                 )}
                 <Ridebook
                     open={openEditModal}

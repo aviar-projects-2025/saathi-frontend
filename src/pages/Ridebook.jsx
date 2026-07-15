@@ -68,12 +68,6 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, onS
 
       const memberRide = res.data.data.map((item) => item.members);
 
-      // memberRide.forEach((members) => {
-      //   members.forEach((member) => {
-      //     console.log(member.name);
-      //     console.log(member.age);
-      //   });
-      // });
     } catch (error) {
       console.log(error);
       toast.error(error.response?.data?.message || "Request failed");
@@ -127,7 +121,7 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, onS
       return false;
     }
 
- 
+
 
     for (let i = 0; i < requestData.members.length; i++) {
       if (!requestData.members[i].name.trim()) {
@@ -264,7 +258,7 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, onS
           label="Phone Number"
           margin="normal"
           size={isMobile ? "small" : "medium"}
-          value={currentUser.mobile}
+          value={currentUser?.mobile}
           disabled
           onChange={(e) => setRequestData({ ...requestData, phone: e.target.value })}
         />
