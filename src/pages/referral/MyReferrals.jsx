@@ -39,10 +39,18 @@ const MyReferrals = () => {
 
     useEffect(() => {
         if (notifications?.length) {
-            setMyReferrals((pre) => [
-                ...notifications,
-                ...pre
-            ]);
+            const filtered = notifications.filter(n =>
+                n.type === "referral_pending" ||
+                n.type === "referral_approved" ||
+                n.type === "referral_rejected"
+            );
+
+            if (filtered.length) {
+                setMyReferrals((pre) => [
+                    ...filtered,
+                    ...pre
+                ]);
+            }
         }
     }, [notifications]);
 
