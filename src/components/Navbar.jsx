@@ -39,15 +39,31 @@ const TopNav = ({ onMenuClick }) => {
   const { tabNotification, notifications } = useNotifications();
   // const unreadCount = tabNotification?.filter(n => !n.isRead).length;
   // console.log(tabNotification, 'tabNotification')
+
+  // const unreadCount = Object.values(
+  //   (tabNotification || []).reduce((acc, curr) => {
+  //     if(curr.type == "ride_started") return 0;
+  //     if (!curr?.isRead) {
+  //       acc[curr?.data.rideId || curr._id] = curr;
+  //     }
+  //     return acc;
+  //   }, {})
+  // ).length;
+
   const unreadCount = Object.values(
-    (tabNotification || []).reduce((acc, curr) => {
-      if(curr.type == "ride_started") return 0;
-      if (!curr?.isRead) {
-        acc[curr?.data.rideId || curr._id] = curr;
-      }
+  (tabNotification || []).reduce((acc, curr) => {
+    if (curr.type === "ride_started") {
       return acc;
-    }, {})
-  ).length;
+    }
+
+    if (!curr?.isRead) {
+      acc[curr?.data?.rideId || curr._id] = curr;
+    }
+
+    return acc;
+  }, {})
+).length;
+
   // console.log(unreadCount,'unreadCount')
   const [selectedMenu, setSelectedMenu] = useState("");
  
