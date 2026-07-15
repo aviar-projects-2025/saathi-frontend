@@ -68,12 +68,12 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, onS
 
       const memberRide = res.data.data.map((item) => item.members);
 
-      memberRide.forEach((members) => {
-        members.forEach((member) => {
-          console.log(member.name);
-          console.log(member.age);
-        });
-      });
+      // memberRide.forEach((members) => {
+      //   members.forEach((member) => {
+      //     console.log(member.name);
+      //     console.log(member.age);
+      //   });
+      // });
     } catch (error) {
       console.log(error);
       toast.error(error.response?.data?.message || "Request failed");

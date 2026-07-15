@@ -523,7 +523,7 @@ function RequestItem({ request, onApprove, onReject }) {
 
 
 // ── Ride Card ────────────────────────────────────────────────────────────────
-function RideCard({ ride, fetchRides, confirmRide, setConfirmRide, showEdit, showDelete, onEdit, isCurrentRide, notificationRide, setNotificationRide, onDelete, allRequests, setAllRequests }) {
+function RideCard({ ride, fetchRides, user, confirmRide, setConfirmRide, showEdit, showDelete, onEdit, isCurrentRide, notificationRide, setNotificationRide, onDelete, allRequests, setAllRequests }) {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [showRequests, setShowRequests] = useState(false);
   const [loadingRequests, setLoadingRequests] = useState(false);
@@ -1011,9 +1011,9 @@ const MyRides = () => {
           now >= start &&
           !processedIds.current.has(ride._id)
         ) {
-          toast.info("Your ride is starting now 🚗");
+          ride.createdBy._id == user.id && toast.info("Your ride is starting now 🚗");
 
-          setConfirmRide(ride);
+          ride.createdBy._id == user.id && setConfirmRide(ride);
 
           processedIds.current.add(ride._id);
         }
@@ -1316,6 +1316,7 @@ const MyRides = () => {
       return (
         <RideCard
           key={ride._id || ride.id}
+          user={user}
           ride={ride}
           notificationRide={notificationRide}
           isCurrentRide={isCurrentRide}

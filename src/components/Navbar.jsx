@@ -52,10 +52,7 @@ const TopNav = ({ onMenuClick }) => {
 
   const unreadCount = Object.values(
   (tabNotification || []).reduce((acc, curr) => {
-    if (curr.type === "ride_started") {
-      return acc;
-    }
-
+    if (curr.type === "ride_started") return acc;
     if (!curr?.isRead) {
       acc[curr?.data?.rideId || curr._id] = curr;
     }
@@ -63,7 +60,6 @@ const TopNav = ({ onMenuClick }) => {
     return acc;
   }, {})
 ).length;
-
   // console.log(unreadCount,'unreadCount')
   const [selectedMenu, setSelectedMenu] = useState("");
  
