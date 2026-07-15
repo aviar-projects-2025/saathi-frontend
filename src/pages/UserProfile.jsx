@@ -118,6 +118,7 @@ const UserProfile = () => {
         }));
     };
     const { currentUser, getuserData } = useUser()
+
     const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
     const [editProfile, setEditProfile] = useState(false)
     const [profileImage, setProfileImage] = useState(currentUser?.profileImage || "");
@@ -232,7 +233,7 @@ const UserProfile = () => {
 
 
             const postsRes = await axios.get(Api + "/community/");
-
+            console.log("postsRes", postsRes)
             // Only current user's posts
             const myPosts = postsRes.data.data.filter(
                 (item) => item.authorId?._id === currentUser?._id
