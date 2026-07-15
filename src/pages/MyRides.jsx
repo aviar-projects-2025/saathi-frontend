@@ -1086,6 +1086,7 @@ const MyRides = () => {
 
       setHistory(
         all.filter((ride) => {
+          console.log(ride, 'rideride')
           const rideStartTime = new Date(ride?.startTime);
           // const rideEndTime = new Date(rideStartTime.getTime() + 3 * 60 * 60 * 1000);
           return ride?.createdBy?._id === user.id && !isNaN(rideStartTime) && ride?.travelStatus === "Completed";
@@ -1120,20 +1121,23 @@ const MyRides = () => {
     fetchRides();
   }, [refreshRide]);
 
+
+  // Upcoming Ride Condition for both req and post
   useEffect(() => {
+
+    console.log(allMyRequests, 'allMyRequests')
 
     if (!allMyRequests?.length) return;
 
     const currentDateTime = new Date();
 
-
-
     const acceptedRides = allMyRequests.filter((ride) => {
       // ride?.status?.trim() === "ACCEPTED" && ride.rideId
       const rideStartTime = new Date(ride?.rideId?.startTime);
+      console.log(ride,'riderideriderideride')
       return (
         !isNaN(rideStartTime) &&
-        rideStartTime > currentDateTime
+        rideStartTime > currentDateTime && ride?.status === "ACCEPTED"
       )
     })
       .map((ride) => ride.rideId);
@@ -1165,7 +1169,7 @@ const MyRides = () => {
 
         return (
           !isNaN(rideStartTime) &&
-          rideStartTime <= currentDateTime
+          rideStartTime <= currentDateTime && ride?.status === "ACCEPTED" && ride?.rideId?.travelStatus !== "Completed"
         );
       })
       .map((ride) => ride.rideId);
@@ -1184,12 +1188,16 @@ const MyRides = () => {
 
     setCurrentRide([...currReqRide, ...myrides]);
 
+    const historyRide = allMyRequests
+      .filter((ride) => ride?.rideId?.travelStatus == "Completed")
+      .map((ride) => ride.rideId);
+
     const histMyPost = mypost.filter((ride) => {
       const rideStartTime = new Date(ride?.startTime);
       return ride?.createdBy?._id === user.id && !isNaN(rideStartTime) && ride?.travelStatus === "Completed";
     })
 
-    setHistory([...history, ...histMyPost]);
+    setHistory([...historyRide, ...histMyPost]);
 
   }, [allMyRequests, mypost]);
 
