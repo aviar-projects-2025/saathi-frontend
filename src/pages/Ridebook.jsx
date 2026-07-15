@@ -27,7 +27,7 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, onS
 
   const emptyRequestData = {
     seatsRequested: 1,
-    phone: "",
+    // phone: "",
     message: "",
     membersCount: 1,
     members: [{ name: "", age: "" }],
@@ -42,7 +42,7 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, onS
     if (requestToEdit) {
       setRequestData({
         seatsRequested: requestToEdit.seatsRequested || 1,
-        phone: requestToEdit.phone || "",
+        // phone: requestToEdit.phone || "",
         message: requestToEdit.message || "",
         membersCount: requestToEdit.membersCount || (requestToEdit.members?.length ?? 1),
         members: requestToEdit.members?.length
@@ -127,15 +127,7 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, onS
       return false;
     }
 
-    if (!requestData.phone.trim()) {
-      toast.error("Please enter phone number");
-      return false;
-    }
-
-    if (!/^[6-9]\d{9}$/.test(requestData.phone)) {
-      toast.error("Enter valid 10 digit phone number");
-      return false;
-    }
+ 
 
     for (let i = 0; i < requestData.members.length; i++) {
       if (!requestData.members[i].name.trim()) {
