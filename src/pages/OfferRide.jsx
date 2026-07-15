@@ -24,6 +24,7 @@ import {
   Alert,
   Divider,
   useMediaQuery,
+  Chip,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import {
@@ -89,8 +90,9 @@ const INITIAL_FORM = {
   airlineName: "",
   transitAirport: "",
   travellerType: "",
-  language: "",
+  language: [],
   ageGroupPreference: "Any",
+  price: '',
 
   medicalAssistance: false,
   languageSupport: false,
@@ -165,9 +167,14 @@ function ReviewItem({ icon: Icon, label, value }) {
         >
           {label}
         </Typography>
-        <Typography sx={{ fontSize: { xs: "0.78rem", sm: "0.875rem" }, fontWeight: 600, wordBreak: "break-word" }}>
-          {value}
-        </Typography>
+        <Typography
+          sx={{
+            fontSize: { xs: "0.78rem", sm: "0.875rem" },
+            fontWeight: 600,
+          }}
+        >
+          {Array.isArray(value) ? value.join(", ") : value}
+        </Typography> 
       </Box>
     </Stack>
   );
@@ -231,9 +238,22 @@ export default function OfferRide() {
       if (!form.genderPreference) { toast.error("Please select Gender Preference"); return false; }
       if (isFlight) {
         if (!form.travellerType) { toast.error("Please select Traveller Type"); return false; }
-        if (!form.language.trim()) { toast.error("Please enter Language"); return false; }
+        if (!form.language || form.language.length === 0) {
+          toast.error("Select at least one language");
+          return false;
+        }
       } else {
-        if (form.availableSeats < 1) { toast.error("Available seats should be at least 1"); return false; }
+        if (form.availableSeats < 1) {
+          toast.error("Available seats should be at least 1");
+          return false;
+        }
+
+        if (form.fuelSharing && !form.price) {
+          toast.error("Enter Split Amount");
+          return false;
+        }
+
+        return true;
       }
     }
 
@@ -295,6 +315,19 @@ export default function OfferRide() {
       setIsSubmitted(false);
     }
   };
+
+  const languages = [
+    "English",
+    "Tamil",
+    "Hindi",
+    "Bengali",
+    "Telugu",
+    "Marathi",
+    "Gujarati",
+    "Kannada",
+    "Malayalam",
+    "Punjabi",
+  ];
 
   useEffect(() => {
     if (submitted) {
@@ -650,12 +683,54 @@ export default function OfferRide() {
                     )}
                   </FormControl>
 
-                  <TextField label="Language" fullWidth size={inputSize} value={form.language}
-                    onChange={(e) => update("language", e.target.value)}
-                    placeholder="Tamil, English"
-                    error={!form.language && showErrors}
-                    helperText={!form.language && showErrors ? "Required" : ""}
-                    sx={tfSx} />
+                  <FormControl
+                    fullWidth
+                    size={inputSize}
+                    error={!form.language?.length && showErrors}
+                  >
+                    <InputLabel sx={ilSx}>Language</InputLabel>
+
+                    <Select
+                      multiple
+                      value={form.language || []}
+                      label="Language"
+                      onChange={(e) => update("language", e.target.value)}
+                      sx={selectSx}
+                      renderValue={(selected) => (
+                        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                          {selected.map((value) => (
+                            <Chip
+                              key={value}
+                              label={value}
+                              size="small"
+                              onMouseDown={(e) => e.stopPropagation()} // 🔥 prevent dropdown open
+                              onDelete={() => {
+                                update(
+                                  "language",
+                                  form.language.filter((item) => item !== value)
+                                );
+                              }}
+                            />
+                          ))}
+                        </Box>
+                      )}
+                      MenuProps={{
+                        disablePortal: true, // keeps dropdown under field
+                      }}
+                    >
+                      {languages.map((lang) => (
+                        <MenuItem key={lang} value={lang} sx={menuItemSx}>
+                          {lang}
+                        </MenuItem>
+                      ))}
+                    </Select>
+
+                    {!form.language?.length && showErrors && (
+                      <FormHelperText sx={{ fontSize: { xs: "0.62rem", sm: "0.7rem" } }}>
+                        Required
+                      </FormHelperText>
+                    )}
+                  </FormControl>
 
                   <FormControl fullWidth size={inputSize}>
                     <InputLabel sx={ilSx}>Age Group Preference</InputLabel>
@@ -747,23 +822,38 @@ export default function OfferRide() {
                     </CardContent>
                   </Card>
 
-                  <FormControlLabel
-                    control={
-                      <Switch checked={form.fuelSharing}
-                        onChange={(e) => update("fuelSharing", e.target.checked)}
-                        size={isMobile ? "small" : "medium"}
-                        sx={{
-                          "& .MuiSwitch-switchBase.Mui-checked": { color: ACCENT },
-                          "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": { backgroundColor: ACCENT },
-                        }} />
-                    }
-                    label={
-                      <Stack direction="row" spacing={0.6} alignItems="center">
-                        <Fuel size={16} color={ACCENT_DARK} />
-                        <Typography sx={{ fontSize: { xs: "0.8rem", sm: "0.875rem" } }}>Fuel Sharing</Typography>
-                      </Stack>
-                    }
-                  />
+                  <Box sx={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
+                    <FormControlLabel
+                      control={
+                        <Switch checked={form.fuelSharing}
+                          onChange={(e) => update("fuelSharing", e.target.checked)}
+                          size={isMobile ? "small" : "medium"}
+                          sx={{
+                            "& .MuiSwitch-switchBase.Mui-checked": { color: ACCENT },
+                            "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": { backgroundColor: ACCENT },
+                          }} />
+                      }
+                      label={
+                        <Stack direction="row" spacing={0.6} alignItems="center">
+                          <Fuel size={16} color={ACCENT_DARK} />
+                          <Typography sx={{ fontSize: { xs: "0.8rem", sm: "0.875rem" } }}>Fuel Sharing</Typography>
+                        </Stack>
+
+                      }
+                    />
+                    <Box>
+                      {form.fuelSharing &&
+                        <>
+                          <TextField label="$ Price" fullWidth size={inputSize} value={form.price}
+                            onChange={(e) => update("price", e.target.value)}
+                            placeholder="$5"
+                            error={!form.price && showErrors}
+                            helperText={!form.price && showErrors ? "Required" : ""}
+                            sx={tfSx} />
+                        </>
+                      }
+                    </Box>
+                  </Box>
                 </>
               )}
 
@@ -911,6 +1001,6 @@ export default function OfferRide() {
           </Stack>
         </Paper>
       </Box>
-    </PageLayout>
+    </PageLayout >
   );
 }
