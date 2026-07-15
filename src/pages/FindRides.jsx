@@ -305,7 +305,7 @@ export default function FindRides() {
         display: "flex",
         flexDirection: "column",
         width: "100%",
-        maxWidth: { xs: "100%", sm: 720 },
+        maxWidth: { xs: "100%" },
         boxSizing: "border-box",
         overflowX: "hidden",
       }}

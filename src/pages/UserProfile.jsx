@@ -279,7 +279,7 @@ const UserProfile = () => {
 
     return (
         <PageLayout>
-            <Box sx={{ maxWidth: 860, mx: "auto", px: { xs: 0, sm: 2, md: 0 } }}>
+            <Box sx={{ maxWidth: 1200, mx: "auto", px: { xs: 0, sm: 2, md: 0 } }}>
                 {/* Page heading */}
 
                 <Typography
