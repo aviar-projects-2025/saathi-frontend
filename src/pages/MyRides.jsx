@@ -1189,7 +1189,7 @@ const MyRides = () => {
       return ride?.createdBy?._id === user.id && !isNaN(rideStartTime) && ride?.travelStatus === "Completed";
     })
 
-    setHistory([...historyRide, ...histMyPost]);
+    setHistory([...history, ...histMyPost]);
 
   }, [allMyRequests, mypost]);
 
