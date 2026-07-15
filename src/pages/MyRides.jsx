@@ -5,7 +5,7 @@ import {
   TextField, IconButton, Stack, FormControl, Grid,
   InputLabel, Select, MenuItem, FormControlLabel, Switch, Slider,
   CircularProgress, Card, CardContent, Divider, useMediaQuery, DialogContentText,
-  Badge, Collapse, Avatar
+  Badge, Collapse, Avatar, Pagination
 } from '@mui/material';
 import Ridebook from './Ridebook.jsx';
 import { useTheme } from '@mui/material/styles';
@@ -104,6 +104,9 @@ const noZoomInputSx = {
   },
 };
 
+// Pagination config: how many ride cards to show per page on each tab
+const ITEMS_PER_PAGE = 10;
+
 
 // ── Empty State ──────────────────────────────────────────────────────────────
 function EmptyState({ emoji, message, actionLabel, actionHref }) {
@@ -135,6 +138,44 @@ function EmptyState({ emoji, message, actionLabel, actionHref }) {
         </Button>
       )}
     </Paper>
+  );
+}
+
+// ── Pagination Bar ───────────────────────────────────────────────────────────
+function RidePaginationBar({ count, page, onChange, isMobile }) {
+  if (count <= 1) return null;
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        justifyContent: 'center',
+        mt: { xs: 2, sm: 3 },
+        mb: { xs: 2, sm: 1 },
+      }}
+    >
+      <Pagination
+        count={count}
+        page={page}
+        onChange={onChange}
+        shape="rounded"
+        size={isMobile ? "small" : "medium"}
+        siblingCount={isMobile ? 0 : 1}
+        sx={{
+          "& .MuiPaginationItem-root": {
+            fontWeight: 600,
+            color: "#fd6100",
+            borderColor: "#fd6100",
+          },
+          "& .MuiPaginationItem-root.Mui-selected": {
+            backgroundColor: "#fd6100",
+            color: "#fff",
+            "&:hover": {
+              backgroundColor: "#e55a00",
+            },
+          },
+        }}
+      />
+    </Box>
   );
 }
 
@@ -490,8 +531,6 @@ function RideCard({ ride, fetchRides, confirmRide, setConfirmRide, showEdit, sho
 
   const status = statusConfig[ride?.status];
 
-  // console.log(ride, 'ride inside ridecard')
-
   const startDate = new Date(ride.startTime);
   const date = !isNaN(startDate)
     ? startDate.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
@@ -600,7 +639,7 @@ function RideCard({ ride, fetchRides, confirmRide, setConfirmRide, showEdit, sho
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            boxShadow: "0 6px 15px rgba(255,153,51,.25)",
+            // boxShadow: "0 6px 15px rgba(255,153,51,.25)",
           }}
         >
           <Box sx={{ minWidth: 0, flex: 1 }}>
@@ -633,18 +672,35 @@ function RideCard({ ride, fetchRides, confirmRide, setConfirmRide, showEdit, sho
                 {ride?.travelStatus === "Started" ? "Complete Ride" : "Start Ride"}
               </Button>
             )}
-            <Chip
-              size="small"
-              label={`${status.icon} ${status.label}`}
-              sx={{
-                bgcolor: status.bg,
-                color: status.color,
-                fontWeight: 700,
-                fontSize: { xs: '0.62rem', sm: '0.7rem' },
-                height: { xs: 22, sm: 24 },
-                flexShrink: 0,
-              }}
-            />
+            {ride?.travelStatus === "Completed" && (
+              <>
+                <Chip
+                  size="small"
+                  label={"Completed Ride"}
+                  sx={{
+                    bgcolor: status.bg,
+                    color: status.color,
+                    fontWeight: 700,
+                    fontSize: { xs: '0.62rem', sm: '0.7rem' },
+                    height: { xs: 22, sm: 24 },
+                    flexShrink: 0,
+                  }}
+                />
+              </>
+            )}
+            {ride.travelStatus !== "Completed" ?
+              <Chip
+                size="small"
+                label={`${status.icon} ${status.label}`}
+                sx={{
+                  bgcolor: status.bg,
+                  color: status.color,
+                  fontWeight: 700,
+                  fontSize: { xs: '0.62rem', sm: '0.7rem' },
+                  height: { xs: 22, sm: 24 },
+                  flexShrink: 0,
+                }}
+              /> : ""}
 
             {rideRequests.length > 0 && (
               <Badge
@@ -686,7 +742,7 @@ function RideCard({ ride, fetchRides, confirmRide, setConfirmRide, showEdit, sho
             borderRadius: "0 0 18px 18px",
             background: "#fff",
             border: "1px solid #FFE2C2",
-            boxShadow: "0 10px 30px rgba(255,153,51,.12)",
+            // boxShadow: "0 10px 30px rgba(255,153,51,.12)",
             overflow: "hidden",
             transition: ".3s",
             // "&:hover": {
@@ -875,6 +931,9 @@ function RideCard({ ride, fetchRides, confirmRide, setConfirmRide, showEdit, sho
 
 // ── Main Component ─────────────────────────────────────────────────────────
 const MyRides = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   const [tab, setTab] = useState(0);
   const [mypost, setMypost] = useState([]);
   const [upcoming, setUpcoming] = useState([]);
@@ -889,7 +948,13 @@ const MyRides = () => {
   const { notifications } = useNotifications();
   const [confirmRide, setConfirmRide] = useState(null)
 
+  // Pagination state — one page counter per tab so each tab remembers its own position
+  const [currentRidePage, setCurrentRidePage] = useState(1);
+  const [upcomingPage, setUpcomingPage] = useState(1);
+  const [mypostPage, setMypostPage] = useState(1);
+  const [historyPage, setHistoryPage] = useState(1);
 
+  // console.log(notifications,'notifications myrides')
 
   const processedIds = useRef(new Set());
 
@@ -973,7 +1038,7 @@ const MyRides = () => {
 
       setUpcoming(
         all.filter((ride) => {
-
+          // console.log(ride, 'upcoming ride settting')
           const rideStartTime = new Date(ride?.startTime);
           return ride?.createdBy?._id === user.id && !isNaN(rideStartTime) && rideStartTime > currentDateTime;
         })
@@ -988,12 +1053,23 @@ const MyRides = () => {
       );
 
       setCurrentRide(
+        //   const currentDateTime = new Date();
+        //   const currReqRide = allMyRequests.filter((ride)=>{
+
+        //     const rideStartTime = new Date(ride?.rideId?.startTime);
+        //     return(
+        //       !isNaN(rideStartTime) &&
+        //       rideStartTime <= currentDateTime
+        //     )
+        //   })
+
         all.filter((ride) => {
           const rideStartTime = new Date(ride?.startTime);
           // const rideEndTime = new Date(rideStartTime.getTime() + 3 * 60 * 60 * 1000);
           return ride?.createdBy?._id === user.id && rideStartTime <= currentDateTime && ride?.travelStatus !== "Completed";
         })
       );
+
     } catch (error) {
       console.error('Error fetching rides:', error.message);
     } finally {
@@ -1010,19 +1086,72 @@ const MyRides = () => {
 
     const currentDateTime = new Date();
 
-    const acceptedRides = allMyRequests
-      .filter((ride) => ride?.status?.trim() === "ACCEPTED" && ride.rideId)
+
+
+    const acceptedRides = allMyRequests.filter((ride) => {
+      // ride?.status?.trim() === "ACCEPTED" && ride.rideId
+      const rideStartTime = new Date(ride?.rideId?.startTime);
+      return (
+        !isNaN(rideStartTime) &&
+        rideStartTime > currentDateTime
+      )
+    })
       .map((ride) => ride.rideId);
+
+    console.log(acceptedRides, 'acceptedRides')
 
     const myUpcoming = mypost.filter((ride) => {
       const rideStartTime = new Date(ride?.startTime);
+      console.log(rideStartTime, 'rideStartTime')
+      console.log(currentDateTime, 'currentDateTime')
       return (
         !isNaN(rideStartTime) &&
         rideStartTime > currentDateTime
       );
     });
 
+    console.log(myUpcoming, 'myUpcoming')
+
     setUpcoming([...acceptedRides, ...myUpcoming]);
+  }, [allMyRequests, mypost]);
+
+
+  useEffect(() => {
+    const currentDateTime = new Date();
+
+    const currReqRide = allMyRequests
+      .filter((ride) => {
+        const rideStartTime = new Date(ride?.rideId?.startTime);
+        return (
+          !isNaN(rideStartTime) &&
+          rideStartTime <= currentDateTime && ride?.rideId?.travelStatus !== "Completed"
+        );
+      })
+      .map((ride) => ride.rideId);
+
+    const myrides = mypost.filter((ride) => {
+      const rideStartTime = new Date(ride?.startTime);
+      console.log(ride, 'rides I created')
+      // const rideEndTime = new Date(rideStartTime.getTime() + 3 * 60 * 60 * 1000);
+      return ride?.createdBy?._id === user.id && rideStartTime <= currentDateTime && ride?.travelStatus !== "Completed";
+    })
+
+    const historyRide = allMyRequests
+      .filter((ride) => ride?.rideId?.travelStatus == "Completed")
+      .map((ride) => ride.rideId);
+
+    console.log(myrides, 'myrides')
+    console.log(historyRide, 'historyRide')
+
+    setCurrentRide([...currReqRide, ...myrides]);
+
+    const histMyPost = mypost.filter((ride) => {
+      const rideStartTime = new Date(ride?.startTime);
+      return ride?.createdBy?._id === user.id && !isNaN(rideStartTime) && ride?.travelStatus === "Completed";
+    })
+
+    setHistory([...historyRide, ...histMyPost]);
+
   }, [allMyRequests, mypost]);
 
   const fetchAllRequests = async () => {
@@ -1037,7 +1166,7 @@ const MyRides = () => {
   const fetchAllSends = async () => {
     try {
       const res = await axios.get(`${Api}/bookride/send/${user.id}`);
-      console.log(res.data.data, 'res.data.data')
+      // console.log(res.data.data, 'res.data.data')
       setAllMyRequests(res.data.data || []);
     } catch (error) {
       console.error('Error fetching requests:', error);
@@ -1131,26 +1260,39 @@ const MyRides = () => {
   };
   const [openCancelDialog, setOpenCancelDialog] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
-  const renderList = (list, showEdit = false, showDelete = false, isCurrentRide = false) =>
-    list.map((ride) => (
-      <RideCard
-        key={ride._id || ride.id}
-        ride={ride}
-        notificationRide={notificationRide}
-        isCurrentRide={isCurrentRide}
-        setNotificationRide={setNotificationRide}
-        showEdit={showEdit}
-        confirmRide={confirmRide}
-        setConfirmRide={setConfirmRide}
-        showDelete={showDelete}
-        fetchRides={fetchRides}
-        onEdit={setEditRide}
-        onDelete={setDeleteRide}
-        allRequests={allRequests}
-        setAllRequests={setAllRequests}
-      />
-    ));
 
+  // Slices a list down to the given page's worth of items (ITEMS_PER_PAGE per page)
+  const paginate = (list, page) =>
+    list.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+
+  const renderList = (
+    list,
+    showEdit = false,
+    showDelete = false,
+    isCurrentRide = false
+  ) =>
+    list.map((ride) => {
+      const isCompleted = ride.travelStatus === "Completed";
+
+      return (
+        <RideCard
+          key={ride._id || ride.id}
+          ride={ride}
+          notificationRide={notificationRide}
+          isCurrentRide={isCurrentRide}
+          setNotificationRide={setNotificationRide}
+          showEdit={showEdit && !isCompleted}
+          confirmRide={confirmRide}
+          setConfirmRide={setConfirmRide}
+          showDelete={showDelete && !isCompleted}
+          fetchRides={fetchRides}
+          onEdit={setEditRide}
+          onDelete={setDeleteRide}
+          allRequests={allRequests}
+          setAllRequests={setAllRequests}
+        />
+      );
+    });
   const handleCancelClick = (request) => {
     setSelectedRequest(request);
     setOpenCancelDialog(true);
@@ -1192,6 +1334,28 @@ const MyRides = () => {
       return rideStart && !isNaN(rideStart.getTime()) && rideStart <= now;
     });
   }, [allMyRequests]);
+
+  // Clamp each tab's page number back into range whenever its underlying list shrinks/grows
+  // (e.g. after a delete makes the last page disappear)
+  useEffect(() => {
+    const maxPage = Math.max(1, Math.ceil(currentRide.length / ITEMS_PER_PAGE));
+    if (currentRidePage > maxPage) setCurrentRidePage(maxPage);
+  }, [currentRide, currentRidePage]);
+
+  useEffect(() => {
+    const maxPage = Math.max(1, Math.ceil(upcoming.length / ITEMS_PER_PAGE));
+    if (upcomingPage > maxPage) setUpcomingPage(maxPage);
+  }, [upcoming, upcomingPage]);
+
+  useEffect(() => {
+    const maxPage = Math.max(1, Math.ceil(mypost.length / ITEMS_PER_PAGE));
+    if (mypostPage > maxPage) setMypostPage(maxPage);
+  }, [mypost, mypostPage]);
+
+  useEffect(() => {
+    const maxPage = Math.max(1, Math.ceil(history.length / ITEMS_PER_PAGE));
+    if (historyPage > maxPage) setHistoryPage(maxPage);
+  }, [history, historyPage]);
 
   const tabLabels = [
     { short: 'Current', count: currentRide.length },
@@ -1303,36 +1467,75 @@ const MyRides = () => {
             <>
               {tab === 0 && (
                 <Box>
-                  {currentRide.length > 0
-                    ? renderList(currentRide, false, false, true)
-                    : <EmptyState emoji="🚗" message="You don't have any active rides at the moment"
+                  {currentRide.length > 0 ? (
+                    <>
+                      {renderList(paginate(currentRide, currentRidePage), false, false, true)}
+                      <RidePaginationBar
+                        count={Math.ceil(currentRide.length / ITEMS_PER_PAGE)}
+                        page={currentRidePage}
+                        onChange={(_, value) => setCurrentRidePage(value)}
+                        isMobile={isMobile}
+                      />
+                    </>
+                  ) : (
+                    <EmptyState emoji="🚗" message="You don't have any active rides at the moment"
 
                     />
-                  }
+                  )}
                 </Box>
               )}
 
               {tab === 1 && (
                 <Box>
-                  {upcoming.length > 0
-                    ? renderList(upcoming, true, true)
-                    : <EmptyState emoji="🗓️" message="No upcoming rides" />}
+                  {upcoming.length > 0 ? (
+                    <>
+                      {renderList(paginate(upcoming, upcomingPage), true, true)}
+                      <RidePaginationBar
+                        count={Math.ceil(upcoming.length / ITEMS_PER_PAGE)}
+                        page={upcomingPage}
+                        onChange={(_, value) => setUpcomingPage(value)}
+                        isMobile={isMobile}
+                      />
+                    </>
+                  ) : (
+                    <EmptyState emoji="🗓️" message="No upcoming rides" />
+                  )}
                 </Box>
               )}
 
               {tab === 2 && (
                 <Box>
-                  {mypost.length > 0
-                    ? renderList(mypost, true, true)
-                    : <EmptyState emoji="🚗" message="You haven't posted any rides yet" />}
+                  {mypost.length > 0 ? (
+                    <>
+                      {renderList(paginate(mypost, mypostPage), true, true)}
+                      <RidePaginationBar
+                        count={Math.ceil(mypost.length / ITEMS_PER_PAGE)}
+                        page={mypostPage}
+                        onChange={(_, value) => setMypostPage(value)}
+                        isMobile={isMobile}
+                      />
+                    </>
+                  ) : (
+                    <EmptyState emoji="🚗" message="You haven't posted any rides yet" />
+                  )}
                 </Box>
               )}
 
               {tab === 3 && (
                 <Box>
-                  {history.length > 0
-                    ? renderList(history, false, false)
-                    : <EmptyState emoji="🕰️" message="No past rides yet" />}
+                  {history.length > 0 ? (
+                    <>
+                      {renderList(paginate(history, historyPage), false, false)}
+                      <RidePaginationBar
+                        count={Math.ceil(history.length / ITEMS_PER_PAGE)}
+                        page={historyPage}
+                        onChange={(_, value) => setHistoryPage(value)}
+                        isMobile={isMobile}
+                      />
+                    </>
+                  ) : (
+                    <EmptyState emoji="🕰️" message="No past rides yet" />
+                  )}
                 </Box>
               )}
             </>
