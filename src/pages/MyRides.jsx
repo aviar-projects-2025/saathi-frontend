@@ -7,6 +7,7 @@ import {
   CircularProgress, Card, CardContent, Divider, useMediaQuery, DialogContentText,
   Badge, Collapse, Avatar
 } from '@mui/material';
+import Ridebook from './Ridebook.jsx';
 import { useTheme } from '@mui/material/styles';
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
@@ -514,7 +515,7 @@ function RideCard({ ride, fetchRides, confirmRide, setConfirmRide, showEdit, sho
 
     try {
       const res = await axios.patch(`${Api}/bookride/${requestId}/status?type=Approve`, { status: 'ACCEPTED' });
-      // console.log(res.data.succes, 'res')
+
       setAllRequests(prev => prev.map(req =>
         req._id === requestId ? { ...req, status: 'ACCEPTED' } : req
       ));
@@ -888,7 +889,7 @@ const MyRides = () => {
   const { notifications } = useNotifications();
   const [confirmRide, setConfirmRide] = useState(null)
 
-console.log(notifications,'notifications myrides')
+
 
   const processedIds = useRef(new Set());
 
@@ -972,7 +973,7 @@ console.log(notifications,'notifications myrides')
 
       setUpcoming(
         all.filter((ride) => {
-          console.log(ride, 'upcoming ride settting')
+
           const rideStartTime = new Date(ride?.startTime);
           return ride?.createdBy?._id === user.id && !isNaN(rideStartTime) && rideStartTime > currentDateTime;
         })
@@ -1004,9 +1005,9 @@ console.log(notifications,'notifications myrides')
   }, [refreshRide]);
 
   useEffect(() => {
-    console.log(allMyRequests?.length, "hello")
+
     if (!allMyRequests?.length) return;
-    console.log("hello")
+
     const currentDateTime = new Date();
 
     const acceptedRides = allMyRequests
@@ -1353,197 +1354,3 @@ console.log(notifications,'notifications myrides')
 
 export default MyRides;
 
-
-
-//my ride request ui
-// <Box
-//       sx={{
-//         flex: 1,
-//         minWidth: { lg: 340 },
-//         maxHeight: "90vh",
-//         overflowY: "auto",
-//         position: "sticky",
-//         top: 30,
-//       }}
-//     >
-//       <Typography variant="h5" fontWeight={800} sx={{ fontSize: { xs: '1.2rem', sm: '1.5rem' } }}>
-//         My Requests
-//       </Typography>
-//       <br />
-//       {allMyRequests
-//         .filter(req => req?.rideId)
-//         .map((request) => (
-//           <Card
-//             key={request._id}
-//             sx={{
-//               mb: 3,
-//               borderRadius: "20px",
-//               overflow: "hidden",
-//               background: "linear-gradient(135deg, #ffffff 0%, #f8fbff 100%)",
-//               boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-//               transition: "0.3s",
-//               position: "relative",
-//               "&:hover": {
-//                 transform: "translateY(-4px)",
-//                 boxShadow: "0 18px 40px rgba(0,0,0,0.12)",
-//               },
-//             }}
-//           >
-//             {/* Delete Button */}
-//             <IconButton
-//               color="error"
-//               onClick={() => handleCancelClick(request)}
-//               sx={{
-//                 position: "absolute",
-//                 top: 15,
-//                 right: 15,
-//                 bgcolor: "#fff",
-//                 boxShadow: 2,
-//                 "&:hover": {
-//                   bgcolor: "#ffebee",
-//                 },
-//               }}
-//             >
-//               <DeleteIcon />
-//             </IconButton>
-
-//             <CardContent
-//               sx={{
-//                 display: "flex",
-//                 alignItems: "center",
-//                 justifyContent: "space-between",
-//                 flexWrap: "wrap",
-//                 gap: 2,
-//                 p: 2.5,
-//                 pr: 8, // Space for delete button
-//               }}
-//             >
-//               {/* Rider */}
-//               <Box
-//                 sx={{
-//                   display: "flex",
-//                   alignItems: "center",
-//                   gap: 1,
-//                   minWidth: 220,
-//                 }}
-//               >
-//                 <Avatar
-//                   sx={{
-//                     bgcolor: "#FF9933",
-//                     width: 42,
-//                     height: 42,
-//                   }}
-//                 >
-//                   <PersonIcon />
-//                 </Avatar>
-
-//                 <Typography fontWeight={700}>
-//                   {request.rideId?.createdBy?.firstName}{" "}
-//                   {request.rideId?.createdBy?.lastName}
-//                 </Typography>
-//               </Box>
-
-//               {/* Route */}
-//               <Box
-//                 sx={{
-//                   display: "flex",
-//                   alignItems: "center",
-//                   gap: 1,
-//                   minWidth: 250,
-//                 }}
-//               >
-//                 <LocationOnIcon sx={{ color: "#FF9933" }} />
-
-//                 <Typography fontWeight={600}>
-//                   {request.rideId?.from}
-//                 </Typography>
-
-//                 <ArrowForwardIcon sx={{ color: "#FF9933" }} />
-
-//                 <Typography fontWeight={600}>
-//                   {request.rideId?.destination}
-//                 </Typography>
-//               </Box>
-
-//               {/* Date */}
-//               <Box
-//                 sx={{
-//                   display: "flex",
-//                   alignItems: "center",
-//                   gap: 1,
-//                 }}
-//               >
-//                 <CalendarMonthIcon sx={{ color: "#FF9933" }} />
-
-//                 <Typography>
-//                   {new Date(request?.rideId?.startTime).toLocaleDateString()}
-//                 </Typography>
-//               </Box>
-
-//               {/* Time */}
-//               <Box
-//                 sx={{
-//                   display: "flex",
-//                   alignItems: "center",
-//                   gap: 1,
-//                 }}
-//               >
-//                 <AccessTimeIcon sx={{ color: "#FF9933" }} />
-
-//                 <Typography>
-//                   {new Date(request.createdAt).toLocaleTimeString([], {
-//                     hour: "2-digit",
-//                     minute: "2-digit",
-//                   })}
-//                 </Typography>
-//               </Box>
-
-//               {/* Status */}
-//               <Chip
-//                 label={request.status}
-//                 color={
-//                   request.status === "ACCEPTED"
-//                     ? "success"
-//                     : request.status === "REJECTED"
-//                       ? "error"
-//                       : "warning"
-//                 }
-//                 sx={{
-//                   fontWeight: 700,
-//                   borderRadius: 5,
-//                 }}
-//               />
-//             </CardContent>
-//           </Card>
-//         ))}
-//       <Dialog
-//         open={openCancelDialog}
-//         onClose={handleCloseDialog}
-//         maxWidth="xs"
-//         fullWidth
-//       >
-//         <DialogTitle>Cancel Ride Request</DialogTitle>
-
-//         <DialogContent>
-//           <DialogContentText>
-//             Are you sure you want to cancel this ride request?
-//             <br />
-//             This action cannot be undone.
-//           </DialogContentText>
-//         </DialogContent>
-
-//         <DialogActions>
-//           <Button onClick={handleCloseDialog}>
-//             No
-//           </Button>
-
-//           <Button
-//             color="error"
-//             variant="contained"
-//             onClick={handleConfirmCancel}
-//           >
-//             Yes, Cancel
-//           </Button>
-//         </DialogActions>
-//       </Dialog>
-//     </Box>
