@@ -213,7 +213,7 @@ const Myprofile = () => {
   return (
     <Box
       sx={{
-        maxWidth: 700,
+        maxWidth: 1000,
         // mx: "auto",
         px: 1.5,
         py: 2,

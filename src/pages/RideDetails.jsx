@@ -368,6 +368,7 @@ export default function RideDetailsModal({
     ride,
     requests = [],
     showEdit,
+    user,
     showDelete,
     onEdit,
     onDelete,
@@ -643,7 +644,7 @@ export default function RideDetailsModal({
                     borderTop: `1px solid ${TOKENS.line}`,
                 }}
             >
-                {showEdit && (
+                {showEdit && ride.createdBy._id == user?.id &&(
                     <Button
                         onClick={() => onEdit(ride)}
                         startIcon={<EditIcon sx={{ fontSize: { xs: 16, sm: 18 } }} />}
@@ -665,7 +666,7 @@ export default function RideDetailsModal({
                         Edit ride
                     </Button>
                 )}
-                {showDelete && (
+                {showDelete && ride.createdBy._id == user?.id && (
                     <Button
                         onClick={() => onDelete(ride)}
                         startIcon={<DeleteIcon sx={{ fontSize: { xs: 16, sm: 18 } }} />}

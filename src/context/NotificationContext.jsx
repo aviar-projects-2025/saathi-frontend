@@ -41,13 +41,14 @@ export const NotificationProvider = ({ children }) => {
             audio.currentTime = 0;
             audio.play();
 
+            // console.log(payload,'payload')
             const newNotification = {
                 id: data._id || Date.now(),
                 type,
                 category: category || "general",
                 data,
                 message,
-                isRead: false,
+                isRead: type == "ride_started" ? true : false,
                 createdAt: new Date()
             };
 

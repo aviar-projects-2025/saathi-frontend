@@ -5,6 +5,7 @@ import {
   Collapse, Stack, IconButton, Divider, Dialog, DialogTitle,
   DialogContent, DialogActions, TextField, useMediaQuery, useTheme,
 } from "@mui/material";
+import Ridebook from "./Ridebook.jsx";
 import { useUser } from "../context/userConetext.jsx";
 import VerifiedIcon from "@mui/icons-material/Verified";
 import EventSeatIcon from "@mui/icons-material/EventSeat";
@@ -19,6 +20,7 @@ import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import CloseIcon from "@mui/icons-material/Close";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import WcIcon from "@mui/icons-material/Wc";
+import { useRide } from "../context/RideContext";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import PersonIcon from "@mui/icons-material/Person";
 import WomanIcon from "@mui/icons-material/Woman";
@@ -42,11 +44,12 @@ export default function RideCard({ ride }) {
   const [expanded, setExpanded] = useState(false);
   const [openRequestModal, setOpenRequestModal] = useState(false);
   const [selectedRide, setSelectedRide] = useState(null);
+  const [selectedRequest, setSelectedRequest] = useState(null);
   const [myRequestedRides, setMyRequestedRides] = useState([]);
   const { completion } = useUser();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
+  const [openEditModal, setOpenEditModal] = useState(false);
   const [requestData, setRequestData] = useState({
     seatsRequested: 1,
     phone: "",
@@ -85,7 +88,32 @@ export default function RideCard({ ride }) {
       members: Array.from({ length: count }, (_, i) => prev.members[i] || { name: "", age: "" }),
     }));
   };
+  const { refreshRide } = useRide();
 
+  useEffect(() => {
+    fetchAllSends();
+  }, []);
+
+  useEffect(() => {
+    fetchAllSends();
+  }, [refreshRide]);
+
+  useEffect(() => {
+    myReqRides();
+  }, [refreshRide]);
+  async function fetchAllSends() {
+    try {
+      if (!user?.id) return;
+
+      const res = await axios.get(`${Api}/bookride/send/${user.id}`);
+      const requestUser = res.data.data.map((item) => item.members)
+      setUserData(requestUser);
+      setAllMyRequests(res.data?.data || []);
+    } catch (error) {
+      console.error("Error fetching requests:", error);
+      setAllMyRequests([]);
+    }
+  }
   const handleSeatsChange = (value) => {
     let seats = Number(value);
     if (!seats || seats < 1) seats = 1;
@@ -143,7 +171,7 @@ export default function RideCard({ ride }) {
       seatsRequested: isFlight ? null : Number(requestData.seatsRequested),
       membersCount: Number(requestData.membersCount),
       members: requestData.members,
-      phone: requestData.phone,
+      // phone: requestData.phone,
       message: requestData.message,
       requestType: isFlight ? "COMPANION" : "SEAT",
     };
@@ -450,12 +478,12 @@ export default function RideCard({ ride }) {
                         <Button
                           disabled={
                             !isProfileComplete ||
-                            (!isFlight && remainingSeatsForUser <= 0)
+                            (!isFlight && !alreadyRequested && remainingSeatsForUser <= 0)
                           }
                           onClick={() => {
                             setSelectedRide(ride);
-                            resetRequestData();
-                            setOpenRequestModal(true);
+                            setSelectedRequest(alreadyRequested ? currentRequest : null);
+                            setOpenEditModal(true);
                           }}
                           sx={{
                             bgcolor: ORANGE,
@@ -472,13 +500,15 @@ export default function RideCard({ ride }) {
                             textTransform: "none",
                           }}
                         >
-                          {!isFlight && remainingSeatsForUser <= 0
-                            ? "No Seats"
+                          {alreadyRequested
+                            ? remainingSeatsForUser > 0
+                              ? `Edit Request (${remainingSeatsForUser} left)`
+                              : "Edit Your Request"
                             : isFlight
                               ? "Request Companion"
-                              : alreadyRequested
-                                ? `Request More (${remainingSeatsForUser} left)`
-                                : `Request Seat (${remainingSeatsForUser} left)`}
+                              : remainingSeatsForUser > 0
+                                ? `Request Seat (${remainingSeatsForUser} left)`
+                                : "No Seats Available"}
                         </Button>
                         {/* <Button
                     variant="contained"
@@ -605,78 +635,18 @@ export default function RideCard({ ride }) {
         </Card>
       </Box>
 
-      {/* ── Request Modal ── */}
-      <Dialog open={openRequestModal} onClose={() => setOpenRequestModal(false)} fullWidth maxWidth="sm"
-        PaperProps={{ sx: { m: { xs: 1, sm: 2 }, width: "100%", borderRadius: 3 } }}>
-        <DialogTitle sx={{
-          display: "flex", justifyContent: "space-between", alignItems: "center",
-          fontSize: { xs: "0.95rem", sm: "1.2rem" }, fontWeight: 700,
-          py: { xs: 1.5, sm: 2 }, px: { xs: 2, sm: 3 },
-          borderBottom: `1px solid ${ORANGE_DIVIDER}`,
-        }}>
-          {selectedRide?.modeOfTravel === "Flight" ? "Request Travel Companion" : "Request Seat"}
-          <IconButton onClick={() => setOpenRequestModal(false)} size={isMobile ? "small" : "medium"}>
-            <CloseIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />
-          </IconButton>
-        </DialogTitle>
+      <Ridebook
+        open={openEditModal}
+        onClose={() => setOpenEditModal(false)}
+        ride={selectedRide}
+        maxSeats={selectedRide?.availableSeats ?? Infinity}
+        onSuccess={() => {
+          fetchAllSends();
+          myReqRides();   // <-- refresh the data the seat count actually depends on
+        }}
+        requestToEdit={selectedRequest}
+      />
 
-        <DialogContent sx={{ px: { xs: 2, sm: 3 }, pt: "16px !important" }}>
-          <Typography mb={2} sx={{ fontSize: { xs: "0.8rem", sm: "1rem" }, color: "text.secondary" }}>
-            {selectedRide?.from} {"\u2192"} {selectedRide?.destination}
-          </Typography>
-
-          {!isFlight && (
-            <Typography variant="body2" color="success.main" mb={1} sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}>
-              Available Seats: {maxSeats}
-            </Typography>
-          )}
-
-          {selectedRide?.modeOfTravel !== "Flight" && (
-            <TextField fullWidth type="number" label="Seats Required" margin="normal"
-              size={isMobile ? "small" : "medium"} value={requestData.seatsRequested}
-              inputProps={{ min: 1, max: maxSeats }} helperText={`You can request maximum ${maxSeats} seat(s)`}
-              onChange={(e) => handleSeatsChange(e.target.value)} />
-          )}
-
-          <TextField fullWidth type="number" label="No. of Members" margin="normal"
-            size={isMobile ? "small" : "medium"} value={requestData.membersCount}
-            inputProps={{ min: 1, max: isFlight ? 20 : maxSeats }}
-            helperText={isFlight ? "Enter number of members travelling" : `Maximum ${maxSeats} member(s) allowed`}
-            onChange={(e) => handleMembersCountChange(e.target.value)} />
-
-          {requestData.members.map((member, index) => (
-            <Box key={index} sx={{ display: "flex", gap: 1.5, mt: 1.5, alignItems: "center" }}>
-              <TextField label={`Member ${index + 1} Name`} value={member.name} fullWidth size="small"
-                onChange={(e) => handleMemberChange(index, "name", e.target.value)} />
-              <TextField label="Age" type="number" size="small" sx={{ width: { xs: 80, sm: 120 } }}
-                value={member.age} onChange={(e) => handleMemberChange(index, "age", e.target.value)} />
-            </Box>
-          ))}
-
-          <TextField fullWidth label="Phone Number" margin="normal" size={isMobile ? "small" : "medium"}
-            value={requestData.phone} onChange={(e) => setRequestData({ ...requestData, phone: e.target.value })} />
-
-          <TextField fullWidth multiline rows={isMobile ? 3 : 4} margin="normal" size={isMobile ? "small" : "medium"}
-            label={selectedRide?.modeOfTravel === "Flight" ? "Why do you need a companion?" : "Message to Driver"}
-            value={requestData.message} onChange={(e) => setRequestData({ ...requestData, message: e.target.value })} />
-        </DialogContent>
-
-        <DialogActions sx={{
-          px: { xs: 2, sm: 3 }, py: { xs: 1.5, sm: 2 }, gap: 1,
-          borderTop: `1px solid ${ORANGE_DIVIDER}`,
-          flexDirection: { xs: "column-reverse", sm: "row" },
-        }}>
-          <Button fullWidth={isMobile} size={isMobile ? "small" : "medium"}
-            onClick={() => setOpenRequestModal(false)} sx={{ textTransform: "none", borderRadius: 2 }}>
-            Cancel
-          </Button>
-          <Button variant="contained" fullWidth={isMobile} size={isMobile ? "small" : "medium"}
-            onClick={handleRequestSubmit}
-            sx={{ bgcolor: ORANGE, "&:hover": { bgcolor: "#e68a00" }, fontWeight: 700, textTransform: "none", borderRadius: 2, boxShadow: "none" }}>
-            Submit Request
-          </Button>
-        </DialogActions>
-      </Dialog>
     </>
   );
 }
