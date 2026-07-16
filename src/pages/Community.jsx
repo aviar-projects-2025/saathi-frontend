@@ -1023,16 +1023,16 @@ export default function Community() {
           <Grid
             sx={{
               mt: { sm: 6, md: 8, lg: 10, xl: 12 },
-              width: { sm: '240px', md: '300px', lg: '340px', xl: '380px' },
-              minWidth: { sm: '240px', md: '300px', lg: '340px', xl: '380px' },
+              width: { sm: '200px', md: '270px', lg: '320px', xl: '300px' },
+              minWidth: { sm: '200px', md: '270px', lg: '320px', xl: '300px' },
               flexShrink: 0,
               position: 'sticky',
               top: 20,
               height: SIDEBAR_SCROLL_HEIGHT,
               overflowY: 'auto',
               overflowX: 'hidden',
-              pr: 1,
-              '&::-webkit-scrollbar': { width: 6 },
+              pr: 5,
+              '&::-webkit-scrollbar': { width: 5 },
               '&::-webkit-scrollbar-thumb': { backgroundColor: '#E0D4C8', borderRadius: 4 },
             }}
           >

@@ -1,120 +1,160 @@
-
 import { Box, Drawer, useMediaQuery } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { Outlet } from "react-router-dom";
+import { useState } from "react";
+
 import Sidebar from "./Sidebar";
 import TopNav from "./Navbar";
-import { useState } from "react";
 import MobileBottomNav from "../pages/MobileBottomNav";
 
-const TOPBAR_HEIGHT = 64; // adjust to match your TopNav's actual height
-const BOTTOMNAV_HEIGHT = 56; // adjust to match your MobileBottomNav's actual height
-
-// Percentages of viewport width
-const SIDEBAR_WIDTH_PCT = 15;
-const OUTLET_WIDTH_PCT = 60;
-// Remaining 25% is split as left/right gap (12.5% each), which centers the 75% content block
+const TOPBAR_HEIGHT = 50;
+const BOTTOMNAV_HEIGHT = 56;
 
 const UserLayout = () => {
   const theme = useTheme();
-  const isDesktop = useMediaQuery(theme.breakpoints.up("lg")); // 1024+
+
+  const isDesktop = useMediaQuery(theme.breakpoints.up("lg"));
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <Box
       sx={{
+        width: "100%",
         height: "100dvh",
         bgcolor: "#fbfaf8ff",
         overflow: "hidden",
       }}
     >
-      {/* Fixed Top Bar */}
+      {/* Top Bar */}
       <Box
         sx={{
           position: "fixed",
           top: 0,
           left: 0,
           right: 0,
-          height: TOPBAR_HEIGHT,
+          height: `${TOPBAR_HEIGHT}px`,
           zIndex: theme.zIndex.appBar,
         }}
       >
         <TopNav onMenuClick={() => setMobileOpen(true)} />
       </Box>
 
-      {/* Body: centered wrapper containing sidebar + outlet */}
+      {/* Body */}
       <Box
         sx={{
-          display: "flex",
-          justifyContent: "center", // centers the inner content block horizontally
-          height: "100%",
-          pt: `${TOPBAR_HEIGHT}px`,
-          pb: isMobile ? `${BOTTOMNAV_HEIGHT}px` : 0,
+          width: "100%",
+          height: `calc(100dvh - ${TOPBAR_HEIGHT}px - ${isMobile ? BOTTOMNAV_HEIGHT : 0
+            }px)`,
+          mt: `${TOPBAR_HEIGHT}px`,
           boxSizing: "border-box",
+          overflow: "hidden",
         }}
       >
-        {/* Inner content block: sidebar% + outlet% = 75% of viewport, centered */}
+        {/* Box 1 */}
         <Box
           sx={{
-            display: "flex",
-            width: { lg: `${SIDEBAR_WIDTH_PCT + OUTLET_WIDTH_PCT}%` }, // 75% on desktop
+            width: "100%",
             height: "100%",
-            gap: 1, // visual gap between sidebar and outlet
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "flex-start",
+            px: {
+              xs: 0,
+              lg: "5%",
+            },
+            boxSizing: "border-box",
           }}
         >
-          {isDesktop ? (
-            <Box
-              sx={{
-                width: `${(SIDEBAR_WIDTH_PCT / (SIDEBAR_WIDTH_PCT + OUTLET_WIDTH_PCT)) * 100}%`,
-                flexShrink: 0,
-                // borderRight: "1px solid #f1e4d7",
-                // overflowY: "auto",
-                height: "100%",
-              }}
-            >
-              <Sidebar />
-            </Box>
-          ) : (
-            <Drawer
-              anchor="left"
-              open={mobileOpen}
-              onClose={() => setMobileOpen(false)}
-              PaperProps={{
-                sx: {
-                  width: "70%",
-                  maxWidth: 280,
-                  borderRight: "1px solid #f1e4d7",
-                  mt: `${TOPBAR_HEIGHT}px`, // sit below fixed topbar
-                  height: `calc(100% - ${TOPBAR_HEIGHT}px)`,
-                },
-              }}
-            >
-              <Sidebar onItemClick={() => setMobileOpen(false)} isMobile />
-            </Drawer>
-          )}
-
+          {/* Box 2 */}
           <Box
-            component="main"
             sx={{
-              flex: 1,
-              minWidth: 0,
-              overflowY: "auto",
-              height: "100%",
-              px: { xs: 1, sm: 1.5, md: 2 },
-              pt: 2,
-              pb: 5,
               width: "100%",
-              // maxWidth: "1500px",
-              mx: "auto",
+              maxWidth: { xs: "100%", sm: "1800px" },
+              height: "100%",
+              py: 2,
             }}
           >
-            <Outlet />
+            {/* Box 3 */}
+            <Box
+              sx={{
+                width: "100%",
+                height: "100%",
+                display: "grid",
+                gridTemplateColumns: {
+                  xs: "1fr",
+                  lg: "20% 78%",
+                },
+                gap: {
+                  xs: 0,
+                  lg: "2%",
+                },
+                alignItems: "start",
+              }}
+            >
+              {/* Desktop Sidebar */}
+              {isDesktop ? (
+                <Box
+                  sx={{
+                    width: "100%",
+                    height: "100%",
+                    // overflowY: "auto",
+                  }}
+                >
+                  <Sidebar />
+                </Box>
+              ) : (
+                <Drawer
+                  anchor="left"
+                  open={mobileOpen}
+                  onClose={() => setMobileOpen(false)}
+                  PaperProps={{
+                    sx: {
+                      width: "70%",
+                      maxWidth: 280,
+                      mt: `${TOPBAR_HEIGHT}px`,
+                      height: `calc(100% - ${TOPBAR_HEIGHT}px)`,
+                    },
+                  }}
+                >
+                  <Sidebar
+                    onItemClick={() => setMobileOpen(false)}
+                    isMobile
+                  />
+                </Drawer>
+              )}
+
+              {/* Outlet */}
+              <Box
+                component="main"
+                sx={{
+                  width: "100%",
+                  minWidth: 0,
+                  height: "100%",
+                  overflowY: "auto",
+                  pb: 5,
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "flex-start",
+                }}
+              >
+                <Box
+                  sx={{
+                    width: "100%",
+                    maxWidth: { xs: "100%", sm: "1400px" },
+                    p: { xs: 1 }
+                  }}
+                >
+                  <Outlet />
+                </Box>
+              </Box>
+            </Box>
           </Box>
         </Box>
       </Box>
 
-      {/* Fixed Mobile Bottom Bar */}
+      {/* Bottom Bar */}
       {isMobile && (
         <Box
           sx={{
@@ -122,8 +162,9 @@ const UserLayout = () => {
             bottom: 0,
             left: 0,
             right: 0,
-            height: BOTTOMNAV_HEIGHT,
+            height: `${BOTTOMNAV_HEIGHT}px`,
             zIndex: theme.zIndex.appBar,
+            bgcolor: "#fff",
           }}
         >
           <MobileBottomNav />
