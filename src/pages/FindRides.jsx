@@ -308,7 +308,7 @@ export default function FindRides() {
   }
 
   return (
-    // Outer wrapper: full viewport height minus navbar, no overflow on itself
+  
     <Box
       sx={{
         height: `calc(100vh - ${NAVBAR_HEIGHT}px)`,
@@ -321,9 +321,7 @@ export default function FindRides() {
         p:1
       }}
     >
-      {/* ── Sticky block: ONLY the hero + From/To/Filter search bar.
-             The expanded filter panel lives OUTSIDE this sticky block,
-             so it scrolls/collapses away instead of staying pinned. ── */}
+   
       <Box
         sx={{
           position: "sticky",
@@ -525,8 +523,6 @@ export default function FindRides() {
               </Button>
             </Box>
 
-            {/* Applied filter chips live just under the sticky search row
-                 so the user can see/clear them without opening the panel. */}
             {activeFilters.length > 0 && (
               <Box sx={{ display: "flex", flexWrap: "wrap", gap: { xs: 0.5, sm: 0.75 }, mt: 1.25 }}>
                 {activeFilters.map((f) => (
@@ -554,11 +550,7 @@ export default function FindRides() {
         </Box>
       </Box>
 
-      {/* ── Scrollable results area. The filter panel renders as the
-             FIRST thing inside this scrollable area (not in the sticky
-             block), so: scrolling naturally moves it out of view, AND
-             we additionally force-collapse it past a small scroll delta
-             so it doesn't loiter half-visible. ── */}
+
       <Box
         ref={resultsRef}
         onScroll={handleResultsScroll}

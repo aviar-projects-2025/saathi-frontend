@@ -25,9 +25,6 @@ import { IconButton, InputAdornment } from "@mui/material";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 
-// LAYOUT 4: Card with a colored top banner and a centered avatar badge
-// straddling the seam — matches the Login page styling.
-
 const Register = () => {
   const navigate = useNavigate();
   const [serverError, setServerError] = useState("");
@@ -268,41 +265,9 @@ const Register = () => {
                           ),
                         },
                       }}
-                      sx={{
-                        "& .MuiOutlinedInput-root": {
-                          backgroundColor: "#FFFFFF",
-                          borderRadius: "12px",
-                          "& input:-webkit-autofill": {
-                            WebkitBoxShadow: "0 0 0 1000px #FFFFFF inset",
-                            WebkitTextFillColor: "#000000",
-                          },
-                          "& .MuiOutlinedInput-notchedOutline": {
-                            borderRadius: "12px",
-                          },
-                          "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                            borderColor: "#FF9933",
-                          },
-                        },
-                        "& .MuiInputLabel-root.Mui-focused": {
-                          color: "#FF9933",
-                        },
-                      }}
+                      sx={inputSx}
                     />
 
-                    {/* <TextField
-                      fullWidth
-                      type="password"
-                      label="Password"
-                      name="password"
-                      value={values.password}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      error={touched.password && Boolean(errors.password)}
-                      helperText={touched.password && errors.password}
-                      margin="normal"
-                      size="small"
-                      sx={inputSx}
-                    /> */}
 
                     <TextField
                       fullWidth

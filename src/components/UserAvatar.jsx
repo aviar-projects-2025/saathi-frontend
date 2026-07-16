@@ -39,8 +39,6 @@ export default function UserAvatar({ name, profile, firstName, lastName, initial
       >
       </Avatar> */}
 
-
-
             <Avatar
                 src={profile || currentUser?.profileImage || ""}
                 sx={{
