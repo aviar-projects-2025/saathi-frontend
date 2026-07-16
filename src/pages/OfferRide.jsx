@@ -174,7 +174,7 @@ function ReviewItem({ icon: Icon, label, value }) {
           }}
         >
           {Array.isArray(value) ? value.join(", ") : value}
-        </Typography> 
+        </Typography>
       </Box>
     </Stack>
   );
@@ -220,14 +220,42 @@ export default function OfferRide() {
         if (!form.from.trim()) { toast.error("Please enter From location"); return false; }
         if (!form.destination.trim()) { toast.error("Please enter Destination"); return false; }
       }
-      if (!form.date) { toast.error("Please select Date"); return false; }
-      if (!form.time) { toast.error("Please select Time"); return false; }
+      if (!form.date) {
+        toast.error("Please select Date");
+        return false;
+      }
+
+      if (!form.time) {
+        toast.error("Please select Time");
+        return false;
+      }
 
       const selectedDateTime = new Date(`${form.date}T${form.time}`);
       const now = new Date();
-      if (selectedDateTime < now) {
+
+
+      if (selectedDateTime <= now) {
         toast.error("Please select a future date and time");
         return false;
+      }
+
+
+      const minimumAllowedTime = new Date(now);
+
+      if (isFlight) {
+        minimumAllowedTime.setHours(minimumAllowedTime.getHours() + 3);
+
+        if (selectedDateTime < minimumAllowedTime) {
+          toast.error("Flight departure must be at least 3 hours from now.");
+          return false;
+        }
+      } else {
+        minimumAllowedTime.setHours(minimumAllowedTime.getHours() + 1);
+
+        if (selectedDateTime < minimumAllowedTime) {
+          toast.error("Ride start time must be at least 1 hour from now.");
+          return false;
+        }
       }
 
       if (!form.description.trim()) { toast.error("Please enter Description"); return false; }

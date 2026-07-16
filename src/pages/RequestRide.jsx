@@ -13,6 +13,7 @@ import Api from '../Api';
 import Ridebook from "./Ridebook.jsx";
 import VerifiedIcon from "@mui/icons-material/Verified";
 import { useRide } from "../context/RideContext";
+import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import PersonIcon from "@mui/icons-material/Person";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
@@ -22,14 +23,14 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import PageLayout from '../components/PageLayout';
 
 const RequestRide = () => {
-
+    const [loadingRequests, setLoadingRequests] = useState(true);
     const [openEditModal, setOpenEditModal] = useState(false);
     const [allMyRequests, setAllMyRequests] = useState([]);
     const [openCancelDialog, setOpenCancelDialog] = useState(false);
     const [selectedRide, setSelectedRide] = useState();
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [userData, setUserData] = useState([]);
-
+    const [anchorEl, setAnchorEl] = useState(null);
     const user = JSON.parse(localStorage.getItem('user'));
 
     const { refreshRide } = useRide();
@@ -44,8 +45,9 @@ const RequestRide = () => {
 
     async function fetchAllSends() {
         try {
+        
             if (!user?.id) return;
-
+                setLoadingRequests(true);
             const res = await axios.get(`${Api}/bookride/send/${user.id}`);
             const requestUser = res.data.data.map((item) => item.members)
             setUserData(requestUser);
@@ -53,9 +55,40 @@ const RequestRide = () => {
         } catch (error) {
             console.error("Error fetching requests:", error);
             setAllMyRequests([]);
-        }
+        }finally {
+    setLoadingRequests(false);
     }
+}
+    const handleMenuOpen = (event, post) => {
+        setAnchorEl(event.currentTarget);
+        setSelectedPost(post);
+    };
 
+    const handleMenuClose = () => {
+        setAnchorEl(null);
+    };
+
+
+    const handleDelete = async (requestId) => {
+        setOpenCancelDialog(false);
+        setSelectedRequest(null);
+        try {
+            console.log("requestId", requestId)
+            await axios.delete(`${Api}/bookride/${requestId}`);
+            setAllMyRequests((prev) =>
+                prev.filter((request) => request._id !== requestId)
+            );
+            toast.success("Ride request deleted successfully");
+
+
+            fetchAllSends();
+        } catch (error) {
+            console.error(error);
+            toast.error(
+                error.response?.data?.message || "Failed to delete ride request"
+            );
+        }
+    };
 
     const handleCancelClick = (request) => {
         setSelectedRequest(request);
@@ -74,8 +107,6 @@ const RequestRide = () => {
             await axios.delete(`${Api}/bookride/${selectedRequest._id}`);
 
             handleCloseDialog();
-
-            // Refresh request list
             fetchAllSends();
         } catch (err) {
             console.error("Error cancelling request:", err);
@@ -99,20 +130,20 @@ const RequestRide = () => {
                 </Typography>
                 <br />
 
-                {allMyRequests.filter(req => req?.rideId).length === 0 ? (
-                    <Typography textAlign="center" color="text.secondary" sx={{ mt: 4 }}>
-                        No ride requests found.
-                    </Typography>
-                ) : (
+            {loadingRequests ? (
+  <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+    <CircularProgress color="warning" />
+  </Box>
+) : allMyRequests.filter(req => req?.rideId).length === 0 ? (
+  <Typography textAlign="center" color="text.secondary" sx={{ mt: 4 }}>
+    No ride requests found.
+  </Typography>
+) : (
                     <>
 
                         {(() => {
                             const uniqueRequests = allMyRequests
                                 .filter(req => req?.rideId)
-
-
-
-
                             const completed = uniqueRequests.filter(
                                 request => request.rideId?.travelStatus === "Completed"
                             );
@@ -218,11 +249,6 @@ const RequestRide = () => {
                                         return (
                                             <Card
                                                 key={request._id}
-                                                onClick={() => {
-                                                    setSelectedRequest(request);
-                                                    setSelectedRide(request.rideId);
-                                                    setOpenEditModal(true);
-                                                }}
                                                 sx={{
                                                     mb: 3,
                                                     borderRadius: "16px",
@@ -250,12 +276,6 @@ const RequestRide = () => {
                                                     </Typography>
 
                                                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                                        {/* <Chip
-                  label={`${requestCount} Request${requestCount > 1 ? "s" : ""}`}
-                  size="small"
-                  sx={{ bgcolor: "#E3F2FD", color: "#1565C0", fontWeight: 600 }}
-                /> */}
-
                                                         <Chip
                                                             label={request.status}
                                                             size="small"
@@ -272,6 +292,21 @@ const RequestRide = () => {
                                                         />
 
                                                         <IconButton
+                                                            onClick={() => {
+                                                                setSelectedRequest(request);
+                                                                setSelectedRide(request.rideId);
+                                                                setOpenEditModal(true);
+                                                            }}
+                                                            size="small"
+                                                            sx={{
+                                                                bgcolor: "rgba(255,255,255,0.1)",
+                                                                color: "#fff",
+                                                                "&:hover": { bgcolor: "rgba(255,255,255,0.2)" },
+                                                            }}
+                                                        >
+                                                            <EditIcon fontSize="small" />
+                                                        </IconButton>
+                                                        <IconButton
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
                                                                 handleCancelClick(request);
@@ -287,7 +322,48 @@ const RequestRide = () => {
                                                         </IconButton>
                                                     </Box>
                                                 </Box>
+                                                <Dialog
+                                                    open={openCancelDialog}
+                                                    onClose={() => setOpenCancelDialog(false)}
+                                                    maxWidth="xs"
+                                                    fullWidth
+                                                >
+                                                    <DialogTitle>Delete Post</DialogTitle>
 
+                                                    <DialogContent>
+                                                        <Typography>
+                                                            Are you sure you want to delete this request?
+                                                        </Typography>
+                                                    </DialogContent>
+
+                                                    <DialogActions sx={{ px: 3, pb: 2 }}>
+                                                        <Button
+                                                            variant="contained"
+                                                            onClick={() => setOpenCancelDialog(false)}
+                                                            sx={{
+                                                                bgcolor: "grey.500",
+                                                                color: "#fff",
+                                                                "&:hover": {
+                                                                    bgcolor: "grey.700",
+                                                                },
+                                                            }}
+                                                        >
+                                                            Cancel
+                                                        </Button>
+                                                        <Button
+                                                            variant="contained"
+                                                            color="error"
+                                                            onClick={() => {
+                                                                if (selectedRequest) {
+                                                                    handleDelete(selectedRequest._id);
+                                                                }
+
+                                                            }}
+                                                        >
+                                                            Delete
+                                                        </Button>
+                                                    </DialogActions>
+                                                </Dialog>
                                                 <CardContent sx={{ p: 2.5 }}>
                                                     <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
                                                         <Box>
