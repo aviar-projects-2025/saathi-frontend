@@ -305,9 +305,10 @@ export default function FindRides() {
         display: "flex",
         flexDirection: "column",
         width: "100%",
-        maxWidth: { xs: "100%" },
+        // maxWidth: { xs: "100%" },
         boxSizing: "border-box",
         overflowX: "hidden",
+        p:1
       }}
     >
       {/* ── Sticky block: ONLY the hero + From/To/Filter search bar.
@@ -327,12 +328,12 @@ export default function FindRides() {
           sx={{
             color: "#000000",
             pt: { xs: 1, sm: 2, md: 5 },
-            pb: { xs: 0, sm: 3, md: 3.5 },
-            px: { xs: 0, sm: 2 },
+            pb: { xs: 0, sm: 2, md: 3 },
+            // px: { xs: 0, sm: 2 },
 
           }}
         >
-          <Container maxWidth="md" disableGutters sx={{ px: { xs: 0, sm: 2 } }}>
+          <Container disableGutters >
             {/* Title */}
             <Typography
               fontWeight={800}
@@ -358,7 +359,7 @@ export default function FindRides() {
               {/* From */}
               <TextField
                 size="small"
-                placeholder={isMobile ? "From / City" : " From / City / Airport"}
+                placeholder={isMobile ? "From" : " From / City / Airport"}
                 value={searchFrom}
                 onChange={(e) => setSearchFrom(e.target.value)}
                 InputProps={{
@@ -372,7 +373,7 @@ export default function FindRides() {
                   flex: 1,
                   minWidth: 0,
                   "& .MuiOutlinedInput-root": {
-                    borderRadius: "50px",
+                    borderRadius: "12px",
                     background: "rgba(255,255,255,0.96)",
                     fontSize: { xs: "0.7rem", sm: "0.84rem" },
                     height: { xs: 34, sm: 40 },
@@ -387,7 +388,7 @@ export default function FindRides() {
               {/* To */}
               <TextField
                 size="small"
-                placeholder={isMobile ? "To / City" : " To / City / Airport"}
+                placeholder={isMobile ? "To" : " To / City / Airport"}
                 value={searchDestination}
                 onChange={(e) => setSearchDestination(e.target.value)}
                 InputProps={{
@@ -401,7 +402,7 @@ export default function FindRides() {
                   flex: 1,
                   minWidth: 0,
                   "& .MuiOutlinedInput-root": {
-                    borderRadius: "50px",
+                    borderRadius: "12px",
                     background: "rgba(255,255,255,0.96)",
                     fontSize: { xs: "0.7rem", sm: "0.84rem" },
                     height: { xs: 34, sm: 40 },

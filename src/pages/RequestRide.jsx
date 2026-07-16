@@ -56,7 +56,6 @@ const RequestRide = () => {
         }
     }
 
-
     const handleCancelClick = (request) => {
         setSelectedRequest(request);
         setOpenCancelDialog(true);
@@ -95,7 +94,7 @@ const RequestRide = () => {
                 }}
             >
                 <Typography variant="h5" fontWeight={800} sx={{ fontSize: { xs: '1.2rem', sm: '1.5rem' } }}>
-                    My Requests
+                    My Request Rides
                 </Typography>
                 <br />
 
@@ -109,9 +108,6 @@ const RequestRide = () => {
                         {(() => {
                             const uniqueRequests = allMyRequests
                                 .filter(req => req?.rideId)
-
-
-
 
                             const completed = uniqueRequests.filter(
                                 request => request.rideId?.travelStatus === "Completed"

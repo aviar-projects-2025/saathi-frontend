@@ -116,15 +116,15 @@ function EmptyState({ emoji, message, actionLabel, actionHref }) {
         p: { xs: 2.5, sm: 3.5, md: 4 },
         textAlign: 'center',
 
-        border: '1px dashed #E0D5CC',
-        bgcolor: '#FFF8F2',
+        // border: '1px dashed #E0D5CC',
+        // bgcolor: '#FFF8F2',
         borderRadius: 2,
         mx: 'auto',
         maxWidth: { xs: '100%', sm: 440, md: 480 },
       }}
       elevation={0}
     >
-      <Typography sx={{ fontSize: { xs: '1.6rem', sm: '1.8rem', md: '2rem' } }}>{emoji}</Typography>
+      {/* <Typography sx={{ fontSize: { xs: '1.6rem', sm: '1.8rem', md: '2rem' } }}>{emoji}</Typography> */}
       <Typography fontWeight={600} color="text.secondary" mt={1} sx={{ fontSize: { xs: '0.85rem', sm: '0.95rem', md: '1rem' } }}>
         {message}
       </Typography>
@@ -1432,7 +1432,7 @@ const MyRides = () => {
     <Box
       sx={{
         display: "flex",
-        gap: { xs: 2, sm: 2.5, md: 3 },
+        gap: { xs: 1, sm: 2.5, md: 3 },
         alignItems: "flex-start",
         flexDirection: { xs: "column", lg: "row", md: "row" },
         width: '100%',
@@ -1441,10 +1441,10 @@ const MyRides = () => {
       <Box
         sx={{
           width: '100%',
-          maxWidth: { xs: '100%', sm: '100%', md: 900, lg: 1200 },
+          // maxWidth: { xs: '100%', sm: '100%', md: 900, lg: 1200 },
           mx: { md: 'auto', lg: 0 },
-          px: { xs: 0, sm: 2, md: 3 },
-          py: { xs: 0, sm: 2, md: 3 },
+          // px: { xs: 0, sm: 2, md: 3 },
+          // py: { xs: 0, sm: 2, md: 3 },
           boxSizing: 'border-box',
           display: 'flex',
           flexDirection: 'column',
@@ -1465,7 +1465,7 @@ const MyRides = () => {
             mb: 0,
             flexShrink: 0,
             position: { xs: 'sticky', sm: 'sticky' },
-            top: { xs: -10, sm: -12 },
+            top: { xs: -3, sm: -3 },
             zIndex: { xs: 10, sm: 10 },
             bgcolor: 'background.paper',
           }}
@@ -1475,7 +1475,7 @@ const MyRides = () => {
             onChange={(_, v) => setTab(v)}
             variant="fullWidth"
             sx={{
-              minHeight: { xs: 46, sm: 48, md: 50 },
+              minHeight: { xs: 40, sm: 48, md: 50 },
               "& .MuiTab-root": {
                 minWidth: 0,
                 padding: { xs: "4px 2px", sm: "8px 12px", md: "12px 16px" },

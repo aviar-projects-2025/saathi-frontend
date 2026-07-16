@@ -13,8 +13,12 @@ const BOTTOMNAV_HEIGHT = 56;
 const UserLayout = () => {
   const theme = useTheme();
 
+  // Sidebar becomes a permanent column at lg+, a Drawer below that.
   const isDesktop = useMediaQuery(theme.breakpoints.up("lg"));
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  // Bottom nav now matches the same threshold as the Drawer, so there's
+  // never a gap where the sidebar is hidden AND there's no bottom nav
+  // to reach it from (previously true between "md" and "lg").
+  const isMobile = useMediaQuery(theme.breakpoints.down("lg"));
 
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -60,8 +64,12 @@ const UserLayout = () => {
             display: "flex",
             justifyContent: "center",
             alignItems: "flex-start",
+            // Scales up gradually instead of jumping straight from 0 to 5%
+            // only at "lg" — tablets now get some breathing room too.
             px: {
               xs: 0,
+              sm: "2%",
+              md: "3%",
               lg: "5%",
             },
             boxSizing: "border-box",
@@ -73,7 +81,7 @@ const UserLayout = () => {
               width: "100%",
               maxWidth: { xs: "100%", sm: "1800px" },
               height: "100%",
-              py: 2,
+              py: { xs: 1, sm: 2 },
             }}
           >
             {/* Box 3 */}
@@ -84,7 +92,7 @@ const UserLayout = () => {
                 display: "grid",
                 gridTemplateColumns: {
                   xs: "1fr",
-                  lg: "20% 78%",
+                  lg: "20% 80%",
                 },
                 gap: {
                   xs: 0,
@@ -98,8 +106,8 @@ const UserLayout = () => {
                 <Box
                   sx={{
                     width: "100%",
-                    height: "100%",
-                    // overflowY: "auto",
+                    height: "98%",
+                    overflowY: "auto",
                   }}
                 >
                   <Sidebar />
@@ -143,7 +151,9 @@ const UserLayout = () => {
                   sx={{
                     width: "100%",
                     maxWidth: { xs: "100%", sm: "1400px" },
-                    p: { xs: 1 }
+                    // A touch more breathing room as the screen grows,
+                    // instead of a flat p:1 at every size below "sm".
+                    p: { xs: 1, sm: 2, md: 3 },
                   }}
                 >
                   <Outlet />

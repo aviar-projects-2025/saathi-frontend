@@ -142,6 +142,7 @@ function Perforation() {
                         boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.06)',
                     }}
                 />
+                
             ))}
         </Box>
     );
