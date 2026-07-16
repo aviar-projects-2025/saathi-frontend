@@ -115,7 +115,7 @@ export default function FindRides() {
   const navigate = useNavigate();
   const [searchFrom, setSearchFrom] = useState("");
   const [searchDestination, setSearchDestination] = useState("");
-
+  const [search, setSearch] = useState("");
   // Staged filter values: edited live inside the panel, but only
   // committed to `appliedFilters` (and therefore the results) on Apply.
   const [draftFilters, setDraftFilters] = useState(emptyFilters);
@@ -138,6 +138,8 @@ export default function FindRides() {
       setLoading(false);
     }
   };
+
+
 
   // ── Filter panel open/close + scroll-to-collapse ──────────────────────
   const openFilters = () => {
@@ -239,9 +241,7 @@ export default function FindRides() {
     .filter((ride) => ride.createdBy?._id !== currentUser?._id)
     .filter((ride) => {
       // Hide past rides
-      if (new Date(ride.startTime) <= now) {
-        return false;
-      }
+      if (new Date(ride.startTime) <= now) return false;
 
       const fromValue =
         ride.modeOfTravel === "Flight"
@@ -256,30 +256,40 @@ export default function FindRides() {
       const fromMatch = fromValue.toLowerCase().includes(searchFrom.toLowerCase());
       const destinationMatch = destinationValue.toLowerCase().includes(searchDestination.toLowerCase());
 
-      const transportMatch =
-        !appliedTransportMode || ride.modeOfTravel === appliedTransportMode;
+      // General search box (top hero field) — matches across all key fields
+      const searchText = search.toLowerCase();
+      const generalSearchMatch =
+        !search ||
+        ride.from?.toLowerCase().includes(searchText) ||
+        ride.destination?.toLowerCase().includes(searchText) ||
+        ride.fromAirport?.toLowerCase().includes(searchText) ||
+        ride.destinationAirport?.toLowerCase().includes(searchText) ||
+        ride.airlineName?.toLowerCase().includes(searchText) ||
+        ride.flightNumber?.toLowerCase().includes(searchText) ||
+        ride.createdBy?.firstName?.toLowerCase().includes(searchText) ||
+        ride.createdBy?.lastName?.toLowerCase().includes(searchText);
 
-      const genderMatch =
-        !appliedGender || ride.genderPreference === appliedGender;
-
+      const transportMatch = !appliedTransportMode || ride.modeOfTravel === appliedTransportMode;
+      const genderMatch = !appliedGender || ride.genderPreference === appliedGender;
       const fuelMatch =
         appliedFuelSharing === "" ||
         ride.modeOfTravel === "Flight" ||
         ride.fuelSharing?.toString() === appliedFuelSharing;
-
       const languageMatch =
-        !appliedLanguage ||
-        ride.language?.toLowerCase().includes(appliedLanguage.toLowerCase());
+        !appliedLanguage || ride.language?.toLowerCase().includes(appliedLanguage.toLowerCase());
 
       return (
         fromMatch &&
         destinationMatch &&
+        generalSearchMatch &&
         transportMatch &&
         genderMatch &&
         fuelMatch &&
         languageMatch
       );
     });
+
+
 
   if (loading) {
     return (
@@ -345,8 +355,44 @@ export default function FindRides() {
             >
               Find Rides & Flight Companions
             </Typography>
-
-            {/* Search row: From / To / Filter — this is what stays sticky */}
+            <Box
+              sx={{
+                display: "flex",
+                gap: { xs: 0.7, sm: 1.25 },
+                alignItems: "center",
+                flexDirection: "row",
+                mt: { xs: 2.3, sm: 1.5 },
+              }}
+            >
+              <TextField
+                size="small"
+                placeholder="Search by From, To, Airport, City..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon
+                        sx={{
+                          color: saffron[500],
+                          fontSize: 20,
+                        }}
+                      />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  flex: 1,
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: "50px",
+                    background: "#fff",
+                    "& fieldset": {
+                      border: "none",
+                    },
+                  },
+                }}
+              />
+            </Box>
             <Box
               sx={{
                 display: "flex",

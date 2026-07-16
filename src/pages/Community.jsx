@@ -152,6 +152,7 @@ export default function Community() {
     if (!file) return;
 
     setMedia(file);
+
     setPreview(URL.createObjectURL(file));
 
     e.target.value = "";
@@ -164,11 +165,7 @@ export default function Community() {
   const { completion } = useUser();
 
   const isProfileComplete = completion === 100;
-  // ── Scroll behavior ────────────────────────────────────────────────────
-  // Only the SIDEBAR gets its own independent scroll container (fixed height).
-  // The feed/main content scrolls with the page itself (normal page scroll),
-  // so scrolling anywhere on the page scrolls the page/feed, except when the
-  // cursor is over the sidebar, which scrolls independently.
+
   const SIDEBAR_SCROLL_HEIGHT = 'calc(100vh - 130px)';
   const handleEdit = (post) => {
     setSelectedPost(post);

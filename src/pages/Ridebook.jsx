@@ -75,32 +75,55 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, onS
   };
 
   const handleSeatsChange = (value) => {
-    let seats = Number(value);
-    if (!seats || seats < 1) seats = 1;
-    if (seats > maxSeats) {
-      seats = maxSeats;
-      toast.warning(`Only ${maxSeats} seat(s) available`);
+    if (value === "") {
+      setRequestData((prev) => ({
+        ...prev,
+        seatsRequested: "",
+      }));
+      return;
     }
+
+    const seats = Number(value);
+
+    if (seats < 1) return;
+
+    if (seats > maxSeats) {
+      toast.warning(`Only ${maxSeats} seat(s) available`);
+      return;
+    }
+
     setRequestData((prev) => ({
       ...prev,
       seatsRequested: seats,
-      membersCount: seats,
-      members: Array.from({ length: seats }, (_, i) => prev.members[i] || { name: "", age: "" }),
     }));
   };
-
   const handleMembersCountChange = (value) => {
-    let count = Number(value);
-    if (!count || count < 1) count = 1;
-    if (!isFlight && count > maxSeats) {
-      count = maxSeats;
-      toast.warning(`Only ${maxSeats} seat(s) available`);
+    if (value === "") {
+      setRequestData((prev) => ({
+        ...prev,
+        membersCount: "",
+        members: [],
+      }));
+      return;
     }
+
+    const count = Number(value);
+    const limit = isFlight ? 20 : maxSeats;
+
+    if (count < 1) return;
+
+    if (count > limit) {
+      toast.warning(`Maximum ${limit} member(s) allowed`);
+      return;
+    }
+
     setRequestData((prev) => ({
       ...prev,
       membersCount: count,
-      seatsRequested: isFlight ? prev.seatsRequested : count,
-      members: Array.from({ length: count }, (_, i) => prev.members[i] || { name: "", age: "" }),
+      members: Array.from(
+        { length: count },
+        (_, i) => prev.members[i] || { name: "", age: "" }
+      ),
     }));
   };
 
@@ -215,9 +238,21 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, onS
             margin="normal"
             size={isMobile ? "small" : "medium"}
             value={requestData.seatsRequested}
-            inputProps={{ min: 1, max: maxSeats }}
             helperText={`You can request maximum ${maxSeats} seat(s)`}
-            onChange={(e) => handleSeatsChange(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value;
+
+              if (value === "") {
+                handleSeatsChange("");
+                return;
+              }
+
+              const num = Number(value);
+
+              if (num >= 1 && num <= maxSeats) {
+                handleSeatsChange(value);
+              }
+            }}
           />
         )}
 
@@ -228,9 +263,26 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, onS
           margin="normal"
           size={isMobile ? "small" : "medium"}
           value={requestData.membersCount}
-          inputProps={{ min: 1, max: isFlight ? 20 : maxSeats }}
-          helperText={isFlight ? "Enter number of members travelling" : `Maximum ${maxSeats} member(s) allowed`}
-          onChange={(e) => handleMembersCountChange(e.target.value)}
+          helperText={
+            isFlight
+              ? "Enter number of members travelling"
+              : `Maximum ${maxSeats} member(s) allowed`
+          }
+          onChange={(e) => {
+            const value = e.target.value;
+            const limit = isFlight ? 20 : maxSeats;
+
+            if (value === "") {
+              handleMembersCountChange("");
+              return;
+            }
+
+            const num = Number(value);
+
+            if (num >= 1 && num <= limit) {
+              handleMembersCountChange(value);
+            }
+          }}
         />
 
         {requestData.members.map((member, index) => (
@@ -248,7 +300,17 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, onS
               size="small"
               sx={{ width: { xs: 80, sm: 120 } }}
               value={member.age}
-              onChange={(e) => handleMemberChange(index, "age", e.target.value)}
+              inputProps={{
+                min: 1,
+                max: 120,
+              }}
+              onChange={(e) => {
+                const value = e.target.value;
+
+                if (value === "" || (Number(value) >= 1 && Number(value) <= 120)) {
+                  handleMemberChange(index, "age", value);
+                }
+              }}
             />
           </Box>
         ))}
