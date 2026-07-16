@@ -143,7 +143,7 @@ const CommunityComments = ({ post, user }) => {
 
   const getComments = async () => {
     try {
-      setLoading(true);
+      // setLoading(true);
       const res = await axios.get(Api + `/community/comments/${post?._id}`);
 
       setCommentsFetched(res.data.data.comments);
