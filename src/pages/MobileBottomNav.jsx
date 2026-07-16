@@ -176,14 +176,26 @@ export default function MobileBottomNav() {
       >
         {bottomNavItems
           .find((item) => item.hasDropdown)
-          ?.dropdownOptions.map((option) => (
-            <MenuItem
-              key={option.link}
-              onClick={() => handleDropdownSelect(option.link)}
-            >
-              {option.label}
-            </MenuItem>
-          ))}
+          ?.dropdownOptions.map((option) => {
+            const isActive = location.pathname === option.link;
+
+            return (
+              <MenuItem
+                key={option.link}
+                onClick={() => handleDropdownSelect(option.link)}
+                sx={{
+                  color: isActive ? "#FF9933" : "text.primary",
+                  fontWeight: isActive ? 600 : 400,
+                  // bgcolor: isActive ? "rgba(255, 153, 51, 0.12)" : "transparent",
+                  // "&:hover": {
+                  //   bgcolor: "rgba(255, 153, 51, 0.18)",
+                  // },
+                }}
+              >
+                {option.label}
+              </MenuItem>
+            );
+          })}
       </Menu>
 
       {/* Alert for Post Ride only */}
@@ -195,9 +207,9 @@ export default function MobileBottomNav() {
           vertical: "bottom",
           horizontal: "bottom",
         }}
-        // sx={{
-        //   top: { xs: 70, sm: 80 },
-        // }}
+      // sx={{
+      //   top: { xs: 70, sm: 80 },
+      // }}
       >
         <Alert
           severity="warning"

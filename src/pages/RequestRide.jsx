@@ -126,7 +126,7 @@ const RequestRide = () => {
                 }}
             >
                 <Typography variant="h5" fontWeight={800} sx={{ fontSize: { xs: '1.2rem', sm: '1.5rem' } }}>
-                    My Requests
+                    My Request Rides
                 </Typography>
                 <br />
 
