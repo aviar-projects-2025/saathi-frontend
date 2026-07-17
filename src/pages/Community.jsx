@@ -91,6 +91,7 @@ export default function Community() {
   const [previewImage, setPreviewImage] = useState("");
   const [openMediaDialog, setOpenMediaDialog] = useState(false);
   const { currentUser } = useUser()
+  const [tooltipOpen, setTooltipOpen] = useState(false);
 
   const cameraInputRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -471,12 +472,12 @@ export default function Community() {
                   from laptops up) instead of a single mobile/desktop switch. */}
               <Box
                 sx={{
-                  p: { xs: 1.25, sm: 1.5, md: 2 },
+                  p: { xs: 1, sm: 1.5, md: 2 },
                   borderRadius: 3,
                   border: CARD_BORDER,
                   mb: 2,
                   width: POST_BOX_WIDTH_SX,
-                  maxWidth: '100%', // never overflow a narrower viewport
+                  // maxWidth: '100%', // never overflow a narrower viewport
                   boxSizing: 'border-box',
                 }}
               >
@@ -487,13 +488,14 @@ export default function Community() {
                     currentUser={currentUser}
                   />
 
-                  <TextField
+                  {/* <TextField
                     fullWidth
                     multiline
                     minRows={1}
                     maxRows={5}
                     value={post}
                     onChange={(e) => setPost(e.target.value)}
+                    disabled={!isProfileComplete}
                     placeholder="Make a post"
                     variant="outlined"
                     size={isMobile ? 'small' : 'medium'}
@@ -505,7 +507,60 @@ export default function Community() {
                         fontSize: { xs: "10px", sm: "12px" }
                       },
                     }}
-                  />
+                  /> */}
+
+                  <Tooltip
+                    title="Complete your profile to 100% before creating a post."
+                    arrow
+                    open={!isProfileComplete && tooltipOpen}
+                    onClose={() => setTooltipOpen(false)}
+                  >
+                    <span
+                      style={{ display: "block", width: "100%" }}
+                      onClick={() => {
+                        if (!isProfileComplete) {
+                          setTooltipOpen(true);
+
+                          setTimeout(() => {
+                            setTooltipOpen(false);
+                          }, 3000);
+                        }
+                      }}
+                    >
+                      <TextField
+                        fullWidth
+                        multiline
+                        minRows={1}
+                        maxRows={5}
+                        value={post}
+                        onChange={(e) => setPost(e.target.value)}
+                        // disabled={!isProfileComplete}
+                        placeholder="Make a post"
+                        variant="outlined"
+                        size={isMobile ? "small" : "medium"}
+                        onKeyDown={() => {
+                          if (!isProfileComplete) {
+                            setTooltipOpen(true);
+
+                            setTimeout(() => setTooltipOpen(false), 3000);
+                          }
+                        }}
+                        inputProps={{
+                          style: {
+                            fontSize: bodyFontSize,
+                            readOnly: !isProfileComplete,
+                          },
+                        }}
+                        sx={{
+                          "& .MuiOutlinedInput-root": {
+                            borderRadius: 3,
+                            alignItems: "flex-start",
+                            fontSize: { xs: "10px", sm: "12px" },
+                          },
+                        }}
+                      />
+                    </span>
+                  </Tooltip>
                 </Box>
 
                 {/* Image preview */}
@@ -547,109 +602,111 @@ export default function Community() {
                 <Divider sx={{ my: 1.5 }} />
 
                 <Stack direction="row" alignItems="center" justifyContent="space-between">
-                  <Tooltip
-                    title={
-                      !isProfileComplete
-                        ? "Complete your profile to 100% before creating a post."
-                        : ""
-                    }
-                    arrow
-                  >
-                    <Box component="span">
-                      <Button
-                        onClick={handleMediaClick}
-                        disabled={!isProfileComplete}
-                        startIcon={<PermMediaIcon fontSize={iconFontSize} />}
-                        size={isMobile ? "small" : "medium"}
-                        sx={{
-                          textTransform: "none",
-                          fontSize: btnFontSize,
-                          "&.Mui-disabled": {
-                            color: "#9e9e9e",
-                          },
-                        }}
-                      >
-                        Media
-                      </Button>
 
-                      {openMediaDialog && (
-                        <>
-                          <Stack direction="row" spacing={1.5} sx={{ mt: 1 }}>
-                            {isMobile && <Button
-                              startIcon={<CameraAltIcon />}
-                              onClick={() => cameraInputRef.current?.click()}
-                              size={isMobile ? "small" : "medium"}
-                              sx={{
-                                textTransform: "none",
-                                fontSize: { xs: "9px", sm: "10px" },
-                                borderRadius: 5,
-                                px: 1.5,
-                                bgcolor: "#1976d2",
-                                color: "#fff",
-
-                                "& .MuiButton-startIcon svg": {
-                                  fontSize: { xs: "13px", sm: "14px" } // 14px, 16px, 18px, etc.
-                                },
-
-                                "&:hover": {
-                                  bgcolor: "#1565c0",
-                                },
-                              }}
-                            >
-                              Camera
-                            </Button>}
-
-                            <Button
-                              // variant="contained"
-                              startIcon={<FolderIcon />}
-                              onClick={() => fileInputRef.current?.click()}
-                              size={isMobile ? "small" : "medium"}
-                              sx={{
-                                textTransform: "none",
-                                fontSize: { xs: "9px", sm: "10px" },
-                                borderRadius: 5,
-                                px: 1.5,
-                                bgcolor: "#2e7d32",
-                                color: "#fff",
-                                "& .MuiButton-startIcon svg": {
-                                  fontSize: { xs: "13px", sm: "14px" } // 14px, 16px, 18px, etc.
-                                },
-
-                                "&:hover": {
-                                  bgcolor: "#1b5e20",
-
-                                },
-                              }}
-                            >
-                              {isMobile ? "Gallery" : "File"}
-                            </Button>
-                          </Stack>
+                  <Box component="span">
+                    <Tooltip
+                      title={
+                        !isProfileComplete
+                          ? "Complete your profile to 100% before creating a post."
+                          : ""
+                      }
+                      arrow
+                    >
+                      <span>
+                        <Button
+                          onClick={() => setOpenMediaDialog((prev) => !prev)}
+                          disabled={!isProfileComplete}
+                          startIcon={<PermMediaIcon fontSize={iconFontSize} />}
+                          size={isMobile ? "small" : "medium"}
+                          sx={{
+                            textTransform: "none",
+                            fontSize: btnFontSize,
+                            "&.Mui-disabled": {
+                              color: "#9e9e9e",
+                            },
+                          }}
+                        >
+                          Media
+                        </Button>
+                      </span>
+                    </Tooltip>
 
 
-                        </>
-                      )}
+                    {openMediaDialog && (
+                      <>
+                        <Stack direction="row" spacing={1.5} sx={{ mt: 1 }}>
+                          <Button
+                            startIcon={<CameraAltIcon />}
+                            onClick={() => cameraInputRef.current?.click()}
+                            size={isMobile ? "small" : "medium"}
+                            sx={{
+                              textTransform: "none",
+                              fontSize: { xs: "9px", sm: "10px" },
+                              borderRadius: 5,
+                              px: 1.5,
+                              bgcolor: "#1976d2",
+                              color: "#fff",
 
-                      {/* Hidden Camera Input */}
-                      <input
-                        ref={cameraInputRef}
-                        hidden
-                        type="file"
-                        accept="image/*"
-                        capture="environment"
-                        onChange={handleMediaSelect}
-                      />
+                              "& .MuiButton-startIcon svg": {
+                                fontSize: { xs: "13px", sm: "14px" } // 14px, 16px, 18px, etc.
+                              },
 
-                      {/* Hidden File Input */}
-                      <input
-                        ref={fileInputRef}
-                        hidden
-                        type="file"
-                        accept="image/*"
-                        onChange={handleMediaSelect}
-                      />
+                              "&:hover": {
+                                bgcolor: "#1565c0",
+                              },
+                            }}
+                          >
+                            {isMobile ? "Camera" : "Camera / Webcam"}
+                          </Button>
 
-                    </Box>
-                  </Tooltip>
+                          <Button
+                            // variant="contained"
+                            startIcon={<FolderIcon />}
+                            onClick={() => fileInputRef.current?.click()}
+                            size={isMobile ? "small" : "medium"}
+                            sx={{
+                              textTransform: "none",
+                              fontSize: { xs: "9px", sm: "10px" },
+                              borderRadius: 5,
+                              px: 1.5,
+                              bgcolor: "#2e7d32",
+                              color: "#fff",
+                              "& .MuiButton-startIcon svg": {
+                                fontSize: { xs: "13px", sm: "14px" } // 14px, 16px, 18px, etc.
+                              },
+
+                              "&:hover": {
+                                bgcolor: "#1b5e20",
+
+                              },
+                            }}
+                          >
+                            {isMobile ? "Gallery" : "File"}
+                          </Button>
+                        </Stack>
+
+                        {/* Hidden Camera Input */}
+                        <input
+                          ref={cameraInputRef}
+                          hidden
+                          type="file"
+                          accept="image/*"
+                          capture="environment"
+                          onChange={handleMediaSelect}
+                        />
+
+                        {/* Hidden File Input */}
+                        <input
+                          ref={fileInputRef}
+                          hidden
+                          type="file"
+                          accept="image/*"
+                          onChange={handleMediaSelect}
+                        />
+                      </>
+                    )}
+
+                  </Box>
 
                   <Tooltip
                     title={
@@ -1011,17 +1068,17 @@ export default function Community() {
         {showSidebar && (
           <Grid
             sx={{
-              mt: { sm: 6, md: 8, lg: 10, xl: 12 },
-              width: { sm: '200px', md: '270px', lg: '320px', xl: '300px' },
-              minWidth: { sm: '200px', md: '270px', lg: '320px', xl: '300px' },
+              mt: { sm: 6, md: 8, lg: 12, xl: 14 },
+              width: { sm: '200px', md: '260px', lg: '300px', xl: '300px' },
+              minWidth: { sm: '200px', md: '260px', lg: '300px', xl: '300px' },
               flexShrink: 0,
               position: 'sticky',
               top: 20,
               height: SIDEBAR_SCROLL_HEIGHT,
               overflowY: 'auto',
               overflowX: 'hidden',
-              pr: 5,
-              '&::-webkit-scrollbar': { width: 5 },
+              pr: 6,
+              '&::-webkit-scrollbar': { width: 3 },
               '&::-webkit-scrollbar-thumb': { backgroundColor: '#E0D4C8', borderRadius: 4 },
             }}
           >

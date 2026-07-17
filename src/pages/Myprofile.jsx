@@ -398,6 +398,7 @@ const Myprofile = () => {
             {/* Body */}
             <Box p={1}>
               <Stack spacing={2}>
+
                 <TextField
                   fullWidth
                   label="Current Password"
@@ -405,25 +406,24 @@ const Myprofile = () => {
                   name="currentPassword"
                   value={passwordData.currentPassword}
                   onChange={handlePasswordChange}
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton
-                          onClick={() =>
-                            setShowPassword({
-                              ...showPassword,
-                              current: !showPassword.current,
-                            })
-                          }
-                        >
-                          {showPassword.current ? (
-                            <VisibilityOff />
-                          ) : (
-                            <Visibility />
-                          )}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
+                  slotProps={{
+                    input: {
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            edge="end"
+                            onClick={() =>
+                              setShowPassword((prev) => ({
+                                ...prev,
+                                current: !prev.current,
+                              }))
+                            }
+                          >
+                            {showPassword.current ? <VisibilityOff /> : <Visibility />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    },
                   }}
                 />
 
@@ -434,25 +434,24 @@ const Myprofile = () => {
                   name="newPassword"
                   value={passwordData.newPassword}
                   onChange={handlePasswordChange}
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton
-                          onClick={() =>
-                            setShowPassword({
-                              ...showPassword,
-                              new: !showPassword.new,
-                            })
-                          }
-                        >
-                          {showPassword.new ? (
-                            <VisibilityOff />
-                          ) : (
-                            <Visibility />
-                          )}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
+                  slotProps={{
+                    input: {
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            edge="end"
+                            onClick={() =>
+                              setShowPassword((prev) => ({
+                                ...prev,
+                                new: !prev.new,
+                              }))
+                            }
+                          >
+                            {showPassword.new ? <VisibilityOff /> : <Visibility />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    },
                   }}
                 />
 
@@ -463,25 +462,24 @@ const Myprofile = () => {
                   name="confirmPassword"
                   value={passwordData.confirmPassword}
                   onChange={handlePasswordChange}
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton
-                          onClick={() =>
-                            setShowPassword({
-                              ...showPassword,
-                              confirm: !showPassword.confirm,
-                            })
-                          }
-                        >
-                          {showPassword.confirm ? (
-                            <VisibilityOff />
-                          ) : (
-                            <Visibility />
-                          )}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
+                  slotProps={{
+                    input: {
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            edge="end"
+                            onClick={() =>
+                              setShowPassword((prev) => ({
+                                ...prev,
+                                confirm: !prev.confirm,
+                              }))
+                            }
+                          >
+                            {showPassword.confirm ? <VisibilityOff /> : <Visibility />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    },
                   }}
                 />
 

@@ -158,7 +158,10 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
           fullWidth
           size="small"
           variant="contained"
-          onClick={() => navigate("/user-profile")}
+          onClick={() => {
+            navigate("/user-profile");
+            onItemClick?.();
+          }}
           sx={{
             mt: 1,
             bgcolor: "#FF9933",
@@ -323,6 +326,6 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
         <LogoutIcon sx={{ fontSize: 21 }} />
         <Typography sx={{ fontSize: 14, fontWeight: 700 }}>Logout</Typography>
       </Box>
-    </Paper>
+    </Paper >
   );
 }

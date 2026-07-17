@@ -39,10 +39,6 @@ export default function UserAvatar({ name, profile, firstName, lastName, initial
       >
       </Avatar> */}
 
-            {console.log(profile, 'profile')}
-            {console.log(currentUser, 'currentUser')}
-
-
             <Avatar
                 src={profile || currentUser?.profileImage || ""}
                 sx={{

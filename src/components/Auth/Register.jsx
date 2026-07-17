@@ -21,9 +21,9 @@ import { useState } from "react";
 import Api from "../../Api";
 import { toast } from "react-toastify";
 import Saathi from '../../assets/saathilogo.png';
-
-// LAYOUT 4: Card with a colored top banner and a centered avatar badge
-// straddling the seam — matches the Login page styling.
+import { IconButton, InputAdornment } from "@mui/material";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -33,6 +33,16 @@ const Register = () => {
 
   const theme = useTheme();
   const isTab = useMediaQuery(theme.breakpoints.down("sm"));
+
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleClickShowPassword = () => {
+    setShowPassword((show) => !show);
+  };
+
+  const handleMouseDownPassword = (event) => {
+    event.preventDefault();
+  };
 
   const validationSchema = Yup.object({
     firstName: Yup.string().required("First name is required"),
@@ -230,7 +240,7 @@ const Register = () => {
 
                     <TextField
                       fullWidth
-                      type="password"
+                      type={showPassword ? "text" : "password"}
                       label="Password"
                       name="password"
                       value={values.password}
@@ -240,8 +250,24 @@ const Register = () => {
                       helperText={touched.password && errors.password}
                       margin="normal"
                       size="small"
+                      slotProps={{
+                        input: {
+                          endAdornment: (
+                            <InputAdornment position="end">
+                              <IconButton
+                                onClick={handleClickShowPassword}
+                                onMouseDown={handleMouseDownPassword}
+                                edge="end"
+                              >
+                                {showPassword ? <VisibilityOff /> : <Visibility />}
+                              </IconButton>
+                            </InputAdornment>
+                          ),
+                        },
+                      }}
                       sx={inputSx}
                     />
+
 
                     <TextField
                       fullWidth
