@@ -793,7 +793,7 @@ export default function Community() {
                           </Typography>
                         </Box>
 
-                        {post?.authorId?._id === currentUser.id && (
+                        {post?.authorId?._id === currentUser._id && (
                           <>
                             <IconButton onClick={(e) => handleMenuOpen(e, post)}>
                               <MoreHorizIcon
