@@ -90,30 +90,30 @@ export default function RideCard({ ride }) {
   };
   const { refreshRide } = useRide();
 
-  useEffect(() => {
-    fetchAllSends();
-  }, []);
+  // useEffect(() => {
+  //   fetchAllSends();
+  // }, []);
 
-  useEffect(() => {
-    fetchAllSends();
-  }, [refreshRide]);
+  // useEffect(() => {
+  //   fetchAllSends();
+  // }, [refreshRide]);
 
-  useEffect(() => {
-    myReqRides();
-  }, [refreshRide]);
-  async function fetchAllSends() {
-    try {
-      if (!user?.id) return;
+  // useEffect(() => {
+  //   myReqRides();
+  // }, [refreshRide]);
+  // async function fetchAllSends() {
+  //   try {
+  //     if (!user?.id) return;
 
-      const res = await axios.get(`${Api}/bookride/send/${user.id}`);
-      const requestUser = res.data.data.map((item) => item.members)
-      setUserData(requestUser);
-      setAllMyRequests(res.data?.data || []);
-    } catch (error) {
-      console.error("Error fetching requests:", error);
-      setAllMyRequests([]);
-    }
-  }
+  //     const res = await axios.get(`${Api}/bookride/send/${user.id}`);
+  //     const requestUser = res.data.data.map((item) => item.members)
+  //     setUserData(requestUser);
+  //     setAllMyRequests(res.data?.data || []);
+  //   } catch (error) {
+  //     console.error("Error fetching requests:", error);
+  //     setAllMyRequests([]);
+  //   }
+  // }
   const handleSeatsChange = (value) => {
     let seats = Number(value);
     if (!seats || seats < 1) seats = 1;
@@ -198,11 +198,17 @@ export default function RideCard({ ride }) {
 
   useEffect(() => {
     myReqRides();
-  }, [])
+  }, [refreshRide]);
 
+  useEffect(() => {
+    myReqRides();
+  }, []);
   const myReqRides = async () => {
     try {
-      const res = await axios.get(Api + `/bookride/${storedUser.id}?type=requested`);
+      const res = await axios.get(
+        Api + `/bookride/${storedUser.id}?type=requested`
+      );
+
       if (res.data.success) {
         setMyRequestedRides(res.data.data || []);
       }
@@ -211,7 +217,47 @@ export default function RideCard({ ride }) {
     }
   };
 
-  const iconSx = { color: ORANGE, fontSize: { xs: 14, sm: 16 } };
+
+
+  const currentRequest = myRequestedRides.find((req) => {
+    const rideId =
+      typeof req.rideId === "object"
+        ? req.rideId?._id
+        : req.rideId;
+
+    return rideId === ride._id && req.status !== "CANCELLED";
+  });
+
+  const alreadyRequested = !!currentRequest;
+
+  const requestedByMe = myRequestedRides
+    .filter((req) => {
+      const rideId =
+        typeof req.rideId === "object"
+          ? req.rideId?._id
+          : req.rideId;
+
+      return rideId === ride._id && req.status === "PENDING";
+    })
+    .reduce((sum, req) => sum + Number(req.seatsRequested || 0), 0);
+
+  const remainingSeatsForUser = isFlight
+    ? null
+    : Math.max(Number(ride.availableSeats || 0) - requestedByMe, 0);
+
+  const maxSeatsForDialog = isFlight
+    ? Infinity
+    : alreadyRequested
+      ? remainingSeatsForUser +
+      Number(currentRequest?.seatsRequested || 0)
+      : remainingSeatsForUser;
+
+
+  const iconSx = {
+    color: ORANGE,
+    fontSize: { xs: 14, sm: 16 },
+  };
+
 
   const genderIcon = {
     Male: <PersonIcon sx={iconSx} />,
@@ -230,33 +276,14 @@ export default function RideCard({ ride }) {
 
 
 
-  const currentRequest = myRequestedRides.find(
-    (req) => req.rideId === ride._id && req.status !== "CANCELLED"
-  );
 
-  const alreadyRequested = !!currentRequest;
 
-  const requestedByMe = myRequestedRides
-    .filter(
-      (req) =>
-        req.rideId === ride._id &&
-        req.status === "PENDING"
-    )
-    .reduce((sum, req) => sum + Number(req.seatsRequested || 0), 0);
-  const remainingSeatsForUser = isFlight
-    ? null
-    : Math.max(
-      Number(ride.availableSeats || 0) - requestedByMe,
-      0
-    );
+
+
 
   const maxSeats = isFlight ? Infinity : remainingSeatsForUser;
 
-  // const remainingSeats = isFlight
-  //   ? null
-  //   : Math.max(Number(ride.availableSeats || 0) - requestedByMe, 0);
 
-  // const maxSeats = isFlight ? Infinity : remainingSeats;
 
   const canRequestMore = isFlight || remainingSeatsForUser > 0;
   const detailItems = isFlight
@@ -634,16 +661,13 @@ export default function RideCard({ ride }) {
           </CardContent>
         </Card>
       </Box>
-
       <Ridebook
         open={openEditModal}
         onClose={() => setOpenEditModal(false)}
         ride={selectedRide}
-        maxSeats={selectedRide?.availableSeats ?? Infinity}
-        onSuccess={() => {
-          fetchAllSends();
-          myReqRides();   // <-- refresh the data the seat count actually depends on
-        }}
+        allMyRequests={myRequestedRides}
+        setAllMyRequests={setMyRequestedRides}
+        maxSeats={maxSeatsForDialog}
         requestToEdit={selectedRequest}
       />
 

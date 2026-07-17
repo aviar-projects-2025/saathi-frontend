@@ -45,20 +45,21 @@ const RequestRide = () => {
 
     async function fetchAllSends() {
         try {
-        
+
             if (!user?.id) return;
-                setLoadingRequests(true);
+            setLoadingRequests(true);
             const res = await axios.get(`${Api}/bookride/send/${user.id}`);
             const requestUser = res.data.data.map((item) => item.members)
             setUserData(requestUser);
+
             setAllMyRequests(res.data?.data || []);
         } catch (error) {
             console.error("Error fetching requests:", error);
             setAllMyRequests([]);
-        }finally {
-    setLoadingRequests(false);
+        } finally {
+            setLoadingRequests(false);
+        }
     }
-}
     const handleMenuOpen = (event, post) => {
         setAnchorEl(event.currentTarget);
         setSelectedPost(post);
@@ -73,7 +74,6 @@ const RequestRide = () => {
         setOpenCancelDialog(false);
         setSelectedRequest(null);
         try {
-            console.log("requestId", requestId)
             await axios.delete(`${Api}/bookride/${requestId}`);
             setAllMyRequests((prev) =>
                 prev.filter((request) => request._id !== requestId)
@@ -130,15 +130,15 @@ const RequestRide = () => {
                 </Typography>
                 <br />
 
-            {loadingRequests ? (
-  <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-    <CircularProgress color="warning" />
-  </Box>
-) : allMyRequests.filter(req => req?.rideId).length === 0 ? (
-  <Typography textAlign="center" color="text.secondary" sx={{ mt: 4 }}>
-    No ride requests found.
-  </Typography>
-) : (
+                {loadingRequests ? (
+                    <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+                        <CircularProgress color="warning" />
+                    </Box>
+                ) : allMyRequests.filter(req => req?.rideId).length === 0 ? (
+                    <Typography textAlign="center" color="text.secondary" sx={{ mt: 4 }}>
+                        No ride requests found.
+                    </Typography>
+                ) : (
                     <>
 
                         {(() => {
@@ -419,10 +419,13 @@ const RequestRide = () => {
                     open={openEditModal}
                     onClose={() => setOpenEditModal(false)}
                     ride={selectedRide}
+                    setAllMyRequests={setAllMyRequests}
+                    allMyRequests={allMyRequests}
                     maxSeats={selectedRide?.availableSeats ?? Infinity}
-                    onSuccess={fetchAllSends}
+                    // onSuccess={fetchAllSends}
                     requestToEdit={selectedRequest}
                 />
+                {console.log("allMyRequests123", allMyRequests)}
             </Box>
         </PageLayout>
     )
