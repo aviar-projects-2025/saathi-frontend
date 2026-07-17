@@ -153,6 +153,19 @@ const UserProfile = () => {
         }));
     };
 
+    const resetForm = () => {
+        setFormData({
+            firstName: currentUser?.firstName,
+            lastName: currentUser?.lastName,
+            email: currentUser?.email,
+            mobile: currentUser?.mobile || "",
+            dob: currentUser?.dob ? dayjs(currentUser.dob) : null,
+            gender: currentUser?.gender || "",
+            bio: currentUser?.bio || "",
+            profileImage: currentUser?.profileImage || "",
+        })
+    }
+
 
     const [formData, setFormData] = useState({
         firstName: currentUser?.firstName || "",
@@ -266,7 +279,8 @@ const UserProfile = () => {
             toast.success("Profile updated")
             setEditProfile(false)
         } catch (error) {
-            console.log(error);
+            console.log(error.response);
+            toast.error(error.response.data.message)
         } finally {
             setSubmitLoading(false)
         }
@@ -770,6 +784,7 @@ const UserProfile = () => {
                                         }}
                                         onClick={() => {
                                             setProfileImage("");
+                                            resetForm()
                                             setEditProfile(false);
                                         }}
                                     >
