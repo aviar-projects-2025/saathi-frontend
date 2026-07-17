@@ -137,7 +137,6 @@ const Myprofile = () => {
     }
   }, [currentUser]);
 
-  console.log("author---id", currentUser?._id)
   const handleChangePassword = async () => {
     try {
       // Frontend validation
@@ -171,7 +170,6 @@ const Myprofile = () => {
         confirmPassword: "",
       });
 
-      console.log("Change Password", res.data);
     } catch (error) {
       console.error(error);
       toast.error(error.response?.data?.message || "Something went wrong");
@@ -186,7 +184,6 @@ const Myprofile = () => {
       const myPosts = postsRes.data.data.filter(
         (item) => item.authorId?._id === currentUser?._id
       );
-      console.log("GYFYFUHGU", postRes)
       setCommunityPosts(myPosts);
 
     } catch (error) {
@@ -401,6 +398,7 @@ const Myprofile = () => {
             {/* Body */}
             <Box p={1}>
               <Stack spacing={2}>
+
                 <TextField
                   fullWidth
                   label="Current Password"
@@ -408,25 +406,24 @@ const Myprofile = () => {
                   name="currentPassword"
                   value={passwordData.currentPassword}
                   onChange={handlePasswordChange}
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton
-                          onClick={() =>
-                            setShowPassword({
-                              ...showPassword,
-                              current: !showPassword.current,
-                            })
-                          }
-                        >
-                          {showPassword.current ? (
-                            <VisibilityOff />
-                          ) : (
-                            <Visibility />
-                          )}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
+                  slotProps={{
+                    input: {
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            edge="end"
+                            onClick={() =>
+                              setShowPassword((prev) => ({
+                                ...prev,
+                                current: !prev.current,
+                              }))
+                            }
+                          >
+                            {showPassword.current ? <VisibilityOff /> : <Visibility />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    },
                   }}
                 />
 
@@ -437,25 +434,24 @@ const Myprofile = () => {
                   name="newPassword"
                   value={passwordData.newPassword}
                   onChange={handlePasswordChange}
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton
-                          onClick={() =>
-                            setShowPassword({
-                              ...showPassword,
-                              new: !showPassword.new,
-                            })
-                          }
-                        >
-                          {showPassword.new ? (
-                            <VisibilityOff />
-                          ) : (
-                            <Visibility />
-                          )}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
+                  slotProps={{
+                    input: {
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            edge="end"
+                            onClick={() =>
+                              setShowPassword((prev) => ({
+                                ...prev,
+                                new: !prev.new,
+                              }))
+                            }
+                          >
+                            {showPassword.new ? <VisibilityOff /> : <Visibility />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    },
                   }}
                 />
 
@@ -466,25 +462,24 @@ const Myprofile = () => {
                   name="confirmPassword"
                   value={passwordData.confirmPassword}
                   onChange={handlePasswordChange}
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton
-                          onClick={() =>
-                            setShowPassword({
-                              ...showPassword,
-                              confirm: !showPassword.confirm,
-                            })
-                          }
-                        >
-                          {showPassword.confirm ? (
-                            <VisibilityOff />
-                          ) : (
-                            <Visibility />
-                          )}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
+                  slotProps={{
+                    input: {
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            edge="end"
+                            onClick={() =>
+                              setShowPassword((prev) => ({
+                                ...prev,
+                                confirm: !prev.confirm,
+                              }))
+                            }
+                          >
+                            {showPassword.confirm ? <VisibilityOff /> : <Visibility />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    },
                   }}
                 />
 
@@ -751,7 +746,7 @@ const Myprofile = () => {
             >
               Logout
             </Button>
-            <Button
+            {/* <Button
               startIcon={<DeleteIcon sx={{ fontSize: { xs: 5, sm: 17 } }} />}
               sx={{
                 ...pillBtn,
@@ -759,7 +754,7 @@ const Myprofile = () => {
               }}
             >
               Hide Account From Users
-            </Button>
+            </Button> */}
           </Stack>
         </Grid>
       </SectionCard>

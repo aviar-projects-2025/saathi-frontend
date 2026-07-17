@@ -286,7 +286,7 @@ export default function RideCard({ ride }) {
 
   return (
     <>
-      <Box sx={{ mb: 2, mx: { xs: 0, sm: 0 }, maxWidth: 1000, width: "100%" }}>
+      <Box sx={{ mb: 2.5, mx: { xs: 0, sm: 0 }, maxWidth: 1000, width: "100%" }}>
 
         {/* ── Light orange-tinted header strip ── */}
         <Box sx={{
@@ -460,9 +460,14 @@ export default function RideCard({ ride }) {
                         size="small"
                         color="info"
                         sx={{
+                          height: { xs: 18, sm: 25 },
+                          fontSize: { xs: "0.65rem", sm: "0.7rem" },
                           fontWeight: 600,
                           bgcolor: "#E3F2FD",
                           color: "#1565C0",
+                          "& .MuiChip-label": {
+                            px: { xs: 0.5, sm: 1 },
+                          },
                         }}
                       />
                     )}
@@ -492,7 +497,7 @@ export default function RideCard({ ride }) {
                             "&.Mui-disabled": { bgcolor: "#e0e0e0" },
                             fontWeight: 700,
                             fontSize: { xs: "0.7rem", sm: "0.875rem" },
-                            px: { xs: 1.5, sm: 3 },
+                            px: { xs: 1.2, sm: 3 },
                             py: { xs: 0.5, sm: 1 },
                             borderRadius: 2,
                             whiteSpace: "nowrap",

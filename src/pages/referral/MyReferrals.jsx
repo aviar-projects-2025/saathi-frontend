@@ -24,6 +24,7 @@ import axios from "axios";
 import Api from "../../Api";
 import { toast } from "react-toastify";
 import { useNotifications } from "../../context/NotificationContext";
+import { useReferral } from "../../context/ReferralContext";
 
 const MyReferrals = () => {
     const handleOpenShare = () => setOpenShare(true);
@@ -34,6 +35,7 @@ const MyReferrals = () => {
     const [tab, setTab] = useState(0);
     const [loading, setLoading] = useState(false);
     const { notifications } = useNotifications()
+    const { getPendingReferralCount } = useReferral();
 
 
 
@@ -50,9 +52,12 @@ const MyReferrals = () => {
                     ...filtered,
                     ...pre
                 ]);
+
+                getReferrals();
             }
         }
     }, [notifications]);
+
 
     const user = JSON.parse(localStorage.getItem('user'));
 
@@ -66,6 +71,7 @@ const MyReferrals = () => {
             const approved = res.data.data.filter((item) => item.refApprove === "Approved");
             setMyReferrals(waitingReferrals);
             setApprovedReferrals(approved);
+            getPendingReferralCount()
         } catch (error) {
             toast.error(error.message);
         } finally {
@@ -84,6 +90,7 @@ const MyReferrals = () => {
             await axios.patch(Api + `/referrals/${id}`, { refApprove: "Approved" });
             toast.success("Referral approved");
             getReferrals();
+            getPendingReferralCount()
         } catch (error) {
             toast.error(error.response?.data?.message || error.message);
         }
@@ -91,8 +98,11 @@ const MyReferrals = () => {
 
     const declineUser = async (id) => {
         try {
-            axios.delete(Api + `/referrals/${id}`).then(() => getReferrals());
-        } catch (error) { }
+            axios.delete(Api + `/referrals/${id}`).then(() => {
+                getReferrals()
+                getPendingReferralCount()
+            });
+        } catch (error) { console.log(error.message) }
     };
 
     const getInitials = (firstName = "", lastName = "") =>
@@ -404,7 +414,7 @@ const MyReferrals = () => {
     const shareLink = `${window.location.origin}/register?ref=${user?.referralCode}`;
     return (
         <PageLayout>
-            <Box sx={{ maxWidth: 680, mx: "auto", px: { xs: 0, sm: 2, md: 0 }, pb: 6 }}>
+            <Box sx={{ px: { xs: 0, sm: 2, md: 0 }, pb: 6 }}>
 
                 {/* Header */}
                 <Box sx={{ mb: 1.5 }}>

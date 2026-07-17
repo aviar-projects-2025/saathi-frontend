@@ -154,13 +154,12 @@ const Community = React.lazy(() => import("./pages/Community.jsx"));
 const Myprofile = React.lazy(() => import("./pages/Myprofile.jsx"));
 const Discover = React.lazy(() => import("./pages/Discover.jsx"));
 const UserProfile = React.lazy(() => import("./pages/UserProfile.jsx"));
-const Notification = React.lazy(() => import("./pages/Notification.jsx"));
 const OfferRide = React.lazy(() => import("./pages/OfferRide.jsx"));
 const MyRides = React.lazy(() => import("./pages/MyRides.jsx"));
 const MyReferrals = React.lazy(() =>
   import("./pages/referral/MyReferrals.jsx")
 );
-const Settings = React.lazy(() => import("./pages/Settings.jsx"));
+// const Settings = React.lazy(() => import("./pages/Settings.jsx"));
 const RequestRide = React.lazy(() => import("./pages/RequestRide.jsx"));
 
 // ADMIN pages
@@ -237,7 +236,6 @@ function App() {
               <Route path="/myprofile" element={<Myprofile />} />
               <Route path="/myride" element={<MyRides />} />
               <Route path="/user-profile" element={<UserProfile />} />
-              <Route path="/notification" element={<Notification />} />
               <Route path="/discover" element={<Discover />} />
               <Route path="/request-ride" element={<RequestRide />} />
             </Route>
@@ -251,7 +249,7 @@ function App() {
               <Route path="/invite" element={<Invite />} />
               <Route path="/community" element={<Community />} />
               <Route path="/my-referalls" element={<MyReferrals />} />
-              <Route path="/settings" element={<Settings />} />
+              {/* <Route path="/settings" element={<Settings />} /> */}
             </Route>
           </Route>
 
