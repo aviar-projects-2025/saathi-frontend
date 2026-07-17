@@ -92,6 +92,7 @@ export default function Community() {
   const [openMediaDialog, setOpenMediaDialog] = useState(false);
   const { currentUser } = useUser()
   const [tooltipOpen, setTooltipOpen] = useState(false);
+   const [tooltip2Open, setTooltip2Open] = useState(false);
 
   const cameraInputRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -509,7 +510,7 @@ export default function Community() {
                     }}
                   /> */}
 
-                  <Tooltip
+                  {/* <Tooltip
                     title="Complete your profile to 100% before creating a post."
                     arrow
                     open={!isProfileComplete && tooltipOpen}
@@ -560,7 +561,89 @@ export default function Community() {
                         }}
                       />
                     </span>
+                  </Tooltip> */}
+
+
+                  <Tooltip
+                    title="Complete your profile to 100% before creating a post."
+                    arrow
+                    open={!isProfileComplete && tooltipOpen}
+                    onClose={() => setTooltipOpen(false)}
+                    slotProps={{
+                      tooltip: {
+                        sx: {
+                          fontSize: {
+                            xs: "10px",
+                            sm: "12px",
+                            md: "13px",
+                          },
+                          py: {
+                            xs: 0.5,
+                            sm: 1,
+                          },
+                          px: {
+                            xs: 1,
+                            sm: 1.5,
+                          },
+                          maxWidth: {
+                            xs: 180,
+                            sm: 250,
+                          },
+                          textAlign: "center",
+                        },
+                      },
+                      arrow: {
+                        sx: {
+                          fontSize: {
+                            xs: "0.6rem",
+                            sm: "0.8rem",
+                          },
+                        },
+                      },
+                    }}
+                  >
+                    <span
+                      style={{ display: "block", width: "100%" }}
+                      onClick={() => {
+                        if (!isProfileComplete) {
+                          setTooltipOpen(true);
+                          setTimeout(() => setTooltipOpen(false), 5000);
+                        }
+                      }}
+                    >
+                      <TextField
+                        fullWidth
+                        multiline
+                        minRows={1}
+                        maxRows={5}
+                        value={post}
+                        onChange={(e) => setPost(e.target.value)}
+                        placeholder="Make a post"
+                        variant="outlined"
+                        size={isMobile ? "small" : "medium"}
+                        onKeyDown={() => {
+                          if (!isProfileComplete) {
+                            setTooltipOpen(true);
+                            setTimeout(() => setTooltipOpen(false), 3000);
+                          }
+                        }}
+                        inputProps={{
+                          style: {
+                            fontSize: bodyFontSize,
+                            readOnly: !isProfileComplete,
+                          },
+                        }}
+                        sx={{
+                          "& .MuiOutlinedInput-root": {
+                            borderRadius: 3,
+                            alignItems: "flex-start",
+                            fontSize: { xs: "10px", sm: "12px" },
+                          },
+                        }}
+                      />
+                    </span>
                   </Tooltip>
+
                 </Box>
 
                 {/* Image preview */}
@@ -604,7 +687,7 @@ export default function Community() {
                 <Stack direction="row" alignItems="center" justifyContent="space-between">
 
                   <Box component="span">
-                    <Tooltip
+                    {/* <Tooltip
                       title={
                         !isProfileComplete
                           ? "Complete your profile to 100% before creating a post."
@@ -615,6 +698,78 @@ export default function Community() {
                       <span>
                         <Button
                           onClick={() => setOpenMediaDialog((prev) => !prev)}
+                          disabled={!isProfileComplete}
+                          startIcon={<PermMediaIcon fontSize={iconFontSize} />}
+                          size={isMobile ? "small" : "medium"}
+                          sx={{
+                            textTransform: "none",
+                            fontSize: btnFontSize,
+                            "&.Mui-disabled": {
+                              color: "#9e9e9e",
+                            },
+                          }}
+                        >
+                          Media
+                        </Button>
+                      </span>
+                    </Tooltip> */}
+
+                    <Tooltip
+                      title="Complete your profile to 100% before creating a post."
+                      arrow
+                      open={!isProfileComplete && tooltip2Open}
+                      onClose={() => setTooltip2Open(false)}
+                      slotProps={{
+                        tooltip: {
+                          sx: {
+                            fontSize: {
+                              xs: "10px",
+                              sm: "12px",
+                              md: "13px",
+                            },
+                            py: {
+                              xs: 0.5,
+                              sm: 1,
+                            },
+                            px: {
+                              xs: 1,
+                              sm: 1.5,
+                            },
+                            maxWidth: {
+                              xs: 180,
+                              sm: 250,
+                            },
+                            textAlign: "center",
+                          },
+                        },
+                        arrow: {
+                          sx: {
+                            fontSize: {
+                              xs: "0.6rem",
+                              sm: "0.8rem",
+                            },
+                          },
+                        },
+                      }}
+                    >
+                      <span
+                        style={{ display: "inline-block", width: "100%" }}
+                        onClick={() => {
+                          if (!isProfileComplete) {
+                            setTooltip2Open(true);
+
+                            setTimeout(() => {
+                              setTooltip2Open(false);
+                            }, 5000);
+                          }
+                        }}
+                      >
+                        <Button
+                          onClick={() => {
+                            if (isProfileComplete) {
+                              setOpenMediaDialog((prev) => !prev);
+                            }
+                          }}
                           disabled={!isProfileComplete}
                           startIcon={<PermMediaIcon fontSize={iconFontSize} />}
                           size={isMobile ? "small" : "medium"}
