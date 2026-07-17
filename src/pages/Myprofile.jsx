@@ -137,7 +137,6 @@ const Myprofile = () => {
     }
   }, [currentUser]);
 
-  console.log("author---id", currentUser?._id)
   const handleChangePassword = async () => {
     try {
       // Frontend validation
@@ -171,7 +170,6 @@ const Myprofile = () => {
         confirmPassword: "",
       });
 
-      console.log("Change Password", res.data);
     } catch (error) {
       console.error(error);
       toast.error(error.response?.data?.message || "Something went wrong");
@@ -186,7 +184,6 @@ const Myprofile = () => {
       const myPosts = postsRes.data.data.filter(
         (item) => item.authorId?._id === currentUser?._id
       );
-      console.log("GYFYFUHGU", postRes)
       setCommunityPosts(myPosts);
 
     } catch (error) {
@@ -751,7 +748,7 @@ const Myprofile = () => {
             >
               Logout
             </Button>
-            <Button
+            {/* <Button
               startIcon={<DeleteIcon sx={{ fontSize: { xs: 5, sm: 17 } }} />}
               sx={{
                 ...pillBtn,
@@ -759,7 +756,7 @@ const Myprofile = () => {
               }}
             >
               Hide Account From Users
-            </Button>
+            </Button> */}
           </Stack>
         </Grid>
       </SectionCard>

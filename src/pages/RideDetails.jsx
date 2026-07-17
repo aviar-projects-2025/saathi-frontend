@@ -1,28 +1,3 @@
-/**
- * RideDetailsModal — "Boarding Pass" layout
- * ------------------------------------------------------------
- * Drop-in replacement for the previous Ride Details modal.
- * Same props, same callbacks, same data shape — new visual layout only.
- *
- * Fonts used (add once, e.g. in index.html <head>):
- *   <link rel="preconnect" href="https://fonts.googleapis.com">
- *   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
- *
- * Props:
- *   ride            - ride object (from/source, to/destination, startTime, modeOfTravel,
- *                      availableSeats/seats, genderPreference, fuelSharing, fuelAmount,
- *                      description, status)
- *   requests        - array of request objects (_id, requestedBy, seatsRequested, status,
- *                      message, phone, members[])
- *   showEdit        - bool, show Edit button
- *   showDelete      - bool, show Delete button
- *   onEdit(ride)    - callback
- *   onDelete(ride)  - callback
- *   onClose()       - callback
- *   onApprove(id)   - callback
- *   onReject(id)    - callback
- */
-
 import { useState } from 'react';
 import {
     Dialog,

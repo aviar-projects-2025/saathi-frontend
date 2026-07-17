@@ -556,17 +556,17 @@ function RideCard({ ride, fetchRides, user, confirmRide, setConfirmRide, showEdi
   ).length;
 
   const handleApprove = async (requestId) => {
-
     try {
       const res = await axios.patch(`${Api}/bookride/${requestId}/status?type=Approve`, { status: 'ACCEPTED' });
-
-      setAllRequests(prev => prev.map(req =>
-        req._id === requestId ? { ...req, status: 'ACCEPTED' } : req
-      ));
-      fetchRides();
-      toast.success('Request approved successfully!');
+      if (res.status) {
+        setAllRequests(prev => prev.map(req =>
+          req._id === requestId ? { ...req, status: 'ACCEPTED' } : req
+        ));
+        fetchRides();
+        toast.success('Request approved successfully!');
+      }
     } catch (error) {
-      toast.error('Failed to approve request');
+      toast.error(error.response.data.message);
     }
   };
 

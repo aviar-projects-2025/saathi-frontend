@@ -43,7 +43,7 @@ export const NotificationProvider = ({ children }) => {
 
             // console.log(payload,'payload')
             const newNotification = {
-                id: data._id || Date.now(),
+                _id: data._id || Date.now(),
                 type,
                 category: category || "general",
                 data,
