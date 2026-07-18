@@ -44,7 +44,7 @@ const fetchRides = async () => {
     fetchRides();
   }
 }, []);
-console.log(user.id,"id")
+
   const handleSubmit = async () => {
     try {
       await axios.post(`${Api}/rideRating/${user.id}`, {
