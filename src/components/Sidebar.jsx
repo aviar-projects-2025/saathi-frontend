@@ -20,22 +20,10 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
   const { currentUser, completion } = useUser();
   const navigate = useNavigate();
   const location = useLocation();
-  const { pendingReferralCount } = useReferral();
+  const { notificationLengthcount } = useReferral();
   const { notifications } = useNotifications();
-  const [notificationLengthcount, setNotificationLengthcount] = useState(0);
+
   const [openDropdown, setOpenDropdown] = useState(null);
-
-  useEffect(() => {
-    const referralNotificationsCount =
-      notifications?.filter(
-        (n) => n.type === "REFERRAL" // adjust based on your actual type
-      ).length || 0;
-
-    const total =
-      (pendingReferralCount || 0) + referralNotificationsCount;
-
-    setNotificationLengthcount(total);
-  }, [notifications, pendingReferralCount]);
 
   const SAFFRON = "#E8650A";
   const CARD_BORDER = "1px solid #F0E6DC";
@@ -170,7 +158,10 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
           fullWidth
           size="small"
           variant="contained"
-          onClick={() => navigate("/user-profile")}
+          onClick={() => {
+            navigate("/user-profile");
+            onItemClick?.();
+          }}
           sx={{
             mt: 1,
             bgcolor: "#FF9933",
@@ -335,6 +326,6 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
         <LogoutIcon sx={{ fontSize: 21 }} />
         <Typography sx={{ fontSize: 14, fontWeight: 700 }}>Logout</Typography>
       </Box>
-    </Paper>
+    </Paper >
   );
 }

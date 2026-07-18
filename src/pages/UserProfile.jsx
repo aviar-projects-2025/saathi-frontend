@@ -153,6 +153,19 @@ const UserProfile = () => {
         }));
     };
 
+    const resetForm = () => {
+        setFormData({
+            firstName: currentUser?.firstName,
+            lastName: currentUser?.lastName,
+            email: currentUser?.email,
+            mobile: currentUser?.mobile || "",
+            dob: currentUser?.dob ? dayjs(currentUser.dob) : null,
+            gender: currentUser?.gender || "",
+            bio: currentUser?.bio || "",
+            profileImage: currentUser?.profileImage || "",
+        })
+    }
+
 
     const [formData, setFormData] = useState({
         firstName: currentUser?.firstName || "",
@@ -266,7 +279,8 @@ const UserProfile = () => {
             toast.success("Profile updated")
             setEditProfile(false)
         } catch (error) {
-            console.log(error);
+            console.log(error.response);
+            toast.error(error.response.data.message)
         } finally {
             setSubmitLoading(false)
         }
@@ -280,12 +294,17 @@ const UserProfile = () => {
 
     return (
         <PageLayout>
-            <Box sx={{ maxWidth: 1200, mx: "auto", px: { xs: 0, sm: 2, md: 0 } }}>
+            <Box sx={{ mx: "auto", px: { xs: 0, sm: 2, md: 0 } }}>
                 {/* Page heading */}
+                <Box sx={{ px: { xs: 1.5, sm: 0 }, pt: { xs: 2, sm: 0 }, mb: 1, flexShrink: 0 }}>
+                    <Typography variant="h5" fontWeight={800} sx={{ fontSize: { xs: '1.1rem', sm: '1.35rem', md: '1.5rem' } }}>
+                        My Profile
+                    </Typography>
+                </Box>
 
                 <Typography
                     color="text.secondary"
-                    sx={{ mt: { xs: 1, sm: 2 }, fontSize: { xs: "0.72rem", sm: "1rem", md: "1rem" } }}
+                    sx={{ mt: { xs: 1, sm: 1 }, fontSize: { xs: "0.72rem", sm: "1rem", md: "1rem" } }}
                 >
                     Manage your Saathi account, referrals, and preferences.
                 </Typography>
@@ -765,6 +784,7 @@ const UserProfile = () => {
                                         }}
                                         onClick={() => {
                                             setProfileImage("");
+                                            resetForm()
                                             setEditProfile(false);
                                         }}
                                     >

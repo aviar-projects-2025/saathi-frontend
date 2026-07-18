@@ -308,21 +308,20 @@ export default function FindRides() {
   }
 
   return (
-    // Outer wrapper: full viewport height minus navbar, no overflow on itself
+  
     <Box
       sx={{
         height: `calc(100vh - ${NAVBAR_HEIGHT}px)`,
         display: "flex",
         flexDirection: "column",
         width: "100%",
-        maxWidth: { xs: "100%" },
+        // maxWidth: { xs: "100%" },
         boxSizing: "border-box",
         overflowX: "hidden",
+        p:1
       }}
     >
-      {/* ── Sticky block: ONLY the hero + From/To/Filter search bar.
-             The expanded filter panel lives OUTSIDE this sticky block,
-             so it scrolls/collapses away instead of staying pinned. ── */}
+   
       <Box
         sx={{
           position: "sticky",
@@ -337,13 +336,13 @@ export default function FindRides() {
           sx={{
             color: "#000000",
             pt: { xs: 1, sm: 2, md: 5 },
-            pb: { xs: 0, sm: 3, md: 3.5 },
-            px: { xs: 0, sm: 2 },
+            pb: { xs: 0, sm: 2, md: 3 },
+            // px: { xs: 0, sm: 2 },
 
           }}
         >
-          <Container maxWidth="md" disableGutters sx={{ px: { xs: 0, sm: 2 } }}>
-
+          <Container disableGutters >
+            {/* Title */}
             <Typography
               fontWeight={800}
               sx={{
@@ -404,7 +403,7 @@ export default function FindRides() {
               {/* From */}
               <TextField
                 size="small"
-                placeholder={isMobile ? "From / City" : " From / City / Airport"}
+                placeholder={isMobile ? "From" : " From / City / Airport"}
                 value={searchFrom}
                 onChange={(e) => setSearchFrom(e.target.value)}
                 InputProps={{
@@ -418,7 +417,7 @@ export default function FindRides() {
                   flex: 1,
                   minWidth: 0,
                   "& .MuiOutlinedInput-root": {
-                    borderRadius: "50px",
+                    borderRadius: "12px",
                     background: "rgba(255,255,255,0.96)",
                     fontSize: { xs: "0.7rem", sm: "0.84rem" },
                     height: { xs: 34, sm: 40 },
@@ -433,7 +432,7 @@ export default function FindRides() {
               {/* To */}
               <TextField
                 size="small"
-                placeholder={isMobile ? "To / City" : " To / City / Airport"}
+                placeholder={isMobile ? "To" : " To / City / Airport"}
                 value={searchDestination}
                 onChange={(e) => setSearchDestination(e.target.value)}
                 InputProps={{
@@ -447,7 +446,7 @@ export default function FindRides() {
                   flex: 1,
                   minWidth: 0,
                   "& .MuiOutlinedInput-root": {
-                    borderRadius: "50px",
+                    borderRadius: "12px",
                     background: "rgba(255,255,255,0.96)",
                     fontSize: { xs: "0.7rem", sm: "0.84rem" },
                     height: { xs: 34, sm: 40 },
@@ -524,8 +523,6 @@ export default function FindRides() {
               </Button>
             </Box>
 
-            {/* Applied filter chips live just under the sticky search row
-                 so the user can see/clear them without opening the panel. */}
             {activeFilters.length > 0 && (
               <Box sx={{ display: "flex", flexWrap: "wrap", gap: { xs: 0.5, sm: 0.75 }, mt: 1.25 }}>
                 {activeFilters.map((f) => (
@@ -553,11 +550,7 @@ export default function FindRides() {
         </Box>
       </Box>
 
-      {/* ── Scrollable results area. The filter panel renders as the
-             FIRST thing inside this scrollable area (not in the sticky
-             block), so: scrolling naturally moves it out of view, AND
-             we additionally force-collapse it past a small scroll delta
-             so it doesn't loiter half-visible. ── */}
+
       <Box
         ref={resultsRef}
         onScroll={handleResultsScroll}
