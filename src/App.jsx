@@ -9,7 +9,7 @@ import { ToastContainer } from "react-toastify";
 import AdminLayout from "./components/AdminLayout.jsx";
 import UserLayout from "./components/UserLayout.jsx";
 import PublicRoute from "./routes/PublicRoute.jsx";
-import RatingModal from "./pages/RatingModal.jsx";
+
 // ---------- Lazy-loaded Pages ----------
 
 // Public Pages
@@ -84,7 +84,6 @@ function App() {
         autoClose={3000}
         theme="light"
       />
-        <RatingModal/>
       <Suspense fallback={<Loader />}>
         <Routes>
           <Route path="/" element={<Web />} />

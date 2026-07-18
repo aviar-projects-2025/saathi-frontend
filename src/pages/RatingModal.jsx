@@ -15,46 +15,43 @@ import Api from "../Api";
 
 const RatingModal = () => {
   const [open, setOpen] = useState(false);
-  const [rating, setRating] = useState(5);
+  const [rating, setRating] = useState(null);
   const [review, setReview] = useState("");
   const [completedRide, setCompletedRide] = useState(null);
 
   const user = JSON.parse(localStorage.getItem("user"));
+const fetchRides = async () => {
+  try {
+    const response = await axios.get(`${Api}/rides/get`);
 
-  const fetchRides = async () => {
-    try {
-      const response = await axios.get(`${Api}/rides/get`);
+    const completed = response.data.data.find(
+      (ride) =>
+        ride?.createdBy?._id === user?.id &&
+        ride?.travelStatus === "Completed"
+    );
 
-      const all = response.data.data || [];
-
-      const completed = all.find(
-        (ride) =>
-          ride?.createdBy?._id === user?.id &&
-          ride?.travelStatus === "Completed"
-      );
-
-      if (completed) {
-        setCompletedRide(completed);
-        setOpen(true);
-      }
-    } catch (error) {
-      console.error("Error fetching rides:", error);
+    if (completed) {
+      setCompletedRide(completed);
+      setOpen(true); 
     }
-  };
+  } catch (error) {
+    console.error(error);
+  }
+};
 
-  useEffect(() => {
-    if (user?.id) {
-      fetchRides();
-    }
-  }, []);
-
+ useEffect(() => {
+  if (user?.id) {
+    fetchRides();
+  }
+}, []);
+console.log(user.id,"id")
   const handleSubmit = async () => {
     try {
-      // await axios.post(`${Api}/ratings`, {
-      //   rideId: completedRide._id,
-      //   rating,
-      //   review,
-      // });
+      await axios.post(`${Api}/rideRating/${user.id}`, {
+        rideId: completedRide._id,
+        rating,
+        review,
+      });
 
       toast.success("Thank you for your feedback!");
       setOpen(false);
@@ -77,10 +74,30 @@ const RatingModal = () => {
           How was your ride?
         </Typography>
 
-        <Rating
-          value={rating}
-          onChange={(e, value) => setRating(value)}
-        />
+<Rating
+  value={rating}
+  onChange={(event, newValue) => setRating(newValue)}
+  sx={{
+    fontSize: "3.5rem",
+
+    "& .MuiRating-icon": {
+      transition: "transform 0.2s ease, color 0.2s ease",
+    },
+
+    "& .MuiRating-iconEmpty": {
+      color: "#CFCFCF", // Gray initially
+    },
+
+    "& .MuiRating-iconFilled": {
+      color: "#FFD700", // Gold after selection
+    },
+
+    "& .MuiRating-iconHover": {
+      color: "#FFD700", // Gold while hovering
+      transform: "scale(1.2)",
+    },
+  }}
+/>
 
         <TextField
           fullWidth
