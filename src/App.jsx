@@ -1,125 +1,3 @@
-// import React, { useEffect } from "react";
-// import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-// import ProtectedRoute from "./routes/ProtectedRoute.jsx";
-// import ROLES from "./context/Role";
-
-// // Public Pages
-// import Web from "./pages/Web.jsx";
-// import Login from "./components/Auth/Login.jsx";
-// import Register from "./components/Auth/Register.jsx";
-// import Unauthorized from "./pages/Unauthorized.jsx";
-// import PublicRoute from "./routes/PublicRoute.jsx";
-
-// // Shared (both roles)
-// import BottomNav from "./components/BottomNav.jsx";
-// import Invite from "./pages/Invite.jsx";
-
-// // USER pages
-// import Home from "./pages/Home.jsx";
-// import FindRides from "./pages/FindRides.jsx";
-// import Profile from "./pages/Profile.jsx";
-// import Community from "./pages/Community.jsx";
-// import Myprofile from "./pages/Myprofile.jsx";
-// import Discover from "./pages/Discover.jsx";
-// import UserProfile from "./pages/UserProfile.jsx";
-
-// // import myRides from "./pages/MyRides.jsx";
-// import Notification from "./pages/Notification.jsx";
-// import OfferRide from "./pages/OfferRide.jsx";
-
-// // ADMIN pages
-// import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
-// import AdminUsers from "./pages/admin/AdminUsers.jsx";
-// import { ToastContainer } from "react-toastify";
-// import AdminLayout from "./components/AdminLayout.jsx";
-// import MyRides from "./pages/MyRides.jsx";
-// import UserLayout from "./components/UserLayout.jsx";
-// import WaitingApproval from "./components/Auth/WaitingApproval.jsx";
-// import MyReferrals from "./pages/referral/MyReferrals.jsx";
-// import Settings from "./pages/Settings.jsx";
-// import RequestRide from "./pages/RequestRide.jsx";
-
-// function App() {
-
-//   useEffect(() => {
-//     const handleClose = () => {
-//       sessionStorage.clear(); // or localStorage.clear()
-//     };
-
-//     window.addEventListener("beforeunload", handleClose);
-
-//     return () => {
-//       window.removeEventListener("beforeunload", handleClose);
-//     };
-//   }, []);
-
-//   return (  
-//     <BrowserRouter>
-//       <ToastContainer
-//         hideProgressBar
-//         draggable={true}
-//         closeButton={false}
-//         position="top-center"
-//         autoClose={3000}
-//         theme="light"
-//       />
-//       <Routes>
-//         <Route path="/" element={<Web />} />
-//         <Route path="/unauthorized" element={<Unauthorized />} />
-
-//         {/* Public auth routes */}
-//         <Route element={<PublicRoute />}>
-//           <Route path="/login" element={<Login />} />
-//           <Route path="/waiting-approval" element={<WaitingApproval />} />
-//           <Route path="/register" element={<Register />} />
-//         </Route>
-
-//         {/* ADMIN only routes */}
-//         <Route element={<ProtectedRoute allowedRoles={[ROLES.ADMIN]} />}>
-//           <Route element={<AdminLayout />}>
-//             <Route path="/admin/dashboard" element={<AdminDashboard />} />
-//             <Route path="/admin/users" element={<AdminUsers />} />
-//           </Route>
-//         </Route>
-
-//         {/* USER only routes */}
-//         <Route element={<ProtectedRoute allowedRoles={[ROLES.USER]} />}>
-//           <Route element={<UserLayout />}>
-//             <Route path="/home" element={<Home />} />
-//             <Route path="/find-ride" element={<FindRides />} />
-//             <Route path="/offer-ride" element={<OfferRide />} />
-//             <Route path="/profile" element={<Profile />} />
-//             <Route path="/myprofile" element ={<Myprofile/>}/>
-//             <Route path="/myride" element={<MyRides />} />
-//             <Route path ="/user-profile" element={<UserProfile/>}/>
-//             <Route path="/notification" element={<Notification />} />
-//             <Route path="/discover" element={<Discover />} />
-//             <Route path="/request-ride" element={<RequestRide />} />
-
-//           </Route>
-//         </Route>
-
-//         {/*Both ADMIN and USER */}
-//         <Route element={<ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.USER]} />}>
-//           <Route element={<UserLayout />}>
-//             <Route path="/invite" element={<Invite />} />
-//             <Route path="/community" element={<Community />} />
-//             <Route path="/my-referalls" element={<MyReferrals />} />
-//             <Route path="/settings" element={<Settings />} />
-
-
-//           </Route>
-//         </Route>
-
-//         {/* Fallback */}
-//         <Route path="*" element={<Navigate to="/login" replace />} />
-
-//       </Routes>
-//     </BrowserRouter>
-//   );
-// }
-
-// export default App;
 
 import React, { Suspense, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
@@ -131,7 +9,7 @@ import { ToastContainer } from "react-toastify";
 import AdminLayout from "./components/AdminLayout.jsx";
 import UserLayout from "./components/UserLayout.jsx";
 import PublicRoute from "./routes/PublicRoute.jsx";
-
+import RatingModal from "./pages/RatingModal.jsx";
 // ---------- Lazy-loaded Pages ----------
 
 // Public Pages
@@ -206,6 +84,7 @@ function App() {
         autoClose={3000}
         theme="light"
       />
+        <RatingModal/>
       <Suspense fallback={<Loader />}>
         <Routes>
           <Route path="/" element={<Web />} />
@@ -233,6 +112,7 @@ function App() {
               <Route path="/find-ride" element={<FindRides />} />
               <Route path="/offer-ride" element={<OfferRide />} />
               <Route path="/profile" element={<Profile />} />
+       
               <Route path="/myprofile" element={<Myprofile />} />
               <Route path="/myride" element={<MyRides />} />
               <Route path="/user-profile" element={<UserProfile />} />
@@ -257,6 +137,7 @@ function App() {
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </Suspense>
+           
     </BrowserRouter>
   );
 }
