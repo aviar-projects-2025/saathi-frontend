@@ -2,7 +2,7 @@ import { Box, Drawer, useMediaQuery } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { Outlet } from "react-router-dom";
 import { useState } from "react";
-
+import RatingModal from "../pages/RatingModal.jsx";
 import Sidebar from "./Sidebar";
 import TopNav from "./Navbar";
 import MobileBottomNav from "../pages/MobileBottomNav";
@@ -21,6 +21,8 @@ const UserLayout = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
+    <>
+         <RatingModal/>
     <Box
       sx={{
         width: "100%",
@@ -29,7 +31,7 @@ const UserLayout = () => {
         overflow: "hidden",
       }}
     >
-      {/* Top Bar */}
+  
       <Box
         sx={{
           position: "fixed",
@@ -41,6 +43,7 @@ const UserLayout = () => {
         }}
       >
         <TopNav onMenuClick={() => setMobileOpen(true)} />
+        
       </Box>
 
       {/* Body */}
@@ -71,6 +74,8 @@ const UserLayout = () => {
             boxSizing: "border-box",
           }}
         >
+                
+          
           {/* Box 2 */}
           <Box
             sx={{
@@ -175,6 +180,7 @@ const UserLayout = () => {
         </Box>
       )}
     </Box>
+    </>
   );
 };
 
