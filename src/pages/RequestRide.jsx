@@ -6,7 +6,7 @@ import {
     TextField, IconButton, Stack, FormControl, Grid,
     InputLabel, Select, MenuItem, FormControlLabel, Switch, Slider,
     CircularProgress, Card, CardContent, Divider, useMediaQuery, DialogContentText,
-    Badge, Collapse, Avatar
+    Badge, Collapse, Avatar, useTheme
 } from '@mui/material';
 import axios from 'axios';
 import Api from '../Api';
@@ -21,6 +21,7 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import PageLayout from '../components/PageLayout';
+import { toast } from "react-toastify";
 
 const RequestRide = () => {
     const [loadingRequests, setLoadingRequests] = useState(true);
@@ -35,6 +36,9 @@ const RequestRide = () => {
 
     const { refreshRide } = useRide();
 
+    const theme = useTheme();
+    const isTab = useMediaQuery(theme.breakpoints.down("sm"));
+
     useEffect(() => {
         fetchAllSends();
     }, []);
@@ -45,9 +49,9 @@ const RequestRide = () => {
 
     async function fetchAllSends() {
         try {
-        
+
             if (!user?.id) return;
-                setLoadingRequests(true);
+            setLoadingRequests(true);
             const res = await axios.get(`${Api}/bookride/send/${user.id}`);
             const requestUser = res.data.data.map((item) => item.members)
             setUserData(requestUser);
@@ -55,10 +59,10 @@ const RequestRide = () => {
         } catch (error) {
             console.error("Error fetching requests:", error);
             setAllMyRequests([]);
-        }finally {
-    setLoadingRequests(false);
+        } finally {
+            setLoadingRequests(false);
+        }
     }
-}
     const handleMenuOpen = (event, post) => {
         setAnchorEl(event.currentTarget);
         setSelectedPost(post);
@@ -78,15 +82,42 @@ const RequestRide = () => {
             setAllMyRequests((prev) =>
                 prev.filter((request) => request._id !== requestId)
             );
-            toast.success("Ride request deleted successfully");
+            toast.success("Ride request deleted successfully", {
+                position: isTab ? "top-center" : "top-right",
+                autoClose: 2000,
+                hideProgressBar: true,
+                closeButton: false,
+                style: {
+                    width: isTab ? "90vw" : "360px",
+                    maxWidth: isTab ? "320px" : "360px",
+                    fontSize: isTab ? "13px" : "15px",
+                    padding: isTab ? "8px 12px" : "12px 16px",
+                    borderRadius: isTab ? "8px" : "10px",
+                    minHeight: isTab ? "42px" : "52px",
+                    margin: "0 auto",
+                },
+            });
 
 
             fetchAllSends();
         } catch (error) {
             console.error(error);
             toast.error(
-                error.response?.data?.message || "Failed to delete ride request"
-            );
+                error.response?.data?.message || "Failed to delete ride request", {
+                position: isTab ? "top-center" : "top-right",
+                autoClose: 2000,
+                hideProgressBar: true,
+                closeButton: false,
+                style: {
+                    width: isTab ? "90vw" : "360px",
+                    maxWidth: isTab ? "320px" : "360px",
+                    fontSize: isTab ? "13px" : "15px",
+                    padding: isTab ? "8px 12px" : "12px 16px",
+                    borderRadius: isTab ? "8px" : "10px",
+                    minHeight: isTab ? "42px" : "52px",
+                    margin: "0 auto",
+                },
+            });
         }
     };
 
@@ -130,15 +161,15 @@ const RequestRide = () => {
                 </Typography>
                 <br />
 
-            {loadingRequests ? (
-  <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-    <CircularProgress color="warning" />
-  </Box>
-) : allMyRequests.filter(req => req?.rideId).length === 0 ? (
-  <Typography textAlign="center" color="text.secondary" sx={{ mt: 4 }}>
-    No ride requests found.
-  </Typography>
-) : (
+                {loadingRequests ? (
+                    <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+                        <CircularProgress color="warning" />
+                    </Box>
+                ) : allMyRequests.filter(req => req?.rideId).length === 0 ? (
+                    <Typography textAlign="center" color="text.secondary" sx={{ mt: 4 }}>
+                        No ride requests found.
+                    </Typography>
+                ) : (
                     <>
 
                         {(() => {

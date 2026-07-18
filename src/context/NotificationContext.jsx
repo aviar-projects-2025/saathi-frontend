@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import socket from "../socket";
 import axios from "axios";
 import Api from "../Api";
+import { useTheme, useMediaQuery } from '@mui/material';
 
 const NotificationContext = createContext();
 
@@ -14,12 +15,29 @@ export const NotificationProvider = ({ children }) => {
     const user = JSON.parse(localStorage.getItem('user'))
     const [tabNotification, setTabNotification] = useState([]);
 
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
     const fetchNotifications = async () => {
         try {
             const res = await axios.get(Api + `/notification/${user.id}/`)
             setTabNotification(res?.data?.data)
         } catch (error) {
-            toast.error(error.message)
+            toast.error(error.message, {
+                position: isMobile ? "top-center" : "top-right",
+                autoClose: 3000,
+                hideProgressBar: true,
+                closeButton: false,
+                style: {
+                    width: isMobile ? "90vw" : "360px",
+                    maxWidth: isMobile ? "320px" : "360px",
+                    fontSize: isMobile ? "13px" : "15px",
+                    padding: isMobile ? "8px 12px" : "12px 16px",
+                    borderRadius: isMobile ? "8px" : "10px",
+                    minHeight: isMobile ? "42px" : "52px",
+                    margin: "0 auto",
+                },
+            });
             console.log(error)
         }
     }
@@ -55,7 +73,21 @@ export const NotificationProvider = ({ children }) => {
             setNotifications((prev) => [newNotification, ...prev]);
             setTabNotification((prev) => [newNotification, ...prev]);
 
-            toast.info(message || "New notification");
+            toast.info(message || "New notification", {
+                position: isMobile ? "top-center" : "top-right",
+                autoClose: 3000,
+                hideProgressBar: true,
+                closeButton: false,
+                style: {
+                    width: isMobile ? "90vw" : "360px",
+                    maxWidth: isMobile ? "320px" : "360px",
+                    fontSize: isMobile ? "13px" : "15px",
+                    padding: isMobile ? "8px 12px" : "12px 16px",
+                    borderRadius: isMobile ? "8px" : "10px",
+                    minHeight: isMobile ? "42px" : "52px",
+                    margin: "0 auto",
+                },
+            });
         };
 
         socket.on("notification", handleEvent);

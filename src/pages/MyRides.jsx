@@ -5,10 +5,10 @@ import {
   TextField, IconButton, Stack, FormControl, Grid,
   InputLabel, Select, MenuItem, FormControlLabel, Switch, Slider,
   CircularProgress, Card, CardContent, Divider, useMediaQuery, DialogContentText,
-  Badge, Collapse, Avatar, Pagination
+  Badge, Collapse, Avatar, Pagination,useTheme
 } from '@mui/material';
 import Ridebook from './Ridebook.jsx';
-import { useTheme } from '@mui/material/styles';
+// import { useTheme } from '@mui/material/styles';
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
@@ -530,6 +530,8 @@ function RideCard({ ride, fetchRides, user, confirmRide, setConfirmRide, showEdi
   const [selectedRequest, setSelectedRequest] = useState([]);
 
   const theme = useTheme();
+  const isTab = useMediaQuery(theme.breakpoints.down("sm"));
+
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const navigate = useNavigate();
@@ -563,10 +565,36 @@ function RideCard({ ride, fetchRides, user, confirmRide, setConfirmRide, showEdi
           req._id === requestId ? { ...req, status: 'ACCEPTED' } : req
         ));
         fetchRides();
-        toast.success('Request approved successfully!');
+        toast.success('Request approved successfully!', {
+          position: isTab ? "top-center" : "top-right",
+          autoClose: 2000,
+          hideProgressBar: true,
+          closeButton: false,
+          style: {
+            width: isTab ? "90vw" : "360px",
+            maxWidth: isTab ? "320px" : "360px",
+            fontSize: isTab ? "13px" : "15px",
+            padding: isTab ? "8px 12px" : "12px 16px",
+            borderRadius: isTab ? "8px" : "10px",
+            minHeight: isTab ? "42px" : "52px",
+            margin: "0 auto",
+          },
+        });
       }
     } catch (error) {
-      toast.error(error.response.data.message);
+      toast.error(error.response.data.message, {
+        position: isTab ? "top-center" : "top-right",
+        autoClose: 3000,
+        hideProgressBar: true,
+        closeButton: false,
+        style: {
+          width: isTab ? "280px" : "360px",
+          fontSize: isTab ? "13px" : "15px",
+          padding: isTab ? "8px 12px" : "12px 16px",
+          borderRadius: isTab ? "8px" : "10px",
+          minHeight: isTab ? "42px" : "52px",
+        },
+      });
     }
   };
 
@@ -576,10 +604,36 @@ function RideCard({ ride, fetchRides, user, confirmRide, setConfirmRide, showEdi
       setAllRequests(prev => prev.map(req =>
         req._id === requestId ? { ...req, status: 'REJECTED' } : req
       ));
-      toast.success('Request rejected');
+      toast.success('Request rejected', {
+        position: isTab ? "top-center" : "top-right",
+        autoClose: 2000,
+        hideProgressBar: true,
+        closeButton: false,
+        style: {
+          width: isTab ? "90vw" : "360px",
+          maxWidth: isTab ? "320px" : "360px",
+          fontSize: isTab ? "13px" : "15px",
+          padding: isTab ? "8px 12px" : "12px 16px",
+          borderRadius: isTab ? "8px" : "10px",
+          minHeight: isTab ? "42px" : "52px",
+          margin: "0 auto",
+        },
+      });
       fetchRides()
     } catch (error) {
-      toast.error('Failed to reject request');
+      toast.error('Failed to reject request', {
+        position: isTab ? "top-center" : "top-right",
+        autoClose: 3000,
+        hideProgressBar: true,
+        closeButton: false,
+        style: {
+          width: isTab ? "280px" : "360px",
+          fontSize: isTab ? "13px" : "15px",
+          padding: isTab ? "8px 12px" : "12px 16px",
+          borderRadius: isTab ? "8px" : "10px",
+          minHeight: isTab ? "42px" : "52px",
+        },
+      });
     }
   };
 
@@ -591,16 +645,56 @@ function RideCard({ ride, fetchRides, user, confirmRide, setConfirmRide, showEdi
 
         setConfirmRide(null)
         fetchRides()
-        toast.success('Ride Started');
+        toast.success('Ride Started', {
+          position: isTab ? "top-center" : "top-right",
+          autoClose: 2000,
+          hideProgressBar: true,
+          closeButton: false,
+          style: {
+            width: isTab ? "90vw" : "360px",
+            maxWidth: isTab ? "320px" : "360px",
+            fontSize: isTab ? "13px" : "15px",
+            padding: isTab ? "8px 12px" : "12px 16px",
+            borderRadius: isTab ? "8px" : "10px",
+            minHeight: isTab ? "42px" : "52px",
+            margin: "0 auto",
+          },
+        });
       } else if (status === "Started") {
         const response = await axios.patch(`${Api}/rides/edit/${rideId}`, { travelStatus: 'Completed', endTime: new Date().toISOString() })
 
         setConfirmRide(null)
         fetchRides()
-        toast.success('Ride Completed');
+        toast.success('Ride Completed', {
+          position: isTab ? "top-center" : "top-right",
+          autoClose: 2000,
+          hideProgressBar: true,
+          closeButton: false,
+          style: {
+            width: isTab ? "90vw" : "360px",
+            maxWidth: isTab ? "320px" : "360px",
+            fontSize: isTab ? "13px" : "15px",
+            padding: isTab ? "8px 12px" : "12px 16px",
+            borderRadius: isTab ? "8px" : "10px",
+            minHeight: isTab ? "42px" : "52px",
+            margin: "0 auto",
+          },
+        });
       }
     } catch (error) {
-      toast.error('Failed');
+      toast.error('Failed', {
+        position: isTab ? "top-center" : "top-right",
+        autoClose: 3000,
+        hideProgressBar: true,
+        closeButton: false,
+        style: {
+          width: isTab ? "280px" : "360px",
+          fontSize: isTab ? "13px" : "15px",
+          padding: isTab ? "8px 12px" : "12px 16px",
+          borderRadius: isTab ? "8px" : "10px",
+          minHeight: isTab ? "42px" : "52px",
+        },
+      });
     }
   };
 
@@ -1018,6 +1112,9 @@ const MyRides = () => {
 
   const processedIds = useRef(new Set());
 
+  // const theme = useTheme();
+  const isTab = useMediaQuery(theme.breakpoints.down("sm"));
+
   useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date();
@@ -1031,7 +1128,19 @@ const MyRides = () => {
           now >= start &&
           !processedIds.current.has(ride._id)
         ) {
-          ride.createdBy._id == user.id && toast.info("Your ride is starting now 🚗");
+          ride.createdBy._id == user.id && toast.info("Your ride is starting now 🚗", {
+            position: isTab ? "top-center" : "top-right",
+            autoClose: 3000,
+            hideProgressBar: true,
+            closeButton: false,
+            style: {
+              width: isTab ? "280px" : "360px",
+              fontSize: isTab ? "13px" : "15px",
+              padding: isTab ? "8px 12px" : "12px 16px",
+              borderRadius: isTab ? "8px" : "10px",
+              minHeight: isTab ? "42px" : "52px",
+            },
+          });
 
           ride.createdBy._id == user.id && setConfirmRide(ride);
 
@@ -1309,7 +1418,21 @@ const MyRides = () => {
     setHistory(merge(history));
     setCurrentRide(prev => merge(prev));
     setEditRide(null);
-    toast.success('Ride Updated Successfully...!');
+    toast.success('Ride Updated Successfully...!', {
+      position: isTab ? "top-center" : "top-right",
+      autoClose: 2000,
+      hideProgressBar: true,
+      closeButton: false,
+      style: {
+        width: isTab ? "90vw" : "360px",
+        maxWidth: isTab ? "320px" : "360px",
+        fontSize: isTab ? "13px" : "15px",
+        padding: isTab ? "8px 12px" : "12px 16px",
+        borderRadius: isTab ? "8px" : "10px",
+        minHeight: isTab ? "42px" : "52px",
+        margin: "0 auto",
+      },
+    });
   };
 
   const handleDelete = (deleted) => {
@@ -1319,7 +1442,21 @@ const MyRides = () => {
     setUpcoming(prev => remove(prev));
     setHistory(prev => remove(prev));
     setDeleteRide(null);
-    toast.success('Ride Deleted Successfully...!');
+    toast.success('Ride Deleted Successfully...!', {
+      position: isTab ? "top-center" : "top-right",
+      autoClose: 2000,
+      hideProgressBar: true,
+      closeButton: false,
+      style: {
+        width: isTab ? "90vw" : "360px",
+        maxWidth: isTab ? "320px" : "360px",
+        fontSize: isTab ? "13px" : "15px",
+        padding: isTab ? "8px 12px" : "12px 16px",
+        borderRadius: isTab ? "8px" : "10px",
+        minHeight: isTab ? "42px" : "52px",
+        margin: "0 auto",
+      },
+    });
   };
   const [openCancelDialog, setOpenCancelDialog] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);

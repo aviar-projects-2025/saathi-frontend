@@ -14,7 +14,6 @@ const ORANGE = "#FF9933";
 const ORANGE_DIVIDER = "rgba(255,153,51,0.2)";
 
 
-
 export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, onSuccess, requestToEdit = null }) {
   const theme = useTheme();
   const { currentUser } = useUser();
@@ -23,6 +22,23 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, onS
   const isFlight = ride?.modeOfTravel === "Flight";
   const isEditMode = Boolean(requestToEdit);
   const [allMyRequests, setAllMyRequests] = useState();
+
+  // const theme = useTheme();
+  const isTab = useMediaQuery(theme.breakpoints.down("sm"));
+
+  const TOASTS = {
+    position: isTab ? "top-center" : "top-right",
+    autoClose: 3000,
+    hideProgressBar: true,
+    closeButton: false,
+    style: {
+      width: isTab ? "280px" : "360px",
+      fontSize: isTab ? "13px" : "15px",
+      padding: isTab ? "8px 12px" : "12px 16px",
+      borderRadius: isTab ? "8px" : "10px",
+      minHeight: isTab ? "42px" : "52px",
+    },
+  }
 
 
   const emptyRequestData = {
@@ -70,7 +86,7 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, onS
 
     } catch (error) {
       console.log(error);
-      toast.error(error.response?.data?.message || "Request failed");
+      toast.error(error.response?.data?.message || "Request failed", TOASTS);
     }
   };
 
@@ -88,7 +104,7 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, onS
     if (seats < 1) return;
 
     if (seats > maxSeats) {
-      toast.warning(`Only ${maxSeats} seat(s) available`);
+      toast.warning(`Only ${maxSeats} seat(s) available`, TOASTS);
       return;
     }
 
@@ -113,7 +129,7 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, onS
     if (count < 1) return;
 
     if (count > limit) {
-      toast.warning(`Maximum ${limit} member(s) allowed`);
+      toast.warning(`Maximum ${limit} member(s) allowed`, TOASTS);
       return;
     }
 
@@ -135,12 +151,12 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, onS
 
   const validate = () => {
     if (!isFlight && Number(requestData.seatsRequested) > maxSeats) {
-      toast.error(`Only ${maxSeats} seat(s) available`);
+      toast.error(`Only ${maxSeats} seat(s) available`, TOASTS);
       return false;
     }
 
     if (!isFlight && Number(requestData.membersCount) > maxSeats) {
-      toast.error(`Only ${maxSeats} member(s) allowed`);
+      toast.error(`Only ${maxSeats} member(s) allowed`, TOASTS);
       return false;
     }
 
@@ -148,11 +164,11 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, onS
 
     for (let i = 0; i < requestData.members.length; i++) {
       if (!requestData.members[i].name.trim()) {
-        toast.error(`Please enter Member ${i + 1} name`);
+        toast.error(`Please enter Member ${i + 1} name`, TOASTS);
         return false;
       }
       if (!requestData.members[i].age) {
-        toast.error(`Please enter Member ${i + 1} age`);
+        toast.error(`Please enter Member ${i + 1} age`, TOASTS);
         return false;
       }
     }
@@ -182,14 +198,28 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, onS
         ? await axios.put(`${Api}/bookride/edit/${requestToEdit._id}`, payload)
         : await axios.post(`${Api}/bookride/${ride._id}`, payload);
 
-      toast.success(res.data.message || (isEditMode ? "Request updated" : "Request sent"));
+      toast.success(res.data.message || (isEditMode ? "Request updated" : "Request sent"), {
+        position: isTab ? "top-center" : "top-right",
+        autoClose: 2000,
+        hideProgressBar: true,
+        closeButton: false,
+        style: {
+          width: isTab ? "90vw" : "360px",
+          maxWidth: isTab ? "320px" : "360px",
+          fontSize: isTab ? "13px" : "15px",
+          padding: isTab ? "8px 12px" : "12px 16px",
+          borderRadius: isTab ? "8px" : "10px",
+          minHeight: isTab ? "42px" : "52px",
+          margin: "0 auto",
+        },
+      });
 
       setRequestData(emptyRequestData);
       onClose?.();
       onSuccess?.();
     } catch (error) {
       console.log(error);
-      toast.error(error.response?.data?.message || "Request failed");
+      toast.error(error.response?.data?.message || "Request failed", TOASTS);
     }
   };
 

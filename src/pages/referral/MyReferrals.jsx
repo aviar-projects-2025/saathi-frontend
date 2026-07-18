@@ -15,6 +15,7 @@ import {
     CircularProgress,
     IconButton,
     Tooltip,
+    useTheme, useMediaQuery
 } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
@@ -36,6 +37,9 @@ const MyReferrals = () => {
     const [loading, setLoading] = useState(false);
     const { notifications } = useNotifications()
     const { getPendingReferralCount } = useReferral();
+
+    const theme = useTheme();
+    const isTab = useMediaQuery(theme.breakpoints.down("sm"));
 
 
 
@@ -73,7 +77,21 @@ const MyReferrals = () => {
             setApprovedReferrals(approved);
             getPendingReferralCount()
         } catch (error) {
-            toast.error(error.message);
+            toast.error(error.message, {
+                position: isTab ? "top-center" : "top-right",
+                autoClose: 3000,
+                hideProgressBar: true,
+                closeButton: false,
+                style: {
+                    width: isTab ? "90vw" : "360px",
+                    maxWidth: isTab ? "320px" : "360px",
+                    fontSize: isTab ? "13px" : "15px",
+                    padding: isTab ? "8px 12px" : "12px 16px",
+                    borderRadius: isTab ? "8px" : "10px",
+                    minHeight: isTab ? "42px" : "52px",
+                    margin: "0 auto",
+                },
+            });
         } finally {
             setLoading(false);
         }
@@ -88,11 +106,39 @@ const MyReferrals = () => {
         if (!confirmed) return;
         try {
             await axios.patch(Api + `/referrals/${id}`, { refApprove: "Approved" });
-            toast.success("Referral approved");
+            toast.success("Referral approved", {
+                position: isTab ? "top-center" : "top-right",
+                autoClose: 2000,
+                hideProgressBar: true,
+                closeButton: false,
+                style: {
+                    width: isTab ? "90vw" : "360px",
+                    maxWidth: isTab ? "320px" : "360px",
+                    fontSize: isTab ? "13px" : "15px",
+                    padding: isTab ? "8px 12px" : "12px 16px",
+                    borderRadius: isTab ? "8px" : "10px",
+                    minHeight: isTab ? "42px" : "52px",
+                    margin: "0 auto",
+                },
+            });
             getReferrals();
             getPendingReferralCount()
         } catch (error) {
-            toast.error(error.response?.data?.message || error.message);
+            toast.error(error.response?.data?.message || error.message, {
+                position: isTab ? "top-center" : "top-right",
+                autoClose: 2000,
+                hideProgressBar: true,
+                closeButton: false,
+                style: {
+                    width: isTab ? "90vw" : "360px",
+                    maxWidth: isTab ? "320px" : "360px",
+                    fontSize: isTab ? "13px" : "15px",
+                    padding: isTab ? "8px 12px" : "12px 16px",
+                    borderRadius: isTab ? "8px" : "10px",
+                    minHeight: isTab ? "42px" : "52px",
+                    margin: "0 auto",
+                },
+            });
         }
     };
 
@@ -213,7 +259,21 @@ const MyReferrals = () => {
                                             url: shareLink,
                                         });
                                     } else {
-                                        toast.info("Sharing not supported on this device");
+                                        toast.info("Sharing not supported on this device", {
+                                            position: isTab ? "top-center" : "top-right",
+                                            autoClose: 2000,
+                                            hideProgressBar: true,
+                                            closeButton: false,
+                                            style: {
+                                                width: isTab ? "90vw" : "360px",
+                                                maxWidth: isTab ? "320px" : "360px",
+                                                fontSize: isTab ? "13px" : "15px",
+                                                padding: isTab ? "8px 12px" : "12px 16px",
+                                                borderRadius: isTab ? "8px" : "10px",
+                                                minHeight: isTab ? "42px" : "52px",
+                                                margin: "0 auto",
+                                            },
+                                        });
                                     }
                                 }}
                             >

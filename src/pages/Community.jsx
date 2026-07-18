@@ -7,7 +7,8 @@ import {
   CircularProgress,
   Tooltip,
   useTheme,
-  IconButton
+  IconButton,
+  useMediaQuery
 } from '@mui/material';
 import GroupsIcon from '@mui/icons-material/Groups';
 import StarIcon from '@mui/icons-material/Star';
@@ -40,16 +41,8 @@ import CommunityComments from './CommunityComments.jsx';
 import { useUser } from '../context/userConetext.jsx';
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import FolderIcon from "@mui/icons-material/Folder";
+import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 
-// ── Reliable, theme-independent responsive detection ────────────────────────
-// useMediaQuery(theme.breakpoints...) depends on theme.breakpoints being the
-// values you expect, and can also mis-fire on first paint before hydration
-// settles. This hook checks the real window width directly (with a resize
-// listener) and buckets it into MUI's standard breakpoint tiers, so any JS
-// logic (component `size` props, boolean toggles, etc.) always matches the
-// user's actual window width — on phones, tablets, laptops, and large
-// desktops alike. Layout dimensions/spacing/fonts are additionally handled
-// via responsive `sx` breakpoint objects for smooth in-between scaling.
 const BREAKPOINTS = { xs: 0, sm: 600, md: 900, lg: 1200, xl: 1536 }; // MUI defaults
 
 function getTier(width) {
@@ -92,7 +85,11 @@ export default function Community() {
   const [openMediaDialog, setOpenMediaDialog] = useState(false);
   const { currentUser } = useUser()
   const [tooltipOpen, setTooltipOpen] = useState(false);
-   const [tooltip2Open, setTooltip2Open] = useState(false);
+  const [tooltip2Open, setTooltip2Open] = useState(false);
+
+
+  const theme = useTheme();
+  const isTab = useMediaQuery(theme.breakpoints.down("sm"));
 
   const cameraInputRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -107,7 +104,24 @@ export default function Community() {
     }
   };
 
-  const theme = useTheme();
+  //Edit Community Post Image
+
+  // inside your component:
+  const [imageMenuAnchor, setImageMenuAnchor] = useState(null);
+  const isImageMenuOpen = Boolean(imageMenuAnchor);
+
+  const openImageMenu = (e) => setImageMenuAnchor(e.currentTarget);
+  const closeImageMenu = () => setImageMenuAnchor(null);
+
+  const onImageSelected = (e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+      setEditImage(selectedFile);
+      setPreviewImage(URL.createObjectURL(selectedFile));
+    }
+    closeImageMenu();
+    e.target.value = null; // allow re-selecting same file next time
+  };
 
 
   const tier = useResponsiveTier();
@@ -200,13 +214,41 @@ export default function Community() {
         )
       );
 
-      toast.success(res.data.message);
+      toast.success(res.data.message, {
+        position: isTab ? "top-center" : "top-right",
+        autoClose: 2000,
+        hideProgressBar: true,
+        closeButton: false,
+        style: {
+          width: isTab ? "90vw" : "360px",
+          maxWidth: isTab ? "320px" : "360px",
+          fontSize: isTab ? "13px" : "15px",
+          padding: isTab ? "8px 12px" : "12px 16px",
+          borderRadius: isTab ? "8px" : "10px",
+          minHeight: isTab ? "42px" : "52px",
+          margin: "0 auto",
+        },
+      });
 
       setEditOpen(false);
       setSelectedPost(null);
       setEditImage(null);
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to update post");
+      toast.error(error.response?.data?.message || "Failed to update post", {
+        position: isTab ? "top-center" : "top-right",
+        autoClose: 2000,
+        hideProgressBar: true,
+        closeButton: false,
+        style: {
+          width: isTab ? "90vw" : "360px",
+          maxWidth: isTab ? "320px" : "360px",
+          fontSize: isTab ? "13px" : "15px",
+          padding: isTab ? "8px 12px" : "12px 16px",
+          borderRadius: isTab ? "8px" : "10px",
+          minHeight: isTab ? "42px" : "52px",
+          margin: "0 auto",
+        },
+      });
     }
   };
   const handleCreatePost = async () => {
@@ -229,9 +271,38 @@ export default function Community() {
       setPost("");
       setMedia(null);
       setPreview("");
-      toast.success("Posted");
+      toast.success("Posted!...", {
+        position: isTab ? "top-center" : "top-right",
+        autoClose: 3000,
+        hideProgressBar: true,
+        closeButton: false,
+        style: {
+          width: isTab ? "280px" : "360px",
+          fontSize: isTab ? "13px" : "15px",
+          padding: isTab ? "8px 12px" : "12px 16px",
+          borderRadius: isTab ? "8px" : "10px",
+          minHeight: isTab ? "42px" : "52px",
+        },
+      });
     } catch (error) {
       console.log(error);
+      // toast.error(error.message, {
+      //   position: isMobile ? "top-center" : "top-right",
+      // });
+      toast.error(error.message, {
+        position: isTab ? "top-center" : "top-right",
+        autoClose: 3000,
+        hideProgressBar: true,
+        closeButton: false,
+        style: {
+          width: isTab ? "280px" : "360px",
+          fontSize: isTab ? "13px" : "15px",
+          padding: isTab ? "8px 12px" : "12px 16px",
+          borderRadius: isTab ? "8px" : "10px",
+          minHeight: isTab ? "42px" : "52px",
+        },
+      });
+
     } finally {
       setLoading(false);
       getCommmunityPost();
@@ -298,11 +369,36 @@ export default function Community() {
         prev.filter((post) => post._id !== postId)
       );
 
-      toast.success(res.data.message);
+      toast.success(res.data.message, {
+        position: isTab ? "top-center" : "top-right",
+        autoClose: 2000,
+        hideProgressBar: true,
+        closeButton: false,
+        style: {
+          width: isTab ? "90vw" : "360px",
+          maxWidth: isTab ? "320px" : "360px",
+          fontSize: isTab ? "13px" : "15px",
+          padding: isTab ? "8px 12px" : "12px 16px",
+          borderRadius: isTab ? "8px" : "10px",
+          minHeight: isTab ? "42px" : "52px",
+          margin: "0 auto",
+        },
+      });
     } catch (error) {
       toast.error(
-        error.response?.data?.message || "Failed to delete post"
-      );
+        error.response?.data?.message || "Failed to delete post", {
+        position: isTab ? "top-center" : "top-right",
+        autoClose: 3000,
+        hideProgressBar: true,
+        closeButton: false,
+        style: {
+          width: isTab ? "280px" : "360px",
+          fontSize: isTab ? "13px" : "15px",
+          padding: isTab ? "8px 12px" : "12px 16px",
+          borderRadius: isTab ? "8px" : "10px",
+          minHeight: isTab ? "42px" : "52px",
+        },
+      });
     }
   };
   const removeLike = async (id) => {
@@ -459,18 +555,15 @@ export default function Community() {
               maxWidth: "1200px"
             }}
           >
-            {/* ── Left: Post Feed (scrolls with the page, no independent scroll) ── */}
+
             <Box
               sx={{
                 flex: 1,
-                minWidth: 0, // prevents flex child from overflowing
+                minWidth: 0,
                 pr: { xs: 0.5, sm: 1 },
               }}
             >
-              {/* Create post box */}
-              {/* Width now scales across every tier via POST_BOX_WIDTH_SX
-                  (fluid on phones/tablets, a fixed comfortable reading width
-                  from laptops up) instead of a single mobile/desktop switch. */}
+
               <Box
                 sx={{
                   p: { xs: 1, sm: 1.5, md: 2 },
@@ -478,7 +571,6 @@ export default function Community() {
                   border: CARD_BORDER,
                   mb: 2,
                   width: POST_BOX_WIDTH_SX,
-                  // maxWidth: '100%', // never overflow a narrower viewport
                   boxSizing: 'border-box',
                 }}
               >
@@ -914,7 +1006,11 @@ export default function Community() {
                   <Paper
                     key={index}
                     elevation={0}
-                    sx={{ borderRadius: 3, border: CARD_BORDER, mb: 2, overflow: 'hidden' }}
+                    sx={{
+                      borderRadius: 3, border: CARD_BORDER, mb: 2, overflow: 'hidden',
+                      width: POST_BOX_WIDTH_SX,  
+                      boxSizing: 'border-box',
+                    }}
                   >
                     <Box sx={{ p: isMobile ? 1.5 : 2 }}>
                       {/* Post header */}
@@ -1031,20 +1127,18 @@ export default function Community() {
                             <Dialog open={editOpen} onClose={() => setEditOpen(false)} fullWidth maxWidth="sm">
                               <DialogTitle>Edit Post</DialogTitle>
 
-                              <DialogContent>
+                              <DialogContent dividers>
                                 <TextField
                                   fullWidth
                                   multiline
-                                  minRows={4}
+                                  minRows={2}
                                   margin="dense"
                                   label="Description"
                                   value={editDescription}
                                   onChange={(e) => setEditDescription(e.target.value)}
                                 />
-                              </DialogContent>
 
-                              <DialogActions>
-                                <Box sx={{ mb: 2 }}>
+                                <Box sx={{ mt: 2 }}>
                                   <img
                                     src={editImage ? URL.createObjectURL(editImage) : previewImage}
                                     alt="Post"
@@ -1057,80 +1151,84 @@ export default function Community() {
                                     }}
                                   />
 
-                                  <Box
+                                  <Button
+                                    variant="contained"
+                                    fullWidth
+                                    onClick={openImageMenu}
                                     sx={{
-                                      display: "flex",
-                                      justifyContent: "space-between",
-                                      alignItems: "center",
-                                      flexWrap: "wrap",
-                                      gap: 2,
+                                      bgcolor: "#FF9933",
+                                      color: "#fff",
+                                      fontWeight: 600,
+                                      textTransform: "none",
+                                      "&:hover": { bgcolor: "#e68a00" },
                                     }}
                                   >
-                                    <Button
-                                      variant="contained"
-                                      component="label"
-                                      sx={{
-                                        bgcolor: "#FF9933",
-                                        color: "#fff",
-                                        fontWeight: 600,
-                                        textTransform: "none",
-                                        "&:hover": {
-                                          bgcolor: "#e68a00",
-                                        },
-                                      }}
-                                    >
-                                      Change Image
+                                    Change Image
+                                  </Button>
+
+                                  <Menu
+                                    anchorEl={imageMenuAnchor}
+                                    open={isImageMenuOpen}
+                                    onClose={closeImageMenu}
+                                    anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+                                    transformOrigin={{ vertical: "top", horizontal: "center" }}
+                                  >
+                                    <MenuItem component="label">
+                                      <ListItemIcon>
+                                        <CameraAltIcon fontSize="small" sx={{ color: "#FF9933" }} />
+                                      </ListItemIcon>
+                                      <ListItemText>Camera</ListItemText>
                                       <input
                                         hidden
                                         type="file"
                                         accept="image/*"
-                                        onChange={(e) => {
-                                          const file = e.target.files[0];
-                                          if (file) {
-                                            setEditImage(file);
-                                            setPreviewImage(URL.createObjectURL(file));
-                                          }
-                                        }}
+                                        capture="environment"
+                                        onChange={onImageSelected}
                                       />
-                                    </Button>
+                                    </MenuItem>
 
-                                    <Box
-                                      sx={{
-                                        display: "flex",
-                                        gap: 2,
-                                      }}
-                                    >
-                                      <Button
-                                        onClick={() => setEditOpen(false)}
-                                        variant="contained"
-                                        sx={{
-                                          bgcolor: "#9E9E9E",
-                                          color: "#fff",
-                                          "&:hover": {
-                                            bgcolor: "#757575",
-                                          },
-                                        }}
-                                      >
-                                        Cancel
-                                      </Button>
-
-                                      <Button
-                                        variant="contained"
-                                        onClick={handleUpdate}
-                                        sx={{
-                                          bgcolor: "#FF9933",
-                                          "&:hover": {
-                                            bgcolor: "#e68a00",
-                                          },
-                                        }}
-                                      >
-                                        Save
-                                      </Button>
-                                    </Box>
-                                  </Box>
+                                    <MenuItem component="label">
+                                      <ListItemIcon>
+                                        <InsertDriveFileIcon fontSize="small" sx={{ color: "#FF9933" }} />
+                                      </ListItemIcon>
+                                      <ListItemText>File</ListItemText>
+                                      <input
+                                        hidden
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={onImageSelected}
+                                      />
+                                    </MenuItem>
+                                  </Menu>
                                 </Box>
+                              </DialogContent>
 
+                              <DialogActions
+                                sx={{
+                                  display: "flex",
+                                  flexDirection: { xs: "column", sm: "row" },
+                                  gap: 1,
+                                  p: 2,
+                                  "& > button": { flex: { xs: "1 1 auto", sm: "0 1 auto" } },
+                                }}
+                              >
+                                <Button
+                                  onClick={() => setEditOpen(false)}
+                                  variant="contained"
+                                  fullWidth
+                                  sx={{ bgcolor: "#9E9E9E", color: "#fff", "&:hover": { bgcolor: "#757575" } }}
+                                >
+                                  Cancel
+                                </Button>
 
+                                <Button
+                                  variant="contained"
+                                  onClick={handleUpdate}
+                                  fullWidth
+                                  sx={{ bgcolor: "#FF9933", "&:hover": { bgcolor: "#e68a00" } }}
+                                >
+                                  Save
+                                </Button>
                               </DialogActions>
                             </Dialog>
                             {editImage && (
@@ -1223,9 +1321,9 @@ export default function Community() {
         {showSidebar && (
           <Grid
             sx={{
-              mt: { sm: 6, md: 8, lg: 12, xl: 14 },
-              width: { sm: '200px', md: '260px', lg: '300px', xl: '300px' },
-              minWidth: { sm: '200px', md: '260px', lg: '300px', xl: '300px' },
+              mt: { sm: 5, md: 7, lg: 10, xl: 12 },
+              width: { sm: '200px', md: '260px', lg: '300px', xl: '320px' },
+              minWidth: { sm: '200px', md: '260px', lg: '300px', xl: '320px' },
               flexShrink: 0,
               position: 'sticky',
               top: 20,

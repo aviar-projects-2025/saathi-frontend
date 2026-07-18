@@ -31,7 +31,7 @@ const Login = () => {
     const navigate = useNavigate();
 
     const theme = useTheme();
-    const isTab = useMediaQuery(theme.breakpoints.down("sm"));
+    const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
     const validationSchema = Yup.object({
         email: Yup.string()
@@ -45,26 +45,60 @@ const Login = () => {
     const loginSubmit = async (values) => {
         try {
             const data = await login(values);
-            toast.success("Ride created successfully!", {
-                position: isTab ? "top-center" : "top-right",
-                autoClose: 1000,
-                hideProgressBar: true,
-                closeButton: false,
-                style: {
-                    width: isTab ? "280px" : "360px",
-                    fontSize: isTab ? "13px" : "15px",
-                    padding: isTab ? "8px 12px" : "12px 16px",
-                    borderRadius: isTab ? "8px" : "10px",
-                    minHeight: isTab ? "42px" : "52px",
-                },
-            });
+            if (data?.user.refApprove === "Approved") {
+                toast.success("Login Successful!", {
+                    position: isMobile ? "top-center" : "top-right",
+                    autoClose: 2000,
+                    hideProgressBar: true,
+                    closeButton: false,
+                    style: {
+                        width: isMobile ? "90vw" : "360px",
+                        maxWidth: isMobile ? "320px" : "360px",
+                        fontSize: isMobile ? "13px" : "15px",
+                        padding: isMobile ? "8px 12px" : "12px 16px",
+                        borderRadius: isMobile ? "8px" : "10px",
+                        minHeight: isMobile ? "42px" : "52px",
+                        margin: "0 auto",
+                    },
+                });
+            } else {
+                toast.info("Login successful! Waiting for admin approval.", {
+                    position: isMobile ? "top-center" : "top-right",
+                    autoClose: 3000,
+                    hideProgressBar: true,
+                    closeButton: false,
+                    style: {
+                        width: isMobile ? "90vw" : "360px",
+                        maxWidth: isMobile ? "320px" : "360px",
+                        fontSize: isMobile ? "13px" : "15px",
+                        padding: isMobile ? "8px 12px" : "12px 16px",
+                        borderRadius: isMobile ? "8px" : "10px",
+                        minHeight: isMobile ? "42px" : "52px",
+                        margin: "0 auto",
+                    },
+                });
+            }
             window.location.href = data?.user.role === ROLES.ADMIN
                 ? "/admin/dashboard"
                 : data?.user.refApprove === "Approved"
                     ? "/community"
                     : "/waiting-approval";
         } catch (error) {
-            toast.error(error.message);
+            toast.error(error.message, {
+                position: isMobile ? "top-center" : "top-right",
+                autoClose: 3000,
+                hideProgressBar: true,
+                closeButton: false,
+                style: {
+                    width: isMobile ? "90vw" : "360px",
+                    maxWidth: isMobile ? "320px" : "360px",
+                    fontSize: isMobile ? "13px" : "15px",
+                    padding: isMobile ? "8px 12px" : "12px 16px",
+                    borderRadius: isMobile ? "8px" : "10px",
+                    minHeight: isMobile ? "42px" : "52px",
+                    margin: "0 auto",
+                },
+            });
         }
     };
 

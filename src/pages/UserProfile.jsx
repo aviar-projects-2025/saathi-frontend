@@ -138,6 +138,9 @@ const UserProfile = () => {
     const handleOpenShare = () => setOpenShare(true);
     const handleCloseShare = () => setOpenShare(false);
 
+    // const theme = useTheme();
+    const isTab = useMediaQuery(theme.breakpoints.down("sm"));
+
 
     const [openImage, setOpenImage] = useState(false);
     const [selectedImage, setSelectedImage] = useState("");
@@ -276,11 +279,39 @@ const UserProfile = () => {
 
             await axios.post(Api + `/users/update/${user?.id}`, data)
             getuserData()
-            toast.success("Profile updated")
+            toast.success("Profile Updated", {
+                position: isTab ? "top-center" : "top-right",
+                autoClose: 2000,
+                hideProgressBar: true,
+                closeButton: false,
+                style: {
+                    width: isTab ? "90vw" : "360px",
+                    maxWidth: isTab ? "320px" : "360px",
+                    fontSize: isTab ? "13px" : "15px",
+                    padding: isTab ? "8px 12px" : "12px 16px",
+                    borderRadius: isTab ? "8px" : "10px",
+                    minHeight: isTab ? "42px" : "52px",
+                    margin: "0 auto",
+                },
+            });
             setEditProfile(false)
         } catch (error) {
             console.log(error.response);
-            toast.error(error.response.data.message)
+            toast.error(error.response.data.message, {
+                position: isTab ? "top-center" : "top-right",
+                autoClose: 2000,
+                hideProgressBar: true,
+                closeButton: false,
+                style: {
+                    width: isTab ? "90vw" : "360px",
+                    maxWidth: isTab ? "320px" : "360px",
+                    fontSize: isTab ? "13px" : "15px",
+                    padding: isTab ? "8px 12px" : "12px 16px",
+                    borderRadius: isTab ? "8px" : "10px",
+                    minHeight: isTab ? "42px" : "52px",
+                    margin: "0 auto",
+                },
+            });
         } finally {
             setSubmitLoading(false)
         }
@@ -289,7 +320,21 @@ const UserProfile = () => {
     const [tab, setTab] = useState(0);
     const handleCopy = (value) => {
         navigator.clipboard.writeText(value);
-        toast.success("Copied to clipboard!");
+        toast.success("Copied to Clipboard!", {
+            position: isTab ? "top-center" : "top-right",
+            autoClose: 2000,
+            hideProgressBar: true,
+            closeButton: false,
+            style: {
+                width: isTab ? "90vw" : "360px",
+                maxWidth: isTab ? "320px" : "360px",
+                fontSize: isTab ? "13px" : "15px",
+                padding: isTab ? "8px 12px" : "12px 16px",
+                borderRadius: isTab ? "8px" : "10px",
+                minHeight: isTab ? "42px" : "52px",
+                margin: "0 auto",
+            },
+        });
     };
 
     return (

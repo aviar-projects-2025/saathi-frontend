@@ -136,6 +136,9 @@ const CommunityComments = ({ post, user }) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [commentToDelete, setCommentToDelete] = useState(null);
 
+  // const theme = useTheme();
+  const isTab = useMediaQuery(theme.breakpoints.down("sm"));
+
   useEffect(() => {
     getComments();
   }, [post]);
@@ -232,12 +235,39 @@ const CommunityComments = ({ post, user }) => {
         }
       );
 
-      toast.success("Comment updated");
+      toast.success("Comment Updated", {
+        position: isTab ? "top-center" : "top-right",
+        autoClose: 2000,
+        hideProgressBar: true,
+        closeButton: false,
+        style: {
+          width: isTab ? "90vw" : "360px",
+          maxWidth: isTab ? "320px" : "360px",
+          fontSize: isTab ? "13px" : "15px",
+          padding: isTab ? "8px 12px" : "12px 16px",
+          borderRadius: isTab ? "8px" : "10px",
+          minHeight: isTab ? "42px" : "52px",
+          margin: "0 auto",
+        },
+      });
+
       setEditingCommentId(null);
       setEditText("");
       getComments();
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to update comment");
+      toast.error(error.response?.data?.message || "Failed to update comment", {
+        position: isTab ? "top-center" : "top-right",
+        autoClose: 3000,
+        hideProgressBar: true,
+        closeButton: false,
+        style: {
+          width: isTab ? "280px" : "360px",
+          fontSize: isTab ? "13px" : "15px",
+          padding: isTab ? "8px 12px" : "12px 16px",
+          borderRadius: isTab ? "8px" : "10px",
+          minHeight: isTab ? "42px" : "52px",
+        },
+      });
     }
   };
 
@@ -259,12 +289,37 @@ const CommunityComments = ({ post, user }) => {
       const res = await axios.delete(
         `${Api}/community/comments/${commentToDelete._id}/${user.id}`
       );
-      toast.success("Comment deleted");
+      toast.success("Comment deleted", {
+        position: isTab ? "top-center" : "top-right",
+        autoClose: 2000,
+        hideProgressBar: true,
+        closeButton: false,
+        style: {
+          width: isTab ? "90vw" : "360px",
+          maxWidth: isTab ? "320px" : "360px",
+          fontSize: isTab ? "13px" : "15px",
+          padding: isTab ? "8px 12px" : "12px 16px",
+          borderRadius: isTab ? "8px" : "10px",
+          minHeight: isTab ? "42px" : "52px",
+          margin: "0 auto",
+        },
+      });
       getComments();
     } catch (error) {
       toast.error(
-        error.response?.data?.message || "Failed to delete comment"
-      );
+        error.response?.data?.message || "Failed to delete comment", {
+        position: isTab ? "top-center" : "top-right",
+        autoClose: 3000,
+        hideProgressBar: true,
+        closeButton: false,
+        style: {
+          width: isTab ? "280px" : "360px",
+          fontSize: isTab ? "13px" : "15px",
+          padding: isTab ? "8px 12px" : "12px 16px",
+          borderRadius: isTab ? "8px" : "10px",
+          minHeight: isTab ? "42px" : "52px",
+        },
+      });
     } finally {
       setDeleteDialogOpen(false);
       setCommentToDelete(null);

@@ -61,7 +61,7 @@ const Register = () => {
       const res = await axios.post(`${Api}/users/`, values);
       toast.success("Registration Success - Waiting for approval!", {
         position: isTab ? "top-center" : "top-right",
-        autoClose: 1000,
+        autoClose: 3000,
         hideProgressBar: true,
         closeButton: false,
         style: {
