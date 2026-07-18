@@ -247,19 +247,21 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, req
         (isEditMode ? "Request updated" : "Request sent")
       );
 
-      const updatedRequest = res.data.data;
+   const updatedRequest = res.data.data;
 
-      // Update RideCard state immediately
-      setAllMyRequests((prev) =>
-        prev.map((item) =>
-          item._id === updatedRequest._id
-            ? {
-              ...item,
-              ...updatedRequest,
-            }
-            : item
-        )
-      );
+setAllMyRequests((prev) => {
+  if (isEditMode) {
+    // Update existing request
+    return prev.map((item) =>
+      item._id === updatedRequest._id
+        ? { ...item, ...updatedRequest }
+        : item
+    );
+  }
+
+  // Add newly created request
+  return [...prev, updatedRequest];
+});
 
       setRequestData(emptyRequestData);
       onClose?.();
