@@ -1221,7 +1221,7 @@ const MyRides = () => {
     try {
       const res = await axios.get(`${Api}/bookride/${user.id}?type=received`);
       setAllRequests(res.data.data || []);
-      console.log(res.data.data,'res.data.data')
+
     } catch (error) {
       console.error('Error fetching requests:', error);
     }
