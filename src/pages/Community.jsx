@@ -24,6 +24,7 @@ import PermMediaIcon from '@mui/icons-material/PermMedia';
 import CloseIcon from '@mui/icons-material/Close';
 import Api from '../Api.jsx';
 import axios from 'axios';
+import Discover from './Discover.jsx'
 
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -133,7 +134,7 @@ export default function Community() {
   const SAFFRON = "#E8650A";
   const CARD_BORDER = "1px solid #F0E6DC";
 
-  const POST_BOX_WIDTH_SX = { xs: '100%', sm: '100%', md: '560px', lg: '600px', xl: '640px' };
+  const POST_BOX_WIDTH_SX = { xs: '100%', sm: '100%', md: '600px', lg: '640px', xl: '640px' };
 
   const avatarSize = isMobile ? 30 : isTablet ? 33 : 35;
   const iconFontSize = isMobile ? 'small' : 'medium';
@@ -413,122 +414,7 @@ export default function Community() {
     } catch (error) { }
   };
 
-  // ── Discover data ──────────────────────────────────────────────────────────────
-  const topMembers = [
-    { name: "Vijay Patel", initials: "VP", rides: 67, city: "Frisco", badge: "🏅 Founding member", verified: true },
-    { name: "Deepa Iyer", initials: "DI", rides: 42, city: "Plano", badge: "⭐ Community elder", verified: true },
-    { name: "Rahul Sharma", initials: "RS", rides: 34, city: "Dallas", badge: null, verified: true },
-    { name: "Ananya Krishnan", initials: "AK", rides: 18, city: "Houston", badge: null, verified: true },
-    { name: "Sunita Mehta", initials: "SM", rides: 12, city: "Chicago", badge: null, verified: false },
-  ];
-
-  const activities = [
-    { text: "Vijay P. gave a free temple ride to 4 members", time: "2h ago", icon: "🛕" },
-    { text: "Deepa I. helped Neel K.'s parents from the airport", time: "5h ago", icon: "✈️" },
-    { text: "Rahul S. completed his 34th community ride!", time: "1d ago", icon: "🎉" },
-    { text: "3 new members joined from Houston", time: "2d ago", icon: "👋" },
-    { text: "Sunita M. got 5 ride offers for her family trip", time: "3d ago", icon: "🙏" },
-  ];
-
-  // ── Small avatar used in the leaderboard ─────────────────────────────────────
-  const LeaderAvatar = ({ initials, verified }) => (
-    <Box sx={{
-      width: 36, height: 36, borderRadius: '50%', background: '#FFE8D6',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontWeight: 800, fontSize: 13, position: 'relative', flexShrink: 0
-    }}>
-      {initials}
-      {verified && (
-        <Box sx={{
-          position: 'absolute', right: -2, bottom: -2, background: '#2196f3',
-          color: '#fff', borderRadius: '50%', width: 13, height: 13, fontSize: 9,
-          display: 'flex', alignItems: 'center', justifyContent: 'center'
-        }}>
-          ✓
-        </Box>
-      )}
-    </Box>
-  );
-
-  // ── Sidebar content extracted for reuse ──────────────────────────────────────
-  const SidebarContent = () => (
-    <Box sx={{ width: '100%' }}>
-      {/* Top Members */}
-      <Paper elevation={0} sx={{ p: 2, borderRadius: 3, border: '1px solid #F0E6DC', mb: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-          <EmojiEventsIcon sx={{ color: '#F4A261', fontSize: 20 }} />
-          <Typography fontWeight={700} fontSize="0.9rem">Top Community Members</Typography>
-        </Box>
-
-        {topMembers.map((member, index) => (
-          <Box key={member.name}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2, py: 1 }}>
-              <Typography sx={{ width: 18, fontWeight: 800, color: 'text.secondary', fontSize: 12 }}>
-                {index + 1}
-              </Typography>
-              <LeaderAvatar initials={member.initials} verified={member.verified} />
-              <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Typography fontWeight={600} fontSize="0.8rem" noWrap>{member.name}</Typography>
-                <Typography variant="caption" color="text.secondary" fontSize="0.68rem">
-                  {member.city}
-                </Typography>
-                {member.badge && (
-                  <Typography variant="caption" sx={{
-                    display: 'block', color: '#E8650A',
-                    fontWeight: 600, fontSize: '0.65rem'
-                  }}>
-                    {member.badge}
-                  </Typography>
-                )}
-              </Box>
-              <Box textAlign="right" sx={{ flexShrink: 0 }}>
-                <Typography fontWeight={700} color="primary.main" fontSize={13}>
-                  {member.rides}
-                </Typography>
-                <Typography variant="caption" color="text.secondary" fontSize="0.65rem">
-                  rides
-                </Typography>
-              </Box>
-            </Box>
-            {index !== topMembers.length - 1 && <Divider />}
-          </Box>
-        ))}
-      </Paper>
-
-      {/* Recent Activity */}
-      <Paper elevation={0} sx={{ p: 2, borderRadius: 3, border: '1px solid #F0E6DC', mb: 2 }}>
-        <Typography fontWeight={700} fontSize="0.9rem" mb={1.5} sx={{ mb: 2 }}>Recent Activity</Typography>
-        {activities.map((a, i) => (
-          <Box key={i} sx={{ display: 'flex', gap: 1, mb: 1.2 }}>
-            <Typography fontSize={16}>{a.icon}</Typography>
-            <Box>
-              <Typography variant="body2" fontSize="0.78rem">{a.text}</Typography>
-              <Typography variant="caption" color="text.secondary" fontSize="0.65rem">{a.time}</Typography>
-            </Box>
-          </Box>
-        ))}
-      </Paper>
-
-      {/* Invite */}
-      <Paper elevation={0} sx={{
-        p: 2, borderRadius: 3,
-        background: 'linear-gradient(135deg, #E8650A, #FF8C42)', color: '#fff'
-      }}>
-        <Typography fontWeight={800} mb={0.5} fontSize="0.9rem">Invite a friend 🙏</Typography>
-        <Typography variant="body2" sx={{ opacity: 0.9, mb: 1.5, fontSize: '0.78rem' }}>
-          Saathi grows through trust. Invite someone from your community to join.
-        </Typography>
-        <Button size="small" variant="contained"
-          sx={{
-            background: '#fff', color: '#E8650A', fontWeight: 700,
-            '&:hover': { background: '#FFF8F2' }, fontSize: '0.75rem'
-          }}>
-          Share invite link
-        </Button>
-      </Paper>
-    </Box>
-  );
-
+ 
   return (
     <>
       <PageLayout>
@@ -1226,7 +1112,7 @@ export default function Community() {
                 '&::-webkit-scrollbar-thumb': { backgroundColor: '#E0D4C8', borderRadius: 4 },
               }}
             >
-              <SidebarContent />
+              <Discover />
             </Box>
           )}
         </Box>
