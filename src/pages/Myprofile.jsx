@@ -278,11 +278,11 @@ const Myprofile = () => {
   return (
     <Box
       sx={{
-        maxWidth: 1000,
+        // maxWidth: 1000,
         // mx: "auto",
-        px: 1.5,
+        // px: 1.5,
         py: 2,
-        pb: 4
+        pb: 3
       }}
     >
       <SectionCard

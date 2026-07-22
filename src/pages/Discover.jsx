@@ -19,10 +19,6 @@ const activities = [
     { text: "Sunita M. got 5 ride offers for her family trip", time: "3d ago", icon: "🙏" },
 ];
 
-// Container name used for all @container queries below. This makes the
-// component respond to the width of whatever box it's placed in (a full
-// page column, a narrow sidebar, a modal, etc.) instead of the browser
-// window's width — which is what MUI's xs/sm/md breakpoints track.
 const CQ = "discoverRoot";
 const cq = (minWidth) => `@container ${CQ} (min-width: ${minWidth}px)`;
 
@@ -71,13 +67,10 @@ const UserAvatar = ({ initials, verified }) => (
 const Discover = () => (
     <Box
         sx={{
-            // Establishes this component as its own container-query context,
-            // so its internal layout reacts to its own rendered width rather
-            // than the viewport width.
             containerType: "inline-size",
             containerName: CQ,
             minHeight: "100vh",
-            pb: 4,
+            pb: 3,
             px: 1.5,
             width: "100%",
             boxSizing: "border-box",

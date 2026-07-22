@@ -6,7 +6,7 @@ const PageLayout = ({ children }) => {
         <Box
             sx={{
                 width: '100%',
-                maxWidth: { xs: '100%', sm: 1000 },
+                maxWidth: { xs: '100%', sm: '100%' },
                 // mx: 'auto',
                 // px: { xs: 0, sm: 2 },
                 // py: { xs: 0, sm: 2 },
