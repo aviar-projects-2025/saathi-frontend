@@ -42,6 +42,7 @@ import { useUser } from '../context/userConetext.jsx';
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import FolderIcon from "@mui/icons-material/Folder";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
+import ToastConfig from '../components/ToastConfig.jsx';
 
 const BREAKPOINTS = { xs: 0, sm: 600, md: 900, lg: 1200, xl: 1536 }; // MUI defaults
 
@@ -86,6 +87,8 @@ export default function Community() {
   const { currentUser } = useUser()
   const [tooltipOpen, setTooltipOpen] = useState(false);
   const [tooltip2Open, setTooltip2Open] = useState(false);
+
+  const toasts = ToastConfig();
 
 
   const theme = useTheme();
@@ -214,41 +217,13 @@ export default function Community() {
         )
       );
 
-      toast.success(res.data.message, {
-        position: isTab ? "top-center" : "top-right",
-        autoClose: 2000,
-        hideProgressBar: true,
-        closeButton: false,
-        style: {
-          width: isTab ? "90vw" : "360px",
-          maxWidth: isTab ? "320px" : "360px",
-          fontSize: isTab ? "13px" : "15px",
-          padding: isTab ? "8px 12px" : "12px 16px",
-          borderRadius: isTab ? "8px" : "10px",
-          minHeight: isTab ? "42px" : "52px",
-          margin: "0 auto",
-        },
-      });
+      toast.success(res.data.message, toasts);
 
       setEditOpen(false);
       setSelectedPost(null);
       setEditImage(null);
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to update post", {
-        position: isTab ? "top-center" : "top-right",
-        autoClose: 2000,
-        hideProgressBar: true,
-        closeButton: false,
-        style: {
-          width: isTab ? "90vw" : "360px",
-          maxWidth: isTab ? "320px" : "360px",
-          fontSize: isTab ? "13px" : "15px",
-          padding: isTab ? "8px 12px" : "12px 16px",
-          borderRadius: isTab ? "8px" : "10px",
-          minHeight: isTab ? "42px" : "52px",
-          margin: "0 auto",
-        },
-      });
+      toast.error(error.response?.data?.message || "Failed to update post", toasts);
     }
   };
   const handleCreatePost = async () => {
@@ -271,37 +246,13 @@ export default function Community() {
       setPost("");
       setMedia(null);
       setPreview("");
-      toast.success("Posted!...", {
-        position: isTab ? "top-center" : "top-right",
-        autoClose: 3000,
-        hideProgressBar: true,
-        closeButton: false,
-        style: {
-          width: isTab ? "280px" : "360px",
-          fontSize: isTab ? "13px" : "15px",
-          padding: isTab ? "8px 12px" : "12px 16px",
-          borderRadius: isTab ? "8px" : "10px",
-          minHeight: isTab ? "42px" : "52px",
-        },
-      });
+      toast.success("Posted!...", toasts);
     } catch (error) {
       console.log(error);
       // toast.error(error.message, {
       //   position: isMobile ? "top-center" : "top-right",
       // });
-      toast.error(error.message, {
-        position: isTab ? "top-center" : "top-right",
-        autoClose: 3000,
-        hideProgressBar: true,
-        closeButton: false,
-        style: {
-          width: isTab ? "280px" : "360px",
-          fontSize: isTab ? "13px" : "15px",
-          padding: isTab ? "8px 12px" : "12px 16px",
-          borderRadius: isTab ? "8px" : "10px",
-          minHeight: isTab ? "42px" : "52px",
-        },
-      });
+      toast.error(error.message, toasts);
 
     } finally {
       setLoading(false);
@@ -369,36 +320,10 @@ export default function Community() {
         prev.filter((post) => post._id !== postId)
       );
 
-      toast.success(res.data.message, {
-        position: isTab ? "top-center" : "top-right",
-        autoClose: 2000,
-        hideProgressBar: true,
-        closeButton: false,
-        style: {
-          width: isTab ? "90vw" : "360px",
-          maxWidth: isTab ? "320px" : "360px",
-          fontSize: isTab ? "13px" : "15px",
-          padding: isTab ? "8px 12px" : "12px 16px",
-          borderRadius: isTab ? "8px" : "10px",
-          minHeight: isTab ? "42px" : "52px",
-          margin: "0 auto",
-        },
-      });
+      toast.success(res.data.message, toasts);
     } catch (error) {
       toast.error(
-        error.response?.data?.message || "Failed to delete post", {
-        position: isTab ? "top-center" : "top-right",
-        autoClose: 3000,
-        hideProgressBar: true,
-        closeButton: false,
-        style: {
-          width: isTab ? "280px" : "360px",
-          fontSize: isTab ? "13px" : "15px",
-          padding: isTab ? "8px 12px" : "12px 16px",
-          borderRadius: isTab ? "8px" : "10px",
-          minHeight: isTab ? "42px" : "52px",
-        },
-      });
+        error.response?.data?.message || "Failed to delete post", toasts);
     }
   };
   const removeLike = async (id) => {
@@ -414,7 +339,7 @@ export default function Community() {
     } catch (error) { }
   };
 
- 
+
   return (
     <>
       <PageLayout>
@@ -2133,7 +2058,7 @@ export default function Community() {
 //                     elevation={0}
 //                     sx={{
 //                       borderRadius: 3, border: CARD_BORDER, mb: 2, overflow: 'hidden',
-//                       width: POST_BOX_WIDTH_SX,  
+//                       width: POST_BOX_WIDTH_SX,
 //                       boxSizing: 'border-box',
 //                     }}
 //                   >

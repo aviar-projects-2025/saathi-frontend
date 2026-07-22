@@ -117,7 +117,7 @@ function Perforation() {
                         boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.06)',
                     }}
                 />
-                
+
             ))}
         </Box>
     );
@@ -378,11 +378,12 @@ export default function RideDetailsModal({
             fullScreen={isXs}
             PaperProps={{
                 sx: {
-                    borderRadius: { xs: 0, sm: 4 },
+                    borderRadius: { xs: 3, sm: 4 },
                     bgcolor: TOKENS.paper,
                     backgroundImage: 'none',
                 },
             }}
+            sx={{ p: 1.5 }}
         >
             {/* ── Ticket header ── */}
             <Box
@@ -531,82 +532,92 @@ export default function RideDetailsModal({
                     )}
                 </Box>
 
-                <Perforation />
+                {console.log("Requesed Ride List", requests)}
 
-                <Box>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.6 }}>
-                        <Stack direction="row" spacing={0.8} alignItems="center">
-                            <Typography
-                                sx={{
-                                    fontFamily: TOKENS.displayFont,
-                                    fontWeight: 700,
-                                    fontSize: { xs: '0.95rem', sm: '1.05rem' },
-                                    color: TOKENS.ink,
-                                }}
-                            >
-                                Passenger Manifest
-                            </Typography>
-                            {pendingCount > 0 && (
-                                <Chip
-                                    label={`${pendingCount} pending`}
-                                    size="small"
-                                    sx={{
-                                        bgcolor: TOKENS.amberSoft,
-                                        color: TOKENS.amber,
-                                        fontFamily: TOKENS.bodyFont,
-                                        fontWeight: 700,
-                                        fontSize: '0.7rem',
-                                    }}
-                                />
-                            )}
-                        </Stack>
-                        <Typography sx={{ fontFamily: TOKENS.monoFont, fontSize: '0.9 rem', color: TOKENS.inkSoft, mx: 2 }}>
-                            {requests.length} total
-                        </Typography>
-                    </Stack>
+                {requests.length > 0 && (
+                    <>
+                        <Perforation />
 
-                    {requests.length === 0 ? (
-                        <Box
-                            sx={{
-                                textAlign: 'center',
-                                py: 3,
-                                border: `1px dashed ${TOKENS.line}`,
-                                borderRadius: 2,
-                            }}
-                        >
-                            <Typography sx={{ fontFamily: TOKENS.bodyFont, fontSize: '0.85rem', color: TOKENS.inkSoft }}>
-                                No requests yet
-                            </Typography>
-                        </Box>
-                    ) : (
-                        <Box
-                            sx={{
-                                // border: `1px solid ${TOKENS.line}`,
-                                borderRadius: 1.5,
-                                maxHeight: { xs: 280, sm: 340 },
-                                overflowY: 'auto',
-                                overflowX: 'hidden',
-                            }}
-                        >
-                            {requests.map((req, idx) => (
+                        <Box>
+
+                            {requests.length === 0 ? (
                                 <Box
-                                    key={req._id}
                                     sx={{
-                                        // borderTop: idx === 0 ? 'none' : `1px solid ${TOKENS.line}`,
-                                        mt: 2
+                                        textAlign: 'center',
+                                        py: 3,
+                                        border: `1px dashed ${TOKENS.line}`,
+                                        borderRadius: 2,
                                     }}
                                 >
-                                    <PassengerStub
-                                        request={req}
-                                        onApprove={onApprove}
-                                        onReject={onReject}
-                                        dense={isXs}
-                                    />
+                                    <Typography sx={{ fontFamily: TOKENS.bodyFont, fontSize: '0.85rem', color: TOKENS.inkSoft }}>
+                                        No requests yet
+                                    </Typography>
                                 </Box>
-                            ))}
+                            ) : (
+                                <>
+                                    <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.6 }}>
+                                        <Stack direction="row" spacing={0.8} alignItems="center">
+                                            <Typography
+                                                sx={{
+                                                    fontFamily: TOKENS.displayFont,
+                                                    fontWeight: 700,
+                                                    fontSize: { xs: '0.95rem', sm: '1.05rem' },
+                                                    color: TOKENS.ink,
+                                                }}
+                                            >
+                                                Passenger Manifest
+                                            </Typography>
+                                            {pendingCount > 0 && (
+                                                <Chip
+                                                    label={`${pendingCount} pending`}
+                                                    size="small"
+                                                    sx={{
+                                                        bgcolor: TOKENS.amberSoft,
+                                                        color: TOKENS.amber,
+                                                        fontFamily: TOKENS.bodyFont,
+                                                        fontWeight: 700,
+                                                        fontSize: '0.7rem',
+                                                    }}
+                                                />
+                                            )}
+                                        </Stack>
+                                        <Typography sx={{ fontFamily: TOKENS.monoFont, fontSize: '0.9 rem', color: TOKENS.inkSoft, mx: 2 }}>
+                                            {requests.length} total
+                                        </Typography>
+                                    </Stack>
+
+                                    <Box
+                                        sx={{
+                                            // border: `1px solid ${TOKENS.line}`,
+                                            borderRadius: 1.5,
+                                            maxHeight: { xs: 280, sm: 340 },
+                                            overflowY: 'auto',
+                                            overflowX: 'hidden',
+                                        }}
+                                    >
+                                        {requests.map((req, idx) => (
+                                            <Box
+                                                key={req._id}
+                                                sx={{
+                                                    // borderTop: idx === 0 ? 'none' : `1px solid ${TOKENS.line}`,
+                                                    mt: 2
+                                                }}
+                                            >
+                                                <PassengerStub
+                                                    request={req}
+                                                    onApprove={onApprove}
+                                                    onReject={onReject}
+                                                    dense={isXs}
+                                                />
+                                            </Box>
+                                        ))}
+                                    </Box>
+                                </>
+                            )}
                         </Box>
-                    )}
-                </Box>
+                    </>
+                )}
+
             </DialogContent>
 
             {/* ── Actions ── */}
@@ -620,7 +631,7 @@ export default function RideDetailsModal({
                     borderTop: `1px solid ${TOKENS.line}`,
                 }}
             >
-                {showEdit && ride.createdBy._id == user?.id &&(
+                {showEdit && ride.createdBy._id == user?.id && (
                     <Button
                         onClick={() => onEdit(ride)}
                         startIcon={<EditIcon sx={{ fontSize: { xs: 16, sm: 18 } }} />}

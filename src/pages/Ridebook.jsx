@@ -13,6 +13,7 @@ import AddCircleOutlineIcon from "@mui/icons-material/Add";
 import { Chip, Stack, Avatar } from "@mui/material";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import RemoveCircle from "@mui/icons-material/RemoveCircle";
+import ToastConfig from "../components/ToastConfig";
 
 const ORANGE = "#FF9933";
 const ORANGE_DIVIDER = "rgba(255,153,51,0.2)";
@@ -31,19 +32,7 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, req
   // const theme = useTheme();
   const isTab = useMediaQuery(theme.breakpoints.down("sm"));
 
-  const TOASTS = {
-    position: isTab ? "top-center" : "top-right",
-    autoClose: 3000,
-    hideProgressBar: true,
-    closeButton: false,
-    style: {
-      width: isTab ? "280px" : "360px",
-      fontSize: isTab ? "13px" : "15px",
-      padding: isTab ? "8px 12px" : "12px 16px",
-      borderRadius: isTab ? "8px" : "10px",
-      minHeight: isTab ? "42px" : "52px",
-    },
-  }
+  const TOASTS = ToastConfig();
 
 
   const handleAddMember = () => {

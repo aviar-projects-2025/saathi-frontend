@@ -50,6 +50,7 @@ import PageLayout from "../components/PageLayout";
 import axios from "axios";
 import Api from "../Api";
 import { toast } from "react-toastify";
+import ToastConfig from "../components/ToastConfig";
 
 
 /* ──────────────── THEME TOKENS ──────────────── */
@@ -203,20 +204,7 @@ export default function OfferRide() {
 
   const isTab = useMediaQuery(theme.breakpoints.down("sm"));
 
-  const TOASTS = {
-    position: isTab ? "top-center" : "top-right",
-    autoClose: 3000,
-    hideProgressBar: true,
-    closeButton: false,
-    style: {
-      width: isTab ? "280px" : "360px",
-      fontSize: isTab ? "13px" : "15px",
-      padding: isTab ? "8px 12px" : "12px 16px",
-      borderRadius: isTab ? "8px" : "10px",
-      minHeight: isTab ? "42px" : "52px",
-    },
-  }
-
+  const TOASTS = ToastConfig();
 
   /* ──────────────── VALIDATION (unchanged logic) ──────────────── */
   const validateStep = () => {
@@ -224,19 +212,7 @@ export default function OfferRide() {
 
     if (step === 0) {
       if (!form.modeOfTravel) {
-        toast.error("Please select mode of travel", {
-          position: isTab ? "top-center" : "top-right",
-          autoClose: 3000,
-          hideProgressBar: true,
-          closeButton: false,
-          style: {
-            width: isTab ? "280px" : "360px",
-            fontSize: isTab ? "13px" : "15px",
-            padding: isTab ? "8px 12px" : "12px 16px",
-            borderRadius: isTab ? "8px" : "10px",
-            minHeight: isTab ? "42px" : "52px",
-          },
-        });
+        toast.error("Please select mode of travel", TOASTS);
         return false;
       }
       if (isFlight) {

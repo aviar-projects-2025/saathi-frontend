@@ -5,7 +5,7 @@ import {
   TextField, IconButton, Stack, FormControl, Grid,
   InputLabel, Select, MenuItem, FormControlLabel, Switch, Slider,
   CircularProgress, Card, CardContent, Divider, useMediaQuery, DialogContentText,
-  Badge, Collapse, Avatar, Pagination,useTheme
+  Badge, Collapse, Avatar, Pagination, useTheme
 } from '@mui/material';
 import Ridebook from './Ridebook.jsx';
 // import { useTheme } from '@mui/material/styles';
@@ -43,6 +43,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useNotifications } from '../context/NotificationContext';
 import RideDetailsModal from './RideDetails'
 import moment from 'moment';
+import ToastConfig from '../components/ToastConfig.jsx';
 
 const statusConfig = {
   FULL: { label: 'Filled', color: '#2D6A4F', bg: '#E8F5E9', icon: '✅' },
@@ -186,14 +187,11 @@ function EditRideModal({ ride, onSave, onClose }) {
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
-  // Helper to zero-pad numbers (e.g. 5 -> "05")
   const pad2 = (n) => String(n).padStart(2, '0');
 
   const startDate = new Date(ride.startTime);
 
-  // FIX: use LOCAL date/time getters, not toISOString().
-  // toISOString() converts to UTC, which shifts the displayed date/time
-  // away from the actual local time, and causes drift on every save.
+
   const initialDate = !isNaN(startDate)
     ? `${startDate.getFullYear()}-${pad2(startDate.getMonth() + 1)}-${pad2(startDate.getDate())}`
     : '';
@@ -222,7 +220,7 @@ function EditRideModal({ ride, onSave, onClose }) {
     setSaving(true);
     setError('');
 
-    // Basic guard: don't attempt to save with an empty/invalid date or time.
+
     if (!form.date || !form.time) {
       setError('Please select both a date and a time.');
       setSaving(false);
@@ -230,10 +228,7 @@ function EditRideModal({ ride, onSave, onClose }) {
     }
 
     try {
-      // form.date and form.time are LOCAL values coming from the inputs.
-      // `new Date('YYYY-MM-DDTHH:mm:00')` (no timezone suffix) is parsed
-      // as local time by the JS engine, so this correctly round-trips with
-      // the local getters used above, then converts to UTC for storage.
+
       const localDateTime = new Date(`${form.date}T${form.time}:00`);
 
       if (isNaN(localDateTime)) {
@@ -263,6 +258,7 @@ function EditRideModal({ ride, onSave, onClose }) {
       fullWidth
       fullScreen={fullScreen}
       PaperProps={{ sx: { borderRadius: { xs: 0, sm: 3 }, m: { xs: 0, sm: 2, md: 4 } } }}
+      sx={{ p: 1.5 }}
     >
       <DialogTitle sx={{ fontWeight: 800, pb: 0, pr: 5, fontSize: { xs: '1.05rem', sm: '1.25rem' } }}>
         Edit Ride
@@ -529,6 +525,8 @@ function RideCard({ ride, fetchRides, user, confirmRide, setConfirmRide, showEdi
   const [loadingRequests, setLoadingRequests] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState([]);
 
+  const toasts = ToastConfig();
+
   const theme = useTheme();
   const isTab = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -565,36 +563,10 @@ function RideCard({ ride, fetchRides, user, confirmRide, setConfirmRide, showEdi
           req._id === requestId ? { ...req, status: 'ACCEPTED' } : req
         ));
         fetchRides();
-        toast.success('Request approved successfully!', {
-          position: isTab ? "top-center" : "top-right",
-          autoClose: 2000,
-          hideProgressBar: true,
-          closeButton: false,
-          style: {
-            width: isTab ? "90vw" : "360px",
-            maxWidth: isTab ? "320px" : "360px",
-            fontSize: isTab ? "13px" : "15px",
-            padding: isTab ? "8px 12px" : "12px 16px",
-            borderRadius: isTab ? "8px" : "10px",
-            minHeight: isTab ? "42px" : "52px",
-            margin: "0 auto",
-          },
-        });
+        toast.success('Request approved successfully!', toasts);
       }
     } catch (error) {
-      toast.error(error.response.data.message, {
-        position: isTab ? "top-center" : "top-right",
-        autoClose: 3000,
-        hideProgressBar: true,
-        closeButton: false,
-        style: {
-          width: isTab ? "280px" : "360px",
-          fontSize: isTab ? "13px" : "15px",
-          padding: isTab ? "8px 12px" : "12px 16px",
-          borderRadius: isTab ? "8px" : "10px",
-          minHeight: isTab ? "42px" : "52px",
-        },
-      });
+      toast.error(error.response.data.message, toasts);
     }
   };
 
@@ -604,36 +576,10 @@ function RideCard({ ride, fetchRides, user, confirmRide, setConfirmRide, showEdi
       setAllRequests(prev => prev.map(req =>
         req._id === requestId ? { ...req, status: 'REJECTED' } : req
       ));
-      toast.success('Request rejected', {
-        position: isTab ? "top-center" : "top-right",
-        autoClose: 2000,
-        hideProgressBar: true,
-        closeButton: false,
-        style: {
-          width: isTab ? "90vw" : "360px",
-          maxWidth: isTab ? "320px" : "360px",
-          fontSize: isTab ? "13px" : "15px",
-          padding: isTab ? "8px 12px" : "12px 16px",
-          borderRadius: isTab ? "8px" : "10px",
-          minHeight: isTab ? "42px" : "52px",
-          margin: "0 auto",
-        },
-      });
+      toast.success('Request rejected', toasts);
       fetchRides()
     } catch (error) {
-      toast.error('Failed to reject request', {
-        position: isTab ? "top-center" : "top-right",
-        autoClose: 3000,
-        hideProgressBar: true,
-        closeButton: false,
-        style: {
-          width: isTab ? "280px" : "360px",
-          fontSize: isTab ? "13px" : "15px",
-          padding: isTab ? "8px 12px" : "12px 16px",
-          borderRadius: isTab ? "8px" : "10px",
-          minHeight: isTab ? "42px" : "52px",
-        },
-      });
+      toast.error('Failed to reject request', toasts);
     }
   };
 
@@ -645,56 +591,16 @@ function RideCard({ ride, fetchRides, user, confirmRide, setConfirmRide, showEdi
 
         setConfirmRide(null)
         fetchRides()
-        toast.success('Ride Started', {
-          position: isTab ? "top-center" : "top-right",
-          autoClose: 2000,
-          hideProgressBar: true,
-          closeButton: false,
-          style: {
-            width: isTab ? "90vw" : "360px",
-            maxWidth: isTab ? "320px" : "360px",
-            fontSize: isTab ? "13px" : "15px",
-            padding: isTab ? "8px 12px" : "12px 16px",
-            borderRadius: isTab ? "8px" : "10px",
-            minHeight: isTab ? "42px" : "52px",
-            margin: "0 auto",
-          },
-        });
+        toast.success('Ride Started', toasts);
       } else if (status === "Started") {
         const response = await axios.patch(`${Api}/rides/edit/${rideId}`, { travelStatus: 'Completed', endTime: new Date().toISOString() })
 
         setConfirmRide(null)
         fetchRides()
-        toast.success('Ride Completed', {
-          position: isTab ? "top-center" : "top-right",
-          autoClose: 2000,
-          hideProgressBar: true,
-          closeButton: false,
-          style: {
-            width: isTab ? "90vw" : "360px",
-            maxWidth: isTab ? "320px" : "360px",
-            fontSize: isTab ? "13px" : "15px",
-            padding: isTab ? "8px 12px" : "12px 16px",
-            borderRadius: isTab ? "8px" : "10px",
-            minHeight: isTab ? "42px" : "52px",
-            margin: "0 auto",
-          },
-        });
+        toast.success('Ride Completed', toasts);
       }
     } catch (error) {
-      toast.error('Failed', {
-        position: isTab ? "top-center" : "top-right",
-        autoClose: 3000,
-        hideProgressBar: true,
-        closeButton: false,
-        style: {
-          width: isTab ? "280px" : "360px",
-          fontSize: isTab ? "13px" : "15px",
-          padding: isTab ? "8px 12px" : "12px 16px",
-          borderRadius: isTab ? "8px" : "10px",
-          minHeight: isTab ? "42px" : "52px",
-        },
-      });
+      toast.error('Failed', toasts);
     }
   };
 
@@ -1109,6 +1015,7 @@ const MyRides = () => {
   const [mypostPage, setMypostPage] = useState(1);
   const [historyPage, setHistoryPage] = useState(1);
 
+  const toastss = ToastConfig();
 
   const processedIds = useRef(new Set());
 
@@ -1128,19 +1035,7 @@ const MyRides = () => {
           now >= start &&
           !processedIds.current.has(ride._id)
         ) {
-          ride.createdBy._id == user.id && toast.info("Your ride is starting now 🚗", {
-            position: isTab ? "top-center" : "top-right",
-            autoClose: 3000,
-            hideProgressBar: true,
-            closeButton: false,
-            style: {
-              width: isTab ? "280px" : "360px",
-              fontSize: isTab ? "13px" : "15px",
-              padding: isTab ? "8px 12px" : "12px 16px",
-              borderRadius: isTab ? "8px" : "10px",
-              minHeight: isTab ? "42px" : "52px",
-            },
-          });
+          ride.createdBy._id == user.id && toast.info("Your ride is starting now 🚗", toastss);
 
           ride.createdBy._id == user.id && setConfirmRide(ride);
 
@@ -1419,21 +1314,7 @@ const MyRides = () => {
     setHistory(merge(history));
     setCurrentRide(prev => merge(prev));
     setEditRide(null);
-    toast.success('Ride Updated Successfully...!', {
-      position: isTab ? "top-center" : "top-right",
-      autoClose: 2000,
-      hideProgressBar: true,
-      closeButton: false,
-      style: {
-        width: isTab ? "90vw" : "360px",
-        maxWidth: isTab ? "320px" : "360px",
-        fontSize: isTab ? "13px" : "15px",
-        padding: isTab ? "8px 12px" : "12px 16px",
-        borderRadius: isTab ? "8px" : "10px",
-        minHeight: isTab ? "42px" : "52px",
-        margin: "0 auto",
-      },
-    });
+    toast.success('Ride Updated Successfully...!', toastss);
   };
 
   const handleDelete = (deleted) => {
@@ -1443,21 +1324,7 @@ const MyRides = () => {
     setUpcoming(prev => remove(prev));
     setHistory(prev => remove(prev));
     setDeleteRide(null);
-    toast.success('Ride Deleted Successfully...!', {
-      position: isTab ? "top-center" : "top-right",
-      autoClose: 2000,
-      hideProgressBar: true,
-      closeButton: false,
-      style: {
-        width: isTab ? "90vw" : "360px",
-        maxWidth: isTab ? "320px" : "360px",
-        fontSize: isTab ? "13px" : "15px",
-        padding: isTab ? "8px 12px" : "12px 16px",
-        borderRadius: isTab ? "8px" : "10px",
-        minHeight: isTab ? "42px" : "52px",
-        margin: "0 auto",
-      },
-    });
+    toast.success('Ride Deleted Successfully...!', toastss);
   };
   const [openCancelDialog, setOpenCancelDialog] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
@@ -1507,19 +1374,19 @@ const MyRides = () => {
 
   const handleConfirmCancel = async () => {
     try {
-      // Call your delete/cancel API here
+
       await axios.delete(`${Api}/bookride/${selectedRequest._id}`);
 
 
       handleCloseDialog();
 
-      // Refresh request list
+
       getMyRequests();
     } catch (err) {
       console.error(err);
     }
   };
-  // Rides you've requested/booked that haven't happened yet
+
   const upcomingRequests = useMemo(() => {
     const now = new Date();
     return allMyRequests.filter((booking) => {
@@ -1528,7 +1395,7 @@ const MyRides = () => {
     });
   }, [allMyRequests]);
 
-  // Rides you've requested/booked that already happened (with approve/reject outcome)
+
   const pastRequests = useMemo(() => {
     const now = new Date();
     return allMyRequests.filter((booking) => {
@@ -1537,8 +1404,6 @@ const MyRides = () => {
     });
   }, [allMyRequests]);
 
-  // Clamp each tab's page number back into range whenever its underlying list shrinks/grows
-  // (e.g. after a delete makes the last page disappear)
   useEffect(() => {
     const maxPage = Math.max(1, Math.ceil(currentRide.length / ITEMS_PER_PAGE));
     if (currentRidePage > maxPage) setCurrentRidePage(maxPage);

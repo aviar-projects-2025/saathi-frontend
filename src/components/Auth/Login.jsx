@@ -22,6 +22,7 @@ import InputAdornment from "@mui/material/InputAdornment";
 import IconButton from "@mui/material/IconButton";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import ToastConfig from "../ToastConfig";
 
 // LAYOUT 4: Card with a colored top banner and a centered avatar badge
 // straddling the seam — a classic "app-like" login card, softly modernized.
@@ -29,6 +30,9 @@ import VisibilityOff from "@mui/icons-material/VisibilityOff";
 const Login = () => {
     const { login } = useAuth();
     const navigate = useNavigate();
+
+    const toasts = ToastConfig();
+
 
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -46,37 +50,9 @@ const Login = () => {
         try {
             const data = await login(values);
             if (data?.user.refApprove === "Approved") {
-                toast.success("Login Successful!", {
-                    position: isMobile ? "top-center" : "top-right",
-                    autoClose: 2000,
-                    hideProgressBar: true,
-                    closeButton: false,
-                    style: {
-                        width: isMobile ? "90vw" : "360px",
-                        maxWidth: isMobile ? "320px" : "360px",
-                        fontSize: isMobile ? "13px" : "15px",
-                        padding: isMobile ? "8px 12px" : "12px 16px",
-                        borderRadius: isMobile ? "8px" : "10px",
-                        minHeight: isMobile ? "42px" : "52px",
-                        margin: "0 auto",
-                    },
-                });
+                toast.success("Login Successful!", toasts);
             } else {
-                toast.info("Login successful! Waiting for admin approval.", {
-                    position: isMobile ? "top-center" : "top-right",
-                    autoClose: 3000,
-                    hideProgressBar: true,
-                    closeButton: false,
-                    style: {
-                        width: isMobile ? "90vw" : "360px",
-                        maxWidth: isMobile ? "320px" : "360px",
-                        fontSize: isMobile ? "13px" : "15px",
-                        padding: isMobile ? "8px 12px" : "12px 16px",
-                        borderRadius: isMobile ? "8px" : "10px",
-                        minHeight: isMobile ? "42px" : "52px",
-                        margin: "0 auto",
-                    },
-                });
+                toast.info("Login successful! Waiting for admin approval.", toasts);
             }
             window.location.href = data?.user.role === ROLES.ADMIN
                 ? "/admin/dashboard"
@@ -84,21 +60,7 @@ const Login = () => {
                     ? "/community"
                     : "/waiting-approval";
         } catch (error) {
-            toast.error(error.message, {
-                position: isMobile ? "top-center" : "top-right",
-                autoClose: 3000,
-                hideProgressBar: true,
-                closeButton: false,
-                style: {
-                    width: isMobile ? "90vw" : "360px",
-                    maxWidth: isMobile ? "320px" : "360px",
-                    fontSize: isMobile ? "13px" : "15px",
-                    padding: isMobile ? "8px 12px" : "12px 16px",
-                    borderRadius: isMobile ? "8px" : "10px",
-                    minHeight: isMobile ? "42px" : "52px",
-                    margin: "0 auto",
-                },
-            });
+            toast.error(error.message, toasts);
         }
     };
 

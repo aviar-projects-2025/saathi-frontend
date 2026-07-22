@@ -31,6 +31,7 @@ import FlightIcon from "@mui/icons-material/Flight";
 import DirectionsBoatIcon from "@mui/icons-material/DirectionsBoat";
 import TrainIcon from "@mui/icons-material/Train";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import ToastConfig from "../components/ToastConfig.jsx";
 
 import Api from "../Api";
 import { toast } from "react-toastify";
@@ -64,19 +65,7 @@ export default function RideCard({ ride }) {
   const isTab = useMediaQuery(theme.breakpoints.down("sm"));
 
 
-  const TOASTS = {
-    position: isTab ? "top-center" : "top-right",
-    autoClose: 3000,
-    hideProgressBar: true,
-    closeButton: false,
-    style: {
-      width: isTab ? "280px" : "360px",
-      fontSize: isTab ? "13px" : "15px",
-      padding: isTab ? "8px 12px" : "12px 16px",
-      borderRadius: isTab ? "8px" : "10px",
-      minHeight: isTab ? "42px" : "52px",
-    },
-  }
+  const TOASTS = ToastConfig();
 
   const user = ride?.createdBy || {};
   const isFlight = ride?.modeOfTravel === "Flight";

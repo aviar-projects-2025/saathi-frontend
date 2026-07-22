@@ -46,6 +46,8 @@ import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import CommunityComments from "./CommunityComments.jsx";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 
+import ToastConfig from "../components/ToastConfig.jsx";
+
 const SAFFRON = "#E8650A";
 const SAFFRON_LIGHT = "#FDF0E8";
 const CARD_BORDER = "1px solid #F0E6DC";
@@ -109,6 +111,7 @@ const StatBlock = ({ value, label }) => (
 const UserProfile = () => {
     const theme = useTheme();
 
+    const toasts = ToastConfig();
 
     const [openComments, setOpenComments] = useState({});
     const handleToggleComments = (id) => {
@@ -279,39 +282,11 @@ const UserProfile = () => {
 
             await axios.post(Api + `/users/update/${user?.id}`, data)
             getuserData()
-            toast.success("Profile Updated", {
-                position: isTab ? "top-center" : "top-right",
-                autoClose: 2000,
-                hideProgressBar: true,
-                closeButton: false,
-                style: {
-                    width: isTab ? "90vw" : "360px",
-                    maxWidth: isTab ? "320px" : "360px",
-                    fontSize: isTab ? "13px" : "15px",
-                    padding: isTab ? "8px 12px" : "12px 16px",
-                    borderRadius: isTab ? "8px" : "10px",
-                    minHeight: isTab ? "42px" : "52px",
-                    margin: "0 auto",
-                },
-            });
+            toast.success("Profile Updated", toasts);
             setEditProfile(false)
         } catch (error) {
             console.log(error.response);
-            toast.error(error.response.data.message, {
-                position: isTab ? "top-center" : "top-right",
-                autoClose: 2000,
-                hideProgressBar: true,
-                closeButton: false,
-                style: {
-                    width: isTab ? "90vw" : "360px",
-                    maxWidth: isTab ? "320px" : "360px",
-                    fontSize: isTab ? "13px" : "15px",
-                    padding: isTab ? "8px 12px" : "12px 16px",
-                    borderRadius: isTab ? "8px" : "10px",
-                    minHeight: isTab ? "42px" : "52px",
-                    margin: "0 auto",
-                },
-            });
+            toast.error(error.response.data.message, toasts);
         } finally {
             setSubmitLoading(false)
         }
@@ -320,21 +295,7 @@ const UserProfile = () => {
     const [tab, setTab] = useState(0);
     const handleCopy = (value) => {
         navigator.clipboard.writeText(value);
-        toast.success("Copied to Clipboard!", {
-            position: isTab ? "top-center" : "top-right",
-            autoClose: 2000,
-            hideProgressBar: true,
-            closeButton: false,
-            style: {
-                width: isTab ? "90vw" : "360px",
-                maxWidth: isTab ? "320px" : "360px",
-                fontSize: isTab ? "13px" : "15px",
-                padding: isTab ? "8px 12px" : "12px 16px",
-                borderRadius: isTab ? "8px" : "10px",
-                minHeight: isTab ? "42px" : "52px",
-                margin: "0 auto",
-            },
-        });
+        toast.success("Copied to Clipboard!", toasts);
     };
 
     return (

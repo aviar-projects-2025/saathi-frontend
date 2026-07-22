@@ -44,6 +44,7 @@ import {
   InputAdornment,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import ToastConfig from "../components/ToastConfig.jsx";
 
 
 const SAFFRON = "#E8650A";
@@ -115,6 +116,8 @@ const Myprofile = () => {
     confirm: false,
   });
 
+  const toasts = ToastConfig();
+
   // const theme = useTheme();
   const isTab = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -133,21 +136,7 @@ const Myprofile = () => {
   const [communityPosts, setCommunityPosts] = useState([]);
   const handleCopy = (value) => {
     navigator.clipboard.writeText(value);
-    toast.success("Copied to Clipboard!", {
-      position: isTab ? "top-center" : "top-right",
-      autoClose: 2000,
-      hideProgressBar: true,
-      closeButton: false,
-      style: {
-        width: isTab ? "90vw" : "360px",
-        maxWidth: isTab ? "320px" : "360px",
-        fontSize: isTab ? "13px" : "15px",
-        padding: isTab ? "8px 12px" : "12px 16px",
-        borderRadius: isTab ? "8px" : "10px",
-        minHeight: isTab ? "42px" : "52px",
-        margin: "0 auto",
-      },
-    });
+    toast.success("Copied to Clipboard!", toasts);
   };
   useEffect(() => {
     if (currentUser?._id) {
@@ -163,35 +152,11 @@ const Myprofile = () => {
         !passwordData.newPassword ||
         !passwordData.confirmPassword
       ) {
-        return toast.error("All fields are required", {
-          position: isTab ? "top-center" : "top-right",
-          autoClose: 3000,
-          hideProgressBar: true,
-          closeButton: false,
-          style: {
-            width: isTab ? "280px" : "360px",
-            fontSize: isTab ? "13px" : "15px",
-            padding: isTab ? "8px 12px" : "12px 16px",
-            borderRadius: isTab ? "8px" : "10px",
-            minHeight: isTab ? "42px" : "52px",
-          },
-        });
+        return toast.error("All fields are required", toasts);
       }
 
       if (passwordData.newPassword !== passwordData.confirmPassword) {
-        return toast.error("Passwords do not match", {
-          position: isTab ? "top-center" : "top-right",
-          autoClose: 3000,
-          hideProgressBar: true,
-          closeButton: false,
-          style: {
-            width: isTab ? "280px" : "360px",
-            fontSize: isTab ? "13px" : "15px",
-            padding: isTab ? "8px 12px" : "12px 16px",
-            borderRadius: isTab ? "8px" : "10px",
-            minHeight: isTab ? "42px" : "52px",
-          },
-        });
+        return toast.error("Passwords do not match", toasts);
       }
 
       const res = await axios.patch(
@@ -203,21 +168,7 @@ const Myprofile = () => {
         }
       );
 
-      toast.success(res.data.message, {
-        position: isTab ? "top-center" : "top-right",
-        autoClose: 2000,
-        hideProgressBar: true,
-        closeButton: false,
-        style: {
-          width: isTab ? "90vw" : "360px",
-          maxWidth: isTab ? "320px" : "360px",
-          fontSize: isTab ? "13px" : "15px",
-          padding: isTab ? "8px 12px" : "12px 16px",
-          borderRadius: isTab ? "8px" : "10px",
-          minHeight: isTab ? "42px" : "52px",
-          margin: "0 auto",
-        },
-      });
+      toast.success(res.data.message, toasts);
 
       setPasswordModel(false);
       setPasswordData({
@@ -228,19 +179,7 @@ const Myprofile = () => {
 
     } catch (error) {
       console.error(error);
-      toast.error(error.response?.data?.message || "Something went wrong", {
-        position: isTab ? "top-center" : "top-right",
-        autoClose: 3000,
-        hideProgressBar: true,
-        closeButton: false,
-        style: {
-          width: isTab ? "280px" : "360px",
-          fontSize: isTab ? "13px" : "15px",
-          padding: isTab ? "8px 12px" : "12px 16px",
-          borderRadius: isTab ? "8px" : "10px",
-          minHeight: isTab ? "42px" : "52px",
-        },
-      });
+      toast.error(error.response?.data?.message || "Something went wrong", toasts);
     }
   };
 
@@ -677,19 +616,7 @@ const Myprofile = () => {
                       url: shareLink,
                     });
                   } else {
-                    toast.info("Sharing not supported on this device", {
-                      position: isTab ? "top-center" : "top-right",
-                      autoClose: 3000,
-                      hideProgressBar: true,
-                      closeButton: false,
-                      style: {
-                        width: isTab ? "280px" : "360px",
-                        fontSize: isTab ? "13px" : "15px",
-                        padding: isTab ? "8px 12px" : "12px 16px",
-                        borderRadius: isTab ? "8px" : "10px",
-                        minHeight: isTab ? "42px" : "52px",
-                      },
-                    });
+                    toast.info("Sharing not supported on this device", toasts);
                   }
                 }}
               >

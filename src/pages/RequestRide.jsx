@@ -22,6 +22,7 @@ import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import PageLayout from '../components/PageLayout';
 import { toast } from "react-toastify";
+import ToastConfig from '../components/ToastConfig.jsx';
 
 const RequestRide = () => {
     const [loadingRequests, setLoadingRequests] = useState(true);
@@ -33,6 +34,8 @@ const RequestRide = () => {
     const [userData, setUserData] = useState([]);
     const [anchorEl, setAnchorEl] = useState(null);
     const user = JSON.parse(localStorage.getItem('user'));
+
+    const toasts = ToastConfig();
 
     const { refreshRide } = useRide();
 
@@ -82,42 +85,14 @@ const RequestRide = () => {
             setAllMyRequests((prev) =>
                 prev.filter((request) => request._id !== requestId)
             );
-            toast.success("Ride request deleted successfully", {
-                position: isTab ? "top-center" : "top-right",
-                autoClose: 2000,
-                hideProgressBar: true,
-                closeButton: false,
-                style: {
-                    width: isTab ? "90vw" : "360px",
-                    maxWidth: isTab ? "320px" : "360px",
-                    fontSize: isTab ? "13px" : "15px",
-                    padding: isTab ? "8px 12px" : "12px 16px",
-                    borderRadius: isTab ? "8px" : "10px",
-                    minHeight: isTab ? "42px" : "52px",
-                    margin: "0 auto",
-                },
-            });
+            toast.success("Ride request deleted successfully", toasts);
 
 
             fetchAllSends();
         } catch (error) {
             console.error(error);
             toast.error(
-                error.response?.data?.message || "Failed to delete ride request", {
-                position: isTab ? "top-center" : "top-right",
-                autoClose: 2000,
-                hideProgressBar: true,
-                closeButton: false,
-                style: {
-                    width: isTab ? "90vw" : "360px",
-                    maxWidth: isTab ? "320px" : "360px",
-                    fontSize: isTab ? "13px" : "15px",
-                    padding: isTab ? "8px 12px" : "12px 16px",
-                    borderRadius: isTab ? "8px" : "10px",
-                    minHeight: isTab ? "42px" : "52px",
-                    margin: "0 auto",
-                },
-            });
+                error.response?.data?.message || "Failed to delete ride request", toasts);
         }
     };
 

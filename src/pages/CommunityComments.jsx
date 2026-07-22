@@ -32,6 +32,7 @@ import UserAvatar from "../components/UserAvatar";
 import ThumbUpAltOutlinedIcon from "@mui/icons-material/ThumbUpAltOutlined";
 import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
 import { toast } from "react-toastify"; // remove if you use a different toast lib
+import ToastConfig from "../components/ToastConfig";
 
 
 
@@ -115,6 +116,8 @@ const CommunityComments = ({ post, user }) => {
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
   const SAFFRON = "#E8650A";
   const CARD_BORDER = "1px solid #F0E6DC";
+
+  const toasts = ToastConfig();
 
   const showSidebar = useMediaQuery(theme.breakpoints.up('sm'));
 
@@ -235,39 +238,13 @@ const CommunityComments = ({ post, user }) => {
         }
       );
 
-      toast.success("Comment Updated", {
-        position: isTab ? "top-center" : "top-right",
-        autoClose: 2000,
-        hideProgressBar: true,
-        closeButton: false,
-        style: {
-          width: isTab ? "90vw" : "360px",
-          maxWidth: isTab ? "320px" : "360px",
-          fontSize: isTab ? "13px" : "15px",
-          padding: isTab ? "8px 12px" : "12px 16px",
-          borderRadius: isTab ? "8px" : "10px",
-          minHeight: isTab ? "42px" : "52px",
-          margin: "0 auto",
-        },
-      });
+      toast.success("Comment Updated", toasts);
 
       setEditingCommentId(null);
       setEditText("");
       getComments();
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to update comment", {
-        position: isTab ? "top-center" : "top-right",
-        autoClose: 3000,
-        hideProgressBar: true,
-        closeButton: false,
-        style: {
-          width: isTab ? "280px" : "360px",
-          fontSize: isTab ? "13px" : "15px",
-          padding: isTab ? "8px 12px" : "12px 16px",
-          borderRadius: isTab ? "8px" : "10px",
-          minHeight: isTab ? "42px" : "52px",
-        },
-      });
+      toast.error(error.response?.data?.message || "Failed to update comment", toasts);
     }
   };
 
@@ -289,37 +266,11 @@ const CommunityComments = ({ post, user }) => {
       const res = await axios.delete(
         `${Api}/community/comments/${commentToDelete._id}/${user.id}`
       );
-      toast.success("Comment deleted", {
-        position: isTab ? "top-center" : "top-right",
-        autoClose: 2000,
-        hideProgressBar: true,
-        closeButton: false,
-        style: {
-          width: isTab ? "90vw" : "360px",
-          maxWidth: isTab ? "320px" : "360px",
-          fontSize: isTab ? "13px" : "15px",
-          padding: isTab ? "8px 12px" : "12px 16px",
-          borderRadius: isTab ? "8px" : "10px",
-          minHeight: isTab ? "42px" : "52px",
-          margin: "0 auto",
-        },
-      });
+      toast.success("Comment deleted", toasts);
       getComments();
     } catch (error) {
       toast.error(
-        error.response?.data?.message || "Failed to delete comment", {
-        position: isTab ? "top-center" : "top-right",
-        autoClose: 3000,
-        hideProgressBar: true,
-        closeButton: false,
-        style: {
-          width: isTab ? "280px" : "360px",
-          fontSize: isTab ? "13px" : "15px",
-          padding: isTab ? "8px 12px" : "12px 16px",
-          borderRadius: isTab ? "8px" : "10px",
-          minHeight: isTab ? "42px" : "52px",
-        },
-      });
+        error.response?.data?.message || "Failed to delete comment", toasts);
     } finally {
       setDeleteDialogOpen(false);
       setCommentToDelete(null);
