@@ -175,7 +175,7 @@ export default function Community() {
   const { completion } = useUser();
 
   const isProfileComplete = completion === 100;
-  const SIDEBAR_SCROLL_HEIGHT = 'calc(100vh - 130px)';
+  const SIDEBAR_SCROLL_HEIGHT = 'calc(100vh - 120px)';
   const handleEdit = (post) => {
     setSelectedPost(post);
     setEditDescription(post.description);
@@ -356,7 +356,7 @@ export default function Community() {
           sx={{
             display: 'flex',
             flexDirection: { xs: 'column', sm: 'row' },
-            gap: 2,
+            // gap: 1,
             alignItems: 'flex-start',
             width: '100%',
             maxWidth: "1200px"
@@ -1025,16 +1025,25 @@ export default function Community() {
           {showSidebar && (
             <Box
               sx={{
-                width: { sm: '200px', md: '260px', lg: '300px', xl: '320px' },
-                minWidth: { sm: '200px', md: '260px', lg: '300px', xl: '320px' },
+                width: { sm: "260px", md: "320px", lg: "360px", xl: "400px" },
+                minWidth: { sm: "260px", md: "320px", lg: "360px", xl: "400px" },
                 flexShrink: 0,
-                position: 'sticky',
+                position: "sticky",
                 top: 20,
                 height: SIDEBAR_SCROLL_HEIGHT,
-                overflowY: 'auto',
-                overflowX: 'hidden',
-                '&::-webkit-scrollbar': { width: 3 },
-                '&::-webkit-scrollbar-thumb': { backgroundColor: '#E0D4C8', borderRadius: 4 },
+                maxHeight: SIDEBAR_SCROLL_HEIGHT,
+                overflowY: "auto",
+                overflowX: "hidden",
+                "&::-webkit-scrollbar": { width: 3 },
+                "&::-webkit-scrollbar-thumb": {
+                  backgroundColor: "#E0D4C8",
+                  borderRadius: 4,
+                },
+                "&::-webkit-scrollbar-thumb:hover": {
+                  backgroundColor: "#D4C4B4",
+                },
+                scrollbarWidth: "thin",
+                scrollbarColor: "#E0D4C8 transparent",
               }}
             >
               <Discover />

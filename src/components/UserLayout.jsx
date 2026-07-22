@@ -62,12 +62,12 @@ const UserLayout = () => {
             display: "flex",
             justifyContent: "center",
             alignItems: "flex-start",
-            px: {
-              xs: 0,
-              sm: "2%",
-              md: "3%",
-              lg: "5%",
-            },
+            // px: {
+            //   xs: 0,
+            //   sm: "2%",
+            //   md: "3%",
+            //   lg: "5%",
+            // },
             boxSizing: "border-box",
           }}
         >
@@ -78,6 +78,7 @@ const UserLayout = () => {
               maxWidth: { xs: "100%", sm: "1800px" },
               height: "100%",
               py: { xs: 1, sm: 2 },
+              
             }}
           >
             {/* Box 3 */}
@@ -90,10 +91,10 @@ const UserLayout = () => {
                   xs: "1fr",
                   lg: "20% 80%",
                 },
-                gap: {
-                  xs: 0,
-                  lg: "2%",
-                },
+                // gap: {
+                //   xs: 0,
+                //   lg: "2%",
+                // },
                 alignItems: "start",
               }}
             >
@@ -137,7 +138,7 @@ const UserLayout = () => {
                   minWidth: 0,
                   height: "100%",
                   overflowY: "auto",
-                  pb: 5,
+                  pb: 4,
                   display: "flex",
                   justifyContent: "center",
                   alignItems: "flex-start",
@@ -148,6 +149,7 @@ const UserLayout = () => {
                     width: "100%",
                     maxWidth: { xs: "100%", sm: "1400px" },
                     p: { xs: 1, sm: 2, md: 3 },
+
                   }}
                 >
                   <Outlet />
