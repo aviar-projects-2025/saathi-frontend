@@ -78,6 +78,7 @@ export default function RideCard({ ride }) {
     setRequestData({ seatsRequested: 1, phone: "", message: "", membersCount: 1, members: [{ name: "", age: "" }] });
   };
 
+
   const handleMembersCountChange = (value) => {
     let count = Number(value);
     if (!count || count < 1) count = 1;
@@ -129,7 +130,13 @@ export default function RideCard({ ride }) {
     updatedMembers[index][field] = value;
     setRequestData({ ...requestData, members: updatedMembers });
   };
+  const myRequest = myRequestedRides.find(
+    (item) => item.rideId === ride._id
+  );
+  console.log("myRequestbm./", ride._id)
 
+  const isRejected = myRequest?.status === "REJECTED";
+  console.log("isdfghj", isRejected)
   const handleRequestSubmit = async () => {
     if (!selectedRide) return;
 
@@ -245,6 +252,9 @@ export default function RideCard({ ride }) {
     ? null
     : Math.max(Number(ride.availableSeats || 0) - requestedByMe, 0);
 
+
+
+  const noSeats = !isFlight && remainingSeatsForUser <= 0;
   const maxSeatsForDialog = isFlight
     ? Infinity
     : alreadyRequested
@@ -353,22 +363,48 @@ export default function RideCard({ ride }) {
               </Box>
             </Box>
           </Box>
-
+          {console.log("myReqynn,", myRequestedRides.map((item) => item.status === "REJECTED"))}
           {/* Mode chip */}
           <Chip
-            icon={isFlight
-              ? <FlightTakeoffIcon sx={{ fontSize: { xs: 10, sm: 14 } }} />
-              : travelIcons[ride.modeOfTravel]}
-            label={isFlight ? "Flight Companion" : "Ride Available"}
+            icon={
+              isFlight
+                ? <FlightTakeoffIcon sx={{ fontSize: { xs: 10, sm: 14 } }} />
+                : travelIcons[ride.modeOfTravel]
+            }
+            label={
+              isFlight
+                ? "Flight Companion"
+                : isRejected
+                  ? "Rejected"
+                  : noSeats
+                    ? "No Seats"
+                    : "Ride Available"
+            }
             size="small"
             sx={{
-              bgcolor: isFlight ? "#EAF2FF" : "#E8F5E9",
-              color: isFlight ? "#1A3C5E" : "#2D6A4F",
+              bgcolor: isRejected
+                ? "#FDECEA"
+                : noSeats
+                  ? "#FFF3E0"
+                  : isFlight
+                    ? "#EAF2FF"
+                    : "#E8F5E9",
+
+              color: isRejected
+                ? "#D32F2F"
+                : noSeats
+                  ? "#EF6C00"
+                  : isFlight
+                    ? "#1A3C5E"
+                    : "#2D6A4F",
+
               fontWeight: 700,
               fontSize: { xs: "0.58rem", sm: "0.7rem" },
               height: { xs: 22, sm: 26 },
               flexShrink: 0,
-              "& .MuiChip-label": { px: { xs: 0.75, sm: 1.25 } },
+              "& .MuiChip-label": {
+                px: { xs: 0.75, sm: 1.25 },
+              },
             }}
           />
         </Box>
@@ -509,6 +545,7 @@ export default function RideCard({ ride }) {
                       <Box component="span">
                         <Button
                           disabled={
+                            isRejected ||
                             !isProfileComplete ||
                             (!isFlight && !alreadyRequested && remainingSeatsForUser <= 0)
                           }
@@ -518,10 +555,15 @@ export default function RideCard({ ride }) {
                             setOpenEditModal(true);
                           }}
                           sx={{
-                            bgcolor: ORANGE,
+                            bgcolor: isRejected ? "#D32F2F" : ORANGE,
                             color: "#ffffff",
-                            "&:hover": { bgcolor: "#e68a00" },
-                            "&.Mui-disabled": { bgcolor: "#e0e0e0" },
+                            "&:hover": {
+                              bgcolor: isRejected ? "#D32F2F" : "#e68a00",
+                            },
+                            "&.Mui-disabled": {
+                              bgcolor: isRejected ? "#EF9A9A" : "#e0e0e0",
+                              color: "#ffffff",
+                            },
                             fontWeight: 700,
                             fontSize: { xs: "0.7rem", sm: "0.875rem" },
                             px: { xs: 1.2, sm: 3 },
@@ -532,15 +574,17 @@ export default function RideCard({ ride }) {
                             textTransform: "none",
                           }}
                         >
-                          {alreadyRequested
-                            ? remainingSeatsForUser > 0
-                              ? `Edit Request (${remainingSeatsForUser} left)`
-                              : "Edit Your Request"
-                            : isFlight
-                              ? "Request Companion"
-                              : remainingSeatsForUser > 0
-                                ? `Request Seat (${remainingSeatsForUser} left)`
-                                : "No Seats Available"}
+                          {isRejected
+                            ? "Rejected"
+                            : alreadyRequested
+                              ? remainingSeatsForUser > 0
+                                ? `Edit Request (${remainingSeatsForUser} left)`
+                                : "Edit Your Request"
+                              : isFlight
+                                ? "Request Companion"
+                                : remainingSeatsForUser > 0
+                                  ? `Request Seat (${remainingSeatsForUser} left)`
+                                  : "No Seats Available"}
                         </Button>
                         {/* <Button
                     variant="contained"
