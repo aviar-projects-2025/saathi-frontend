@@ -55,6 +55,7 @@ const RequestRide = () => {
             const res = await axios.get(`${Api}/bookride/send/${user.id}`);
             const requestUser = res.data.data.map((item) => item.members)
             setUserData(requestUser);
+
             setAllMyRequests(res.data?.data || []);
         } catch (error) {
             console.error("Error fetching requests:", error);
@@ -77,7 +78,6 @@ const RequestRide = () => {
         setOpenCancelDialog(false);
         setSelectedRequest(null);
         try {
-            console.log("requestId", requestId)
             await axios.delete(`${Api}/bookride/${requestId}`);
             setAllMyRequests((prev) =>
                 prev.filter((request) => request._id !== requestId)
@@ -450,10 +450,13 @@ const RequestRide = () => {
                     open={openEditModal}
                     onClose={() => setOpenEditModal(false)}
                     ride={selectedRide}
+                    setAllMyRequests={setAllMyRequests}
+                    allMyRequests={allMyRequests}
                     maxSeats={selectedRide?.availableSeats ?? Infinity}
-                    onSuccess={fetchAllSends}
+                    // onSuccess={fetchAllSends}
                     requestToEdit={selectedRequest}
                 />
+                {console.log("allMyRequests123", allMyRequests)}
             </Box>
         </PageLayout>
     )
