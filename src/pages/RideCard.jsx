@@ -133,10 +133,10 @@ export default function RideCard({ ride }) {
   const myRequest = myRequestedRides.find(
     (item) => item.rideId === ride._id
   );
-  console.log("myRequestbm./", ride._id)
+
 
   const isRejected = myRequest?.status === "REJECTED";
-  console.log("isdfghj", isRejected)
+
   const handleRequestSubmit = async () => {
     if (!selectedRide) return;
 
@@ -363,7 +363,7 @@ export default function RideCard({ ride }) {
               </Box>
             </Box>
           </Box>
-          {console.log("myReqynn,", myRequestedRides.map((item) => item.status === "REJECTED"))}
+
           {/* Mode chip */}
           <Chip
             icon={
