@@ -13,6 +13,7 @@ import AddCircleOutlineIcon from "@mui/icons-material/Add";
 import { Chip, Stack, Avatar } from "@mui/material";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import RemoveCircle from "@mui/icons-material/RemoveCircle";
+import ToastConfig from "../components/ToastConfig";
 
 const ORANGE = "#FF9933";
 const ORANGE_DIVIDER = "rgba(255,153,51,0.2)";
@@ -27,6 +28,11 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, req
   const isFlight = ride?.modeOfTravel === "Flight";
   const isEditMode = Boolean(requestToEdit);
   const [requests, setRequests] = useState();
+
+  // const theme = useTheme();
+  const isTab = useMediaQuery(theme.breakpoints.down("sm"));
+
+  const TOASTS = ToastConfig();
 
 
   const handleAddMember = () => {
@@ -154,12 +160,24 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, req
 
     } catch (error) {
       console.log(error);
-      toast.error(error.response?.data?.message || "Request failed");
+      toast.error(error.response?.data?.message || "Request failed", TOASTS);
     }
   };
 
 
 
+  //   if (seats < 1) return;
+
+  //   if (seats > maxSeats) {
+  //     toast.warning(`Only ${maxSeats} seat(s) available`, TOASTS);
+  //     return;
+  //   }
+
+  //   setRequestData((prev) => ({
+  //     ...prev,
+  //     seatsRequested: seats,
+  //   }));
+  // };
   const handleMembersCountChange = (value) => {
     if (value === "") {
       setRequestData((prev) => ({
@@ -176,7 +194,7 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, req
     if (count < 1) return;
 
     if (count > limit) {
-      toast.warning(`Maximum ${limit} member(s) allowed`);
+      toast.warning(`Maximum ${limit} member(s) allowed`, TOASTS);
       return;
     }
 
@@ -194,12 +212,12 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, req
 
   const validate = () => {
     if (!isFlight && Number(requestData.seatsRequested) > maxSeats) {
-      toast.error(`Only ${maxSeats} seat(s) available`);
+      toast.error(`Only ${maxSeats} seat(s) available`, TOASTS);
       return false;
     }
 
     if (!isFlight && Number(requestData.membersCount) > maxSeats) {
-      toast.error(`Only ${maxSeats} member(s) allowed`);
+      toast.error(`Only ${maxSeats} member(s) allowed`, TOASTS);
       return false;
     }
 
@@ -207,11 +225,11 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, req
 
     for (let i = 0; i < requestData.members.length; i++) {
       if (!requestData.members[i].name.trim()) {
-        toast.error(`Please enter Member ${i + 1} name`);
+        toast.error(`Please enter Member ${i + 1} name`, TOASTS);
         return false;
       }
       if (!requestData.members[i].age) {
-        toast.error(`Please enter Member ${i + 1} age`);
+        toast.error(`Please enter Member ${i + 1} age`, TOASTS);
         return false;
       }
     }
@@ -242,32 +260,27 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, req
         ? await axios.put(`${Api}/bookride/edit/${requestToEdit._id}`, payload)
         : await axios.post(`${Api}/bookride/${ride._id}`, payload);
 
-      toast.success(
-        res.data.message ||
-        (isEditMode ? "Request updated" : "Request sent")
-      );
-
-   const updatedRequest = res.data.data;
-
-setAllMyRequests((prev) => {
-  if (isEditMode) {
-    // Update existing request
-    return prev.map((item) =>
-      item._id === updatedRequest._id
-        ? { ...item, ...updatedRequest }
-        : item
-    );
-  }
-
-  // Add newly created request
-  return [...prev, updatedRequest];
-});
+      toast.success(res.data.message || (isEditMode ? "Request updated" : "Request sent"), {
+        position: isTab ? "top-center" : "top-right",
+        autoClose: 2000,
+        hideProgressBar: true,
+        closeButton: false,
+        style: {
+          width: isTab ? "90vw" : "360px",
+          maxWidth: isTab ? "320px" : "360px",
+          fontSize: isTab ? "13px" : "15px",
+          padding: isTab ? "8px 12px" : "12px 16px",
+          borderRadius: isTab ? "8px" : "10px",
+          minHeight: isTab ? "42px" : "52px",
+          margin: "0 auto",
+        },
+      });
 
       setRequestData(emptyRequestData);
       onClose?.();
     } catch (error) {
       console.log(error);
-      toast.error(error.response?.data?.message || "Request failed");
+      toast.error(error.response?.data?.message || "Request failed", TOASTS);
     }
   };
 

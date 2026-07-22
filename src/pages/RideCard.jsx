@@ -31,6 +31,7 @@ import FlightIcon from "@mui/icons-material/Flight";
 import DirectionsBoatIcon from "@mui/icons-material/DirectionsBoat";
 import TrainIcon from "@mui/icons-material/Train";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import ToastConfig from "../components/ToastConfig.jsx";
 
 import Api from "../Api";
 import { toast } from "react-toastify";
@@ -39,6 +40,8 @@ const ORANGE = "#FF9933";
 const ORANGE_BG = "#FFF9F2";
 const ORANGE_BORDER = "rgba(255,153,51,0.25)";
 const ORANGE_DIVIDER = "rgba(255,153,51,0.2)";
+
+
 
 export default function RideCard({ ride }) {
   const [expanded, setExpanded] = useState(false);
@@ -57,6 +60,12 @@ export default function RideCard({ ride }) {
     membersCount: 1,
     members: [{ name: "", age: "" }],
   });
+
+  // const theme = useTheme();
+  const isTab = useMediaQuery(theme.breakpoints.down("sm"));
+
+
+  const TOASTS = ToastConfig();
 
   const user = ride?.createdBy || {};
   const isFlight = ride?.modeOfTravel === "Flight";
@@ -82,7 +91,7 @@ export default function RideCard({ ride }) {
   const handleMembersCountChange = (value) => {
     let count = Number(value);
     if (!count || count < 1) count = 1;
-    if (!isFlight && count > maxSeats) { count = maxSeats; toast.warning(`Only ${maxSeats} seat(s) available`); }
+    if (!isFlight && count > maxSeats) { count = maxSeats; toast.warning(`Only ${maxSeats} seat(s) available`, TOASTS); }
     setRequestData((prev) => ({
       ...prev, membersCount: count,
       seatsRequested: isFlight ? prev.seatsRequested : count,
@@ -118,7 +127,7 @@ export default function RideCard({ ride }) {
   const handleSeatsChange = (value) => {
     let seats = Number(value);
     if (!seats || seats < 1) seats = 1;
-    if (seats > maxSeats) { seats = maxSeats; toast.warning(`Only ${maxSeats} seat(s) available`); }
+    if (seats > maxSeats) { seats = maxSeats; toast.warning(`Only ${maxSeats} seat(s) available`, TOASTS); }
     setRequestData((prev) => ({
       ...prev, seatsRequested: seats, membersCount: seats,
       members: Array.from({ length: seats }, (_, i) => prev.members[i] || { name: "", age: "" }),
@@ -141,33 +150,33 @@ export default function RideCard({ ride }) {
     if (!selectedRide) return;
 
     if (!isFlight && Number(requestData.seatsRequested) > maxSeats) {
-      toast.error(`Only ${maxSeats} seat(s) available`);
+      toast.error(`Only ${maxSeats} seat(s) available`, TOASTS);
       return;
     }
 
     if (!isFlight && Number(requestData.membersCount) > maxSeats) {
-      toast.error(`Only ${maxSeats} member(s) allowed`);
+      toast.error(`Only ${maxSeats} member(s) allowed`, TOASTS);
       return;
     }
 
     if (!requestData.phone.trim()) {
-      toast.error("Please enter phone number");
+      toast.error("Please enter phone number", TOASTS);
       return;
     }
 
     if (!/^[6-9]\d{9}$/.test(requestData.phone)) {
-      toast.error("Enter valid 10 digit phone number");
+      toast.error("Enter valid 10 digit phone number", TOASTS);
       return;
     }
 
     for (let i = 0; i < requestData.members.length; i++) {
       if (!requestData.members[i].name.trim()) {
-        toast.error(`Please enter Member ${i + 1} name`);
+        toast.error(`Please enter Member ${i + 1} name`, TOASTS);
         return;
       }
 
       if (!requestData.members[i].age) {
-        toast.error(`Please enter Member ${i + 1} age`);
+        toast.error(`Please enter Member ${i + 1} age`, TOASTS);
         return;
       }
     }
@@ -189,7 +198,21 @@ export default function RideCard({ ride }) {
         payload
       );
 
-      toast.success(res.data.message);
+      toast.success(res.data.message, {
+        position: isTab ? "top-center" : "top-right",
+        autoClose: 2000,
+        hideProgressBar: true,
+        closeButton: false,
+        style: {
+          width: isTab ? "90vw" : "360px",
+          maxWidth: isTab ? "320px" : "360px",
+          fontSize: isTab ? "13px" : "15px",
+          padding: isTab ? "8px 12px" : "12px 16px",
+          borderRadius: isTab ? "8px" : "10px",
+          minHeight: isTab ? "42px" : "52px",
+          margin: "0 auto",
+        },
+      });
 
       setOpenRequestModal(false);
       resetRequestData();
@@ -198,8 +221,7 @@ export default function RideCard({ ride }) {
       console.log(error);
 
       toast.error(
-        error.response?.data?.message || "Request failed"
-      );
+        error.response?.data?.message || "Request failed", TOASTS);
     }
   };
 

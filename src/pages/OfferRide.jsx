@@ -50,6 +50,8 @@ import PageLayout from "../components/PageLayout";
 import axios from "axios";
 import Api from "../Api";
 import { toast } from "react-toastify";
+import ToastConfig from "../components/ToastConfig";
+
 
 /* ──────────────── THEME TOKENS ──────────────── */
 // Saffron accent — swap these two if you ever want to re-theme.
@@ -200,33 +202,37 @@ export default function OfferRide() {
 
   const update = (key, val) => setForm((prev) => ({ ...prev, [key]: val }));
 
+  const isTab = useMediaQuery(theme.breakpoints.down("sm"));
+
+  const TOASTS = ToastConfig();
+
   /* ──────────────── VALIDATION (unchanged logic) ──────────────── */
   const validateStep = () => {
     setShowErrors(true);
 
     if (step === 0) {
       if (!form.modeOfTravel) {
-        toast.error("Please select mode of travel");
+        toast.error("Please select mode of travel", TOASTS);
         return false;
       }
       if (isFlight) {
-        if (!form.fromCountry.trim()) { toast.error("Please enter From Country"); return false; }
-        if (!form.fromAirport.trim()) { toast.error("Please enter From Airport"); return false; }
-        if (!form.toCountry.trim()) { toast.error("Please enter To Country"); return false; }
-        if (!form.toAirport.trim()) { toast.error("Please enter To Airport"); return false; }
-        if (!form.flightNumber.trim()) { toast.error("Please enter Flight Number"); return false; }
-        if (!form.airlineName.trim()) { toast.error("Please enter Airline Name"); return false; }
+        if (!form.fromCountry.trim()) { toast.error("Please enter From Country", TOASTS); return false; }
+        if (!form.fromAirport.trim()) { toast.error("Please enter From Airport", TOASTS); return false; }
+        if (!form.toCountry.trim()) { toast.error("Please enter To Country", TOASTS); return false; }
+        if (!form.toAirport.trim()) { toast.error("Please enter To Airport", TOASTS); return false; }
+        if (!form.flightNumber.trim()) { toast.error("Please enter Flight Number", TOASTS); return false; }
+        if (!form.airlineName.trim()) { toast.error("Please enter Airline Name", TOASTS); return false; }
       } else {
-        if (!form.from.trim()) { toast.error("Please enter From location"); return false; }
-        if (!form.destination.trim()) { toast.error("Please enter Destination"); return false; }
+        if (!form.from.trim()) { toast.error("Please enter From location", TOASTS); return false; }
+        if (!form.destination.trim()) { toast.error("Please enter Destination", TOASTS); return false; }
       }
       if (!form.date) {
-        toast.error("Please select Date");
+        toast.error("Please select Date", TOASTS);
         return false;
       }
 
       if (!form.time) {
-        toast.error("Please select Time");
+        toast.error("Please select Time", TOASTS);
         return false;
       }
 
@@ -235,7 +241,7 @@ export default function OfferRide() {
 
 
       if (selectedDateTime <= now) {
-        toast.error("Please select a future date and time");
+        toast.error("Please select a future date and time", TOASTS);
         return false;
       }
 
@@ -246,38 +252,38 @@ export default function OfferRide() {
         minimumAllowedTime.setHours(minimumAllowedTime.getHours() + 3);
 
         if (selectedDateTime < minimumAllowedTime) {
-          toast.error("Flight departure must be at least 3 hours from now.");
+          toast.error("Flight departure must be at least 3 hours from now.", TOASTS);
           return false;
         }
       } else {
         minimumAllowedTime.setHours(minimumAllowedTime.getHours() + 1);
 
         if (selectedDateTime < minimumAllowedTime) {
-          toast.error("Ride start time must be at least 1 hour from now.");
+          toast.error("Ride start time must be at least 1 hour from now.", TOASTS);
           return false;
         }
       }
 
-      if (!form.description.trim()) { toast.error("Please enter Description"); return false; }
-      if (!form.duration.trim()) { toast.error("Please enter Journey Duration"); return false; }
+      if (!form.description.trim()) { toast.error("Please enter Description", TOASTS); return false; }
+      if (!form.duration.trim()) { toast.error("Please enter Journey Duration", TOASTS); return false; }
     }
 
     if (step === 1) {
-      if (!form.genderPreference) { toast.error("Please select Gender Preference"); return false; }
+      if (!form.genderPreference) { toast.error("Please select Gender Preference", TOASTS); return false; }
       if (isFlight) {
-        if (!form.travellerType) { toast.error("Please select Traveller Type"); return false; }
+        if (!form.travellerType) { toast.error("Please select Traveller Type", TOASTS); return false; }
         if (!form.language || form.language.length === 0) {
-          toast.error("Select at least one language");
+          toast.error("Select at least one language", TOASTS);
           return false;
         }
       } else {
         if (form.availableSeats < 1) {
-          toast.error("Available seats should be at least 1");
+          toast.error("Available seats should be at least 1", TOASTS);
           return false;
         }
 
         if (form.fuelSharing && !form.price) {
-          toast.error("Enter Split Amount");
+          toast.error("Enter Split Amount", TOASTS);
           return false;
         }
 
@@ -331,14 +337,40 @@ export default function OfferRide() {
       setIsSubmitted(true);
       await axios.post(`${Api}/rides/`, payload);
 
-      toast.success("Ride Created Successfully...!");
+      toast.success("Ride Created Successfully...!", {
+        position: isTab ? "top-center" : "top-right",
+        autoClose: 2000,
+        hideProgressBar: true,
+        closeButton: false,
+        style: {
+          width: isTab ? "90vw" : "360px",
+          maxWidth: isTab ? "320px" : "360px",
+          fontSize: isTab ? "13px" : "15px",
+          padding: isTab ? "8px 12px" : "12px 16px",
+          borderRadius: isTab ? "8px" : "10px",
+          minHeight: isTab ? "42px" : "52px",
+          margin: "0 auto",
+        },
+      });
       refreshRides();
       setStep(0);
       formReset();
       setSubmitted(true);
       setShowErrors(false);
     } catch (error) {
-      toast.error(error.response?.data?.message || error.message);
+      toast.error(error.response?.data?.message || error.message, {
+        position: isTab ? "top-center" : "top-right",
+        autoClose: 3000,
+        hideProgressBar: true,
+        closeButton: false,
+        style: {
+          width: isTab ? "280px" : "360px",
+          fontSize: isTab ? "13px" : "15px",
+          padding: isTab ? "8px 12px" : "12px 16px",
+          borderRadius: isTab ? "8px" : "10px",
+          minHeight: isTab ? "42px" : "52px",
+        },
+      });
     } finally {
       setIsSubmitted(false);
     }

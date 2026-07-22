@@ -4,6 +4,8 @@ import { toast } from "react-toastify";
 import socket from "../socket";
 import axios from "axios";
 import Api from "../Api";
+import { useTheme, useMediaQuery } from '@mui/material';
+import ToastConfig from "../components/ToastConfig";
 
 const NotificationContext = createContext();
 
@@ -14,12 +16,17 @@ export const NotificationProvider = ({ children }) => {
     const user = JSON.parse(localStorage.getItem('user'))
     const [tabNotification, setTabNotification] = useState([]);
 
+    const toasts = ToastConfig();
+
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
     const fetchNotifications = async () => {
         try {
             const res = await axios.get(Api + `/notification/${user.id}/`)
             setTabNotification(res?.data?.data)
         } catch (error) {
-            toast.error(error.message)
+            toast.error(error.message, toasts);
             console.log(error)
         }
     }
@@ -55,7 +62,7 @@ export const NotificationProvider = ({ children }) => {
             setNotifications((prev) => [newNotification, ...prev]);
             setTabNotification((prev) => [newNotification, ...prev]);
 
-            toast.info(message || "New notification");
+            toast.info(message || "New notification", toasts);
         };
 
         socket.on("notification", handleEvent);

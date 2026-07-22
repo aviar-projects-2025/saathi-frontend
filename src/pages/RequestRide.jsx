@@ -6,7 +6,7 @@ import {
     TextField, IconButton, Stack, FormControl, Grid,
     InputLabel, Select, MenuItem, FormControlLabel, Switch, Slider,
     CircularProgress, Card, CardContent, Divider, useMediaQuery, DialogContentText,
-    Badge, Collapse, Avatar
+    Badge, Collapse, Avatar, useTheme
 } from '@mui/material';
 import axios from 'axios';
 import Api from '../Api';
@@ -21,6 +21,8 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import PageLayout from '../components/PageLayout';
+import { toast } from "react-toastify";
+import ToastConfig from '../components/ToastConfig.jsx';
 
 const RequestRide = () => {
     const [loadingRequests, setLoadingRequests] = useState(true);
@@ -33,7 +35,12 @@ const RequestRide = () => {
     const [anchorEl, setAnchorEl] = useState(null);
     const user = JSON.parse(localStorage.getItem('user'));
 
+    const toasts = ToastConfig();
+
     const { refreshRide } = useRide();
+
+    const theme = useTheme();
+    const isTab = useMediaQuery(theme.breakpoints.down("sm"));
 
     useEffect(() => {
         fetchAllSends();
@@ -78,15 +85,14 @@ const RequestRide = () => {
             setAllMyRequests((prev) =>
                 prev.filter((request) => request._id !== requestId)
             );
-            toast.success("Ride request deleted successfully");
+            toast.success("Ride request deleted successfully", toasts);
 
 
             fetchAllSends();
         } catch (error) {
             console.error(error);
             toast.error(
-                error.response?.data?.message || "Failed to delete ride request"
-            );
+                error.response?.data?.message || "Failed to delete ride request", toasts);
         }
     };
 

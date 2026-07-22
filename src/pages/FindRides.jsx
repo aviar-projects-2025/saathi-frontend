@@ -308,7 +308,7 @@ export default function FindRides() {
   }
 
   return (
-  
+
     <Box
       sx={{
         height: `calc(100vh - ${NAVBAR_HEIGHT}px)`,
@@ -318,10 +318,10 @@ export default function FindRides() {
         // maxWidth: { xs: "100%" },
         boxSizing: "border-box",
         overflowX: "hidden",
-        p:1
+        p: 1
       }}
     >
-   
+
       <Box
         sx={{
           position: "sticky",
@@ -381,12 +381,15 @@ export default function FindRides() {
                 }}
                 sx={{
                   flex: 1,
+                  minWidth: 0,
                   "& .MuiOutlinedInput-root": {
-                    borderRadius: "50px",
-                    background: "#fff",
-                    "& fieldset": {
-                      border: "none",
-                    },
+                    borderRadius: "12px",
+                    background: "rgba(255,255,255,0.96)",
+                    fontSize: { xs: "0.65rem", sm: "0.84rem" },
+                    height: { xs: 32, sm: 40 },
+                    "& fieldset": { border: "none" },
+                    "& input": { py: 0, px: { xs: 1, sm: 1 } },
+                    "& .MuiInputAdornment-root": { ml: { xs: 0.75, sm: 1 }, mr: { xs: 0.25, sm: 0.5 } },
                   },
                 }}
               />
@@ -403,7 +406,7 @@ export default function FindRides() {
               {/* From */}
               <TextField
                 size="small"
-                placeholder={isMobile ? "From" : " From / City / Airport"}
+                placeholder={isMobile ? "From" : "From / City / Airport"}
                 value={searchFrom}
                 onChange={(e) => setSearchFrom(e.target.value)}
                 InputProps={{
@@ -419,9 +422,8 @@ export default function FindRides() {
                   "& .MuiOutlinedInput-root": {
                     borderRadius: "12px",
                     background: "rgba(255,255,255,0.96)",
-                    fontSize: { xs: "0.7rem", sm: "0.84rem" },
+                    fontSize: { xs: "0.65rem", sm: "0.84rem" },
                     height: { xs: 34, sm: 40 },
-                    pr: 0.5,
                     "& fieldset": { border: "none" },
                     "& input": { py: 0, px: { xs: 1, sm: 1 } },
                     "& .MuiInputAdornment-root": { ml: { xs: 0.75, sm: 1 }, mr: { xs: 0.25, sm: 0.5 } },
@@ -432,13 +434,13 @@ export default function FindRides() {
               {/* To */}
               <TextField
                 size="small"
-                placeholder={isMobile ? "To" : " To / City / Airport"}
+                placeholder={isMobile ? "To" : "To / City / Airport"}
                 value={searchDestination}
                 onChange={(e) => setSearchDestination(e.target.value)}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <SearchIcon sx={{ color: saffron[500], fontSize: { xs: 14, sm: 17 } }} />
+                      <SearchIcon sx={{ color: saffron[500], fontSize: { xs: 12, sm: 17 } }} />
                     </InputAdornment>
                   ),
                 }}
@@ -448,7 +450,7 @@ export default function FindRides() {
                   "& .MuiOutlinedInput-root": {
                     borderRadius: "12px",
                     background: "rgba(255,255,255,0.96)",
-                    fontSize: { xs: "0.7rem", sm: "0.84rem" },
+                    fontSize: { xs: "0.65rem", sm: "0.84rem" },
                     height: { xs: 34, sm: 40 },
                     pr: 0.5,
                     "& fieldset": { border: "none" },
