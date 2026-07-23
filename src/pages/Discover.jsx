@@ -70,16 +70,14 @@ const Discover = () => {
         const fetchTopRiders = async () => {
             try {
                 setLoading(true);
-                console.log("@@@@@@@@")
-                const res = await axios.get(`${Api}/users/top-riders?limit=`);
-                console.log("resvbnm",res)
+
+                const res = await axios.get(`${Api}/users/top-riders`);
                 const riders = res.data?.data || [];
-  
                 const formatted = riders.map((rider, index) => ({
                     name: `${rider.firstName} ${rider.lastName}`,
                     initials: getInitials(rider.firstName, rider.lastName),
                     rides: rider.completedRideCount,
-                    city: rider.city || "",
+                    // city: rider.city || "",
                     badge: getBadge(index),
                     verified: rider.isVerified,
                 }));
@@ -101,10 +99,11 @@ const Discover = () => {
             pb: { xs: 4, sm: 0 },
             width: "100%",
             boxSizing: "border-box",
-            maxWidth: { xs: '100%', sm: 0 },
+            width: "100%",
+            // maxWidth: { xs: '100%', sm: 0 },
             px: { xs: 1, sm: 0 }
         }}>
-            <Grid sx={{ mt: 3 }}>
+            <Grid container spacing={2} sx={{ mt: 3 }}>
 
                 {/* TOP MEMBERS */}
                 <Grid item xs={12} md={7} sx={{ mb: 3 }}>
