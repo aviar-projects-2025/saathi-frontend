@@ -70,7 +70,7 @@ const Discover = () => (
             containerType: "inline-size",
             containerName: CQ,
             minHeight: "100vh",
-            pb: 3,
+            // pb: 3,
             px: 1.5,
             width: "100%",
             boxSizing: "border-box",
@@ -82,7 +82,7 @@ const Discover = () => (
                 display: "flex",
                 flexDirection: "column",
                 gap: 2,
-                mt: 1,
+                // mt: 1,
                 [cq(700)]: { gap: 3, mt: 3 },
                 [cq(800)]: { flexDirection: "row", alignItems: "flex-start" },
             }}
