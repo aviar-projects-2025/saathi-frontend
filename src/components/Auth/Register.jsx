@@ -24,9 +24,13 @@ import Saathi from '../../assets/saathilogo.png';
 import { IconButton, InputAdornment } from "@mui/material";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import ToastConfig from "../ToastConfig";
 
 const Register = () => {
   const navigate = useNavigate();
+
+  const toasts = ToastConfig();
+
   const [serverError, setServerError] = useState("");
   const [searchParams] = useSearchParams();
   const referralFromUrl = searchParams.get("ref") || "";
@@ -59,19 +63,7 @@ const Register = () => {
       setServerError("");
 
       const res = await axios.post(`${Api}/users/`, values);
-      toast.success("Registration Success - Waiting for approval!", {
-        position: isTab ? "top-center" : "top-right",
-        autoClose: 1000,
-        hideProgressBar: true,
-        closeButton: false,
-        style: {
-          width: isTab ? "280px" : "360px",
-          fontSize: isTab ? "13px" : "15px",
-          padding: isTab ? "8px 12px" : "12px 16px",
-          borderRadius: isTab ? "8px" : "10px",
-          minHeight: isTab ? "42px" : "52px",
-        },
-      });
+      toast.success("Registration Success - Waiting for approval!", toasts);
 
       if (res?.data?.data?.refApprove === "Waiting") {
         navigate("/waiting-approval");

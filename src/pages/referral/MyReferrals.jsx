@@ -15,6 +15,7 @@ import {
     CircularProgress,
     IconButton,
     Tooltip,
+    useTheme, useMediaQuery
 } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
@@ -25,6 +26,7 @@ import Api from "../../Api";
 import { toast } from "react-toastify";
 import { useNotifications } from "../../context/NotificationContext";
 import { useReferral } from "../../context/ReferralContext";
+import ToastConfig from "../../components/ToastConfig";
 
 const MyReferrals = () => {
     const handleOpenShare = () => setOpenShare(true);
@@ -36,6 +38,11 @@ const MyReferrals = () => {
     const [loading, setLoading] = useState(false);
     const { notifications } = useNotifications()
     const { getPendingReferralCount } = useReferral();
+
+    const toasts = ToastConfig();
+
+    const theme = useTheme();
+    const isTab = useMediaQuery(theme.breakpoints.down("sm"));
 
 
 
@@ -73,7 +80,7 @@ const MyReferrals = () => {
             setApprovedReferrals(approved);
             getPendingReferralCount()
         } catch (error) {
-            toast.error(error.message);
+            toast.error(error.message, toasts);
         } finally {
             setLoading(false);
         }
@@ -88,11 +95,11 @@ const MyReferrals = () => {
         if (!confirmed) return;
         try {
             await axios.patch(Api + `/referrals/${id}`, { refApprove: "Approved" });
-            toast.success("Referral approved");
+            toast.success("Referral approved", toasts);
             getReferrals();
             getPendingReferralCount()
         } catch (error) {
-            toast.error(error.response?.data?.message || error.message);
+            toast.error(error.response?.data?.message || error.message, toasts);
         }
     };
 
@@ -213,7 +220,7 @@ const MyReferrals = () => {
                                             url: shareLink,
                                         });
                                     } else {
-                                        toast.info("Sharing not supported on this device");
+                                        toast.info("Sharing not supported on this device", toasts);
                                     }
                                 }}
                             >

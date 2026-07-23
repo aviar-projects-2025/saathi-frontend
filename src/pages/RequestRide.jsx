@@ -6,7 +6,7 @@ import {
     TextField, IconButton, Stack, FormControl, Grid,
     InputLabel, Select, MenuItem, FormControlLabel, Switch, Slider,
     CircularProgress, Card, CardContent, Divider, useMediaQuery, DialogContentText,
-    Badge, Collapse, Avatar
+    Badge, Collapse, Avatar, useTheme
 } from '@mui/material';
 import axios from 'axios';
 import Api from '../Api';
@@ -21,6 +21,8 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import PageLayout from '../components/PageLayout';
+import { toast } from "react-toastify";
+import ToastConfig from '../components/ToastConfig.jsx';
 
 const RequestRide = () => {
     const [loadingRequests, setLoadingRequests] = useState(true);
@@ -33,7 +35,12 @@ const RequestRide = () => {
     const [anchorEl, setAnchorEl] = useState(null);
     const user = JSON.parse(localStorage.getItem('user'));
 
+    const toasts = ToastConfig();
+
     const { refreshRide } = useRide();
+
+    const theme = useTheme();
+    const isTab = useMediaQuery(theme.breakpoints.down("sm"));
 
     useEffect(() => {
         fetchAllSends();
@@ -45,20 +52,21 @@ const RequestRide = () => {
 
     async function fetchAllSends() {
         try {
-        
+
             if (!user?.id) return;
-                setLoadingRequests(true);
+            setLoadingRequests(true);
             const res = await axios.get(`${Api}/bookride/send/${user.id}`);
             const requestUser = res.data.data.map((item) => item.members)
             setUserData(requestUser);
+
             setAllMyRequests(res.data?.data || []);
         } catch (error) {
             console.error("Error fetching requests:", error);
             setAllMyRequests([]);
-        }finally {
-    setLoadingRequests(false);
+        } finally {
+            setLoadingRequests(false);
+        }
     }
-}
     const handleMenuOpen = (event, post) => {
         setAnchorEl(event.currentTarget);
         setSelectedPost(post);
@@ -73,20 +81,18 @@ const RequestRide = () => {
         setOpenCancelDialog(false);
         setSelectedRequest(null);
         try {
-            console.log("requestId", requestId)
             await axios.delete(`${Api}/bookride/${requestId}`);
             setAllMyRequests((prev) =>
                 prev.filter((request) => request._id !== requestId)
             );
-            toast.success("Ride request deleted successfully");
+            toast.success("Ride request deleted successfully", toasts);
 
 
             fetchAllSends();
         } catch (error) {
             console.error(error);
             toast.error(
-                error.response?.data?.message || "Failed to delete ride request"
-            );
+                error.response?.data?.message || "Failed to delete ride request", toasts);
         }
     };
 
@@ -130,15 +136,15 @@ const RequestRide = () => {
                 </Typography>
                 <br />
 
-            {loadingRequests ? (
-  <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-    <CircularProgress color="warning" />
-  </Box>
-) : allMyRequests.filter(req => req?.rideId).length === 0 ? (
-  <Typography textAlign="center" color="text.secondary" sx={{ mt: 4 }}>
-    No ride requests found.
-  </Typography>
-) : (
+                {loadingRequests ? (
+                    <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+                        <CircularProgress color="warning" />
+                    </Box>
+                ) : allMyRequests.filter(req => req?.rideId).length === 0 ? (
+                    <Typography textAlign="center" color="text.secondary" sx={{ mt: 4 }}>
+                        No ride requests found.
+                    </Typography>
+                ) : (
                     <>
 
                         {(() => {
@@ -419,10 +425,13 @@ const RequestRide = () => {
                     open={openEditModal}
                     onClose={() => setOpenEditModal(false)}
                     ride={selectedRide}
+                    setAllMyRequests={setAllMyRequests}
+                    allMyRequests={allMyRequests}
                     maxSeats={selectedRide?.availableSeats ?? Infinity}
-                    onSuccess={fetchAllSends}
+                    // onSuccess={fetchAllSends}
                     requestToEdit={selectedRequest}
                 />
+                {console.log("allMyRequests123", allMyRequests)}
             </Box>
         </PageLayout>
     )

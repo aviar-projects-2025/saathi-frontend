@@ -31,6 +31,7 @@ import FlightIcon from "@mui/icons-material/Flight";
 import DirectionsBoatIcon from "@mui/icons-material/DirectionsBoat";
 import TrainIcon from "@mui/icons-material/Train";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import ToastConfig from "../components/ToastConfig.jsx";
 
 import Api from "../Api";
 import { toast } from "react-toastify";
@@ -39,6 +40,8 @@ const ORANGE = "#FF9933";
 const ORANGE_BG = "#FFF9F2";
 const ORANGE_BORDER = "rgba(255,153,51,0.25)";
 const ORANGE_DIVIDER = "rgba(255,153,51,0.2)";
+
+
 
 export default function RideCard({ ride }) {
   const [expanded, setExpanded] = useState(false);
@@ -57,6 +60,12 @@ export default function RideCard({ ride }) {
     membersCount: 1,
     members: [{ name: "", age: "" }],
   });
+
+  // const theme = useTheme();
+  const isTab = useMediaQuery(theme.breakpoints.down("sm"));
+
+
+  const TOASTS = ToastConfig();
 
   const user = ride?.createdBy || {};
   const isFlight = ride?.modeOfTravel === "Flight";
@@ -78,10 +87,11 @@ export default function RideCard({ ride }) {
     setRequestData({ seatsRequested: 1, phone: "", message: "", membersCount: 1, members: [{ name: "", age: "" }] });
   };
 
+
   const handleMembersCountChange = (value) => {
     let count = Number(value);
     if (!count || count < 1) count = 1;
-    if (!isFlight && count > maxSeats) { count = maxSeats; toast.warning(`Only ${maxSeats} seat(s) available`); }
+    if (!isFlight && count > maxSeats) { count = maxSeats; toast.warning(`Only ${maxSeats} seat(s) available`, TOASTS); }
     setRequestData((prev) => ({
       ...prev, membersCount: count,
       seatsRequested: isFlight ? prev.seatsRequested : count,
@@ -90,34 +100,34 @@ export default function RideCard({ ride }) {
   };
   const { refreshRide } = useRide();
 
-  useEffect(() => {
-    fetchAllSends();
-  }, []);
+  // useEffect(() => {
+  //   fetchAllSends();
+  // }, []);
 
-  useEffect(() => {
-    fetchAllSends();
-  }, [refreshRide]);
+  // useEffect(() => {
+  //   fetchAllSends();
+  // }, [refreshRide]);
 
-  useEffect(() => {
-    myReqRides();
-  }, [refreshRide]);
-  async function fetchAllSends() {
-    try {
-      if (!user?.id) return;
+  // useEffect(() => {
+  //   myReqRides();
+  // }, [refreshRide]);
+  // async function fetchAllSends() {
+  //   try {
+  //     if (!user?.id) return;
 
-      const res = await axios.get(`${Api}/bookride/send/${user.id}`);
-      const requestUser = res.data.data.map((item) => item.members)
-      setUserData(requestUser);
-      setAllMyRequests(res.data?.data || []);
-    } catch (error) {
-      console.error("Error fetching requests:", error);
-      setAllMyRequests([]);
-    }
-  }
+  //     const res = await axios.get(`${Api}/bookride/send/${user.id}`);
+  //     const requestUser = res.data.data.map((item) => item.members)
+  //     setUserData(requestUser);
+  //     setAllMyRequests(res.data?.data || []);
+  //   } catch (error) {
+  //     console.error("Error fetching requests:", error);
+  //     setAllMyRequests([]);
+  //   }
+  // }
   const handleSeatsChange = (value) => {
     let seats = Number(value);
     if (!seats || seats < 1) seats = 1;
-    if (seats > maxSeats) { seats = maxSeats; toast.warning(`Only ${maxSeats} seat(s) available`); }
+    if (seats > maxSeats) { seats = maxSeats; toast.warning(`Only ${maxSeats} seat(s) available`, TOASTS); }
     setRequestData((prev) => ({
       ...prev, seatsRequested: seats, membersCount: seats,
       members: Array.from({ length: seats }, (_, i) => prev.members[i] || { name: "", age: "" }),
@@ -129,38 +139,44 @@ export default function RideCard({ ride }) {
     updatedMembers[index][field] = value;
     setRequestData({ ...requestData, members: updatedMembers });
   };
+  const myRequest = myRequestedRides.find(
+    (item) => item.rideId === ride._id
+  );
+
+
+  const isRejected = myRequest?.status === "REJECTED";
 
   const handleRequestSubmit = async () => {
     if (!selectedRide) return;
 
     if (!isFlight && Number(requestData.seatsRequested) > maxSeats) {
-      toast.error(`Only ${maxSeats} seat(s) available`);
+      toast.error(`Only ${maxSeats} seat(s) available`, TOASTS);
       return;
     }
 
     if (!isFlight && Number(requestData.membersCount) > maxSeats) {
-      toast.error(`Only ${maxSeats} member(s) allowed`);
+      toast.error(`Only ${maxSeats} member(s) allowed`, TOASTS);
       return;
     }
 
     if (!requestData.phone.trim()) {
-      toast.error("Please enter phone number");
+      toast.error("Please enter phone number", TOASTS);
       return;
     }
 
     if (!/^[6-9]\d{9}$/.test(requestData.phone)) {
-      toast.error("Enter valid 10 digit phone number");
+      toast.error("Enter valid 10 digit phone number", TOASTS);
       return;
     }
 
     for (let i = 0; i < requestData.members.length; i++) {
       if (!requestData.members[i].name.trim()) {
-        toast.error(`Please enter Member ${i + 1} name`);
+        toast.error(`Please enter Member ${i + 1} name`, TOASTS);
         return;
       }
 
       if (!requestData.members[i].age) {
-        toast.error(`Please enter Member ${i + 1} age`);
+        toast.error(`Please enter Member ${i + 1} age`, TOASTS);
         return;
       }
     }
@@ -182,7 +198,21 @@ export default function RideCard({ ride }) {
         payload
       );
 
-      toast.success(res.data.message);
+      toast.success(res.data.message, {
+        position: isTab ? "top-center" : "top-right",
+        autoClose: 2000,
+        hideProgressBar: true,
+        closeButton: false,
+        style: {
+          width: isTab ? "90vw" : "360px",
+          maxWidth: isTab ? "320px" : "360px",
+          fontSize: isTab ? "13px" : "15px",
+          padding: isTab ? "8px 12px" : "12px 16px",
+          borderRadius: isTab ? "8px" : "10px",
+          minHeight: isTab ? "42px" : "52px",
+          margin: "0 auto",
+        },
+      });
 
       setOpenRequestModal(false);
       resetRequestData();
@@ -191,18 +221,23 @@ export default function RideCard({ ride }) {
       console.log(error);
 
       toast.error(
-        error.response?.data?.message || "Request failed"
-      );
+        error.response?.data?.message || "Request failed", TOASTS);
     }
   };
 
   useEffect(() => {
     myReqRides();
-  }, [])
+  }, [refreshRide]);
 
+  useEffect(() => {
+    myReqRides();
+  }, []);
   const myReqRides = async () => {
     try {
-      const res = await axios.get(Api + `/bookride/${storedUser.id}?type=requested`);
+      const res = await axios.get(
+        Api + `/bookride/${storedUser.id}?type=requested`
+      );
+
       if (res.data.success) {
         setMyRequestedRides(res.data.data || []);
       }
@@ -211,7 +246,50 @@ export default function RideCard({ ride }) {
     }
   };
 
-  const iconSx = { color: ORANGE, fontSize: { xs: 14, sm: 16 } };
+
+
+  const currentRequest = myRequestedRides.find((req) => {
+    const rideId =
+      typeof req.rideId === "object"
+        ? req.rideId?._id
+        : req.rideId;
+
+    return rideId === ride._id && req.status !== "CANCELLED";
+  });
+
+  const alreadyRequested = !!currentRequest;
+
+  const requestedByMe = myRequestedRides
+    .filter((req) => {
+      const rideId =
+        typeof req.rideId === "object"
+          ? req.rideId?._id
+          : req.rideId;
+
+      return rideId === ride._id && req.status === "PENDING";
+    })
+    .reduce((sum, req) => sum + Number(req.seatsRequested || 0), 0);
+
+  const remainingSeatsForUser = isFlight
+    ? null
+    : Math.max(Number(ride.availableSeats || 0) - requestedByMe, 0);
+
+
+
+  const noSeats = !isFlight && remainingSeatsForUser <= 0;
+  const maxSeatsForDialog = isFlight
+    ? Infinity
+    : alreadyRequested
+      ? remainingSeatsForUser +
+      Number(currentRequest?.seatsRequested || 0)
+      : remainingSeatsForUser;
+
+
+  const iconSx = {
+    color: ORANGE,
+    fontSize: { xs: 14, sm: 16 },
+  };
+
 
   const genderIcon = {
     Male: <PersonIcon sx={iconSx} />,
@@ -230,33 +308,14 @@ export default function RideCard({ ride }) {
 
 
 
-  const currentRequest = myRequestedRides.find(
-    (req) => req.rideId === ride._id && req.status !== "CANCELLED"
-  );
 
-  const alreadyRequested = !!currentRequest;
 
-  const requestedByMe = myRequestedRides
-    .filter(
-      (req) =>
-        req.rideId === ride._id &&
-        req.status === "PENDING"
-    )
-    .reduce((sum, req) => sum + Number(req.seatsRequested || 0), 0);
-  const remainingSeatsForUser = isFlight
-    ? null
-    : Math.max(
-      Number(ride.availableSeats || 0) - requestedByMe,
-      0
-    );
+
+
 
   const maxSeats = isFlight ? Infinity : remainingSeatsForUser;
 
-  // const remainingSeats = isFlight
-  //   ? null
-  //   : Math.max(Number(ride.availableSeats || 0) - requestedByMe, 0);
 
-  // const maxSeats = isFlight ? Infinity : remainingSeats;
 
   const canRequestMore = isFlight || remainingSeatsForUser > 0;
   const detailItems = isFlight
@@ -329,19 +388,45 @@ export default function RideCard({ ride }) {
 
           {/* Mode chip */}
           <Chip
-            icon={isFlight
-              ? <FlightTakeoffIcon sx={{ fontSize: { xs: 10, sm: 14 } }} />
-              : travelIcons[ride.modeOfTravel]}
-            label={isFlight ? "Flight Companion" : "Ride Available"}
+            icon={
+              isFlight
+                ? <FlightTakeoffIcon sx={{ fontSize: { xs: 10, sm: 14 } }} />
+                : travelIcons[ride.modeOfTravel]
+            }
+            label={
+              isFlight
+                ? "Flight Companion"
+                : isRejected
+                  ? "Rejected"
+                  : noSeats
+                    ? "No Seats"
+                    : "Ride Available"
+            }
             size="small"
             sx={{
-              bgcolor: isFlight ? "#EAF2FF" : "#E8F5E9",
-              color: isFlight ? "#1A3C5E" : "#2D6A4F",
+              bgcolor: isRejected
+                ? "#FDECEA"
+                : noSeats
+                  ? "#FFF3E0"
+                  : isFlight
+                    ? "#EAF2FF"
+                    : "#E8F5E9",
+
+              color: isRejected
+                ? "#D32F2F"
+                : noSeats
+                  ? "#EF6C00"
+                  : isFlight
+                    ? "#1A3C5E"
+                    : "#2D6A4F",
+
               fontWeight: 700,
               fontSize: { xs: "0.58rem", sm: "0.7rem" },
               height: { xs: 22, sm: 26 },
               flexShrink: 0,
-              "& .MuiChip-label": { px: { xs: 0.75, sm: 1.25 } },
+              "& .MuiChip-label": {
+                px: { xs: 0.75, sm: 1.25 },
+              },
             }}
           />
         </Box>
@@ -482,6 +567,7 @@ export default function RideCard({ ride }) {
                       <Box component="span">
                         <Button
                           disabled={
+                            isRejected ||
                             !isProfileComplete ||
                             (!isFlight && !alreadyRequested && remainingSeatsForUser <= 0)
                           }
@@ -491,10 +577,15 @@ export default function RideCard({ ride }) {
                             setOpenEditModal(true);
                           }}
                           sx={{
-                            bgcolor: ORANGE,
+                            bgcolor: isRejected ? "#D32F2F" : ORANGE,
                             color: "#ffffff",
-                            "&:hover": { bgcolor: "#e68a00" },
-                            "&.Mui-disabled": { bgcolor: "#e0e0e0" },
+                            "&:hover": {
+                              bgcolor: isRejected ? "#D32F2F" : "#e68a00",
+                            },
+                            "&.Mui-disabled": {
+                              bgcolor: isRejected ? "#EF9A9A" : "#e0e0e0",
+                              color: "#ffffff",
+                            },
                             fontWeight: 700,
                             fontSize: { xs: "0.7rem", sm: "0.875rem" },
                             px: { xs: 1.2, sm: 3 },
@@ -505,15 +596,17 @@ export default function RideCard({ ride }) {
                             textTransform: "none",
                           }}
                         >
-                          {alreadyRequested
-                            ? remainingSeatsForUser > 0
-                              ? `Edit Request (${remainingSeatsForUser} left)`
-                              : "Edit Your Request"
-                            : isFlight
-                              ? "Request Companion"
-                              : remainingSeatsForUser > 0
-                                ? `Request Seat (${remainingSeatsForUser} left)`
-                                : "No Seats Available"}
+                          {isRejected
+                            ? "Rejected"
+                            : alreadyRequested
+                              ? remainingSeatsForUser > 0
+                                ? `Edit Request (${remainingSeatsForUser} left)`
+                                : "Edit Your Request"
+                              : isFlight
+                                ? "Request Companion"
+                                : remainingSeatsForUser > 0
+                                  ? `Request Seat (${remainingSeatsForUser} left)`
+                                  : "No Seats Available"}
                         </Button>
                         {/* <Button
                     variant="contained"
@@ -639,16 +732,13 @@ export default function RideCard({ ride }) {
           </CardContent>
         </Card>
       </Box>
-
       <Ridebook
         open={openEditModal}
         onClose={() => setOpenEditModal(false)}
         ride={selectedRide}
-        maxSeats={selectedRide?.availableSeats ?? Infinity}
-        onSuccess={() => {
-          fetchAllSends();
-          myReqRides();   // <-- refresh the data the seat count actually depends on
-        }}
+        allMyRequests={myRequestedRides}
+        setAllMyRequests={setMyRequestedRides}
+        maxSeats={maxSeatsForDialog}
         requestToEdit={selectedRequest}
       />
 

@@ -26,6 +26,8 @@ export default function NotificationTab({ handleCloseNotifications }) {
         }, {})
     );
 
+    // console.log(uniqueNotifications,'uniqueNotifications')
+
     const navigate = useNavigate();
 
     const handleNavigation = (item) => {
@@ -128,7 +130,7 @@ export default function NotificationTab({ handleCloseNotifications }) {
                                     }}
                                 >
                                     <ListItemAvatar>
-                                        <Avatar src={item?.actorId?.profileImage}>
+                                        <Avatar src={item?.actorId?.profileImage || item?.data?.profileImage}>
                                             {item?.actorId?.firstName?.[0] || "U"}
                                         </Avatar>
                                     </ListItemAvatar>

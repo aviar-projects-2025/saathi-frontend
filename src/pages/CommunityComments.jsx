@@ -32,6 +32,7 @@ import UserAvatar from "../components/UserAvatar";
 import ThumbUpAltOutlinedIcon from "@mui/icons-material/ThumbUpAltOutlined";
 import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
 import { toast } from "react-toastify"; // remove if you use a different toast lib
+import ToastConfig from "../components/ToastConfig";
 
 
 
@@ -116,6 +117,8 @@ const CommunityComments = ({ post, user }) => {
   const SAFFRON = "#E8650A";
   const CARD_BORDER = "1px solid #F0E6DC";
 
+  const toasts = ToastConfig();
+
   const showSidebar = useMediaQuery(theme.breakpoints.up('sm'));
 
   const avatarSize = isMobile ? 30 : 35;
@@ -135,6 +138,9 @@ const CommunityComments = ({ post, user }) => {
   // delete confirmation modal state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [commentToDelete, setCommentToDelete] = useState(null);
+
+  // const theme = useTheme();
+  const isTab = useMediaQuery(theme.breakpoints.down("sm"));
 
   useEffect(() => {
     getComments();
@@ -232,12 +238,13 @@ const CommunityComments = ({ post, user }) => {
         }
       );
 
-      toast.success("Comment updated");
+      toast.success("Comment Updated", toasts);
+
       setEditingCommentId(null);
       setEditText("");
       getComments();
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to update comment");
+      toast.error(error.response?.data?.message || "Failed to update comment", toasts);
     }
   };
 
@@ -259,12 +266,11 @@ const CommunityComments = ({ post, user }) => {
       const res = await axios.delete(
         `${Api}/community/comments/${commentToDelete._id}/${user.id}`
       );
-      toast.success("Comment deleted");
+      toast.success("Comment deleted", toasts);
       getComments();
     } catch (error) {
       toast.error(
-        error.response?.data?.message || "Failed to delete comment"
-      );
+        error.response?.data?.message || "Failed to delete comment", toasts);
     } finally {
       setDeleteDialogOpen(false);
       setCommentToDelete(null);

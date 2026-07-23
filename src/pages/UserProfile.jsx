@@ -46,6 +46,8 @@ import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import CommunityComments from "./CommunityComments.jsx";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 
+import ToastConfig from "../components/ToastConfig.jsx";
+
 const SAFFRON = "#E8650A";
 const SAFFRON_LIGHT = "#FDF0E8";
 const CARD_BORDER = "1px solid #F0E6DC";
@@ -109,6 +111,7 @@ const StatBlock = ({ value, label }) => (
 const UserProfile = () => {
     const theme = useTheme();
 
+    const toasts = ToastConfig();
 
     const [openComments, setOpenComments] = useState({});
     const handleToggleComments = (id) => {
@@ -137,6 +140,9 @@ const UserProfile = () => {
     const [selectedPost, setSelectedPost] = useState(null);
     const handleOpenShare = () => setOpenShare(true);
     const handleCloseShare = () => setOpenShare(false);
+
+    // const theme = useTheme();
+    const isTab = useMediaQuery(theme.breakpoints.down("sm"));
 
 
     const [openImage, setOpenImage] = useState(false);
@@ -276,11 +282,11 @@ const UserProfile = () => {
 
             await axios.post(Api + `/users/update/${user?.id}`, data)
             getuserData()
-            toast.success("Profile updated")
+            toast.success("Profile Updated", toasts);
             setEditProfile(false)
         } catch (error) {
             console.log(error.response);
-            toast.error(error.response.data.message)
+            toast.error(error.response.data.message, toasts);
         } finally {
             setSubmitLoading(false)
         }
@@ -289,7 +295,7 @@ const UserProfile = () => {
     const [tab, setTab] = useState(0);
     const handleCopy = (value) => {
         navigator.clipboard.writeText(value);
-        toast.success("Copied to clipboard!");
+        toast.success("Copied to Clipboard!", toasts);
     };
 
     return (

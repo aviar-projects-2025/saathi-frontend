@@ -44,6 +44,7 @@ import {
   InputAdornment,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import ToastConfig from "../components/ToastConfig.jsx";
 
 
 const SAFFRON = "#E8650A";
@@ -114,6 +115,12 @@ const Myprofile = () => {
     new: false,
     confirm: false,
   });
+
+  const toasts = ToastConfig();
+
+  // const theme = useTheme();
+  const isTab = useMediaQuery(theme.breakpoints.down("sm"));
+
   const handlePasswordChange = (e) => {
     const { name, value } = e.target;
 
@@ -129,7 +136,7 @@ const Myprofile = () => {
   const [communityPosts, setCommunityPosts] = useState([]);
   const handleCopy = (value) => {
     navigator.clipboard.writeText(value);
-    toast.success("Copied to clipboard!");
+    toast.success("Copied to Clipboard!", toasts);
   };
   useEffect(() => {
     if (currentUser?._id) {
@@ -145,11 +152,11 @@ const Myprofile = () => {
         !passwordData.newPassword ||
         !passwordData.confirmPassword
       ) {
-        return toast.error("All fields are required");
+        return toast.error("All fields are required", toasts);
       }
 
       if (passwordData.newPassword !== passwordData.confirmPassword) {
-        return toast.error("Passwords do not match");
+        return toast.error("Passwords do not match", toasts);
       }
 
       const res = await axios.patch(
@@ -161,7 +168,7 @@ const Myprofile = () => {
         }
       );
 
-      toast.success(res.data.message);
+      toast.success(res.data.message, toasts);
 
       setPasswordModel(false);
       setPasswordData({
@@ -172,7 +179,7 @@ const Myprofile = () => {
 
     } catch (error) {
       console.error(error);
-      toast.error(error.response?.data?.message || "Something went wrong");
+      toast.error(error.response?.data?.message || "Something went wrong", toasts);
     }
   };
 
@@ -210,11 +217,11 @@ const Myprofile = () => {
   return (
     <Box
       sx={{
-        maxWidth: 1000,
+        // maxWidth: 1000,
         // mx: "auto",
-        px: 1.5,
+        // px: 1.5,
         py: 2,
-        pb: 4
+        pb: 3
       }}
     >
       <SectionCard
@@ -609,7 +616,7 @@ const Myprofile = () => {
                       url: shareLink,
                     });
                   } else {
-                    toast.info("Sharing not supported on this device");
+                    toast.info("Sharing not supported on this device", toasts);
                   }
                 }}
               >

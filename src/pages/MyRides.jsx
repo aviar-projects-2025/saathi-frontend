@@ -5,10 +5,10 @@ import {
   TextField, IconButton, Stack, FormControl, Grid,
   InputLabel, Select, MenuItem, FormControlLabel, Switch, Slider,
   CircularProgress, Card, CardContent, Divider, useMediaQuery, DialogContentText,
-  Badge, Collapse, Avatar, Pagination
+  Badge, Collapse, Avatar, Pagination, useTheme
 } from '@mui/material';
 import Ridebook from './Ridebook.jsx';
-import { useTheme } from '@mui/material/styles';
+// import { useTheme } from '@mui/material/styles';
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
@@ -43,6 +43,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useNotifications } from '../context/NotificationContext';
 import RideDetailsModal from './RideDetails'
 import moment from 'moment';
+import ToastConfig from '../components/ToastConfig.jsx';
 
 const statusConfig = {
   FULL: { label: 'Filled', color: '#2D6A4F', bg: '#E8F5E9', icon: '✅' },
@@ -186,14 +187,11 @@ function EditRideModal({ ride, onSave, onClose }) {
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
-  // Helper to zero-pad numbers (e.g. 5 -> "05")
   const pad2 = (n) => String(n).padStart(2, '0');
 
   const startDate = new Date(ride.startTime);
 
-  // FIX: use LOCAL date/time getters, not toISOString().
-  // toISOString() converts to UTC, which shifts the displayed date/time
-  // away from the actual local time, and causes drift on every save.
+
   const initialDate = !isNaN(startDate)
     ? `${startDate.getFullYear()}-${pad2(startDate.getMonth() + 1)}-${pad2(startDate.getDate())}`
     : '';
@@ -222,7 +220,7 @@ function EditRideModal({ ride, onSave, onClose }) {
     setSaving(true);
     setError('');
 
-    // Basic guard: don't attempt to save with an empty/invalid date or time.
+
     if (!form.date || !form.time) {
       setError('Please select both a date and a time.');
       setSaving(false);
@@ -230,10 +228,7 @@ function EditRideModal({ ride, onSave, onClose }) {
     }
 
     try {
-      // form.date and form.time are LOCAL values coming from the inputs.
-      // `new Date('YYYY-MM-DDTHH:mm:00')` (no timezone suffix) is parsed
-      // as local time by the JS engine, so this correctly round-trips with
-      // the local getters used above, then converts to UTC for storage.
+
       const localDateTime = new Date(`${form.date}T${form.time}:00`);
 
       if (isNaN(localDateTime)) {
@@ -263,6 +258,7 @@ function EditRideModal({ ride, onSave, onClose }) {
       fullWidth
       fullScreen={fullScreen}
       PaperProps={{ sx: { borderRadius: { xs: 0, sm: 3 }, m: { xs: 0, sm: 2, md: 4 } } }}
+      sx={{ p: 1.5 }}
     >
       <DialogTitle sx={{ fontWeight: 800, pb: 0, pr: 5, fontSize: { xs: '1.05rem', sm: '1.25rem' } }}>
         Edit Ride
@@ -529,7 +525,11 @@ function RideCard({ ride, fetchRides, user, confirmRide, setConfirmRide, showEdi
   const [loadingRequests, setLoadingRequests] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState([]);
 
+  const toasts = ToastConfig();
+
   const theme = useTheme();
+  const isTab = useMediaQuery(theme.breakpoints.down("sm"));
+
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const navigate = useNavigate();
@@ -545,11 +545,12 @@ function RideCard({ ride, fetchRides, user, confirmRide, setConfirmRide, showEdi
     : "—";
 
   const fuelLabel = ride.fuelSharing ? "Yes" : "No";
-
+  console.log(allRequests,'allRequests')
   // Get requests for this specific ride
   const rideRequests = allRequests?.filter(
-    (req) => req.rideId?.toString() === ride._id?.toString()
+    (req) => req.rideId?._id?.toString() === ride._id?.toString()
   ) || [];
+  console.log(rideRequests,'rideRequests ')
 
   const pendingCount = rideRequests.filter(
     r => r.status?.toUpperCase() === 'PENDING'
@@ -563,10 +564,10 @@ function RideCard({ ride, fetchRides, user, confirmRide, setConfirmRide, showEdi
           req._id === requestId ? { ...req, status: 'ACCEPTED' } : req
         ));
         fetchRides();
-        toast.success('Request approved successfully!');
+        toast.success('Request approved successfully!', toasts);
       }
     } catch (error) {
-      toast.error(error.response.data.message);
+      toast.error(error.response.data.message, toasts);
     }
   };
 
@@ -576,10 +577,10 @@ function RideCard({ ride, fetchRides, user, confirmRide, setConfirmRide, showEdi
       setAllRequests(prev => prev.map(req =>
         req._id === requestId ? { ...req, status: 'REJECTED' } : req
       ));
-      toast.success('Request rejected');
+      toast.success('Request rejected', toasts);
       fetchRides()
     } catch (error) {
-      toast.error('Failed to reject request');
+      toast.error('Failed to reject request', toasts);
     }
   };
 
@@ -591,16 +592,16 @@ function RideCard({ ride, fetchRides, user, confirmRide, setConfirmRide, showEdi
 
         setConfirmRide(null)
         fetchRides()
-        toast.success('Ride Started');
+        toast.success('Ride Started', toasts);
       } else if (status === "Started") {
         const response = await axios.patch(`${Api}/rides/edit/${rideId}`, { travelStatus: 'Completed', endTime: new Date().toISOString() })
 
         setConfirmRide(null)
         fetchRides()
-        toast.success('Ride Completed');
+        toast.success('Ride Completed', toasts);
       }
     } catch (error) {
-      toast.error('Failed');
+      toast.error('Failed', toasts);
     }
   };
 
@@ -1009,14 +1010,21 @@ const MyRides = () => {
   const { notifications } = useNotifications();
   const [confirmRide, setConfirmRide] = useState(null)
 
+
+  console.log(notifications, 'notificationsnotifications')
+
   // Pagination state — one page counter per tab so each tab remembers its own position
   const [currentRidePage, setCurrentRidePage] = useState(1);
   const [upcomingPage, setUpcomingPage] = useState(1);
   const [mypostPage, setMypostPage] = useState(1);
   const [historyPage, setHistoryPage] = useState(1);
 
+  const toastss = ToastConfig();
 
   const processedIds = useRef(new Set());
+
+  // const theme = useTheme();
+  const isTab = useMediaQuery(theme.breakpoints.down("sm"));
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -1031,7 +1039,7 @@ const MyRides = () => {
           now >= start &&
           !processedIds.current.has(ride._id)
         ) {
-          ride.createdBy._id == user.id && toast.info("Your ride is starting now 🚗");
+          ride.createdBy._id == user.id && toast.info("Your ride is starting now 🚗", toastss);
 
           ride.createdBy._id == user.id && setConfirmRide(ride);
 
@@ -1217,10 +1225,52 @@ const MyRides = () => {
 
   }, [allMyRequests, mypost, notifications]);
 
+  useEffect(() => {
+    if (!notifications?.length) return;
+
+    const newRequestsFromNotifications = notifications
+      .filter((noti) => noti.type === "new_request")
+      .map((noti) => {
+        console.log(noti,'notinotinoti')
+        const booking = noti.data.bookingData;
+
+        return {
+          ...booking,
+          _id: booking._id,
+
+          // normalize rideId (VERY IMPORTANT)
+          rideId: {
+            _id: booking.rideId,
+          },
+
+          // attach profile image
+          requestedBy: {
+            _id: booking.requestedBy,
+            profileImage: noti.data.profileImage,
+            firstName: noti.data.requestBy.requestedBy.firstName,
+            lastName : noti.data.requestBy.requestedBy.lastName,
+          },
+        };
+      });
+
+    setAllRequests((prev) => {
+      const merged = [...newRequestsFromNotifications, ...prev];
+
+      // remove duplicates
+      const unique = merged.filter(
+        (item, index, self) =>
+          index === self.findIndex((t) => t._id === item._id)
+      );
+
+      return unique;
+    });
+  }, [notifications]);
+
   const fetchAllRequests = async () => {
     try {
       const res = await axios.get(`${Api}/bookride/${user.id}?type=received`);
       setAllRequests(res.data.data || []);
+
     } catch (error) {
       console.error('Error fetching requests:', error);
     }
@@ -1309,7 +1359,7 @@ const MyRides = () => {
     setHistory(merge(history));
     setCurrentRide(prev => merge(prev));
     setEditRide(null);
-    toast.success('Ride Updated Successfully...!');
+    toast.success('Ride Updated Successfully...!', toastss);
   };
 
   const handleDelete = (deleted) => {
@@ -1319,7 +1369,7 @@ const MyRides = () => {
     setUpcoming(prev => remove(prev));
     setHistory(prev => remove(prev));
     setDeleteRide(null);
-    toast.success('Ride Deleted Successfully...!');
+    toast.success('Ride Deleted Successfully...!', toastss);
   };
   const [openCancelDialog, setOpenCancelDialog] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
@@ -1369,19 +1419,19 @@ const MyRides = () => {
 
   const handleConfirmCancel = async () => {
     try {
-      // Call your delete/cancel API here
+
       await axios.delete(`${Api}/bookride/${selectedRequest._id}`);
 
 
       handleCloseDialog();
 
-      // Refresh request list
+
       getMyRequests();
     } catch (err) {
       console.error(err);
     }
   };
-  // Rides you've requested/booked that haven't happened yet
+
   const upcomingRequests = useMemo(() => {
     const now = new Date();
     return allMyRequests.filter((booking) => {
@@ -1390,7 +1440,7 @@ const MyRides = () => {
     });
   }, [allMyRequests]);
 
-  // Rides you've requested/booked that already happened (with approve/reject outcome)
+
   const pastRequests = useMemo(() => {
     const now = new Date();
     return allMyRequests.filter((booking) => {
@@ -1399,8 +1449,6 @@ const MyRides = () => {
     });
   }, [allMyRequests]);
 
-  // Clamp each tab's page number back into range whenever its underlying list shrinks/grows
-  // (e.g. after a delete makes the last page disappear)
   useEffect(() => {
     const maxPage = Math.max(1, Math.ceil(currentRide.length / ITEMS_PER_PAGE));
     if (currentRidePage > maxPage) setCurrentRidePage(maxPage);

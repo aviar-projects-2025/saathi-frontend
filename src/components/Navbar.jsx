@@ -139,7 +139,7 @@ const TopNav = ({ onMenuClick }) => {
     >
       <Toolbar
         sx={{
-          minHeight: { xs: 58, md: 66 },
+          minHeight: { xs: 58, md: 68 },
           px: { xs: 1.5, sm: 2, md: 3 },
           display: "flex",
           justifyContent: "space-between",

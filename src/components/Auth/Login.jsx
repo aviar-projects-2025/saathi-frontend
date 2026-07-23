@@ -22,6 +22,7 @@ import InputAdornment from "@mui/material/InputAdornment";
 import IconButton from "@mui/material/IconButton";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import ToastConfig from "../ToastConfig";
 
 // LAYOUT 4: Card with a colored top banner and a centered avatar badge
 // straddling the seam — a classic "app-like" login card, softly modernized.
@@ -30,8 +31,11 @@ const Login = () => {
     const { login } = useAuth();
     const navigate = useNavigate();
 
+    const toasts = ToastConfig();
+
+
     const theme = useTheme();
-    const isTab = useMediaQuery(theme.breakpoints.down("sm"));
+    const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
     const validationSchema = Yup.object({
         email: Yup.string()
@@ -45,26 +49,18 @@ const Login = () => {
     const loginSubmit = async (values) => {
         try {
             const data = await login(values);
-            toast.success("Ride created successfully!", {
-                position: isTab ? "top-center" : "top-right",
-                autoClose: 1000,
-                hideProgressBar: true,
-                closeButton: false,
-                style: {
-                    width: isTab ? "280px" : "360px",
-                    fontSize: isTab ? "13px" : "15px",
-                    padding: isTab ? "8px 12px" : "12px 16px",
-                    borderRadius: isTab ? "8px" : "10px",
-                    minHeight: isTab ? "42px" : "52px",
-                },
-            });
+            if (data?.user.refApprove === "Approved") {
+                toast.success("Login Successful!", toasts);
+            } else {
+                toast.info("Login successful! Waiting for admin approval.", toasts);
+            }
             window.location.href = data?.user.role === ROLES.ADMIN
                 ? "/admin/dashboard"
                 : data?.user.refApprove === "Approved"
                     ? "/community"
                     : "/waiting-approval";
         } catch (error) {
-            toast.error(error.message);
+            toast.error(error.message, toasts);
         }
     };
 
