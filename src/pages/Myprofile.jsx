@@ -314,7 +314,7 @@ const Myprofile = () => {
       </SectionCard>
 
 
-      <SectionCard sx={{ mt: 3 }}>
+      {/* <SectionCard sx={{ mt: 3 }}>
         <SectionHeader icon={<PersonIcon />} label="Account" />
         <Divider sx={{ mt: 1 }} />
         <Stack>
@@ -344,7 +344,7 @@ const Myprofile = () => {
             Manage ride preferences
           </Button>
         </Stack>
-      </SectionCard>
+      </SectionCard> */}
 
 
       {/* ── Security ── */}
@@ -628,7 +628,7 @@ const Myprofile = () => {
       </Modal>
 
       {/* ── Notifications ── */}
-      <SectionCard sx={{ mt: 3 }}>
+      {/* <SectionCard sx={{ mt: 3 }}>
         <SectionHeader icon={<NotificationsIcon />} label="Notifications" />
         <Divider sx={{ mt: 1 }} />
         <Stack spacing={0} divider={<Divider />}>
@@ -665,7 +665,7 @@ const Myprofile = () => {
             />
           ))}
         </Stack>
-      </SectionCard>
+      </SectionCard> */}
 
       {/* ── Referral ── */}
       <SectionCard sx={{ mt: 3 }}>
