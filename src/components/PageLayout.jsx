@@ -10,7 +10,7 @@ const PageLayout = ({ children }) => {
                 // mx: 'auto',
                 // px: { xs: 0, sm: 2 },
                 // py: { xs: 0, sm: 2 },
-                pb: { xs: 2, sm: 3 },
+                pb: { xs: 2, sm: 4 },
                 boxSizing: 'border-box',
                 // border:'1px solid black'
             }}
