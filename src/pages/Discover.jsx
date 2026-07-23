@@ -99,17 +99,17 @@ const Discover = () => {
             pb: { xs: 4, sm: 0 },
             width: "100%",
             boxSizing: "border-box",
-            width: "100%",
+
             // maxWidth: { xs: '100%', sm: 0 },
             px: { xs: 1, sm: 0 }
         }}>
             <Grid container spacing={2} sx={{ mt: 3 }}>
 
                 {/* TOP MEMBERS */}
-                <Grid item xs={12} md={7} sx={{ mb: 3 }}>
+                <Grid item xs={12} md={7} sx={{ mb: 3 }} >
                     <Paper
                         elevation={0}
-                        sx={{ p: { xs: 1.5, sm: 2.5 }, borderRadius: 3, border: "1px solid #F0E6DC" }}
+                        sx={{ p: { xs: 1.5, sm: 2.5 }, borderRadius: 3, border: "1px solid #F0E6DC", width: "105%" }}
                     >
                         <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
                             <EmojiEventsIcon sx={{ color: "#F4A261" }} />
