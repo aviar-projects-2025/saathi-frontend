@@ -13,9 +13,7 @@ const BOTTOMNAV_HEIGHT = 56;
 const UserLayout = () => {
   const theme = useTheme();
 
-
   const isDesktop = useMediaQuery(theme.breakpoints.up("lg"));
-
   const isMobile = useMediaQuery(theme.breakpoints.down("lg"));
 
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -47,8 +45,9 @@ const UserLayout = () => {
       <Box
         sx={{
           width: "100%",
-          height: `calc(100dvh - ${TOPBAR_HEIGHT}px - ${isMobile ? BOTTOMNAV_HEIGHT : 0
-            }px)`,
+          height: `calc(100dvh - ${TOPBAR_HEIGHT}px - ${
+            isMobile ? BOTTOMNAV_HEIGHT : 0
+          }px)`,
           mt: `${TOPBAR_HEIGHT}px`,
           boxSizing: "border-box",
           overflow: "hidden",
@@ -62,12 +61,12 @@ const UserLayout = () => {
             display: "flex",
             justifyContent: "center",
             alignItems: "flex-start",
-            // px: {
-            //   xs: 0,
-            //   sm: "2%",
-            //   md: "3%",
-            //   lg: "5%",
-            // },
+            px: {
+              xs: 0,
+              // sm: "2%",
+              // md: "3%",
+              lg: "1%",
+            },
             boxSizing: "border-box",
           }}
         >
@@ -78,7 +77,7 @@ const UserLayout = () => {
               maxWidth: { xs: "100%", sm: "1800px" },
               height: "100%",
               py: { xs: 1, sm: 2 },
-              
+              mx: "auto", // explicit centering, don't rely only on parent flex
             }}
           >
             {/* Box 3 */}
@@ -91,11 +90,12 @@ const UserLayout = () => {
                   xs: "1fr",
                   lg: "20% 80%",
                 },
-                // gap: {
-                //   xs: 0,
-                //   lg: "2%",
-                // },
+                gap: {
+                  xs: 0,
+                  lg: "2%",
+                },
                 alignItems: "start",
+                justifyContent: "center",
               }}
             >
               {/* Desktop Sidebar */}
@@ -123,10 +123,7 @@ const UserLayout = () => {
                     },
                   }}
                 >
-                  <Sidebar
-                    onItemClick={() => setMobileOpen(false)}
-                    isMobile
-                  />
+                  <Sidebar onItemClick={() => setMobileOpen(false)} isMobile />
                 </Drawer>
               )}
 
@@ -147,9 +144,9 @@ const UserLayout = () => {
                 <Box
                   sx={{
                     width: "100%",
-                    maxWidth: { xs: "100%", sm: "1400px" },
+                    maxWidth: { xs: "100%", sm: "100%" },
+                    mx: "auto", // explicit centering for the outlet content too
                     p: { xs: 1, sm: 2, md: 3 },
-
                   }}
                 >
                   <Outlet />
@@ -181,4 +178,3 @@ const UserLayout = () => {
 };
 
 export default UserLayout;
-

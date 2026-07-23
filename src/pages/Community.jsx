@@ -1025,8 +1025,18 @@ export default function Community() {
           {showSidebar && (
             <Box
               sx={{
-                width: { sm: "260px", md: "320px", lg: "360px", xl: "400px" },
-                minWidth: { sm: "260px", md: "320px", lg: "360px", xl: "400px" },
+                width: {
+                  sm: "35%",
+                  md: "33%",
+                  lg: "33%",
+                  xl: "30%",
+                },
+                minWidth: {
+                  sm: "35%",
+                  md: "33%",
+                  lg: "33%",
+                  xl: "30%",
+                },
                 flexShrink: 0,
                 position: "sticky",
                 top: 20,
