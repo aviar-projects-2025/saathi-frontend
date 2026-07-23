@@ -41,12 +41,16 @@ export const NotificationProvider = ({ children }) => {
     useEffect(() => {
         if (!user?.id) return;
         socket.emit("join", user.id);
+        socket.emit("rides_room");
+
         // console.log('joined ', user.id)
         const handleEvent = (payload) => {
             const { type, data, message, category } = payload;
             const audio = new Audio(notificationSound);
             audio.currentTime = 0;
             audio.play();
+
+            console.log(payload)
 
             // console.log(payload,'payload')
             const newNotification = {
@@ -64,9 +68,7 @@ export const NotificationProvider = ({ children }) => {
 
             toast.info(message || "New notification", toasts);
         };
-
         socket.on("notification", handleEvent);
-
         return () => {
             socket.off("notification", handleEvent);
         };

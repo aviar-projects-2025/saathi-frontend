@@ -162,8 +162,10 @@ function PassengerStub({ request, onApprove, onReject, dense }) {
     const [open, setOpen] = useState(false);
     const v = requestVisual(request?.status);
     const isPending = request?.status?.toUpperCase() === 'PENDING';
-    const firstName = request.requestedBy?.firstName || 'U';
+    console.log(request,'requestrequest')
+    const firstName = request.requestedBy?.firstName || request?.data?.requestBy?.requestedBy?.firstName|| 'U';
     const lastName = request.requestedBy?.lastName || '';
+    const profilePic = request.requestedBy?.profileImage
     const seats = request?.seatsRequested || 1;
 
     return (
@@ -188,6 +190,7 @@ function PassengerStub({ request, onApprove, onReject, dense }) {
             >
                 <Stack direction="row" spacing={1.2} alignItems="center" sx={{ minWidth: 0 }}>
                     <Avatar
+                        src={profilePic}
                         sx={{
                             width: { xs: 32, sm: 38 },
                             height: { xs: 32, sm: 38 },
