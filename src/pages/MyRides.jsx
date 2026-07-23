@@ -545,12 +545,12 @@ function RideCard({ ride, fetchRides, user, confirmRide, setConfirmRide, showEdi
     : "—";
 
   const fuelLabel = ride.fuelSharing ? "Yes" : "No";
-  console.log(allRequests,'allRequests')
+  console.log(allRequests, 'allRequests')
   // Get requests for this specific ride
   const rideRequests = allRequests?.filter(
     (req) => req.rideId?._id?.toString() === ride._id?.toString()
   ) || [];
-  console.log(rideRequests,'rideRequests ')
+  console.log(rideRequests, 'rideRequests ')
 
   const pendingCount = rideRequests.filter(
     r => r.status?.toUpperCase() === 'PENDING'
@@ -820,102 +820,116 @@ function RideCard({ ride, fetchRides, user, confirmRide, setConfirmRide, showEdi
               {/* FROM / TO row */}
               <Box
                 sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: 1,
-                  pb: { xs: 1.1, sm: 1.5, md: 2 },
-                  mb: { xs: 1.1, sm: 1.5, md: 2 },
-                  borderBottom: '1px solid rgba(255,153,51,0.2)',
+                  display: isMobile ? 'block' :  'flex',
+                  justifyContent:'space-between',
+                  // alignItems:'center',
                 }}
               >
-                <Box sx={{ minWidth: 0, flex: 1 }}>
-                  <Typography
-                    variant="caption"
-                    sx={{ color: "#FF9933", fontWeight: 700, letterSpacing: 0.8, fontSize: { xs: '0.58rem', sm: '0.65rem', md: '0.7rem' } }}
-                  >
-                    FROM
-                  </Typography>
-                  <Typography
-                    fontWeight={700}
-                    sx={{
-                      wordBreak: 'break-word',
-                      fontSize: { xs: '0.78rem', sm: '0.88rem', md: '0.95rem' },
-                      lineHeight: 1.3,
-                    }}
-                  >
-                    📍 {formFrom(ride)}
-                  </Typography>
+                <Box
+                  sx={{
+                    // border:'1px solid black',
+                    display: 'flex',
+                    width: isMobile ? '100%' : '25%',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 1,
+                    pb: isMobile && { xs: 1.1, sm: 1.5, md: 2 },
+                    // mb: { xs: 1.1, sm: 1.5, md: 2 },
+                    // borderBottom: '1px solid rgba(255,153,51,0.2)',
+                  }}
+                >
+                  <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Typography
+                      variant="caption"
+                      sx={{ color: "#FF9933", fontWeight: 700, letterSpacing: 0.8, fontSize: { xs: '0.58rem', sm: '0.65rem', md: '0.7rem' } }}
+                    >
+                      FROM
+                    </Typography>
+                    <Typography
+                      fontWeight={700}
+                      sx={{
+                        wordBreak: 'break-word',
+                        fontSize: { xs: '0.78rem', sm: '0.88rem', md: '0.95rem' },
+                        lineHeight: 1.3,
+                      }}
+                    >
+                      📍 {formFrom(ride)}
+                    </Typography>
+                  </Box>
+
+                  <ArrowForwardIcon sx={{ color: '#FF9933', fontSize: { xs: 14, sm: 18, md: 20 }, flexShrink: 0 }} />
+
+                  <Box sx={{ minWidth: 0, flex: 1, textAlign: 'right' }}>
+                    <Typography
+                      variant="caption" 
+                      sx={{ color: "#FF9933", fontWeight: 700, letterSpacing: 0.8, fontSize: { xs: '0.58rem', sm: '0.65rem', md: '0.7rem' } }}
+                    >
+                      TO
+                    </Typography>
+                    <Typography
+                      fontWeight={700}
+                      sx={{
+                        wordBreak: 'break-word',
+                        fontSize: { xs: '0.78rem', sm: '0.88rem', md: '0.95rem' },
+                        lineHeight: 1.3,
+                      }}
+                    >
+                      📍 {formTo(ride)}
+                    </Typography>
+                  </Box>
+                </Box>
+                <Box
+                  sx={{
+                    // border:'1px solid black',
+                    justifyContent:'space-around',
+                    display: 'flex',
+                    width: isMobile ? '100%' : '60%',
+                    gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(3, 1fr)' },
+                    gap: { xs: '10px 6px', sm: '16px', md: 3 },
+                  }}
+                >
+                  <Box>
+                    <Typography sx={{ fontSize: { xs: '0.62rem', sm: '0.68rem', md: '0.7rem' }, color: 'text.secondary', mb: 0.5 }}>
+                      Date &amp; time
+                    </Typography>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <CalendarTodayIcon sx={{ color: "#FF9933", fontSize: { xs: 14, sm: 16, md: 18 } }} />
+                      <Typography sx={{ fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.875rem' }, fontWeight: 600 }}>
+                        {date} · {time}
+                      </Typography>
+                    </Stack>
+                  </Box>
+
+                  <Box>
+                    <Typography sx={{ fontSize: { xs: '0.62rem', sm: '0.68rem', md: '0.7rem' }, color: 'text.secondary', mb: 0.5 }}>
+                      Seats available
+                    </Typography>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <EventSeatIcon sx={{ color: "#FF9933", fontSize: { xs: 14, sm: 16, md: 18 } }} />
+                      <Typography sx={{ fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.875rem' }, fontWeight: 600 }}>
+                        {ride.availableSeats} seat{ride.availableSeats === 1 ? '' : 's'}
+                      </Typography>
+                    </Stack>
+                  </Box>
+
+                  <Box>
+                    <Typography sx={{ fontSize: { xs: '0.62rem', sm: '0.68rem', md: '0.7rem' }, color: 'text.secondary', mb: 0.5 }}>
+                      Travel mode
+                    </Typography>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      {React.cloneElement(travelIcons[ride.modeOfTravel] || travelIcons.Car, {
+                        sx: { color: "#FF9933", fontSize: { xs: 14, sm: 16, md: 18 } },
+                      })}
+                      <Typography sx={{ fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.875rem' }, fontWeight: 600 }}>
+                        {ride.modeOfTravel}
+                      </Typography>
+                    </Stack>
+                  </Box>
                 </Box>
 
-                <ArrowForwardIcon sx={{ color: '#FF9933', fontSize: { xs: 14, sm: 18, md: 20 }, flexShrink: 0 }} />
-
-                <Box sx={{ minWidth: 0, flex: 1, textAlign: 'right' }}>
-                  <Typography
-                    variant="caption"
-                    sx={{ color: "#FF9933", fontWeight: 700, letterSpacing: 0.8, fontSize: { xs: '0.58rem', sm: '0.65rem', md: '0.7rem' } }}
-                  >
-                    TO
-                  </Typography>
-                  <Typography
-                    fontWeight={700}
-                    sx={{
-                      wordBreak: 'break-word',
-                      fontSize: { xs: '0.78rem', sm: '0.88rem', md: '0.95rem' },
-                      lineHeight: 1.3,
-                    }}
-                  >
-                    📍 {formTo(ride)}
-                  </Typography>
-                </Box>
               </Box>
 
               {/* Details grid */}
-              <Box
-                sx={{
-                  display: 'grid',
-                  gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(3, 1fr)' },
-                  gap: { xs: '10px 6px', sm: '16px', md: 3 },
-                }}
-              >
-                <Box>
-                  <Typography sx={{ fontSize: { xs: '0.62rem', sm: '0.68rem', md: '0.7rem' }, color: 'text.secondary', mb: 0.5 }}>
-                    Date &amp; time
-                  </Typography>
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <CalendarTodayIcon sx={{ color: "#FF9933", fontSize: { xs: 14, sm: 16, md: 18 } }} />
-                    <Typography sx={{ fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.875rem' }, fontWeight: 600 }}>
-                      {date} · {time}
-                    </Typography>
-                  </Stack>
-                </Box>
-
-                <Box>
-                  <Typography sx={{ fontSize: { xs: '0.62rem', sm: '0.68rem', md: '0.7rem' }, color: 'text.secondary', mb: 0.5 }}>
-                    Seats available
-                  </Typography>
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <EventSeatIcon sx={{ color: "#FF9933", fontSize: { xs: 14, sm: 16, md: 18 } }} />
-                    <Typography sx={{ fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.875rem' }, fontWeight: 600 }}>
-                      {ride.availableSeats} seat{ride.availableSeats === 1 ? '' : 's'}
-                    </Typography>
-                  </Stack>
-                </Box>
-
-                <Box>
-                  <Typography sx={{ fontSize: { xs: '0.62rem', sm: '0.68rem', md: '0.7rem' }, color: 'text.secondary', mb: 0.5 }}>
-                    Travel mode
-                  </Typography>
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    {React.cloneElement(travelIcons[ride.modeOfTravel] || travelIcons.Car, {
-                      sx: { color: "#FF9933", fontSize: { xs: 14, sm: 16, md: 18 } },
-                    })}
-                    <Typography sx={{ fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.875rem' }, fontWeight: 600 }}>
-                      {ride.modeOfTravel}
-                    </Typography>
-                  </Stack>
-                </Box>
-              </Box>
             </Box>
 
             {/* Requests section */}
@@ -1231,7 +1245,7 @@ const MyRides = () => {
     const newRequestsFromNotifications = notifications
       .filter((noti) => noti.type === "new_request")
       .map((noti) => {
-        console.log(noti,'notinotinoti')
+        console.log(noti, 'notinotinoti')
         const booking = noti.data.bookingData;
 
         return {
@@ -1248,7 +1262,7 @@ const MyRides = () => {
             _id: booking.requestedBy,
             profileImage: noti.data.profileImage,
             firstName: noti.data.requestBy.requestedBy.firstName,
-            lastName : noti.data.requestBy.requestedBy.lastName,
+            lastName: noti.data.requestBy.requestedBy.lastName,
           },
         };
       });
