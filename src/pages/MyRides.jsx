@@ -545,11 +545,12 @@ function RideCard({ ride, fetchRides, user, confirmRide, setConfirmRide, showEdi
     : "—";
 
   const fuelLabel = ride.fuelSharing ? "Yes" : "No";
-
+  console.log(allRequests,'allRequests')
   // Get requests for this specific ride
   const rideRequests = allRequests?.filter(
     (req) => req.rideId?._id?.toString() === ride._id?.toString()
   ) || [];
+  console.log(rideRequests,'rideRequests ')
 
   const pendingCount = rideRequests.filter(
     r => r.status?.toUpperCase() === 'PENDING'
@@ -1009,6 +1010,9 @@ const MyRides = () => {
   const { notifications } = useNotifications();
   const [confirmRide, setConfirmRide] = useState(null)
 
+
+  console.log(notifications, 'notificationsnotifications')
+
   // Pagination state — one page counter per tab so each tab remembers its own position
   const [currentRidePage, setCurrentRidePage] = useState(1);
   const [upcomingPage, setUpcomingPage] = useState(1);
@@ -1220,6 +1224,47 @@ const MyRides = () => {
     setHistory([...historyRide, ...histMyPost]);
 
   }, [allMyRequests, mypost, notifications]);
+
+  useEffect(() => {
+    if (!notifications?.length) return;
+
+    const newRequestsFromNotifications = notifications
+      .filter((noti) => noti.type === "new_request")
+      .map((noti) => {
+        console.log(noti,'notinotinoti')
+        const booking = noti.data.bookingData;
+
+        return {
+          ...booking,
+          _id: booking._id,
+
+          // normalize rideId (VERY IMPORTANT)
+          rideId: {
+            _id: booking.rideId,
+          },
+
+          // attach profile image
+          requestedBy: {
+            _id: booking.requestedBy,
+            profileImage: noti.data.profileImage,
+            firstName: noti.data.requestBy.requestedBy.firstName,
+            lastName : noti.data.requestBy.requestedBy.lastName,
+          },
+        };
+      });
+
+    setAllRequests((prev) => {
+      const merged = [...newRequestsFromNotifications, ...prev];
+
+      // remove duplicates
+      const unique = merged.filter(
+        (item, index, self) =>
+          index === self.findIndex((t) => t._id === item._id)
+      );
+
+      return unique;
+    });
+  }, [notifications]);
 
   const fetchAllRequests = async () => {
     try {

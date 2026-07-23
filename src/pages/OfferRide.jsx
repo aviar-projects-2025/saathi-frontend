@@ -691,7 +691,7 @@ export default function OfferRide() {
               </Stack>
 
               <TextField
-                label="Journey Duration"
+                label="Journey Duration (Approximate)"
                 fullWidth
                 size={inputSize}
                 value={form.duration}
