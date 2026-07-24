@@ -31,6 +31,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import FlightTakeoffIcon from '@mui/icons-material/FlightTakeoff';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
+import CircularProgress from "@mui/material/CircularProgress";
 
 // ── Design tokens ────────────────────────────────────────────────────────
 const TOKENS = {
@@ -158,12 +159,12 @@ function Field({ icon: Icon, label, value, span }) {
 }
 
 // ── Passenger / request stub row ─────────────────────────────────────────
-function PassengerStub({ request, onApprove, onReject, dense }) {
+function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoading, dense }) {
     const [open, setOpen] = useState(false);
     const v = requestVisual(request?.status);
     const isPending = request?.status?.toUpperCase() === 'PENDING';
-    console.log(request,'requestrequest')
-    const firstName = request.requestedBy?.firstName || request?.data?.requestBy?.requestedBy?.firstName|| 'U';
+    console.log(request, 'requestrequest')
+    const firstName = request.requestedBy?.firstName || request?.data?.requestBy?.requestedBy?.firstName || 'U';
     const lastName = request.requestedBy?.lastName || '';
     const profilePic = request.requestedBy?.profileImage
     const seats = request?.seatsRequested || 1;
@@ -231,6 +232,10 @@ function PassengerStub({ request, onApprove, onReject, dense }) {
                                 <IconButton
                                     aria-label="Approve request"
                                     onClick={() => onApprove(request._id)}
+                                    disabled={
+                                        approveLoading === request._id ||
+                                        rejectLoading === request._id
+                                    }
                                     sx={{
                                         width: 32,
                                         height: 32,
@@ -239,11 +244,21 @@ function PassengerStub({ request, onApprove, onReject, dense }) {
                                         '&:hover': { bgcolor: TOKENS.green, color: '#fff' },
                                     }}
                                 >
-                                    <CheckCircleIcon sx={{ fontSize: 18 }} />
+                                    {
+                                        approveLoading === request._id ? (
+                                            <CircularProgress size={16} color="inherit" />
+                                        ) : (
+                                            <CheckCircleIcon sx={{ fontSize: 16 }} />
+                                        )
+                                    }
                                 </IconButton>
                                 <IconButton
                                     aria-label="Reject request"
                                     onClick={() => onReject(request._id)}
+                                    disabled={
+                                        approveLoading === request._id ||
+                                        rejectLoading === request._id
+                                    }
                                     sx={{
                                         width: 32,
                                         height: 32,
@@ -252,7 +267,13 @@ function PassengerStub({ request, onApprove, onReject, dense }) {
                                         '&:hover': { bgcolor: TOKENS.red, color: '#fff' },
                                     }}
                                 >
-                                    <CancelIcon sx={{ fontSize: 18 }} />
+                                    {
+                                        rejectLoading === request._id ? (
+                                            <CircularProgress size={16} color="inherit" />
+                                        ) : (
+                                            <CancelIcon sx={{ fontSize: 16 }} />
+                                        )
+                                    }
                                 </IconButton>
                             </>
                         ) : (
@@ -260,7 +281,17 @@ function PassengerStub({ request, onApprove, onReject, dense }) {
                                 <Button
                                     size="small"
                                     onClick={() => onApprove(request._id)}
-                                    startIcon={<CheckCircleIcon sx={{ fontSize: 16 }} />}
+                                    disabled={
+                                        approveLoading === request._id ||
+                                        rejectLoading === request._id
+                                    }
+                                    // startIcon={
+                                    //     approveLoading === request._id ? (
+                                    //         <CircularProgress size={16} color="inherit" />
+                                    //     ) : (
+                                    //         <CheckCircleIcon sx={{ fontSize: 16 }} />
+                                    //     )
+                                    // }
                                     sx={{
                                         fontFamily: TOKENS.bodyFont,
                                         textTransform: 'none',
@@ -273,12 +304,22 @@ function PassengerStub({ request, onApprove, onReject, dense }) {
                                         '&:hover': { bgcolor: TOKENS.green, color: '#fff' },
                                     }}
                                 >
-                                    Approve
+                                    {approveLoading === request._id ? "Approving..." : "Approve"}
                                 </Button>
                                 <Button
                                     size="small"
                                     onClick={() => onReject(request._id)}
-                                    startIcon={<CancelIcon sx={{ fontSize: 16 }} />}
+                                    disabled={
+                                        approveLoading === request._id ||
+                                        rejectLoading === request._id
+                                    }
+                                    // startIcon={
+                                    //     rejectLoading === request._id ? (
+                                    //         <CircularProgress size={16} color="inherit" />
+                                    //     ) : (
+                                    //         <CancelIcon sx={{ fontSize: 16 }} />
+                                    //     )
+                                    // }
                                     sx={{
                                         fontFamily: TOKENS.bodyFont,
                                         textTransform: 'none',
@@ -291,7 +332,7 @@ function PassengerStub({ request, onApprove, onReject, dense }) {
                                         '&:hover': { bgcolor: TOKENS.red, color: '#fff' },
                                     }}
                                 >
-                                    Reject
+                                    {rejectLoading === request._id ? "Rejecting..." : "Reject"}
                                 </Button>
                             </>
                         )
@@ -354,6 +395,8 @@ export default function RideDetailsModal({
     onClose,
     onApprove = () => { },
     onReject = () => { },
+    approveLoading,
+    rejectLoading,
 }) {
     const theme = useTheme();
     const isXs = useMediaQuery(theme.breakpoints.down('sm'));
@@ -610,6 +653,8 @@ export default function RideDetailsModal({
                                                     request={req}
                                                     onApprove={onApprove}
                                                     onReject={onReject}
+                                                    approveLoading={approveLoading}
+                                                    rejectLoading={rejectLoading}
                                                     dense={isXs}
                                                 />
                                             </Box>

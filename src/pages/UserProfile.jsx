@@ -265,8 +265,9 @@ const UserProfile = () => {
         }
     };
     const handleUpdateProfile = async () => {
+        setSubmitLoading(true);
         try {
-            setSubmitLoading(true)
+
             const data = new FormData();
 
             if (profileFile) {
@@ -810,7 +811,7 @@ const UserProfile = () => {
                                         onClick={handleUpdateProfile}
                                         disabled={submitLoading}
                                     >
-                                        Save Changes
+                                        {submitLoading ? "Saving Changes..." : "Save Changes"}
                                     </Button>
                                 </Stack>
                             </Stack>

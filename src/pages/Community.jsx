@@ -88,6 +88,7 @@ export default function Community() {
   const { currentUser } = useUser()
   const [tooltipOpen, setTooltipOpen] = useState(false);
   const [tooltip2Open, setTooltip2Open] = useState(false);
+  const [imagePostLoading, setImagePostLoading] = useState(false);
 
   const toasts = ToastConfig();
 
@@ -185,6 +186,9 @@ export default function Community() {
     setEditOpen(true);
   };
   const handleUpdate = async () => {
+
+    setImagePostLoading(true);
+
     try {
       const user = JSON.parse(localStorage.getItem("user"));
 
@@ -207,6 +211,7 @@ export default function Community() {
       );
 
       setCommunityPosts((prev) =>
+
         prev.map((post) =>
           post._id === selectedPost._id
             ? {
@@ -223,6 +228,7 @@ export default function Community() {
       setEditOpen(false);
       setSelectedPost(null);
       setEditImage(null);
+      setImagePostLoading(false);
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to update post", toasts);
     }
@@ -308,6 +314,7 @@ export default function Community() {
     } catch (error) { }
   };
   const handleDelete = async (postId) => {
+    setImagePostLoading(true);
     try {
       const user = JSON.parse(localStorage.getItem("user"));
 
@@ -322,9 +329,13 @@ export default function Community() {
       );
 
       toast.success(res.data.message, toasts);
+
+
     } catch (error) {
       toast.error(
         error.response?.data?.message || "Failed to delete post", toasts);
+    } finally {
+      setImagePostLoading(false);
     }
   };
   const removeLike = async (id) => {
@@ -820,6 +831,7 @@ export default function Community() {
                               <Button
                                 variant="contained"
                                 color="error"
+                                disabled={imagePostLoading}
                                 onClick={() => {
                                   const postId = selectedPost._id;
                                   handleMenuClose();
@@ -827,18 +839,48 @@ export default function Community() {
                                   setDeleteOpen(false);
                                 }}
                               >
-                                Delete
+                                {imagePostLoading ? " Deleting..." : " Delete"}
                               </Button>
                             </DialogActions>
                           </Dialog>
-                          <Dialog open={editOpen} onClose={() => setEditOpen(false)} fullWidth maxWidth="sm">
-                            <DialogTitle>Edit Post</DialogTitle>
+                          <Dialog
+                            open={editOpen}
+                            onClose={() => setEditOpen(false)}
+                            fullWidth
+                            maxWidth="sm"
+                          >
+                            {/* Dialog Header */}
+                            <DialogTitle
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                fontWeight: 600,
+                                pb: 1,
+                              }}
+                            >
+                              Edit Post
 
+                              <IconButton
+                                onClick={() => setEditOpen(false)}
+                                size="small"
+                                sx={{
+                                  color: "#666",
+                                  "&:hover": {
+                                    bgcolor: "#f5f5f5",
+                                  },
+                                }}
+                              >
+                                <CloseIcon />
+                              </IconButton>
+                            </DialogTitle>
+
+                            {/* Dialog Content */}
                             <DialogContent dividers>
                               <TextField
                                 fullWidth
                                 multiline
-                                minRows={2}
+                                minRows={3}
                                 margin="dense"
                                 label="Description"
                                 value={editDescription}
@@ -846,15 +888,17 @@ export default function Community() {
                               />
 
                               <Box sx={{ mt: 2 }}>
-                                <img
+                                <Box
+                                  component="img"
                                   src={editImage ? URL.createObjectURL(editImage) : previewImage}
-                                  alt="Post"
-                                  style={{
+                                  alt="Preview"
+                                  sx={{
                                     width: "100%",
-                                    maxHeight: "250px",
+                                    height: { xs: 220, sm: 280 },
                                     objectFit: "cover",
-                                    borderRadius: "8px",
-                                    marginBottom: "16px",
+                                    borderRadius: 2,
+                                    border: "1px solid #eee",
+                                    mb: 2,
                                   }}
                                 />
 
@@ -863,28 +907,44 @@ export default function Community() {
                                   fullWidth
                                   onClick={openImageMenu}
                                   sx={{
+                                    height: 46,
                                     bgcolor: "#FF9933",
                                     color: "#fff",
                                     fontWeight: 600,
                                     textTransform: "none",
-                                    "&:hover": { bgcolor: "#e68a00" },
+                                    borderRadius: 2,
+                                    "&:hover": {
+                                      bgcolor: "#E68A00",
+                                    },
                                   }}
                                 >
                                   Change Image
                                 </Button>
 
+                                {/* Image Menu */}
                                 <Menu
                                   anchorEl={imageMenuAnchor}
                                   open={isImageMenuOpen}
                                   onClose={closeImageMenu}
-                                  anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-                                  transformOrigin={{ vertical: "top", horizontal: "center" }}
+                                  anchorOrigin={{
+                                    vertical: "bottom",
+                                    horizontal: "center",
+                                  }}
+                                  transformOrigin={{
+                                    vertical: "top",
+                                    horizontal: "center",
+                                  }}
                                 >
                                   <MenuItem component="label">
                                     <ListItemIcon>
-                                      <CameraAltIcon fontSize="small" sx={{ color: "#FF9933" }} />
+                                      <CameraAltIcon
+                                        fontSize="small"
+                                        sx={{ color: "#FF9933" }}
+                                      />
                                     </ListItemIcon>
+
                                     <ListItemText>Camera</ListItemText>
+
                                     <input
                                       hidden
                                       type="file"
@@ -896,9 +956,14 @@ export default function Community() {
 
                                   <MenuItem component="label">
                                     <ListItemIcon>
-                                      <InsertDriveFileIcon fontSize="small" sx={{ color: "#FF9933" }} />
+                                      <InsertDriveFileIcon
+                                        fontSize="small"
+                                        sx={{ color: "#FF9933" }}
+                                      />
                                     </ListItemIcon>
-                                    <ListItemText>File</ListItemText>
+
+                                    <ListItemText>Gallery</ListItemText>
+
                                     <input
                                       hidden
                                       type="file"
@@ -910,31 +975,56 @@ export default function Community() {
                               </Box>
                             </DialogContent>
 
+                            {/* Dialog Footer */}
                             <DialogActions
                               sx={{
-                                display: "flex",
-                                flexDirection: { xs: "column", sm: "row" },
-                                gap: 1,
                                 p: 2,
-                                "& > button": { flex: { xs: "1 1 auto", sm: "0 1 auto" } },
+                                display: "flex",
+                                flexDirection: {
+                                  xs: "column",
+                                  sm: "row",
+                                },
+                                gap: 1.5,
                               }}
                             >
                               <Button
-                                onClick={() => setEditOpen(false)}
-                                variant="contained"
+                                variant="outlined"
                                 fullWidth
-                                sx={{ bgcolor: "#9E9E9E", color: "#fff", "&:hover": { bgcolor: "#757575" } }}
+                                onClick={() => setEditOpen(false)}
+                                sx={{
+                                  height: 46,
+                                  borderColor: "#BDBDBD",
+                                  color: "#616161",
+                                  fontWeight: 600,
+                                  textTransform: "none",
+                                  borderRadius: 2,
+                                  "&:hover": {
+                                    borderColor: "#757575",
+                                    bgcolor: "#F5F5F5",
+                                  },
+                                }}
                               >
                                 Cancel
                               </Button>
 
                               <Button
                                 variant="contained"
-                                onClick={handleUpdate}
                                 fullWidth
-                                sx={{ bgcolor: "#FF9933", "&:hover": { bgcolor: "#e68a00" } }}
+                                disabled={imagePostLoading}
+                                onClick={handleUpdate}
+                                sx={{
+                                  height: 46,
+                                  bgcolor: "#FF9933",
+                                  color: "#fff",
+                                  fontWeight: 600,
+                                  textTransform: "none",
+                                  borderRadius: 2,
+                                  "&:hover": {
+                                    bgcolor: "#E68A00",
+                                  },
+                                }}
                               >
-                                Save
+                                {imagePostLoading ? " Saving Changes..." : " Save Changes"}
                               </Button>
                             </DialogActions>
                           </Dialog>
