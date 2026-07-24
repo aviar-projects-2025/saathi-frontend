@@ -738,7 +738,7 @@ export default function RideCard({ ride }) {
                             },
                             "&.Mui-disabled": {
                               bgcolor: isRejected ? "#EF9A9A" : "#e0e0e0",
-                              color: "#beb7b7",
+                              color: "#ffffff",
                             },
                             fontWeight: 700,
                             fontSize: { xs: "0.7rem", sm: "0.875rem" },
