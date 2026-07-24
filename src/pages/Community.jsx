@@ -58,7 +58,6 @@ function useResponsiveTier() {
   const [tier, setTier] = useState(
     typeof window !== 'undefined' ? getTier(window.innerWidth) : 'md'
   );
-
   useEffect(() => {
     const handleResize = () => setTier(getTier(window.innerWidth));
     // Run once on mount in case the initial state above was computed
@@ -87,7 +86,7 @@ export default function Community() {
   const { currentUser } = useUser()
   const [tooltipOpen, setTooltipOpen] = useState(false);
   const [tooltip2Open, setTooltip2Open] = useState(false);
-
+const [commentCounts, setCommentCounts] = useState({}); 
   const toasts = ToastConfig();
 
 
@@ -107,7 +106,51 @@ export default function Community() {
     }
   };
 
-  //Edit Community Post Image
+
+  const getCommmunityPost = async () => {
+  try {
+    setPostLoading(true);
+    const postsRes = await axios.get(Api + "/community/");
+    const likesRes = await axios.get(Api + `/likes/liked-posts/${user.id}`);
+    const likedPostIds = likesRes?.data?.data || [];
+    const updatedPosts = postsRes?.data?.data?.map((post) => ({
+      ...post,
+      isLiked: likedPostIds.includes(post._id),
+    }));
+    const postIds = postsRes.data.data.map((item) => item._id);
+    setCommunityPosts(updatedPosts);
+    setPostId(postIds);
+
+    // fetch comment counts for all posts in parallel
+    const countEntries = await Promise.all(
+      updatedPosts.map(async (p) => {
+        try {
+          const res = await axios.get(Api + `/community/comments/${p._id}`);
+          return [p._id, res.data.data.comments.length];
+        } catch {
+          return [p._id, 0];
+        }
+      })
+    );
+    setCommentCounts(Object.fromEntries(countEntries));
+  } catch (error) {
+    console.error(error.message);
+  } finally {
+    setPostLoading(false);
+  }
+};
+
+const getComments = async (postId) => {
+  try {
+    setLoading(true);
+    const res = await axios.get(Api + `/community/comments/${postId}`);
+    setCommentCounts((prev) => ({ ...prev, [postId]: res.data.data.comments.length }));
+  } catch (error) {
+    console.log(error.message);
+  } finally {
+    setLoading(false);
+  }
+};
 
   // inside your component:
   const [imageMenuAnchor, setImageMenuAnchor] = useState(null);
@@ -260,28 +303,7 @@ export default function Community() {
     }
   };
 
-  const getCommmunityPost = async () => {
-    try {
-      setPostLoading(true);
-      const postsRes = await axios.get(Api + "/community/");
-      const likesRes = await axios.get(Api + `/likes/liked-posts/${user.id}`);
-      const likedPostIds = likesRes?.data?.data || [];
-      const updatedPosts = postsRes?.data?.data?.map((post) => ({
-        ...post,
-        isLiked: likedPostIds.includes(post._id),
-      }));
-      const postIds = postsRes.data.data.map((item) => item._id
-
-      )
-      setCommunityPosts(updatedPosts);
-      setPostId(postIds)
-
-    } catch (error) {
-      console.error(error.message);
-    } finally {
-      setPostLoading(false);
-    }
-  };
+ 
 
   useEffect(() => {
     getCommmunityPost();
@@ -985,20 +1007,22 @@ export default function Community() {
                       {post?.likes || 0}
                     </Button>
 
-                    <Button
-                      startIcon={
-                        activeCommentPostId === post._id
-                          ? <ChatIcon fontSize={iconFontSize} sx={{ color: '#0084ff' }} />
-                          : <ChatIcon fontSize={iconFontSize} />
-                      }
-                      onClick={() =>
-                        setActiveCommentPostId((prev) => prev === post._id ? null : post._id)
-                      }
-                      size={isMobile ? 'small' : 'medium'}
-                      sx={{ textTransform: 'none', color: 'text.secondary', fontSize: btnFontSize }}
-                    >
-                      Comments
-                    </Button>
+                <Button
+  startIcon={
+    activeCommentPostId === post._id
+      ? <ChatIcon fontSize={iconFontSize} sx={{ color: '#0084ff' }} />
+      : <ChatIcon fontSize={iconFontSize} />
+  }
+  onClick={() => {
+    const next = activeCommentPostId === post._id ? null : post._id;
+    setActiveCommentPostId(next);
+    if (next) getComments(next);
+  }}
+  size={isMobile ? 'small' : 'medium'}
+  sx={{ textTransform: 'none', color: 'text.secondary', fontSize: btnFontSize }}
+>
+  Comments ({commentCounts[post._id] ?? 0})
+</Button>
 
                     <Button
                       startIcon={<ShareIcon fontSize={iconFontSize} />}
@@ -1011,11 +1035,17 @@ export default function Community() {
 
                   <Divider />
 
-                  {activeCommentPostId === post._id && (
-                    <Box sx={{ margin: isMobile ? 1 : 1.5 }}>
-                      <CommunityComments post={post} user={user} />
-                    </Box>
-                  )}
+ {activeCommentPostId === post._id && (
+  <Box sx={{ margin: isMobile ? 1 : 1.5 }}>
+    <CommunityComments
+      post={post}
+      user={user}
+      onCommentsChanged={(newCount) =>
+        setCommentCounts((prev) => ({ ...prev, [post._id]: newCount }))
+      }
+    />
+  </Box>
+)}
                 </Paper>
               ))
             )}
