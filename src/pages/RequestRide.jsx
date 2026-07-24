@@ -34,6 +34,7 @@ const RequestRide = () => {
     const [userData, setUserData] = useState([]);
     const [anchorEl, setAnchorEl] = useState(null);
     const user = JSON.parse(localStorage.getItem('user'));
+    const [deleteLoading, setDeleteLoading] = useState(false);
 
     const toasts = ToastConfig();
 
@@ -78,6 +79,7 @@ const RequestRide = () => {
 
 
     const handleDelete = async (requestId) => {
+        setDeleteLoading(true);
         setOpenCancelDialog(false);
         setSelectedRequest(null);
         try {
@@ -93,6 +95,8 @@ const RequestRide = () => {
             console.error(error);
             toast.error(
                 error.response?.data?.message || "Failed to delete ride request", toasts);
+        } finally {
+            setDeleteLoading(false);
         }
     };
 
@@ -359,6 +363,7 @@ const RequestRide = () => {
                                                         <Button
                                                             variant="contained"
                                                             color="error"
+                                                            disabled={deleteLoading}
                                                             onClick={() => {
                                                                 if (selectedRequest) {
                                                                     handleDelete(selectedRequest._id);
@@ -366,7 +371,7 @@ const RequestRide = () => {
 
                                                             }}
                                                         >
-                                                            Delete
+                                                            {deleteLoading ? "Deleting" : "Delete"}
                                                         </Button>
                                                     </DialogActions>
                                                 </Dialog>

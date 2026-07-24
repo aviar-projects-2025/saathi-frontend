@@ -138,16 +138,70 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
             </Avatar>
           </Box>
 
-          <Box sx={{ minWidth: 0 }}>
-            <Typography fontWeight={700} sx={{ fontSize: { xs: "0.8rem", sm: "1rem" } }} noWrap>
+          <Box
+            sx={{
+              minWidth: 0,
+              width: "100%",
+              maxWidth: {
+                xs: 100,
+                sm: 135,
+                md: 150,
+              },
+              overflow: "hidden",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+            }}
+          >
+            <Typography
+              sx={{
+                fontWeight: 700,
+                fontSize: {
+                  xs: "0.8rem",
+                  sm: "1rem",
+                },
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                lineHeight: 1.3,
+                color: "text.primary",
+              }}
+            >
               {currentUser?.firstName} {currentUser?.lastName}
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: "0.75rem", sm: "1rem" } }} noWrap>
+
+            <Typography
+              sx={{
+                fontSize: {
+                  xs: "0.75rem",
+                  sm: "0.9rem",
+                },
+                color: "text.secondary",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                lineHeight: 1.3,
+                mt: 0.25,
+              }}
+            >
               {currentUser?.email}
             </Typography>
+
             <Typography
-              variant="caption"
-              sx={{ fontWeight: 700, color: SAFFRON, display: "block", mt: 0.25 }}
+              sx={{
+                fontSize: {
+                  xs: "0.7rem",
+                  sm: "0.75rem",
+                },
+                fontWeight: 700,
+                color: SAFFRON,
+                display: "block",
+                mt: 0.5,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                lineHeight: 1.2,
+              }}
             >
               {Math.round(completion)}% complete
             </Typography>

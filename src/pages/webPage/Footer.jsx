@@ -17,6 +17,7 @@ import {
   Email as EmailIcon,
   LocationOn as LocationIcon,
 } from '@mui/icons-material';
+import SaathiLogo from '../../assets/saathilogo.png';
 
 // ──────────────────────────────────────────────
 // Footer
@@ -65,15 +66,23 @@ const Footer = () => (
                 width: { xs: 64, md: 72 },
                 height: { xs: 64, md: 72 },
                 borderRadius: 3,
-                background: 'linear-gradient(135deg,#FF6B35,#FF9F1C)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 800,
-                fontSize: { xs: '1.8rem', md: '2rem' },
+                overflow: "hidden",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                bgcolor: "#fff", // optional
               }}
             >
-              S
+              <Box
+                component="img"
+                src={SaathiLogo}// Replace with your image path
+                alt="Saathi Logo"
+                sx={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover", // use "contain" if you don't want cropping
+                }}
+              />
             </Box>
 
             <Box>
@@ -96,7 +105,7 @@ const Footer = () => (
               </Typography>
             </Box>
 
-            <Stack direction="row" spacing={1.5} justifyContent="center">
+            {/* <Stack direction="row" spacing={1.5} justifyContent="center">
               {socialIcons.map(({ name, icon: Icon, link }) => (
                 <IconButton
                   key={name}
@@ -122,7 +131,7 @@ const Footer = () => (
                   <Icon fontSize="small" />
                 </IconButton>
               ))}
-            </Stack>
+            </Stack> */}
           </Stack>
         </Grid>
 
@@ -137,15 +146,15 @@ const Footer = () => (
             {[
               {
                 Icon: PhoneIcon,
-                text: '+91 98765 43210',
+                text: '+91 - 86680 65758',
               },
               {
                 Icon: EmailIcon,
-                text: 'hello@saathi.com',
+                text: 'aviar@aviartechservices.com',
               },
               {
                 Icon: LocationIcon,
-                text: 'Bangalore, India',
+                text: 'Thiruvannamalai, Tamil Nadu, India',
               },
             ].map(({ Icon, text }) => (
               <Stack key={text} direction="row" spacing={1.5} alignItems="center">
@@ -190,7 +199,7 @@ const Footer = () => (
             textAlign: 'center',
           }}
         >
-          © 2026 Saathi Technologies Pvt Ltd
+          © 2026 AVIAR Technology Services
         </Typography>
 
         <Typography
@@ -200,7 +209,7 @@ const Footer = () => (
             textAlign: 'center',
           }}
         >
-          Made with ❤️ in India
+          Made in India
         </Typography>
       </Stack>
     </Container>

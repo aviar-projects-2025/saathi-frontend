@@ -17,6 +17,7 @@ import TravelExploreIcon from "@mui/icons-material/TravelExplore";
 import ExploreIcon from "@mui/icons-material/Explore";
 import SettingsIcon from "@mui/icons-material/Settings";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
+import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 
 export default function MobileBottomNav() {
   const { completion } = useUser();
@@ -56,6 +57,11 @@ export default function MobileBottomNav() {
       icon: <AddCircleIcon />,
       link: "/offer-ride",
       requiresComplete: true, // only this item is gated by profile completion
+    },
+     {
+      label: "My Rides",
+      icon: <DirectionsCarIcon />,
+      link: "/myride",
     },
     {
       label: "Discover",
