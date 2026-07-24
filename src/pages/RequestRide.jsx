@@ -19,7 +19,6 @@ import {
   Grid,
   InputLabel,
   Select,
-  MenuItem,
   FormControlLabel,
   Switch,
   Slider,
@@ -34,6 +33,10 @@ import {
   Avatar,
   useTheme,
 } from "@mui/material";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
+import ListItemIcon from "@mui/material/ListItemIcon";
 import DirectionsCarFilledOutlinedIcon from "@mui/icons-material/DirectionsCarFilledOutlined";
 import axios from "axios";
 import Api from "../Api";
@@ -64,6 +67,7 @@ const RequestRide = () => {
 
   const toasts = ToastConfig();
 
+const open = Boolean(anchorEl);
   const { refreshRide } = useRide();
 
   const theme = useTheme();
@@ -93,14 +97,15 @@ const RequestRide = () => {
       setLoadingRequests(false);
     }
   }
-  const handleMenuOpen = (event, post) => {
-    setAnchorEl(event.currentTarget);
-    setSelectedPost(post);
-  };
+const handleMenuOpen = (event, request) => {
+  event.stopPropagation();
+  setAnchorEl(event.currentTarget);
+  setSelectedRequest(request);
+};
 
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
+const handleMenuClose = () => {
+  setAnchorEl(null);
+};
 
   const handleDelete = async (requestId) => {
     setOpenCancelDialog(false);
@@ -384,33 +389,14 @@ const RequestRide = () => {
                             />
 
                             <IconButton
-                              onClick={() => {
-                                setSelectedRequest(request);
-                                setSelectedRide(request.rideId);
-                                setOpenEditModal(true);
-                              }}
-                              size="small"
+                              onClick={(event) =>
+                                handleMenuOpen(event, request)
+                              }
                               sx={{
-                                bgcolor: "rgba(255,255,255,0.1)",
                                 color: "#fff",
-                                "&:hover": { bgcolor: "rgba(255,255,255,0.2)" },
                               }}
                             >
-                              <EditIcon fontSize="small" />
-                            </IconButton>
-                            <IconButton
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleCancelClick(request);
-                              }}
-                              size="small"
-                              sx={{
-                                bgcolor: "rgba(255,255,255,0.1)",
-                                color: "#fff",
-                                "&:hover": { bgcolor: "rgba(255,255,255,0.2)" },
-                              }}
-                            >
-                              <DeleteIcon fontSize="small" />
+                              <MoreVertIcon />
                             </IconButton>
                           </Box>
                         </Box>
@@ -585,6 +571,39 @@ const RequestRide = () => {
             })()}
           </>
         )}
+        <Menu
+  anchorEl={anchorEl}
+  open={open}
+  onClose={handleMenuClose}
+>
+  <MenuItem
+    onClick={() => {
+      setSelectedRide(selectedRequest?.rideId);
+      setOpenEditModal(true);
+      handleMenuClose();
+    }}
+  >
+    <ListItemIcon>
+      <EditIcon fontSize="small" />
+    </ListItemIcon>
+    Edit
+  </MenuItem>
+
+  <MenuItem
+    onClick={() => {
+      handleCancelClick(selectedRequest);
+      handleMenuClose();
+    }}
+  >
+    <ListItemIcon>
+      <DeleteIcon
+        fontSize="small"
+        color="error"
+      />
+    </ListItemIcon>
+    Delete
+  </MenuItem>
+</Menu>
         <Ridebook
           open={openEditModal}
           onClose={() => setOpenEditModal(false)}
