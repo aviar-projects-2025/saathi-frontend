@@ -158,26 +158,29 @@ const RequestRide = () => {
           px: 2,
         }}
       >
-        <DirectionsCarFilledOutlinedIcon
-          sx={{
+     
+
+{allMyRequests.filter((req) => req?.rideId).length === 0 && (
+    <DirectionsCarFilledOutlinedIcon
+        sx={{
             fontSize: 55,
             color: "#bdbdbd",
-            mb: 1,
-          }}
-        />
-        <Typography
-          sx={{
-            fontSize: {
-              xs: "1.4rem",
-              sm: "1.7rem",
-            },
-            fontWeight: 100,
-            mb: 1,
-          }}
-        >
-          {" "}
-          My Request Rides
-        </Typography>
+            mb: 2,
+        }}
+    />
+)}
+<Typography
+    sx={{
+        fontSize: {
+            xs: "1.4rem",
+            sm: "1.7rem",
+        },
+        fontWeight: 100,
+        mb: 2,
+    }}
+>
+    My Request Rides
+</Typography>
         <br />
 
         {loadingRequests ? (
@@ -316,30 +319,33 @@ const RequestRide = () => {
                     ).length;
 
                     return (
-                      <Card
-                        key={request._id}
-                        sx={{
-                          mb: 3,
-                          borderRadius: "16px",
-                          overflow: "hidden",
-                          border: "1px solid #f0d9c0",
-                          boxShadow: "none",
-                          cursor: "pointer",
-                        }}
-                      >
+                <Card
+    key={request._id}
+    sx={{
+        width: "100%",
+        maxWidth: "1200px",
+        minHeight: "220px",
+        mb: 4,
+        borderRadius: "20px",
+        overflow: "hidden",
+        border: "1px solid #f0d9c0",
+        boxShadow: "0 8px 20px rgba(0,0,0,0.08)",
+        cursor: "pointer",
+    }}
+>
                         {/* Header bar */}
-                        <Box
-                          sx={{
-                            bgcolor: "#1a1030",
-                            px: 2.5,
-                            py: 1.5,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            gap: 1,
-                            flexWrap: "wrap",
-                          }}
-                        >
+                  <Box
+    sx={{
+        bgcolor: "#1a1030",
+        px: 3,
+        py: 2,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: 1,
+        flexWrap: "wrap",
+    }}
+>
                           <Typography
                             sx={{
                               color: "#fff",
@@ -451,8 +457,11 @@ const RequestRide = () => {
                             </Button>
                           </DialogActions>
                         </Dialog>
-                        <CardContent sx={{ p: 2.5 }}>
-                          <Box
+<CardContent
+    sx={{
+        p: 4,
+    }}
+>                          <Box
                             sx={{
                               display: "flex",
                               alignItems: "center",
