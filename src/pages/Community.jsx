@@ -296,6 +296,17 @@ export default function Community() {
     });
 
   const addLike = async (id) => {
+    setCommunityPosts((prev) =>
+      prev.map((post) =>
+        post._id === id
+          ? {
+            ...post,
+            isLiked: true,
+            likes: (post.likes || 0) + 1,
+          }
+          : post
+      )
+    );
     try {
       const res = await axios.post(Api + `/likes/${id}/${user.id}`);
       setCommunityPosts((prev) =>
@@ -305,7 +316,20 @@ export default function Community() {
             : post
         )
       );
-    } catch (error) { }
+    } catch (error) {
+      console.error(error);
+      setCommunityPosts((prev) =>
+        prev.map((post) =>
+          post._id === id
+            ? {
+              ...post,
+              isLiked: false,
+              likes: (post.likes || 1) - 1,
+            }
+            : post
+        )
+      );
+    }
   };
   const handleDelete = async (postId) => {
     try {
@@ -328,6 +352,17 @@ export default function Community() {
     }
   };
   const removeLike = async (id) => {
+    setCommunityPosts((prev) =>
+      prev.map((post) =>
+        post._id === id
+          ? {
+            ...post,
+            isLiked: false,
+            likes: Math.max((post.likes || 1) - 1, 0),
+          }
+          : post
+      )
+    );
     try {
       const res = await axios.delete(Api + `/likes/${id}/${user.id}`);
       setCommunityPosts((prev) =>
@@ -337,7 +372,20 @@ export default function Community() {
             : post
         )
       );
-    } catch (error) { }
+    } catch (error) {
+      console.error(error);
+      setCommunityPosts((prev) =>
+        prev.map((post) =>
+          post._id === id
+            ? {
+              ...post,
+              isLiked: true,
+              likes: (post.likes || 0) + 1,
+            }
+            : post
+        )
+      );
+    }
   };
 
 
