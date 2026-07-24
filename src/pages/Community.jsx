@@ -1022,7 +1022,7 @@ const getComments = async (postId) => {
   size={isMobile ? 'small' : 'medium'}
   sx={{ textTransform: 'none', color: 'text.secondary', fontSize: btnFontSize }}
 >
-  Comments ({commentCounts[post._id] ?? 0})
+ {commentCounts[post._id] ?? 0}
 </Button>
 
                     <Button

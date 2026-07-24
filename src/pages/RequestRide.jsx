@@ -67,7 +67,7 @@ const RequestRide = () => {
 
   const toasts = ToastConfig();
 
-const open = Boolean(anchorEl);
+  const open = Boolean(anchorEl);
   const { refreshRide } = useRide();
 
   const theme = useTheme();
@@ -97,15 +97,15 @@ const open = Boolean(anchorEl);
       setLoadingRequests(false);
     }
   }
-const handleMenuOpen = (event, request) => {
-  event.stopPropagation();
-  setAnchorEl(event.currentTarget);
-  setSelectedRequest(request);
-};
+  const handleMenuOpen = (event, request) => {
+    event.stopPropagation();
+    setAnchorEl(event.currentTarget);
+    setSelectedRequest(request);
+  };
 
-const handleMenuClose = () => {
-  setAnchorEl(null);
-};
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
 
   const handleDelete = async (requestId) => {
     setOpenCancelDialog(false);
@@ -406,11 +406,11 @@ const handleMenuClose = () => {
                           maxWidth="xs"
                           fullWidth
                         >
-                          <DialogTitle>Delete Post</DialogTitle>
+                          <DialogTitle>Cancel Ride Request</DialogTitle>
 
                           <DialogContent>
                             <Typography>
-                              Are you sure you want to delete this request?
+                              Are you sure you want to cancel this ride request?
                             </Typography>
                           </DialogContent>
 
@@ -426,7 +426,7 @@ const handleMenuClose = () => {
                                 },
                               }}
                             >
-                              Cancel
+                              No, Keep Request
                             </Button>
                             <Button
                               variant="contained"
@@ -437,7 +437,7 @@ const handleMenuClose = () => {
                                 }
                               }}
                             >
-                              Delete
+                              Yes, Cancel Ride
                             </Button>
                           </DialogActions>
                         </Dialog>
@@ -572,38 +572,83 @@ const handleMenuClose = () => {
           </>
         )}
         <Menu
-  anchorEl={anchorEl}
-  open={open}
-  onClose={handleMenuClose}
->
-  <MenuItem
-    onClick={() => {
-      setSelectedRide(selectedRequest?.rideId);
-      setOpenEditModal(true);
-      handleMenuClose();
-    }}
-  >
-    <ListItemIcon>
-      <EditIcon fontSize="small" />
-    </ListItemIcon>
-    Edit
-  </MenuItem>
+          anchorEl={anchorEl}
+          open={open}
+          onClose={handleMenuClose}
+          PaperProps={{
+            elevation: 0,
+            sx: {
+              borderRadius: "20px",
+              minWidth: 250,
+              p: 1,
+              mt: 1,
+              bgcolor: "#F8FAFC", // Card Background Color
+              border: "1px solid #E2E8F0",
+              boxShadow: "0px 10px 30px rgba(0, 0, 0, 0.12)",
+              overflow: "hidden",
+            },
+          }}
+        >
+          <MenuItem
+            onClick={() => {
+              setSelectedRide(selectedRequest?.rideId);
+              setOpenEditModal(true);
+              handleMenuClose();
+            }}
+            sx={{
+              borderRadius: "14px",
+              py: 1.5,
+              mb: 0.5,
+              bgcolor: "#FFFFFF",
+              "&:hover": {
+                bgcolor: "#EEF2FF",
+              },
+            }}
+          >
+            <ListItemIcon>
+              <EditIcon fontSize="small" sx={{ color: "#6C63FF" }} />
+            </ListItemIcon>
 
-  <MenuItem
-    onClick={() => {
-      handleCancelClick(selectedRequest);
-      handleMenuClose();
-    }}
-  >
-    <ListItemIcon>
-      <DeleteIcon
-        fontSize="small"
-        color="error"
-      />
-    </ListItemIcon>
-    Delete
-  </MenuItem>
-</Menu>
+            <Box>
+              <Typography fontWeight={600} fontSize={14}>
+                Update Ride
+              </Typography>
+
+              <Typography variant="caption" color="text.secondary">
+                Modify your ride request
+              </Typography>
+            </Box>
+          </MenuItem>
+
+          <MenuItem
+            onClick={() => {
+              handleCancelClick(selectedRequest);
+              handleMenuClose();
+            }}
+            sx={{
+              borderRadius: "14px",
+              py: 1.5,
+              bgcolor: "#FFFFFF",
+              "&:hover": {
+                bgcolor: "#FFF1F2",
+              },
+            }}
+          >
+            <ListItemIcon>
+              <DeleteIcon fontSize="small" sx={{ color: "#E53935" }} />
+            </ListItemIcon>
+
+            <Box>
+              <Typography fontWeight={600} fontSize={14} color="error">
+                Cancel Ride Request
+              </Typography>
+
+              <Typography variant="caption" color="text.secondary">
+                Cancel your current request
+              </Typography>
+            </Box>
+          </MenuItem>
+        </Menu>
         <Ridebook
           open={openEditModal}
           onClose={() => setOpenEditModal(false)}
