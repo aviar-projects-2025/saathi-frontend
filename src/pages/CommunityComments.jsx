@@ -148,7 +148,19 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
       setLoading(true);
       const res = await axios.get(Api + `/community/comments/${post?._id}`);
       const list = res.data.data.comments;
-      setCommentsFetched(list);
+    setCommentsFetched((previousComments) =>
+  list.map((newComment) => {
+    const oldComment = previousComments.find(
+      (item) => item._id === newComment._id
+    );
+    return {
+      ...newComment,
+      likedByCurrentUser:
+        oldComment?.likedByCurrentUser ??
+        newComment.likedByCurrentUser,
+    };
+  })
+);
       onCommentsChanged?.(list.length);
     } catch (error) {
       console.log(error.message);
