@@ -1,4 +1,3 @@
-
 import { Formik } from "formik";
 import * as Yup from "yup";
 import axios from "axios";
@@ -20,7 +19,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useState } from "react";
 import Api from "../../Api";
 import { toast } from "react-toastify";
-import Saathi from '../../assets/saathilogo.png';
+import Saathi from "../../assets/saathilogo.png";
 import { IconButton, InputAdornment } from "@mui/material";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
@@ -52,9 +51,16 @@ const Register = () => {
     firstName: Yup.string().required("First name is required"),
     lastName: Yup.string().required("Last name is required"),
     email: Yup.string().email("Invalid email").required("Email is required"),
-    referralCode: Yup.string().required('Referral Code is MUST'),
+    referralCode: Yup.string().required("Referral Code is MUST"),
     password: Yup.string()
-      .min(6, "Password must be at least 6 characters")
+      .matches(/^[A-Z]/, "Password must start with an uppercase letter")
+      .matches(/[a-z]/, "Password must contain at least one lowercase letter")
+      .matches(/[0-9]/, "Password must contain at least one number")
+      .matches(
+        /[@$!%*?&#]/,
+        "Password must contain at least one special character",
+      )
+      .min(8, "Password must be at least 8 characters")
       .required("Password is required"),
   });
 
@@ -76,22 +82,22 @@ const Register = () => {
   };
 
   const inputSx = {
-    '& .MuiOutlinedInput-root': {
-      backgroundColor: '#FFFFFF',
-      borderRadius: '12px',
-      '& input:-webkit-autofill': {
-        WebkitBoxShadow: '0 0 0 1000px #FFFFFF inset',
-        WebkitTextFillColor: '#000000',
+    "& .MuiOutlinedInput-root": {
+      backgroundColor: "#FFFFFF",
+      borderRadius: "12px",
+      "& input:-webkit-autofill": {
+        WebkitBoxShadow: "0 0 0 1000px #FFFFFF inset",
+        WebkitTextFillColor: "#000000",
       },
-      '& .MuiOutlinedInput-notchedOutline': {
-        borderRadius: '12px',
+      "& .MuiOutlinedInput-notchedOutline": {
+        borderRadius: "12px",
       },
-      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-        borderColor: '#FF9933',
+      "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+        borderColor: "#FF9933",
       },
     },
-    '& .MuiInputLabel-root.Mui-focused': {
-      color: '#FF9933',
+    "& .MuiInputLabel-root.Mui-focused": {
+      color: "#FF9933",
     },
   };
 
@@ -155,7 +161,7 @@ const Register = () => {
             </Typography>
 
             {serverError && (
-              <Alert severity="error" sx={{ mb: 2, borderRadius: '12px' }}>
+              <Alert severity="error" sx={{ mb: 2, borderRadius: "12px" }}>
                 {serverError}
               </Alert>
             )}
@@ -251,7 +257,11 @@ const Register = () => {
                                 onMouseDown={handleMouseDownPassword}
                                 edge="end"
                               >
-                                {showPassword ? <VisibilityOff /> : <Visibility />}
+                                {showPassword ? (
+                                  <VisibilityOff />
+                                ) : (
+                                  <Visibility />
+                                )}
                               </IconButton>
                             </InputAdornment>
                           ),
@@ -259,7 +269,6 @@ const Register = () => {
                       }}
                       sx={inputSx}
                     />
-
 
                     <TextField
                       fullWidth
@@ -272,7 +281,9 @@ const Register = () => {
                       }}
                       onChange={handleChange}
                       onBlur={handleBlur}
-                      error={touched.referralCode && Boolean(errors.referralCode)}
+                      error={
+                        touched.referralCode && Boolean(errors.referralCode)
+                      }
                       helperText={touched.referralCode && errors.referralCode}
                       margin="normal"
                       size="small"
