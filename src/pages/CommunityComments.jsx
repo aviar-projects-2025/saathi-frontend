@@ -157,7 +157,22 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
           <CircularProgress size={28} />
         </Box>
       ) : (
-        <Box sx={{ mt: 0.75 }}>
+          <Box
+    sx={{
+      mt: 0.75,
+      maxHeight: { xs: 280, sm: 320, md: 360 },
+      overflowY: "auto",
+      overflowX: "hidden",
+      pr: 0.5, // avoid content hiding under scrollbar
+      "&::-webkit-scrollbar": { width: 4 },
+      "&::-webkit-scrollbar-thumb": {
+        backgroundColor: "#E0D4C8",
+        borderRadius: 4,
+      },
+      scrollbarWidth: "thin",
+      scrollbarColor: "#E0D4C8 transparent",
+    }}
+  >
           {parentComments.map((item, index) => {
             const replies = getReplies(item._id);
 
