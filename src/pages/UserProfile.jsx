@@ -419,14 +419,14 @@ const UserProfile = () => {
                                 Edit Profile
                             </Button>
 
-                            <Button
+                            {/* <Button
                                 fullWidth
                                 variant="outlined"
                                 onClick={handleOpenShare}
                                 sx={{ ...pillBtn, borderColor: "#EADFD3" }}
                             >
                                 Share Profile
-                            </Button>
+                            </Button> */}
                         </Stack>
                     </SectionCard>
 
