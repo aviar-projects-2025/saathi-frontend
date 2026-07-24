@@ -148,19 +148,16 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
       setLoading(true);
       const res = await axios.get(Api + `/community/comments/${post?._id}`);
       const list = res.data.data.comments;
-    setCommentsFetched((previousComments) =>
-  list.map((newComment) => {
-    const oldComment = previousComments.find(
-      (item) => item._id === newComment._id
-    );
-    return {
-      ...newComment,
-      likedByCurrentUser:
-        oldComment?.likedByCurrentUser ??
-        newComment.likedByCurrentUser,
-    };
-  })
-);
+      const likedComments =
+        JSON.parse(localStorage.getItem("likedComments")) || [];
+
+      const updatedComments = list.map((item) => ({
+        ...item,
+        likedByCurrentUser:
+          likedComments.includes(item._id) || item.likedByCurrentUser,
+      }));
+
+      setCommentsFetched(updatedComments);
       onCommentsChanged?.(list.length);
     } catch (error) {
       console.log(error.message);
@@ -203,6 +200,21 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
       const res = await axios.post(
         Api + `/community/likes/comment/${commentId}/${user.id}`,
       );
+      let likedComments =
+        JSON.parse(localStorage.getItem("likedComments")) || [];
+
+      // Add or remove comment id
+      if (res.data.liked) {
+        if (!likedComments.includes(commentId)) {
+          likedComments.push(commentId);
+        }
+      } else {
+        likedComments = likedComments.filter((id) => id !== commentId);
+      }
+
+      // Save in localStorage
+      localStorage.setItem("likedComments", JSON.stringify(likedComments));
+
       setCommentsFetched((prev) =>
         prev.map((item) =>
           item._id === commentId
