@@ -550,7 +550,7 @@ function RideCard({ ride, fetchRides, user, confirmRide, setConfirmRide, showEdi
   const rideRequests = allRequests?.filter(
     (req) => req.rideId?._id?.toString() === ride._id?.toString()
   ) || [];
-  console.log(rideRequests, 'rideRequests ')
+
 
   const pendingCount = rideRequests.filter(
     r => r.status?.toUpperCase() === 'PENDING'

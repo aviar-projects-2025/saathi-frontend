@@ -31,6 +31,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import FlightTakeoffIcon from '@mui/icons-material/FlightTakeoff';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 
 // ── Design tokens ────────────────────────────────────────────────────────
 const TOKENS = {
@@ -162,183 +163,241 @@ function PassengerStub({ request, onApprove, onReject, dense }) {
     const [open, setOpen] = useState(false);
     const v = requestVisual(request?.status);
     const isPending = request?.status?.toUpperCase() === 'PENDING';
-    console.log(request,'requestrequest')
-    const firstName = request.requestedBy?.firstName || request?.data?.requestBy?.requestedBy?.firstName|| 'U';
+    console.log(request, 'requestrequest')
+    const firstName = request.requestedBy?.firstName || request?.data?.requestBy?.requestedBy?.firstName || 'U';
     const lastName = request.requestedBy?.lastName || '';
     const profilePic = request.requestedBy?.profileImage
-    const seats = request?.seatsRequested || 1;
+    const seats = request?.approvedSeats || 1;
+    const pendingReq = request?.pendingReqSeats || 0;
 
     return (
-        <Box
-            sx={{
-                position: 'relative',
-                borderRadius: 1.5,
-                bgcolor: 'background.default',
-                border: `1px solid ${TOKENS.line}`,
-                borderLeft: `4px solid ${v.color}`,
-                overflow: 'hidden',
-            }}
-        >
+        <>
             <Box
                 sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: 1,
-                    p: { xs: 1.1, sm: 1.4 },
+                    position: 'relative',
+                    borderRadius: 1.5,
+                    bgcolor: 'background.default',
+                    border: `1px solid ${TOKENS.line}`,
+                    borderLeft: `4px solid ${v.color}`,
+                    overflow: 'hidden',
                 }}
             >
-                <Stack direction="row" spacing={1.2} alignItems="center" sx={{ minWidth: 0 }}>
-                    <Avatar
-                        src={profilePic}
-                        sx={{
-                            width: { xs: 32, sm: 38 },
-                            height: { xs: 32, sm: 38 },
-                            bgcolor: TOKENS.ink,
-                            color: TOKENS.paper,
-                            fontFamily: TOKENS.displayFont,
-                            fontWeight: 700,
-                            fontSize: { xs: '0.8rem', sm: '0.9rem' },
-                        }}
-                    >
-                        {firstName[0]}
-                    </Avatar>
-                    <Box sx={{ minWidth: 0 }}>
-                        <Typography
-                            noWrap
+                <Box
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 1,
+                        p: { xs: 1.1, sm: 1.4 },
+                    }}
+                >
+                    <Stack direction="row" spacing={1.2} alignItems="center" sx={{ minWidth: 0 }}>
+                        <Avatar
+                            src={profilePic}
                             sx={{
-                                fontFamily: TOKENS.bodyFont,
+                                width: { xs: 32, sm: 38 },
+                                height: { xs: 32, sm: 38 },
+                                bgcolor: TOKENS.ink,
+                                color: TOKENS.paper,
+                                fontFamily: TOKENS.displayFont,
                                 fontWeight: 700,
-                                fontSize: { xs: '0.82rem', sm: '0.9rem' },
-                                color: TOKENS.ink,
+                                fontSize: { xs: '0.8rem', sm: '0.9rem' },
                             }}
                         >
-                            {firstName} {lastName}
-                        </Typography>
-                        <Stack direction="row" spacing={0.6} alignItems="center" sx={{ mt: 0.3 }}>
-                            <EventSeatIcon sx={{ fontSize: 13, color: TOKENS.inkSoft }} />
-                            <Typography sx={{ fontFamily: TOKENS.monoFont, fontSize: '0.7rem', color: TOKENS.inkSoft }}>
-                                SEAT × {seats}
+                            {firstName[0]}
+                        </Avatar>
+                        <Box sx={{ minWidth: 0 }}>
+                            <Typography
+                                noWrap
+                                sx={{
+                                    fontFamily: TOKENS.bodyFont,
+                                    fontWeight: 700,
+                                    fontSize: { xs: '0.82rem', sm: '0.9rem' },
+                                    color: TOKENS.ink,
+                                }}
+                            >
+                                {firstName} {lastName}
                             </Typography>
-                        </Stack>
-                    </Box>
-                </Stack>
-
-                <Stack direction="row" spacing={0.5} alignItems="center" sx={{ flexShrink: 0 }}>
-                    {isPending ? (
-                        dense ? (
-                            <>
-                                <IconButton
-                                    aria-label="Approve request"
-                                    onClick={() => onApprove(request._id)}
-                                    sx={{
-                                        width: 32,
-                                        height: 32,
-                                        bgcolor: TOKENS.greenSoft,
-                                        color: TOKENS.green,
-                                        '&:hover': { bgcolor: TOKENS.green, color: '#fff' },
-                                    }}
-                                >
-                                    <CheckCircleIcon sx={{ fontSize: 18 }} />
-                                </IconButton>
-                                <IconButton
-                                    aria-label="Reject request"
-                                    onClick={() => onReject(request._id)}
-                                    sx={{
-                                        width: 32,
-                                        height: 32,
-                                        bgcolor: TOKENS.redSoft,
-                                        color: TOKENS.red,
-                                        '&:hover': { bgcolor: TOKENS.red, color: '#fff' },
-                                    }}
-                                >
-                                    <CancelIcon sx={{ fontSize: 18 }} />
-                                </IconButton>
-                            </>
-                        ) : (
-                            <>
-                                <Button
-                                    size="small"
-                                    onClick={() => onApprove(request._id)}
-                                    startIcon={<CheckCircleIcon sx={{ fontSize: 16 }} />}
-                                    sx={{
-                                        fontFamily: TOKENS.bodyFont,
-                                        textTransform: 'none',
-                                        fontWeight: 700,
-                                        fontSize: '0.75rem',
-                                        color: TOKENS.green,
-                                        bgcolor: TOKENS.greenSoft,
-                                        borderRadius: 5,
-                                        px: 1.4,
-                                        '&:hover': { bgcolor: TOKENS.green, color: '#fff' },
-                                    }}
-                                >
-                                    Approve
-                                </Button>
-                                <Button
-                                    size="small"
-                                    onClick={() => onReject(request._id)}
-                                    startIcon={<CancelIcon sx={{ fontSize: 16 }} />}
-                                    sx={{
-                                        fontFamily: TOKENS.bodyFont,
-                                        textTransform: 'none',
-                                        fontWeight: 700,
-                                        fontSize: '0.75rem',
-                                        color: TOKENS.red,
-                                        bgcolor: TOKENS.redSoft,
-                                        borderRadius: 5,
-                                        px: 1.4,
-                                        '&:hover': { bgcolor: TOKENS.red, color: '#fff' },
-                                    }}
-                                >
-                                    Reject
-                                </Button>
-                            </>
-                        )
-                    ) : (
-                        <Chip
-                            label={v.label}
-                            size="small"
-                            sx={{
-                                bgcolor: v.bg,
-                                color: v.color,
-                                fontFamily: TOKENS.bodyFont,
-                                fontWeight: 700,
-                                fontSize: '0.68rem',
-                            }}
-                        />
-                    )}
-                    <IconButton size="small" onClick={() => setOpen((o) => !o)} aria-label="Toggle passenger details">
-                        {open ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
-                    </IconButton>
-                </Stack>
-            </Box>
-
-            <Collapse in={open}>
-                <Box sx={{ px: { xs: 1.4, sm: 1.8 }, pb: 1.4, pt: 0, borderTop: `1px dashed ${TOKENS.line}` }}>
-                    <Stack spacing={0.6} sx={{ mt: 1.2 }}>
-                        <Typography sx={{ fontFamily: TOKENS.bodyFont, fontSize: '0.8rem', color: TOKENS.ink }}>
-                            <strong>Message:</strong> {request.message || 'No message'}
-                        </Typography>
-                        <Typography sx={{ fontFamily: TOKENS.bodyFont, fontSize: '0.8rem', color: TOKENS.ink }}>
-                            <strong>Phone:</strong> {request.phone || 'Not provided'}
-                        </Typography>
-                        {request.members?.length > 0 && (
-                            <>
-                                <Typography sx={{ fontFamily: TOKENS.bodyFont, fontSize: '0.8rem', fontWeight: 700 }}>
-                                    Members:
+                            <Stack direction="row" spacing={0.6} alignItems="center" sx={{ mt: 0.3 }}>
+                                <EventSeatIcon sx={{ fontSize: 13, color: TOKENS.inkSoft }} />
+                                <Typography sx={{ fontFamily: TOKENS.monoFont, fontSize: '0.7rem', color: TOKENS.inkSoft }}>
+                                    SEAT × {seats}
                                 </Typography>
-                                {request.members.map((m, i) => (
-                                    <Typography key={i} sx={{ fontFamily: TOKENS.bodyFont, fontSize: '0.78rem', ml: 2 }}>
-                                        • {m.name} ({m.age} yrs)
-                                    </Typography>
-                                ))}
-                            </>
+                            </Stack>
+                        </Box>
+                    </Stack>
+
+                    <Stack direction="row" spacing={0.5} alignItems="center" sx={{ flexShrink: 0 }}>
+                        {isPending ? (
+                            dense ? (
+                                <>
+                                    <IconButton
+                                        aria-label="Approve request"
+                                        onClick={() => onApprove(request._id)}
+                                        sx={{
+                                            width: 32,
+                                            height: 32,
+                                            bgcolor: TOKENS.greenSoft,
+                                            color: TOKENS.green,
+                                            '&:hover': { bgcolor: TOKENS.green, color: '#fff' },
+                                        }}
+                                    >
+                                        <CheckCircleIcon sx={{ fontSize: 18 }} />
+                                    </IconButton>
+                                    <IconButton
+                                        aria-label="Reject request"
+                                        onClick={() => onReject(request._id)}
+                                        sx={{
+                                            width: 32,
+                                            height: 32,
+                                            bgcolor: TOKENS.redSoft,
+                                            color: TOKENS.red,
+                                            '&:hover': { bgcolor: TOKENS.red, color: '#fff' },
+                                        }}
+                                    >
+                                        <CancelIcon sx={{ fontSize: 18 }} />
+                                    </IconButton>
+                                </>
+                            ) : (
+                                <>
+                                    <Button
+                                        size="small"
+                                        onClick={() => onApprove(request._id)}
+                                        startIcon={<CheckCircleIcon sx={{ fontSize: 16 }} />}
+                                        sx={{
+                                            fontFamily: TOKENS.bodyFont,
+                                            textTransform: 'none',
+                                            fontWeight: 700,
+                                            fontSize: '0.75rem',
+                                            color: TOKENS.green,
+                                            bgcolor: TOKENS.greenSoft,
+                                            borderRadius: 5,
+                                            px: 1.4,
+                                            '&:hover': { bgcolor: TOKENS.green, color: '#fff' },
+                                        }}
+                                    >
+                                        Approve
+                                    </Button>
+                                    <Button
+                                        size="small"
+                                        onClick={() => onReject(request._id)}
+                                        startIcon={<CancelIcon sx={{ fontSize: 16 }} />}
+                                        sx={{
+                                            fontFamily: TOKENS.bodyFont,
+                                            textTransform: 'none',
+                                            fontWeight: 700,
+                                            fontSize: '0.75rem',
+                                            color: TOKENS.red,
+                                            bgcolor: TOKENS.redSoft,
+                                            borderRadius: 5,
+                                            px: 1.4,
+                                            '&:hover': { bgcolor: TOKENS.red, color: '#fff' },
+                                        }}
+                                    >
+                                        Reject
+                                    </Button>
+                                </>
+                            )
+                        ) : (
+                            <Chip
+                                label={v.label}
+                                size="small"
+                                sx={{
+                                    bgcolor: v.bg,
+                                    color: v.color,
+                                    fontFamily: TOKENS.bodyFont,
+                                    fontWeight: 700,
+                                    fontSize: '0.68rem',
+                                }}
+                            />
                         )}
+                        <IconButton size="small" onClick={() => setOpen((o) => !o)} aria-label="Toggle passenger details">
+                            {open ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+                        </IconButton>
                     </Stack>
                 </Box>
-            </Collapse>
-        </Box>
+                <Collapse in={open}>
+                    <Box sx={{ px: { xs: 1.4, sm: 1.8 }, pb: 1.4, pt: 0, borderTop: `1px dashed ${TOKENS.line}` }}>
+                        <Stack spacing={0.6} sx={{ mt: 1.2 }}>
+                            <Typography sx={{ fontFamily: TOKENS.bodyFont, fontSize: '0.8rem', color: TOKENS.ink }}>
+                                <strong>Message:</strong> {request.message || 'No message'}
+                            </Typography>
+                            <Typography sx={{ fontFamily: TOKENS.bodyFont, fontSize: '0.8rem', color: TOKENS.ink }}>
+                                <strong>Phone:</strong> {request.phone || 'Not provided'}
+                            </Typography>
+                            {request.members?.length > 0 && (
+                                <>
+                                    <Typography sx={{ fontFamily: TOKENS.bodyFont, fontSize: '0.8rem', fontWeight: 700 }}>
+                                        Members:
+                                    </Typography>
+                                    {request.members.map((m, i) => (
+                                        <Typography key={i} sx={{ fontFamily: TOKENS.bodyFont, fontSize: '0.78rem', ml: 2 }}>
+                                            • {m.name} ({m.age} yrs)
+                                        </Typography>
+                                    ))}
+                                </>
+                            )}
+                        </Stack>
+                    </Box>
+                </Collapse>
+            </Box>
+
+            {pendingReq > 0 && (
+                <Box
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        p: 1,
+                        m:1,
+                        borderRadius: 2,
+                        bgcolor: "rgba(255,0,0,0.08)", // light red background
+                        border: "1px solid rgba(255,0,0,0.4)",
+                    }}
+                >
+                    {/* Left Side - Warning + Text */}
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        <WarningAmberIcon sx={{ color: "error.main" }} />
+
+                        <Typography
+                            sx={{
+                                fontWeight: 700,
+                                fontSize: "0.85rem",
+                                color: "error.main",
+                            }}
+                        >
+                            {firstName} {lastName} requested +{pendingReq}{" "}
+                            {pendingReq > 1 ? "seats" : "seat"}
+                        </Typography>
+                    </Box>
+
+                    {/* Right Side - Actions */}
+                    <Box sx={{ display: "flex", gap: 0.5 }}>
+                        <IconButton
+                            sx={{
+                                color: "green",
+                                bgcolor: "rgba(0,200,0,0.1)",
+                                "&:hover": { bgcolor: "rgba(0,200,0,0.2)" },
+                            }}
+                            onClick={() => onApprove(request._id)}
+                        >
+                            <CheckCircleIcon />
+                        </IconButton>
+
+                        <IconButton
+                            sx={{
+                                color: "red",
+                                bgcolor: "rgba(255,0,0,0.1)",
+                                "&:hover": { bgcolor: "rgba(255,0,0,0.2)" },
+                            }}
+                            onClick={() => onReject(request._id)}
+                        >
+                            <CancelIcon />
+                        </IconButton>
+                    </Box>
+                </Box>
+            )}
+        </>
     );
 }
 
@@ -534,8 +593,6 @@ export default function RideDetailsModal({
                         <Field icon={DescriptionIcon} label="Notes" value={ride.description} span />
                     )}
                 </Box>
-
-                {console.log("Requesed Ride List", requests)}
 
                 {requests.length > 0 && (
                     <>
