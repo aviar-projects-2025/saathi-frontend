@@ -891,11 +891,21 @@ export default function Community() {
                               </Button>
                             </DialogActions>
                           </Dialog>
+
+                          {/* Edit post of Community Image */}
+
                           <Dialog
                             open={editOpen}
                             onClose={() => setEditOpen(false)}
                             fullWidth
                             maxWidth="sm"
+                            // fullScreen// pass in `useMediaQuery(theme.breakpoints.down('sm'))`
+                            PaperProps={{
+                              sx: {
+                                borderRadius: { xs: 0, sm: 3 },
+                                m: { xs: 0, sm: 2 },
+                              },
+                            }}
                           >
                             {/* Dialog Header */}
                             <DialogTitle
@@ -904,7 +914,9 @@ export default function Community() {
                                 alignItems: "center",
                                 justifyContent: "space-between",
                                 fontWeight: 600,
-                                pb: 1,
+                                fontSize: { xs: "1rem", sm: "1.15rem" },
+                                py: 1.5,
+                                px: 2,
                               }}
                             >
                               Edit Post
@@ -914,22 +926,21 @@ export default function Community() {
                                 size="small"
                                 sx={{
                                   color: "#666",
-                                  "&:hover": {
-                                    bgcolor: "#f5f5f5",
-                                  },
+                                  "&:hover": { bgcolor: "#f5f5f5" },
                                 }}
                               >
-                                <CloseIcon />
+                                <CloseIcon fontSize="small" />
                               </IconButton>
                             </DialogTitle>
 
                             {/* Dialog Content */}
-                            <DialogContent dividers>
+                            <DialogContent dividers sx={{ px: { xs: 1.5, sm: 3 }, py: 2 }}>
                               <TextField
                                 fullWidth
                                 multiline
                                 minRows={3}
                                 margin="dense"
+                                size="small"
                                 label="Description"
                                 value={editDescription}
                                 onChange={(e) => setEditDescription(e.target.value)}
@@ -942,25 +953,29 @@ export default function Community() {
                                   alt="Preview"
                                   sx={{
                                     width: "100%",
-                                    height: { xs: 220, sm: 280 },
+                                    height: { xs: 160, sm: 220, md: 280 },
                                     objectFit: "cover",
                                     borderRadius: 2,
                                     border: "1px solid #eee",
-                                    mb: 2,
+                                    mb: 1.5,
                                   }}
                                 />
 
                                 <Button
                                   variant="contained"
-                                  fullWidth
+                                  size="small"
                                   onClick={openImageMenu}
                                   sx={{
-                                    height: 46,
+                                    width: "fit-content", // or "auto"
+                                    minWidth: "unset",    // optional: removes MUI's default minimum width
+                                    height: 36,
                                     bgcolor: "#FF9933",
                                     color: "#fff",
                                     fontWeight: 600,
+                                    fontSize: "0.8rem",
                                     textTransform: "none",
                                     borderRadius: 2,
+                                    px: 2, // horizontal padding
                                     "&:hover": {
                                       bgcolor: "#E68A00",
                                     },
@@ -969,30 +984,22 @@ export default function Community() {
                                   Change Image
                                 </Button>
 
+                                
                                 {/* Image Menu */}
                                 <Menu
                                   anchorEl={imageMenuAnchor}
                                   open={isImageMenuOpen}
                                   onClose={closeImageMenu}
-                                  anchorOrigin={{
-                                    vertical: "bottom",
-                                    horizontal: "center",
-                                  }}
-                                  transformOrigin={{
-                                    vertical: "top",
-                                    horizontal: "center",
-                                  }}
+                                  anchorOrigin={{ vertical: "top", horizontal: "center" }}
+                                  transformOrigin={{ vertical: "bottom", horizontal: "center" }}
                                 >
-                                  <MenuItem component="label">
+                                  <MenuItem component="label" dense >
                                     <ListItemIcon>
-                                      <CameraAltIcon
-                                        fontSize="small"
-                                        sx={{ color: "#FF9933" }}
-                                      />
+                                      <CameraAltIcon fontSize="small" sx={{ color: "#FF9933" }} />
                                     </ListItemIcon>
-
-                                    <ListItemText>Camera</ListItemText>
-
+                                    <ListItemText primaryTypographyProps={{ fontSize: "0.85rem" }}>
+                                      Camera
+                                    </ListItemText>
                                     <input
                                       hidden
                                       type="file"
@@ -1002,16 +1009,13 @@ export default function Community() {
                                     />
                                   </MenuItem>
 
-                                  <MenuItem component="label">
+                                  <MenuItem component="label" dense>
                                     <ListItemIcon>
-                                      <InsertDriveFileIcon
-                                        fontSize="small"
-                                        sx={{ color: "#FF9933" }}
-                                      />
+                                      <InsertDriveFileIcon fontSize="small" sx={{ color: "#FF9933" }} />
                                     </ListItemIcon>
-
-                                    <ListItemText>Gallery</ListItemText>
-
+                                    <ListItemText primaryTypographyProps={{ fontSize: "0.85rem" }}>
+                                      Gallery
+                                    </ListItemText>
                                     <input
                                       hidden
                                       type="file"
@@ -1026,56 +1030,70 @@ export default function Community() {
                             {/* Dialog Footer */}
                             <DialogActions
                               sx={{
-                                p: 2,
+                                p: { xs: 1.5, sm: 2 },
                                 display: "flex",
-                                flexDirection: {
-                                  xs: "column",
-                                  sm: "row",
-                                },
-                                gap: 1.5,
+                                flexDirection: { xs: "column", sm: "row" },
+                                gap: 1,
                               }}
                             >
-                              <Button
-                                variant="outlined"
-                                fullWidth
-                                onClick={() => setEditOpen(false)}
-                                sx={{
-                                  height: 46,
-                                  borderColor: "#BDBDBD",
-                                  color: "#616161",
-                                  fontWeight: 600,
-                                  textTransform: "none",
-                                  borderRadius: 2,
-                                  "&:hover": {
-                                    borderColor: "#757575",
-                                    bgcolor: "#F5F5F5",
-                                  },
-                                }}
+                              <Stack
+                                direction="row"
+                                spacing={2}
+                                justifyContent="flex-end"
+                                sx={{ pt: 2 }}
                               >
-                                Cancel
-                              </Button>
+                                <Button
+                                  variant="outlined"
+                                  size="small"
+                                  onClick={() => setEditOpen(false)}
+                                  sx={{
+                                    width: "fit-content",
+                                    minWidth: "unset",
+                                    px: 2,
+                                    height: 36,
+                                    borderColor: "#BDBDBD",
+                                    color: "#616161",
+                                    fontWeight: 600,
+                                    fontSize: "0.8rem",
+                                    textTransform: "none",
+                                    borderRadius: 2,
+                                    "&:hover": {
+                                      borderColor: "#757575",
+                                      bgcolor: "#F5F5F5",
+                                    },
+                                  }}
+                                >
+                                  Cancel
+                                </Button>
 
-                              <Button
-                                variant="contained"
-                                fullWidth
-                                disabled={imagePostLoading}
-                                onClick={handleUpdate}
-                                sx={{
-                                  height: 46,
-                                  bgcolor: "#FF9933",
-                                  color: "#fff",
-                                  fontWeight: 600,
-                                  textTransform: "none",
-                                  borderRadius: 2,
-                                  "&:hover": {
-                                    bgcolor: "#E68A00",
-                                  },
-                                }}
-                              >
-                                {imagePostLoading ? " Saving Changes..." : " Save Changes"}
-                              </Button>
+                                <Button
+                                  variant="contained"
+                                  size="small"
+                                  disabled={imagePostLoading}
+                                  onClick={handleUpdate}
+                                  sx={{
+                                    width: "fit-content",
+                                    minWidth: "unset",
+                                    px: 2,
+                                    height: 36,
+                                    bgcolor: "#FF9933",
+                                    color: "#fff",
+                                    fontWeight: 600,
+                                    fontSize: "0.8rem",
+                                    textTransform: "none",
+                                    borderRadius: 2,
+                                    "&:hover": {
+                                      bgcolor: "#E68A00",
+                                    },
+                                  }}
+                                >
+                                  {imagePostLoading ? "Saving..." : "Save Changes"}
+                                </Button>
+                              </Stack>
                             </DialogActions>
                           </Dialog>
+
+
                           {editImage && (
                             <img
                               src={URL.createObjectURL(editImage)}
