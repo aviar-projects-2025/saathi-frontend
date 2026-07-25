@@ -128,9 +128,10 @@ const RequestRide = () => {
     setIsCancelling(true);
 
     try {
+      // Update status to CANCELLED/DELETED
       await axios.patch(
         `${Api}/bookride/${selectedRequest._id}/status?type=Cancel`,
-        { status: "CANCELLED" },
+        { status: "DELETED" } // Using DELETED to distinguish from other cancellations
       );
 
       handleCloseDialog();
@@ -139,11 +140,12 @@ const RequestRide = () => {
     } catch (err) {
       console.error("Error cancelling request:", err);
 
+      // Try with CANCELLED if DELETED fails
       if (err.response?.data?.message?.toLowerCase().includes("invalid")) {
         try {
           await axios.patch(
             `${Api}/bookride/${selectedRequest._id}/status?type=Reject`,
-            { status: "REJECTED" },
+            { status: "CANCELLED" },
           );
 
           handleCloseDialog();
@@ -169,26 +171,71 @@ const RequestRide = () => {
   // Filter requests based on tab
   const uniqueRequests = allMyRequests.filter((req) => req?.rideId);
 
-  // Active requests (not completed and not cancelled/rejected)
+  // Active requests (not completed and not cancelled/rejected/deleted)
   const activeRequests = uniqueRequests.filter(
     (request) =>
       request.rideId?.travelStatus !== "Completed" &&
       request.rideId?.travelStatus !== "Cancelled" &&
       request.status !== "CANCELLED" &&
-      request.status !== "REJECTED",
+      request.status !== "REJECTED" &&
+      request.status !== "DELETED",
   );
 
-  // History requests (completed + cancelled/rejected)
+  // History requests (completed + cancelled/rejected/deleted)
   const historyRequests = uniqueRequests.filter(
     (request) =>
-      request.rideId?.travelStatus === "Cfompleted" ||
+      request.rideId?.travelStatus === "Completed" ||
       request.rideId?.travelStatus === "Cancelled" ||
       request.status === "CANCELLED" ||
-      request.status === "REJECTED",
+      request.status === "REJECTED" ||
+      request.status === "DELETED",
   );
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
+  };
+
+  // Get status label and icon for history items
+  const getHistoryStatusInfo = (request) => {
+    const isDeleted = request.status === "DELETED";
+    const isCancelled = 
+      request.status === "CANCELLED" ||
+      request.status === "REJECTED" ||
+      request.rideId?.travelStatus === "Cancelled";
+    const isCompleted = request.rideId?.travelStatus === "Completed";
+
+    if (isDeleted) {
+      return {
+        label: "You cancelled this ride",
+        icon: "🗑️",
+        color: "#D32F2F",
+        bgColor: "#FFEBEE",
+        isDeleted: true
+      };
+    } else if (isCancelled) {
+      return {
+        label: "Cancelled",
+        icon: "❌",
+        color: "#9B2226",
+        bgColor: "#FFEBEE",
+        isDeleted: false
+      };
+    } else if (isCompleted) {
+      return {
+        label: "Completed",
+        icon: "✅",
+        color: "#2E7D32",
+        bgColor: "#E8F5E9",
+        isDeleted: false
+      };
+    }
+    return {
+      label: "Unknown",
+      icon: "❓",
+      color: "#757575",
+      bgColor: "#F5F5F5",
+      isDeleted: false
+    };
   };
 
   // Render active request card
@@ -373,10 +420,9 @@ const RequestRide = () => {
     const user = request.rideId?.createdBy || {};
     const initials =
       `${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`.toUpperCase();
-    const isCancelled =
-      request.status === "CANCELLED" ||
-      request.status === "REJECTED" ||
-      request.rideId?.travelStatus === "Cancelled";
+    
+    const statusInfo = getHistoryStatusInfo(request);
+    const isDeleted = statusInfo.isDeleted;
 
     return (
       <Box
@@ -391,14 +437,14 @@ const RequestRide = () => {
           borderBottom:
             idx !== historyRequests.length - 1 ? "1px solid #f0e6d8" : "none",
           "&:hover": { bgcolor: "#FFF9F2" },
-          opacity: isCancelled ? 0.7 : 1,
+          opacity: isDeleted ? 0.7 : 1,
         }}
       >
         <Box sx={{ position: "relative" }}>
           <Avatar
             sx={{
-              bgcolor: isCancelled ? "#e0e0e0" : "#f5ddc2",
-              color: isCancelled ? "#666" : "#7a4a00",
+              bgcolor: isDeleted ? "#e0e0e0" : "#f5ddc2",
+              color: isDeleted ? "#666" : "#7a4a00",
               width: 40,
               height: 40,
               fontSize: "0.9rem",
@@ -413,7 +459,7 @@ const RequestRide = () => {
               bottom: -2,
               right: -2,
               fontSize: 14,
-              color: isCancelled ? "#999" : "#1976d2",
+              color: isDeleted ? "#999" : "#1976d2",
               bgcolor: "#fff",
               borderRadius: "50%",
             }}
@@ -421,17 +467,32 @@ const RequestRide = () => {
         </Box>
 
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
             <Typography fontWeight={700} fontSize={14} noWrap>
               {user.firstName} {user.lastName}
             </Typography>
-            {isCancelled && (
+            <Chip
+              label={statusInfo.label}
+              size="small"
+              sx={{
+                bgcolor: statusInfo.bgColor,
+                color: statusInfo.color,
+                fontWeight: 700,
+                fontSize: "0.65rem",
+                height: 24,
+                '& .MuiChip-label': {
+                  px: 1.5,
+                }
+              }}
+              icon={<span>{statusInfo.icon}</span>}
+            />
+            {isDeleted && (
               <Chip
-                label="CANCELLED"
+                label="Deleted"
                 size="small"
                 sx={{
-                  bgcolor: "#FFEBEE",
-                  color: "#9B2226",
+                  bgcolor: "#FFCDD2",
+                  color: "#C62828",
                   fontWeight: 700,
                   fontSize: "0.6rem",
                   height: 20,
@@ -449,7 +510,7 @@ const RequestRide = () => {
             {new Date(request.createdAt).toLocaleDateString()}
           </Typography>
           <Typography fontSize={11} color="text.secondary">
-            {isCancelled ? "❌ Cancelled" : "✅ Completed"}
+            {isDeleted ? "🗑️ Deleted by you" : "✅ Completed"}
           </Typography>
         </Box>
       </Box>
