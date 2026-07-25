@@ -331,7 +331,6 @@ export default function Ridebook({
       setIsSubmitting(false);
     }
   };
-  console.log("Currehhugnknk", currentUser.gender);
   const titleText = isFlight
     ? isEditMode
       ? "Edit Travel Companion Request"
