@@ -128,6 +128,7 @@ const UserProfile = () => {
     const [profileFile, setProfileFile] = useState(null);
     const [submitLoading, setSubmitLoading] = useState(false)
     const [passwordModel, setPasswordModel] = useState('')
+    const [errors, setErrors] = useState({});
     const user = JSON.parse(localStorage.getItem('user'))
     const [passwordData, setPasswordData] = useState({
         currentPassword: "",
@@ -184,6 +185,57 @@ const UserProfile = () => {
         profileImage: currentUser?.profileImage || "",
     });
 
+    const validateForm = (formData) => {
+        const errors = {};
+
+        // First Name
+        if (!formData.firstName?.trim()) {
+            errors.firstName = "First name is required";
+        } else if (formData.firstName.length < 2) {
+            errors.firstName = "Minimum 2 characters required";
+        }
+
+        // Last Name
+        if (!formData.lastName?.trim()) {
+            errors.lastName = "Last name is required";
+        }
+
+        // Email
+        if (!formData.email) {
+            errors.email = "Email is required";
+        } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
+            errors.email = "Invalid email format";
+        }
+
+        // Mobile
+        if (!formData.mobile) {
+            errors.mobile = "Mobile number is required";
+            if (!/^[6-9]\d{9}$/.test(formData.mobile)) {
+                errors.mobile = "Invalid mobile number";
+            }
+        }
+
+        // DOB (Age >= 18)
+        if (!formData.dob) {
+            errors.dob = "Date of birth is required";
+        } else {
+            const today = new Date();
+            const dob = new Date(formData.dob);
+            let age = today.getFullYear() - dob.getFullYear();
+
+            const m = today.getMonth() - dob.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+                age--;
+            }
+
+            if (age < 18) {
+                errors.dob = "You must be at least 18 years old";
+            }
+        }
+
+        return errors;
+    };
+
     useEffect(() => {
         if (currentUser) {
             setFormData({
@@ -237,6 +289,12 @@ const UserProfile = () => {
             ...prev,
             [name]: value,
         }));
+
+
+        setErrors((prev) => ({
+            ...prev,
+            [name]: "",
+        }));
     };
     const [communityPosts, setCommunityPosts] = useState([]);
 
@@ -267,6 +325,11 @@ const UserProfile = () => {
     const handleUpdateProfile = async () => {
         try {
             setSubmitLoading(true)
+            const validationErrors = validateForm(formData);
+            if (Object.keys(validationErrors).length > 0) {
+                setErrors(validationErrors);
+                return;
+            }
             const data = new FormData();
 
             if (profileFile) {
@@ -279,6 +342,7 @@ const UserProfile = () => {
             data.append("dob", formData.dob ? formData.dob.format("YYYY-MM-DD") : "");
             data.append("gender", formData.gender);
             data.append("bio", formData.bio);
+
 
             await axios.post(Api + `/users/update/${user?.id}`, data)
             getuserData()
@@ -411,7 +475,6 @@ const UserProfile = () => {
                             sx={{ mt: { xs: 1.5, sm: 2 } }}
                         >
                             <Button
-                                fullWidth
                                 variant="outlined"
                                 onClick={() => setEditProfile(true)}
                                 sx={{ ...pillBtn, borderColor: "#EADFD3" }}
@@ -671,6 +734,8 @@ const UserProfile = () => {
                                         onChange={handleChange}
                                         InputProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
                                         InputLabelProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
+                                        error={!!errors.firstName}
+                                        helperText={errors.firstName}
                                     />
 
                                     <TextField
@@ -679,6 +744,8 @@ const UserProfile = () => {
                                         size="small"
                                         fullWidth
                                         value={formData?.lastName}
+                                        error={!!errors.lastName}
+                                        helperText={errors.lastName}
                                         onChange={handleChange}
                                         InputProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
                                         InputLabelProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
@@ -697,6 +764,8 @@ const UserProfile = () => {
                                         fullWidth
                                         value={formData?.email}
                                         onChange={handleChange}
+                                        error={!!errors.email}
+                                        helperText={errors.email}
                                         disabled
                                         InputProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
                                         InputLabelProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
@@ -709,6 +778,8 @@ const UserProfile = () => {
                                         fullWidth
                                         value={formData?.mobile}
                                         onChange={handleChange}
+                                        error={!!errors.mobile}
+                                        helperText={errors.mobile}
                                         InputProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
                                         InputLabelProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
                                     />
@@ -728,10 +799,16 @@ const UserProfile = () => {
                                                     ...prev,
                                                     dob: newValue,
                                                 }));
+                                                setErrors((prev) => ({
+                                                    ...prev,
+                                                    dob: "",
+                                                }));
                                             }}
                                             slotProps={{
                                                 textField: {
                                                     size: "small",
+                                                    error: !!errors.dob,
+                                                    helperText: errors.dob,
                                                     fullWidth: true,
                                                     InputProps: { sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } },
                                                     InputLabelProps: { sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } },
@@ -750,6 +827,8 @@ const UserProfile = () => {
                                         sx={{ width: { xs: "100%", sm: "48%" } }}
                                         value={formData?.gender}
                                         onChange={handleChange}
+                                        error={!!errors.gender}
+                                        helperText={errors.gender}
                                         InputProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
                                         InputLabelProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
                                     >
@@ -766,6 +845,8 @@ const UserProfile = () => {
                                     rows={3}
                                     fullWidth
                                     value={formData?.bio}
+                                    error={!!errors.bio}
+                                    helperText={errors.bio}
                                     onChange={handleChange}
                                     InputProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
                                     InputLabelProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
@@ -791,6 +872,7 @@ const UserProfile = () => {
                                         onClick={() => {
                                             setProfileImage("");
                                             resetForm()
+                                            setErrors({})
                                             setEditProfile(false);
                                         }}
                                     >

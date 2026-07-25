@@ -1,9 +1,17 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {
-  Dialog, DialogTitle, DialogContent, DialogActions,
-  Typography, TextField, Button, IconButton, Box,
-  useMediaQuery, useTheme,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Typography,
+  TextField,
+  Button,
+  IconButton,
+  Box,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import Api from "../Api";
@@ -18,13 +26,20 @@ import ToastConfig from "../components/ToastConfig";
 const ORANGE = "#FF9933";
 const ORANGE_DIVIDER = "rgba(255,153,51,0.2)";
 
-
-
-export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, requestToEdit = null, setAllMyRequests, allMyRequests }) {
+export default function Ridebook({
+  open,
+  onClose,
+  ride,
+  maxSeats = Infinity,
+  requestToEdit = null,
+  setAllMyRequests,
+  allMyRequests,
+  onRequestUpdated,
+}) {
   const theme = useTheme();
   const { currentUser } = useUser();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const user = JSON.parse(localStorage.getItem('user'));
+  const user = JSON.parse(localStorage.getItem("user"));
   const isFlight = ride?.modeOfTravel === "Flight";
   const isEditMode = Boolean(requestToEdit);
   const [requests, setRequests] = useState();
@@ -33,7 +48,6 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, req
   const isTab = useMediaQuery(theme.breakpoints.down("sm"));
 
   const TOASTS = ToastConfig();
-
 
   const handleAddMember = () => {
     setRequestData((prev) => {
@@ -87,7 +101,7 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, req
     });
   };
   const [editingRequest, setEditingRequest] = useState(null);
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
   useEffect(() => {
     if (editingRequest) {
       setRequestData({
@@ -106,7 +120,14 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, req
     // phone: "",
     message: "",
     membersCount: 1,
-    members: [{ name: "", age: "" }],
+    members: [
+      {
+        name:
+          `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`.trim() ||
+          "",
+        age: "",
+      },
+    ],
   };
 
   const [requestData, setRequestData] = useState(emptyRequestData);
@@ -118,13 +139,19 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, req
         membersCount: undefined,
         members: editingRequest.members?.length
           ? editingRequest.members
-          : [{ name: "", age: "" }],
+          : [
+              {
+                name:
+                  `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`.trim() ||
+                  "",
+                age: "",
+              },
+            ],
         message: editingRequest.message || "",
         phone: editingRequest.phone || "",
       });
     }
   }, [editingRequest?.id]);
-
 
   useEffect(() => {
     if (!open) return;
@@ -134,19 +161,27 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, req
         seatsRequested: requestToEdit.seatsRequested || 1,
         // phone: requestToEdit.phone || "",
         message: requestToEdit.message || "",
-        membersCount: requestToEdit.membersCount || (requestToEdit.members?.length ?? 1),
+        membersCount:
+          requestToEdit.membersCount || (requestToEdit.members?.length ?? 1),
         members: requestToEdit.members?.length
           ? requestToEdit.members
-          : [{ name: "", age: "" }],
+          : [
+              {
+                name:
+                  `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`.trim() ||
+                  "",
+                age: "",
+              },
+            ],
       });
     } else {
       setRequestData(emptyRequestData);
     }
-  }, [open, ride, requestToEdit]);
+  }, [open, ride, requestToEdit, currentUser]);
 
   useEffect(() => {
-    getRidebook()
-  }, [])
+    getRidebook();
+  }, []);
 
   const getRidebook = async () => {
     try {
@@ -157,14 +192,11 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, req
       setRequests(res.data.data);
 
       const memberRide = res.data.data.map((item) => item.members);
-
     } catch (error) {
       console.log(error);
       toast.error(error.response?.data?.message || "Request failed", TOASTS);
     }
   };
-
-
 
   //   if (seats < 1) return;
 
@@ -203,12 +235,16 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, req
       membersCount: count,
       members: Array.from(
         { length: count },
-        (_, i) => prev.members[i] || { name: "", age: "" }
+        (_, i) =>
+          prev.members[i] || {
+            name:
+              `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`.trim() ||
+              "",
+            age: "",
+          },
       ),
     }));
   };
-
-
 
   const validate = () => {
     if (!isFlight && Number(requestData.seatsRequested) > maxSeats) {
@@ -220,8 +256,6 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, req
       toast.error(`Only ${maxSeats} member(s) allowed`, TOASTS);
       return false;
     }
-
-
 
     for (let i = 0; i < requestData.members.length; i++) {
       if (!requestData.members[i].name.trim()) {
@@ -238,9 +272,10 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, req
   };
 
   const handleRequestSubmit = async () => {
+    if (isSubmitting) return;
     if (!ride) return;
     if (!validate()) return;
-
+    setIsSubmitting(true);
     const storedUser = JSON.parse(localStorage.getItem("user"));
     const seatsRequested = requestData.members.length;
 
@@ -260,33 +295,50 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, req
         ? await axios.put(`${Api}/bookride/edit/${requestToEdit._id}`, payload)
         : await axios.post(`${Api}/bookride/${ride._id}`, payload);
 
-      toast.success(res.data.message || (isEditMode ? "Request updated" : "Request sent"), {
-        position: isTab ? "top-center" : "top-right",
-        autoClose: 2000,
-        hideProgressBar: true,
-        closeButton: false,
-        style: {
-          width: isTab ? "90vw" : "360px",
-          maxWidth: isTab ? "320px" : "360px",
-          fontSize: isTab ? "13px" : "15px",
-          padding: isTab ? "8px 12px" : "12px 16px",
-          borderRadius: isTab ? "8px" : "10px",
-          minHeight: isTab ? "42px" : "52px",
-          margin: "0 auto",
+      toast.success(
+        res.data.message || (isEditMode ? "Request updated" : "Request sent"),
+        {
+          position: isTab ? "top-center" : "top-right",
+          autoClose: 2000,
+          hideProgressBar: true,
+          closeButton: false,
+          style: {
+            width: isTab ? "90vw" : "360px",
+            maxWidth: isTab ? "320px" : "360px",
+            fontSize: isTab ? "13px" : "15px",
+            padding: isTab ? "8px 12px" : "12px 16px",
+            borderRadius: isTab ? "8px" : "10px",
+            minHeight: isTab ? "42px" : "52px",
+            margin: "0 auto",
+          },
         },
-      });
-
+      );
+      if (isEditMode) {
+        setAllMyRequests?.((prev) =>
+          prev.map((req) =>
+            req._id === requestToEdit._id ? { ...req, ...res.data.data } : req,
+          ),
+        );
+      }
       setRequestData(emptyRequestData);
+      onRequestUpdated?.();
+
       onClose?.();
     } catch (error) {
       console.log(error);
       toast.error(error.response?.data?.message || "Request failed", TOASTS);
+    } finally {
+      setIsSubmitting(false);
     }
   };
-
+  console.log("Currehhugnknk", currentUser.gender);
   const titleText = isFlight
-    ? (isEditMode ? "Edit Travel Companion Request" : "Request Travel Companion")
-    : (isEditMode ? "Edit Seat Request" : "Request Seat");
+    ? isEditMode
+      ? "Edit Travel Companion Request"
+      : "Request Travel Companion"
+    : isEditMode
+      ? "Edit Seat Request"
+      : "Request Seat";
 
   return (
     <Dialog
@@ -332,7 +384,9 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, req
         </IconButton>
       </DialogTitle>
 
-      <DialogContent sx={{ px: { xs: 2.5, sm: 3 }, pt: "20px !important", pb: 3 }}>
+      <DialogContent
+        sx={{ px: { xs: 2.5, sm: 3 }, pt: "20px !important", pb: 3 }}
+      >
         {/* Route */}
         <Box
           sx={{
@@ -435,7 +489,6 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, req
                 borderRadius: 2.5,
                 border: "1px solid #EEE",
                 bgcolor: "#FCFCFC",
-                transition: "border-color 0.15s ease",
                 "&:hover": { borderColor: ORANGE },
               }}
             >
@@ -454,19 +507,30 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, req
 
               <TextField
                 placeholder="Full name"
-                value={member.name}
                 fullWidth
                 size="small"
                 variant="standard"
                 InputProps={{ disableUnderline: true }}
+                value={
+                  index === 0
+                    ? `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`.trim()
+                    : member.name
+                }
+                disabled={index === 0}
                 sx={{
                   "& .MuiInputBase-input": {
                     fontSize: "0.85rem",
                     fontFamily: "'Inter', sans-serif",
                     fontWeight: 500,
                   },
+                  "& .MuiInputBase-input.Mui-disabled": {
+                    WebkitTextFillColor: "#555",
+                    opacity: 1,
+                  },
                 }}
-                onChange={(e) => handleMemberChange(index, "name", e.target.value)}
+                onChange={(e) =>
+                  index > 0 && handleMemberChange(index, "name", e.target.value)
+                }
               />
 
               <TextField
@@ -479,8 +543,6 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, req
                   width: 56,
                   "& .MuiInputBase-input": {
                     fontSize: "0.85rem",
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 500,
                     textAlign: "center",
                   },
                 }}
@@ -488,7 +550,10 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, req
                 inputProps={{ min: 1, max: 120 }}
                 onChange={(e) => {
                   const value = e.target.value;
-                  if (value === "" || (Number(value) >= 1 && Number(value) <= 120)) {
+                  if (
+                    value === "" ||
+                    (Number(value) >= 1 && Number(value) <= 120)
+                  ) {
                     handleMemberChange(index, "age", value);
                   }
                 }}
@@ -497,7 +562,7 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, req
               <IconButton
                 color="error"
                 onClick={() => handleRemoveMember(index)}
-                disabled={requestData.members.length <= 1}
+                disabled={index === 0}
                 size="small"
               >
                 <RemoveCircle fontSize="small" />
@@ -560,7 +625,9 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, req
           multiline
           rows={isMobile ? 3 : 4}
           size={isMobile ? "small" : "medium"}
-          label={isFlight ? "Why do you need a companion?" : "Message to Driver"}
+          label={
+            isFlight ? "Why do you need a companion?" : "Message to Driver"
+          }
           value={requestData.message}
           sx={{
             "& .MuiInputBase-input": {
@@ -568,7 +635,9 @@ export default function Ridebook({ open, onClose, ride, maxSeats = Infinity, req
               fontSize: "0.9rem",
             },
           }}
-          onChange={(e) => setRequestData({ ...requestData, message: e.target.value })}
+          onChange={(e) =>
+            setRequestData({ ...requestData, message: e.target.value })
+          }
         />
       </DialogContent>
 
