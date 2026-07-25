@@ -556,7 +556,6 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
                       key={replyItem._id}
                       sx={{ ml: { xs: 3.5, sm: 4.5, md: 5 }, mt: 0.5 }}
                     >
-                      {console.log("Avatar....", replyItem)}
                       <Stack direction="row" spacing={{ xs: 0.5, sm: 0.75 }}>
                         <Avatar
                           src={replyItem?.userId?.profileImage}

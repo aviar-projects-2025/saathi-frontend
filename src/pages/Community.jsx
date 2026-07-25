@@ -1100,30 +1100,41 @@ export default function Community() {
             )}
           </Box>
 
-          {/* ── SidebarContent box (visible on sm and up, sticky scroll) ── */}
+          {/* SidebarContent */}
           {showSidebar && (
             <Box
               sx={{
-                width: {
-                  sm: "35%",
-                  md: "33%",
-                  lg: "33%",
-                  xl: "30%",
+                flex: {
+                  sm: "0 0 300px",
+                  md: "0 0 320px",
+                  lg: "0 0 360px",
+                  xl: "0 0 380px",
+                },
+                width: "100%",
+                maxWidth: {
+                  sm: 300,
+                  md: 320,
+                  lg: 360,
+                  xl: 380,
                 },
                 minWidth: {
-                  sm: "35%",
-                  md: "33%",
-                  lg: "33%",
-                  xl: "30%",
+                  sm: 260,
+                  md: 280,
+                  lg: 300,
                 },
                 flexShrink: 0,
+
                 position: "sticky",
                 top: 20,
                 height: SIDEBAR_SCROLL_HEIGHT,
                 maxHeight: SIDEBAR_SCROLL_HEIGHT,
+
                 overflowY: "auto",
                 overflowX: "hidden",
-                "&::-webkit-scrollbar": { width: 3 },
+
+                "&::-webkit-scrollbar": {
+                  width: 4,
+                },
                 "&::-webkit-scrollbar-thumb": {
                   backgroundColor: "#E0D4C8",
                   borderRadius: 4,

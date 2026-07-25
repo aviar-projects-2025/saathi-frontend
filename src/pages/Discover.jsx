@@ -3,7 +3,7 @@ import { Box, Paper, Typography, Divider, Button, Grid, Skeleton } from "@mui/ma
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import axios from "axios";
 import Api from "../Api.jsx";
-// Static for now — hook this up to a real activity feed endpoint later if needed
+
 const activities = [
     { text: "Vijay P. gave a free temple ride to 4 members", time: "2h ago", icon: "🛕" },
     { text: "Deepa I. helped Neel K.'s parents from the airport", time: "5h ago", icon: "✈️" },
@@ -25,15 +25,16 @@ const getBadge = (rank) => {
 const UserAvatar = ({ initials, verified }) => (
     <Box
         sx={{
-            width: 40,
-            height: 40,
+            width: { xs: 34, sm: 40 },
+            height: { xs: 34, sm: 40 },
+            flexShrink: 0,
             borderRadius: "50%",
             background: "#FFE8D6",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             fontWeight: 800,
-            fontSize: 14,
+            fontSize: { xs: 12, sm: 14 },
             position: "relative",
         }}
     >
@@ -47,9 +48,9 @@ const UserAvatar = ({ initials, verified }) => (
                     background: "#2196f3",
                     color: "#fff",
                     borderRadius: "50%",
-                    width: 14,
-                    height: 14,
-                    fontSize: 10,
+                    width: { xs: 12, sm: 14 },
+                    height: { xs: 12, sm: 14 },
+                    fontSize: { xs: 8, sm: 10 },
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -98,21 +99,28 @@ const Discover = () => {
             minHeight: "100vh",
             pb: { xs: 4, sm: 0 },
             width: "100%",
+            maxWidth: "100%",
             boxSizing: "border-box",
-
-            // maxWidth: { xs: '100%', sm: 0 },
-            px: { xs: 1, sm: 0 }
+            overflowX: "hidden",
+            px: { xs: 1, sm: 2, md: 0 }
         }}>
-            <Grid container spacing={2} sx={{ mt: 3 }}>
+            <Grid spacing={{ xs: 2, md: 2 }} sx={{ mt: { xs: 1, sm: 0 } }}>
 
                 {/* TOP MEMBERS */}
-                <Grid item xs={12} md={7} sx={{ mb: 3 }} >
+                <Grid item xs={12} md={7} sx={{ mb: { xs: 1, sm: 3 } }} >
                     <Paper
                         elevation={0}
-                        sx={{ p: { xs: 1.5, sm: 2.5 }, borderRadius: 3, border: "1px solid #F0E6DC", width: "105%" }}
+                        sx={{
+                            p: { xs: 1.5, sm: 2.5 },
+                            borderRadius: 3,
+                            border: "1px solid #F0E6DC",
+                            width: "100%",
+                            maxWidth: "100%",
+                            boxSizing: "border-box",
+                        }}
                     >
                         <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-                            <EmojiEventsIcon sx={{ color: "#F4A261" }} />
+                            <EmojiEventsIcon sx={{ color: "#F4A261", fontSize: { xs: 20, sm: 24 } }} />
                             <Typography fontWeight={700} fontSize={{ xs: "0.9rem", sm: "1rem" }}>
                                 Top Community Members
                             </Typography>
@@ -127,13 +135,13 @@ const Discover = () => {
                         )}
 
                         {!loading && error && (
-                            <Typography color="error" fontSize={14}>
+                            <Typography color="error" fontSize={{ xs: 12, sm: 14 }}>
                                 Failed to load top members: {error}
                             </Typography>
                         )}
 
                         {!loading && !error && topMembers.length === 0 && (
-                            <Typography color="text.secondary" fontSize={14}>
+                            <Typography color="text.secondary" fontSize={{ xs: 12, sm: 14 }}>
                                 No completed rides yet. Be the first!
                             </Typography>
                         )}
@@ -146,11 +154,13 @@ const Discover = () => {
                                         alignItems: "center",
                                         gap: { xs: 1, sm: 1.5 },
                                         py: 1.2,
+                                        flexWrap: "nowrap",
                                     }}
                                 >
                                     <Typography
                                         sx={{
-                                            width: 20,
+                                            width: { xs: 16, sm: 20 },
+                                            flexShrink: 0,
                                             fontWeight: 800,
                                             color: "text.secondary",
                                             fontSize: { xs: 12, sm: 14 },
@@ -161,8 +171,16 @@ const Discover = () => {
 
                                     <UserAvatar initials={member.initials} verified={member.verified} />
 
-                                    <Box sx={{ flex: 1 }}>
-                                        <Typography fontWeight={600} fontSize={{ xs: "0.8rem", sm: "0.9rem" }}>
+                                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                                        <Typography
+                                            fontWeight={600}
+                                            fontSize={{ xs: "0.8rem", sm: "0.9rem" }}
+                                            sx={{
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                whiteSpace: "nowrap",
+                                            }}
+                                        >
                                             {member.name}
                                         </Typography>
                                         <Typography variant="caption" color="text.secondary">
@@ -183,11 +201,11 @@ const Discover = () => {
                                         )}
                                     </Box>
 
-                                    <Box textAlign="right">
+                                    <Box textAlign="right" sx={{ flexShrink: 0, pl: 1 }}>
                                         <Typography fontWeight={700} color="primary.main" fontSize={{ xs: 13, sm: 15 }}>
                                             {member.rides}
                                         </Typography>
-                                        <Typography variant="caption" color="text.secondary">
+                                        <Typography variant="caption" color="text.secondary" fontSize={{ xs: 10, sm: 12 }}>
                                             rides
                                         </Typography>
                                     </Box>
@@ -203,16 +221,26 @@ const Discover = () => {
                 <Grid item xs={12} md={5}>
                     <Paper
                         elevation={0}
-                        sx={{ p: { xs: 1.5, sm: 2.5 }, borderRadius: 3, border: "1px solid #F0E6DC", mb: 2 }}
+                        sx={{
+                            p: { xs: 1.5, sm: 2.5 },
+                            borderRadius: 3,
+                            border: "1px solid #F0E6DC",
+                            mb: 2,
+                            width: "100%",
+                            maxWidth: "100%",
+                            boxSizing: "border-box",
+                        }}
                     >
-                        <Typography fontWeight={700} mb={2}>
+                        <Typography fontWeight={700} mb={2} fontSize={{ xs: "0.9rem", sm: "1rem" }}>
                             Recent Activity
                         </Typography>
 
                         {activities.map((a, index) => (
                             <Box key={index} sx={{ display: "flex", gap: 1.2, mb: 1.5 }}>
-                                <Typography fontSize={18}>{a.icon}</Typography>
-                                <Box>
+                                <Typography fontSize={{ xs: 16, sm: 18 }} sx={{ flexShrink: 0 }}>
+                                    {a.icon}
+                                </Typography>
+                                <Box sx={{ minWidth: 0 }}>
                                     <Typography variant="body2" fontSize={{ xs: 12, sm: 14 }}>
                                         {a.text}
                                     </Typography>
@@ -228,30 +256,41 @@ const Discover = () => {
                     <Paper
                         elevation={0}
                         sx={{
-                            p: 2.5,
+                            p: { xs: 1.5, sm: 2.5 },
                             borderRadius: 3,
                             background: "linear-gradient(135deg, #E8650A, #FF8C42)",
                             color: "#fff",
+                            width: "100%",
+                            maxWidth: "100%",
+                            boxSizing: "border-box",
                         }}
                     >
-                        <Typography fontWeight={800} mb={1}>
+                        <Typography fontWeight={800} mb={1} fontSize={{ xs: "0.9rem", sm: "1rem" }}>
                             Invite a friend 🙏
                         </Typography>
-                        <Typography variant="body2" sx={{ opacity: 0.9, mb: 2 }}>
+                        <Typography variant="body2" fontSize={{ xs: 12, sm: 14 }} sx={{ opacity: 0.9, mb: 2 }}>
                             Saathi grows through trust. Invite someone from your community to join.
                         </Typography>
-                        <Button
-                            size="small"
-                            variant="contained"
-                            sx={{
-                                background: "#fff",
-                                color: "#E8650A",
-                                fontWeight: 700,
-                                "&:hover": { background: "#FFF8F2" },
-                            }}
-                        >
-                            Share invite link
-                        </Button>
+                        <Box sx={{
+                            display: "flex",
+                            justifyContent: { sm: "flex-end" }
+                        }}>
+                            <Button
+                                fullWidth
+                                size="small"
+                                variant="contained"
+                                sx={{
+                                    background: "#fff",
+                                    color: "#E8650A",
+                                    fontWeight: 700,
+                                    maxWidth: { xs: "100%", sm: "fit-content" },
+                                    "&:hover": { background: "#FFF8F2" },
+                                }}
+                            >
+                                Share invite link
+                            </Button>
+                        </Box>
+
                     </Paper>
                 </Grid>
 

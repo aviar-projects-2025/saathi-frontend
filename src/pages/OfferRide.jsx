@@ -1090,7 +1090,7 @@ export default function OfferRide() {
                               direction="row"
                               spacing={0.5}
                               alignItems="center"
-                              sx={{ minWidth: 0 }}
+                              sx={{ minWidth: 0, mt: 1.5 }}
                             >
                               <Icon
                                 size={14}
@@ -1167,65 +1167,63 @@ export default function OfferRide() {
                   </CardContent>
                 </Card>
                 {!isFlight && (
-                  <Box
+                  <Stack
+                    direction={{ xs: "column", sm: "row" }}
+                    spacing={2}
+                    alignItems={{ xs: "stretch", sm: "center" }}
                     sx={{
+                      width: "100%",
                       display: "flex",
-                      justifyContent: "space-around",
-                      alignItems: "center",
+                      justifyContent: "space-between"
                     }}
                   >
                     <FormControlLabel
+                      sx={{ m: 0 }}
                       control={
                         <Switch
                           checked={form.fuelSharing}
-                          onChange={(e) =>
-                            update("fuelSharing", e.target.checked)
-                          }
+                          onChange={(e) => update("fuelSharing", e.target.checked)}
                           size={isMobile ? "small" : "medium"}
                           sx={{
                             "& .MuiSwitch-switchBase.Mui-checked": {
                               color: ACCENT,
                             },
-                            "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
-                              { backgroundColor: ACCENT },
+                            "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                              backgroundColor: ACCENT,
+                            },
                           }}
                         />
                       }
                       label={
-                        <Stack
-                          direction="row"
-                          spacing={0.6}
-                          alignItems="center"
-                        >
+                        <Stack direction="row" spacing={0.6} alignItems="center">
                           <Fuel size={16} color={ACCENT_DARK} />
-                          <Typography
-                            sx={{ fontSize: { xs: "0.8rem", sm: "0.875rem" } }}
-                          >
+                          <Typography sx={{ fontSize: { xs: "0.8rem", sm: "0.875rem" } }}>
                             Fuel Sharing
                           </Typography>
                         </Stack>
                       }
                     />
-                    <Box>
-                      {form.fuelSharing && (
-                        <>
-                          <TextField
-                            label="$ Price"
-                            fullWidth
-                            size={inputSize}
-                            value={form.price}
-                            onChange={(e) => update("price", e.target.value)}
-                            placeholder="$5"
-                            error={!form.price && showErrors}
-                            helperText={
-                              !form.price && showErrors ? "Required" : ""
-                            }
-                            sx={tfSx}
-                          />
-                        </>
-                      )}
-                    </Box>
-                  </Box>
+
+                    {form.fuelSharing && (
+                      <TextField
+                        label="$ Price"
+                        size={inputSize}
+                        value={form.price}
+                        onChange={(e) => update("price", e.target.value)}
+                        placeholder="$5"
+                        error={!form.price && showErrors}
+                        helperText={!form.price && showErrors ? "Required" : ""}
+                        sx={{
+                          ...tfSx,
+                          width: {
+                            xs: "100%",
+                            sm: 180,
+                            md: 220,
+                          },
+                        }}
+                      />
+                    )}
+                  </Stack>
                 )}
               </>
 
@@ -1382,7 +1380,8 @@ export default function OfferRide() {
                           Fuel,
                           "Fuel Sharing",
                           // form.fuelSharing ? "Yes" : "No",
-                          form.price,
+                          // form.price,
+                          `$ - ${form.price}`,
                         ],
                         [Users, "Gender Preference", form.genderPreference],
                       ]
