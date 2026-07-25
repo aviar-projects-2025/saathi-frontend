@@ -318,7 +318,7 @@ const RequestRide = () => {
                       (item) =>
                         item?.rideId &&
                         item?.rideId?.createdBy?._id ===
-                          request?.rideId?.createdBy?._id,
+                        request?.rideId?.createdBy?._id,
                     ).length;
 
                     return (

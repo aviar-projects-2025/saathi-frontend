@@ -87,7 +87,7 @@ export default function Community() {
   const { currentUser } = useUser()
   const [tooltipOpen, setTooltipOpen] = useState(false);
   const [tooltip2Open, setTooltip2Open] = useState(false);
-const [commentCounts, setCommentCounts] = useState({}); 
+  const [commentCounts, setCommentCounts] = useState({});
   const toasts = ToastConfig();
 
 
@@ -109,49 +109,49 @@ const [commentCounts, setCommentCounts] = useState({});
 
 
   const getCommmunityPost = async () => {
-  try {
-    setPostLoading(true);
-    const postsRes = await axios.get(Api + "/community/");
-    const likesRes = await axios.get(Api + `/likes/liked-posts/${user.id}`);
-    const likedPostIds = likesRes?.data?.data || [];
-    const updatedPosts = postsRes?.data?.data?.map((post) => ({
-      ...post,
-      isLiked: likedPostIds.includes(post._id),
-    }));
-    const postIds = postsRes.data.data.map((item) => item._id);
-    setCommunityPosts(updatedPosts);
-    setPostId(postIds);
+    try {
+      setPostLoading(true);
+      const postsRes = await axios.get(Api + "/community/");
+      const likesRes = await axios.get(Api + `/likes/liked-posts/${user.id}`);
+      const likedPostIds = likesRes?.data?.data || [];
+      const updatedPosts = postsRes?.data?.data?.map((post) => ({
+        ...post,
+        isLiked: likedPostIds.includes(post._id),
+      }));
+      const postIds = postsRes.data.data.map((item) => item._id);
+      setCommunityPosts(updatedPosts);
+      setPostId(postIds);
 
-    // fetch comment counts for all posts in parallel
-    const countEntries = await Promise.all(
-      updatedPosts.map(async (p) => {
-        try {
-          const res = await axios.get(Api + `/community/comments/${p._id}`);
-          return [p._id, res.data.data.comments.length];
-        } catch {
-          return [p._id, 0];
-        }
-      })
-    );
-    setCommentCounts(Object.fromEntries(countEntries));
-  } catch (error) {
-    console.error(error.message);
-  } finally {
-    setPostLoading(false);
-  }
-};
+      // fetch comment counts for all posts in parallel
+      const countEntries = await Promise.all(
+        updatedPosts.map(async (p) => {
+          try {
+            const res = await axios.get(Api + `/community/comments/${p._id}`);
+            return [p._id, res.data.data.comments.length];
+          } catch {
+            return [p._id, 0];
+          }
+        })
+      );
+      setCommentCounts(Object.fromEntries(countEntries));
+    } catch (error) {
+      console.error(error.message);
+    } finally {
+      setPostLoading(false);
+    }
+  };
 
-const getComments = async (postId) => {
-  try {
-    setLoading(true);
-    const res = await axios.get(Api + `/community/comments/${postId}`);
-    setCommentCounts((prev) => ({ ...prev, [postId]: res.data.data.comments.length }));
-  } catch (error) {
-    console.log(error.message);
-  } finally {
-    setLoading(false);
-  }
-};
+  const getComments = async (postId) => {
+    try {
+      setLoading(true);
+      const res = await axios.get(Api + `/community/comments/${postId}`);
+      setCommentCounts((prev) => ({ ...prev, [postId]: res.data.data.comments.length }));
+    } catch (error) {
+      console.log(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // inside your component:
   const [imageMenuAnchor, setImageMenuAnchor] = useState(null);
@@ -304,7 +304,7 @@ const getComments = async (postId) => {
     }
   };
 
- 
+
 
   useEffect(() => {
     getCommmunityPost();
@@ -1056,22 +1056,22 @@ const getComments = async (postId) => {
                       {post?.likes || 0}
                     </Button>
 
-                <Button
-  startIcon={
-    activeCommentPostId === post._id
-      ? <ChatIcon fontSize={iconFontSize} sx={{ color: '#0084ff' }} />
-      : <ChatIcon fontSize={iconFontSize} />
-  }
-  onClick={() => {
-    const next = activeCommentPostId === post._id ? null : post._id;
-    setActiveCommentPostId(next);
-    if (next) getComments(next);
-  }}
-  size={isMobile ? 'small' : 'medium'}
-  sx={{ textTransform: 'none', color: 'text.secondary', fontSize: btnFontSize }}
->
- {commentCounts[post._id] ?? 0}
-</Button>
+                    <Button
+                      startIcon={
+                        activeCommentPostId === post._id
+                          ? <ChatIcon fontSize={iconFontSize} sx={{ color: '#0084ff' }} />
+                          : <ChatIcon fontSize={iconFontSize} />
+                      }
+                      onClick={() => {
+                        const next = activeCommentPostId === post._id ? null : post._id;
+                        setActiveCommentPostId(next);
+                        if (next) getComments(next);
+                      }}
+                      size={isMobile ? 'small' : 'medium'}
+                      sx={{ textTransform: 'none', color: 'text.secondary', fontSize: btnFontSize }}
+                    >
+                      {commentCounts[post._id] ?? 0}
+                    </Button>
 
                     <Button
                       startIcon={<BookmarkBorderIcon fontSize={iconFontSize} />}
@@ -1084,17 +1084,17 @@ const getComments = async (postId) => {
 
                   <Divider />
 
- {activeCommentPostId === post._id && (
-  <Box sx={{ margin: isMobile ? 1 : 1.5 }}>
-    <CommunityComments
-      post={post}
-      user={user}
-      onCommentsChanged={(newCount) =>
-        setCommentCounts((prev) => ({ ...prev, [post._id]: newCount }))
-      }
-    />
-  </Box>
-)}
+                  {activeCommentPostId === post._id && (
+                    <Box sx={{ margin: isMobile ? 1 : 1.5 }}>
+                      <CommunityComments
+                        post={post}
+                        user={user}
+                        onCommentsChanged={(newCount) =>
+                          setCommentCounts((prev) => ({ ...prev, [post._id]: newCount }))
+                        }
+                      />
+                    </Box>
+                  )}
                 </Paper>
               ))
             )}

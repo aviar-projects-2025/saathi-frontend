@@ -12,7 +12,7 @@ const adminMenus = [
 const AdminLayout = () => {
   return (
     <Box sx={{ display: "flex" }}>
-      <Sidebar/>
+      <Sidebar />
 
       <Box component="main" sx={{ flex: 1, p: 3 }}>
         <Outlet />

@@ -96,16 +96,16 @@ export default function RideCard({ ride }) {
   const dateObj = ride.startTime ? new Date(ride.startTime) : null;
   const dateStr = dateObj
     ? dateObj.toLocaleDateString(undefined, {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    })
     : "No date";
   const timeStr = dateObj
     ? dateObj.toLocaleTimeString(undefined, {
-        hour: "2-digit",
-        minute: "2-digit",
-      })
+      hour: "2-digit",
+      minute: "2-digit",
+    })
     : "";
 
   const resetRequestData = () => {
@@ -290,7 +290,7 @@ export default function RideCard({ ride }) {
 
     return rideId === ride._id && req.status !== "CANCELLED";
   });
-  
+
   const requestedCount = currentRequest?.seatsRequested || 0;
   const alreadyRequested = !!currentRequest;
 
@@ -343,70 +343,70 @@ export default function RideCard({ ride }) {
     ride.genderPreference !== currentUser?.gender;
   const detailItems = isFlight
     ? [
-        {
-          label: "Date & time",
-          icon: <CalendarTodayIcon sx={iconSx} />,
-          value: `${dateStr}${timeStr ? " · " + timeStr : ""}`,
-        },
-        {
-          label: "Flight no.",
-          icon: <FlightTakeoffIcon sx={iconSx} />,
-          value: ride.flightNumber || "—",
-        },
-        {
-          label: "Airline",
-          icon: <FlightTakeoffIcon sx={iconSx} />,
-          value: ride.airlineName || "—",
-        },
-        {
-          label: "Traveller type",
-          icon: <WcIcon sx={iconSx} />,
-          value: ride.travellerType || "—",
-        },
-        {
-          label: "Language",
-          icon: <LanguageIcon sx={iconSx} />,
-          value: ride.language || "—",
-        },
-        ...(ride.transitAirport
-          ? [
-              {
-                label: "Transit",
-                icon: <FlightTakeoffIcon sx={iconSx} />,
-                value: ride.transitAirport,
-              },
-            ]
-          : []),
-      ]
+      {
+        label: "Date & time",
+        icon: <CalendarTodayIcon sx={iconSx} />,
+        value: `${dateStr}${timeStr ? " · " + timeStr : ""}`,
+      },
+      {
+        label: "Flight no.",
+        icon: <FlightTakeoffIcon sx={iconSx} />,
+        value: ride.flightNumber || "—",
+      },
+      {
+        label: "Airline",
+        icon: <FlightTakeoffIcon sx={iconSx} />,
+        value: ride.airlineName || "—",
+      },
+      {
+        label: "Traveller type",
+        icon: <WcIcon sx={iconSx} />,
+        value: ride.travellerType || "—",
+      },
+      {
+        label: "Language",
+        icon: <LanguageIcon sx={iconSx} />,
+        value: ride.language || "—",
+      },
+      ...(ride.transitAirport
+        ? [
+          {
+            label: "Transit",
+            icon: <FlightTakeoffIcon sx={iconSx} />,
+            value: ride.transitAirport,
+          },
+        ]
+        : []),
+    ]
     : [
-        {
-          label: "Date & time",
-          icon: <CalendarTodayIcon sx={iconSx} />,
-          value: `${dateStr}${timeStr ? " · " + timeStr : ""}`,
-        },
-        {
-          label: "Seats available",
-          icon: <EventSeatIcon sx={iconSx} />,
-          value: isFlight
-            ? "—"
-            : `${remainingSeatsForUser ?? 0} seat${remainingSeatsForUser === 1 ? "" : "s"}`,
-        },
-        {
-          label: "Travel mode",
-          icon: travelIcons[ride.modeOfTravel],
-          value: ride.modeOfTravel || "—",
-        },
-        {
-          label: "Gender pref",
-          icon: genderIcon[ride.genderPreference],
-          value: ride.genderPreference,
-        },
-        {
-          label: "Fuel sharing",
-          icon: <LocalGasStationIcon sx={iconSx} />,
-          value: ride.fuelSharing,
-        },
-      ];
+      {
+        label: "Date & time",
+        icon: <CalendarTodayIcon sx={iconSx} />,
+        value: `${dateStr}${timeStr ? " · " + timeStr : ""}`,
+      },
+      {
+        label: "Seats available",
+        icon: <EventSeatIcon sx={iconSx} />,
+        value: isFlight
+          ? "—"
+          : `${remainingSeatsForUser ?? 0} seat${remainingSeatsForUser === 1 ? "" : "s"}`,
+      },
+      {
+        label: "Travel mode",
+        icon: travelIcons[ride.modeOfTravel],
+        value: ride.modeOfTravel || "—",
+      },
+      {
+        label: "Gender pref",
+        icon: genderIcon[ride.genderPreference],
+        value: ride.genderPreference,
+      },
+      {
+        label: "Fuel sharing",
+        icon: <LocalGasStationIcon sx={iconSx} />,
+        value: ride.fuelSharing,
+      },
+    ];
 
   return (
     <>
@@ -841,15 +841,15 @@ export default function RideCard({ ride }) {
                     { label: "Travel mode", value: ride.modeOfTravel },
                     ...(isFlight
                       ? [
-                          {
-                            label: "Age group pref",
-                            value: ride.ageGroupPreference,
-                          },
-                          {
-                            label: "Transit airport",
-                            value: ride.transitAirport || "None",
-                          },
-                        ]
+                        {
+                          label: "Age group pref",
+                          value: ride.ageGroupPreference,
+                        },
+                        {
+                          label: "Transit airport",
+                          value: ride.transitAirport || "None",
+                        },
+                      ]
                       : []),
                   ].map(({ label, value }) => (
                     <Box key={label}>

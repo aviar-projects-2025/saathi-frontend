@@ -140,13 +140,13 @@ export default function Ridebook({
         members: editingRequest.members?.length
           ? editingRequest.members
           : [
-              {
-                name:
-                  `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`.trim() ||
-                  "",
-                age: "",
-              },
-            ],
+            {
+              name:
+                `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`.trim() ||
+                "",
+              age: "",
+            },
+          ],
         message: editingRequest.message || "",
         phone: editingRequest.phone || "",
       });
@@ -166,13 +166,13 @@ export default function Ridebook({
         members: requestToEdit.members?.length
           ? requestToEdit.members
           : [
-              {
-                name:
-                  `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`.trim() ||
-                  "",
-                age: "",
-              },
-            ],
+            {
+              name:
+                `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`.trim() ||
+                "",
+              age: "",
+            },
+          ],
       });
     } else {
       setRequestData(emptyRequestData);

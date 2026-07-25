@@ -51,18 +51,18 @@ const TopNav = ({ onMenuClick }) => {
   // ).length;
 
   const unreadCount = Object.values(
-  (tabNotification || []).reduce((acc, curr) => {
-    if (curr.type === "ride_started") return acc;
-    if (!curr?.isRead) {
-      acc[curr?.data?.rideId || curr._id] = curr;
-    }
+    (tabNotification || []).reduce((acc, curr) => {
+      if (curr.type === "ride_started") return acc;
+      if (!curr?.isRead) {
+        acc[curr?.data?.rideId || curr._id] = curr;
+      }
 
-    return acc;
-  }, {})
-).length;
+      return acc;
+    }, {})
+  ).length;
   // console.log(unreadCount,'unreadCount')
   const [selectedMenu, setSelectedMenu] = useState("");
- 
+
 
   const { completion, currentUser } = useUser();
   const navigate = useNavigate();

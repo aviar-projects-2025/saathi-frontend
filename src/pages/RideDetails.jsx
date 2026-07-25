@@ -424,8 +424,8 @@ export default function RideDetailsModal({
   onEdit,
   onDelete,
   onClose,
-  onApprove = () => {},
-  onReject = () => {},
+  onApprove = () => { },
+  onReject = () => { },
 }) {
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down("sm"));
@@ -434,17 +434,17 @@ export default function RideDetailsModal({
   const startDate = new Date(ride.startTime);
   const dateLabel = !isNaN(startDate)
     ? startDate.toLocaleDateString("en-IN", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    })
     : "—";
   const timeLabel = !isNaN(startDate)
     ? startDate.toLocaleTimeString("en-IN", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      })
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    })
     : "—";
 
   const stamp = statusStamp[ride?.status] || statusStamp.ACTIVE;

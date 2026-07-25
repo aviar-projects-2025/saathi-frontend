@@ -219,10 +219,10 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
         prev.map((item) =>
           item._id === commentId
             ? {
-                ...item,
-                likes: res.data.likes,
-                likedByCurrentUser: res.data.liked,
-              }
+              ...item,
+              likes: res.data.likes,
+              likedByCurrentUser: res.data.liked,
+            }
             : item,
         ),
       );
@@ -556,8 +556,10 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
                       key={replyItem._id}
                       sx={{ ml: { xs: 3.5, sm: 4.5, md: 5 }, mt: 0.5 }}
                     >
+                      {console.log("Avatar....", replyItem)}
                       <Stack direction="row" spacing={{ xs: 0.5, sm: 0.75 }}>
                         <Avatar
+                          src={replyItem?.userId?.profileImage}
                           sx={{
                             width: { xs: 20, sm: 22, md: 24 },
                             height: { xs: 20, sm: 22, md: 24 },

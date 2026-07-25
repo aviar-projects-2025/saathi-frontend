@@ -125,9 +125,8 @@ export default function Profile() {
                       width: 76,
                       height: 76,
                       borderRadius: "50%",
-                      background: `conic-gradient(#E85D26 ${
-                        user.trustScore * 3.6
-                      }deg, #E5E7EB 0deg)`,
+                      background: `conic-gradient(#E85D26 ${user.trustScore * 3.6
+                        }deg, #E5E7EB 0deg)`,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",

@@ -202,8 +202,8 @@ const Web = () => {
       <Box sx={{ bgcolor: 'background.default', overflowX: 'hidden' }}>
         <WebNavbar
           scrolled={scrolled}
-          // drawerOpen={drawerOpen}
-          // onDrawerToggle={handleDrawerToggle}
+        // drawerOpen={drawerOpen}
+        // onDrawerToggle={handleDrawerToggle}
         />
 
         <HeroSection onSearchClick={handleSearchClick} />
