@@ -29,17 +29,16 @@ const Input = ({
         placeholder={placeholder}
         value={value}
         onChange={onChange}
-        onBlur={onBlur}             
+        onBlur={onBlur}
         className={`
           w-full rounded-xl border px-4 py-3
           bg-white
           shadow-sm
           transition-all duration-200
           focus:outline-none focus:ring-2 focus:ring-orange-400
-          ${
-            error && touched
-              ? "border-red-500"
-              : "border-gray-300"
+          ${error && touched
+            ? "border-red-500"
+            : "border-gray-300"
           }
         `}
       />

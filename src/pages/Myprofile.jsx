@@ -602,7 +602,7 @@ const Myprofile = () => {
           </Box>
         </Box>
       </Modal>
-
+      
       <Modal open={openShare} onClose={handleCloseShare}>
         <Box
           sx={{
@@ -619,6 +619,7 @@ const Myprofile = () => {
         >
           <Box
             sx={{
+              position: "relative",
               bgcolor: "white",
               width: { xs: "100%", sm: 320 },
               maxWidth: 320,
@@ -627,11 +628,25 @@ const Myprofile = () => {
               boxShadow: 24,
             }}
           >
+            <IconButton
+              onClick={handleCloseShare}
+              size="small"
+              sx={{
+                position: "absolute",
+                top: 8,
+                right: 8,
+                color: "grey.500",
+              }}
+            >
+              <CloseIcon fontSize="small" />
+            </IconButton>
+
             <Typography
               fontWeight={600}
               sx={{
                 fontSize: { xs: "0.9rem", sm: "1rem" },
                 mb: { xs: 1.5, sm: 2 },
+                pr: 3,
               }}
             >
               Share your referral link
@@ -800,7 +815,7 @@ const Myprofile = () => {
         <Grid
           sx={{
             display: 'flex',
-            justifyContent: { xs: "center", sm: "end" },
+            justifyContent: { xs: "end", sm: "end" },
             mt: 2,
             mx: 1
           }}>

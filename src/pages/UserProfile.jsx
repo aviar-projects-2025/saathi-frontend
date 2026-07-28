@@ -473,7 +473,11 @@ const UserProfile = () => {
                         <Stack
                             direction="row"
                             spacing={{ xs: 1, sm: 1.5 }}
-                            sx={{ mt: { xs: 1.5, sm: 2 } }}
+                            sx={{
+                                mt: { xs: 1.5, sm: 2 },
+                                display: "flex",
+                                justifyContent: "flex-end"
+                            }}
                         >
                             <Button
                                 variant="outlined"

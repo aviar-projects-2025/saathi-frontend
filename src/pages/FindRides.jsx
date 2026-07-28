@@ -397,10 +397,11 @@ export default function FindRides() {
             <Box
               sx={{
                 display: "flex",
-                gap: { xs: 0.7, sm: 1.25 },
+                gap: { xs: 1, sm: 1.25 },
                 alignItems: "center",
                 flexDirection: "row",
-                mt: { xs: 2.3, sm: 1.5 },
+                mt: { xs: 2, sm: 1.5 },
+                mb: { xs: 1, sm: 1 }
               }}
             >
               {/* From */}

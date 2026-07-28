@@ -448,10 +448,10 @@ const MyReferrals = () => {
     const shareLink = `${window.location.origin}/register?ref=${user?.referralCode}`;
     return (
         <PageLayout>
-            <Box sx={{ px: { xs: 0, sm: 2, md: 0 }, pb: 6 }}>
+            <Box sx={{ px: { xs: 0.5, sm: 0, md: 0 }, pb: 6 }}>
 
                 {/* Header */}
-                <Box sx={{ mb: 1.5 }}>
+                <Box sx={{ mb: 1, mt: 1 }}>
                     <Typography
                         variant="h5"
                         fontWeight={700}

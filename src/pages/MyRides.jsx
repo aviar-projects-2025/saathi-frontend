@@ -914,7 +914,7 @@ function RideCard({
           sx={{
             background: "linear-gradient(135deg, #0e0e3b, #271c45)",
             color: "#fff",
-            borderRadius: "18px 18px 0 0",
+            borderRadius: "15px 15px 0 0",
             px: { xs: 1.5, sm: 2.5, md: 3 },
             py: { xs: 1.25, sm: 1.75, md: 2 },
             display: "flex",
