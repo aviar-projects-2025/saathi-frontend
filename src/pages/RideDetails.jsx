@@ -170,7 +170,8 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
     const profilePic = request.requestedBy?.profileImage
     const seats = request?.approvedSeats || 1;
     const pendingReq = request?.pendingReqSeats || 0;
-
+    const approvedSeats = request?.approvedSeats || 0;
+    const membersCount = request?.membersCount || 0;
     return (
         <>
             <Box
@@ -222,7 +223,13 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
                             <Stack direction="row" spacing={0.6} alignItems="center" sx={{ mt: 0.3 }}>
                                 <EventSeatIcon sx={{ fontSize: 13, color: TOKENS.inkSoft }} />
                                 <Typography sx={{ fontFamily: TOKENS.monoFont, fontSize: '0.7rem', color: TOKENS.inkSoft }}>
-                                    SEAT × {seats}
+                                    Approved Seats × {approvedSeats}
+                                </Typography>
+                            </Stack>
+                            <Stack direction="row" spacing={0.6} alignItems="center" sx={{ mt: 0.3 }}>
+                                <EventSeatIcon sx={{ fontSize: 13, color: TOKENS.inkSoft }} />
+                                <Typography sx={{ fontFamily: TOKENS.monoFont, fontSize: '0.7rem', color: TOKENS.inkSoft }}>
+                                    Pending Seat Req × {pendingReq}
                                 </Typography>
                             </Stack>
                         </Box>
@@ -383,7 +390,7 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
                 </Collapse>
             </Box>
 
-            {pendingReq > 0 && (
+            {pendingReq > 0 && approvedSeats > 0 && (
                 <Box
                     sx={{
                         display: "flex",

@@ -1,12 +1,5 @@
 import React from "react";
-import {
-  Box,
-  Paper,
-  Typography,
-  Button,
-  Stack,
-  Avatar,
-} from "@mui/material";
+import { Box, Paper, Typography, Button, Stack, Avatar } from "@mui/material";
 import HourglassTopIcon from "@mui/icons-material/HourglassTop";
 import LogoutIcon from "@mui/icons-material/Logout";
 import RefreshIcon from "@mui/icons-material/Refresh";
@@ -65,8 +58,10 @@ export default function WaitingApproval() {
         </Typography>
 
         <Typography color="text.secondary" sx={{ mt: 1, mb: 2 }}>
-          Your Saathi account has been created successfully.
-          Your account is awaiting verification from the member who referred you.
+          Your account has been created successfully. You'll receive a
+          confirmation email shortly, and your referrer will receive your
+          approval request. Once your account is approved, you'll be ready to
+          enjoy Saathi.
         </Typography>
 
         {/* 🔥 Referral Contact Section */}
@@ -80,11 +75,12 @@ export default function WaitingApproval() {
           }}
         >
           <Typography fontWeight={700} color="#E8650A" mb={0.5}>
-            Need faster approval?
+            Ready to join the community?
           </Typography>
 
           <Typography variant="body2" color="text.secondary">
-            Contact your referral person and ask them to approve your account.
+            our account is waiting for your referrer's approval. If you know
+            them, you can send them a quick reminder to review your request{" "}
           </Typography>
 
           {/* OPTIONAL: show referral details */}
@@ -109,8 +105,8 @@ export default function WaitingApproval() {
             What happens next?
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Once approved, you can access rides, community posts, referrals, and
-            other Saathi features.
+            After your referrer approves your request, you'll be able to sign in
+            and start using Saathi's rides, community, referrals, and more.
           </Typography>
         </Box>
 
