@@ -264,7 +264,15 @@ const TopNav = ({ onMenuClick }) => {
             </Box>
           </Tooltip>
 
-          <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
+          <Dialog
+            open={open}
+            onClose={(event, reason) => {
+              if (reason === "backdropClick") return;
+              setOpen(false);
+            }}
+            fullWidth
+            maxWidth="sm"
+          >
             <DialogTitle
               sx={{
                 position: "relative",

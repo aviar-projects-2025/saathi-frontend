@@ -746,8 +746,8 @@ export default function RideDetailsModal({
                       // border: `1px solid ${TOKENS.line}`,
                       borderRadius: 1.5,
                       maxHeight: { xs: 280, sm: 340 },
-                      overflowY: "auto",
-                      overflowX: "hidden",
+                      // overflowY: "auto",
+                      // overflowX: "hidden",
                     }}
                   >
                     {requests.map((req, idx) => (
