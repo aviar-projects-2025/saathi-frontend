@@ -375,29 +375,29 @@ export default function OfferRide() {
       status: "OPEN",
       ...(isFlight
         ? {
-            fromCountry: form.fromCountry,
-            fromAirport: form.fromAirport,
-            toCountry: form.toCountry,
-            toAirport: form.toAirport,
-            from: form.fromAirport,
-            destination: form.toAirport,
-            flightNumber: form.flightNumber,
-            airlineName: form.airlineName,
-            transitAirport: form.transitAirport,
-            travellerType: form.travellerType,
-            language: form.language,
-            ageGroupPreference: form.ageGroupPreference,
-            medicalAssistance: form.medicalAssistance,
-            languageSupport: form.languageSupport,
-            transitHelp: form.transitHelp,
-            baggageHelp: form.baggageHelp,
-          }
+          fromCountry: form.fromCountry,
+          fromAirport: form.fromAirport,
+          toCountry: form.toCountry,
+          toAirport: form.toAirport,
+          from: form.fromAirport,
+          destination: form.toAirport,
+          flightNumber: form.flightNumber,
+          airlineName: form.airlineName,
+          transitAirport: form.transitAirport,
+          travellerType: form.travellerType,
+          language: form.language,
+          ageGroupPreference: form.ageGroupPreference,
+          medicalAssistance: form.medicalAssistance,
+          languageSupport: form.languageSupport,
+          transitHelp: form.transitHelp,
+          baggageHelp: form.baggageHelp,
+        }
         : {
-            from: form.from,
-            destination: form.destination,
-            availableSeats: form.availableSeats,
-            fuelSharing: form.price,
-          }),
+          from: form.from,
+          destination: form.destination,
+          availableSeats: form.availableSeats,
+          fuelSharing: form.price,
+        }),
     };
 
     try {
@@ -440,6 +440,10 @@ export default function OfferRide() {
       });
     } finally {
       setIsSubmitted(false);
+
+      setTimeout(() => {
+        navigate("/myride");
+      }, 3000);
     }
   };
 
@@ -614,9 +618,9 @@ export default function OfferRide() {
                 fontSize: { xs: "1.1rem", sm: "1.6rem", md: "1.8rem" },
               },
               "& .MuiStepIcon-root.Mui-active, & .MuiStepIcon-root.Mui-completed":
-                {
-                  color: ACCENT,
-                },
+              {
+                color: ACCENT,
+              },
               "& .MuiStepConnector-line": { minWidth: { xs: 2, sm: 16 } },
               "& .MuiStep-root": { px: { xs: 0.25, sm: 1 } },
             }}
@@ -1278,114 +1282,114 @@ export default function OfferRide() {
                   <Stack spacing={0}>
                     {(isFlight
                       ? [
-                          [
-                            MapPin,
-                            "Route",
-                            `${form.fromAirport || "—"} → ${form.toAirport || "—"}`,
-                          ],
-                          [
-                            MapPin,
-                            "Country",
-                            `${form.fromCountry || "—"} → ${form.toCountry || "—"}`,
-                          ],
-                          [
-                            Calendar,
-                            "Date & Departure",
-                            `${form.date || "—"} at ${form.time || "—"}`,
-                          ],
-                          [Clock, "Journey Duration", form.duration || "—"],
-                          [Plane, "Flight Number", form.flightNumber || "—"],
-                          [Plane, "Airline Name", form.airlineName || "—"],
-                          [
-                            MapPin,
-                            "Transit Airport",
-                            form.transitAirport || "No transit",
-                          ],
-                          [Users, "Traveller Type", form.travellerType || "—"],
-                          [Languages, "Language", form.language || "—"],
-                          [Users, "Gender Preference", form.genderPreference],
-                          [
-                            Users,
-                            "Age Group Preference",
-                            form.ageGroupPreference,
-                          ],
-                          [
-                            HeartPulse,
-                            "Medical Assistance",
-                            form.medicalAssistance ? "Yes" : "No",
-                          ],
-                          [
-                            Languages,
-                            "Language Support",
-                            form.languageSupport ? "Yes" : "No",
-                          ],
-                          [
-                            MapPin,
-                            "Transit Help",
-                            form.transitHelp ? "Yes" : "No",
-                          ],
-                          [
-                            Luggage,
-                            "Baggage Help",
-                            form.baggageHelp ? "Yes" : "No",
-                          ],
-                        ]
+                        [
+                          MapPin,
+                          "Route",
+                          `${form.fromAirport || "—"} → ${form.toAirport || "—"}`,
+                        ],
+                        [
+                          MapPin,
+                          "Country",
+                          `${form.fromCountry || "—"} → ${form.toCountry || "—"}`,
+                        ],
+                        [
+                          Calendar,
+                          "Date & Departure",
+                          `${form.date || "—"} at ${form.time || "—"}`,
+                        ],
+                        [Clock, "Journey Duration", form.duration || "—"],
+                        [Plane, "Flight Number", form.flightNumber || "—"],
+                        [Plane, "Airline Name", form.airlineName || "—"],
+                        [
+                          MapPin,
+                          "Transit Airport",
+                          form.transitAirport || "No transit",
+                        ],
+                        [Users, "Traveller Type", form.travellerType || "—"],
+                        [Languages, "Language", form.language || "—"],
+                        [Users, "Gender Preference", form.genderPreference],
+                        [
+                          Users,
+                          "Age Group Preference",
+                          form.ageGroupPreference,
+                        ],
+                        [
+                          HeartPulse,
+                          "Medical Assistance",
+                          form.medicalAssistance ? "Yes" : "No",
+                        ],
+                        [
+                          Languages,
+                          "Language Support",
+                          form.languageSupport ? "Yes" : "No",
+                        ],
+                        [
+                          MapPin,
+                          "Transit Help",
+                          form.transitHelp ? "Yes" : "No",
+                        ],
+                        [
+                          Luggage,
+                          "Baggage Help",
+                          form.baggageHelp ? "Yes" : "No",
+                        ],
+                      ]
                       : [
-                          [
-                            MapPin,
-                            "From → Destination",
-                            `${form.from || "—"} → ${form.destination || "—"}`,
-                          ],
-                          [
-                            Calendar,
-                            "Date & Time",
-                            `${form.date || "—"} at ${form.time || "—"}`,
-                          ],
-                          [Clock, "Journey Duration", form.duration || "—"],
-                          [Car, "Mode of Travel", form.modeOfTravel],
-                          [Users, "Available Seats", form.availableSeats],
-                          [Users, "Traveller Type", form.travellerType || "—"],
-                          [Languages, "Language", form.language || "—"],
-                          [Users, "Gender Preference", form.genderPreference],
-                          [
-                            Fuel,
-                            "Fuel Sharing",
-                            // form.fuelSharing ? "Yes" : "No",
-                            form.price,
-                          ],
-                          [
-                            Users,
-                            "Age Group Preference",
-                            form.ageGroupPreference,
-                          ],
-                          [
-                            HeartPulse,
-                            "Medical Assistance",
-                            form.medicalAssistance ? "Yes" : "No",
-                          ],
-                          [
-                            Languages,
-                            "Language Support",
-                            form.languageSupport ? "Yes" : "No",
-                          ],
-                          [
-                            MapPin,
-                            "Transit Help",
-                            form.transitHelp ? "Yes" : "No",
-                          ],
-                          [
-                            Luggage,
-                            "Baggage Help",
-                            form.baggageHelp ? "Yes" : "No",
-                          ],
-                          [
-                            Fuel,
-                            "Fuel Sharing",
-                            // form.fuelSharing ? "Yes" : "No",
-                            form.price,
-                          ],
-                          [Users, "Gender Preference", form.genderPreference],
-                        ]
+                        [
+                          MapPin,
+                          "From → Destination",
+                          `${form.from || "—"} → ${form.destination || "—"}`,
+                        ],
+                        [
+                          Calendar,
+                          "Date & Time",
+                          `${form.date || "—"} at ${form.time || "—"}`,
+                        ],
+                        [Clock, "Journey Duration", form.duration || "—"],
+                        [Car, "Mode of Travel", form.modeOfTravel],
+                        [Users, "Available Seats", form.availableSeats],
+                        [Users, "Traveller Type", form.travellerType || "—"],
+                        [Languages, "Language", form.language || "—"],
+                        [Users, "Gender Preference", form.genderPreference],
+                        [
+                          Fuel,
+                          "Fuel Sharing",
+                          // form.fuelSharing ? "Yes" : "No",
+                          form.price,
+                        ],
+                        [
+                          Users,
+                          "Age Group Preference",
+                          form.ageGroupPreference,
+                        ],
+                        [
+                          HeartPulse,
+                          "Medical Assistance",
+                          form.medicalAssistance ? "Yes" : "No",
+                        ],
+                        [
+                          Languages,
+                          "Language Support",
+                          form.languageSupport ? "Yes" : "No",
+                        ],
+                        [
+                          MapPin,
+                          "Transit Help",
+                          form.transitHelp ? "Yes" : "No",
+                        ],
+                        [
+                          Luggage,
+                          "Baggage Help",
+                          form.baggageHelp ? "Yes" : "No",
+                        ],
+                        [
+                          Fuel,
+                          "Fuel Sharing",
+                          // form.fuelSharing ? "Yes" : "No",
+                          form.price,
+                        ],
+                        [Users, "Gender Preference", form.genderPreference],
+                      ]
                     ).map(([Icon, label, value]) => (
                       <ReviewItem
                         key={label}

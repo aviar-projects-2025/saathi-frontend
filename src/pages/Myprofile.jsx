@@ -19,6 +19,7 @@ import {
   Grid,
   CircularProgress,
 } from "@mui/material";
+import Close from "@mui/icons-material/Close";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import LockIcon from "@mui/icons-material/Lock";
 import ThumbUpOffAltIcon from "@mui/icons-material/ThumbUpOffAlt";
@@ -116,6 +117,8 @@ const Myprofile = () => {
     confirm: false,
   });
 
+  const [passwordLoading, setPasswordLoading] = useState(false);
+
   const toasts = ToastConfig();
 
   // const theme = useTheme();
@@ -145,6 +148,7 @@ const Myprofile = () => {
   }, [currentUser]);
 
   const handleChangePassword = async () => {
+    setPasswordLoading(true);
     try {
       // Frontend validation
       if (
@@ -180,6 +184,8 @@ const Myprofile = () => {
     } catch (error) {
       console.error(error);
       toast.error(error.response?.data?.message || "Something went wrong", toasts);
+    } finally {
+      setPasswordLoading(false);
     }
   };
 
@@ -372,7 +378,6 @@ const Myprofile = () => {
         </Grid>
       </SectionCard>
 
-      {/* ── Change Password Modal ── */}
       <Modal
         open={passwordModel}
         onClose={() => setPasswordModel(false)}
@@ -384,28 +389,61 @@ const Myprofile = () => {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            bgcolor: "rgba(0,0,0,0.35)",
-
+            bgcolor: "rgba(0,0,0,0.45)",
+            p: 2,
           }}
         >
-
           <Box
             sx={{
               bgcolor: "#fff",
-              width: { xs: "100%", sm: 430 },
-              p: 5,
-              borderRadius: 4,
-              boxShadow: 8,
+              width: {
+                xs: "100%",
+                sm: "90%",
+                md: 430,
+              },
+              maxWidth: 430,
+              borderRadius: 3,
+              boxShadow: 10,
               overflow: "hidden",
             }}
           >
             {/* Header */}
+            <Box
+              sx={{
+                px: 3,
+                py: 2,
+                borderBottom: "1px solid #EAEAEA",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <Typography
+                // variant={{xs:"h1", sm:"h9"}}
+                sx={{
+                  fontWeight: 700,
+                  color: "#333",
+                }}
+              >
+                Change Password
+              </Typography>
 
+              <IconButton onClick={() => setPasswordModel(false)} size="small">
+                <Close />
+              </IconButton>
+            </Box>
 
             {/* Body */}
-            <Box p={1}>
-              <Stack spacing={2}>
-
+            <Box
+              sx={{
+                p: {
+                  xs: 2,
+                  sm: 3,
+                },
+              }}
+            >
+              <Stack spacing={2.5}>
+                {/* Current Password */}
                 <TextField
                   fullWidth
                   label="Current Password"
@@ -426,7 +464,11 @@ const Myprofile = () => {
                               }))
                             }
                           >
-                            {showPassword.current ? <VisibilityOff /> : <Visibility />}
+                            {showPassword.current ? (
+                              <VisibilityOff />
+                            ) : (
+                              <Visibility />
+                            )}
                           </IconButton>
                         </InputAdornment>
                       ),
@@ -434,6 +476,7 @@ const Myprofile = () => {
                   }}
                 />
 
+                {/* New Password */}
                 <TextField
                   fullWidth
                   label="New Password"
@@ -454,7 +497,11 @@ const Myprofile = () => {
                               }))
                             }
                           >
-                            {showPassword.new ? <VisibilityOff /> : <Visibility />}
+                            {showPassword.new ? (
+                              <VisibilityOff />
+                            ) : (
+                              <Visibility />
+                            )}
                           </IconButton>
                         </InputAdornment>
                       ),
@@ -462,6 +509,7 @@ const Myprofile = () => {
                   }}
                 />
 
+                {/* Confirm Password */}
                 <TextField
                   fullWidth
                   label="Confirm Password"
@@ -482,7 +530,11 @@ const Myprofile = () => {
                               }))
                             }
                           >
-                            {showPassword.confirm ? <VisibilityOff /> : <Visibility />}
+                            {showPassword.confirm ? (
+                              <VisibilityOff />
+                            ) : (
+                              <Visibility />
+                            )}
                           </IconButton>
                         </InputAdornment>
                       ),
@@ -490,11 +542,16 @@ const Myprofile = () => {
                   }}
                 />
 
+                {/* Buttons */}
                 <Stack
-                  direction="row"
+                  direction={{ xs: "column", sm: "row" }}
                   spacing={2}
                   justifyContent="flex-end"
-                  mt={1}
+                  sx={{
+                    pt: 2,
+                    display: "flex",
+                    justifyContent: "flex-end"
+                  }}
                 >
                   <Button
                     variant="outlined"
@@ -507,8 +564,12 @@ const Myprofile = () => {
                       });
                     }}
                     sx={{
+                      width: { xs: "100%", sm: "auto" },
+                      minWidth: { sm: 140 },
                       borderColor: "#E8650A",
                       color: "#E8650A",
+                      textTransform: "none",
+                      fontWeight: 600,
                       "&:hover": {
                         borderColor: "#D65A00",
                         bgcolor: "#FFF6E5",
@@ -521,15 +582,19 @@ const Myprofile = () => {
                   <Button
                     variant="contained"
                     onClick={handleChangePassword}
+                    disabled={passwordLoading}
                     sx={{
+                      width: { xs: "100%", sm: "auto" },
+                      minWidth: { sm: 180 },
                       bgcolor: "#E8650A",
-                      px: 3,
+                      textTransform: "none",
+                      fontWeight: 600,
                       "&:hover": {
                         bgcolor: "#D65A00",
                       },
                     }}
                   >
-                    Update Password
+                    {passwordLoading ? " Updating Password... " : " Update Password "}
                   </Button>
                 </Stack>
               </Stack>

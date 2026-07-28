@@ -55,6 +55,13 @@ import { toast } from "react-toastify";
 import ToastConfig from "../components/ToastConfig.jsx";
 
 const RequestRide = () => {
+
+
+
+
+
+
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [loadingRequests, setLoadingRequests] = useState(true);
   const [openEditModal, setOpenEditModal] = useState(false);
   const [allMyRequests, setAllMyRequests] = useState([]);
@@ -109,6 +116,7 @@ const RequestRide = () => {
 
   const handleDelete = async (requestId) => {
     setOpenCancelDialog(false);
+    setDeleteLoading(true);
     setSelectedRequest(null);
     try {
       await axios.delete(`${Api}/bookride/${requestId}`);
@@ -124,6 +132,8 @@ const RequestRide = () => {
         error.response?.data?.message || "Failed to delete ride request",
         toasts,
       );
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -318,7 +328,7 @@ const RequestRide = () => {
                       (item) =>
                         item?.rideId &&
                         item?.rideId?.createdBy?._id ===
-                          request?.rideId?.createdBy?._id,
+                        request?.rideId?.createdBy?._id,
                     ).length;
 
                     return (

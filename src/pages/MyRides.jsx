@@ -278,7 +278,7 @@ function EditRideModal({ ride, onSave, onClose }) {
     } catch (err) {
       setError(
         err?.response?.data?.message ||
-          "Failed to update ride. Please try again.",
+        "Failed to update ride. Please try again.",
       );
     } finally {
       setSaving(false);
@@ -483,21 +483,19 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
 
-  const isPost =
-    ride.role === "offered" &&
-    (ride.status === "pending" || ride.status === "confirmed");
-  const label = isPost ? "Remove post" : "Cancel ride";
-  const body = isPost
-    ? "This will remove your ride post. Passengers who requested this ride will be notified."
-    : "This will cancel your booking. The driver will be notified.";
+  // const isPost = ride.role === 'offered' && (ride.status === 'pending' || ride.status === 'confirmed');
+  // const label = isPost ? 'Remove post' : 'Cancel ride';
+  // const body = isPost
+  //   ? 'This will remove your ride post. Passengers who requested this ride will be notified.'
+  //   : 'This will cancel your booking. The driver will be notified.';
 
   const startDate = new Date(ride.startTime);
   const dateLabel = !isNaN(startDate)
     ? startDate.toLocaleDateString("en-IN", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    })
     : "—";
 
   const handleConfirm = async () => {
@@ -509,7 +507,7 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
     } catch (err) {
       setError(
         err?.response?.data?.message ||
-          "Failed to delete ride. Please try again.",
+        "Failed to delete ride. Please try again.",
       );
     } finally {
       setDeleting(false);
@@ -530,48 +528,17 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
         },
       }}
     >
-      <DialogTitle
-        sx={{ fontWeight: 800, pr: 5, fontSize: { xs: "1rem", sm: "1.15rem" } }}
-      >
-        {label}?
-        <IconButton
-          onClick={onClose}
-          aria-label="Close"
-          sx={{
-            position: "absolute",
-            right: 8,
-            top: 8,
-            color: "text.secondary",
-            width: 44,
-            height: 44,
-          }}
-        >
+      <DialogTitle sx={{ fontWeight: 800, pr: 5, fontSize: { xs: '1rem', sm: '1.15rem' } }}>
+        Are you Cancel Ride?
+        <IconButton onClick={onClose} aria-label="Close" sx={{ position: 'absolute', right: 8, top: 8, color: 'text.secondary', width: 44, height: 44 }}>
           <CloseIcon fontSize="small" />
         </IconButton>
       </DialogTitle>
 
       <DialogContent>
-        <Typography
-          color="text.secondary"
-          sx={{ fontSize: { xs: "0.82rem", sm: "0.9rem" } }}
-        >
-          {body}
-        </Typography>
-        <Paper
-          sx={{
-            mt: 2,
-            p: 1.5,
-            bgcolor: "#FFF8F2",
-            border: "1px solid #F0E6DC",
-            borderRadius: 2,
-          }}
-          elevation={0}
-        >
-          <Typography
-            sx={{ fontSize: { xs: "0.78rem", sm: "0.85rem" } }}
-            fontWeight={700}
-            wordBreak="break-word"
-          >
+        <Typography color="text.secondary" sx={{ fontSize: { xs: '0.82rem', sm: '0.9rem' } }}>This will cancel your booking. The driver will be notified...</Typography>
+        <Paper sx={{ mt: 2, p: 1.5, bgcolor: '#FFF8F2', border: '1px solid #F0E6DC', borderRadius: 2 }} elevation={0}>
+          <Typography sx={{ fontSize: { xs: '0.78rem', sm: '0.85rem' } }} fontWeight={700} wordBreak="break-word">
             {formFrom(ride)} → {formTo(ride)}
           </Typography>
           <Typography
@@ -601,20 +568,8 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
         >
           Keep it
         </Button>
-        <Button
-          onClick={handleConfirm}
-          variant="contained"
-          color="error"
-          disabled={deleting}
-          sx={{
-            borderRadius: 2,
-            textTransform: "none",
-            fontWeight: 700,
-            flex: { xs: "1 1 auto", sm: "0 0 auto" },
-            minHeight: 44,
-          }}
-        >
-          {deleting ? "Deleting..." : label}
+        <Button onClick={handleConfirm} variant="contained" color="error" disabled={deleting} sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700, flex: { xs: '1 1 auto', sm: '0 0 auto' }, minHeight: 44 }}>
+          {deleting ? 'Deleting...' : "Delete"}
         </Button>
       </DialogActions>
     </Dialog>
@@ -812,6 +767,9 @@ function RideCard({
   const [loadingRequests, setLoadingRequests] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState([]);
 
+  const [approveLoading, setApproveLoading] = useState(null);
+  const [rejectLoading, setRejectLoading] = useState(null);
+
   const toasts = ToastConfig();
 
   const theme = useTheme();
@@ -826,17 +784,17 @@ function RideCard({
   const startDate = new Date(ride.startTime);
   const date = !isNaN(startDate)
     ? startDate.toLocaleDateString("en-IN", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    })
     : "—";
   const time = !isNaN(startDate)
     ? startDate.toLocaleTimeString("en-IN", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      })
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    })
     : "—";
 
   const fuelLabel = ride.fuelSharing ? "Yes" : "No";
@@ -852,6 +810,7 @@ function RideCard({
   ).length;
 
   const handleApprove = async (requestId) => {
+    setApproveLoading(requestId);
     try {
       const res = await axios.patch(
         `${Api}/bookride/${requestId}/status?type=Approve`,
@@ -868,10 +827,13 @@ function RideCard({
       }
     } catch (error) {
       toast.error(error.response.data.message, toasts);
+    } finally {
+      setApproveLoading(null);
     }
   };
 
   const handleReject = async (requestId) => {
+    setRejectLoading(requestId);
     try {
       await axios.patch(`${Api}/bookride/${requestId}/status?type=Reject`, {
         status: "REJECTED",
@@ -884,7 +846,9 @@ function RideCard({
       toast.success("Request rejected", toasts);
       fetchRides();
     } catch (error) {
-      toast.error("Failed to reject request", toasts);
+      toast.error('Failed to reject request', toasts);
+    } finally {
+      setRejectLoading(null);
     }
   };
 
@@ -1130,8 +1094,8 @@ function RideCard({
               {/* FROM / TO row */}
               <Box
                 sx={{
-                  display: isMobile ? "block" : "flex",
-                  justifyContent: "space-between",
+                  display: isMobile ? 'block' : 'flex',
+                  justifyContent: 'space-between',
                   // alignItems:'center',
                 }}
               >
@@ -1223,14 +1187,11 @@ function RideCard({
                 <Box
                   sx={{
                     // border:'1px solid black',
-                    justifyContent: "space-around",
-                    display: "flex",
-                    width: isMobile ? "100%" : "60%",
-                    gridTemplateColumns: {
-                      xs: "1fr 1fr",
-                      sm: "repeat(3, 1fr)",
-                    },
-                    gap: { xs: "10px 6px", sm: "16px", md: 3 },
+                    justifyContent: 'space-around',
+                    display: 'flex',
+                    width: isMobile ? '100%' : '60%',
+                    gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(3, 1fr)' },
+                    gap: { xs: '10px 6px', sm: '16px', md: 3 },
                   }}
                 >
                   <Box>
@@ -1398,6 +1359,8 @@ function RideCard({
           requests={rideRequests}
           onApprove={handleApprove}
           onReject={handleReject}
+          approveLoading={approveLoading}
+          rejectLoading={rejectLoading}
         />
       )}
 

@@ -323,8 +323,9 @@ const UserProfile = () => {
         }
     };
     const handleUpdateProfile = async () => {
+        setSubmitLoading(true);
         try {
-            setSubmitLoading(true)
+           
             const validationErrors = validateForm(formData);
             if (Object.keys(validationErrors).length > 0) {
                 setErrors(validationErrors);
@@ -892,7 +893,7 @@ const UserProfile = () => {
                                         onClick={handleUpdateProfile}
                                         disabled={submitLoading}
                                     >
-                                        Save Changes
+                                        {submitLoading ? "Saving Changes..." : "Save Changes"}
                                     </Button>
                                 </Stack>
                             </Stack>
