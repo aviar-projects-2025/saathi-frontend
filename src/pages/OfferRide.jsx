@@ -396,6 +396,7 @@ export default function OfferRide() {
           from: form.from,
           destination: form.destination,
           availableSeats: form.availableSeats,
+          totalSeats: form.availableSeats,
           fuelSharing: form.price,
         }),
     };
