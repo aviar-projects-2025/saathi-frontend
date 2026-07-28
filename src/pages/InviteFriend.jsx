@@ -116,13 +116,12 @@ export default function InviteFlow() {
           {[0, 1, 2, 3].map((item) => (
             <div
               key={item}
-              className={`h-2 rounded-full transition-all duration-300 ${
-                step === item
+              className={`h-2 rounded-full transition-all duration-300 ${step === item
                   ? "w-6 bg-[#E87722]"
                   : step > item
-                  ? "w-2 bg-[#0D6B3C]"
-                  : "w-2 bg-[#F0E6DC]"
-              }`}
+                    ? "w-2 bg-[#0D6B3C]"
+                    : "w-2 bg-[#F0E6DC]"
+                }`}
             />
           ))}
         </div>
@@ -144,22 +143,20 @@ export default function InviteFlow() {
             <div className="mb-6 flex overflow-hidden rounded-xl border border-[#F0E6DC]">
               <button
                 onClick={() => setTab("join")}
-                className={`flex-1 px-3 py-2 text-sm font-bold ${
-                  tab === "join"
+                className={`flex-1 px-3 py-2 text-sm font-bold ${tab === "join"
                     ? "bg-[#E87722] text-white"
                     : "bg-[#FFF8F2] text-[#555577]"
-                }`}
+                  }`}
               >
                 I have a code
               </button>
 
               <button
                 onClick={() => setTab("invite")}
-                className={`flex-1 px-3 py-2 text-sm font-bold ${
-                  tab === "invite"
+                className={`flex-1 px-3 py-2 text-sm font-bold ${tab === "invite"
                     ? "bg-[#E87722] text-white"
                     : "bg-[#FFF8F2] text-[#555577]"
-                }`}
+                  }`}
               >
                 Invite someone
               </button>
@@ -176,11 +173,10 @@ export default function InviteFlow() {
                   onChange={(e) => setRefCode(e.target.value.toUpperCase())}
                   maxLength={10}
                   placeholder="e.g. PRIYA47"
-                  className={`mb-2 w-full rounded-xl border bg-[#FFF8F2] px-4 py-3 text-lg font-bold uppercase tracking-widest outline-none ${
-                    refCode.length >= 6 && !isCodeValid
+                  className={`mb-2 w-full rounded-xl border bg-[#FFF8F2] px-4 py-3 text-lg font-bold uppercase tracking-widest outline-none ${refCode.length >= 6 && !isCodeValid
                       ? "border-red-500"
                       : "border-[#F0E6DC] focus:border-[#E87722]"
-                  }`}
+                    }`}
                 />
 
                 {refCode.length >= 6 && !isCodeValid && (
@@ -332,9 +328,8 @@ export default function InviteFlow() {
                   maxLength={1}
                   onChange={(e) => handleOtpChange(e.target.value, index)}
                   onKeyDown={(e) => handleOtpKey(e, index)}
-                  className={`h-14 w-11 rounded-xl border bg-[#FFF8F2] text-center font-['Sora',sans-serif] text-xl font-bold outline-none ${
-                    digit ? "border-[#E87722]" : "border-[#F0E6DC]"
-                  } ${otpError ? "border-red-500" : ""}`}
+                  className={`h-14 w-11 rounded-xl border bg-[#FFF8F2] text-center font-['Sora',sans-serif] text-xl font-bold outline-none ${digit ? "border-[#E87722]" : "border-[#F0E6DC]"
+                    } ${otpError ? "border-red-500" : ""}`}
                 />
               ))}
             </div>
@@ -430,11 +425,10 @@ export default function InviteFlow() {
                 <button
                   key={lang}
                   onClick={() => toggleLang(lang)}
-                  className={`rounded-full border px-3 py-1.5 text-sm font-medium ${
-                    langs.includes(lang)
+                  className={`rounded-full border px-3 py-1.5 text-sm font-medium ${langs.includes(lang)
                       ? "border-[#E87722] bg-[#FFF3E8] text-[#E87722]"
                       : "border-[#F0E6DC] bg-[#FFF8F2] text-[#555577]"
-                  }`}
+                    }`}
                 >
                   {lang}
                 </button>

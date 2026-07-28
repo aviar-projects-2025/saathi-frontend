@@ -8,8 +8,8 @@ const Header = () => {
                 sx={{
                     bgcolor: "rgba(255, 255, 236, 0)",
                     height: 20,
-                    padding : 2,
-                    pl : 4,
+                    padding: 2,
+                    pl: 4,
                 }}
             >
                 <Typography

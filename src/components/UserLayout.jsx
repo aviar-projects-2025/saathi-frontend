@@ -45,9 +45,8 @@ const UserLayout = () => {
       <Box
         sx={{
           width: "100%",
-          height: `calc(100dvh - ${TOPBAR_HEIGHT}px - ${
-            isMobile ? BOTTOMNAV_HEIGHT : 0
-          }px)`,
+          height: `calc(100dvh - ${TOPBAR_HEIGHT}px - ${isMobile ? BOTTOMNAV_HEIGHT : 0
+            }px)`,
           mt: `${TOPBAR_HEIGHT}px`,
           boxSizing: "border-box",
           overflow: "hidden",
