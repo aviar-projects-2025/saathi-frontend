@@ -377,7 +377,7 @@ function EditRideModal({ ride, onSave, onClose }) {
               <MenuItem value="Bus">🚌 Bus</MenuItem>
               <MenuItem value="Bike">🏍️ Bike</MenuItem>
               <MenuItem value="Flight">✈️ Flight</MenuItem>
-              <MenuItem value="Ship">🚢 Ship</MenuItem>
+              {/* <MenuItem value="Ship">🚢 Ship</MenuItem> */}
               <MenuItem value="Train">🚆 Train</MenuItem>
             </Select>
           </FormControl>
@@ -897,6 +897,7 @@ function RideCard({
   return (
     <>
       <Box
+        onClick={() => setDetailsOpen(true)}
         sx={{
           p: { xs: 0, sm: 0 },
           width: "100%",
@@ -905,7 +906,7 @@ function RideCard({
           mb: { xs: 1.5, sm: 2 },
           transition: "all .3s ease",
           "&:hover": {
-            transform: { xs: "none", sm: "translateY(-6px)" },
+            transform: { xs: "none", sm: "translateY(-5px)" },
           },
         }}
       >
@@ -1067,7 +1068,6 @@ function RideCard({
         {/* ── Card body ── */}
         <Card
           elevation={0}
-          onClick={() => setDetailsOpen(true)}
           sx={{
             borderRadius: "0 0 18px 18px",
             background: "#fff",
@@ -1943,6 +1943,11 @@ const MyRides = () => {
           >
             My Rides
           </Typography>
+
+          {/* <Typography variant="h5" sx={{ color: '#E8650A', fontWeight: 900, fontSize: { xs: "1.2rem", sm: "1.2rem", md: "1.35rem", lg: "1.5rem" } }}>
+          My <span style={{ color: '#138808' }}>Rides</span>
+        </Typography> */}
+
         </Box>
 
         <Box

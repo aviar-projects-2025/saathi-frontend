@@ -58,7 +58,7 @@ export default function MobileBottomNav() {
       link: "/offer-ride",
       requiresComplete: true, // only this item is gated by profile completion
     },
-     {
+    {
       label: "My Rides",
       icon: <DirectionsCarIcon />,
       link: "/myride",

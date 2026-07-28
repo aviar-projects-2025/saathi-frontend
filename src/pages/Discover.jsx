@@ -3,6 +3,9 @@ import { Box, Paper, Typography, Divider, Button, Grid, Skeleton } from "@mui/ma
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import axios from "axios";
 import Api from "../Api.jsx";
+import { useTheme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
+
 
 const activities = [
     { text: "Vijay P. gave a free temple ride to 4 members", time: "2h ago", icon: "🛕" },
@@ -67,6 +70,9 @@ const Discover = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
     useEffect(() => {
         const fetchTopRiders = async () => {
             try {
@@ -104,6 +110,11 @@ const Discover = () => {
             overflowX: "hidden",
             px: { xs: 1, sm: 2, md: 0 }
         }}>
+            {isMobile && (
+                <Typography variant="h5" fontWeight={800} sx={{ color: '#E8650A', mb: 2, mt: 1, fontSize: { xs: "1rem", sm: "1.2rem" } }}>
+                    Saathi <span style={{ color: '#138808' }}>Community Members</span>
+                </Typography>)}
+
             <Grid spacing={{ xs: 2, md: 2 }} sx={{ mt: { xs: 1, sm: 0 } }}>
 
                 {/* TOP MEMBERS */}

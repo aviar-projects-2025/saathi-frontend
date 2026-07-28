@@ -459,6 +459,11 @@ const MyReferrals = () => {
                     >
                         My Referrals
                     </Typography>
+
+                    {/* <Typography variant="h5" sx={{ color: '#E8650A', fontWeight: 900, fontSize: { xs: "1.2rem", sm: "1.2rem", md: "1.35rem", lg: "1.5rem" } }}>
+          My <span style={{ color: '#138808' }}> Referrals</span>
+        </Typography> */}
+
                     <Typography
                         variant="body2"
                         color="text.secondary"

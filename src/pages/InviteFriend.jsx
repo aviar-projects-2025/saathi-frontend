@@ -117,10 +117,10 @@ export default function InviteFlow() {
             <div
               key={item}
               className={`h-2 rounded-full transition-all duration-300 ${step === item
-                  ? "w-6 bg-[#E87722]"
-                  : step > item
-                    ? "w-2 bg-[#0D6B3C]"
-                    : "w-2 bg-[#F0E6DC]"
+                ? "w-6 bg-[#E87722]"
+                : step > item
+                  ? "w-2 bg-[#0D6B3C]"
+                  : "w-2 bg-[#F0E6DC]"
                 }`}
             />
           ))}
@@ -144,8 +144,8 @@ export default function InviteFlow() {
               <button
                 onClick={() => setTab("join")}
                 className={`flex-1 px-3 py-2 text-sm font-bold ${tab === "join"
-                    ? "bg-[#E87722] text-white"
-                    : "bg-[#FFF8F2] text-[#555577]"
+                  ? "bg-[#E87722] text-white"
+                  : "bg-[#FFF8F2] text-[#555577]"
                   }`}
               >
                 I have a code
@@ -154,8 +154,8 @@ export default function InviteFlow() {
               <button
                 onClick={() => setTab("invite")}
                 className={`flex-1 px-3 py-2 text-sm font-bold ${tab === "invite"
-                    ? "bg-[#E87722] text-white"
-                    : "bg-[#FFF8F2] text-[#555577]"
+                  ? "bg-[#E87722] text-white"
+                  : "bg-[#FFF8F2] text-[#555577]"
                   }`}
               >
                 Invite someone
@@ -174,8 +174,8 @@ export default function InviteFlow() {
                   maxLength={10}
                   placeholder="e.g. PRIYA47"
                   className={`mb-2 w-full rounded-xl border bg-[#FFF8F2] px-4 py-3 text-lg font-bold uppercase tracking-widest outline-none ${refCode.length >= 6 && !isCodeValid
-                      ? "border-red-500"
-                      : "border-[#F0E6DC] focus:border-[#E87722]"
+                    ? "border-red-500"
+                    : "border-[#F0E6DC] focus:border-[#E87722]"
                     }`}
                 />
 
@@ -426,8 +426,8 @@ export default function InviteFlow() {
                   key={lang}
                   onClick={() => toggleLang(lang)}
                   className={`rounded-full border px-3 py-1.5 text-sm font-medium ${langs.includes(lang)
-                      ? "border-[#E87722] bg-[#FFF3E8] text-[#E87722]"
-                      : "border-[#F0E6DC] bg-[#FFF8F2] text-[#555577]"
+                    ? "border-[#E87722] bg-[#FFF3E8] text-[#E87722]"
+                    : "border-[#F0E6DC] bg-[#FFF8F2] text-[#555577]"
                     }`}
                 >
                   {lang}

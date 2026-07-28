@@ -18,8 +18,6 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
-import TwoWheelerIcon from '@mui/icons-material/TwoWheeler';
 import EventSeatIcon from '@mui/icons-material/EventSeat';
 import Diversity3Icon from '@mui/icons-material/Diversity3';
 import WcIcon from '@mui/icons-material/Wc';
@@ -33,6 +31,17 @@ import FlightTakeoffIcon from '@mui/icons-material/FlightTakeoff';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import CircularProgress from "@mui/material/CircularProgress";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+
+import PersonIcon from "@mui/icons-material/Person";
+import WomanIcon from "@mui/icons-material/Woman";
+import GroupsIcon from "@mui/icons-material/Groups";
+
+import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
+import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
+import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
+import FlightIcon from "@mui/icons-material/Flight";
+import DirectionsBoatIcon from "@mui/icons-material/DirectionsBoat";
+import TrainIcon from "@mui/icons-material/Train";
 
 // ── Design tokens ────────────────────────────────────────────────────────
 const TOKENS = {
@@ -54,15 +63,19 @@ const TOKENS = {
   monoFont: "'IBM Plex Mono', monospace",
 };
 
-const travelIcon = {
+const travelIcons = {
   Car: DirectionsCarIcon,
+  Bus: DirectionsBusIcon,
   Bike: TwoWheelerIcon,
+  Flight: FlightIcon,
+  Ship: DirectionsBoatIcon,
+  Train: TrainIcon,
 };
 
 const genderIcon = {
-  Any: Diversity3Icon,
-  'Male only': WcIcon,
-  'Female only': WcIcon,
+  Male: PersonIcon,
+  Female: WomanIcon,
+  Any: GroupsIcon,
 };
 
 const statusStamp = {
@@ -164,7 +177,6 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
   const [open, setOpen] = useState(false);
   const v = requestVisual(request?.status);
   const isPending = request?.status?.toUpperCase() === 'PENDING';
-  console.log(request, 'requestrequest')
   const firstName = request.requestedBy?.firstName || request?.data?.requestBy?.requestedBy?.firstName || 'U';
   const lastName = request.requestedBy?.lastName || '';
   const profilePic = request.requestedBy?.profileImage
@@ -295,13 +307,6 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
                       approveLoading === request._id ||
                       rejectLoading === request._id
                     }
-                    // startIcon={
-                    //     approveLoading === request._id ? (
-                    //         <CircularProgress size={16} color="inherit" />
-                    //     ) : (
-                    //         <CheckCircleIcon sx={{ fontSize: 16 }} />
-                    //     )
-                    // }
                     sx={{
                       fontFamily: TOKENS.bodyFont,
                       textTransform: 'none',
@@ -323,13 +328,6 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
                       approveLoading === request._id ||
                       rejectLoading === request._id
                     }
-                    // startIcon={
-                    //     rejectLoading === request._id ? (
-                    //         <CircularProgress size={16} color="inherit" />
-                    //     ) : (
-                    //         <CancelIcon sx={{ fontSize: 16 }} />
-                    //     )
-                    // }
                     sx={{
                       fontFamily: TOKENS.bodyFont,
                       textTransform: 'none',
@@ -399,11 +397,10 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
             p: 1,
             m: 1,
             borderRadius: 2,
-            bgcolor: "rgba(255,0,0,0.08)", // light red background
+            bgcolor: "rgba(255,0,0,0.08)",
             border: "1px solid rgba(255,0,0,0.4)",
           }}
         >
-          {/* Left Side - Warning + Text */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <WarningAmberIcon sx={{ color: "error.main" }} />
 
@@ -419,7 +416,6 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
             </Typography>
           </Box>
 
-          {/* Right Side - Actions */}
           <Box sx={{ display: "flex", gap: 0.5 }}>
             <IconButton
               sx={{
@@ -477,8 +473,10 @@ export default function RideDetailsModal({
     : '—';
 
   const stamp = statusStamp[ride?.status] || statusStamp.ACTIVE;
-  const TravelIcon = travelIcon[ride.modeOfTravel] || DirectionsCarIcon;
+
+  const TravelIcon = travelIcons[ride.modeOfTravel] || DirectionsCarIcon;
   const GenderIcon = genderIcon[ride.genderPreference] || Diversity3Icon;
+
   const pendingCount = requests.filter((r) => r?.status?.toUpperCase() === 'PENDING').length;
 
   return (
@@ -691,25 +689,21 @@ export default function RideDetailsModal({
                         />
                       )}
                     </Stack>
-                    <Typography sx={{ fontFamily: TOKENS.monoFont, fontSize: '0.9 rem', color: TOKENS.inkSoft, mx: 2 }}>
+                    <Typography sx={{ fontFamily: TOKENS.monoFont, fontSize: '0.9rem', color: TOKENS.inkSoft, mx: 2 }}>
                       {requests.length} total
                     </Typography>
                   </Stack>
 
                   <Box
                     sx={{
-                      // border: `1px solid ${TOKENS.line}`,
                       borderRadius: 1.5,
                       maxHeight: { xs: 280, sm: 340 },
-                      // overflowY: "auto",
-                      // overflowX: "hidden",
                     }}
                   >
                     {requests.map((req, idx) => (
                       <Box
                         key={req._id}
                         sx={{
-                          // borderTop: idx === 0 ? 'none' : `1px solid ${TOKENS.line}`,
                           mt: 2
                         }}
                       >
@@ -743,7 +737,7 @@ export default function RideDetailsModal({
           borderTop: `1px solid ${TOKENS.line}`,
         }}
       >
-        {showEdit && ride.createdBy._id == user?.id && (
+        {showEdit && ride.createdBy?._id === user?.id && (
           <Button
             onClick={() => onEdit(ride)}
             startIcon={<EditIcon sx={{ fontSize: { xs: 16, sm: 18 } }} />}
@@ -765,7 +759,7 @@ export default function RideDetailsModal({
             Edit ride
           </Button>
         )}
-        {showDelete && ride.createdBy._id == user?.id && (
+        {showDelete && ride.createdBy?._id === user?.id && (
           <Button
             onClick={() => onDelete(ride)}
             startIcon={<DeleteIcon sx={{ fontSize: { xs: 16, sm: 18 } }} />}
