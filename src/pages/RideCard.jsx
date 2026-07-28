@@ -446,7 +446,7 @@ export default function RideCard({ ride }) {
         >
           {/* Avatar + name + verified */}
           <Box display="flex" alignItems="center" gap={{ xs: 1, sm: 1.5 }} sx={{ minWidth: 0, flex: 1 }}>
-          
+
             <Avatar sx={{
               bgcolor: isFlight ? "#1A3C5E" : "#2D6A4F",
               width: { xs: 25, sm: 38 }, height: { xs: 25, sm: 38 },
@@ -455,7 +455,7 @@ export default function RideCard({ ride }) {
               {userName.charAt(0)}
             </Avatar>
 
-             {/* <Avatar
+            {/* <Avatar
               src={} // e.g. user.profileImage
               alt={userName}
               sx={{
