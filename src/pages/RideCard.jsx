@@ -305,25 +305,14 @@ export default function RideCard({ ride }) {
   const isRejected = myRequest?.status === "REJECTED";
   const isAccepted = myRequest?.status === "ACCEPTED";
   const requestedByMe = Number(myRequest?.seatsRequested || 0);
-
-
-  //   const requestedByMe = myRequestedRides
-  //     .filter((req) => {
-  //       const rideId =
-  //         typeof req.rideId === "object" ? req.rideId?._id : req.rideId;
-
-  //       return rideId === ride._id && req.status === "PENDING";
-  //     })
-  //     .reduce((sum, req) => sum + Number(req.seatsRequested || 0), 0);
-  //  console.log("Rxfctctctgcgy",requestedByMe)
-
-
+  const pendingSeatsByMe = isAccepted ? 0 : requestedByMe;
 
   const remainingSeatsForUser = isFlight
     ? null
-    : Math.max(Number(ride.availableSeats || 0) - requestedByMe, 0);
+    : Math.max(Number(ride.availableSeats || 0) - pendingSeatsByMe, 0);
 
   const noSeats = !isFlight && remainingSeatsForUser <= 0;
+
   const maxSeatsForDialog = isFlight
     ? Infinity
     : alreadyRequested
