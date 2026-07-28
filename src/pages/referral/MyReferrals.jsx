@@ -39,6 +39,9 @@ const MyReferrals = () => {
     const { notifications } = useNotifications()
     const { getPendingReferralCount } = useReferral();
 
+    const [approveLoading, setApproveLoading] = useState(false);
+    const [rejectLoading, setRejectLoading] = useState(false);
+
     const toasts = ToastConfig();
 
     const theme = useTheme();
@@ -93,6 +96,9 @@ const MyReferrals = () => {
     const approveUser = async (id) => {
         const confirmed = window.confirm("Are you sure you want to approve this person?");
         if (!confirmed) return;
+
+        setApproveLoading(true);
+
         try {
             await axios.patch(Api + `/referrals/${id}`, { refApprove: "Approved" });
             toast.success("Referral approved", toasts);
@@ -100,16 +106,24 @@ const MyReferrals = () => {
             getPendingReferralCount()
         } catch (error) {
             toast.error(error.response?.data?.message || error.message, toasts);
+        } finally {
+            setApproveLoading(false);
         }
     };
 
     const declineUser = async (id) => {
+        setRejectLoading(true);
         try {
             axios.delete(Api + `/referrals/${id}`).then(() => {
                 getReferrals()
                 getPendingReferralCount()
             });
-        } catch (error) { console.log(error.message) }
+        } catch (error) {
+            console.log(error.message);
+        } finally {
+            setRejectLoading(false);
+        }
+
     };
 
     const getInitials = (firstName = "", lastName = "") =>
@@ -235,7 +249,6 @@ const MyReferrals = () => {
 
     const ReferralCard = ({ user: u, showActions = false }) => {
 
-
         const userData = {
             firstName: u?.data?.user?.firstName || u?.firstName || "",
             lastName: u?.data?.user?.lastName || u?.lastName || "",
@@ -345,8 +358,15 @@ const MyReferrals = () => {
                                 <Button
                                     variant="contained"
                                     size="small"
-                                    startIcon={<CheckCircleIcon sx={{ fontSize: 16 }} />}
+                                    startIcon={
+                                        approveLoading ? (
+                                            <CircularProgress size={16} color="inherit" />
+                                        ) : (
+                                            <CheckCircleIcon sx={{ fontSize: 16 }} />
+                                        )
+                                    }
                                     onClick={() => approveUser(userData?.id)}
+                                    disabled={approveLoading}
                                     disableElevation
                                     sx={{
                                         bgcolor: "#1E8E3E",
@@ -361,13 +381,20 @@ const MyReferrals = () => {
                                         mt: 0.5
                                     }}
                                 >
-                                    Approve
+                                    {approveLoading ? "Approving..." : " Approve "}
                                 </Button>
                                 <Button
                                     variant="outlined"
                                     size="small"
-                                    startIcon={<CancelIcon sx={{ fontSize: 16 }} />}
+                                    startIcon={
+                                        rejectLoading ? (
+                                            <CircularProgress size={16} color="inherit" />
+                                        ) : (
+                                            <CancelIcon sx={{ fontSize: 16 }} />
+                                        )
+                                    }
                                     onClick={() => declineUser(userData?.id)}
+                                    disabled={rejectLoading}
                                     sx={{
                                         color: "#D93025",
                                         borderColor: "#D93025",
@@ -381,7 +408,7 @@ const MyReferrals = () => {
                                         mt: 0.5
                                     }}
                                 >
-                                    Decline
+                                    {rejectLoading ? " Declining..." : " Decline "}
                                 </Button>
                             </Box>
                         </Stack>
@@ -396,10 +423,10 @@ const MyReferrals = () => {
                                 gap: 0.5,
                                 bgcolor: "#E6F4EA",
                                 color: "#1E8E3E",
-                                fontSize: 11,
+                                fontSize: 10,
                                 fontWeight: 600,
                                 px: 1,
-                                py: 0.5,
+                                // py: 0.5,
                                 borderRadius: 5,
                                 flexShrink: 0,
                             }}

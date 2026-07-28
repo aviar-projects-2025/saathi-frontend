@@ -440,6 +440,10 @@ export default function OfferRide() {
       });
     } finally {
       setIsSubmitted(false);
+
+      setTimeout(() => {
+        navigate("/myride");
+      }, 3000);
     }
   };
 

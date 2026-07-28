@@ -135,6 +135,7 @@ export default function RideCard({ ride }) {
       ),
     }));
   };
+
   const { refreshRide } = useRide();
 
   // useEffect(() => {
@@ -184,10 +185,9 @@ export default function RideCard({ ride }) {
     updatedMembers[index][field] = value;
     setRequestData({ ...requestData, members: updatedMembers });
   };
-  const myRequest = myRequestedRides.find((item) => item.rideId === ride._id);
 
-  const isRejected = myRequest?.status === "REJECTED";
 
+  // console.log("isAccepted",isAccepted)
   const handleRequestSubmit = async () => {
     if (!selectedRide) return;
 
@@ -294,14 +294,30 @@ export default function RideCard({ ride }) {
   const requestedCount = currentRequest?.seatsRequested || 0;
   const alreadyRequested = !!currentRequest;
 
-  const requestedByMe = myRequestedRides
-    .filter((req) => {
-      const rideId =
-        typeof req.rideId === "object" ? req.rideId?._id : req.rideId;
+  //   const myRequest = myRequestedRides.find((req) => {
+  //   const rideId =
+  //     typeof req.rideId === "object" ? req.rideId?._id : req.rideId;
 
-      return rideId === ride._id && req.status === "PENDING";
-    })
-    .reduce((sum, req) => sum + Number(req.seatsRequested || 0), 0);
+  //   return rideId === ride._id;
+  // });
+  const myRequest = myRequestedRides.find((item) => item.rideId === ride._id);
+
+  const isRejected = myRequest?.status === "REJECTED";
+  const isAccepted = myRequest?.status === "ACCEPTED";
+  const requestedByMe = Number(myRequest?.seatsRequested || 0);
+
+
+  //   const requestedByMe = myRequestedRides
+  //     .filter((req) => {
+  //       const rideId =
+  //         typeof req.rideId === "object" ? req.rideId?._id : req.rideId;
+
+  //       return rideId === ride._id && req.status === "PENDING";
+  //     })
+  //     .reduce((sum, req) => sum + Number(req.seatsRequested || 0), 0);
+  //  console.log("Rxfctctctgcgy",requestedByMe)
+
+
 
   const remainingSeatsForUser = isFlight
     ? null
@@ -429,13 +445,19 @@ export default function RideCard({ ride }) {
           }}
         >
           {/* Avatar + name + verified */}
-          <Box
-            display="flex"
-            alignItems="center"
-            gap={{ xs: 1, sm: 1.5 }}
-            sx={{ minWidth: 0, flex: 1 }}
-          >
-            <Avatar
+          <Box display="flex" alignItems="center" gap={{ xs: 1, sm: 1.5 }} sx={{ minWidth: 0, flex: 1 }}>
+
+            <Avatar sx={{
+              bgcolor: isFlight ? "#1A3C5E" : "#2D6A4F",
+              width: { xs: 25, sm: 38 }, height: { xs: 25, sm: 38 },
+              fontSize: { xs: "0.8rem", sm: "1.1rem" }, flexShrink: 0,
+            }}>
+              {userName.charAt(0)}
+            </Avatar>
+
+            {/* <Avatar
+              src={} // e.g. user.profileImage
+              alt={userName}
               sx={{
                 bgcolor: isFlight ? "#1A3C5E" : "#2D6A4F",
                 width: { xs: 25, sm: 38 },
@@ -444,8 +466,9 @@ export default function RideCard({ ride }) {
                 flexShrink: 0,
               }}
             >
-              {userName.charAt(0)}
-            </Avatar>
+              {! && userName?.charAt(0).toUpperCase()}
+            </Avatar>  */}
+
             <Box sx={{ minWidth: 0 }}>
               <Typography
                 fontWeight={700}
@@ -688,17 +711,23 @@ export default function RideCard({ ride }) {
               >
                 <Box component="span">
                   <Stack direction="row" alignItems="center" spacing={1}>
-                    {requestedByMe > 0 && (
+
+                    {myRequest && (
                       <Chip
-                        label={`You applied for ${requestedByMe} seat${requestedByMe > 1 ? "s" : ""}`}
-                        size="small"
-                        color="info"
+                        label={
+                          isAccepted
+                            ? `You have ${requestedByMe} approved seat${requestedByMe > 1 ? "s" : ""}`
+                            : `You applied for ${requestedByMe} seat${requestedByMe > 1 ? "s" : ""}`
+                        }
+                        color={isAccepted ? "success" : "info"}
                         sx={{
                           height: { xs: 18, sm: 25 },
                           fontSize: { xs: "0.65rem", sm: "0.7rem" },
                           fontWeight: 600,
-                          bgcolor: "#E3F2FD",
-                          color: "#1565C0",
+                          bgcolor:
+                            isAccepted ? "#E8F5E9" : "#E3F2FD",
+                          color:
+                            isAccepted ? "#2E7D32" : "#1565C0",
                           "& .MuiChip-label": {
                             px: { xs: 0.5, sm: 1 },
                           },
