@@ -57,7 +57,7 @@ export const ReferralProvider = ({ children }) => {
   return (
     <ReferralContext.Provider
       value={{
-        pendingReferral,     
+        pendingReferral,
         pendingReferralCount: pendingReferral.length,
         notificationLengthcount,
         getPendingReferralCount,

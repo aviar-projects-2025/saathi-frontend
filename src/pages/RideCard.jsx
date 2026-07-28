@@ -427,7 +427,7 @@ export default function RideCard({ ride }) {
   return (
     <>
       <Box
-        sx={{ mb: 2.5, mx: { xs: 0, sm: 0 }, maxWidth: 1000, width: "100%" }}
+        sx={{ mb: 3, maxWidth: 1000, width: "100%" }}
       >
         {/* ── Light orange-tinted header strip ── */}
         <Box
@@ -445,13 +445,19 @@ export default function RideCard({ ride }) {
           }}
         >
           {/* Avatar + name + verified */}
-          <Box
-            display="flex"
-            alignItems="center"
-            gap={{ xs: 1, sm: 1.5 }}
-            sx={{ minWidth: 0, flex: 1 }}
-          >
-            <Avatar
+          <Box display="flex" alignItems="center" gap={{ xs: 1, sm: 1.5 }} sx={{ minWidth: 0, flex: 1 }}>
+
+            <Avatar sx={{
+              bgcolor: isFlight ? "#1A3C5E" : "#2D6A4F",
+              width: { xs: 25, sm: 38 }, height: { xs: 25, sm: 38 },
+              fontSize: { xs: "0.8rem", sm: "1.1rem" }, flexShrink: 0,
+            }}>
+              {userName.charAt(0)}
+            </Avatar>
+
+            {/* <Avatar
+              src={} // e.g. user.profileImage
+              alt={userName}
               sx={{
                 bgcolor: isFlight ? "#1A3C5E" : "#2D6A4F",
                 width: { xs: 25, sm: 38 },
@@ -460,8 +466,9 @@ export default function RideCard({ ride }) {
                 flexShrink: 0,
               }}
             >
-              {userName.charAt(0)}
-            </Avatar>
+              {! && userName?.charAt(0).toUpperCase()}
+            </Avatar>  */}
+
             <Box sx={{ minWidth: 0 }}>
               <Typography
                 fontWeight={700}

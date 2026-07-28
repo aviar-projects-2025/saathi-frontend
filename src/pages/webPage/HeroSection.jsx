@@ -5,7 +5,7 @@ import { Search as SearchIcon } from '@mui/icons-material';
 // ──────────────────────────────────────────────
 // Hero Section
 // ──────────────────────────────────────────────
-const HeroSection = ({ onSearchClick }) => {
+const HeroSection = () => {
   return (
     <Box
       sx={{
@@ -90,7 +90,6 @@ const HeroSection = ({ onSearchClick }) => {
                   <Button
                     variant="contained"
                     size="large"
-                    onClick={onSearchClick}
                     endIcon={<SearchIcon />}
                     sx={{
                       px: 4,

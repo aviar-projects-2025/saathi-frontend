@@ -323,8 +323,9 @@ const UserProfile = () => {
         }
     };
     const handleUpdateProfile = async () => {
+        setSubmitLoading(true);
         try {
-            setSubmitLoading(true)
+           
             const validationErrors = validateForm(formData);
             if (Object.keys(validationErrors).length > 0) {
                 setErrors(validationErrors);
@@ -472,7 +473,11 @@ const UserProfile = () => {
                         <Stack
                             direction="row"
                             spacing={{ xs: 1, sm: 1.5 }}
-                            sx={{ mt: { xs: 1.5, sm: 2 } }}
+                            sx={{
+                                mt: { xs: 1.5, sm: 2 },
+                                display: "flex",
+                                justifyContent: "flex-end"
+                            }}
                         >
                             <Button
                                 variant="outlined"
@@ -892,7 +897,7 @@ const UserProfile = () => {
                                         onClick={handleUpdateProfile}
                                         disabled={submitLoading}
                                     >
-                                        Save Changes
+                                        {submitLoading ? "Saving Changes..." : "Save Changes"}
                                     </Button>
                                 </Stack>
                             </Stack>
