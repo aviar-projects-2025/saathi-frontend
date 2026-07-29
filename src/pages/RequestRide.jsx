@@ -165,7 +165,7 @@ const RequestRide = () => {
           // alignItems: "center",
           flexDirection: "column",
           // textAlign: "center",
-          px: 0.5,
+          // px: 0.5,
         }}
       >
         {allMyRequests.filter((req) => req?.rideId).length === 0 && (
