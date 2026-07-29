@@ -33,6 +33,7 @@ export default function Ridebook({
   open,
   onClose,
   ride,
+  totalSeat,
   maxSeats = Infinity,
   requestToEdit = null,
   setAllMyRequests,
@@ -182,7 +183,7 @@ export default function Ridebook({
       setNewMembers(
         requestToEdit.pendingMembers?.length
           ? requestToEdit.pendingMembers
-          : []
+          : [],
       );
     } else {
       setExistingMembers([]);
@@ -322,7 +323,7 @@ export default function Ridebook({
 
       toast.success(
         res.data.message || (isEditMode ? "Request updated" : "Request sent"),
-        TOASTS
+        TOASTS,
       );
 
       setRequestData(emptyRequestData);
@@ -458,7 +459,7 @@ export default function Ridebook({
               Available Seats
             </Typography>
             <Chip
-              label={`${totalOccupied} / ${maxSeats}`}
+              label={`${totalOccupied} / ${totalSeat}`}
               size="small"
               sx={{
                 bgcolor: ORANGE,
