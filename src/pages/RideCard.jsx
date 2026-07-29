@@ -88,7 +88,7 @@ export default function RideCard({ ride }) {
   const user = ride?.createdBy || {};
   const avaialableSeats = ride?.availableSeats;
   const totalSeats = ride?.totalSeats;
-
+ 
   const [totalSeat, setTotalSeat] = useState(totalSeats);
   const [seatAvailable, setSeatAvailable] = useState(avaialableSeats);
   const isFlight = ride?.modeOfTravel === "Flight";
@@ -313,18 +313,18 @@ export default function RideCard({ ride }) {
   //   return rideId === ride._id;
   // });
   const myRequest = myRequestedRides.find((item) => item.rideId === ride._id);
-
+ 
   const isRejected = myRequest?.status === "REJECTED";
   const isAccepted = myRequest?.status === "ACCEPTED";
   const requestedByMe = Number(myRequest?.seatsRequested || 0);
   const approvedSeats = myRequest?.approvedSeats || 0;
-  
+
   const pendingSeatsByMe = isAccepted ? 0 : requestedByMe;
 
   const remainingSeatsForUser = isFlight
     ? null
     : Math.max(Number(ride.availableSeats || 0) - pendingSeatsByMe, 0);
-
+console.log("remainingSeatsForUser", remainingSeatsForUser, "pendingSeatsByMe", pendingSeatsByMe, "ride.availableSeats", ride.availableSeats);
   const noSeats = !isFlight && remainingSeatsForUser <= 0;
 
   const maxSeatsForDialog = isFlight
@@ -408,9 +408,14 @@ export default function RideCard({ ride }) {
           icon: <EventSeatIcon sx={iconSx} />,
           value: isFlight
             ? "—"
-            : `${remainingSeatsForUser ?? 0} available seat${
-                (remainingSeatsForUser ?? 0) === 1 ? "" : "s"
-              } / ${totalSeat} total seat${totalSeat === 1 ? "" : "s"}`,
+            : (() => {
+                const occupiedSeats = Math.max(
+                  Number(totalSeat || 0) - Number(remainingSeatsForUser ?? 0),
+                  0,
+                );
+                return `${occupiedSeats}
+        / ${totalSeat}`;
+              })(),
         },
         {
           label: "Travel mode",

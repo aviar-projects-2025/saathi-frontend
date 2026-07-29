@@ -47,7 +47,7 @@ export default function Ridebook({
   const isFlight = ride?.modeOfTravel === "Flight";
   const isEditMode = Boolean(requestToEdit);
   const [requests, setRequests] = useState();
-
+ 
   // existingMembers = already CONFIRMED/APPROVED members on this request.
   // Read-only, shown for context, never sent back to the backend.
   const [existingMembers, setExistingMembers] = useState([]);
@@ -72,14 +72,14 @@ export default function Ridebook({
     if (isEditMode) {
       setNewMembers((prev) => {
         const totalSeats = existingMembers.length + prev.length;
-        if (!isFlight && totalSeats >= maxSeats) return prev;
+        if (!isFlight && totalSeats >= totalSeat) return prev;
         return [...prev, { name: "", age: "" }];
       });
       return;
     }
 
     setRequestData((prev) => {
-      if (!isFlight && prev.members.length >= maxSeats) return prev;
+      if (!isFlight && prev.members.length >= totalSeat) return prev;
       const updatedMembers = [...prev.members, { name: "", age: "" }];
 
       const newSeats = Math.max(prev.seatsRequested, updatedMembers.length);
@@ -159,8 +159,24 @@ export default function Ridebook({
       },
     ],
   };
-
+  const [myRequestedRides, setMyRequestedRides] = useState([]);
+  const pendingRequest = myRequestedRides.find(
+    (item) => item.rideId === ride._id,
+  );
+  const pendingReqSeats = pendingRequest?.pendingReqSeats;
   const [requestData, setRequestData] = useState(emptyRequestData);
+    const myRequest = myRequestedRides.find((item) => item.rideId === ride._id)
+  const isRejected = myRequest?.status === "REJECTED";
+  const isAccepted = myRequest?.status === "ACCEPTED";
+  const requestedByMe = Number(myRequest?.seatsRequested || 0);
+  const approvedSeats = myRequest?.approvedSeats || 0;
+    const pendingSeatsByMe = isAccepted ? 0 : requestedByMe;
+  const avaialableSeats = ride?.availableSeats;
+  const remainingSeatsForUser = isFlight
+    ? null
+    : Math.max(Number(avaialableSeats|| 0) - pendingSeatsByMe, 0);
+       console.log("remainingSeatsForUser", remainingSeatsForUser);
+
 
   // Keep message/phone in sync when opening an existing request for edit.
   // NOTE: member data itself now lives in existingMembers / newMembers,
@@ -667,10 +683,10 @@ export default function Ridebook({
           })}
         </Stack>
 
-        <Button
+        {/* <Button
           startIcon={<AddCircleOutlineIcon />}
           onClick={handleAddMember}
-          disabled={!isFlight && totalOccupied >= maxSeats}
+          disabled={!isFlight && totalOccupied >= totalSeat}
           sx={{
             mt: 1.5,
             mb: 3,
@@ -683,8 +699,24 @@ export default function Ridebook({
           size="small"
         >
           Add Member
-        </Button>
-
+        </Button> */}
+<Button
+  startIcon={<AddCircleOutlineIcon />}
+  onClick={handleAddMember}
+  disabled={!isFlight && remainingSeatsForUser <= 0}
+  sx={{
+    mt: 1.5,
+    mb: 3,
+    textTransform: "none",
+    fontWeight: 700,
+    fontFamily: "'Inter', sans-serif",
+    color: ORANGE,
+    "&:hover": { bgcolor: "#FFF3E6" },
+  }}
+  size="small"
+>
+  Add Member
+</Button>
         {/* Contact + message */}
         <Typography
           sx={{
