@@ -85,9 +85,9 @@ const RequestRide = () => {
   }, [refreshRide]);
 
   async function fetchAllSends() {
+    setLoadingRequests(true);
     try {
       if (!user?.id) return;
-      setLoadingRequests(true);
       const res = await axios.get(`${Api}/bookride/send/${user.id}`);
       const requestUser = res.data.data.map((item) => item.members);
       setUserData(requestUser);
@@ -168,15 +168,6 @@ const RequestRide = () => {
           // px: 0.5,
         }}
       >
-        {allMyRequests.filter((req) => req?.rideId).length === 0 && (
-          <DirectionsCarFilledOutlinedIcon
-            sx={{
-              fontSize: 55,
-              color: "#bdbdbd",
-              mb: 2,
-            }}
-          />
-        )}
         <Typography
           sx={{
             fontSize: {
@@ -200,20 +191,40 @@ const RequestRide = () => {
             <CircularProgress color="warning" />
           </Box>
         ) : allMyRequests.filter((req) => req?.rideId).length === 0 ? (
-          <Typography
-            color="text.secondary"
+          <Box
             sx={{
-              maxWidth: "400px",
-              fontSize: {
-                xs: "0.9rem",
-                sm: "1rem",
-              },
-              mb: 2,
+              // minHeight: "65vh",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              flexDirection: "column",
+              textAlign: "center",
+              // px: 0.5,
             }}
           >
-            {" "}
-            No ride requests found.
-          </Typography>
+            <DirectionsCarFilledOutlinedIcon
+              sx={{
+                fontSize: 55,
+                color: "#bdbdbd",
+                mb: 2,
+              }}
+            />
+
+            <Typography
+              color="text.secondary"
+              sx={{
+                maxWidth: "400px",
+                fontSize: {
+                  xs: "0.9rem",
+                  sm: "1rem",
+                },
+                mb: 2,
+              }}
+            >
+              {" "}
+              No ride requests found.
+            </Typography>
+          </Box>
         ) : (
           <>
             {(() => {
@@ -810,7 +821,7 @@ const RequestRide = () => {
           // onSuccess={fetchAllSends}
           requestToEdit={selectedRequest}
         />
-        {console.log("allMyRequests123", allMyRequests)}
+
       </Box>
     </PageLayout >
   );

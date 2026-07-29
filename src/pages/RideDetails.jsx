@@ -45,15 +45,15 @@ import TrainIcon from "@mui/icons-material/Train";
 
 // ── Design tokens ────────────────────────────────────────────────────────
 const TOKENS = {
-  paper: '#FAF6EC',
-  paperDim: '#F1EADA',
+  paper: '#ffff',
+  paperDim: '#fdfcfb',
   ink: '#1C2B33',
   inkSoft: '#5B6B72',
   accent: '#C9622A',
   accentSoft: '#F3E1D2',
   amber: '#D69A2D',
   amberSoft: '#FBEFD7',
-  green: '#3D7A46',
+  green: '#4a8d54',
   greenSoft: '#E4EFDD',
   red: '#B23B3B',
   redSoft: '#F8E4E1',
@@ -79,9 +79,9 @@ const genderIcon = {
 };
 
 const statusStamp = {
-  ACTIVE: { label: 'ACTIVE', color: TOKENS.green, bg: TOKENS.greenSoft },
-  COMPLETED: { label: 'COMPLETED', color: TOKENS.inkSoft, bg: TOKENS.paperDim },
-  CANCELLED: { label: 'VOID', color: TOKENS.red, bg: TOKENS.redSoft },
+  OPEN: { label: 'OPENED', color: TOKENS.accent, bg: TOKENS.accentSoft },
+  FULL: { label: 'FILLED', color: TOKENS.paper, bg: TOKENS.green },
+  CLOSED: { label: 'VOID', color: TOKENS.red, bg: TOKENS.redSoft },
 };
 
 function requestVisual(status) {
@@ -385,8 +385,8 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
               )}
               {request?.pendingMembers?.length > 0 && (
                 <>
-                  <Typography sx={{ fontFamily: TOKENS.bodyFont, fontSize: '0.8rem', fontWeight: 700, color:'red' }}>
-                   Pending Members:
+                  <Typography sx={{ fontFamily: TOKENS.bodyFont, fontSize: '0.8rem', fontWeight: 700, color: 'red' }}>
+                    Pending Members:
                   </Typography>
                   {request?.pendingMembers?.map((m, i) => (
                     <Typography key={i} sx={{ fontFamily: TOKENS.bodyFont, fontSize: '0.78rem', ml: 2 }}>
@@ -484,7 +484,7 @@ export default function RideDetailsModal({
     ? startDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
     : '—';
 
-  const stamp = statusStamp[ride?.status] || statusStamp.ACTIVE;
+  const stamp = statusStamp[ride?.status];
 
   const TravelIcon = travelIcons[ride.modeOfTravel] || DirectionsCarIcon;
   const GenderIcon = genderIcon[ride.genderPreference] || Diversity3Icon;
@@ -577,9 +577,9 @@ export default function RideDetailsModal({
             </Typography>
           </Box>
 
-          <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: 0.5, position: 'relative', top: -8 }}>
+          <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: 1, position: 'relative', top: -8 }}>
             <Box sx={{ flex: 1, borderTop: '2px dashed rgba(250,246,236,0.35)' }} />
-            <FlightTakeoffIcon sx={{ fontSize: { xs: 16, sm: 19 }, color: TOKENS.accent, transform: 'rotate(90deg)' }} />
+            <FlightTakeoffIcon sx={{ fontSize: { xs: 16, sm: 19 }, color: TOKENS.accent, transform: 'rotate(0deg)' }} />
             <Box sx={{ flex: 1, borderTop: '2px dashed rgba(250,246,236,0.35)' }} />
           </Box>
 

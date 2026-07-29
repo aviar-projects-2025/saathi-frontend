@@ -1108,11 +1108,11 @@ function RideCard({
                   sx={{
                     // border:'1px solid black',
                     display: "flex",
-                    width: isMobile ? "100%" : "25%",
+                    width: isMobile ? "100%" : "35%",
                     alignItems: "center",
                     justifyContent: "space-between",
                     gap: 1,
-                    pb: isMobile && { xs: 1.1, sm: 1.5, md: 2 },
+                    pb: isMobile && { xs: 1.2, sm: 1.5, md: 2 },
                     // mb: { xs: 1.1, sm: 1.5, md: 2 },
                     // borderBottom: '1px solid rgba(255,153,51,0.2)',
                   }}
