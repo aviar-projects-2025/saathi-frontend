@@ -371,12 +371,24 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
               <Typography sx={{ fontFamily: TOKENS.bodyFont, fontSize: '0.8rem', color: TOKENS.ink }}>
                 <strong>Phone:</strong> {request.phone || 'Not provided'}
               </Typography>
-              {request.members?.length > 0 && (
+              {request?.members?.length > 0 && (
                 <>
                   <Typography sx={{ fontFamily: TOKENS.bodyFont, fontSize: '0.8rem', fontWeight: 700 }}>
                     Members:
                   </Typography>
                   {request.members.map((m, i) => (
+                    <Typography key={i} sx={{ fontFamily: TOKENS.bodyFont, fontSize: '0.78rem', ml: 2 }}>
+                      • {m.name} ({m.age} yrs)
+                    </Typography>
+                  ))}
+                </>
+              )}
+              {request?.pendingMembers?.length > 0 && (
+                <>
+                  <Typography sx={{ fontFamily: TOKENS.bodyFont, fontSize: '0.8rem', fontWeight: 700, color:'red' }}>
+                   Pending Members:
+                  </Typography>
+                  {request?.pendingMembers?.map((m, i) => (
                     <Typography key={i} sx={{ fontFamily: TOKENS.bodyFont, fontSize: '0.78rem', ml: 2 }}>
                       • {m.name} ({m.age} yrs)
                     </Typography>

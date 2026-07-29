@@ -770,6 +770,10 @@ function RideCard({
   const [approveLoading, setApproveLoading] = useState(null);
   const [rejectLoading, setRejectLoading] = useState(null);
 
+  const [members, setMembers] = useState([])
+  const [pendingMembers, setPendingMembers] = useState([])
+
+
   const toasts = ToastConfig();
 
   const theme = useTheme();
@@ -804,6 +808,7 @@ function RideCard({
     allRequests?.filter(
       (req) => req.rideId?._id?.toString() === ride._id?.toString(),
     ) || [];
+
 
   const pendingCount = rideRequests.filter(
     (r) => r.status?.toUpperCase() === "PENDING",
