@@ -52,22 +52,58 @@ export default function Ridebook({
   // existingMembers = already CONFIRMED/APPROVED members on this request.
   // Read-only, shown for context, never sent back to the backend.
   const [existingMembers, setExistingMembers] = useState([]);
-
-  // newMembers = members that are NOT yet approved (previous pendingMembers)
-  // plus anything the user adds/edits/removes in this session.
-  // This is the ONLY array sent to the backend as `pendingMembers`.
   const [newMembers, setNewMembers] = useState([]);
-
   const isTab = useMediaQuery(theme.breakpoints.down("sm"));
+  const calculateAge = (dob) => {
+    if (!dob) return "";
+
+    const birthDate = new Date(dob);
+    const today = new Date();
+
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
+      age--;
+    }
+
+    return age;
+  };
+  const availableSeat = ride?.availableSeats || 0;
+  const defaultSelfMember = () => ({
+    name: `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`.trim(),
+    age: calculateAge(currentUser?.dob),
+  });
+  const emptyRequestData = {
+    seatsRequested: 1,
+    message: "",
+    membersCount: 1,
+    members: [defaultSelfMember()],
+  };
+  const [requestData, setRequestData] = useState(emptyRequestData);
+  const totalOccupied = isEditMode
+    ? existingMembers.length + newMembers.length
+    : requestData.members.length;
+
+
+  const remainingAvailableSeats = isEditMode
+    ? Math.max(
+      ride?.availableSeats - (existingMembers.length + newMembers.length),
+      0
+    )
+    : Math.max(
+      ride?.availableSeats - requestData?.members.length,
+      0
+    );
 
   const TOASTS = ToastConfig();
 
-  const defaultSelfMember = () => ({
-    name: `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`.trim(),
-    age: "",
-  });
 
-  // ---------- Add / Remove / Change (mode-aware) ----------
+
+
 
   const handleAddMember = () => {
     if (isEditMode) {
@@ -76,17 +112,28 @@ export default function Ridebook({
         if (!isFlight && totalSeats >= maxSeats) return prev;
         return [...prev, { name: "", age: "" }];
       });
+
       return;
     }
 
     setRequestData((prev) => {
+
+
       if (!isFlight && prev.members.length >= maxSeats) return prev;
+
       const updatedMembers = [...prev.members, { name: "", age: "" }];
 
-      const newSeats = Math.max(prev.seatsRequested, updatedMembers.length);
-      return { ...prev, members: updatedMembers, seatsRequested: newSeats };
+
+
+      return {
+        ...prev,
+        members: updatedMembers,
+        seatsRequested: updatedMembers.length,
+      };
     });
+
   };
+
 
   const handleRemoveMember = (index) => {
     if (isEditMode) {
@@ -147,25 +194,9 @@ export default function Ridebook({
   const [editingRequest, setEditingRequest] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const emptyRequestData = {
-    seatsRequested: 1,
-    message: "",
-    membersCount: 1,
-    members: [
-      {
-        name:
-          `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`.trim() ||
-          "",
-        age: "",
-      },
-    ],
-  };
 
-  const [requestData, setRequestData] = useState(emptyRequestData);
 
-  // Keep message/phone in sync when opening an existing request for edit.
-  // NOTE: member data itself now lives in existingMembers / newMembers,
-  // not in requestData.members, while in edit mode.
+
   useEffect(() => {
     if (editingRequest) {
       setRequestData((prev) => ({
@@ -176,19 +207,17 @@ export default function Ridebook({
     }
   }, [editingRequest?.id]);
 
-  // Split the request into "confirmed" (existingMembers, read-only) and
-  // "pending" (newMembers, editable + submitted) buckets.
   useEffect(() => {
     if (isEditMode && requestToEdit) {
       setExistingMembers(requestToEdit.members || []);
       setNewMembers(
         requestToEdit.pendingMembers?.length
           ? requestToEdit.pendingMembers
-          : [],
+          : []
       );
     } else {
       setExistingMembers([]);
-      setNewMembers([defaultSelfMember()]);
+      setNewMembers([]);
     }
   }, [isEditMode, requestToEdit, currentUser]);
 
@@ -202,7 +231,12 @@ export default function Ridebook({
         phone: requestToEdit.phone || "",
       }));
     } else {
-      setRequestData(emptyRequestData);
+      setRequestData({
+        seatsRequested: 1,
+        message: "",
+        membersCount: 1,
+        members: [defaultSelfMember()],
+      });
     }
   }, [open, ride, requestToEdit, currentUser]);
 
@@ -295,6 +329,7 @@ export default function Ridebook({
     return true;
   };
 
+
   const handleRequestSubmit = async () => {
 
     setRequestLoading(true);
@@ -353,9 +388,7 @@ export default function Ridebook({
 
   // The list actually rendered in the editable member cards.
   const editableMembers = isEditMode ? newMembers : requestData.members;
-  const totalOccupied = isEditMode
-    ? existingMembers.length + newMembers.length
-    : requestData.members.length;
+
 
   return (
     <Dialog
@@ -465,7 +498,7 @@ export default function Ridebook({
               Available Seats
             </Typography>
             <Chip
-              label={`${totalOccupied} / ${totalSeat}`}
+              label={`${remainingAvailableSeats}`}
               size="small"
               sx={{
                 bgcolor: ORANGE,
@@ -647,7 +680,12 @@ export default function Ridebook({
                       textAlign: "center",
                     },
                   }}
-                  value={member.age}
+                  value={
+                    isLockedSelfSlot
+                      ? calculateAge(currentUser?.dob)
+                      : member.age
+                  }
+                  disabled={isLockedSelfSlot}
                   inputProps={{ min: 1, max: 120 }}
                   onChange={(e) => {
                     const value = e.target.value;

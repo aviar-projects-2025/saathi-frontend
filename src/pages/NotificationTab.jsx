@@ -26,8 +26,6 @@ export default function NotificationTab({ handleCloseNotifications }) {
         }, {})
     );
 
-    // console.log(uniqueNotifications,'uniqueNotifications')
-
     const navigate = useNavigate();
 
     const handleNavigation = (item) => {
@@ -35,6 +33,8 @@ export default function NotificationTab({ handleCloseNotifications }) {
         switch (item.type) {
             case "new_request":
             case "request_accepted":
+                navigate("/request-ride", { state: { rideId: item.data?.rideId }, });
+                break;
             case "request_rejected":
                 navigate("/myride", { state: { tab: 2, rideId: item.data?.rideId }, });
                 break;
@@ -66,6 +66,7 @@ export default function NotificationTab({ handleCloseNotifications }) {
             console.log(error.message)
         }
     }
+
 
     return (
         <Box
