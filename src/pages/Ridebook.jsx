@@ -180,11 +180,11 @@ export default function Ridebook({
       setNewMembers(
         requestToEdit.pendingMembers?.length
           ? requestToEdit.pendingMembers
-          : [defaultSelfMember()]
+          : []
       );
     } else {
       setExistingMembers([]);
-      setNewMembers([defaultSelfMember()]);
+      setNewMembers([]);
     }
   }, [isEditMode, requestToEdit, currentUser]);
 

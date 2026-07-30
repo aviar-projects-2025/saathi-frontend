@@ -790,7 +790,7 @@ export default function RideDetailsModal({
               '&:hover': { bgcolor: TOKENS.red, color: '#fff' },
             }}
           >
-            Delete ride
+            Cancel ride
           </Button>
         )}
         <Box sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }} />
