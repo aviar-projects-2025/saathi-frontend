@@ -483,12 +483,6 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
 
-  // const isPost = ride.role === 'offered' && (ride.status === 'pending' || ride.status === 'confirmed');
-  // const label = isPost ? 'Remove post' : 'Cancel ride';
-  // const body = isPost
-  //   ? 'This will remove your ride post. Passengers who requested this ride will be notified.'
-  //   : 'This will cancel your booking. The driver will be notified.';
-
   const startDate = new Date(ride.startTime);
   const dateLabel = !isNaN(startDate)
     ? startDate.toLocaleDateString("en-IN", {
@@ -502,7 +496,7 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
     setDeleting(true);
     setError("");
     try {
-      await axios.delete(`${Api}/rides/${ride._id || ride.id}`);
+      await axios.patch(`${Api}/rides/edit/${ride._id || ride.id}?type=Cancel`);
       onConfirm(ride);
     } catch (err) {
       setError(
@@ -529,14 +523,14 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
       }}
     >
       <DialogTitle sx={{ fontWeight: 800, pr: 5, fontSize: { xs: '1rem', sm: '1.15rem' } }}>
-        Are you Cancel Ride?
+        Are you sure to cancel your ride?
         <IconButton onClick={onClose} aria-label="Close" sx={{ position: 'absolute', right: 8, top: 8, color: 'text.secondary', width: 44, height: 44 }}>
           <CloseIcon fontSize="small" />
         </IconButton>
       </DialogTitle>
 
       <DialogContent>
-        <Typography color="text.secondary" sx={{ fontSize: { xs: '0.82rem', sm: '0.9rem' } }}>This will cancel your booking. The driver will be notified...</Typography>
+        <Typography color="text.secondary" sx={{ fontSize: { xs: '0.82rem', sm: '0.9rem' } }}>This will cancel your ride, requested persons will be notified...</Typography>
         <Paper sx={{ mt: 2, p: 1.5, bgcolor: '#FFF8F2', border: '1px solid #F0E6DC', borderRadius: 2 }} elevation={0}>
           <Typography sx={{ fontSize: { xs: '0.78rem', sm: '0.85rem' } }} fontWeight={700} wordBreak="break-word">
             {formFrom(ride)} → {formTo(ride)}
@@ -566,10 +560,10 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
             minHeight: 44,
           }}
         >
-          Keep it
+          Cancel
         </Button>
         <Button onClick={handleConfirm} variant="contained" color="error" disabled={deleting} sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700, flex: { xs: '1 1 auto', sm: '0 0 auto' }, minHeight: 44 }}>
-          {deleting ? 'Deleting...' : "Delete"}
+          {deleting ? 'Deleting...' : "Yes"}
         </Button>
       </DialogActions>
     </Dialog>
@@ -749,6 +743,7 @@ function RequestItem({ request, onApprove, onReject }) {
 function RideCard({
   ride,
   fetchRides,
+  fetchAllRequests,
   user,
   confirmRide,
   setConfirmRide,
@@ -809,6 +804,7 @@ function RideCard({
       (req) => req.rideId?._id?.toString() === ride._id?.toString(),
     ) || [];
 
+  console.log(rideRequests,'rideRequests')
 
   const pendingCount = rideRequests.filter(
     (r) => r.status?.toUpperCase() === "PENDING",
@@ -822,7 +818,7 @@ function RideCard({
         { status: "ACCEPTED" },
       );
 
-      console.log(res,'res after approve')
+      console.log(res, 'res after approve')
       if (res.status) {
         setAllRequests((prev) =>
           prev.map((req) =>
@@ -830,6 +826,7 @@ function RideCard({
           ),
         );
         fetchRides();
+        fetchAllRequests();
         toast.success("Request approved successfully!", toasts);
       }
     } catch (error) {
@@ -1839,6 +1836,7 @@ const MyRides = () => {
           onEdit={setEditRide}
           onDelete={setDeleteRide}
           allRequests={allRequests}
+          fetchAllRequests={fetchAllRequests}
           setAllRequests={setAllRequests}
         />
       );
