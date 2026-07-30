@@ -57,7 +57,6 @@ import ToastConfig from "../components/ToastConfig.jsx";
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 
 const RequestRide = () => {
-
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [loadingRequests, setLoadingRequests] = useState(true);
   const [openEditModal, setOpenEditModal] = useState(false);
@@ -68,11 +67,10 @@ const RequestRide = () => {
   const [userData, setUserData] = useState([]);
   const [anchorEl, setAnchorEl] = useState(null);
   const [isCancelling, setIsCancelling] = useState(false);
-  const [tabValue, setTabValue] = useState(0); // 0 = Active, 1 = History
+  const [tabValue, setTabValue] = useState(0);
   const user = JSON.parse(localStorage.getItem("user"));
 
   const toasts = ToastConfig();
-
   const open = Boolean(anchorEl);
   const { refreshRide } = useRide();
 
@@ -114,29 +112,6 @@ const RequestRide = () => {
     setAnchorEl(null);
   };
 
-  const handleDelete = async (requestId) => {
-    setDeleteLoading(true);
-    setOpenCancelDialog(false);
-    setSelectedRequest(null);
-    try {
-      await axios.delete(`${Api}/bookride/${requestId}`);
-      setAllMyRequests((prev) =>
-        prev.filter((request) => request._id !== requestId),
-      );
-      toast.success("Ride request deleted successfully", toasts);
-
-      fetchAllSends();
-    } catch (error) {
-      console.error(error);
-      toast.error(
-        error.response?.data?.message || "Failed to delete ride request",
-        toasts,
-      );
-    } finally {
-      setDeleteLoading(false);
-    }
-  };
-
   const handleCancelClick = (request) => {
     setSelectedRequest(request);
     setOpenCancelDialog(true);
@@ -154,10 +129,13 @@ const RequestRide = () => {
     setIsCancelling(true);
 
     try {
-      // Update status to CANCELLED/DELETED
       await axios.patch(
         `${Api}/bookride/${selectedRequest._id}/status?type=Cancel`,
-        { status: "DELETED" } // Using DELETED to distinguish from other cancellations
+        { 
+          status: "DELETED",
+          cancelledBy: user?.id,
+          cancelledAt: new Date().toISOString()
+        }
       );
 
       handleCloseDialog();
@@ -166,12 +144,15 @@ const RequestRide = () => {
     } catch (err) {
       console.error("Error cancelling request:", err);
 
-      // Try with CANCELLED if DELETED fails
       if (err.response?.data?.message?.toLowerCase().includes("invalid")) {
         try {
           await axios.patch(
             `${Api}/bookride/${selectedRequest._id}/status?type=Reject`,
-            { status: "CANCELLED" },
+            { 
+              status: "CANCELLED",
+              cancelledBy: user?.id,
+              cancelledAt: new Date().toISOString()
+            },
           );
 
           handleCloseDialog();
@@ -197,7 +178,6 @@ const RequestRide = () => {
   // Filter requests based on tab
   const uniqueRequests = allMyRequests.filter((req) => req?.rideId);
 
-  // Active requests (not completed and not cancelled/rejected/deleted)
   const activeRequests = uniqueRequests.filter(
     (request) =>
       request.rideId?.travelStatus !== "Completed" &&
@@ -207,7 +187,6 @@ const RequestRide = () => {
       request.status !== "DELETED",
   );
 
-  // History requests (completed + cancelled/rejected/deleted)
   const historyRequests = uniqueRequests.filter(
     (request) =>
       request.rideId?.travelStatus === "Completed" ||
@@ -221,7 +200,6 @@ const RequestRide = () => {
     setTabValue(newValue);
   };
 
-  // Get status label and icon for history items
   const getHistoryStatusInfo = (request) => {
     const isDeleted = request.status === "DELETED";
     const isCancelled = 
@@ -230,29 +208,108 @@ const RequestRide = () => {
       request.rideId?.travelStatus === "Cancelled";
     const isCompleted = request.rideId?.travelStatus === "Completed";
 
+    // Check who cancelled/rejected
+    const cancelledByMe = request.cancelledBy === user?.id;
+    const cancelledByDriver = request.cancelledBy && request.cancelledBy !== user?.id;
+    
+    // Check if it was rejected by driver (different from cancellation)
+    const rejectedByDriver = request.status === "REJECTED" && request.cancelledBy && request.cancelledBy !== user?.id;
+
     if (isDeleted) {
-      return {
-        label: "You cancelled this ride",
-        icon: "🗑️",
-        color: "#D32F2F",
-        bgColor: "#FFEBEE",
-        isDeleted: true
-      };
+      if (cancelledByMe) {
+        return {
+          label: "You cancelled this request",
+          icon: "🗑️",
+          color: "#D32F2F",
+          bgColor: "#FFEBEE",
+          isDeleted: true,
+          isCancelledByMe: true,
+          message: "You cancelled this ride request"
+        };
+      } else if (cancelledByDriver) {
+        return {
+          label: "Driver cancelled your request",
+          icon: "🚫",
+          color: "#E65100",
+          bgColor: "#FFF3E0",
+          isDeleted: false,
+          isCancelledByMe: false,
+          isCancelledByDriver: true,
+          message: `${request.rideId?.createdBy?.firstName || 'Driver'} cancelled your request`
+        };
+      } else {
+        return {
+          label: "Cancelled",
+          icon: "❌",
+          color: "#9B2226",
+          bgColor: "#FFEBEE",
+          isDeleted: false,
+          isCancelledByMe: false,
+          message: "Request was cancelled"
+        };
+      }
     } else if (isCancelled) {
-      return {
-        label: "Cancelled",
-        icon: "❌",
-        color: "#9B2226",
-        bgColor: "#FFEBEE",
-        isDeleted: false
-      };
+      if (cancelledByMe) {
+        return {
+          label: "You cancelled this request",
+          icon: "🗑️",
+          color: "#D32F2F",
+          bgColor: "#FFEBEE",
+          isDeleted: true,
+          isCancelledByMe: true,
+          message: "You cancelled this ride request"
+        };
+      } else if (cancelledByDriver) {
+        return {
+          label: `${request.rideId?.createdBy?.firstName || 'Driver'} cancelled your request`,
+          icon: "🚫",
+          color: "#E65100",
+          bgColor: "#FFF3E0",
+          isDeleted: false,
+          isCancelledByMe: false,
+          isCancelledByDriver: true,
+          message: `${request.rideId?.createdBy?.firstName || 'Driver'} cancelled your request`
+        };
+      } else {
+        return {
+          label: "Cancelled",
+          icon: "❌",
+          color: "#9B2226",
+          bgColor: "#FFEBEE",
+          isDeleted: false,
+          isCancelledByMe: false,
+          message: "Request was cancelled"
+        };
+      }
+    } else if (request.status === "REJECTED") {
+      if (rejectedByDriver) {
+        return {
+          label: `${request.rideId?.createdBy?.firstName || 'Driver'} rejected your request`,
+          icon: "❌",
+          color: "#C62828",
+          bgColor: "#FFEBEE",
+          isDeleted: false,
+          isRejectedByDriver: true,
+          message: `${request.rideId?.createdBy?.firstName || 'Driver'} rejected your request`
+        };
+      } else {
+        return {
+          label: "Rejected",
+          icon: "❌",
+          color: "#9B2226",
+          bgColor: "#FFEBEE",
+          isDeleted: false,
+          message: "Request was rejected"
+        };
+      }
     } else if (isCompleted) {
       return {
         label: "Completed",
         icon: "✅",
         color: "#2E7D32",
         bgColor: "#E8F5E9",
-        isDeleted: false
+        isDeleted: false,
+        message: "Ride completed successfully"
       };
     }
     return {
@@ -260,11 +317,11 @@ const RequestRide = () => {
       icon: "❓",
       color: "#757575",
       bgColor: "#F5F5F5",
-      isDeleted: false
+      isDeleted: false,
+      message: "Unknown status"
     };
   };
 
-  // Render active request card
   const renderActiveRequest = (request) => (
     <Card
       key={request._id}
@@ -280,7 +337,6 @@ const RequestRide = () => {
         cursor: "pointer",
       }}
     >
-      {/* Header bar */}
       <Box
         sx={{
           bgcolor: "#1a1030",
@@ -441,7 +497,6 @@ const RequestRide = () => {
     </Card>
   );
 
-  // Render history item
   const renderHistoryItem = (request, idx) => {
     const user = request.rideId?.createdBy || {};
     const initials =
@@ -449,6 +504,9 @@ const RequestRide = () => {
     
     const statusInfo = getHistoryStatusInfo(request);
     const isDeleted = statusInfo.isDeleted;
+    const isCancelledByMe = statusInfo.isCancelledByMe;
+    const isCancelledByDriver = statusInfo.isCancelledByDriver;
+    const isRejectedByDriver = statusInfo.isRejectedByDriver;
 
     return (
       <Box
@@ -463,14 +521,14 @@ const RequestRide = () => {
           borderBottom:
             idx !== historyRequests.length - 1 ? "1px solid #f0e6d8" : "none",
           "&:hover": { bgcolor: "#FFF9F2" },
-          opacity: isDeleted ? 0.7 : 1,
+          opacity: (isDeleted || isCancelledByMe || isCancelledByDriver || isRejectedByDriver) ? 0.7 : 1,
         }}
       >
         <Box sx={{ position: "relative" }}>
           <Avatar
             sx={{
-              bgcolor: isDeleted ? "#e0e0e0" : "#f5ddc2",
-              color: isDeleted ? "#666" : "#7a4a00",
+              bgcolor: (isDeleted || isCancelledByMe || isCancelledByDriver || isRejectedByDriver) ? "#e0e0e0" : "#f5ddc2",
+              color: (isDeleted || isCancelledByMe || isCancelledByDriver || isRejectedByDriver) ? "#666" : "#7a4a00",
               width: 40,
               height: 40,
               fontSize: "0.9rem",
@@ -485,7 +543,7 @@ const RequestRide = () => {
               bottom: -2,
               right: -2,
               fontSize: 14,
-              color: isDeleted ? "#999" : "#1976d2",
+              color: (isDeleted || isCancelledByMe || isCancelledByDriver || isRejectedByDriver) ? "#999" : "#1976d2",
               bgcolor: "#fff",
               borderRadius: "50%",
             }}
@@ -512,9 +570,35 @@ const RequestRide = () => {
               }}
               icon={<span>{statusInfo.icon}</span>}
             />
-            {isDeleted && (
+            {isCancelledByDriver && (
               <Chip
-                label="Deleted"
+                label="By Driver"
+                size="small"
+                sx={{
+                  bgcolor: "#FFF3E0",
+                  color: "#E65100",
+                  fontWeight: 700,
+                  fontSize: "0.6rem",
+                  height: 20,
+                }}
+              />
+            )}
+            {isCancelledByMe && (
+              <Chip
+                label="By You"
+                size="small"
+                sx={{
+                  bgcolor: "#FFEBEE",
+                  color: "#C62828",
+                  fontWeight: 700,
+                  fontSize: "0.6rem",
+                  height: 20,
+                }}
+              />
+            )}
+            {isRejectedByDriver && (
+              <Chip
+                label="Rejected"
                 size="small"
                 sx={{
                   bgcolor: "#FFCDD2",
@@ -529,6 +613,13 @@ const RequestRide = () => {
           <Typography fontSize={12} color="text.secondary" noWrap>
             {request.rideId?.from} → {request.rideId?.destination}
           </Typography>
+          {/* Show who cancelled/rejected */}
+          <Typography fontSize={11} color="text.secondary" sx={{ mt: 0.5 }}>
+            {isCancelledByMe && "🗑️ You cancelled this ride request"}
+            {isCancelledByDriver && `🚫 ${user.firstName || 'Driver'} cancelled your request`}
+            {isRejectedByDriver && `❌ ${user.firstName || 'Driver'} rejected your request`}
+            {!isCancelledByMe && !isCancelledByDriver && !isRejectedByDriver && statusInfo.label === "Completed" && "✅ Completed"}
+          </Typography>
         </Box>
 
         <Box sx={{ textAlign: "right" }}>
@@ -536,7 +627,10 @@ const RequestRide = () => {
             {new Date(request.createdAt).toLocaleDateString()}
           </Typography>
           <Typography fontSize={11} color="text.secondary">
-            {isDeleted ? "🗑️ Deleted by you" : "✅ Completed"}
+            {isCancelledByMe ? "🗑️ Cancelled by you" : 
+             isCancelledByDriver ? "🚫 Cancelled by driver" : 
+             isRejectedByDriver ? "❌ Rejected by driver" :
+             "✅ Completed"}
           </Typography>
         </Box>
       </Box>
@@ -549,187 +643,198 @@ const RequestRide = () => {
         sx={{
           minHeight: "65vh",
           display: "flex",
-          // justifyContent: "center",
-          // alignItems: "center",
+          justifyContent: "center",
+          alignItems: "center",
           flexDirection: "column",
-          // textAlign: "center",
-          // px: 0.5,
+          px: { xs: 2, sm: 3, md: 4 },
+          py: { xs: 2, sm: 3, md: 4 },
+          width: "100%",
         }}
       >
-        <Typography
+        <Box
           sx={{
-            fontSize: {
-              xs: "1rem",
-              sm: "1.3rem",
-            },
-            fontWeight: 600,
+            width: "100%",
+            maxWidth: "1200px",
+            display: "flex",
+            flexDirection: "column",
           }}
         >
-          My Request Rides
-        </Typography>
+          <Typography
+            sx={{
+              fontSize: {
+                xs: "1.2rem",
+                sm: "1.5rem",
+                md: "1.8rem",
+              },
+              fontWeight: 700,
+              color: "#1a1030",
+              mb: 2,
+              textAlign: { xs: "center", sm: "left" },
+            }}
+          >
+            My Request Rides
+          </Typography>
 
-        {/* <Typography variant="h5" sx={{ color: '#E8650A', fontWeight: 900, fontSize: { xs: "1.2rem", sm: "1.2rem", md: "1.35rem", lg: "1.5rem" } }}>
-          My Request <span style={{ color: '#138808' }}>Rides</span>
-        </Typography> */}
-
-        <br />
-
-        {loadingRequests ? (
-          <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
-            <CircularProgress color="warning" />
-          </Box>
-        ) : uniqueRequests.length === 0 ? (
-          <>
-            <DirectionsCarFilledOutlinedIcon
-              sx={{
-                fontSize: 55,
-                color: "#bdbdbd",
-                mb: 2,
-              }}
-            />
-            <Typography
-              color="text.secondary"
-              sx={{
-                maxWidth: "400px",
-                fontSize: {
-                  xs: "0.9rem",
-                  sm: "1rem",
-                },
-                mb: 3,
-              }}
-            >
-              No ride requests found.
-            </Typography>
-          </>
-        ) : (
-          <>
-            {/* Tabs */}
+          {loadingRequests ? (
+            <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+              <CircularProgress color="warning" />
+            </Box>
+          ) : uniqueRequests.length === 0 ? (
             <Box
               sx={{
-                width: "100%",
-                maxWidth: "1200px",
-                borderBottom: "1px solid",
-                borderColor: "divider",
-                mb: 3,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                py: 8,
               }}
             >
-              <Tabs
-                value={tabValue}
-                onChange={handleTabChange}
-                variant="fullWidth"
+              <DirectionsCarFilledOutlinedIcon
                 sx={{
-                  "& .MuiTab-root": {
-                    fontWeight: 600,
-                    textTransform: "none",
-                    fontSize: { xs: "0.85rem", sm: "1rem" },
-                    minHeight: 48,
-                  },
-                  "& .MuiTabs-indicator": {
-                    backgroundColor: "#FF9933",
-                    height: 3,
+                  fontSize: 64,
+                  color: "#bdbdbd",
+                  mb: 2,
+                }}
+              />
+              <Typography
+                color="text.secondary"
+                sx={{
+                  fontSize: {
+                    xs: "1rem",
+                    sm: "1.1rem",
                   },
                 }}
               >
-                <Tab
-                  label={
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <span>Active Requests</span>
-                      <Chip
-                        label={activeRequests.length}
-                        size="small"
-                        sx={{
-                          bgcolor: "#FF9933",
-                          color: "#fff",
-                          fontWeight: 700,
-                          fontSize: "0.7rem",
-                          height: 20,
-                          minWidth: 20,
-                        }}
-                      />
-                    </Box>
-                  }
-                />
-                <Tab
-                  label={
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <span>History</span>
-                      <Chip
-                        label={historyRequests.length}
-                        size="small"
-                        sx={{
-                          bgcolor: "#757575",
-                          color: "#fff",
-                          fontWeight: 700,
-                          fontSize: "0.7rem",
-                          height: 20,
-                          minWidth: 20,
-                        }}
-                      />
-                    </Box>
-                  }
-                />
-              </Tabs>
+                No ride requests found.
+              </Typography>
             </Box>
+          ) : (
+            <>
+              <Box
+                sx={{
+                  width: "100%",
+                  borderBottom: "1px solid",
+                  borderColor: "divider",
+                  mb: 3,
+                }}
+              >
+                <Tabs
+                  value={tabValue}
+                  onChange={handleTabChange}
+                  variant="fullWidth"
+                  sx={{
+                    "& .MuiTab-root": {
+                      fontWeight: 600,
+                      textTransform: "none",
+                      fontSize: { xs: "0.85rem", sm: "1rem" },
+                      minHeight: 48,
+                    },
+                    "& .MuiTabs-indicator": {
+                      backgroundColor: "#FF9933",
+                      height: 3,
+                    },
+                  }}
+                >
+                  <Tab
+                    label={
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        <span>Active Requests</span>
+                        <Chip
+                          label={activeRequests.length}
+                          size="small"
+                          sx={{
+                            bgcolor: "#FF9933",
+                            color: "#fff",
+                            fontWeight: 700,
+                            fontSize: "0.7rem",
+                            height: 20,
+                            minWidth: 20,
+                          }}
+                        />
+                      </Box>
+                    }
+                  />
+                  <Tab
+                    label={
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        <span>History</span>
+                        <Chip
+                          label={historyRequests.length}
+                          size="small"
+                          sx={{
+                            bgcolor: "#757575",
+                            color: "#fff",
+                            fontWeight: 700,
+                            fontSize: "0.7rem",
+                            height: 20,
+                            minWidth: 20,
+                          }}
+                        />
+                      </Box>
+                    }
+                  />
+                </Tabs>
+              </Box>
 
-            {/* Tab Content */}
-            <Box sx={{ width: "100%", maxWidth: "1200px" }}>
-              {tabValue === 0 && (
-                <>
-                  {activeRequests.length > 0 ? (
-                    activeRequests.map((request) =>
-                      renderActiveRequest(request),
-                    )
-                  ) : (
-                    <Box sx={{ textAlign: "center", py: 4 }}>
-                      <Typography color="text.secondary">
-                        No active ride requests.
-                      </Typography>
-                    </Box>
-                  )}
-                </>
-              )}
+              <Box sx={{ width: "100%", mt: 2 }}>
+                {tabValue === 0 && (
+                  <>
+                    {activeRequests.length > 0 ? (
+                      activeRequests.map((request) =>
+                        renderActiveRequest(request),
+                      )
+                    ) : (
+                      <Box sx={{ textAlign: "center", py: 6 }}>
+                        <Typography color="text.secondary" fontSize="1.1rem">
+                          No active ride requests.
+                        </Typography>
+                      </Box>
+                    )}
+                  </>
+                )}
 
-              {tabValue === 1 && (
-                <>
-                  {historyRequests.length > 0 ? (
-                    <Box
-                      sx={{
-                        borderRadius: "16px",
-                        border: "1px solid #f0d9c0",
-                        bgcolor: "#fff",
-                        overflow: "hidden",
-                      }}
-                    >
-                      <Typography
+                {tabValue === 1 && (
+                  <>
+                    {historyRequests.length > 0 ? (
+                      <Box
                         sx={{
-                          px: 2.5,
-                          py: 1.5,
-                          bgcolor: "#f8f8f8",
-                          fontSize: 13,
-                          fontWeight: 700,
-                          color: "text.secondary",
-                          borderBottom: "1px solid #f0e6d8",
+                          borderRadius: "16px",
+                          border: "1px solid #f0d9c0",
+                          bgcolor: "#fff",
+                          overflow: "hidden",
                         }}
                       >
-                        📜 History ({historyRequests.length})
-                      </Typography>
+                        <Typography
+                          sx={{
+                            px: 2.5,
+                            py: 1.5,
+                            bgcolor: "#f8f8f8",
+                            fontSize: 13,
+                            fontWeight: 700,
+                            color: "text.secondary",
+                            borderBottom: "1px solid #f0e6d8",
+                          }}
+                        >
+                          📜 History ({historyRequests.length})
+                        </Typography>
 
-                      {historyRequests.map((request, idx) =>
-                        renderHistoryItem(request, idx),
-                      )}
-                    </Box>
-                  ) : (
-                    <Box sx={{ textAlign: "center", py: 4 }}>
-                      <Typography color="text.secondary">
-                        No history found.
-                      </Typography>
-                    </Box>
-                  )}
-                </>
-              )}
-            </Box>
-          </>
-        )}
+                        {historyRequests.map((request, idx) =>
+                          renderHistoryItem(request, idx),
+                        )}
+                      </Box>
+                    ) : (
+                      <Box sx={{ textAlign: "center", py: 6 }}>
+                        <Typography color="text.secondary" fontSize="1.1rem">
+                          No history found.
+                        </Typography>
+                      </Box>
+                    )}
+                  </>
+                )}
+              </Box>
+            </>
+          )}
+        </Box>
 
         <Menu
           anchorEl={anchorEl}
@@ -806,7 +911,6 @@ const RequestRide = () => {
           </MenuItem>
         </Menu>
 
-        {/* Cancel Confirmation Dialog */}
         <Dialog
           open={openCancelDialog}
           onClose={() => setOpenCancelDialog(false)}
@@ -902,7 +1006,7 @@ const RequestRide = () => {
           requestToEdit={selectedRequest}
         />
       </Box>
-    </PageLayout >
+    </PageLayout>
   );
 };
 
