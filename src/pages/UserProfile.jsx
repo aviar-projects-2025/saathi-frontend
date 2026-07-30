@@ -202,11 +202,16 @@ const UserProfile = () => {
     }
 
     // Email
-    if (!formData.email) {
-      errors.email = "Email is required";
-    } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
-      errors.email = "Invalid email format";
+     if (!formData.email) {
+        errors.email = "Email is required";
+    } else {
+        // Proper email validation
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (!emailRegex.test(formData.email)) {
+            errors.email = "Please enter a valid email address (e.g., name@domain.com)";
+        }
     }
+
 
     // Mobile
     if (!formData.mobile) {
