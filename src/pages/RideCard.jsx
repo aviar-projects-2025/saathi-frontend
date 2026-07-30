@@ -318,7 +318,7 @@ export default function RideCard({ ride }) {
   const isAccepted = myRequest?.status === "ACCEPTED";
   const requestedByMe = Number(myRequest?.seatsRequested || 0);
   const approvedSeats = myRequest?.approvedSeats || 0;
-  
+
   const pendingSeatsByMe = isAccepted ? 0 : requestedByMe;
 
   const remainingSeatsForUser = isFlight
@@ -408,10 +408,16 @@ export default function RideCard({ ride }) {
           icon: <EventSeatIcon sx={iconSx} />,
           value: isFlight
             ? "—"
-            : `${remainingSeatsForUser ?? 0} available seat${
-                (remainingSeatsForUser ?? 0) === 1 ? "" : "s"
-              } / ${totalSeat} total seat${totalSeat === 1 ? "" : "s"}`,
+            : (() => {
+                const occupiedSeats = Math.max(
+                  Number(totalSeat || 0) - Number(remainingSeatsForUser ?? 0),
+                  0,
+                );
+                return `${occupiedSeats}
+        / ${totalSeat}`;
+              })(),
         },
+
         {
           label: "Travel mode",
           icon: travelIcons[ride.modeOfTravel],
