@@ -63,11 +63,11 @@ export default function MobileBottomNav() {
       icon: <DirectionsCarIcon />,
       link: "/myride",
     },
-    {
-      label: "Discover",
-      icon: <ExploreIcon />,
-      link: "/discover",
-    },
+    // {
+    //   label: "Discover",
+    //   icon: <ExploreIcon />,
+    //   link: "/discover",
+    // },
     {
       label: "Settings",
       icon: <SettingsIcon />,

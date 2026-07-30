@@ -244,7 +244,7 @@ const Discover = () => {
                             boxSizing: "border-box",
                         }}
                     >
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 3 }}>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
                             <HistoryIcon sx={{ color: "#F4A261", fontSize: { xs: 23, sm: 26 } }} />
                             <Typography fontWeight={700}
                                 sx={{ fontSize: { xs: "1.05rem", sm: "1.2em" } }} >

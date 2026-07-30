@@ -104,16 +104,16 @@ export default function RideCard({ ride }) {
   const dateObj = ride.startTime ? new Date(ride.startTime) : null;
   const dateStr = dateObj
     ? dateObj.toLocaleDateString(undefined, {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    })
     : "No date";
   const timeStr = dateObj
     ? dateObj.toLocaleTimeString(undefined, {
-        hour: "2-digit",
-        minute: "2-digit",
-      })
+      hour: "2-digit",
+      minute: "2-digit",
+    })
     : "";
 
   const resetRequestData = () => {
@@ -362,78 +362,78 @@ export default function RideCard({ ride }) {
     ride.genderPreference !== currentUser?.gender;
   const detailItems = isFlight
     ? [
-        {
-          label: "Date & time",
-          icon: <CalendarTodayIcon sx={iconSx} />,
-          value: `${dateStr}${timeStr ? " · " + timeStr : ""}`,
-        },
-        {
-          label: "Flight no.",
-          icon: <FlightTakeoffIcon sx={iconSx} />,
-          value: ride.flightNumber || "—",
-        },
-        {
-          label: "Airline",
-          icon: <FlightTakeoffIcon sx={iconSx} />,
-          value: ride.airlineName || "—",
-        },
-        {
-          label: "Traveller type",
-          icon: <WcIcon sx={iconSx} />,
-          value: ride.travellerType || "—",
-        },
-        {
-          label: "Language",
-          icon: <LanguageIcon sx={iconSx} />,
-          value: ride.language || "—",
-        },
-        ...(ride.transitAirport
-          ? [
-              {
-                label: "Transit",
-                icon: <FlightTakeoffIcon sx={iconSx} />,
-                value: ride.transitAirport,
-              },
-            ]
-          : []),
-      ]
+      {
+        label: "Date & time",
+        icon: <CalendarTodayIcon sx={iconSx} />,
+        value: `${dateStr}${timeStr ? " · " + timeStr : ""}`,
+      },
+      {
+        label: "Flight no.",
+        icon: <FlightTakeoffIcon sx={iconSx} />,
+        value: ride.flightNumber || "—",
+      },
+      {
+        label: "Airline",
+        icon: <FlightTakeoffIcon sx={iconSx} />,
+        value: ride.airlineName || "—",
+      },
+      {
+        label: "Traveller type",
+        icon: <WcIcon sx={iconSx} />,
+        value: ride.travellerType || "—",
+      },
+      {
+        label: "Language",
+        icon: <LanguageIcon sx={iconSx} />,
+        value: ride.language || "—",
+      },
+      ...(ride.transitAirport
+        ? [
+          {
+            label: "Transit",
+            icon: <FlightTakeoffIcon sx={iconSx} />,
+            value: ride.transitAirport,
+          },
+        ]
+        : []),
+    ]
     : [
-        {
-          label: "Date & time",
-          icon: <CalendarTodayIcon sx={iconSx} />,
-          value: `${dateStr}${timeStr ? " · " + timeStr : ""}`,
-        },
-        {
-          label: "Seats available",
-          icon: <EventSeatIcon sx={iconSx} />,
-          value: isFlight
-            ? "—"
-            : (() => {
-                const occupiedSeats = Math.max(
-                  Number(totalSeat || 0) - Number(remainingSeatsForUser ?? 0),
-                  0,
-                );
-                return `${occupiedSeats}
+      {
+        label: "Date & time",
+        icon: <CalendarTodayIcon sx={iconSx} />,
+        value: `${dateStr}${timeStr ? " · " + timeStr : ""}`,
+      },
+      {
+        label: "Seats available",
+        icon: <EventSeatIcon sx={iconSx} />,
+        value: isFlight
+          ? "—"
+          : (() => {
+            const occupiedSeats = Math.max(
+              Number(totalSeat || 0) - Number(remainingSeatsForUser ?? 0),
+              0,
+            );
+            return `${occupiedSeats}
         / ${totalSeat}`;
-              })(),
-        },
+          })(),
+      },
 
-        {
-          label: "Travel mode",
-          icon: travelIcons[ride.modeOfTravel],
-          value: ride.modeOfTravel || "—",
-        },
-        {
-          label: "Gender pref",
-          icon: genderIcon[ride.genderPreference],
-          value: ride.genderPreference,
-        },
-        {
-          label: "Fuel sharing",
-          icon: <LocalGasStationIcon sx={iconSx} />,
-          value: ride.fuelSharing,
-        },
-      ];
+      {
+        label: "Travel mode",
+        icon: travelIcons[ride.modeOfTravel],
+        value: ride.modeOfTravel || "—",
+      },
+      {
+        label: "Gender pref",
+        icon: genderIcon[ride.genderPreference],
+        value: ride.genderPreference,
+      },
+      {
+        label: "Fuel sharing",
+        icon: <LocalGasStationIcon sx={iconSx} />,
+        value: ride.fuelSharing,
+      },
+    ];
 
   return (
     <>
@@ -728,59 +728,7 @@ export default function RideCard({ ride }) {
               >
                 <Box component="span">
                   <Stack direction="row" alignItems="center" spacing={1}>
-                    {myRequest && (
-                      <Chip
-                        label={
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 0.5,
-                            }}
-                          >
-                            <Typography
-                              component="span"
-                              sx={{
-                                fontSize: { xs: "0.65rem", sm: "0.7rem" },
-                                fontWeight: 600,
-                                color: isAccepted ? "#2E7D32" : "#1565C0",
-                              }}
-                            >
-                              {isAccepted
-                                ? `You have ${approvedSeats} approved seat${
-                                    approvedSeats > 1 ? "s" : ""
-                                  }`
-                                : `You applied for ${requestedByMe} seat${
-                                    requestedByMe > 1 ? "s" : ""
-                                  }`}
-                            </Typography>
 
-                            {isAccepted && pendingReqSeats > 0 && (
-                              <Typography
-                                component="span"
-                                sx={{
-                                  fontSize: { xs: "0.65rem", sm: "0.7rem" },
-                                  fontWeight: 600,
-                                  color: "#F57C00",
-                                }}
-                              >
-                                {`and ${pendingReqSeats} pending seat${
-                                  pendingReqSeats > 1 ? "s" : ""
-                                }`}
-                              </Typography>
-                            )}
-                          </Box>
-                        }
-                        color={isAccepted ? "success" : "info"}
-                        sx={{
-                          height: { xs: 18, sm: 25 },
-                          bgcolor: isAccepted ? "#E8F5E9" : "#E3F2FD",
-                          "& .MuiChip-label": {
-                            px: { xs: 0.5, sm: 1 },
-                          },
-                        }}
-                      />
-                    )}
                     <Tooltip
                       title={
                         !isProfileComplete
@@ -876,6 +824,66 @@ export default function RideCard({ ride }) {
               </Tooltip>
             </Box>
 
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: { xs: "center", sm: "flex-start" },
+                mt: 2
+              }}>
+              {myRequest && (
+                <Chip
+                  label={
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 0.5,
+                      }}
+                    >
+                      <Typography
+                        component="span"
+                        sx={{
+                          fontSize: { xs: "0.65rem", sm: "0.7rem" },
+                          fontWeight: 600,
+                          color: isAccepted ? "#2E7D32" : "#1565C0",
+                        }}
+                      >
+                        {isAccepted
+                          ? `You have ${approvedSeats} approved seat${approvedSeats > 1 ? "s" : ""
+                          }`
+                          : `You applied for ${requestedByMe} seat${requestedByMe > 1 ? "s" : ""
+                          }`}
+                      </Typography>
+
+                      {/* <Typography sx={{color:"#000000",mb:0.4}}> & </Typography> */}
+
+                      {isAccepted && pendingReqSeats > 0 && (
+                        <Typography
+                          component="span"
+                          sx={{
+                            fontSize: { xs: "0.65rem", sm: "0.7rem" },
+                            fontWeight: 600,
+                            color: "#F57C00",
+                          }}
+                        >
+                          {`and ${pendingReqSeats} pending seat${pendingReqSeats > 1 ? "s" : ""
+                            }`}
+                        </Typography>
+                      )}
+                    </Box>
+                  }
+                  color={isAccepted ? "success" : "info"}
+                  sx={{
+                    height: { xs: 18, sm: 25 },
+                    bgcolor: isAccepted ? "#E8F5E9" : "#E3F2FD",
+                    "& .MuiChip-label": {
+                      px: { xs: 0.5, sm: 1 },
+                    },
+                  }}
+                />
+              )}
+            </Box>
+
             {/* Expanded details */}
             <Collapse in={expanded}>
               <Box
@@ -917,15 +925,15 @@ export default function RideCard({ ride }) {
                     { label: "Travel mode", value: ride.modeOfTravel },
                     ...(isFlight
                       ? [
-                          {
-                            label: "Age group pref",
-                            value: ride.ageGroupPreference,
-                          },
-                          {
-                            label: "Transit airport",
-                            value: ride.transitAirport || "None",
-                          },
-                        ]
+                        {
+                          label: "Age group pref",
+                          value: ride.ageGroupPreference,
+                        },
+                        {
+                          label: "Transit airport",
+                          value: ride.transitAirport || "None",
+                        },
+                      ]
                       : []),
                   ].map(({ label, value }) => (
                     <Box key={label}>

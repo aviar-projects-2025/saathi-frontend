@@ -61,7 +61,7 @@ import { useNavigate } from "react-router-dom";
 const pillBtn = {
     textTransform: "none",
     border: "none",
-    fontSize: { xs: "0.72rem", sm: "0.85rem", md: "1.1rem" },
+    fontSize: { xs: "0.72rem", sm: "0.85rem", md: "0.9rem" },
     color: SAFFRON,
     fontWeight: 600,
 };
