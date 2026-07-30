@@ -172,7 +172,6 @@ export default function RideCard({ ride }) {
     setRequestData({ ...requestData, members: updatedMembers });
   };
 
-  // console.log("isAccepted",isAccepted)
   const handleRequestSubmit = async () => {
     if (!selectedRide) return;
 
