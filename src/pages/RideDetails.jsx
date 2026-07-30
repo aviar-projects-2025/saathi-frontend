@@ -18,8 +18,6 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
-import TwoWheelerIcon from '@mui/icons-material/TwoWheeler';
 import EventSeatIcon from '@mui/icons-material/EventSeat';
 import Diversity3Icon from '@mui/icons-material/Diversity3';
 import WcIcon from '@mui/icons-material/Wc';
@@ -34,17 +32,28 @@ import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import CircularProgress from "@mui/material/CircularProgress";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 
+import PersonIcon from "@mui/icons-material/Person";
+import WomanIcon from "@mui/icons-material/Woman";
+import GroupsIcon from "@mui/icons-material/Groups";
+
+import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
+import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
+import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
+import FlightIcon from "@mui/icons-material/Flight";
+import DirectionsBoatIcon from "@mui/icons-material/DirectionsBoat";
+import TrainIcon from "@mui/icons-material/Train";
+
 // ── Design tokens ────────────────────────────────────────────────────────
 const TOKENS = {
-  paper: '#FAF6EC',
-  paperDim: '#F1EADA',
+  paper: '#ffff',
+  paperDim: '#fdfcfb',
   ink: '#1C2B33',
   inkSoft: '#5B6B72',
   accent: '#C9622A',
   accentSoft: '#F3E1D2',
   amber: '#D69A2D',
   amberSoft: '#FBEFD7',
-  green: '#3D7A46',
+  green: '#4a8d54',
   greenSoft: '#E4EFDD',
   red: '#B23B3B',
   redSoft: '#F8E4E1',
@@ -54,21 +63,25 @@ const TOKENS = {
   monoFont: "'IBM Plex Mono', monospace",
 };
 
-const travelIcon = {
+const travelIcons = {
   Car: DirectionsCarIcon,
+  Bus: DirectionsBusIcon,
   Bike: TwoWheelerIcon,
+  Flight: FlightIcon,
+  Ship: DirectionsBoatIcon,
+  Train: TrainIcon,
 };
 
 const genderIcon = {
-  Any: Diversity3Icon,
-  'Male only': WcIcon,
-  'Female only': WcIcon,
+  Male: PersonIcon,
+  Female: WomanIcon,
+  Any: GroupsIcon,
 };
 
 const statusStamp = {
-  ACTIVE: { label: 'ACTIVE', color: TOKENS.green, bg: TOKENS.greenSoft },
-  COMPLETED: { label: 'COMPLETED', color: TOKENS.inkSoft, bg: TOKENS.paperDim },
-  CANCELLED: { label: 'VOID', color: TOKENS.red, bg: TOKENS.redSoft },
+  OPEN: { label: 'OPENED', color: TOKENS.accent, bg: TOKENS.accentSoft },
+  FULL: { label: 'FILLED', color: TOKENS.paper, bg: TOKENS.green },
+  CLOSED: { label: 'VOID', color: TOKENS.red, bg: TOKENS.redSoft },
 };
 
 function requestVisual(status) {
@@ -294,13 +307,6 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
                       approveLoading === request._id ||
                       rejectLoading === request._id
                     }
-                    // startIcon={
-                    //     approveLoading === request._id ? (
-                    //         <CircularProgress size={16} color="inherit" />
-                    //     ) : (
-                    //         <CheckCircleIcon sx={{ fontSize: 16 }} />
-                    //     )
-                    // }
                     sx={{
                       fontFamily: TOKENS.bodyFont,
                       textTransform: 'none',
@@ -322,13 +328,6 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
                       approveLoading === request._id ||
                       rejectLoading === request._id
                     }
-                    // startIcon={
-                    //     rejectLoading === request._id ? (
-                    //         <CircularProgress size={16} color="inherit" />
-                    //     ) : (
-                    //         <CancelIcon sx={{ fontSize: 16 }} />
-                    //     )
-                    // }
                     sx={{
                       fontFamily: TOKENS.bodyFont,
                       textTransform: 'none',
@@ -386,8 +385,8 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
               )}
               {request?.pendingMembers?.length > 0 && (
                 <>
-                  <Typography sx={{ fontFamily: TOKENS.bodyFont, fontSize: '0.8rem', fontWeight: 700, color:'red' }}>
-                   Pending Members:
+                  <Typography sx={{ fontFamily: TOKENS.bodyFont, fontSize: '0.8rem', fontWeight: 700, color: 'red' }}>
+                    Pending Members:
                   </Typography>
                   {request?.pendingMembers?.map((m, i) => (
                     <Typography key={i} sx={{ fontFamily: TOKENS.bodyFont, fontSize: '0.78rem', ml: 2 }}>
@@ -410,11 +409,10 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
             p: 1,
             m: 1,
             borderRadius: 2,
-            bgcolor: "rgba(255,0,0,0.08)", // light red background
+            bgcolor: "rgba(255,0,0,0.08)",
             border: "1px solid rgba(255,0,0,0.4)",
           }}
         >
-          {/* Left Side - Warning + Text */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <WarningAmberIcon sx={{ color: "error.main" }} />
 
@@ -430,7 +428,6 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
             </Typography>
           </Box>
 
-          {/* Right Side - Actions */}
           <Box sx={{ display: "flex", gap: 0.5 }}>
             <IconButton
               sx={{
@@ -487,9 +484,11 @@ export default function RideDetailsModal({
     ? startDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
     : '—';
 
-  const stamp = statusStamp[ride?.status] || statusStamp.ACTIVE;
-  const TravelIcon = travelIcon[ride.modeOfTravel] || DirectionsCarIcon;
+  const stamp = statusStamp[ride?.status];
+
+  const TravelIcon = travelIcons[ride.modeOfTravel] || DirectionsCarIcon;
   const GenderIcon = genderIcon[ride.genderPreference] || Diversity3Icon;
+
   const pendingCount = requests.filter((r) => r?.status?.toUpperCase() === 'PENDING').length;
 
   return (
@@ -578,9 +577,9 @@ export default function RideDetailsModal({
             </Typography>
           </Box>
 
-          <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: 0.5, position: 'relative', top: -8 }}>
+          <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: 1, position: 'relative', top: -8 }}>
             <Box sx={{ flex: 1, borderTop: '2px dashed rgba(250,246,236,0.35)' }} />
-            <FlightTakeoffIcon sx={{ fontSize: { xs: 16, sm: 19 }, color: TOKENS.accent, transform: 'rotate(90deg)' }} />
+            <FlightTakeoffIcon sx={{ fontSize: { xs: 16, sm: 19 }, color: TOKENS.accent, transform: 'rotate(0deg)' }} />
             <Box sx={{ flex: 1, borderTop: '2px dashed rgba(250,246,236,0.35)' }} />
           </Box>
 
@@ -702,25 +701,21 @@ export default function RideDetailsModal({
                         />
                       )}
                     </Stack>
-                    <Typography sx={{ fontFamily: TOKENS.monoFont, fontSize: '0.9 rem', color: TOKENS.inkSoft, mx: 2 }}>
+                    <Typography sx={{ fontFamily: TOKENS.monoFont, fontSize: '0.9rem', color: TOKENS.inkSoft, mx: 2 }}>
                       {requests.length} total
                     </Typography>
                   </Stack>
 
                   <Box
                     sx={{
-                      // border: `1px solid ${TOKENS.line}`,
                       borderRadius: 1.5,
                       maxHeight: { xs: 280, sm: 340 },
-                      // overflowY: "auto",
-                      // overflowX: "hidden",
                     }}
                   >
                     {requests.map((req, idx) => (
                       <Box
                         key={req._id}
                         sx={{
-                          // borderTop: idx === 0 ? 'none' : `1px solid ${TOKENS.line}`,
                           mt: 2
                         }}
                       >
@@ -754,7 +749,7 @@ export default function RideDetailsModal({
           borderTop: `1px solid ${TOKENS.line}`,
         }}
       >
-        {showEdit && ride.createdBy._id == user?.id && (
+        {showEdit && ride.createdBy?._id === user?.id && (
           <Button
             onClick={() => onEdit(ride)}
             startIcon={<EditIcon sx={{ fontSize: { xs: 16, sm: 18 } }} />}
@@ -776,7 +771,7 @@ export default function RideDetailsModal({
             Edit ride
           </Button>
         )}
-        {showDelete && ride.createdBy._id == user?.id && (
+        {showDelete && ride.createdBy?._id === user?.id && (
           <Button
             onClick={() => onDelete(ride)}
             startIcon={<DeleteIcon sx={{ fontSize: { xs: 16, sm: 18 } }} />}

@@ -377,7 +377,7 @@ function EditRideModal({ ride, onSave, onClose }) {
               <MenuItem value="Bus">🚌 Bus</MenuItem>
               <MenuItem value="Bike">🏍️ Bike</MenuItem>
               <MenuItem value="Flight">✈️ Flight</MenuItem>
-              <MenuItem value="Ship">🚢 Ship</MenuItem>
+              {/* <MenuItem value="Ship">🚢 Ship</MenuItem> */}
               <MenuItem value="Train">🚆 Train</MenuItem>
             </Select>
           </FormControl>
@@ -904,6 +904,7 @@ function RideCard({
   return (
     <>
       <Box
+        onClick={() => setDetailsOpen(true)}
         sx={{
           p: { xs: 0, sm: 0 },
           width: "100%",
@@ -912,7 +913,7 @@ function RideCard({
           mb: { xs: 1.5, sm: 2 },
           transition: "all .3s ease",
           "&:hover": {
-            transform: { xs: "none", sm: "translateY(-6px)" },
+            transform: { xs: "none", sm: "translateY(-5px)" },
           },
         }}
       >
@@ -1074,7 +1075,6 @@ function RideCard({
         {/* ── Card body ── */}
         <Card
           elevation={0}
-          onClick={() => setDetailsOpen(true)}
           sx={{
             borderRadius: "0 0 18px 18px",
             background: "#fff",
@@ -1110,11 +1110,11 @@ function RideCard({
                   sx={{
                     // border:'1px solid black',
                     display: "flex",
-                    width: isMobile ? "100%" : "25%",
+                    width: isMobile ? "100%" : "35%",
                     alignItems: "center",
                     justifyContent: "space-between",
                     gap: 1,
-                    pb: isMobile && { xs: 1.1, sm: 1.5, md: 2 },
+                    pb: isMobile && { xs: 1.2, sm: 1.5, md: 2 },
                     // mb: { xs: 1.1, sm: 1.5, md: 2 },
                     // borderBottom: '1px solid rgba(255,153,51,0.2)',
                   }}
@@ -1950,6 +1950,11 @@ const MyRides = () => {
           >
             My Rides
           </Typography>
+
+          {/* <Typography variant="h5" sx={{ color: '#E8650A', fontWeight: 900, fontSize: { xs: "1.2rem", sm: "1.2rem", md: "1.35rem", lg: "1.5rem" } }}>
+          My <span style={{ color: '#138808' }}>Rides</span>
+        </Typography> */}
+
         </Box>
 
         <Box

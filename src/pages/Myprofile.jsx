@@ -226,10 +226,23 @@ const Myprofile = () => {
         // maxWidth: 1000,
         // mx: "auto",
         // px: 1.5,
-        py: 2,
+        py: 1,
         pb: 3
       }}
     >
+      <Typography
+        variant="h5"
+        sx={{
+          // color: '#E8650A',
+          color: '#000000',
+          fontWeight: 600,
+          fontSize: { xs: "1.2rem", sm: "1.2rem", md: "1.35rem", lg: "1.5rem" },
+          mb: { xs: "1.2rem", sm: "1.2rem", md: "1.35rem", lg: "1.5rem" }
+        }}>
+        Settings
+        {/* <span style={{ color: '#138808' }}>Profile</span> */}
+      </Typography>
+
       <SectionCard
         sx={{
           p: { xs: 1, sm: 2 },
@@ -602,7 +615,7 @@ const Myprofile = () => {
           </Box>
         </Box>
       </Modal>
-      
+
       <Modal open={openShare} onClose={handleCloseShare}>
         <Box
           sx={{
