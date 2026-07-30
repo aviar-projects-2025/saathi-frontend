@@ -104,16 +104,16 @@ export default function RideCard({ ride }) {
   const dateObj = ride.startTime ? new Date(ride.startTime) : null;
   const dateStr = dateObj
     ? dateObj.toLocaleDateString(undefined, {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    })
     : "No date";
   const timeStr = dateObj
     ? dateObj.toLocaleTimeString(undefined, {
-        hour: "2-digit",
-        minute: "2-digit",
-      })
+      hour: "2-digit",
+      minute: "2-digit",
+    })
     : "";
 
   const resetRequestData = () => {
@@ -362,78 +362,78 @@ export default function RideCard({ ride }) {
     ride.genderPreference !== currentUser?.gender;
   const detailItems = isFlight
     ? [
-        {
-          label: "Date & time",
-          icon: <CalendarTodayIcon sx={iconSx} />,
-          value: `${dateStr}${timeStr ? " · " + timeStr : ""}`,
-        },
-        {
-          label: "Flight no.",
-          icon: <FlightTakeoffIcon sx={iconSx} />,
-          value: ride.flightNumber || "—",
-        },
-        {
-          label: "Airline",
-          icon: <FlightTakeoffIcon sx={iconSx} />,
-          value: ride.airlineName || "—",
-        },
-        {
-          label: "Traveller type",
-          icon: <WcIcon sx={iconSx} />,
-          value: ride.travellerType || "—",
-        },
-        {
-          label: "Language",
-          icon: <LanguageIcon sx={iconSx} />,
-          value: ride.language || "—",
-        },
-        ...(ride.transitAirport
-          ? [
-              {
-                label: "Transit",
-                icon: <FlightTakeoffIcon sx={iconSx} />,
-                value: ride.transitAirport,
-              },
-            ]
-          : []),
-      ]
+      {
+        label: "Date & time",
+        icon: <CalendarTodayIcon sx={iconSx} />,
+        value: `${dateStr}${timeStr ? " · " + timeStr : ""}`,
+      },
+      {
+        label: "Flight no.",
+        icon: <FlightTakeoffIcon sx={iconSx} />,
+        value: ride.flightNumber || "—",
+      },
+      {
+        label: "Airline",
+        icon: <FlightTakeoffIcon sx={iconSx} />,
+        value: ride.airlineName || "—",
+      },
+      {
+        label: "Traveller type",
+        icon: <WcIcon sx={iconSx} />,
+        value: ride.travellerType || "—",
+      },
+      {
+        label: "Language",
+        icon: <LanguageIcon sx={iconSx} />,
+        value: ride.language || "—",
+      },
+      ...(ride.transitAirport
+        ? [
+          {
+            label: "Transit",
+            icon: <FlightTakeoffIcon sx={iconSx} />,
+            value: ride.transitAirport,
+          },
+        ]
+        : []),
+    ]
     : [
-        {
-          label: "Date & time",
-          icon: <CalendarTodayIcon sx={iconSx} />,
-          value: `${dateStr}${timeStr ? " · " + timeStr : ""}`,
-        },
-        {
-          label: "Seats available",
-          icon: <EventSeatIcon sx={iconSx} />,
-          value: isFlight
-            ? "—"
-            : (() => {
-                const occupiedSeats = Math.max(
-                  Number(totalSeat || 0) - Number(remainingSeatsForUser ?? 0),
-                  0,
-                );
-                return `${occupiedSeats}
+      {
+        label: "Date & time",
+        icon: <CalendarTodayIcon sx={iconSx} />,
+        value: `${dateStr}${timeStr ? " · " + timeStr : ""}`,
+      },
+      {
+        label: "Seats available",
+        icon: <EventSeatIcon sx={iconSx} />,
+        value: isFlight
+          ? "—"
+          : (() => {
+            const occupiedSeats = Math.max(
+              Number(totalSeat || 0) - Number(remainingSeatsForUser ?? 0),
+              0,
+            );
+            return `${occupiedSeats}
         / ${totalSeat}`;
-              })(),
-        },
+          })(),
+      },
 
-        {
-          label: "Travel mode",
-          icon: travelIcons[ride.modeOfTravel],
-          value: ride.modeOfTravel || "—",
-        },
-        {
-          label: "Gender pref",
-          icon: genderIcon[ride.genderPreference],
-          value: ride.genderPreference,
-        },
-        {
-          label: "Fuel sharing",
-          icon: <LocalGasStationIcon sx={iconSx} />,
-          value: ride.fuelSharing,
-        },
-      ];
+      {
+        label: "Travel mode",
+        icon: travelIcons[ride.modeOfTravel],
+        value: ride.modeOfTravel || "—",
+      },
+      {
+        label: "Gender pref",
+        icon: genderIcon[ride.genderPreference],
+        value: ride.genderPreference,
+      },
+      {
+        label: "Fuel sharing",
+        icon: <LocalGasStationIcon sx={iconSx} />,
+        value: ride.fuelSharing,
+      },
+    ];
 
   return (
     <>
@@ -747,12 +747,10 @@ export default function RideCard({ ride }) {
                               }}
                             >
                               {isAccepted
-                                ? `You have ${approvedSeats} approved seat${
-                                    approvedSeats > 1 ? "s" : ""
-                                  }`
-                                : `You applied for ${requestedByMe} seat${
-                                    requestedByMe > 1 ? "s" : ""
-                                  }`}
+                                ? `You have ${approvedSeats} approved seat${approvedSeats > 1 ? "s" : ""
+                                }`
+                                : `You applied for ${requestedByMe} seat${requestedByMe > 1 ? "s" : ""
+                                }`}
                             </Typography>
 
                             {isAccepted && pendingReqSeats > 0 && (
@@ -764,9 +762,8 @@ export default function RideCard({ ride }) {
                                   color: "#F57C00",
                                 }}
                               >
-                                {`and ${pendingReqSeats} pending seat${
-                                  pendingReqSeats > 1 ? "s" : ""
-                                }`}
+                                {`and ${pendingReqSeats} pending seat${pendingReqSeats > 1 ? "s" : ""
+                                  }`}
                               </Typography>
                             )}
                           </Box>
@@ -826,17 +823,21 @@ export default function RideCard({ ride }) {
                             textTransform: "none",
                           }}
                         >
-                          {genderMismatch
-                            ? `Only ${ride.genderPreference} Allowed`
-                            : isRejected
-                              ? "Rejected"
-                              : alreadyRequested
-                                ? `Edit Request (${remainingSeatsForUser} left)`
-                                : isFlight
-                                  ? "Request Companion"
-                                  : remainingSeatsForUser > 0
-                                    ? `Request Seat (${remainingSeatsForUser} left)`
-                                    : "No Seats Available"}
+                          {
+                            genderMismatch
+                              ? `Only ${ride.genderPreference} Allowed`
+                              : isRejected
+                                ? "Rejected"
+                                : alreadyRequested
+                                  ? remainingSeatsForUser > 0
+                                    ? `Edit Request (${remainingSeatsForUser} left)`
+                                    : "View Request"
+                                  : isFlight
+                                    ? "Request Companion"
+                                    : remainingSeatsForUser > 0
+                                      ? `Request Seat (${remainingSeatsForUser} left)`
+                                      : "No Seats Available"
+                          }
                         </Button>
                         {/* <Button
                     variant="contained"
@@ -917,15 +918,15 @@ export default function RideCard({ ride }) {
                     { label: "Travel mode", value: ride.modeOfTravel },
                     ...(isFlight
                       ? [
-                          {
-                            label: "Age group pref",
-                            value: ride.ageGroupPreference,
-                          },
-                          {
-                            label: "Transit airport",
-                            value: ride.transitAirport || "None",
-                          },
-                        ]
+                        {
+                          label: "Age group pref",
+                          value: ride.ageGroupPreference,
+                        },
+                        {
+                          label: "Transit airport",
+                          value: ride.transitAirport || "None",
+                        },
+                      ]
                       : []),
                   ].map(({ label, value }) => (
                     <Box key={label}>
