@@ -61,7 +61,7 @@ import { useNavigate } from "react-router-dom";
 const pillBtn = {
     textTransform: "none",
     border: "none",
-    fontSize: { xs: "0.60rem", sm: "0.8rem", md: "0.875rem" },
+    fontSize: { xs: "0.72rem", sm: "0.85rem", md: "1.1rem" },
     color: SAFFRON,
     fontWeight: 600,
 };
@@ -325,7 +325,7 @@ const UserProfile = () => {
     const handleUpdateProfile = async () => {
         setSubmitLoading(true);
         try {
-           
+
             const validationErrors = validateForm(formData);
             if (Object.keys(validationErrors).length > 0) {
                 setErrors(validationErrors);
@@ -367,10 +367,15 @@ const UserProfile = () => {
         <PageLayout>
             <Box sx={{ mx: "auto", px: { xs: 0, sm: 2, md: 0 } }}>
                 {/* Page heading */}
-                <Box sx={{ px: { xs: 1.5, sm: 0 }, pt: { xs: 2, sm: 0 }, mb: 1, flexShrink: 0 }}>
+                <Box sx={{ pt: { xs: 2, sm: 0 }, mb: 1, flexShrink: 0 }}>
                     <Typography variant="h5" fontWeight={800} sx={{ fontSize: { xs: '1.1rem', sm: '1.35rem', md: '1.5rem' } }}>
                         My Profile
                     </Typography>
+
+                    {/* <Typography variant="h5" sx={{ color: '#E8650A', fontWeight: 900, fontSize: { xs: "1.2rem", sm: "1.2rem", md: "1.35rem", lg: "1.5rem" } }}>
+                        My <span style={{ color: '#138808' }}>Profile</span>
+                    </Typography> */}
+
                 </Box>
 
                 <Typography

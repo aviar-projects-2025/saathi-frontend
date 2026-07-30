@@ -27,6 +27,7 @@ import Api from '../Api.jsx';
 import axios from 'axios';
 import Discover from './Discover.jsx'
 
+import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import {
@@ -874,22 +875,54 @@ export default function Community() {
                           <Dialog
                             open={deleteOpen}
                             onClose={() => setDeleteOpen(false)}
-                            maxWidth="xs"
                             fullWidth
+                            maxWidth="xs"
+                            PaperProps={{
+                              sx: {
+                                width: { xs: "95%", sm: "100%" },
+                                m: { xs: 1.5, sm: 2 },
+                                borderRadius: { xs: 2, sm: 3 },
+                              },
+                            }}
                           >
-                            <DialogTitle>Delete Post</DialogTitle>
+                            <DialogTitle
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1,
+                                fontWeight: 600,
+                              }}
+                            >
+                              <WarningAmberRoundedIcon color="error" />
+                              Delete Post ?
+                            </DialogTitle>
 
-                            <DialogContent>
-                              <Typography>
+                            <DialogContent sx={{ pt: 1 }}>
+                              <Typography
+                                sx={{
+                                  fontSize: { xs: "0.9rem", sm: "1rem" },
+                                  color: "text.secondary",
+                                }}
+                              >
                                 Are you sure you want to delete this post?
                               </Typography>
                             </DialogContent>
 
-                            <DialogActions sx={{ px: 3, pb: 2 }}>
+                            <DialogActions
+                              sx={{
+                                px: { xs: 2, sm: 3 },
+                                pb: { xs: 2, sm: 3 },
+                                gap: 1,
+                              }}
+                            >
                               <Button
                                 variant="contained"
                                 onClick={() => setDeleteOpen(false)}
                                 sx={{
+                                  flex: 1,
+                                  py: 1,
+                                  fontSize: { xs: "0.8rem", sm: "0.9rem" },
+                                  fontWeight: 600,
                                   bgcolor: "grey.500",
                                   color: "#fff",
                                   "&:hover": {
@@ -899,6 +932,7 @@ export default function Community() {
                               >
                                 Cancel
                               </Button>
+
                               <Button
                                 variant="contained"
                                 color="error"
@@ -909,8 +943,14 @@ export default function Community() {
                                   handleDelete(postId);
                                   setDeleteOpen(false);
                                 }}
+                                sx={{
+                                  flex: 1,
+                                  py: 1,
+                                  fontSize: { xs: "0.8rem", sm: "0.9rem" },
+                                  fontWeight: 600,
+                                }}
                               >
-                                {imagePostLoading ? " Deleting..." : " Delete"}
+                                {imagePostLoading ? "Deleting..." : "Delete"}
                               </Button>
                             </DialogActions>
                           </Dialog>
@@ -1215,14 +1255,14 @@ export default function Community() {
               sx={{
                 flex: {
                   sm: "0 0 300px",
-                  md: "0 0 320px",
+                  md: "0 0 340px",
                   lg: "0 0 360px",
                   xl: "0 0 380px",
                 },
                 width: "100%",
                 maxWidth: {
                   sm: 300,
-                  md: 320,
+                  md: 340,
                   lg: 360,
                   xl: 380,
                 },
@@ -1242,7 +1282,7 @@ export default function Community() {
                 overflowX: "hidden",
 
                 "&::-webkit-scrollbar": {
-                  width: 4,
+                  width: 1,
                 },
                 "&::-webkit-scrollbar-thumb": {
                   backgroundColor: "#E0D4C8",
