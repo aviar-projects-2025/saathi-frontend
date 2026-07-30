@@ -37,7 +37,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import WcIcon from "@mui/icons-material/Wc";
 import { useRide } from "../context/RideContext";
-
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import PersonIcon from "@mui/icons-material/Person";
 import WomanIcon from "@mui/icons-material/Woman";
@@ -67,6 +67,7 @@ export default function RideCard({ ride }) {
   const pendingRequest = myRequestedRides.find(
     (item) => item.rideId === ride._id,
   );
+
   const pendingReqSeats = pendingRequest?.pendingReqSeats;
   const { completion } = useUser();
   const theme = useTheme();
@@ -146,35 +147,7 @@ export default function RideCard({ ride }) {
 
   const { refreshRide } = useRide();
 
-  // useEffect(() => {
-  //   getRideAvailable();
-  // }, []);
 
-  // const getRideAvailable = async () => {
-  //   const res = await axios.get(`${Api}/rides/get`);
-  //   console.log("fcgvhbjnkm", res);
-  // };
-
-  // useEffect(() => {
-  //   fetchAllSends();
-  // }, [refreshRide]);
-
-  // useEffect(() => {
-  //   myReqRides();
-  // }, [refreshRide]);
-  // async function fetchAllSends() {
-  //   try {
-  //     if (!user?.id) return;
-
-  //     const res = await axios.get(`${Api}/bookride/send/${user.id}`);
-  //     const requestUser = res.data.data.map((item) => item.members)
-  //     setUserData(requestUser);
-  //     setAllMyRequests(res.data?.data || []);
-  //   } catch (error) {
-  //     console.error("Error fetching requests:", error);
-  //     setAllMyRequests([]);
-  //   }
-  // }
   const handleSeatsChange = (value) => {
     let seats = Number(value);
     if (!seats || seats < 1) seats = 1;
@@ -433,6 +406,13 @@ export default function RideCard({ ride }) {
         icon: <LocalGasStationIcon sx={iconSx} />,
         value: ride.fuelSharing,
       },
+
+
+      {
+        label: "Duration",
+        icon: <AccessTimeIcon sx={iconSx} />,
+        value: ride.duration,
+      }
     ];
 
   return (
