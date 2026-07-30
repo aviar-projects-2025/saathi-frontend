@@ -26,8 +26,6 @@ export default function NotificationTab({ handleCloseNotifications }) {
         }, {})
     );
 
-    // console.log(uniqueNotifications,'uniqueNotifications')
-
     const navigate = useNavigate();
 
     const handleNavigation = (item) => {
@@ -66,6 +64,7 @@ export default function NotificationTab({ handleCloseNotifications }) {
             console.log(error.message)
         }
     }
+
 
     return (
         <Box
