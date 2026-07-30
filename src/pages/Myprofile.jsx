@@ -235,7 +235,7 @@ const Myprofile = () => {
         sx={{
           // color: '#E8650A',
           color: '#000000',
-          fontWeight: 900,
+          fontWeight: 600,
           fontSize: { xs: "1.2rem", sm: "1.2rem", md: "1.35rem", lg: "1.5rem" },
           mb: { xs: "1.2rem", sm: "1.2rem", md: "1.35rem", lg: "1.5rem" }
         }}>

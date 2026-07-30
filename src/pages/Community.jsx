@@ -1255,14 +1255,14 @@ export default function Community() {
               sx={{
                 flex: {
                   sm: "0 0 300px",
-                  md: "0 0 320px",
+                  md: "0 0 340px",
                   lg: "0 0 360px",
                   xl: "0 0 380px",
                 },
                 width: "100%",
                 maxWidth: {
                   sm: 300,
-                  md: 320,
+                  md: 340,
                   lg: 360,
                   xl: 380,
                 },
@@ -1282,7 +1282,7 @@ export default function Community() {
                 overflowX: "hidden",
 
                 "&::-webkit-scrollbar": {
-                  width: 4,
+                  width: 1,
                 },
                 "&::-webkit-scrollbar-thumb": {
                   backgroundColor: "#E0D4C8",

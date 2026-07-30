@@ -5,6 +5,8 @@ import axios from "axios";
 import Api from "../Api.jsx";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
+import HistoryIcon from "@mui/icons-material/History";
+
 
 
 const activities = [
@@ -242,9 +244,14 @@ const Discover = () => {
                             boxSizing: "border-box",
                         }}
                     >
-                        <Typography fontWeight={700} mb={2} fontSize={{ xs: "0.9rem", sm: "1rem" }}>
-                            Recent Activity
-                        </Typography>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 3 }}>
+                            <HistoryIcon sx={{ color: "#F4A261", fontSize: { xs: 23, sm: 26 } }} />
+                            <Typography fontWeight={700}
+                                sx={{ fontSize: { xs: "1.05rem", sm: "1.2em" } }} >
+                                Recent Activity
+                            </Typography>
+                        </Box>
+
 
                         {activities.map((a, index) => (
                             <Box key={index} sx={{ display: "flex", gap: 1.2, mb: 1.5 }}>

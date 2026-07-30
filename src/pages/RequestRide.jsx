@@ -111,6 +111,7 @@ const RequestRide = () => {
   };
 
   const handleDelete = async (requestId) => {
+    setDeleteLoading(true);
     setOpenCancelDialog(false);
     setSelectedRequest(null);
     try {
@@ -690,7 +691,7 @@ const RequestRide = () => {
                         fullWidth
                         variant="contained"
                         onClick={() => setOpenCancelDialog(false)}
-                        disabled={deleteLoading}
+                        // disabled={deleteLoading}
                         sx={{
                           bgcolor: "grey.500",
                           color: "#fff",
