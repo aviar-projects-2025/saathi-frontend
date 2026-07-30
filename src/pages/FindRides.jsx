@@ -353,6 +353,11 @@ export default function FindRides() {
             >
               Find Rides & Flight Companions
             </Typography>
+
+            {/* <Typography variant="h5" sx={{ color: '#E8650A', fontWeight: 900, fontSize: { xs: "1.2rem", sm: "1.2rem", md: "1.35rem", lg: "1.5rem" } }}>
+              Find Rides & <span style={{ color: '#138808' }}>Flight Companions</span>
+            </Typography> */}
+
             <Box
               sx={{
                 display: "flex",
@@ -364,7 +369,7 @@ export default function FindRides() {
             >
               <TextField
                 size="small"
-                placeholder="Search by From, To, Airport, City..."
+                placeholder="Search by From / To / Airport / City..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 InputProps={{
@@ -397,10 +402,11 @@ export default function FindRides() {
             <Box
               sx={{
                 display: "flex",
-                gap: { xs: 0.7, sm: 1.25 },
+                gap: { xs: 1, sm: 1.25 },
                 alignItems: "center",
                 flexDirection: "row",
-                mt: { xs: 2.3, sm: 1.5 },
+                mt: { xs: 2, sm: 1.5 },
+                mb: { xs: 1, sm: 1 }
               }}
             >
               {/* From */}

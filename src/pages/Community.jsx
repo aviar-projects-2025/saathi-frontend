@@ -27,6 +27,7 @@ import Api from '../Api.jsx';
 import axios from 'axios';
 import Discover from './Discover.jsx'
 
+import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import {
@@ -87,7 +88,9 @@ export default function Community() {
   const { currentUser } = useUser()
   const [tooltipOpen, setTooltipOpen] = useState(false);
   const [tooltip2Open, setTooltip2Open] = useState(false);
-const [commentCounts, setCommentCounts] = useState({}); 
+  const [imagePostLoading, setImagePostLoading] = useState(false);
+
+  const [commentCounts, setCommentCounts] = useState({});
   const toasts = ToastConfig();
 
 
@@ -109,49 +112,49 @@ const [commentCounts, setCommentCounts] = useState({});
 
 
   const getCommmunityPost = async () => {
-  try {
-    setPostLoading(true);
-    const postsRes = await axios.get(Api + "/community/");
-    const likesRes = await axios.get(Api + `/likes/liked-posts/${user.id}`);
-    const likedPostIds = likesRes?.data?.data || [];
-    const updatedPosts = postsRes?.data?.data?.map((post) => ({
-      ...post,
-      isLiked: likedPostIds.includes(post._id),
-    }));
-    const postIds = postsRes.data.data.map((item) => item._id);
-    setCommunityPosts(updatedPosts);
-    setPostId(postIds);
+    try {
+      setPostLoading(true);
+      const postsRes = await axios.get(Api + "/community/");
+      const likesRes = await axios.get(Api + `/likes/liked-posts/${user.id}`);
+      const likedPostIds = likesRes?.data?.data || [];
+      const updatedPosts = postsRes?.data?.data?.map((post) => ({
+        ...post,
+        isLiked: likedPostIds.includes(post._id),
+      }));
+      const postIds = postsRes.data.data.map((item) => item._id);
+      setCommunityPosts(updatedPosts);
+      setPostId(postIds);
 
-    // fetch comment counts for all posts in parallel
-    const countEntries = await Promise.all(
-      updatedPosts.map(async (p) => {
-        try {
-          const res = await axios.get(Api + `/community/comments/${p._id}`);
-          return [p._id, res.data.data.comments.length];
-        } catch {
-          return [p._id, 0];
-        }
-      })
-    );
-    setCommentCounts(Object.fromEntries(countEntries));
-  } catch (error) {
-    console.error(error.message);
-  } finally {
-    setPostLoading(false);
-  }
-};
+      // fetch comment counts for all posts in parallel
+      const countEntries = await Promise.all(
+        updatedPosts.map(async (p) => {
+          try {
+            const res = await axios.get(Api + `/community/comments/${p._id}`);
+            return [p._id, res.data.data.comments.length];
+          } catch {
+            return [p._id, 0];
+          }
+        })
+      );
+      setCommentCounts(Object.fromEntries(countEntries));
+    } catch (error) {
+      console.error(error.message);
+    } finally {
+      setPostLoading(false);
+    }
+  };
 
-const getComments = async (postId) => {
-  try {
-    setLoading(true);
-    const res = await axios.get(Api + `/community/comments/${postId}`);
-    setCommentCounts((prev) => ({ ...prev, [postId]: res.data.data.comments.length }));
-  } catch (error) {
-    console.log(error.message);
-  } finally {
-    setLoading(false);
-  }
-};
+  const getComments = async (postId) => {
+    try {
+      setLoading(true);
+      const res = await axios.get(Api + `/community/comments/${postId}`);
+      setCommentCounts((prev) => ({ ...prev, [postId]: res.data.data.comments.length }));
+    } catch (error) {
+      console.log(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // inside your component:
   const [imageMenuAnchor, setImageMenuAnchor] = useState(null);
@@ -228,6 +231,9 @@ const getComments = async (postId) => {
     setEditOpen(true);
   };
   const handleUpdate = async () => {
+
+    setImagePostLoading(true);
+
     try {
       const user = JSON.parse(localStorage.getItem("user"));
 
@@ -250,6 +256,7 @@ const getComments = async (postId) => {
       );
 
       setCommunityPosts((prev) =>
+
         prev.map((post) =>
           post._id === selectedPost._id
             ? {
@@ -266,6 +273,7 @@ const getComments = async (postId) => {
       setEditOpen(false);
       setSelectedPost(null);
       setEditImage(null);
+      setImagePostLoading(false);
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to update post", toasts);
     }
@@ -304,7 +312,7 @@ const getComments = async (postId) => {
     }
   };
 
- 
+
 
   useEffect(() => {
     getCommmunityPost();
@@ -354,6 +362,7 @@ const getComments = async (postId) => {
     }
   };
   const handleDelete = async (postId) => {
+    setImagePostLoading(true);
     try {
       const user = JSON.parse(localStorage.getItem("user"));
 
@@ -368,9 +377,13 @@ const getComments = async (postId) => {
       );
 
       toast.success(res.data.message, toasts);
+
+
     } catch (error) {
       toast.error(
         error.response?.data?.message || "Failed to delete post", toasts);
+    } finally {
+      setImagePostLoading(false);
     }
   };
   const removeLike = async (id) => {
@@ -862,22 +875,54 @@ const getComments = async (postId) => {
                           <Dialog
                             open={deleteOpen}
                             onClose={() => setDeleteOpen(false)}
-                            maxWidth="xs"
                             fullWidth
+                            maxWidth="xs"
+                            PaperProps={{
+                              sx: {
+                                width: { xs: "95%", sm: "100%" },
+                                m: { xs: 1.5, sm: 2 },
+                                borderRadius: { xs: 2, sm: 3 },
+                              },
+                            }}
                           >
-                            <DialogTitle>Delete Post</DialogTitle>
+                            <DialogTitle
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1,
+                                fontWeight: 600,
+                              }}
+                            >
+                              <WarningAmberRoundedIcon color="error" />
+                              Delete Post ?
+                            </DialogTitle>
 
-                            <DialogContent>
-                              <Typography>
+                            <DialogContent sx={{ pt: 1 }}>
+                              <Typography
+                                sx={{
+                                  fontSize: { xs: "0.9rem", sm: "1rem" },
+                                  color: "text.secondary",
+                                }}
+                              >
                                 Are you sure you want to delete this post?
                               </Typography>
                             </DialogContent>
 
-                            <DialogActions sx={{ px: 3, pb: 2 }}>
+                            <DialogActions
+                              sx={{
+                                px: { xs: 2, sm: 3 },
+                                pb: { xs: 2, sm: 3 },
+                                gap: 1,
+                              }}
+                            >
                               <Button
                                 variant="contained"
                                 onClick={() => setDeleteOpen(false)}
                                 sx={{
+                                  flex: 1,
+                                  py: 1,
+                                  fontSize: { xs: "0.8rem", sm: "0.9rem" },
+                                  fontWeight: 600,
                                   bgcolor: "grey.500",
                                   color: "#fff",
                                   "&:hover": {
@@ -887,74 +932,137 @@ const getComments = async (postId) => {
                               >
                                 Cancel
                               </Button>
+
                               <Button
                                 variant="contained"
                                 color="error"
+                                disabled={imagePostLoading}
                                 onClick={() => {
                                   const postId = selectedPost._id;
                                   handleMenuClose();
                                   handleDelete(postId);
                                   setDeleteOpen(false);
                                 }}
+                                sx={{
+                                  flex: 1,
+                                  py: 1,
+                                  fontSize: { xs: "0.8rem", sm: "0.9rem" },
+                                  fontWeight: 600,
+                                }}
                               >
-                                Delete
+                                {imagePostLoading ? "Deleting..." : "Delete"}
                               </Button>
                             </DialogActions>
                           </Dialog>
-                          <Dialog open={editOpen} onClose={() => setEditOpen(false)} fullWidth maxWidth="sm">
-                            <DialogTitle>Edit Post</DialogTitle>
 
-                            <DialogContent dividers>
+                          {/* Edit post of Community Image */}
+
+                          <Dialog
+                            open={editOpen}
+                            onClose={() => setEditOpen(false)}
+                            fullWidth
+                            maxWidth="sm"
+                            // fullScreen// pass in `useMediaQuery(theme.breakpoints.down('sm'))`
+                            PaperProps={{
+                              sx: {
+                                borderRadius: { xs: 0, sm: 3 },
+                                m: { xs: 0, sm: 2 },
+                              },
+                            }}
+                          >
+                            {/* Dialog Header */}
+                            <DialogTitle
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                fontWeight: 600,
+                                fontSize: { xs: "1rem", sm: "1.15rem" },
+                                py: 1.5,
+                                px: 2,
+                              }}
+                            >
+                              Edit Post
+
+                              <IconButton
+                                onClick={() => setEditOpen(false)}
+                                size="small"
+                                sx={{
+                                  color: "#666",
+                                  "&:hover": { bgcolor: "#f5f5f5" },
+                                }}
+                              >
+                                <CloseIcon fontSize="small" />
+                              </IconButton>
+                            </DialogTitle>
+
+                            {/* Dialog Content */}
+                            <DialogContent dividers sx={{ px: { xs: 1.5, sm: 3 }, py: 2 }}>
                               <TextField
                                 fullWidth
                                 multiline
-                                minRows={2}
+                                minRows={3}
                                 margin="dense"
+                                size="small"
                                 label="Description"
                                 value={editDescription}
                                 onChange={(e) => setEditDescription(e.target.value)}
                               />
 
                               <Box sx={{ mt: 2 }}>
-                                <img
+                                <Box
+                                  component="img"
                                   src={editImage ? URL.createObjectURL(editImage) : previewImage}
-                                  alt="Post"
-                                  style={{
+                                  alt="Preview"
+                                  sx={{
                                     width: "100%",
-                                    maxHeight: "250px",
+                                    height: { xs: 160, sm: 220, md: 280 },
                                     objectFit: "cover",
-                                    borderRadius: "8px",
-                                    marginBottom: "16px",
+                                    borderRadius: 2,
+                                    border: "1px solid #eee",
+                                    mb: 1.5,
                                   }}
                                 />
 
                                 <Button
                                   variant="contained"
-                                  fullWidth
+                                  size="small"
                                   onClick={openImageMenu}
                                   sx={{
+                                    width: "fit-content", // or "auto"
+                                    minWidth: "unset",    // optional: removes MUI's default minimum width
+                                    height: 36,
                                     bgcolor: "#FF9933",
                                     color: "#fff",
                                     fontWeight: 600,
+                                    fontSize: "0.8rem",
                                     textTransform: "none",
-                                    "&:hover": { bgcolor: "#e68a00" },
+                                    borderRadius: 2,
+                                    px: 2, // horizontal padding
+                                    "&:hover": {
+                                      bgcolor: "#E68A00",
+                                    },
                                   }}
                                 >
                                   Change Image
                                 </Button>
 
+
+                                {/* Image Menu */}
                                 <Menu
                                   anchorEl={imageMenuAnchor}
                                   open={isImageMenuOpen}
                                   onClose={closeImageMenu}
-                                  anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-                                  transformOrigin={{ vertical: "top", horizontal: "center" }}
+                                  anchorOrigin={{ vertical: "top", horizontal: "center" }}
+                                  transformOrigin={{ vertical: "bottom", horizontal: "center" }}
                                 >
-                                  <MenuItem component="label">
+                                  <MenuItem component="label" dense >
                                     <ListItemIcon>
                                       <CameraAltIcon fontSize="small" sx={{ color: "#FF9933" }} />
                                     </ListItemIcon>
-                                    <ListItemText>Camera</ListItemText>
+                                    <ListItemText primaryTypographyProps={{ fontSize: "0.85rem" }}>
+                                      Camera
+                                    </ListItemText>
                                     <input
                                       hidden
                                       type="file"
@@ -964,11 +1072,13 @@ const getComments = async (postId) => {
                                     />
                                   </MenuItem>
 
-                                  <MenuItem component="label">
+                                  <MenuItem component="label" dense>
                                     <ListItemIcon>
                                       <InsertDriveFileIcon fontSize="small" sx={{ color: "#FF9933" }} />
                                     </ListItemIcon>
-                                    <ListItemText>File</ListItemText>
+                                    <ListItemText primaryTypographyProps={{ fontSize: "0.85rem" }}>
+                                      Gallery
+                                    </ListItemText>
                                     <input
                                       hidden
                                       type="file"
@@ -980,34 +1090,73 @@ const getComments = async (postId) => {
                               </Box>
                             </DialogContent>
 
+                            {/* Dialog Footer */}
                             <DialogActions
                               sx={{
+                                p: { xs: 1.5, sm: 2 },
                                 display: "flex",
                                 flexDirection: { xs: "column", sm: "row" },
                                 gap: 1,
-                                p: 2,
-                                "& > button": { flex: { xs: "1 1 auto", sm: "0 1 auto" } },
                               }}
                             >
-                              <Button
-                                onClick={() => setEditOpen(false)}
-                                variant="contained"
-                                fullWidth
-                                sx={{ bgcolor: "#9E9E9E", color: "#fff", "&:hover": { bgcolor: "#757575" } }}
+                              <Stack
+                                direction="row"
+                                spacing={2}
+                                justifyContent="flex-end"
+                                sx={{ pt: 2 }}
                               >
-                                Cancel
-                              </Button>
+                                <Button
+                                  variant="outlined"
+                                  size="small"
+                                  onClick={() => setEditOpen(false)}
+                                  sx={{
+                                    width: "fit-content",
+                                    minWidth: "unset",
+                                    px: 2,
+                                    height: 36,
+                                    borderColor: "#BDBDBD",
+                                    color: "#616161",
+                                    fontWeight: 600,
+                                    fontSize: "0.8rem",
+                                    textTransform: "none",
+                                    borderRadius: 2,
+                                    "&:hover": {
+                                      borderColor: "#757575",
+                                      bgcolor: "#F5F5F5",
+                                    },
+                                  }}
+                                >
+                                  Cancel
+                                </Button>
 
-                              <Button
-                                variant="contained"
-                                onClick={handleUpdate}
-                                fullWidth
-                                sx={{ bgcolor: "#FF9933", "&:hover": { bgcolor: "#e68a00" } }}
-                              >
-                                Save
-                              </Button>
+                                <Button
+                                  variant="contained"
+                                  size="small"
+                                  disabled={imagePostLoading}
+                                  onClick={handleUpdate}
+                                  sx={{
+                                    width: "fit-content",
+                                    minWidth: "unset",
+                                    px: 2,
+                                    height: 36,
+                                    bgcolor: "#FF9933",
+                                    color: "#fff",
+                                    fontWeight: 600,
+                                    fontSize: "0.8rem",
+                                    textTransform: "none",
+                                    borderRadius: 2,
+                                    "&:hover": {
+                                      bgcolor: "#E68A00",
+                                    },
+                                  }}
+                                >
+                                  {imagePostLoading ? "Saving..." : "Save Changes"}
+                                </Button>
+                              </Stack>
                             </DialogActions>
                           </Dialog>
+
+
                           {editImage && (
                             <img
                               src={URL.createObjectURL(editImage)}
@@ -1056,22 +1205,22 @@ const getComments = async (postId) => {
                       {post?.likes || 0}
                     </Button>
 
-                <Button
-  startIcon={
-    activeCommentPostId === post._id
-      ? <ChatIcon fontSize={iconFontSize} sx={{ color: '#0084ff' }} />
-      : <ChatIcon fontSize={iconFontSize} />
-  }
-  onClick={() => {
-    const next = activeCommentPostId === post._id ? null : post._id;
-    setActiveCommentPostId(next);
-    if (next) getComments(next);
-  }}
-  size={isMobile ? 'small' : 'medium'}
-  sx={{ textTransform: 'none', color: 'text.secondary', fontSize: btnFontSize }}
->
- {commentCounts[post._id] ?? 0}
-</Button>
+                    <Button
+                      startIcon={
+                        activeCommentPostId === post._id
+                          ? <ChatIcon fontSize={iconFontSize} sx={{ color: '#0084ff' }} />
+                          : <ChatIcon fontSize={iconFontSize} />
+                      }
+                      onClick={() => {
+                        const next = activeCommentPostId === post._id ? null : post._id;
+                        setActiveCommentPostId(next);
+                        if (next) getComments(next);
+                      }}
+                      size={isMobile ? 'small' : 'medium'}
+                      sx={{ textTransform: 'none', color: 'text.secondary', fontSize: btnFontSize }}
+                    >
+                      {commentCounts[post._id] ?? 0}
+                    </Button>
 
                     <Button
                       startIcon={<BookmarkBorderIcon fontSize={iconFontSize} />}
@@ -1084,46 +1233,57 @@ const getComments = async (postId) => {
 
                   <Divider />
 
- {activeCommentPostId === post._id && (
-  <Box sx={{ margin: isMobile ? 1 : 1.5 }}>
-    <CommunityComments
-      post={post}
-      user={user}
-      onCommentsChanged={(newCount) =>
-        setCommentCounts((prev) => ({ ...prev, [post._id]: newCount }))
-      }
-    />
-  </Box>
-)}
+                  {activeCommentPostId === post._id && (
+                    <Box sx={{ margin: isMobile ? 1 : 1.5 }}>
+                      <CommunityComments
+                        post={post}
+                        user={user}
+                        onCommentsChanged={(newCount) =>
+                          setCommentCounts((prev) => ({ ...prev, [post._id]: newCount }))
+                        }
+                      />
+                    </Box>
+                  )}
                 </Paper>
               ))
             )}
           </Box>
 
-          {/* ── SidebarContent box (visible on sm and up, sticky scroll) ── */}
+          {/* SidebarContent */}
           {showSidebar && (
             <Box
               sx={{
-                width: {
-                  sm: "35%",
-                  md: "33%",
-                  lg: "33%",
-                  xl: "30%",
+                flex: {
+                  sm: "0 0 300px",
+                  md: "0 0 340px",
+                  lg: "0 0 360px",
+                  xl: "0 0 380px",
+                },
+                width: "100%",
+                maxWidth: {
+                  sm: 300,
+                  md: 340,
+                  lg: 360,
+                  xl: 380,
                 },
                 minWidth: {
-                  sm: "35%",
-                  md: "33%",
-                  lg: "33%",
-                  xl: "30%",
+                  sm: 260,
+                  md: 280,
+                  lg: 300,
                 },
                 flexShrink: 0,
+
                 position: "sticky",
                 top: 20,
                 height: SIDEBAR_SCROLL_HEIGHT,
                 maxHeight: SIDEBAR_SCROLL_HEIGHT,
+
                 overflowY: "auto",
                 overflowX: "hidden",
-                "&::-webkit-scrollbar": { width: 3 },
+
+                "&::-webkit-scrollbar": {
+                  width: 1,
+                },
                 "&::-webkit-scrollbar-thumb": {
                   backgroundColor: "#E0D4C8",
                   borderRadius: 4,

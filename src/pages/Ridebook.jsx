@@ -25,11 +25,15 @@ import ToastConfig from "../components/ToastConfig";
 
 const ORANGE = "#FF9933";
 const ORANGE_DIVIDER = "rgba(255,153,51,0.2)";
+const GREEN_BG = "#F5FFF5";
+const GREEN_AVATAR_BG = "#C8F5D0";
+const GREEN_AVATAR_TEXT = "#1B5E20";
 
 export default function Ridebook({
   open,
   onClose,
   ride,
+  totalSeat,
   maxSeats = Infinity,
   requestToEdit = null,
   setAllMyRequests,
@@ -44,12 +48,36 @@ export default function Ridebook({
   const isEditMode = Boolean(requestToEdit);
   const [requests, setRequests] = useState();
 
-  // const theme = useTheme();
+  // existingMembers = already CONFIRMED/APPROVED members on this request.
+  // Read-only, shown for context, never sent back to the backend.
+  const [existingMembers, setExistingMembers] = useState([]);
+
+  // newMembers = members that are NOT yet approved (previous pendingMembers)
+  // plus anything the user adds/edits/removes in this session.
+  // This is the ONLY array sent to the backend as `pendingMembers`.
+  const [newMembers, setNewMembers] = useState([]);
+
   const isTab = useMediaQuery(theme.breakpoints.down("sm"));
 
   const TOASTS = ToastConfig();
 
+  const defaultSelfMember = () => ({
+    name: `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`.trim(),
+    age: "",
+  });
+
+  // ---------- Add / Remove / Change (mode-aware) ----------
+
   const handleAddMember = () => {
+    if (isEditMode) {
+      setNewMembers((prev) => {
+        const totalSeats = existingMembers.length + prev.length;
+        if (!isFlight && totalSeats >= maxSeats) return prev;
+        return [...prev, { name: "", age: "" }];
+      });
+      return;
+    }
+
     setRequestData((prev) => {
       if (!isFlight && prev.members.length >= maxSeats) return prev;
       const updatedMembers = [...prev.members, { name: "", age: "" }];
@@ -60,9 +88,13 @@ export default function Ridebook({
   };
 
   const handleRemoveMember = (index) => {
+    if (isEditMode) {
+      setNewMembers((prev) => prev.filter((_, i) => i !== index));
+      return;
+    }
+
     setRequestData((prev) => {
       const updatedMembers = prev.members.filter((_, i) => i !== index);
-
       return { ...prev, members: updatedMembers };
     });
   };
@@ -93,31 +125,29 @@ export default function Ridebook({
       };
     });
   };
+
   const handleMemberChange = (index, field, value) => {
+    if (isEditMode) {
+      setNewMembers((prev) => {
+        const updated = [...prev];
+        updated[index] = { ...updated[index], [field]: value };
+        return updated;
+      });
+      return;
+    }
+
     setRequestData((prev) => {
       const updatedMembers = [...prev.members];
       updatedMembers[index] = { ...updatedMembers[index], [field]: value };
       return { ...prev, members: updatedMembers };
     });
   };
+
   const [editingRequest, setEditingRequest] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  useEffect(() => {
-    if (editingRequest) {
-      setRequestData({
-        seatsRequested: editingRequest.seatsRequested || 1,
-        membersCount: undefined,
-        members: editingRequest.members?.length
-          ? editingRequest.members
-          : [{ name: "", age: "" }],
-        message: editingRequest.message || "",
-        phone: editingRequest.phone || "",
-      });
-    }
-  }, [editingRequest?.id]);
+
   const emptyRequestData = {
     seatsRequested: 1,
-    // phone: "",
     message: "",
     membersCount: 1,
     members: [
@@ -132,48 +162,44 @@ export default function Ridebook({
 
   const [requestData, setRequestData] = useState(emptyRequestData);
 
+  // Keep message/phone in sync when opening an existing request for edit.
+  // NOTE: member data itself now lives in existingMembers / newMembers,
+  // not in requestData.members, while in edit mode.
   useEffect(() => {
     if (editingRequest) {
-      setRequestData({
-        seatsRequested: editingRequest.seatsRequested || 1,
-        membersCount: undefined,
-        members: editingRequest.members?.length
-          ? editingRequest.members
-          : [
-              {
-                name:
-                  `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`.trim() ||
-                  "",
-                age: "",
-              },
-            ],
+      setRequestData((prev) => ({
+        ...prev,
         message: editingRequest.message || "",
         phone: editingRequest.phone || "",
-      });
+      }));
     }
   }, [editingRequest?.id]);
+
+  // Split the request into "confirmed" (existingMembers, read-only) and
+  // "pending" (newMembers, editable + submitted) buckets.
+  useEffect(() => {
+    if (isEditMode && requestToEdit) {
+      setExistingMembers(requestToEdit.members || []);
+      setNewMembers(
+        requestToEdit.pendingMembers?.length
+          ? requestToEdit.pendingMembers
+          : [],
+      );
+    } else {
+      setExistingMembers([]);
+      setNewMembers([defaultSelfMember()]);
+    }
+  }, [isEditMode, requestToEdit, currentUser]);
 
   useEffect(() => {
     if (!open) return;
 
     if (requestToEdit) {
-      setRequestData({
-        seatsRequested: requestToEdit.seatsRequested || 1,
-        // phone: requestToEdit.phone || "",
+      setRequestData((prev) => ({
+        ...prev,
         message: requestToEdit.message || "",
-        membersCount:
-          requestToEdit.membersCount || (requestToEdit.members?.length ?? 1),
-        members: requestToEdit.members?.length
-          ? requestToEdit.members
-          : [
-              {
-                name:
-                  `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`.trim() ||
-                  "",
-                age: "",
-              },
-            ],
-      });
+        phone: requestToEdit.phone || "",
+      }));
     } else {
       setRequestData(emptyRequestData);
     }
@@ -190,27 +216,15 @@ export default function Ridebook({
       const res = await axios.get(`${Api}/bookride/send/${user.id}`);
 
       setRequests(res.data.data);
-
-      const memberRide = res.data.data.map((item) => item.members);
     } catch (error) {
       console.log(error);
       toast.error(error.response?.data?.message || "Request failed", TOASTS);
     }
   };
 
-  //   if (seats < 1) return;
-
-  //   if (seats > maxSeats) {
-  //     toast.warning(`Only ${maxSeats} seat(s) available`, TOASTS);
-  //     return;
-  //   }
-
-  //   setRequestData((prev) => ({
-  //     ...prev,
-  //     seatsRequested: seats,
-  //   }));
-  // };
   const handleMembersCountChange = (value) => {
+    if (isEditMode) return; // count-based quick add only applies to fresh requests
+
     if (value === "") {
       setRequestData((prev) => ({
         ...prev,
@@ -235,34 +249,43 @@ export default function Ridebook({
       membersCount: count,
       members: Array.from(
         { length: count },
-        (_, i) =>
-          prev.members[i] || {
-            name:
-              `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`.trim() ||
-              "",
-            age: "",
-          },
+        (_, i) => prev.members[i] || defaultSelfMember(),
       ),
     }));
   };
 
   const validate = () => {
-    if (!isFlight && Number(requestData.seatsRequested) > maxSeats) {
-      toast.error(`Only ${maxSeats} seat(s) available`, TOASTS);
+    const membersToValidate = isEditMode ? newMembers : requestData.members;
+
+    if (isEditMode) {
+      const totalSeats = existingMembers.length + newMembers.length;
+      if (!isFlight && totalSeats > maxSeats) {
+        toast.error(`Only ${maxSeats} seat(s) available`, TOASTS);
+        return false;
+      }
+    } else {
+      if (!isFlight && Number(requestData.seatsRequested) > maxSeats) {
+        toast.error(`Only ${maxSeats} seat(s) available`, TOASTS);
+        return false;
+      }
+
+      if (!isFlight && Number(requestData.membersCount) > maxSeats) {
+        toast.error(`Only ${maxSeats} member(s) allowed`, TOASTS);
+        return false;
+      }
+    }
+
+    if (membersToValidate.length === 0) {
+      toast.error("Please add at least one member", TOASTS);
       return false;
     }
 
-    if (!isFlight && Number(requestData.membersCount) > maxSeats) {
-      toast.error(`Only ${maxSeats} member(s) allowed`, TOASTS);
-      return false;
-    }
-
-    for (let i = 0; i < requestData.members.length; i++) {
-      if (!requestData.members[i].name.trim()) {
+    for (let i = 0; i < membersToValidate.length; i++) {
+      if (!membersToValidate[i].name?.trim()) {
         toast.error(`Please enter Member ${i + 1} name`, TOASTS);
         return false;
       }
-      if (!requestData.members[i].age) {
+      if (!membersToValidate[i].age) {
         toast.error(`Please enter Member ${i + 1} age`, TOASTS);
         return false;
       }
@@ -272,19 +295,22 @@ export default function Ridebook({
   };
 
   const handleRequestSubmit = async () => {
-    if (isSubmitting) return;
     if (!ride) return;
     if (!validate()) return;
-    setIsSubmitting(true);
+
     const storedUser = JSON.parse(localStorage.getItem("user"));
-    const seatsRequested = requestData.members.length;
+
+    // Only the new/unapproved members are ever sent — existingMembers
+    // (already confirmed) are never re-sent to the backend.
+    const membersToSubmit = isEditMode ? newMembers : requestData.members;
+    const seatsRequested = membersToSubmit.length;
 
     const payload = {
       firstName: storedUser?.firstName,
       requestedBy: storedUser?.id,
       seatsRequested: isFlight ? null : seatsRequested,
       membersCount: seatsRequested,
-      members: requestData.members,
+      pendingMembers: membersToSubmit,
       phone: requestData.phone,
       message: requestData.message,
       requestType: isFlight ? "COMPANION" : "SEAT",
@@ -297,38 +323,17 @@ export default function Ridebook({
 
       toast.success(
         res.data.message || (isEditMode ? "Request updated" : "Request sent"),
-        {
-          position: isTab ? "top-center" : "top-right",
-          autoClose: 2000,
-          hideProgressBar: true,
-          closeButton: false,
-          style: {
-            width: isTab ? "90vw" : "360px",
-            maxWidth: isTab ? "320px" : "360px",
-            fontSize: isTab ? "13px" : "15px",
-            padding: isTab ? "8px 12px" : "12px 16px",
-            borderRadius: isTab ? "8px" : "10px",
-            minHeight: isTab ? "42px" : "52px",
-            margin: "0 auto",
-          },
-        },
+        TOASTS,
       );
-      if (isEditMode) {
-        setAllMyRequests?.((prev) =>
-          prev.map((req) =>
-            req._id === requestToEdit._id ? { ...req, ...res.data.data } : req,
-          ),
-        );
-      }
-      setRequestData(emptyRequestData);
-      onRequestUpdated?.();
 
+      setRequestData(emptyRequestData);
+      setNewMembers([]);
+      setExistingMembers([]);
+      onRequestUpdated?.();
       onClose?.();
     } catch (error) {
       console.log(error);
       toast.error(error.response?.data?.message || "Request failed", TOASTS);
-    } finally {
-      setIsSubmitting(false);
     }
   };
   const titleText = isFlight
@@ -338,6 +343,12 @@ export default function Ridebook({
     : isEditMode
       ? "Edit Seat Request"
       : "Request Seat";
+
+  // The list actually rendered in the editable member cards.
+  const editableMembers = isEditMode ? newMembers : requestData.members;
+  const totalOccupied = isEditMode
+    ? existingMembers.length + newMembers.length
+    : requestData.members.length;
 
   return (
     <Dialog
@@ -447,7 +458,7 @@ export default function Ridebook({
               Available Seats
             </Typography>
             <Chip
-              label={`${requestData.members.length} / ${maxSeats}`}
+              label={`${totalOccupied} / ${totalSeat}`}
               size="small"
               sx={{
                 bgcolor: ORANGE,
@@ -458,6 +469,87 @@ export default function Ridebook({
               }}
             />
           </Box>
+        )}
+
+        {/* Confirmed / already-approved members (edit mode only, read-only) */}
+        {isEditMode && existingMembers.length > 0 && (
+          <>
+            <Typography
+              sx={{
+                fontSize: "0.7rem",
+                fontWeight: 700,
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+                color: "text.secondary",
+                mb: 1.25,
+                fontFamily: "'Inter', sans-serif",
+              }}
+            >
+              Confirmed Members
+            </Typography>
+
+            <Stack spacing={1.25} sx={{ mb: 3 }}>
+              {existingMembers.map((member, index) => (
+                <Box
+                  key={`existing-${index}`}
+                  sx={{
+                    display: "flex",
+                    gap: 1.25,
+                    alignItems: "center",
+                    p: 1.25,
+                    borderRadius: 2.5,
+                    border: "1px solid #E0F2E0",
+                    bgcolor: GREEN_BG,
+                  }}
+                >
+                  <Avatar
+                    sx={{
+                      width: 30,
+                      height: 30,
+                      fontSize: "0.8rem",
+                      fontWeight: 700,
+                      bgcolor: GREEN_AVATAR_BG,
+                      color: GREEN_AVATAR_TEXT,
+                    }}
+                  >
+                    {index + 1}
+                  </Avatar>
+                  <Typography
+                    sx={{
+                      flex: 1,
+                      fontSize: "0.85rem",
+                      fontFamily: "'Inter', sans-serif",
+                      fontWeight: 500,
+                      color: "#333",
+                    }}
+                  >
+                    {member.name}
+                  </Typography>
+                  <Typography
+                    sx={{
+                      width: 56,
+                      textAlign: "center",
+                      fontSize: "0.85rem",
+                      fontFamily: "'Inter', sans-serif",
+                      color: "#666",
+                    }}
+                  >
+                    {member.age}
+                  </Typography>
+                  <Chip
+                    label="Confirmed"
+                    size="small"
+                    sx={{
+                      bgcolor: "#4CAF50",
+                      color: "#fff",
+                      fontWeight: 600,
+                      fontSize: "0.65rem",
+                    }}
+                  />
+                </Box>
+              ))}
+            </Stack>
+          </>
         )}
 
         {/* Section label */}
@@ -472,108 +564,112 @@ export default function Ridebook({
             fontFamily: "'Inter', sans-serif",
           }}
         >
-          Traveling Members
+          {isEditMode ? "Requested Members" : "Traveling Members"}
         </Typography>
 
-        {/* Member cards */}
+        {/* Member cards (editable) */}
         <Stack spacing={1.25}>
-          {requestData.members.map((member, index) => (
-            <Box
-              key={index}
-              sx={{
-                display: "flex",
-                gap: 1.25,
-                alignItems: "center",
-                p: 1.25,
-                borderRadius: 2.5,
-                border: "1px solid #EEE",
-                bgcolor: "#FCFCFC",
-                "&:hover": { borderColor: ORANGE },
-              }}
-            >
-              <Avatar
+          {editableMembers.map((member, index) => {
+            const isLockedSelfSlot = !isEditMode && index === 0;
+            return (
+              <Box
+                key={index}
                 sx={{
-                  width: 30,
-                  height: 30,
-                  fontSize: "0.8rem",
-                  fontWeight: 700,
-                  bgcolor: "#FFE3C2",
-                  color: "#8A5200",
+                  display: "flex",
+                  gap: 1.25,
+                  alignItems: "center",
+                  p: 1.25,
+                  borderRadius: 2.5,
+                  border: "1px solid #EEE",
+                  bgcolor: "#FCFCFC",
+                  "&:hover": { borderColor: ORANGE },
                 }}
               >
-                {index + 1}
-              </Avatar>
+                <Avatar
+                  sx={{
+                    width: 30,
+                    height: 30,
+                    fontSize: "0.8rem",
+                    fontWeight: 700,
+                    bgcolor: "#FFE3C2",
+                    color: "#8A5200",
+                  }}
+                >
+                  {index + 1}
+                </Avatar>
 
-              <TextField
-                placeholder="Full name"
-                fullWidth
-                size="small"
-                variant="standard"
-                InputProps={{ disableUnderline: true }}
-                value={
-                  index === 0
-                    ? `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`.trim()
-                    : member.name
-                }
-                disabled={index === 0}
-                sx={{
-                  "& .MuiInputBase-input": {
-                    fontSize: "0.85rem",
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 500,
-                  },
-                  "& .MuiInputBase-input.Mui-disabled": {
-                    WebkitTextFillColor: "#555",
-                    opacity: 1,
-                  },
-                }}
-                onChange={(e) =>
-                  index > 0 && handleMemberChange(index, "name", e.target.value)
-                }
-              />
-
-              <TextField
-                placeholder="Age"
-                type="number"
-                size="small"
-                variant="standard"
-                InputProps={{ disableUnderline: true }}
-                sx={{
-                  width: 56,
-                  "& .MuiInputBase-input": {
-                    fontSize: "0.85rem",
-                    textAlign: "center",
-                  },
-                }}
-                value={member.age}
-                inputProps={{ min: 1, max: 120 }}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (
-                    value === "" ||
-                    (Number(value) >= 1 && Number(value) <= 120)
-                  ) {
-                    handleMemberChange(index, "age", value);
+                <TextField
+                  placeholder="Full name"
+                  fullWidth
+                  size="small"
+                  variant="standard"
+                  InputProps={{ disableUnderline: true }}
+                  value={
+                    isLockedSelfSlot
+                      ? `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`.trim()
+                      : member.name
                   }
-                }}
-              />
+                  disabled={isLockedSelfSlot}
+                  sx={{
+                    "& .MuiInputBase-input": {
+                      fontSize: "0.85rem",
+                      fontFamily: "'Inter', sans-serif",
+                      fontWeight: 500,
+                    },
+                    "& .MuiInputBase-input.Mui-disabled": {
+                      WebkitTextFillColor: "#555",
+                      opacity: 1,
+                    },
+                  }}
+                  onChange={(e) =>
+                    !isLockedSelfSlot &&
+                    handleMemberChange(index, "name", e.target.value)
+                  }
+                />
 
-              <IconButton
-                color="error"
-                onClick={() => handleRemoveMember(index)}
-                disabled={index === 0}
-                size="small"
-              >
-                <RemoveCircle fontSize="small" />
-              </IconButton>
-            </Box>
-          ))}
+                <TextField
+                  placeholder="Age"
+                  type="number"
+                  size="small"
+                  variant="standard"
+                  InputProps={{ disableUnderline: true }}
+                  sx={{
+                    width: 56,
+                    "& .MuiInputBase-input": {
+                      fontSize: "0.85rem",
+                      textAlign: "center",
+                    },
+                  }}
+                  value={member.age}
+                  inputProps={{ min: 1, max: 120 }}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (
+                      value === "" ||
+                      (Number(value) >= 1 && Number(value) <= 120)
+                    ) {
+                      handleMemberChange(index, "age", value);
+                    }
+                  }}
+                />
+
+                <IconButton
+                  color="error"
+                  onClick={() => handleRemoveMember(index)}
+                  disabled={isLockedSelfSlot}
+                  size="small"
+                >
+                  <RemoveCircle fontSize="small" />
+                </IconButton>
+              </Box>
+            );
+          })}
         </Stack>
 
         <Button
           startIcon={<AddCircleOutlineIcon />}
           onClick={handleAddMember}
-          disabled={!isFlight && requestData.members.length >= maxSeats}
+          disabled={!isFlight && totalOccupied >= maxSeats}
           sx={{
             mt: 1.5,
             mb: 3,
@@ -617,6 +713,9 @@ export default function Ridebook({
               WebkitTextFillColor: "#555",
             },
           }}
+          onChange={(e) =>
+            setRequestData({ ...requestData, mobile: e.target.value })
+          }
         />
 
         <TextField

@@ -278,7 +278,7 @@ function EditRideModal({ ride, onSave, onClose }) {
     } catch (err) {
       setError(
         err?.response?.data?.message ||
-          "Failed to update ride. Please try again.",
+        "Failed to update ride. Please try again.",
       );
     } finally {
       setSaving(false);
@@ -377,7 +377,7 @@ function EditRideModal({ ride, onSave, onClose }) {
               <MenuItem value="Bus">🚌 Bus</MenuItem>
               <MenuItem value="Bike">🏍️ Bike</MenuItem>
               <MenuItem value="Flight">✈️ Flight</MenuItem>
-              <MenuItem value="Ship">🚢 Ship</MenuItem>
+              {/* <MenuItem value="Ship">🚢 Ship</MenuItem> */}
               <MenuItem value="Train">🚆 Train</MenuItem>
             </Select>
           </FormControl>
@@ -483,21 +483,19 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
 
-  const isPost =
-    ride.role === "offered" &&
-    (ride.status === "pending" || ride.status === "confirmed");
-  const label = isPost ? "Remove post" : "Cancel ride";
-  const body = isPost
-    ? "This will remove your ride post. Passengers who requested this ride will be notified."
-    : "This will cancel your booking. The driver will be notified.";
+  // const isPost = ride.role === 'offered' && (ride.status === 'pending' || ride.status === 'confirmed');
+  // const label = isPost ? 'Remove post' : 'Cancel ride';
+  // const body = isPost
+  //   ? 'This will remove your ride post. Passengers who requested this ride will be notified.'
+  //   : 'This will cancel your booking. The driver will be notified.';
 
   const startDate = new Date(ride.startTime);
   const dateLabel = !isNaN(startDate)
     ? startDate.toLocaleDateString("en-IN", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    })
     : "—";
 
   const handleConfirm = async () => {
@@ -509,7 +507,7 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
     } catch (err) {
       setError(
         err?.response?.data?.message ||
-          "Failed to delete ride. Please try again.",
+        "Failed to delete ride. Please try again.",
       );
     } finally {
       setDeleting(false);
@@ -530,48 +528,17 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
         },
       }}
     >
-      <DialogTitle
-        sx={{ fontWeight: 800, pr: 5, fontSize: { xs: "1rem", sm: "1.15rem" } }}
-      >
-        {label}?
-        <IconButton
-          onClick={onClose}
-          aria-label="Close"
-          sx={{
-            position: "absolute",
-            right: 8,
-            top: 8,
-            color: "text.secondary",
-            width: 44,
-            height: 44,
-          }}
-        >
+      <DialogTitle sx={{ fontWeight: 800, pr: 5, fontSize: { xs: '1rem', sm: '1.15rem' } }}>
+        Are you Cancel Ride?
+        <IconButton onClick={onClose} aria-label="Close" sx={{ position: 'absolute', right: 8, top: 8, color: 'text.secondary', width: 44, height: 44 }}>
           <CloseIcon fontSize="small" />
         </IconButton>
       </DialogTitle>
 
       <DialogContent>
-        <Typography
-          color="text.secondary"
-          sx={{ fontSize: { xs: "0.82rem", sm: "0.9rem" } }}
-        >
-          {body}
-        </Typography>
-        <Paper
-          sx={{
-            mt: 2,
-            p: 1.5,
-            bgcolor: "#FFF8F2",
-            border: "1px solid #F0E6DC",
-            borderRadius: 2,
-          }}
-          elevation={0}
-        >
-          <Typography
-            sx={{ fontSize: { xs: "0.78rem", sm: "0.85rem" } }}
-            fontWeight={700}
-            wordBreak="break-word"
-          >
+        <Typography color="text.secondary" sx={{ fontSize: { xs: '0.82rem', sm: '0.9rem' } }}>This will cancel your booking. The driver will be notified...</Typography>
+        <Paper sx={{ mt: 2, p: 1.5, bgcolor: '#FFF8F2', border: '1px solid #F0E6DC', borderRadius: 2 }} elevation={0}>
+          <Typography sx={{ fontSize: { xs: '0.78rem', sm: '0.85rem' } }} fontWeight={700} wordBreak="break-word">
             {formFrom(ride)} → {formTo(ride)}
           </Typography>
           <Typography
@@ -601,20 +568,8 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
         >
           Keep it
         </Button>
-        <Button
-          onClick={handleConfirm}
-          variant="contained"
-          color="error"
-          disabled={deleting}
-          sx={{
-            borderRadius: 2,
-            textTransform: "none",
-            fontWeight: 700,
-            flex: { xs: "1 1 auto", sm: "0 0 auto" },
-            minHeight: 44,
-          }}
-        >
-          {deleting ? "Deleting..." : label}
+        <Button onClick={handleConfirm} variant="contained" color="error" disabled={deleting} sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700, flex: { xs: '1 1 auto', sm: '0 0 auto' }, minHeight: 44 }}>
+          {deleting ? 'Deleting...' : "Delete"}
         </Button>
       </DialogActions>
     </Dialog>
@@ -812,6 +767,13 @@ function RideCard({
   const [loadingRequests, setLoadingRequests] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState([]);
 
+  const [approveLoading, setApproveLoading] = useState(null);
+  const [rejectLoading, setRejectLoading] = useState(null);
+
+  const [members, setMembers] = useState([])
+  const [pendingMembers, setPendingMembers] = useState([])
+
+
   const toasts = ToastConfig();
 
   const theme = useTheme();
@@ -826,17 +788,17 @@ function RideCard({
   const startDate = new Date(ride.startTime);
   const date = !isNaN(startDate)
     ? startDate.toLocaleDateString("en-IN", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    })
     : "—";
   const time = !isNaN(startDate)
     ? startDate.toLocaleTimeString("en-IN", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      })
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    })
     : "—";
 
   const fuelLabel = ride.fuelSharing ? "Yes" : "No";
@@ -847,11 +809,13 @@ function RideCard({
       (req) => req.rideId?._id?.toString() === ride._id?.toString(),
     ) || [];
 
+
   const pendingCount = rideRequests.filter(
     (r) => r.status?.toUpperCase() === "PENDING",
   ).length;
 
   const handleApprove = async (requestId) => {
+    setApproveLoading(requestId);
     try {
       const res = await axios.patch(
         `${Api}/bookride/${requestId}/status?type=Approve`,
@@ -868,10 +832,13 @@ function RideCard({
       }
     } catch (error) {
       toast.error(error.response.data.message, toasts);
+    } finally {
+      setApproveLoading(null);
     }
   };
 
   const handleReject = async (requestId) => {
+    setRejectLoading(requestId);
     try {
       await axios.patch(`${Api}/bookride/${requestId}/status?type=Reject`, {
         status: "REJECTED",
@@ -884,7 +851,9 @@ function RideCard({
       toast.success("Request rejected", toasts);
       fetchRides();
     } catch (error) {
-      toast.error("Failed to reject request", toasts);
+      toast.error('Failed to reject request', toasts);
+    } finally {
+      setRejectLoading(null);
     }
   };
 
@@ -933,6 +902,7 @@ function RideCard({
   return (
     <>
       <Box
+        onClick={() => setDetailsOpen(true)}
         sx={{
           p: { xs: 0, sm: 0 },
           width: "100%",
@@ -941,7 +911,7 @@ function RideCard({
           mb: { xs: 1.5, sm: 2 },
           transition: "all .3s ease",
           "&:hover": {
-            transform: { xs: "none", sm: "translateY(-6px)" },
+            transform: { xs: "none", sm: "translateY(-5px)" },
           },
         }}
       >
@@ -950,7 +920,7 @@ function RideCard({
           sx={{
             background: "linear-gradient(135deg, #0e0e3b, #271c45)",
             color: "#fff",
-            borderRadius: "18px 18px 0 0",
+            borderRadius: "15px 15px 0 0",
             px: { xs: 1.5, sm: 2.5, md: 3 },
             py: { xs: 1.25, sm: 1.75, md: 2 },
             display: "flex",
@@ -1103,7 +1073,6 @@ function RideCard({
         {/* ── Card body ── */}
         <Card
           elevation={0}
-          onClick={() => setDetailsOpen(true)}
           sx={{
             borderRadius: "0 0 18px 18px",
             background: "#fff",
@@ -1130,8 +1099,8 @@ function RideCard({
               {/* FROM / TO row */}
               <Box
                 sx={{
-                  display: isMobile ? "block" : "flex",
-                  justifyContent: "space-between",
+                  display: isMobile ? 'block' : 'flex',
+                  justifyContent: 'space-between',
                   // alignItems:'center',
                 }}
               >
@@ -1139,11 +1108,11 @@ function RideCard({
                   sx={{
                     // border:'1px solid black',
                     display: "flex",
-                    width: isMobile ? "100%" : "25%",
+                    width: isMobile ? "100%" : "35%",
                     alignItems: "center",
                     justifyContent: "space-between",
                     gap: 1,
-                    pb: isMobile && { xs: 1.1, sm: 1.5, md: 2 },
+                    pb: isMobile && { xs: 1.2, sm: 1.5, md: 2 },
                     // mb: { xs: 1.1, sm: 1.5, md: 2 },
                     // borderBottom: '1px solid rgba(255,153,51,0.2)',
                   }}
@@ -1223,14 +1192,11 @@ function RideCard({
                 <Box
                   sx={{
                     // border:'1px solid black',
-                    justifyContent: "space-around",
-                    display: "flex",
-                    width: isMobile ? "100%" : "60%",
-                    gridTemplateColumns: {
-                      xs: "1fr 1fr",
-                      sm: "repeat(3, 1fr)",
-                    },
-                    gap: { xs: "10px 6px", sm: "16px", md: 3 },
+                    justifyContent: 'space-around',
+                    display: 'flex',
+                    width: isMobile ? '100%' : '60%',
+                    gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(3, 1fr)' },
+                    gap: { xs: '10px 6px', sm: '16px', md: 3 },
                   }}
                 >
                   <Box>
@@ -1398,6 +1364,8 @@ function RideCard({
           requests={rideRequests}
           onApprove={handleApprove}
           onReject={handleReject}
+          approveLoading={approveLoading}
+          rejectLoading={rejectLoading}
         />
       )}
 
@@ -1980,6 +1948,11 @@ const MyRides = () => {
           >
             My Rides
           </Typography>
+
+          {/* <Typography variant="h5" sx={{ color: '#E8650A', fontWeight: 900, fontSize: { xs: "1.2rem", sm: "1.2rem", md: "1.35rem", lg: "1.5rem" } }}>
+          My <span style={{ color: '#138808' }}>Rides</span>
+        </Typography> */}
+
         </Box>
 
         <Box

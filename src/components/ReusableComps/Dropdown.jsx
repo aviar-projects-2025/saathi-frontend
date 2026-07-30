@@ -31,10 +31,9 @@ const Dropdown = ({
           w-full rounded-xl border px-4 py-3
           bg-white shadow-sm
           focus:outline-none focus:ring-2 focus:ring-orange-400
-          ${
-            error && touched
-              ? "border-red-500"
-              : "border-gray-300"
+          ${error && touched
+            ? "border-red-500"
+            : "border-gray-300"
           }
         `}
       >

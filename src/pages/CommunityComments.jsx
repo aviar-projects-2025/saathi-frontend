@@ -33,6 +33,7 @@ import ThumbUpAltOutlinedIcon from "@mui/icons-material/ThumbUpAltOutlined";
 import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
 import { toast } from "react-toastify"; // remove if you use a different toast lib
 import ToastConfig from "../components/ToastConfig";
+import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 
 /* ── defined OUTSIDE so React never remounts it on re-render ── */
 const CommentInput = ({ value, onChange, onSend, placeholder }) => (
@@ -132,6 +133,8 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editText, setEditText] = useState("");
 
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
   // delete confirmation modal state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [commentToDelete, setCommentToDelete] = useState(null);
@@ -219,10 +222,10 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
         prev.map((item) =>
           item._id === commentId
             ? {
-                ...item,
-                likes: res.data.likes,
-                likedByCurrentUser: res.data.liked,
-              }
+              ...item,
+              likes: res.data.likes,
+              likedByCurrentUser: res.data.liked,
+            }
             : item,
         ),
       );
@@ -289,6 +292,8 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
 
   const handleDeleteConfirm = async () => {
     if (!commentToDelete) return;
+
+    setDeleteLoading(true);
     try {
       const res = await axios.delete(
         `${Api}/community/comments/${commentToDelete._id}/${user.id}`,
@@ -303,6 +308,7 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
     } finally {
       setDeleteDialogOpen(false);
       setCommentToDelete(null);
+      setDeleteLoading(false);
     }
   };
 
@@ -558,6 +564,7 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
                     >
                       <Stack direction="row" spacing={{ xs: 0.5, sm: 0.75 }}>
                         <Avatar
+                          src={replyItem?.userId?.profileImage}
                           sx={{
                             width: { xs: 20, sm: 22, md: 24 },
                             height: { xs: 20, sm: 22, md: 24 },
@@ -643,21 +650,65 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
       </Menu>
 
       {/* delete confirmation modal */}
-      <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
-        <DialogTitle>Delete comment?</DialogTitle>
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={(event, reason) => {
+          if (deleteLoading) return;
+          if (reason === "backdropClick" || reason === "escapeKeyDown") return;
+          handleDeleteCancel();
+        }}
+        fullWidth
+        maxWidth="xs"
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            p: 1,
+            width: { xs: "90%", sm: "100%" },
+            m: { xs: 2, sm: "auto" },
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            fontWeight: 600,
+          }}
+        >
+          <WarningAmberRoundedIcon color="error" />
+          Delete Comment?
+        </DialogTitle>
+
         <DialogContent>
-          <DialogContentText>
-            This will permanently remove the comment. This action can't be
+          <DialogContentText
+            sx={{
+              color: "text.secondary",
+              fontSize: "0.95rem",
+            }}
+          >
+            Are you sure you want to delete this comment? This action cannot be
             undone.
           </DialogContentText>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDeleteCancel}>Cancel</Button>
+
+        <DialogActions sx={{ px: 3, pb: 2, gap: 1 }}>
+          <Button
+            onClick={handleDeleteCancel}
+            variant="outlined"
+            color="inherit"
+            disabled={deleteLoading}
+          >
+            Cancel
+          </Button>
+
           <Button
             color="error"
+            variant="contained"
             onClick={() => handleDeleteConfirm(comment._id)}
+            disabled={deleteLoading}
           >
-            Delete
+            {deleteLoading ? "Deleting..." : "Delete"}
           </Button>
         </DialogActions>
       </Dialog>

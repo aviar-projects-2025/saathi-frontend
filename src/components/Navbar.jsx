@@ -37,6 +37,7 @@ import LogoutIcon from "@mui/icons-material/Logout";
 const TopNav = ({ onMenuClick }) => {
   const [open, setOpen] = useState(false);
   const { tabNotification, notifications } = useNotifications();
+
   // const unreadCount = tabNotification?.filter(n => !n.isRead).length;
   // console.log(tabNotification, 'tabNotification')
 
@@ -51,18 +52,18 @@ const TopNav = ({ onMenuClick }) => {
   // ).length;
 
   const unreadCount = Object.values(
-  (tabNotification || []).reduce((acc, curr) => {
-    if (curr.type === "ride_started") return acc;
-    if (!curr?.isRead) {
-      acc[curr?.data?.rideId || curr._id] = curr;
-    }
+    (tabNotification || []).reduce((acc, curr) => {
+      if (curr.type === "ride_started") return acc;
+      if (!curr?.isRead) {
+        acc[curr?.data?.rideId || curr._id] = curr;
+      }
 
-    return acc;
-  }, {})
-).length;
+      return acc;
+    }, {})
+  ).length;
   // console.log(unreadCount,'unreadCount')
   const [selectedMenu, setSelectedMenu] = useState("");
- 
+
 
   const { completion, currentUser } = useUser();
   const navigate = useNavigate();
@@ -145,7 +146,8 @@ const TopNav = ({ onMenuClick }) => {
           justifyContent: "space-between",
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center" }}>
+        <Box
+          sx={{ display: "flex", alignItems: "center" }}>
           <IconButton
             onClick={onMenuClick}
             sx={{
@@ -157,13 +159,20 @@ const TopNav = ({ onMenuClick }) => {
             <MenuIcon />
           </IconButton>
 
-          <Box sx={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              cursor: "pointer"
+            }}
+            onClick={() => navigate('/community')}
+          >
             <img
               src={saathilogo1}
               alt="saathi"
               width={38}
               height={38}
-              style={{ marginRight: 8, objectFit: "contain" }}
+              style={{ marginRight: 5, objectFit: "contain" }}
             />
 
             <Typography variant="h6" sx={{ fontWeight: 900 }}>
@@ -255,7 +264,15 @@ const TopNav = ({ onMenuClick }) => {
             </Box>
           </Tooltip>
 
-          <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
+          <Dialog
+            open={open}
+            onClose={(event, reason) => {
+              if (reason === "backdropClick") return;
+              setOpen(false);
+            }}
+            fullWidth
+            maxWidth="sm"
+          >
             <DialogTitle
               sx={{
                 position: "relative",

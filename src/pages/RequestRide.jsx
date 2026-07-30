@@ -54,8 +54,11 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import PageLayout from "../components/PageLayout";
 import { toast } from "react-toastify";
 import ToastConfig from "../components/ToastConfig.jsx";
+import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 
 const RequestRide = () => {
+
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [loadingRequests, setLoadingRequests] = useState(true);
   const [openEditModal, setOpenEditModal] = useState(false);
   const [allMyRequests, setAllMyRequests] = useState([]);
@@ -85,9 +88,9 @@ const RequestRide = () => {
   }, [refreshRide]);
 
   async function fetchAllSends() {
+    setLoadingRequests(true);
     try {
       if (!user?.id) return;
-      setLoadingRequests(true);
       const res = await axios.get(`${Api}/bookride/send/${user.id}`);
       const requestUser = res.data.data.map((item) => item.members);
       setUserData(requestUser);
@@ -109,6 +112,29 @@ const RequestRide = () => {
 
   const handleMenuClose = () => {
     setAnchorEl(null);
+  };
+
+  const handleDelete = async (requestId) => {
+    setDeleteLoading(true);
+    setOpenCancelDialog(false);
+    setSelectedRequest(null);
+    try {
+      await axios.delete(`${Api}/bookride/${requestId}`);
+      setAllMyRequests((prev) =>
+        prev.filter((request) => request._id !== requestId),
+      );
+      toast.success("Ride request deleted successfully", toasts);
+
+      fetchAllSends();
+    } catch (error) {
+      console.error(error);
+      toast.error(
+        error.response?.data?.message || "Failed to delete ride request",
+        toasts,
+      );
+    } finally {
+      setDeleteLoading(false);
+    }
   };
 
   const handleCancelClick = (request) => {
@@ -523,29 +549,33 @@ const RequestRide = () => {
         sx={{
           minHeight: "65vh",
           display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
+          // justifyContent: "center",
+          // alignItems: "center",
           flexDirection: "column",
-          textAlign: "center",
-          px: 2,
+          // textAlign: "center",
+          // px: 0.5,
         }}
       >
         <Typography
           sx={{
             fontSize: {
-              xs: "1.4rem",
-              sm: "1.7rem",
+              xs: "1rem",
+              sm: "1.3rem",
             },
-            fontWeight: 100,
-            mb: 2,
+            fontWeight: 600,
           }}
         >
           My Request Rides
         </Typography>
+
+        {/* <Typography variant="h5" sx={{ color: '#E8650A', fontWeight: 900, fontSize: { xs: "1.2rem", sm: "1.2rem", md: "1.35rem", lg: "1.5rem" } }}>
+          My Request <span style={{ color: '#138808' }}>Rides</span>
+        </Typography> */}
+
         <br />
 
         {loadingRequests ? (
-          <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
             <CircularProgress color="warning" />
           </Box>
         ) : uniqueRequests.length === 0 ? (
@@ -872,7 +902,7 @@ const RequestRide = () => {
           requestToEdit={selectedRequest}
         />
       </Box>
-    </PageLayout>
+    </PageLayout >
   );
 };
 
