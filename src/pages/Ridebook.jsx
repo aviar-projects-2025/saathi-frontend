@@ -50,6 +50,7 @@ export default function Ridebook({
   const [existingMembers, setExistingMembers] = useState([]);
   const [newMembers, setNewMembers] = useState([]);
   const isTab = useMediaQuery(theme.breakpoints.down("sm"));
+
   const calculateAge = (dob) => {
     if (!dob) return "";
 
