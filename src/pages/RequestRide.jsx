@@ -33,6 +33,7 @@ import {
   Avatar,
   useTheme,
 } from "@mui/material";
+
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
@@ -67,7 +68,6 @@ const RequestRide = () => {
   const [userData, setUserData] = useState([]);
   const [anchorEl, setAnchorEl] = useState(null);
   const [isCancelling, setIsCancelling] = useState(false);
-  const [tabValue, setTabValue] = useState(0);
   const user = JSON.parse(localStorage.getItem("user"));
 
   const toasts = ToastConfig();
@@ -123,12 +123,51 @@ const RequestRide = () => {
     setIsCancelling(false);
   };
 
+  const handleDelete = async (requestId) => {
+    setDeleteLoading(true);
+    setOpenCancelDialog(false);
+    setSelectedRequest(null);
+    try {
+      // Soft delete - update status to DELETED
+      await axios.patch(
+        `${Api}/bookride/${requestId}/status?type=Cancel`,
+        { 
+          status: "DELETED",
+          cancelledBy: user?.id,
+          cancelledAt: new Date().toISOString()
+        }
+      );
+      
+      // Remove from local state (hide from list)
+      setAllMyRequests((prev) =>
+        prev.filter((request) => request._id !== requestId),
+      );
+      
+      toast.success("Ride request deleted successfully", toasts);
+      
+      // Refresh data and notify MyRides
+      await fetchAllSends();
+      window.dispatchEvent(new CustomEvent('rideDataChanged', { 
+        detail: { action: 'deleted', requestId: requestId }
+      }));
+    } catch (error) {
+      console.error(error);
+      toast.error(
+        error.response?.data?.message || "Failed to delete ride request",
+        toasts,
+      );
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
   const handleConfirmCancel = async () => {
     if (!selectedRequest) return;
 
     setIsCancelling(true);
 
     try {
+      // Soft delete - update status to DELETED
       await axios.patch(
         `${Api}/bookride/${selectedRequest._id}/status?type=Cancel`,
         { 
@@ -138,8 +177,19 @@ const RequestRide = () => {
         }
       );
 
+      // Remove from local state (hide from list)
+      setAllMyRequests((prev) =>
+        prev.filter((request) => request._id !== selectedRequest._id),
+      );
+
       handleCloseDialog();
       await fetchAllSends();
+      
+      // Notify MyRides to update history
+      window.dispatchEvent(new CustomEvent('rideDataChanged', { 
+        detail: { action: 'cancelled', requestId: selectedRequest._id }
+      }));
+      
       toast.success("Ride request cancelled successfully", toasts);
     } catch (err) {
       console.error("Error cancelling request:", err);
@@ -155,8 +205,19 @@ const RequestRide = () => {
             },
           );
 
+          // Remove from local state (hide from list)
+          setAllMyRequests((prev) =>
+            prev.filter((request) => request._id !== selectedRequest._id),
+          );
+
           handleCloseDialog();
           await fetchAllSends();
+          
+          // Notify MyRides to update history
+          window.dispatchEvent(new CustomEvent('rideDataChanged', { 
+            detail: { action: 'cancelled', requestId: selectedRequest._id }
+          }));
+          
           toast.success("Ride request cancelled successfully", toasts);
         } catch (retryErr) {
           toast.error(
@@ -175,467 +236,14 @@ const RequestRide = () => {
     }
   };
 
-  // Filter requests based on tab
-  const uniqueRequests = allMyRequests.filter((req) => req?.rideId);
-
-  const activeRequests = uniqueRequests.filter(
-    (request) =>
-      request.rideId?.travelStatus !== "Completed" &&
-      request.rideId?.travelStatus !== "Cancelled" &&
-      request.status !== "CANCELLED" &&
-      request.status !== "REJECTED" &&
-      request.status !== "DELETED",
+  // Filter: Only show ACTIVE requests (not deleted/cancelled/rejected)
+  const activeRequests = allMyRequests.filter(
+    (req) => 
+      req?.rideId && 
+      req.status !== "DELETED" && 
+      req.status !== "CANCELLED" && 
+      req.status !== "REJECTED"
   );
-
-  const historyRequests = uniqueRequests.filter(
-    (request) =>
-      request.rideId?.travelStatus === "Completed" ||
-      request.rideId?.travelStatus === "Cancelled" ||
-      request.status === "CANCELLED" ||
-      request.status === "REJECTED" ||
-      request.status === "DELETED",
-  );
-
-  const handleTabChange = (event, newValue) => {
-    setTabValue(newValue);
-  };
-
-  const getHistoryStatusInfo = (request) => {
-    const isDeleted = request.status === "DELETED";
-    const isCancelled = 
-      request.status === "CANCELLED" ||
-      request.status === "REJECTED" ||
-      request.rideId?.travelStatus === "Cancelled";
-    const isCompleted = request.rideId?.travelStatus === "Completed";
-
-    // Check who cancelled/rejected
-    const cancelledByMe = request.cancelledBy === user?.id;
-    const cancelledByDriver = request.cancelledBy && request.cancelledBy !== user?.id;
-    
-    // Check if it was rejected by driver (different from cancellation)
-    const rejectedByDriver = request.status === "REJECTED" && request.cancelledBy && request.cancelledBy !== user?.id;
-
-    if (isDeleted) {
-      if (cancelledByMe) {
-        return {
-          label: "You cancelled this request",
-          icon: "🗑️",
-          color: "#D32F2F",
-          bgColor: "#FFEBEE",
-          isDeleted: true,
-          isCancelledByMe: true,
-          message: "You cancelled this ride request"
-        };
-      } else if (cancelledByDriver) {
-        return {
-          label: "Driver cancelled your request",
-          icon: "🚫",
-          color: "#E65100",
-          bgColor: "#FFF3E0",
-          isDeleted: false,
-          isCancelledByMe: false,
-          isCancelledByDriver: true,
-          message: `${request.rideId?.createdBy?.firstName || 'Driver'} cancelled your request`
-        };
-      } else {
-        return {
-          label: "Cancelled",
-          icon: "❌",
-          color: "#9B2226",
-          bgColor: "#FFEBEE",
-          isDeleted: false,
-          isCancelledByMe: false,
-          message: "Request was cancelled"
-        };
-      }
-    } else if (isCancelled) {
-      if (cancelledByMe) {
-        return {
-          label: "You cancelled this request",
-          icon: "🗑️",
-          color: "#D32F2F",
-          bgColor: "#FFEBEE",
-          isDeleted: true,
-          isCancelledByMe: true,
-          message: "You cancelled this ride request"
-        };
-      } else if (cancelledByDriver) {
-        return {
-          label: `${request.rideId?.createdBy?.firstName || 'Driver'} cancelled your request`,
-          icon: "🚫",
-          color: "#E65100",
-          bgColor: "#FFF3E0",
-          isDeleted: false,
-          isCancelledByMe: false,
-          isCancelledByDriver: true,
-          message: `${request.rideId?.createdBy?.firstName || 'Driver'} cancelled your request`
-        };
-      } else {
-        return {
-          label: "Cancelled",
-          icon: "❌",
-          color: "#9B2226",
-          bgColor: "#FFEBEE",
-          isDeleted: false,
-          isCancelledByMe: false,
-          message: "Request was cancelled"
-        };
-      }
-    } else if (request.status === "REJECTED") {
-      if (rejectedByDriver) {
-        return {
-          label: `${request.rideId?.createdBy?.firstName || 'Driver'} rejected your request`,
-          icon: "❌",
-          color: "#C62828",
-          bgColor: "#FFEBEE",
-          isDeleted: false,
-          isRejectedByDriver: true,
-          message: `${request.rideId?.createdBy?.firstName || 'Driver'} rejected your request`
-        };
-      } else {
-        return {
-          label: "Rejected",
-          icon: "❌",
-          color: "#9B2226",
-          bgColor: "#FFEBEE",
-          isDeleted: false,
-          message: "Request was rejected"
-        };
-      }
-    } else if (isCompleted) {
-      return {
-        label: "Completed",
-        icon: "✅",
-        color: "#2E7D32",
-        bgColor: "#E8F5E9",
-        isDeleted: false,
-        message: "Ride completed successfully"
-      };
-    }
-    return {
-      label: "Unknown",
-      icon: "❓",
-      color: "#757575",
-      bgColor: "#F5F5F5",
-      isDeleted: false,
-      message: "Unknown status"
-    };
-  };
-
-  const renderActiveRequest = (request) => (
-    <Card
-      key={request._id}
-      sx={{
-        width: "100%",
-        maxWidth: "1200px",
-        minHeight: "220px",
-        mb: 4,
-        borderRadius: "20px",
-        overflow: "hidden",
-        border: "1px solid #f0d9c0",
-        boxShadow: "0 8px 20px rgba(0,0,0,0.08)",
-        cursor: "pointer",
-      }}
-    >
-      <Box
-        sx={{
-          bgcolor: "#1a1030",
-          px: 3,
-          py: 2,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 1,
-          flexWrap: "wrap",
-        }}
-      >
-        <Typography
-          sx={{
-            color: "#fff",
-            fontWeight: 600,
-            fontSize: 15,
-          }}
-        >
-          {request.rideId?.createdBy?.firstName}{" "}
-          {request.rideId?.createdBy?.lastName}
-        </Typography>
-
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 1,
-          }}
-        >
-          <Chip
-            label={request.status}
-            size="small"
-            sx={{
-              fontWeight: 700,
-              borderRadius: "20px",
-              bgcolor:
-                request.status === "ACCEPTED"
-                  ? "#e8f7e8"
-                  : request.status === "REJECTED"
-                    ? "#fbe7e6"
-                    : "#fdf1e0",
-              color:
-                request.status === "ACCEPTED"
-                  ? "#1e7d1e"
-                  : request.status === "REJECTED"
-                    ? "#b1362f"
-                    : "#b56b0d",
-            }}
-          />
-
-          <IconButton
-            onClick={(event) => handleMenuOpen(event, request)}
-            sx={{ color: "#fff" }}
-          >
-            <MoreVertIcon />
-          </IconButton>
-        </Box>
-      </Box>
-
-      <CardContent sx={{ p: 4 }}>
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 1,
-          }}
-        >
-          <Box>
-            <Typography
-              sx={{
-                fontSize: 11,
-                color: "#FF9933",
-                fontWeight: 600,
-              }}
-            >
-              FROM
-            </Typography>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 0.5,
-              }}
-            >
-              <LocationOnIcon sx={{ color: "#e2483d", fontSize: 18 }} />
-              <Typography fontWeight={600}>{request.rideId?.from}</Typography>
-            </Box>
-          </Box>
-          <ArrowForwardIcon sx={{ color: "#FF9933" }} />
-          <Box sx={{ textAlign: "right" }}>
-            <Typography
-              sx={{
-                fontSize: 11,
-                color: "#FF9933",
-                fontWeight: 600,
-              }}
-            >
-              TO
-            </Typography>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 0.5,
-                justifyContent: "flex-end",
-              }}
-            >
-              <LocationOnIcon sx={{ color: "#e2483d", fontSize: 18 }} />
-              <Typography fontWeight={600}>
-                {request.rideId?.destination}
-              </Typography>
-            </Box>
-          </Box>
-        </Box>
-        <Box sx={{ borderTop: "1px solid #f0e6d8", my: 2 }} />
-        <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
-          <Box>
-            <Typography sx={{ fontSize: 11, color: "text.secondary" }}>
-              Date
-            </Typography>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 0.5,
-              }}
-            >
-              <CalendarMonthIcon sx={{ color: "#FF9933", fontSize: 16 }} />
-              <Typography fontWeight={600} fontSize={13}>
-                {new Date(request.createdAt).toLocaleDateString()}
-              </Typography>
-            </Box>
-          </Box>
-          <Box>
-            <Typography sx={{ fontSize: 11, color: "text.secondary" }}>
-              Time
-            </Typography>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 0.5,
-              }}
-            >
-              <AccessTimeIcon sx={{ color: "#FF9933", fontSize: 16 }} />
-              <Typography fontWeight={600} fontSize={13}>
-                {new Date(request.createdAt).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </Typography>
-            </Box>
-          </Box>
-        </Box>
-      </CardContent>
-    </Card>
-  );
-
-  const renderHistoryItem = (request, idx) => {
-    const user = request.rideId?.createdBy || {};
-    const initials =
-      `${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`.toUpperCase();
-    
-    const statusInfo = getHistoryStatusInfo(request);
-    const isDeleted = statusInfo.isDeleted;
-    const isCancelledByMe = statusInfo.isCancelledByMe;
-    const isCancelledByDriver = statusInfo.isCancelledByDriver;
-    const isRejectedByDriver = statusInfo.isRejectedByDriver;
-
-    return (
-      <Box
-        key={request._id}
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 1.5,
-          px: 2.5,
-          py: 1.5,
-          cursor: "default",
-          borderBottom:
-            idx !== historyRequests.length - 1 ? "1px solid #f0e6d8" : "none",
-          "&:hover": { bgcolor: "#FFF9F2" },
-          opacity: (isDeleted || isCancelledByMe || isCancelledByDriver || isRejectedByDriver) ? 0.7 : 1,
-        }}
-      >
-        <Box sx={{ position: "relative" }}>
-          <Avatar
-            sx={{
-              bgcolor: (isDeleted || isCancelledByMe || isCancelledByDriver || isRejectedByDriver) ? "#e0e0e0" : "#f5ddc2",
-              color: (isDeleted || isCancelledByMe || isCancelledByDriver || isRejectedByDriver) ? "#666" : "#7a4a00",
-              width: 40,
-              height: 40,
-              fontSize: "0.9rem",
-              fontWeight: 700,
-            }}
-          >
-            {initials || "U"}
-          </Avatar>
-          <VerifiedIcon
-            sx={{
-              position: "absolute",
-              bottom: -2,
-              right: -2,
-              fontSize: 14,
-              color: (isDeleted || isCancelledByMe || isCancelledByDriver || isRejectedByDriver) ? "#999" : "#1976d2",
-              bgcolor: "#fff",
-              borderRadius: "50%",
-            }}
-          />
-        </Box>
-
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
-            <Typography fontWeight={700} fontSize={14} noWrap>
-              {user.firstName} {user.lastName}
-            </Typography>
-            <Chip
-              label={statusInfo.label}
-              size="small"
-              sx={{
-                bgcolor: statusInfo.bgColor,
-                color: statusInfo.color,
-                fontWeight: 700,
-                fontSize: "0.65rem",
-                height: 24,
-                '& .MuiChip-label': {
-                  px: 1.5,
-                }
-              }}
-              icon={<span>{statusInfo.icon}</span>}
-            />
-            {isCancelledByDriver && (
-              <Chip
-                label="By Driver"
-                size="small"
-                sx={{
-                  bgcolor: "#FFF3E0",
-                  color: "#E65100",
-                  fontWeight: 700,
-                  fontSize: "0.6rem",
-                  height: 20,
-                }}
-              />
-            )}
-            {isCancelledByMe && (
-              <Chip
-                label="By You"
-                size="small"
-                sx={{
-                  bgcolor: "#FFEBEE",
-                  color: "#C62828",
-                  fontWeight: 700,
-                  fontSize: "0.6rem",
-                  height: 20,
-                }}
-              />
-            )}
-            {isRejectedByDriver && (
-              <Chip
-                label="Rejected"
-                size="small"
-                sx={{
-                  bgcolor: "#FFCDD2",
-                  color: "#C62828",
-                  fontWeight: 700,
-                  fontSize: "0.6rem",
-                  height: 20,
-                }}
-              />
-            )}
-          </Box>
-          <Typography fontSize={12} color="text.secondary" noWrap>
-            {request.rideId?.from} → {request.rideId?.destination}
-          </Typography>
-          {/* Show who cancelled/rejected */}
-          <Typography fontSize={11} color="text.secondary" sx={{ mt: 0.5 }}>
-            {isCancelledByMe && "🗑️ You cancelled this ride request"}
-            {isCancelledByDriver && `🚫 ${user.firstName || 'Driver'} cancelled your request`}
-            {isRejectedByDriver && `❌ ${user.firstName || 'Driver'} rejected your request`}
-            {!isCancelledByMe && !isCancelledByDriver && !isRejectedByDriver && statusInfo.label === "Completed" && "✅ Completed"}
-          </Typography>
-        </Box>
-
-        <Box sx={{ textAlign: "right" }}>
-          <Typography fontWeight={700} fontSize={14}>
-            {new Date(request.createdAt).toLocaleDateString()}
-          </Typography>
-          <Typography fontSize={11} color="text.secondary">
-            {isCancelledByMe ? "🗑️ Cancelled by you" : 
-             isCancelledByDriver ? "🚫 Cancelled by driver" : 
-             isRejectedByDriver ? "❌ Rejected by driver" :
-             "✅ Completed"}
-          </Typography>
-        </Box>
-      </Box>
-    );
-  };
 
   return (
     <PageLayout>
@@ -646,195 +254,258 @@ const RequestRide = () => {
           justifyContent: "center",
           alignItems: "center",
           flexDirection: "column",
-          px: { xs: 2, sm: 3, md: 4 },
-          py: { xs: 2, sm: 3, md: 4 },
-          width: "100%",
+          textAlign: "center",
+          px: 2,
         }}
       >
-        <Box
+        {activeRequests.length === 0 && (
+          <DirectionsCarFilledOutlinedIcon
+            sx={{
+              fontSize: 55,
+              color: "#bdbdbd",
+              mb: 2,
+            }}
+          />
+        )}
+        <Typography
           sx={{
-            width: "100%",
-            maxWidth: "1200px",
-            display: "flex",
-            flexDirection: "column",
+            fontSize: {
+              xs: "1.4rem",
+              sm: "1.7rem",
+            },
+            fontWeight: 100,
+            mb: 2,
           }}
         >
+          My Request Rides
+        </Typography>
+        <br />
+
+        {loadingRequests ? (
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+            <CircularProgress color="warning" />
+          </Box>
+        ) : activeRequests.length === 0 ? (
           <Typography
+            color="text.secondary"
             sx={{
+              maxWidth: "400px",
               fontSize: {
-                xs: "1.2rem",
-                sm: "1.5rem",
-                md: "1.8rem",
+                xs: "0.9rem",
+                sm: "1rem",
               },
-              fontWeight: 700,
-              color: "#1a1030",
-              mb: 2,
-              textAlign: { xs: "center", sm: "left" },
+              mb: 3,
             }}
           >
-            My Request Rides
+            No active ride requests found.
           </Typography>
-
-          {loadingRequests ? (
-            <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-              <CircularProgress color="warning" />
-            </Box>
-          ) : uniqueRequests.length === 0 ? (
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                py: 8,
-              }}
-            >
-              <DirectionsCarFilledOutlinedIcon
-                sx={{
-                  fontSize: 64,
-                  color: "#bdbdbd",
-                  mb: 2,
-                }}
-              />
-              <Typography
-                color="text.secondary"
-                sx={{
-                  fontSize: {
-                    xs: "1rem",
-                    sm: "1.1rem",
-                  },
-                }}
-              >
-                No ride requests found.
-              </Typography>
-            </Box>
-          ) : (
-            <>
-              <Box
-                sx={{
-                  width: "100%",
-                  borderBottom: "1px solid",
-                  borderColor: "divider",
-                  mb: 3,
-                }}
-              >
-                <Tabs
-                  value={tabValue}
-                  onChange={handleTabChange}
-                  variant="fullWidth"
+        ) : (
+          <>
+            {activeRequests.map((request) => {
+              return (
+                <Card
+                  key={request._id}
                   sx={{
-                    "& .MuiTab-root": {
-                      fontWeight: 600,
-                      textTransform: "none",
-                      fontSize: { xs: "0.85rem", sm: "1rem" },
-                      minHeight: 48,
-                    },
-                    "& .MuiTabs-indicator": {
-                      backgroundColor: "#FF9933",
-                      height: 3,
-                    },
+                    width: "100%",
+                    maxWidth: "1200px",
+                    minHeight: "220px",
+                    mb: 4,
+                    borderRadius: "20px",
+                    overflow: "hidden",
+                    border: "1px solid #f0d9c0",
+                    boxShadow: "0 8px 20px rgba(0,0,0,0.08)",
+                    cursor: "pointer",
                   }}
                 >
-                  <Tab
-                    label={
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        <span>Active Requests</span>
-                        <Chip
-                          label={activeRequests.length}
-                          size="small"
-                          sx={{
-                            bgcolor: "#FF9933",
-                            color: "#fff",
-                            fontWeight: 700,
-                            fontSize: "0.7rem",
-                            height: 20,
-                            minWidth: 20,
-                          }}
-                        />
-                      </Box>
-                    }
-                  />
-                  <Tab
-                    label={
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        <span>History</span>
-                        <Chip
-                          label={historyRequests.length}
-                          size="small"
-                          sx={{
-                            bgcolor: "#757575",
-                            color: "#fff",
-                            fontWeight: 700,
-                            fontSize: "0.7rem",
-                            height: 20,
-                            minWidth: 20,
-                          }}
-                        />
-                      </Box>
-                    }
-                  />
-                </Tabs>
-              </Box>
+                  {/* Header bar */}
+                  <Box
+                    sx={{
+                      bgcolor: "#1a1030",
+                      px: 3,
+                      py: 2,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 1,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        color: "#fff",
+                        fontWeight: 600,
+                        fontSize: 15,
+                      }}
+                    >
+                      {request.rideId?.createdBy?.firstName}{" "}
+                      {request.rideId?.createdBy?.lastName}
+                    </Typography>
 
-              <Box sx={{ width: "100%", mt: 2 }}>
-                {tabValue === 0 && (
-                  <>
-                    {activeRequests.length > 0 ? (
-                      activeRequests.map((request) =>
-                        renderActiveRequest(request),
-                      )
-                    ) : (
-                      <Box sx={{ textAlign: "center", py: 6 }}>
-                        <Typography color="text.secondary" fontSize="1.1rem">
-                          No active ride requests.
-                        </Typography>
-                      </Box>
-                    )}
-                  </>
-                )}
-
-                {tabValue === 1 && (
-                  <>
-                    {historyRequests.length > 0 ? (
-                      <Box
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                      }}
+                    >
+                      <Chip
+                        label={request.status}
+                        size="small"
                         sx={{
-                          borderRadius: "16px",
-                          border: "1px solid #f0d9c0",
-                          bgcolor: "#fff",
-                          overflow: "hidden",
+                          fontWeight: 700,
+                          borderRadius: "20px",
+                          bgcolor:
+                            request.status === "ACCEPTED"
+                              ? "#e8f7e8"
+                              : request.status === "REJECTED"
+                                ? "#fbe7e6"
+                                : "#fdf1e0",
+                          color:
+                            request.status === "ACCEPTED"
+                              ? "#1e7d1e"
+                              : request.status === "REJECTED"
+                                ? "#b1362f"
+                                : "#b56b0d",
+                        }}
+                      />
+
+                      <IconButton
+                        onClick={(event) => handleMenuOpen(event, request)}
+                        sx={{
+                          color: "#fff",
                         }}
                       >
+                        <MoreVertIcon />
+                      </IconButton>
+                    </Box>
+                  </Box>
+
+                  <CardContent
+                    sx={{
+                      p: 4,
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 1,
+                      }}
+                    >
+                      <Box>
                         <Typography
                           sx={{
-                            px: 2.5,
-                            py: 1.5,
-                            bgcolor: "#f8f8f8",
-                            fontSize: 13,
-                            fontWeight: 700,
-                            color: "text.secondary",
-                            borderBottom: "1px solid #f0e6d8",
+                            fontSize: 11,
+                            color: "#FF9933",
+                            fontWeight: 600,
                           }}
                         >
-                          📜 History ({historyRequests.length})
+                          FROM
                         </Typography>
-
-                        {historyRequests.map((request, idx) =>
-                          renderHistoryItem(request, idx),
-                        )}
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 0.5,
+                          }}
+                        >
+                          <LocationOnIcon
+                            sx={{ color: "#e2483d", fontSize: 18 }}
+                          />
+                          <Typography fontWeight={600}>
+                            {request.rideId?.from}
+                          </Typography>
+                        </Box>
                       </Box>
-                    ) : (
-                      <Box sx={{ textAlign: "center", py: 6 }}>
-                        <Typography color="text.secondary" fontSize="1.1rem">
-                          No history found.
+                      <ArrowForwardIcon sx={{ color: "#FF9933" }} />
+                      <Box sx={{ textAlign: "right" }}>
+                        <Typography
+                          sx={{
+                            fontSize: 11,
+                            color: "#FF9933",
+                            fontWeight: 600,
+                          }}
+                        >
+                          TO
                         </Typography>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 0.5,
+                            justifyContent: "flex-end",
+                          }}
+                        >
+                          <LocationOnIcon
+                            sx={{ color: "#e2483d", fontSize: 18 }}
+                          />
+                          <Typography fontWeight={600}>
+                            {request.rideId?.destination}
+                          </Typography>
+                        </Box>
                       </Box>
-                    )}
-                  </>
-                )}
-              </Box>
-            </>
-          )}
-        </Box>
+                    </Box>
+                    <Box sx={{ borderTop: "1px solid #f0e6d8", my: 2 }} />
+                    <Box
+                      sx={{ display: "flex", gap: 3, flexWrap: "wrap" }}
+                    >
+                      <Box>
+                        <Typography
+                          sx={{ fontSize: 11, color: "text.secondary" }}
+                        >
+                          Date
+                        </Typography>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 0.5,
+                          }}
+                        >
+                          <CalendarMonthIcon
+                            sx={{ color: "#FF9933", fontSize: 16 }}
+                          />
+                          <Typography fontWeight={600} fontSize={13}>
+                            {new Date(
+                              request.createdAt,
+                            ).toLocaleDateString()}
+                          </Typography>
+                        </Box>
+                      </Box>
+                      <Box>
+                        <Typography
+                          sx={{ fontSize: 11, color: "text.secondary" }}
+                        >
+                          Time
+                        </Typography>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 0.5,
+                          }}
+                        >
+                          <AccessTimeIcon
+                            sx={{ color: "#FF9933", fontSize: 16 }}
+                          />
+                          <Typography fontWeight={600} fontSize={13}>
+                            {new Date(
+                              request.createdAt,
+                            ).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Box>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </>
+        )}
 
         <Menu
           anchorEl={anchorEl}
