@@ -821,6 +821,8 @@ function RideCard({
         `${Api}/bookride/${requestId}/status?type=Approve`,
         { status: "ACCEPTED" },
       );
+
+      console.log(res,'res after approve')
       if (res.status) {
         setAllRequests((prev) =>
           prev.map((req) =>
