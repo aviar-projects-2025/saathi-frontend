@@ -485,12 +485,6 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
 
-  // const isPost = ride.role === 'offered' && (ride.status === 'pending' || ride.status === 'confirmed');
-  // const label = isPost ? 'Remove post' : 'Cancel ride';
-  // const body = isPost
-  //   ? 'This will remove your ride post. Passengers who requested this ride will be notified.'
-  //   : 'This will cancel your booking. The driver will be notified.';
-
   const startDate = new Date(ride.startTime);
   const dateLabel = !isNaN(startDate)
     ? startDate.toLocaleDateString("en-IN", {
@@ -504,7 +498,7 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
     setDeleting(true);
     setError("");
     try {
-      await axios.delete(`${Api}/rides/${ride._id || ride.id}`);
+      await axios.patch(`${Api}/rides/cancelride/${ride._id || ride.id}?type=Cancel`);
       onConfirm(ride);
     } catch (err) {
       setError(
@@ -531,14 +525,14 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
       }}
     >
       <DialogTitle sx={{ fontWeight: 800, pr: 5, fontSize: { xs: '1rem', sm: '1.15rem' } }}>
-        Are you Cancel Ride?
+        Are you sure to cancel your ride?
         <IconButton onClick={onClose} aria-label="Close" sx={{ position: 'absolute', right: 8, top: 8, color: 'text.secondary', width: 44, height: 44 }}>
           <CloseIcon fontSize="small" />
         </IconButton>
       </DialogTitle>
 
       <DialogContent>
-        <Typography color="text.secondary" sx={{ fontSize: { xs: '0.82rem', sm: '0.9rem' } }}>This will cancel your booking. The driver will be notified...</Typography>
+        <Typography color="text.secondary" sx={{ fontSize: { xs: '0.82rem', sm: '0.9rem' } }}>This will cancel your ride, requested persons will be notified...</Typography>
         <Paper sx={{ mt: 2, p: 1.5, bgcolor: '#FFF8F2', border: '1px solid #F0E6DC', borderRadius: 2 }} elevation={0}>
           <Typography sx={{ fontSize: { xs: '0.78rem', sm: '0.85rem' } }} fontWeight={700} wordBreak="break-word">
             {formFrom(ride)} → {formTo(ride)}
@@ -568,10 +562,10 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
             minHeight: 44,
           }}
         >
-          Keep it
+          Cancel
         </Button>
         <Button onClick={handleConfirm} variant="contained" color="error" disabled={deleting} sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700, flex: { xs: '1 1 auto', sm: '0 0 auto' }, minHeight: 44 }}>
-          {deleting ? 'Deleting...' : "Delete"}
+          {deleting ? 'Deleting...' : "Yes"}
         </Button>
       </DialogActions>
     </Dialog>
@@ -751,6 +745,7 @@ function RequestItem({ request, onApprove, onReject }) {
 function RideCard({
   ride,
   fetchRides,
+  fetchAllRequests,
   user,
   confirmRide,
   setConfirmRide,
@@ -811,6 +806,7 @@ function RideCard({
       (req) => req.rideId?._id?.toString() === ride._id?.toString(),
     ) || [];
 
+  console.log(rideRequests, 'rideRequests')
 
   const pendingCount = rideRequests.filter(
     (r) => r.status?.toUpperCase() === "PENDING",
@@ -824,7 +820,6 @@ function RideCard({
         { status: "ACCEPTED" },
       );
 
-      console.log(res,'res after approve')
       if (res.status) {
         setAllRequests((prev) =>
           prev.map((req) =>
@@ -832,6 +827,7 @@ function RideCard({
           ),
         );
         fetchRides();
+        fetchAllRequests();
         toast.success("Request approved successfully!", toasts);
       }
     } catch (error) {
@@ -852,6 +848,8 @@ function RideCard({
           req._id === requestId ? { ...req, status: "REJECTED" } : req,
         ),
       );
+      fetchRides();
+      fetchAllRequests();
       toast.success("Request rejected", toasts);
       fetchRides();
     } catch (error) {
@@ -910,8 +908,6 @@ function RideCard({
         sx={{
           p: { xs: 0, sm: 0 },
           width: "100%",
-          // maxWidth: "100%",
-          // mx: "auto",
           mb: { xs: 1.5, sm: 2 },
           transition: "all .3s ease",
           "&:hover": {
@@ -922,7 +918,7 @@ function RideCard({
         {/* ── Top header: name + status ── */}
         <Box
           sx={{
-            background: "linear-gradient(135deg, #0e0e3b, #271c45)",
+            background: "linear-gradient(135deg, #1b1b3aff, #09031bff)",
             color: "#fff",
             borderRadius: "15px 15px 0 0",
             px: { xs: 1.5, sm: 2.5, md: 3 },
@@ -973,6 +969,17 @@ function RideCard({
               },
             }}
           >
+            {ride?.travelStatus === "Cancelled" && (
+              <Chip
+                size="small"
+                label={isMobile ? "Cancelled" : "Ride Cancelled"}
+                sx={{
+                  bgcolor: status.bg,
+                  color: status.color,
+                  fontWeight: 700,
+                }}
+              />
+            )}
             {/* Completed Chip */}
           {ride?.travelStatus === "Cancelled" && (
   <Chip
@@ -1555,20 +1562,31 @@ const fetchRides = async () => {
         new Date(b.startTime).getTime() - new Date(a.startTime).getTime(),
     );
 
-    setMypost(all.filter((item) => item?.createdBy?._id === user.id));
+      setUpcoming(
+        all.filter((ride) => {
+          const rideStartTime = new Date(ride?.startTime);
+          return (
+            ride?.createdBy?._id === user.id &&
+            !isNaN(rideStartTime) &&
+            ride.travelStatus !== "Cancelled" &&
+            rideStartTime > currentDateTime
+          );
+        }),
+      );
 
-    setUpcoming(
-      all.filter((ride) => {
-        const rideStartTime = new Date(ride?.startTime);
-        return (
-          ride?.createdBy?._id === user.id &&
-          !isNaN(rideStartTime) &&
-          rideStartTime > currentDateTime &&
-          ride?.travelStatus !== "Completed" &&
-          ride?.travelStatus !== "Cancelled"
-        );
-      }),
-    );
+      setHistory(
+        all.filter((ride) => {
+          const rideStartTime = new Date(ride?.startTime);
+          return (
+            ride?.createdBy?._id === user.id &&
+            !isNaN(rideStartTime) &&
+            (
+              ride?.travelStatus === "Completed" ||
+              ride?.travelStatus === "Cancelled"
+            )
+          );
+        })
+      );
 
     // History includes: Completed rides + Cancelled rides
     setHistory(
@@ -1606,9 +1624,9 @@ const fetchRides = async () => {
   // Upcoming Ride Condition for both req and post
 
 
-  useEffect(() => {
-    console.log("🔥 notifications changed", notifications);
-  }, [notifications]);
+  // useEffect(() => {
+  //   console.log("🔥 notifications changed", notifications);
+  // }, [notifications]);
 
 // Upcoming Ride Condition for both req and post
 useEffect(() => {
@@ -1619,11 +1637,28 @@ useEffect(() => {
     .filter((ride) => {
       const rideStartTime = new Date(ride?.rideId?.startTime);
       return (
-        !isNaN(rideStartTime) &&
+        ride?.createdBy?._id === user.id &&
         rideStartTime <= currentDateTime &&
-        ride?.status === "ACCEPTED" &&
-        ride?.rideId?.travelStatus !== "Completed" &&
-        ride?.rideId?.travelStatus !== "Cancelled"
+        ride?.travelStatus !== "Completed"
+      );
+    });
+
+    setCurrentRide([...currReqRide, ...myrides]);
+
+    const historyRide = allMyRequests
+      .filter((ride) => {
+        return (
+          ride?.rideId?.travelStatus == "Completed" || ride?.rideId?.travelStatus == "Cancelled"
+        )
+      })
+      .map((ride) => ride.rideId);
+
+    const histMyPost = mypost.filter((ride) => {
+      const rideStartTime = new Date(ride?.startTime);
+      return (
+        ride?.createdBy?._id === user.id &&
+        !isNaN(rideStartTime) &&
+        (ride?.travelStatus === "Completed" || ride?.travelStatus === "Cancelled")
       );
     })
     .map((ride) => ride.rideId);
@@ -1886,6 +1921,7 @@ const renderList = (
         allRequests={allRequests}
         setAllRequests={setAllRequests}
         isHistory={isHistory}
+        fetchAllRequests={fetchAllRequests}
       />
     );
   });

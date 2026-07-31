@@ -82,14 +82,13 @@ const INITIAL_FORM = {
   fuelSharing: false,
   description: "",
   genderPreference: "Any",
-
   fromCountry: "",
   fromAirport: "",
   toCountry: "",
   toAirport: "",
   flightNumber: "",
   airlineName: "",
-  transitAirport: "",
+  // transitAirport: "",
   travellerType: "",
   language: [],
   ageGroupPreference: "Any",
@@ -220,7 +219,9 @@ export default function OfferRide() {
   const [form, setForm] = useState(INITIAL_FORM);
 
   const isFlight = form.modeOfTravel === "Flight";
-
+  const isCar = form.modeOfTravel === "Car";
+  const isBike = form.modeOfTravel === "Bike";
+  const isBusTrain = ["Bus", "Train"].includes(form.modeOfTravel);
   const update = (key, val) => setForm((prev) => ({ ...prev, [key]: val }));
 
   const isTab = useMediaQuery(theme.breakpoints.down("sm"));
@@ -231,32 +232,42 @@ export default function OfferRide() {
   const validateStep = () => {
     setShowErrors(true);
 
+    const isCar = form.modeOfTravel === "Car";
+    const isBike = form.modeOfTravel === "Bike";
+    const isBusTrain = ["Bus", "Train"].includes(form.modeOfTravel);
+
     if (step === 0) {
       if (!form.modeOfTravel) {
         toast.error("Please select mode of travel", TOASTS);
         return false;
       }
+
       if (isFlight) {
         if (!form.fromCountry.trim()) {
           toast.error("Please enter From Country", TOASTS);
           return false;
         }
+
         if (!form.fromAirport.trim()) {
           toast.error("Please enter From Airport", TOASTS);
           return false;
         }
+
         if (!form.toCountry.trim()) {
           toast.error("Please enter To Country", TOASTS);
           return false;
         }
+
         if (!form.toAirport.trim()) {
           toast.error("Please enter To Airport", TOASTS);
           return false;
         }
+
         if (!form.flightNumber.trim()) {
           toast.error("Please enter Flight Number", TOASTS);
           return false;
         }
+
         if (!form.airlineName.trim()) {
           toast.error("Please enter Airline Name", TOASTS);
           return false;
@@ -266,11 +277,13 @@ export default function OfferRide() {
           toast.error("Please enter From location", TOASTS);
           return false;
         }
+
         if (!form.destination.trim()) {
           toast.error("Please enter Destination", TOASTS);
           return false;
         }
       }
+
       if (!form.date) {
         toast.error("Please select Date", TOASTS);
         return false;
@@ -297,7 +310,7 @@ export default function OfferRide() {
         if (selectedDateTime < minimumAllowedTime) {
           toast.error(
             "Flight departure must be at least 3 hours from now.",
-            TOASTS,
+            TOASTS
           );
           return false;
         }
@@ -307,7 +320,7 @@ export default function OfferRide() {
         if (selectedDateTime < minimumAllowedTime) {
           toast.error(
             "Ride start time must be at least 1 hour from now.",
-            TOASTS,
+            TOASTS
           );
           return false;
         }
@@ -317,7 +330,9 @@ export default function OfferRide() {
         toast.error("Please enter Description", TOASTS);
         return false;
       }
-      if (!form.duration.trim()) {
+
+      // Duration required only for Car & Bike
+      if ((isCar || isBike) && !form.duration.trim()) {
         toast.error("Please enter Journey Duration", TOASTS);
         return false;
       }
@@ -328,27 +343,29 @@ export default function OfferRide() {
         toast.error("Please select Gender Preference", TOASTS);
         return false;
       }
+
       if (isFlight) {
         if (!form.travellerType) {
           toast.error("Please select Traveller Type", TOASTS);
           return false;
         }
+
         if (!form.language || form.language.length === 0) {
           toast.error("Select at least one language", TOASTS);
           return false;
         }
-      } else {
-        if (form.availableSeats < 1) {
-          toast.error("Available seats should be at least 1", TOASTS);
-          return false;
-        }
+      }
 
-        if (form.fuelSharing && !form.price) {
-          toast.error("Enter Split Amount", TOASTS);
-          return false;
-        }
+      // Available seats only for Car
+      if (isCar && Number(form.availableSeats) < 1) {
+        toast.error("Available seats should be at least 1", TOASTS);
+        return false;
+      }
 
-        return true;
+      // Fuel sharing amount required for Car & Bike only
+      if ((isCar || isBike) && form.fuelSharing && !form.price) {
+        toast.error("Enter Split Amount", TOASTS);
+        return false;
       }
     }
 
@@ -383,13 +400,12 @@ export default function OfferRide() {
           destination: form.toAirport,
           flightNumber: form.flightNumber,
           airlineName: form.airlineName,
-          transitAirport: form.transitAirport,
+          // transitAirport: form.transitAirport,
           travellerType: form.travellerType,
           language: form.language,
           ageGroupPreference: form.ageGroupPreference,
           medicalAssistance: form.medicalAssistance,
           languageSupport: form.languageSupport,
-          transitHelp: form.transitHelp,
           baggageHelp: form.baggageHelp,
         }
         : {
@@ -801,16 +817,6 @@ export default function OfferRide() {
                         />
                       </Stack>
 
-                      <TextField
-                        label="Transit Airport (Optional)"
-                        fullWidth
-                        size={inputSize}
-                        value={form.transitAirport}
-                        onChange={(e) =>
-                          update("transitAirport", e.target.value)
-                        }
-                        sx={tfSx}
-                      />
                     </Stack>
                   </CardContent>
                 </Card>
@@ -890,29 +896,31 @@ export default function OfferRide() {
                   />
                 </Stack>
               </Stack>
+              {isFlight || !isBusTrain && (
+                <TextField
+                  label="Journey Duration (Approximate)"
+                  fullWidth
+                  type="number"
+                  size={inputSize}
+                  value={form.duration}
+                  onChange={(e) => {
+                    const value = e.target.value;
 
-              <TextField
-                label="Journey Duration (Approximate)"
-                fullWidth
-                type="number"
-                size={inputSize}
-                value={form.duration}
-                onChange={(e) => {
-                  const value = e.target.value;
+                    // Allow empty value or numbers up to 2 digits
+                    if (value === "" || /^\d{0,2}$/.test(value)) {
+                      update("duration", value);
+                    }
+                  }}
+                  inputProps={{
+                    min: 0,
+                    max: 99,
+                  }}
+                  error={!form.duration && showErrors}
+                  helperText={!form.duration && showErrors ? "Required" : ""}
+                  sx={tfSx}
+                />
+              )}
 
-                  // Allow empty value or numbers up to 2 digits
-                  if (value === "" || /^\d{0,2}$/.test(value)) {
-                    update("duration", value);
-                  }
-                }}
-                inputProps={{
-                  min: 0,
-                  max: 99,
-                }}
-                error={!form.duration && showErrors}
-                helperText={!form.duration && showErrors ? "Required" : ""}
-                sx={tfSx}
-              />
 
               <TextField
                 label="Description"
@@ -1043,88 +1051,89 @@ export default function OfferRide() {
                     ))}
                   </Select>
                 </FormControl>
-
-                <Card variant="outlined" sx={{ borderRadius: 3 }}>
-                  <CardContent
-                    sx={{
-                      p: { xs: 1.1, sm: 2 },
-                      "&:last-child": { pb: { xs: 1.1, sm: 2 } },
-                    }}
-                  >
-                    <Typography
-                      variant="caption"
-                      fontWeight={700}
-                      color="text.secondary"
+                {!isBike && (
+                  <Card variant="outlined" sx={{ borderRadius: 3 }}>
+                    <CardContent
                       sx={{
-                        fontSize: { xs: "0.62rem", sm: "0.72rem" },
-                        textTransform: "uppercase",
-                        letterSpacing: 0.4,
+                        p: { xs: 1.1, sm: 2 },
+                        "&:last-child": { pb: { xs: 1.1, sm: 2 } },
                       }}
                     >
-                      Assistance Needed
-                    </Typography>
-                    <Box
-                      sx={{
-                        mt: 1,
-                        display: "grid",
-                        gridTemplateColumns: {
-                          xs: "repeat(auto-fit, minmax(130px, 1fr))",
-                          sm: "1fr 1fr",
-                        },
-                        gap: { xs: 0.25, sm: 0.5 },
-                      }}
-                    >
-                      {[
-                        ["medicalAssistance", "Medical Assistance", HeartPulse],
-                        ["languageSupport", "Language Support", Languages],
-                        ["transitHelp", "Transit Help", MapPin],
-                        ["baggageHelp", "Baggage Help", Luggage],
-                      ].map(([key, label, Icon]) => (
-                        <FormControlLabel
-                          key={key}
-                          control={
-                            <Checkbox
-                              checked={form[key]}
-                              onChange={(e) => update(key, e.target.checked)}
-                              size={isMobile ? "small" : "medium"}
-                              sx={{ "&.Mui-checked": { color: ACCENT } }}
-                            />
-                          }
-                          label={
-                            <Stack
-                              direction="row"
-                              spacing={0.5}
-                              alignItems="center"
-                              sx={{ minWidth: 0, mt: 1.5 }}
-                            >
-                              <Icon
-                                size={14}
-                                color={ACCENT_DARK}
-                                style={{ flexShrink: 0 }}
+                      <Typography
+                        variant="caption"
+                        fontWeight={700}
+                        color="text.secondary"
+                        sx={{
+                          fontSize: { xs: "0.62rem", sm: "0.72rem" },
+                          textTransform: "uppercase",
+                          letterSpacing: 0.4,
+                        }}
+                      >
+                        Assistance Needed
+                      </Typography>
+                      <Box
+                        sx={{
+                          mt: 1,
+                          display: "grid",
+                          gridTemplateColumns: {
+                            xs: "repeat(auto-fit, minmax(130px, 1fr))",
+                            sm: "1fr 1fr",
+                          },
+                          gap: { xs: 0.25, sm: 0.5 },
+                        }}
+                      >
+                        {[
+                          ["medicalAssistance", "Medical Assistance", HeartPulse],
+                          ["languageSupport", "Language Support", Languages],
+                          ["transitHelp", "Transit Help", MapPin],
+                          ["baggageHelp", "Baggage Help", Luggage],
+                        ].map(([key, label, Icon]) => (
+                          <FormControlLabel
+                            key={key}
+                            control={
+                              <Checkbox
+                                checked={form[key]}
+                                onChange={(e) => update(key, e.target.checked)}
+                                size={isMobile ? "small" : "medium"}
+                                sx={{ "&.Mui-checked": { color: ACCENT } }}
                               />
-                              <Typography
-                                sx={{
-                                  fontSize: {
-                                    xs: "0.68rem",
-                                    sm: "0.8rem",
-                                    md: "0.875rem",
-                                  },
-                                  wordBreak: "break-word",
-                                }}
+                            }
+                            label={
+                              <Stack
+                                direction="row"
+                                spacing={0.5}
+                                alignItems="center"
+                                sx={{ minWidth: 0, mt: 1.5 }}
                               >
-                                {label}
-                              </Typography>
-                            </Stack>
-                          }
-                          sx={{ mr: 0, ml: 0, alignItems: "flex-start" }}
-                        />
-                      ))}
-                    </Box>
-                  </CardContent>
-                </Card>
-              </>
+                                <Icon
+                                  size={14}
+                                  color={ACCENT_DARK}
+                                  style={{ flexShrink: 0 }}
+                                />
+                                <Typography
+                                  sx={{
+                                    fontSize: {
+                                      xs: "0.68rem",
+                                      sm: "0.8rem",
+                                      md: "0.875rem",
+                                    },
+                                    wordBreak: "break-word",
+                                  }}
+                                >
+                                  {label}
+                                </Typography>
+                              </Stack>
+                            }
+                            sx={{ mr: 0, ml: 0, alignItems: "flex-start" }}
+                          />
+                        ))}
+                      </Box>
+                    </CardContent>
+                  </Card>
+                )}
 
-              <>
+              </>
+              {isCar && (
                 <Card variant="outlined" sx={{ borderRadius: 3 }}>
                   <CardContent
                     sx={{
@@ -1132,12 +1141,7 @@ export default function OfferRide() {
                       "&:last-child": { pb: { xs: 1.25, sm: 2.5 } },
                     }}
                   >
-                    <Stack
-                      direction="row"
-                      alignItems="center"
-                      spacing={1}
-                      sx={{ mb: 0.5 }}
-                    >
+                    <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5 }}>
                       <Users size={16} color={ACCENT_DARK} />
                       <Typography
                         variant="subtitle2"
@@ -1153,6 +1157,7 @@ export default function OfferRide() {
                         Available seats: {form.availableSeats}
                       </Typography>
                     </Stack>
+
                     <Slider
                       value={form.availableSeats}
                       onChange={(_, value) => update("availableSeats", value)}
@@ -1171,66 +1176,67 @@ export default function OfferRide() {
                     />
                   </CardContent>
                 </Card>
-                {!isFlight && (
-                  <Stack
-                    direction={{ xs: "column", sm: "row" }}
-                    spacing={2}
-                    alignItems={{ xs: "stretch", sm: "center" }}
-                    sx={{
-                      width: "100%",
-                      display: "flex",
-                      justifyContent: "space-between"
-                    }}
-                  >
-                    <FormControlLabel
-                      sx={{ m: 0 }}
-                      control={
-                        <Switch
-                          checked={form.fuelSharing}
-                          onChange={(e) => update("fuelSharing", e.target.checked)}
-                          size={isMobile ? "small" : "medium"}
-                          sx={{
-                            "& .MuiSwitch-switchBase.Mui-checked": {
-                              color: ACCENT,
-                            },
-                            "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                              backgroundColor: ACCENT,
-                            },
-                          }}
-                        />
-                      }
-                      label={
-                        <Stack direction="row" spacing={0.6} alignItems="center">
-                          <Fuel size={16} color={ACCENT_DARK} />
-                          <Typography sx={{ fontSize: { xs: "0.8rem", sm: "0.875rem" } }}>
-                            Fuel Sharing
-                          </Typography>
-                        </Stack>
-                      }
-                    />
+              )}
 
-                    {form.fuelSharing && (
-                      <TextField
-                        label="$ Price"
-                        size={inputSize}
-                        value={form.price}
-                        onChange={(e) => update("price", e.target.value)}
-                        placeholder="$5"
-                        error={!form.price && showErrors}
-                        helperText={!form.price && showErrors ? "Required" : ""}
+              {(isCar || isBike) && (
+                <Stack
+                  direction={{ xs: "column", sm: "row" }}
+                  spacing={2}
+                  alignItems={{ xs: "stretch", sm: "center" }}
+                  sx={{
+                    width: "100%",
+                    display: "flex",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <FormControlLabel
+                    sx={{ m: 0 }}
+                    control={
+                      <Switch
+                        checked={form.fuelSharing}
+                        onChange={(e) => update("fuelSharing", e.target.checked)}
+                        size={isMobile ? "small" : "medium"}
                         sx={{
-                          ...tfSx,
-                          width: {
-                            xs: "100%",
-                            sm: 180,
-                            md: 220,
+                          "& .MuiSwitch-switchBase.Mui-checked": {
+                            color: ACCENT,
+                          },
+                          "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                            backgroundColor: ACCENT,
                           },
                         }}
                       />
-                    )}
-                  </Stack>
-                )}
-              </>
+                    }
+                    label={
+                      <Stack direction="row" spacing={0.6} alignItems="center">
+                        <Fuel size={16} color={ACCENT_DARK} />
+                        <Typography sx={{ fontSize: { xs: "0.8rem", sm: "0.875rem" } }}>
+                          Fuel Sharing
+                        </Typography>
+                      </Stack>
+                    }
+                  />
+
+                  {form.fuelSharing && (
+                    <TextField
+                      label="$ Price"
+                      size={inputSize}
+                      value={form.price}
+                      onChange={(e) => update("price", e.target.value)}
+                      placeholder="$5"
+                      error={!form.price && showErrors}
+                      helperText={!form.price && showErrors ? "Required" : ""}
+                      sx={{
+                        ...tfSx,
+                        width: {
+                          xs: "100%",
+                          sm: 180,
+                          md: 220,
+                        },
+                      }}
+                    />
+                  )}
+                </Stack>
+              )}
 
               <FormControl fullWidth size={inputSize}>
                 <InputLabel sx={ilSx}>Gender Preference</InputLabel>
@@ -1299,11 +1305,11 @@ export default function OfferRide() {
                         [Clock, "Journey Duration", form.duration || "—"],
                         [Plane, "Flight Number", form.flightNumber || "—"],
                         [Plane, "Airline Name", form.airlineName || "—"],
-                        [
-                          MapPin,
-                          "Transit Airport",
-                          form.transitAirport || "No transit",
-                        ],
+                        // [
+                        //   MapPin,
+                        //   "Transit Airport",
+                        //   form.transitAirport || "No transit",
+                        // ],
                         [Users, "Traveller Type", form.travellerType || "—"],
                         [Languages, "Language", form.language || "—"],
                         [Users, "Gender Preference", form.genderPreference],

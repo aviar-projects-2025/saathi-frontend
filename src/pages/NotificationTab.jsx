@@ -32,11 +32,14 @@ export default function NotificationTab({ handleCloseNotifications }) {
         console.log(item.type, 'item.type')
         switch (item.type) {
             case "new_request":
-            case "request_accepted":
             case "request_rejected":
                 navigate("/myride", { state: { tab: 2, rideId: item.data?.rideId }, });
                 break;
+            case "request_accepted":
+                navigate("/request-ride", { state: { rideId: item.data?.rideId }, });
+                break;
             case "referral_approved":
+            case "request_cancelled":
                 break
             case "referral_pending":
             case "referral_rejected":

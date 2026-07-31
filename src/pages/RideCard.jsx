@@ -37,7 +37,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import WcIcon from "@mui/icons-material/Wc";
 import { useRide } from "../context/RideContext";
-
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import PersonIcon from "@mui/icons-material/Person";
 import WomanIcon from "@mui/icons-material/Woman";
@@ -67,6 +67,7 @@ export default function RideCard({ ride }) {
   const pendingRequest = myRequestedRides.find(
     (item) => item.rideId === ride._id,
   );
+
   const pendingReqSeats = pendingRequest?.pendingReqSeats;
   const { completion } = useUser();
   const theme = useTheme();
@@ -146,35 +147,7 @@ export default function RideCard({ ride }) {
 
   const { refreshRide } = useRide();
 
-  // useEffect(() => {
-  //   getRideAvailable();
-  // }, []);
 
-  // const getRideAvailable = async () => {
-  //   const res = await axios.get(`${Api}/rides/get`);
-  //   console.log("fcgvhbjnkm", res);
-  // };
-
-  // useEffect(() => {
-  //   fetchAllSends();
-  // }, [refreshRide]);
-
-  // useEffect(() => {
-  //   myReqRides();
-  // }, [refreshRide]);
-  // async function fetchAllSends() {
-  //   try {
-  //     if (!user?.id) return;
-
-  //     const res = await axios.get(`${Api}/bookride/send/${user.id}`);
-  //     const requestUser = res.data.data.map((item) => item.members)
-  //     setUserData(requestUser);
-  //     setAllMyRequests(res.data?.data || []);
-  //   } catch (error) {
-  //     console.error("Error fetching requests:", error);
-  //     setAllMyRequests([]);
-  //   }
-  // }
   const handleSeatsChange = (value) => {
     let seats = Number(value);
     if (!seats || seats < 1) seats = 1;
@@ -199,7 +172,6 @@ export default function RideCard({ ride }) {
     setRequestData({ ...requestData, members: updatedMembers });
   };
 
-  // console.log("isAccepted",isAccepted)
   const handleRequestSubmit = async () => {
     if (!selectedRide) return;
 
@@ -433,46 +405,54 @@ export default function RideCard({ ride }) {
         icon: <LocalGasStationIcon sx={iconSx} />,
         value: ride.fuelSharing,
       },
+
+
+      {
+        label: "Duration",
+        icon: <AccessTimeIcon sx={iconSx} />,
+        value: ride.duration,
+      }
     ];
 
   return (
     <>
-      <Box sx={{ mb: 3, maxWidth: 1000, width: "100%" }}>
-        {/* ── Light orange-tinted header strip ── */}
-        <Box
-          sx={{
-            bgcolor: ORANGE_BG,
-            border: `1px solid ${ORANGE_BORDER}`,
-            borderBottom: 0,
-            borderRadius: "14px 14px 0 0",
-            px: { xs: 1.5, sm: 2.5 },
-            py: { xs: 1, sm: 1.4 },
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: 1,
-          }}
-        >
-          {/* Avatar + name + verified */}
+      {ride.travelStatus !== "Cancelled" && (
+        <Box sx={{ mb: 3, maxWidth: 1000, width: "100%" }}>
+          {/* ── Light orange-tinted header strip ── */}
           <Box
-            display="flex"
-            alignItems="center"
-            gap={{ xs: 1, sm: 1.5 }}
-            sx={{ minWidth: 0, flex: 1 }}
+            sx={{
+              bgcolor: ORANGE_BG,
+              border: `1px solid ${ORANGE_BORDER}`,
+              borderBottom: 0,
+              borderRadius: "14px 14px 0 0",
+              px: { xs: 1.5, sm: 2.5 },
+              py: { xs: 1, sm: 1.4 },
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: 1,
+            }}
           >
-            <Avatar
-              sx={{
-                bgcolor: isFlight ? "#1A3C5E" : "#2D6A4F",
-                width: { xs: 25, sm: 38 },
-                height: { xs: 25, sm: 38 },
-                fontSize: { xs: "0.8rem", sm: "1.1rem" },
-                flexShrink: 0,
-              }}
+            {/* Avatar + name + verified */}
+            <Box
+              display="flex"
+              alignItems="center"
+              gap={{ xs: 1, sm: 1.5 }}
+              sx={{ minWidth: 0, flex: 1 }}
             >
-              {userName.charAt(0)}
-            </Avatar>
+              <Avatar
+                sx={{
+                  bgcolor: isFlight ? "#1A3C5E" : "#2D6A4F",
+                  width: { xs: 25, sm: 38 },
+                  height: { xs: 25, sm: 38 },
+                  fontSize: { xs: "0.8rem", sm: "1.1rem" },
+                  flexShrink: 0,
+                }}
+              >
+                {userName.charAt(0)}
+              </Avatar>
 
-            {/* <Avatar
+              {/* <Avatar
               src={} // e.g. user.profileImage
               alt={userName}
               sx={{
@@ -486,360 +466,360 @@ export default function RideCard({ ride }) {
               {! && userName?.charAt(0).toUpperCase()}
             </Avatar>  */}
 
-            <Box sx={{ minWidth: 0 }}>
-              <Typography
-                fontWeight={700}
-                sx={{
-                  fontSize: { xs: "0.8rem", sm: "0.95rem" },
-                  lineHeight: 1.2,
-                  mt: 0.5,
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                }}
-              >
-                {userName}
-              </Typography>
-              <Box display="flex" alignItems="center" gap={0.5}>
-                {/* <VerifiedIcon color="success" sx={{ fontSize: { xs: 10, sm: 14 }, mt: 0.5 }} />
-                <Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.6rem", sm: "0.7rem" } }}>
-                  Verified User
-                </Typography> */}
-              </Box>
-            </Box>
-          </Box>
-
-          {/* Mode chip */}
-          <Chip
-            icon={
-              isFlight ? (
-                <FlightTakeoffIcon sx={{ fontSize: { xs: 10, sm: 14 } }} />
-              ) : (
-                travelIcons[ride.modeOfTravel]
-              )
-            }
-            label={
-              isFlight
-                ? "Flight Companion"
-                : isRejected
-                  ? "Rejected"
-                  : noSeats
-                    ? "No Seats"
-                    : ride.genderPreference && ride.genderPreference !== "Any"
-                      ? `${ride.genderPreference} Only`
-                      : "Ride Available"
-            }
-            size="small"
-            sx={{
-              bgcolor: isRejected
-                ? "#FDECEA"
-                : noSeats
-                  ? "#FFF3E0"
-                  : isFlight
-                    ? "#EAF2FF"
-                    : "#E8F5E9",
-
-              color: isRejected
-                ? "#D32F2F"
-                : noSeats
-                  ? "#EF6C00"
-                  : isFlight
-                    ? "#1A3C5E"
-                    : "#2D6A4F",
-
-              fontWeight: 700,
-              fontSize: { xs: "0.58rem", sm: "0.7rem" },
-              height: { xs: 22, sm: 26 },
-              flexShrink: 0,
-              "& .MuiChip-label": {
-                px: { xs: 0.75, sm: 1.25 },
-              },
-            }}
-          />
-        </Box>
-
-        {/* ── Card body ── */}
-        <Card
-          elevation={0}
-          sx={{
-            borderRadius: "0 0 14px 14px",
-            border: `1px solid ${ORANGE_BORDER}`,
-            borderTop: 0,
-            bgcolor: "#fff",
-          }}
-        >
-          <CardContent
-            sx={{ p: { xs: "12px !important", sm: "20px 24px !important" } }}
-          >
-            {/* FROM → TO row */}
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: 1,
-                pb: { xs: 1.25, sm: 2 },
-                mb: { xs: 1.25, sm: 2 },
-                borderBottom: `1px solid ${ORANGE_DIVIDER}`,
-              }}
-            >
-              <Box sx={{ minWidth: 0, flex: 1 }}>
-                <Typography
-                  sx={{
-                    color: ORANGE,
-                    fontWeight: 700,
-                    letterSpacing: 0.8,
-                    fontSize: { xs: "0.58rem", sm: "0.68rem" },
-                    mb: 0.3,
-                  }}
-                >
-                  FROM
-                </Typography>
+              <Box sx={{ minWidth: 0 }}>
                 <Typography
                   fontWeight={700}
                   sx={{
-                    wordBreak: "break-word",
-                    fontSize: { xs: "0.78rem", sm: "0.95rem" },
-                    lineHeight: 1.3,
+                    fontSize: { xs: "0.8rem", sm: "0.95rem" },
+                    lineHeight: 1.2,
+                    mt: 0.5,
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
                   }}
                 >
-                  {"\u{1F4CD}"} {routeFrom || "—"}
+                  {userName}
                 </Typography>
+                <Box display="flex" alignItems="center" gap={0.5}>
+                  {/* <VerifiedIcon color="success" sx={{ fontSize: { xs: 10, sm: 14 }, mt: 0.5 }} />
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.6rem", sm: "0.7rem" } }}>
+                  Verified User
+                </Typography> */}
+                </Box>
+              </Box>
+            </Box>
 
-                {/* {isFlight && (
+            {/* Mode chip */}
+            <Chip
+              icon={
+                isFlight ? (
+                  <FlightTakeoffIcon sx={{ fontSize: { xs: 10, sm: 14 } }} />
+                ) : (
+                  travelIcons[ride.modeOfTravel]
+                )
+              }
+              label={
+                isFlight
+                  ? "Flight Companion"
+                  : isRejected
+                    ? "Rejected"
+                    : noSeats
+                      ? "No Seats"
+                      : ride.genderPreference && ride.genderPreference !== "Any"
+                        ? `${ride.genderPreference} Only`
+                        : "Ride Available"
+              }
+              size="small"
+              sx={{
+                bgcolor: isRejected
+                  ? "#FDECEA"
+                  : noSeats
+                    ? "#FFF3E0"
+                    : isFlight
+                      ? "#EAF2FF"
+                      : "#E8F5E9",
+
+                color: isRejected
+                  ? "#D32F2F"
+                  : noSeats
+                    ? "#EF6C00"
+                    : isFlight
+                      ? "#1A3C5E"
+                      : "#2D6A4F",
+
+                fontWeight: 700,
+                fontSize: { xs: "0.58rem", sm: "0.7rem" },
+                height: { xs: 22, sm: 26 },
+                flexShrink: 0,
+                "& .MuiChip-label": {
+                  px: { xs: 0.75, sm: 1.25 },
+                },
+              }}
+            />
+          </Box>
+
+          {/* ── Card body ── */}
+          <Card
+            elevation={0}
+            sx={{
+              borderRadius: "0 0 14px 14px",
+              border: `1px solid ${ORANGE_BORDER}`,
+              borderTop: 0,
+              bgcolor: "#fff",
+            }}
+          >
+            <CardContent
+              sx={{ p: { xs: "12px !important", sm: "20px 24px !important" } }}
+            >
+              {/* FROM → TO row */}
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 1,
+                  pb: { xs: 1.25, sm: 2 },
+                  mb: { xs: 1.25, sm: 2 },
+                  borderBottom: `1px solid ${ORANGE_DIVIDER}`,
+                }}
+              >
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                  <Typography
+                    sx={{
+                      color: ORANGE,
+                      fontWeight: 700,
+                      letterSpacing: 0.8,
+                      fontSize: { xs: "0.58rem", sm: "0.68rem" },
+                      mb: 0.3,
+                    }}
+                  >
+                    FROM
+                  </Typography>
+                  <Typography
+                    fontWeight={700}
+                    sx={{
+                      wordBreak: "break-word",
+                      fontSize: { xs: "0.78rem", sm: "0.95rem" },
+                      lineHeight: 1.3,
+                    }}
+                  >
+                    {"\u{1F4CD}"} {routeFrom || "—"}
+                  </Typography>
+
+                  {/* {isFlight && (
                     <Typography sx={{ fontSize: { xs: "0.58rem", sm: "0.68rem" }, color: "text.secondary", mt: 0.25 }}>
                       {ride.fromCountry}
                     </Typography>
                   )} */}
-              </Box>
+                </Box>
 
-              <ArrowForwardIcon
-                sx={{
-                  color: ORANGE,
-                  fontSize: { xs: 16, sm: 20 },
-                  flexShrink: 0,
-                }}
-              />
-
-              <Box sx={{ minWidth: 0, flex: 1, textAlign: "right" }}>
-                <Typography
+                <ArrowForwardIcon
                   sx={{
                     color: ORANGE,
-                    fontWeight: 700,
-                    letterSpacing: 0.8,
-                    fontSize: { xs: "0.58rem", sm: "0.68rem" },
-                    mb: 0.3,
+                    fontSize: { xs: 16, sm: 20 },
+                    flexShrink: 0,
                   }}
-                >
-                  TO
-                </Typography>
-                <Typography
-                  fontWeight={700}
-                  sx={{
-                    wordBreak: "break-word",
-                    fontSize: { xs: "0.78rem", sm: "0.95rem" },
-                    lineHeight: 1.3,
-                  }}
-                >
-                  {"\u{1F4CD}"} {routeTo || "—"}
-                </Typography>
+                />
 
-                {/* {isFlight && (
+                <Box sx={{ minWidth: 0, flex: 1, textAlign: "right" }}>
+                  <Typography
+                    sx={{
+                      color: ORANGE,
+                      fontWeight: 700,
+                      letterSpacing: 0.8,
+                      fontSize: { xs: "0.58rem", sm: "0.68rem" },
+                      mb: 0.3,
+                    }}
+                  >
+                    TO
+                  </Typography>
+                  <Typography
+                    fontWeight={700}
+                    sx={{
+                      wordBreak: "break-word",
+                      fontSize: { xs: "0.78rem", sm: "0.95rem" },
+                      lineHeight: 1.3,
+                    }}
+                  >
+                    {"\u{1F4CD}"} {routeTo || "—"}
+                  </Typography>
+
+                  {/* {isFlight && (
                     <Typography sx={{ fontSize: { xs: "0.58rem", sm: "0.68rem" }, color: "text.secondary", mt: 0.25 }}>
                       {ride.toCountry}
                     </Typography>
                   )} */}
-              </Box>
-            </Box>
-
-            {/* Details grid */}
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: { xs: "1fr 1fr", sm: "repeat(3, 1fr)" },
-                gap: { xs: "10px 8px", sm: "16px 24px" },
-                pb: { xs: 1.25, sm: 2 },
-                mb: { xs: 1.25, sm: 2 },
-                borderBottom: `1px solid ${ORANGE_DIVIDER}`,
-              }}
-            >
-              {detailItems.map(({ label, icon, value }) => (
-                <Box key={label}>
-                  <Typography
-                    sx={{
-                      fontSize: { xs: "0.58rem", sm: "0.68rem" },
-                      color: "text.secondary",
-                      mb: 0.4,
-                    }}
-                  >
-                    {label}
-                  </Typography>
-                  <Stack direction="row" spacing={0.6} alignItems="center">
-                    {icon}
-                    <Typography
-                      sx={{
-                        fontSize: { xs: "0.65rem", sm: "0.85rem" },
-                        fontWeight: 600,
-                        lineHeight: 1.3,
-                      }}
-                    >
-                      {value}
-                    </Typography>
-                  </Stack>
                 </Box>
-              ))}
-            </Box>
+              </Box>
 
-            {/* Footer: expand + action button */}
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                // alignItems:"center",
-                // gap:1,
-              }}
-            >
-              <IconButton
-                onClick={() => setExpanded(!expanded)}
-                size={isMobile ? "small" : "medium"}
+              {/* Details grid */}
+              <Box
                 sx={{
-                  border: `1px solid ${ORANGE_BORDER}`,
-                  borderRadius: 2,
-                  p: { xs: 0.4, sm: 0.75 },
-                  color: ORANGE,
+                  display: "grid",
+                  gridTemplateColumns: { xs: "1fr 1fr", sm: "repeat(3, 1fr)" },
+                  gap: { xs: "10px 8px", sm: "16px 24px" },
+                  pb: { xs: 1.25, sm: 2 },
+                  mb: { xs: 1.25, sm: 2 },
+                  borderBottom: `1px solid ${ORANGE_DIVIDER}`,
                 }}
               >
-                {expanded ? (
-                  <KeyboardArrowUpIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />
-                ) : (
-                  <KeyboardArrowDownIcon
-                    sx={{ fontSize: { xs: 18, sm: 22 } }}
-                  />
-                )}
-              </IconButton>
+                {detailItems.map(({ label, icon, value }) => (
+                  <Box key={label}>
+                    <Typography
+                      sx={{
+                        fontSize: { xs: "0.58rem", sm: "0.68rem" },
+                        color: "text.secondary",
+                        mb: 0.4,
+                      }}
+                    >
+                      {label}
+                    </Typography>
+                    <Stack direction="row" spacing={0.6} alignItems="center">
+                      {icon}
+                      <Typography
+                        sx={{
+                          fontSize: { xs: "0.65rem", sm: "0.85rem" },
+                          fontWeight: 600,
+                          lineHeight: 1.3,
+                        }}
+                      >
+                        {value}
+                      </Typography>
+                    </Stack>
+                  </Box>
+                ))}
+              </Box>
 
-              <Tooltip
-                title={
-                  !isProfileComplete
-                    ? "Complete your profile to 100% before requesting a ride."
-                    : ""
-                }
-                arrow
+              {/* Footer: expand + action button */}
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  // alignItems:"center",
+                  // gap:1,
+                }}
               >
-                <Box component="span">
-                  <Stack direction="row" alignItems="center" spacing={1}>
-                    {myRequest && (
-                      <Chip
-                        label={
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 0.5,
-                            }}
-                          >
-                            <Typography
-                              component="span"
+                <IconButton
+                  onClick={() => setExpanded(!expanded)}
+                  size={isMobile ? "small" : "medium"}
+                  sx={{
+                    border: `1px solid ${ORANGE_BORDER}`,
+                    borderRadius: 2,
+                    p: { xs: 0.4, sm: 0.75 },
+                    color: ORANGE,
+                  }}
+                >
+                  {expanded ? (
+                    <KeyboardArrowUpIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />
+                  ) : (
+                    <KeyboardArrowDownIcon
+                      sx={{ fontSize: { xs: 18, sm: 22 } }}
+                    />
+                  )}
+                </IconButton>
+
+                <Tooltip
+                  title={
+                    !isProfileComplete
+                      ? "Complete your profile to 100% before requesting a ride."
+                      : ""
+                  }
+                  arrow
+                >
+                  <Box component="span">
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                      {myRequest && (
+                        <Chip
+                          label={
+                            <Box
                               sx={{
-                                fontSize: { xs: "0.65rem", sm: "0.7rem" },
-                                fontWeight: 600,
-                                color: isAccepted ? "#2E7D32" : "#1565C0",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 0.5,
                               }}
                             >
-                              {isAccepted
-                                ? `You have ${approvedSeats} approved seat${approvedSeats > 1 ? "s" : ""
-                                }`
-                                : `You applied for ${requestedByMe} seat${requestedByMe > 1 ? "s" : ""
-                                }`}
-                            </Typography>
-
-                            {isAccepted && pendingReqSeats > 0 && (
                               <Typography
                                 component="span"
                                 sx={{
                                   fontSize: { xs: "0.65rem", sm: "0.7rem" },
                                   fontWeight: 600,
-                                  color: "#F57C00",
+                                  color: isAccepted ? "#2E7D32" : "#1565C0",
                                 }}
                               >
-                                {`and ${pendingReqSeats} pending seat${pendingReqSeats > 1 ? "s" : ""
+                                {isAccepted
+                                  ? `You have ${approvedSeats} approved seat${approvedSeats > 1 ? "s" : ""
+                                  }`
+                                  : `You applied for ${requestedByMe} seat${requestedByMe > 1 ? "s" : ""
                                   }`}
                               </Typography>
-                            )}
-                          </Box>
-                        }
-                        color={isAccepted ? "success" : "info"}
-                        sx={{
-                          height: { xs: 18, sm: 25 },
-                          bgcolor: isAccepted ? "#E8F5E9" : "#E3F2FD",
-                          "& .MuiChip-label": {
-                            px: { xs: 0.5, sm: 1 },
-                          },
-                        }}
-                      />
-                    )}
-                    <Tooltip
-                      title={
-                        !isProfileComplete
-                          ? "Complete your profile to 100% before requesting a ride."
-                          : ""
-                      }
-                      arrow
-                    >
-                      <Box component="span">
-                        <Button
-                          disabled={
-                            genderMismatch ||
-                            isRejected ||
-                            !isProfileComplete ||
-                            (!isFlight &&
-                              !alreadyRequested &&
-                              remainingSeatsForUser <= 0)
+
+                              {isAccepted && pendingReqSeats > 0 && (
+                                <Typography
+                                  component="span"
+                                  sx={{
+                                    fontSize: { xs: "0.65rem", sm: "0.7rem" },
+                                    fontWeight: 600,
+                                    color: "#F57C00",
+                                  }}
+                                >
+                                  {`and ${pendingReqSeats} pending seat${pendingReqSeats > 1 ? "s" : ""
+                                    }`}
+                                </Typography>
+                              )}
+                            </Box>
                           }
-                          onClick={() => {
-                            setSelectedRide(ride);
-                            setSelectedRequest(
-                              alreadyRequested ? currentRequest : null,
-                            );
-                            setOpenEditModal(true);
-                          }}
+                          color={isAccepted ? "success" : "info"}
                           sx={{
-                            bgcolor: isRejected ? "#D32F2F" : ORANGE,
-                            color: "#ffffff",
-                            "&:hover": {
-                              bgcolor: isRejected ? "#D32F2F" : "#e68a00",
+                            height: { xs: 18, sm: 25 },
+                            bgcolor: isAccepted ? "#E8F5E9" : "#E3F2FD",
+                            "& .MuiChip-label": {
+                              px: { xs: 0.5, sm: 1 },
                             },
-                            "&.Mui-disabled": {
-                              bgcolor: isRejected ? "#EF9A9A" : "#e0e0e0",
-                              color: "#ffffff",
-                            },
-                            fontWeight: 700,
-                            fontSize: { xs: "0.7rem", sm: "0.875rem" },
-                            px: { xs: 1.2, sm: 3 },
-                            py: { xs: 0.5, sm: 1 },
-                            borderRadius: 2,
-                            whiteSpace: "nowrap",
-                            boxShadow: "none",
-                            textTransform: "none",
                           }}
-                        >
-                          {
-                            genderMismatch
-                              ? `Only ${ride.genderPreference} Allowed`
-                              : isRejected
-                                ? "Rejected"
-                                : alreadyRequested
-                                  ? remainingSeatsForUser > 0
-                                    ? `Edit Request (${remainingSeatsForUser} left)`
-                                    : "View Request"
-                                  : isFlight
-                                    ? "Request Companion"
-                                    : remainingSeatsForUser > 0
-                                      ? `Request Seat (${remainingSeatsForUser} left)`
-                                      : "No Seats Available"
-                          }
-                        </Button>
-                        {/* <Button
+                        />
+                      )}
+                      <Tooltip
+                        title={
+                          !isProfileComplete
+                            ? "Complete your profile to 100% before requesting a ride."
+                            : ""
+                        }
+                        arrow
+                      >
+                        <Box component="span">
+                          <Button
+                            disabled={
+                              genderMismatch ||
+                              isRejected ||
+                              !isProfileComplete ||
+                              (!isFlight &&
+                                !alreadyRequested &&
+                                remainingSeatsForUser <= 0)
+                            }
+                            onClick={() => {
+                              setSelectedRide(ride);
+                              setSelectedRequest(
+                                alreadyRequested ? currentRequest : null,
+                              );
+                              setOpenEditModal(true);
+                            }}
+                            sx={{
+                              bgcolor: isRejected ? "#D32F2F" : ORANGE,
+                              color: "#ffffff",
+                              "&:hover": {
+                                bgcolor: isRejected ? "#D32F2F" : "#e68a00",
+                              },
+                              "&.Mui-disabled": {
+                                bgcolor: isRejected ? "#EF9A9A" : "#e0e0e0",
+                                color: "#ffffff",
+                              },
+                              fontWeight: 700,
+                              fontSize: { xs: "0.7rem", sm: "0.875rem" },
+                              px: { xs: 1.2, sm: 3 },
+                              py: { xs: 0.5, sm: 1 },
+                              borderRadius: 2,
+                              whiteSpace: "nowrap",
+                              boxShadow: "none",
+                              textTransform: "none",
+                            }}
+                          >
+                            {
+                              genderMismatch
+                                ? `Only ${ride.genderPreference} Allowed`
+                                : isRejected
+                                  ? "Rejected"
+                                  : alreadyRequested
+                                    ? remainingSeatsForUser > 0
+                                      ? `Edit Request (${remainingSeatsForUser} left)`
+                                      : "View Request"
+                                    : isFlight
+                                      ? "Request Companion"
+                                      : remainingSeatsForUser > 0
+                                        ? `Request Seat (${remainingSeatsForUser} left)`
+                                        : "No Seats Available"
+                            }
+                          </Button>
+                          {/* <Button
                     variant="contained"
                     size={isMobile ? "small" : "medium"}
                     disabled={!isProfileComplete || (!isFlight && remainingSeats <= 0)}
@@ -870,193 +850,195 @@ export default function RideCard({ ride }) {
                           ? `Request More (${remainingSeats} left)`
                           : `Request Seat (${remainingSeats} left)`}
                   </Button> */}
-                      </Box>
-                    </Tooltip>
-                  </Stack>
-                </Box>
-              </Tooltip>
-            </Box>
+                        </Box>
+                      </Tooltip>
+                    </Stack>
+                  </Box>
+                </Tooltip>
+              </Box>
 
-            {/* Expanded details */}
-            <Collapse in={expanded}>
-              <Box
-                sx={{
-                  mt: { xs: 1.25, sm: 2 },
-                  p: { xs: 1.25, sm: 2 },
-                  bgcolor: ORANGE_BG,
-                  border: `1px solid ${ORANGE_BORDER}`,
-                  borderRadius: 2,
-                }}
-              >
-                <Typography
-                  sx={{
-                    fontSize: { xs: "0.65rem", sm: "0.72rem" },
-                    color: ORANGE,
-                    fontWeight: 700,
-                    letterSpacing: 0.6,
-                    mb: 1,
-                  }}
-                >
-                  MORE DETAILS
-                </Typography>
+              {/* Expanded details */}
+              <Collapse in={expanded}>
                 <Box
                   sx={{
-                    display: "grid",
-                    gridTemplateColumns: {
-                      xs: "1fr 1fr",
-                      sm: "repeat(3, 1fr)",
-                    },
-                    gap: { xs: "8px 8px", sm: "12px 20px" },
+                    mt: { xs: 1.25, sm: 2 },
+                    p: { xs: 1.25, sm: 2 },
+                    bgcolor: ORANGE_BG,
+                    border: `1px solid ${ORANGE_BORDER}`,
+                    borderRadius: 2,
                   }}
                 >
-                  {[
-                    { label: "Status", value: ride.status },
-                    {
-                      label: "Gender preference",
-                      value: ride.genderPreference,
-                    },
-                    { label: "Travel mode", value: ride.modeOfTravel },
-                    ...(isFlight
-                      ? [
-                        {
-                          label: "Age group pref",
-                          value: ride.ageGroupPreference,
-                        },
-                        {
-                          label: "Transit airport",
-                          value: ride.transitAirport || "None",
-                        },
-                      ]
-                      : []),
-                  ].map(({ label, value }) => (
-                    <Box key={label}>
-                      <Typography
-                        sx={{
-                          fontSize: { xs: "0.58rem", sm: "0.65rem" },
-                          color: "text.secondary",
-                          mb: 0.25,
-                        }}
-                      >
-                        {label}
-                      </Typography>
-                      <Typography
-                        sx={{
-                          fontSize: { xs: "0.72rem", sm: "0.82rem" },
-                          fontWeight: 600,
-                        }}
-                      >
-                        {value || "—"}
-                      </Typography>
-                    </Box>
-                  ))}
-                </Box>
-
-                {/* Description */}
-                {ride.description && (
-                  <Box
+                  <Typography
                     sx={{
-                      bgcolor: ORANGE_BG,
-                      mt: 1,
-                      // px: { xs: 1, sm: 2 }, py: { xs: 0.75, sm: 1.25 }, mb: { xs: 1.25, sm: 2 },
+                      fontSize: { xs: "0.65rem", sm: "0.72rem" },
+                      color: ORANGE,
+                      fontWeight: 700,
+                      letterSpacing: 0.6,
+                      mb: 1,
                     }}
                   >
-                    <Typography
+                    MORE DETAILS
+                  </Typography>
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns: {
+                        xs: "1fr 1fr",
+                        sm: "repeat(3, 1fr)",
+                      },
+                      gap: { xs: "8px 8px", sm: "12px 20px" },
+                    }}
+                  >
+                    {[
+                      { label: "Status", value: ride.status },
+                      {
+                        label: "Gender preference",
+                        value: ride.genderPreference,
+                      },
+                      { label: "Travel mode", value: ride.modeOfTravel },
+                      ...(isFlight
+                        ? [
+                          {
+                            label: "Age group pref",
+                            value: ride.ageGroupPreference,
+                          },
+                          {
+                            label: "Transit airport",
+                            value: ride.transitAirport || "None",
+                          },
+                        ]
+                        : []),
+                    ].map(({ label, value }) => (
+                      <Box key={label}>
+                        <Typography
+                          sx={{
+                            fontSize: { xs: "0.58rem", sm: "0.65rem" },
+                            color: "text.secondary",
+                            mb: 0.25,
+                          }}
+                        >
+                          {label}
+                        </Typography>
+                        <Typography
+                          sx={{
+                            fontSize: { xs: "0.72rem", sm: "0.82rem" },
+                            fontWeight: 600,
+                          }}
+                        >
+                          {value || "—"}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Box>
+
+                  {/* Description */}
+                  {ride.description && (
+                    <Box
                       sx={{
-                        fontSize: { xs: "0.7rem", sm: "0.82rem" },
-                        color: "text.secondary",
+                        bgcolor: ORANGE_BG,
+                        mt: 1,
+                        // px: { xs: 1, sm: 2 }, py: { xs: 0.75, sm: 1.25 }, mb: { xs: 1.25, sm: 2 },
                       }}
                     >
                       <Typography
-                        component="span"
                         sx={{
-                          // fontStyle: "italic",
-                          fontWeight: 800,
-                          fontSize: { xs: "0.75rem", sm: "0.75rem" },
+                          fontSize: { xs: "0.7rem", sm: "0.82rem" },
+                          color: "text.secondary",
                         }}
                       >
-                        Description:
-                      </Typography>{" "}
-                      {ride.description}
-                    </Typography>
-                  </Box>
-                )}
+                        <Typography
+                          component="span"
+                          sx={{
+                            // fontStyle: "italic",
+                            fontWeight: 800,
+                            fontSize: { xs: "0.75rem", sm: "0.75rem" },
+                          }}
+                        >
+                          Description:
+                        </Typography>{" "}
+                        {ride.description}
+                      </Typography>
+                    </Box>
+                  )}
 
-                {isFlight && (
-                  <>
-                    <Divider sx={{ my: 1.25, borderColor: ORANGE_DIVIDER }} />
-                    <Stack direction="row" flexWrap="wrap" sx={{ gap: 1.5 }}>
-                      {ride.medicalAssistance && (
-                        <Chip
-                          size="small"
-                          icon={
-                            <MedicalServicesIcon
-                              sx={{ fontSize: { xs: 11, sm: 13 } }}
-                            />
-                          }
-                          label="Medical Help"
-                          sx={{
-                            fontSize: { xs: "0.58rem", sm: "0.7rem" },
-                            bgcolor: "#FFF0DD",
-                            color: "#7a4a00",
-                          }}
-                        />
-                      )}
-                      {ride.languageSupport && (
-                        <Chip
-                          size="small"
-                          icon={
-                            <LanguageIcon
-                              sx={{ fontSize: { xs: 11, sm: 13 } }}
-                            />
-                          }
-                          label="Language Support"
-                          sx={{
-                            fontSize: { xs: "0.58rem", sm: "0.7rem" },
-                            bgcolor: "#FFF0DD",
-                            color: "#7a4a00",
-                          }}
-                        />
-                      )}
-                      {ride.transitHelp && (
-                        <Chip
-                          size="small"
-                          label="Transit Help"
-                          icon={
-                            <InfoOutlinedIcon
-                              sx={{ fontSize: { xs: 12, sm: 14 } }}
-                            />
-                          }
-                          sx={{
-                            fontSize: { xs: "0.58rem", sm: "0.7rem" },
-                            bgcolor: "#FFF0DD",
-                            color: "#7a4a00",
-                          }}
-                        />
-                      )}
-                      {ride.baggageHelp && (
-                        <Chip
-                          size="small"
-                          icon={
-                            <LuggageIcon
-                              sx={{ fontSize: { xs: 11, sm: 13 } }}
-                            />
-                          }
-                          label="Baggage Help"
-                          sx={{
-                            fontSize: { xs: "0.58rem", sm: "0.7rem" },
-                            bgcolor: "#FFF0DD",
-                            color: "#7a4a00",
-                          }}
-                        />
-                      )}
-                    </Stack>
-                  </>
-                )}
-              </Box>
-            </Collapse>
-          </CardContent>
-        </Card>
-      </Box>
+                  {isFlight && (
+                    <>
+                      <Divider sx={{ my: 1.25, borderColor: ORANGE_DIVIDER }} />
+                      <Stack direction="row" flexWrap="wrap" sx={{ gap: 1.5 }}>
+                        {ride.medicalAssistance && (
+                          <Chip
+                            size="small"
+                            icon={
+                              <MedicalServicesIcon
+                                sx={{ fontSize: { xs: 11, sm: 13 } }}
+                              />
+                            }
+                            label="Medical Help"
+                            sx={{
+                              fontSize: { xs: "0.58rem", sm: "0.7rem" },
+                              bgcolor: "#FFF0DD",
+                              color: "#7a4a00",
+                            }}
+                          />
+                        )}
+                        {ride.languageSupport && (
+                          <Chip
+                            size="small"
+                            icon={
+                              <LanguageIcon
+                                sx={{ fontSize: { xs: 11, sm: 13 } }}
+                              />
+                            }
+                            label="Language Support"
+                            sx={{
+                              fontSize: { xs: "0.58rem", sm: "0.7rem" },
+                              bgcolor: "#FFF0DD",
+                              color: "#7a4a00",
+                            }}
+                          />
+                        )}
+                        {ride.transitHelp && (
+                          <Chip
+                            size="small"
+                            label="Transit Help"
+                            icon={
+                              <InfoOutlinedIcon
+                                sx={{ fontSize: { xs: 12, sm: 14 } }}
+                              />
+                            }
+                            sx={{
+                              fontSize: { xs: "0.58rem", sm: "0.7rem" },
+                              bgcolor: "#FFF0DD",
+                              color: "#7a4a00",
+                            }}
+                          />
+                        )}
+                        {ride.baggageHelp && (
+                          <Chip
+                            size="small"
+                            icon={
+                              <LuggageIcon
+                                sx={{ fontSize: { xs: 11, sm: 13 } }}
+                              />
+                            }
+                            label="Baggage Help"
+                            sx={{
+                              fontSize: { xs: "0.58rem", sm: "0.7rem" },
+                              bgcolor: "#FFF0DD",
+                              color: "#7a4a00",
+                            }}
+                          />
+                        )}
+                      </Stack>
+                    </>
+                  )}
+                </Box>
+              </Collapse>
+            </CardContent>
+          </Card>
+        </Box>
+      )}
+
       <Ridebook
         open={openEditModal}
         onClose={() => setOpenEditModal(false)}
