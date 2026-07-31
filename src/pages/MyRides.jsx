@@ -278,7 +278,7 @@ function EditRideModal({ ride, onSave, onClose }) {
     } catch (err) {
       setError(
         err?.response?.data?.message ||
-          "Failed to update ride. Please try again.",
+        "Failed to update ride. Please try again.",
       );
     } finally {
       setSaving(false);
@@ -486,10 +486,10 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
   const startDate = new Date(ride.startTime);
   const dateLabel = !isNaN(startDate)
     ? startDate.toLocaleDateString("en-IN", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    })
     : "—";
 
   const handleConfirm = async () => {
@@ -503,7 +503,7 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
     } catch (err) {
       setError(
         err?.response?.data?.message ||
-          "Failed to delete ride. Please try again.",
+        "Failed to delete ride. Please try again.",
       );
     } finally {
       setDeleting(false);
@@ -827,17 +827,17 @@ function RideCard({
   const startDate = new Date(ride.startTime);
   const date = !isNaN(startDate)
     ? startDate.toLocaleDateString("en-IN", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    })
     : "—";
   const time = !isNaN(startDate)
     ? startDate.toLocaleTimeString("en-IN", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      })
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    })
     : "—";
 
   const fuelLabel = ride.fuelSharing ? "Yes" : "No";
@@ -1606,13 +1606,14 @@ const MyRides = () => {
           new Date(b.startTime).getTime() - new Date(a.startTime).getTime(),
       );
 
+      setMypost(all.filter((item) => item?.createdBy?._id === user.id));
+
       setUpcoming(
         all.filter((ride) => {
           const rideStartTime = new Date(ride?.startTime);
           return (
             ride?.createdBy?._id === user.id &&
             !isNaN(rideStartTime) &&
-            ride.travelStatus !== "Cancelled" &&
             rideStartTime > currentDateTime
           );
         }),
@@ -1621,36 +1622,33 @@ const MyRides = () => {
       setHistory(
         all.filter((ride) => {
           const rideStartTime = new Date(ride?.startTime);
+          // const rideEndTime = new Date(rideStartTime.getTime() + 3 * 60 * 60 * 1000);
           return (
             ride?.createdBy?._id === user.id &&
             !isNaN(rideStartTime) &&
-            (ride?.travelStatus === "Completed" ||
-              ride?.travelStatus === "Cancelled")
-          );
-        }),
-      );
-
-      // History includes: Completed rides + Cancelled rides
-      setHistory(
-        all.filter((ride) => {
-          const rideStartTime = new Date(ride?.startTime);
-          return (
-            ride?.createdBy?._id === user.id &&
-            !isNaN(rideStartTime) &&
-            (ride?.travelStatus === "Completed" ||
-              ride?.travelStatus === "Cancelled")
+            ride?.travelStatus === "Completed"
           );
         }),
       );
 
       setCurrentRide(
+        //   const currentDateTime = new Date();
+        //   const currReqRide = allMyRequests.filter((ride)=>{
+
+        //     const rideStartTime = new Date(ride?.rideId?.startTime);
+        //     return(
+        //       !isNaN(rideStartTime) &&
+        //       rideStartTime <= currentDateTime
+        //     )
+        //   })
+
         all.filter((ride) => {
           const rideStartTime = new Date(ride?.startTime);
+          // const rideEndTime = new Date(rideStartTime.getTime() + 3 * 60 * 60 * 1000);
           return (
             ride?.createdBy?._id === user.id &&
             rideStartTime >= currentDateTime &&
-            ride?.travelStatus !== "Completed" &&
-            ride?.travelStatus !== "Cancelled"
+            ride?.travelStatus !== "Completed"
           );
         }),
       );
@@ -1665,114 +1663,77 @@ const MyRides = () => {
   }, [refreshRide, notifications]);
 
   // Upcoming Ride Condition for both req and post
-
-  // useEffect(() => {
-  //   console.log("🔥 notifications changed", notifications);
-  // }, [notifications]);
-
-  // Upcoming Ride Condition for both req and post
-  // Upcoming Ride Condition for both req and post
   useEffect(() => {
+    if (!allMyRequests?.length) return;
+
     const currentDateTime = new Date();
 
-    // ✅ STEP 1: Declare myrides FIRST (moved to top)
-    const myrides = mypost.filter((ride) => {
-      const rideStartTime = new Date(ride?.startTime);
-      return (
-        ride?.createdBy?._id === user.id &&
-        !isNaN(rideStartTime) &&
-        rideStartTime <= currentDateTime &&
-        ride?.travelStatus !== "Completed" &&
-        ride?.travelStatus !== "Cancelled"
-      );
-    });
-
-    // ✅ STEP 2: Get current rides from requests
-    const currReqRide = allMyRequests
+    const acceptedRides = allMyRequests
       .filter((ride) => {
-        const rideStartTime = new Date(ride?.rideId?.startTime);
-        return (
-          ride?.rideId?.createdBy?._id === user.id && // ✅ Fixed: access from rideId
-          !isNaN(rideStartTime) &&
-          rideStartTime <= currentDateTime &&
-          ride?.rideId?.travelStatus !== "Completed" && // ✅ Fixed: access from rideId
-          ride?.rideId?.travelStatus !== "Cancelled"
-        );
-      })
-      .map((ride) => ride.rideId)
-      .filter(Boolean); // Remove undefined/null
-
-    // ✅ STEP 3: Now set current ride (myrides is now defined)
-    setCurrentRide([...currReqRide, ...myrides]);
-
-    // ✅ STEP 4: History from requests
-    const historyFromRequests = allMyRequests
-      .filter(
-        (ride) =>
-          ride?.rideId?.travelStatus === "Completed" ||
-          ride?.rideId?.travelStatus === "Cancelled" ||
-          ride?.status === "CANCELLED" ||
-          ride?.status === "REJECTED" ||
-          ride?.status === "DELETED",
-      )
-      .map((ride) => ride.rideId)
-      .filter(Boolean);
-
-    // ✅ STEP 5: History from my posts
-    const historyFromMyPosts = mypost.filter((ride) => {
-      const rideStartTime = new Date(ride?.startTime);
-      return (
-        ride?.createdBy?._id === user.id &&
-        !isNaN(rideStartTime) &&
-        (ride?.travelStatus === "Completed" ||
-          ride?.travelStatus === "Cancelled")
-      );
-    });
-
-    // ✅ STEP 6: Combine and remove duplicates for history
-    const allHistory = [...historyFromRequests, ...historyFromMyPosts];
-    const uniqueHistory = allHistory.filter(
-      (ride, index, self) =>
-        ride && index === self.findIndex((r) => r?._id === ride?._id),
-    );
-
-    setHistory(uniqueHistory);
-
-    // ✅ STEP 7: Upcoming rides from requests
-    const upcomingFromRequests = allMyRequests
-      .filter((ride) => {
+        // ride?.status?.trim() === "ACCEPTED" && ride.rideId
         const rideStartTime = new Date(ride?.rideId?.startTime);
         return (
           !isNaN(rideStartTime) &&
           rideStartTime > currentDateTime &&
-          ride?.status === "ACCEPTED" &&
-          ride?.rideId?.travelStatus !== "Completed" &&
-          ride?.rideId?.travelStatus !== "Cancelled"
+          ride?.status === "ACCEPTED"
         );
       })
-      .map((ride) => ride.rideId)
-      .filter(Boolean);
+      .map((ride) => ride.rideId);
 
-    // ✅ STEP 8: Upcoming from my posts
-    const upcomingFromMyPosts = mypost.filter((ride) => {
+    const myUpcoming = mypost.filter((ride) => {
+      const rideStartTime = new Date(ride?.startTime);
+      return !isNaN(rideStartTime) && rideStartTime > currentDateTime;
+    });
+
+    setUpcoming([...acceptedRides, ...myUpcoming]);
+  }, [allMyRequests, mypost, notifications]);
+
+  useEffect(() => {
+    console.log("🔥 notifications changed", notifications);
+  }, [notifications]);
+
+  useEffect(() => {
+    const currentDateTime = new Date();
+
+    const currReqRide = allMyRequests
+      .filter((ride) => {
+        const rideStartTime = new Date(ride?.rideId?.startTime);
+
+        return (
+          !isNaN(rideStartTime) &&
+          rideStartTime <= currentDateTime &&
+          ride?.status === "ACCEPTED" &&
+          ride?.rideId?.travelStatus !== "Completed"
+        );
+      })
+      .map((ride) => ride.rideId);
+
+    const myrides = mypost.filter((ride) => {
+      const rideStartTime = new Date(ride?.startTime);
+      // const rideEndTime = new Date(rideStartTime.getTime() + 3 * 60 * 60 * 1000);
+      return (
+        ride?.createdBy?._id === user.id &&
+        rideStartTime <= currentDateTime &&
+        ride?.travelStatus !== "Completed"
+      );
+    });
+
+    setCurrentRide([...currReqRide, ...myrides]);
+
+    const historyRide = allMyRequests
+      .filter((ride) => ride?.rideId?.travelStatus == "Completed")
+      .map((ride) => ride.rideId);
+
+    const histMyPost = mypost.filter((ride) => {
       const rideStartTime = new Date(ride?.startTime);
       return (
         ride?.createdBy?._id === user.id &&
         !isNaN(rideStartTime) &&
-        rideStartTime > currentDateTime &&
-        ride?.travelStatus !== "Completed" &&
-        ride?.travelStatus !== "Cancelled"
+        ride?.travelStatus == "Completed"
       );
     });
 
-    // ✅ STEP 9: Combine and remove duplicates for upcoming
-    const allUpcoming = [...upcomingFromRequests, ...upcomingFromMyPosts];
-    const uniqueUpcoming = allUpcoming.filter(
-      (ride, index, self) =>
-        ride && index === self.findIndex((r) => r?._id === ride?._id),
-    );
-
-    setUpcoming(uniqueUpcoming);
+    setHistory([...historyRide, ...histMyPost]);
   }, [allMyRequests, mypost, notifications]);
 
   useEffect(() => {
