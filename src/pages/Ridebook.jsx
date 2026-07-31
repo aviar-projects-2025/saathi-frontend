@@ -369,7 +369,6 @@ export default function Ridebook({
       toast.error(error.response?.data?.message || "Request failed", TOASTS);
     }
   };
-
   const titleText = isFlight
     ? isEditMode
       ? "Edit Travel Companion Request"

@@ -737,83 +737,88 @@ export default function RideDetailsModal({
         )}
 
       </DialogContent>
-
-      {/* ── Actions ── */}
-      <Box
+  {/* ── Actions ── */}
+<Box
+  sx={{
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: 1,
+    px: { xs: 2.5, sm: 4 },
+    py: { xs: 2, sm: 2.5 },
+    borderTop: `1px solid ${TOKENS.line}`,
+  }}
+>
+  {showEdit && (
+    (ride.createdBy?._id === user?.id || 
+     typeof ride.createdBy === 'string' && ride.createdBy === user?.id) && (
+      <Button
+        onClick={() => onEdit(ride)}
+        startIcon={<EditIcon sx={{ fontSize: { xs: 16, sm: 18 } }} />}
+        size={isMd ? 'medium' : 'small'}
         sx={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: 1,
-          px: { xs: 2.5, sm: 4 },
-          py: { xs: 2, sm: 2.5 },
-          borderTop: `1px solid ${TOKENS.line}`,
+          fontFamily: TOKENS.bodyFont,
+          textTransform: 'none',
+          fontWeight: 700,
+          fontSize: { xs: '0.8rem', sm: '0.88rem' },
+          color: TOKENS.ink,
+          border: `1.5px solid ${TOKENS.ink}`,
+          borderRadius: 5,
+          px: { xs: 1.6, sm: 2.2 },
+          minHeight: { xs: 40, sm: 44 },
+          flex: { xs: '1 1 auto', sm: '0 0 auto' },
+          '&:hover': { bgcolor: TOKENS.ink, color: TOKENS.paper },
         }}
       >
-        {showEdit && ride.createdBy?._id === user?.id && (
-          <Button
-            onClick={() => onEdit(ride)}
-            startIcon={<EditIcon sx={{ fontSize: { xs: 16, sm: 18 } }} />}
-            size={isMd ? 'medium' : 'small'}
-            sx={{
-              fontFamily: TOKENS.bodyFont,
-              textTransform: 'none',
-              fontWeight: 700,
-              fontSize: { xs: '0.8rem', sm: '0.88rem' },
-              color: TOKENS.ink,
-              border: `1.5px solid ${TOKENS.ink}`,
-              borderRadius: 5,
-              px: { xs: 1.6, sm: 2.2 },
-              minHeight: { xs: 40, sm: 44 },
-              flex: { xs: '1 1 auto', sm: '0 0 auto' },
-              '&:hover': { bgcolor: TOKENS.ink, color: TOKENS.paper },
-            }}
-          >
-            Edit ride
-          </Button>
-        )}
-        {showDelete && ride.createdBy?._id === user?.id && (
-          <Button
-            onClick={() => onDelete(ride)}
-            startIcon={<DeleteIcon sx={{ fontSize: { xs: 16, sm: 18 } }} />}
-            size={isMd ? 'medium' : 'small'}
-            sx={{
-              fontFamily: TOKENS.bodyFont,
-              textTransform: 'none',
-              fontWeight: 700,
-              fontSize: { xs: '0.8rem', sm: '0.88rem' },
-              color: TOKENS.red,
-              border: `1.5px solid ${TOKENS.red}`,
-              borderRadius: 5,
-              px: { xs: 1.6, sm: 2.2 },
-              minHeight: { xs: 40, sm: 44 },
-              flex: { xs: '1 1 auto', sm: '0 0 auto' },
-              '&:hover': { bgcolor: TOKENS.red, color: '#fff' },
-            }}
-          >
-            Cancel ride
-          </Button>
-        )}
-        <Box sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }} />
-        <Button
-          onClick={onClose}
-          size={isMd ? 'medium' : 'small'}
-          sx={{
-            fontFamily: TOKENS.bodyFont,
-            textTransform: 'none',
-            fontWeight: 700,
-            fontSize: { xs: '0.8rem', sm: '0.88rem' },
-            color: TOKENS.inkSoft,
-            border: `1.5px solid ${TOKENS.line}`,
-            borderRadius: 5,
-            px: { xs: 1.6, sm: 2.2 },
-            minHeight: { xs: 40, sm: 44 },
-            flex: { xs: '1 1 auto', sm: '0 0 auto' },
-            '&:hover': { bgcolor: TOKENS.paperDim },
-          }}
-        >
-          Close
-        </Button>
-      </Box>
+        Edit ride
+      </Button>
+    )
+  )}
+  {showDelete && (
+    (ride.createdBy?._id === user?.id || 
+     typeof ride.createdBy === 'string' && ride.createdBy === user?.id) && (
+      <Button
+        onClick={() => onDelete(ride)}
+        startIcon={<DeleteIcon sx={{ fontSize: { xs: 16, sm: 18 } }} />}
+        size={isMd ? 'medium' : 'small'}
+        sx={{
+          fontFamily: TOKENS.bodyFont,
+          textTransform: 'none',
+          fontWeight: 700,
+          fontSize: { xs: '0.8rem', sm: '0.88rem' },
+          color: TOKENS.red,
+          border: `1.5px solid ${TOKENS.red}`,
+          borderRadius: 5,
+          px: { xs: 1.6, sm: 2.2 },
+          minHeight: { xs: 40, sm: 44 },
+          flex: { xs: '1 1 auto', sm: '0 0 auto' },
+          '&:hover': { bgcolor: TOKENS.red, color: '#fff' },
+        }}
+      >
+        Delete ride
+      </Button>
+    )
+  )}
+  <Box sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }} />
+  <Button
+    onClick={onClose}
+    size={isMd ? 'medium' : 'small'}
+    sx={{
+      fontFamily: TOKENS.bodyFont,
+      textTransform: 'none',
+      fontWeight: 700,
+      fontSize: { xs: '0.8rem', sm: '0.88rem' },
+      color: TOKENS.inkSoft,
+      border: `1.5px solid ${TOKENS.line}`,
+      borderRadius: 5,
+      px: { xs: 1.6, sm: 2.2 },
+      minHeight: { xs: 40, sm: 44 },
+      flex: { xs: '1 1 auto', sm: '0 0 auto' },
+      '&:hover': { bgcolor: TOKENS.paperDim },
+    }}
+  >
+    Close
+  </Button>
+</Box>
     </Dialog>
   );
 }
