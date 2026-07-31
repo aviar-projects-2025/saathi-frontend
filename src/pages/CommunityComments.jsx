@@ -494,8 +494,8 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
                           userSelect: "none",
                         }}
                       >
-                        {item.likedByCurrentUser ? (
-                          <ThumbUpAltIcon sx={{ fontSize: 14 }} />
+                        {item.likedByCurrentUser || item.likes ? (
+                          <ThumbUpAltIcon sx={{ fontSize: 14, color: '#0084ff' }} />
                         ) : (
                           <ThumbUpAltOutlinedIcon sx={{ fontSize: 14 }} />
                         )}
@@ -611,8 +611,8 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
                                 userSelect: "none",
                               }}
                             >
-                              {replyItem.likedByCurrentUser ? (
-                                <ThumbUpAltIcon sx={{ fontSize: 13 }} />
+                              {replyItem.likedByCurrentUser || replyItem.likes ? (
+                                <ThumbUpAltIcon sx={{ fontSize: 14, color: '#0084ff' }} />
                               ) : (
                                 <ThumbUpAltOutlinedIcon sx={{ fontSize: 13 }} />
                               )}
