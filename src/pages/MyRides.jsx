@@ -278,7 +278,7 @@ function EditRideModal({ ride, onSave, onClose }) {
     } catch (err) {
       setError(
         err?.response?.data?.message ||
-        "Failed to update ride. Please try again.",
+          "Failed to update ride. Please try again.",
       );
     } finally {
       setSaving(false);
@@ -486,22 +486,24 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
   const startDate = new Date(ride.startTime);
   const dateLabel = !isNaN(startDate)
     ? startDate.toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    })
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
     : "—";
 
   const handleConfirm = async () => {
     setDeleting(true);
     setError("");
     try {
-      await axios.patch(`${Api}/rides/cancelride/${ride._id || ride.id}?type=Cancel`);
+      await axios.patch(
+        `${Api}/rides/cancelride/${ride._id || ride.id}?type=Cancel`,
+      );
       onConfirm(ride);
     } catch (err) {
       setError(
         err?.response?.data?.message ||
-        "Failed to delete ride. Please try again.",
+          "Failed to delete ride. Please try again.",
       );
     } finally {
       setDeleting(false);
@@ -522,17 +524,48 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
         },
       }}
     >
-      <DialogTitle sx={{ fontWeight: 800, pr: 5, fontSize: { xs: '1rem', sm: '1.15rem' } }}>
+      <DialogTitle
+        sx={{ fontWeight: 800, pr: 5, fontSize: { xs: "1rem", sm: "1.15rem" } }}
+      >
         Are you sure to cancel your ride?
-        <IconButton onClick={onClose} aria-label="Close" sx={{ position: 'absolute', right: 8, top: 8, color: 'text.secondary', width: 44, height: 44 }}>
+        <IconButton
+          onClick={onClose}
+          aria-label="Close"
+          sx={{
+            position: "absolute",
+            right: 8,
+            top: 8,
+            color: "text.secondary",
+            width: 44,
+            height: 44,
+          }}
+        >
           <CloseIcon fontSize="small" />
         </IconButton>
       </DialogTitle>
 
       <DialogContent>
-        <Typography color="text.secondary" sx={{ fontSize: { xs: '0.82rem', sm: '0.9rem' } }}>This will cancel your ride, requested persons will be notified...</Typography>
-        <Paper sx={{ mt: 2, p: 1.5, bgcolor: '#FFF8F2', border: '1px solid #F0E6DC', borderRadius: 2 }} elevation={0}>
-          <Typography sx={{ fontSize: { xs: '0.78rem', sm: '0.85rem' } }} fontWeight={700} wordBreak="break-word">
+        <Typography
+          color="text.secondary"
+          sx={{ fontSize: { xs: "0.82rem", sm: "0.9rem" } }}
+        >
+          This will cancel your ride, requested persons will be notified...
+        </Typography>
+        <Paper
+          sx={{
+            mt: 2,
+            p: 1.5,
+            bgcolor: "#FFF8F2",
+            border: "1px solid #F0E6DC",
+            borderRadius: 2,
+          }}
+          elevation={0}
+        >
+          <Typography
+            sx={{ fontSize: { xs: "0.78rem", sm: "0.85rem" } }}
+            fontWeight={700}
+            wordBreak="break-word"
+          >
             {formFrom(ride)} → {formTo(ride)}
           </Typography>
           <Typography
@@ -562,8 +595,20 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
         >
           Cancel
         </Button>
-        <Button onClick={handleConfirm} variant="contained" color="error" disabled={deleting} sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700, flex: { xs: '1 1 auto', sm: '0 0 auto' }, minHeight: 44 }}>
-          {deleting ? 'Deleting...' : "Yes"}
+        <Button
+          onClick={handleConfirm}
+          variant="contained"
+          color="error"
+          disabled={deleting}
+          sx={{
+            borderRadius: 2,
+            textTransform: "none",
+            fontWeight: 700,
+            flex: { xs: "1 1 auto", sm: "0 0 auto" },
+            minHeight: 44,
+          }}
+        >
+          {deleting ? "Deleting..." : "Yes"}
         </Button>
       </DialogActions>
     </Dialog>
@@ -765,9 +810,8 @@ function RideCard({
   const [approveLoading, setApproveLoading] = useState(null);
   const [rejectLoading, setRejectLoading] = useState(null);
 
-  const [members, setMembers] = useState([])
-  const [pendingMembers, setPendingMembers] = useState([])
-
+  const [members, setMembers] = useState([]);
+  const [pendingMembers, setPendingMembers] = useState([]);
 
   const toasts = ToastConfig();
 
@@ -783,17 +827,17 @@ function RideCard({
   const startDate = new Date(ride.startTime);
   const date = !isNaN(startDate)
     ? startDate.toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    })
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
     : "—";
   const time = !isNaN(startDate)
     ? startDate.toLocaleTimeString("en-IN", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    })
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      })
     : "—";
 
   const fuelLabel = ride.fuelSharing ? "Yes" : "No";
@@ -804,7 +848,7 @@ function RideCard({
       (req) => req.rideId?._id?.toString() === ride._id?.toString(),
     ) || [];
 
-  console.log(rideRequests, 'rideRequests')
+  console.log(rideRequests, "rideRequests");
 
   const pendingCount = rideRequests.filter(
     (r) => r.status?.toUpperCase() === "PENDING",
@@ -851,7 +895,7 @@ function RideCard({
       toast.success("Request rejected", toasts);
       fetchRides();
     } catch (error) {
-      toast.error('Failed to reject request', toasts);
+      toast.error("Failed to reject request", toasts);
     } finally {
       setRejectLoading(null);
     }
@@ -979,26 +1023,24 @@ function RideCard({
               />
             )}
             {/* Completed Chip */}
-            {ride?.travelStatus === "Completed" && (
+            {ride?.travelStatus === "Cancelled" && (
               <Chip
                 size="small"
-                label={isMobile ? "Completed" : "Completed Ride"}
+                label="❌ Cancelled"
                 sx={{
-                  bgcolor: status.bg,
-                  color: status.color,
+                  bgcolor: "#FFEBEE",
+                  color: "#9B2226",
                   fontWeight: 700,
                 }}
               />
             )}
-
-            {/* Status Chip */}
-            {ride?.travelStatus !== "Completed" && (
+            {ride?.travelStatus === "Completed" && (
               <Chip
                 size="small"
-                label={`${status.icon} ${status.label}`}
+                label="✅ Completed"
                 sx={{
-                  bgcolor: status.bg,
-                  color: status.color,
+                  bgcolor: "#E8F5E9",
+                  color: "#2E7D32",
                   fontWeight: 700,
                 }}
               />
@@ -1108,8 +1150,8 @@ function RideCard({
               {/* FROM / TO row */}
               <Box
                 sx={{
-                  display: isMobile ? 'block' : 'flex',
-                  justifyContent: 'space-between',
+                  display: isMobile ? "block" : "flex",
+                  justifyContent: "space-between",
                   // alignItems:'center',
                 }}
               >
@@ -1201,11 +1243,14 @@ function RideCard({
                 <Box
                   sx={{
                     // border:'1px solid black',
-                    justifyContent: 'space-around',
-                    display: 'flex',
-                    width: isMobile ? '100%' : '60%',
-                    gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(3, 1fr)' },
-                    gap: { xs: '10px 6px', sm: '16px', md: 3 },
+                    justifyContent: "space-around",
+                    display: "flex",
+                    width: isMobile ? "100%" : "60%",
+                    gridTemplateColumns: {
+                      xs: "1fr 1fr",
+                      sm: "repeat(3, 1fr)",
+                    },
+                    gap: { xs: "10px 6px", sm: "16px", md: 3 },
                   }}
                 >
                   <Box>
@@ -1483,6 +1528,24 @@ const MyRides = () => {
     return () => clearInterval(interval);
   }, [currentRide]);
 
+  // In MyRides component, add this useEffect:
+
+  useEffect(() => {
+    // Listen for ride data changes from other components
+    const handleRideDataChange = (event) => {
+      console.log("Ride data changed:", event.detail);
+      // Refresh all data
+      fetchRides();
+      fetchAllSends();
+    };
+
+    window.addEventListener("rideDataChanged", handleRideDataChange);
+
+    // Cleanup listener on component unmount
+    return () => {
+      window.removeEventListener("rideDataChanged", handleRideDataChange);
+    };
+  }, []); // Empty dependency array - only run once
   useEffect(() => {
     if (!notifications?.length) return;
     fetchRides();
@@ -1532,6 +1595,8 @@ const MyRides = () => {
 
   const { refreshRide } = useRide();
 
+  // Update the fetchRides function to include cancelled/rejected rides in history
+
   const fetchRides = async () => {
     const currentDateTime = new Date();
     try {
@@ -1540,8 +1605,6 @@ const MyRides = () => {
         (a, b) =>
           new Date(b.startTime).getTime() - new Date(a.startTime).getTime(),
       );
-
-      setMypost(all.filter((item) => item?.createdBy?._id === user.id));
 
       setUpcoming(
         all.filter((ride) => {
@@ -1561,32 +1624,33 @@ const MyRides = () => {
           return (
             ride?.createdBy?._id === user.id &&
             !isNaN(rideStartTime) &&
-            (
-              ride?.travelStatus === "Completed" ||
-              ride?.travelStatus === "Cancelled"
-            )
+            (ride?.travelStatus === "Completed" ||
+              ride?.travelStatus === "Cancelled")
           );
-        })
+        }),
+      );
+
+      // History includes: Completed rides + Cancelled rides
+      setHistory(
+        all.filter((ride) => {
+          const rideStartTime = new Date(ride?.startTime);
+          return (
+            ride?.createdBy?._id === user.id &&
+            !isNaN(rideStartTime) &&
+            (ride?.travelStatus === "Completed" ||
+              ride?.travelStatus === "Cancelled")
+          );
+        }),
       );
 
       setCurrentRide(
-        //   const currentDateTime = new Date();
-        //   const currReqRide = allMyRequests.filter((ride)=>{
-
-        //     const rideStartTime = new Date(ride?.rideId?.startTime);
-        //     return(
-        //       !isNaN(rideStartTime) &&
-        //       rideStartTime <= currentDateTime
-        //     )
-        //   })
-
         all.filter((ride) => {
           const rideStartTime = new Date(ride?.startTime);
-          // const rideEndTime = new Date(rideStartTime.getTime() + 3 * 60 * 60 * 1000);
           return (
             ride?.createdBy?._id === user.id &&
             rideStartTime >= currentDateTime &&
-            ride?.travelStatus !== "Completed"
+            ride?.travelStatus !== "Completed" &&
+            ride?.travelStatus !== "Cancelled"
           );
         }),
       );
@@ -1601,81 +1665,114 @@ const MyRides = () => {
   }, [refreshRide, notifications]);
 
   // Upcoming Ride Condition for both req and post
-  useEffect(() => {
-    if (!allMyRequests?.length) return;
-
-    const currentDateTime = new Date();
-
-    const acceptedRides = allMyRequests
-      .filter((ride) => {
-        // ride?.status?.trim() === "ACCEPTED" && ride.rideId
-        const rideStartTime = new Date(ride?.rideId?.startTime);
-        return (
-          !isNaN(rideStartTime) &&
-          rideStartTime > currentDateTime &&
-          ride?.status === "ACCEPTED"
-        );
-      })
-      .map((ride) => ride.rideId);
-
-    const myUpcoming = mypost.filter((ride) => {
-      const rideStartTime = new Date(ride?.startTime);
-      return !isNaN(rideStartTime) && rideStartTime > currentDateTime;
-    });
-
-    setUpcoming([...acceptedRides, ...myUpcoming]);
-  }, [allMyRequests, mypost, notifications]);
 
   // useEffect(() => {
   //   console.log("🔥 notifications changed", notifications);
   // }, [notifications]);
 
+  // Upcoming Ride Condition for both req and post
+  // Upcoming Ride Condition for both req and post
   useEffect(() => {
     const currentDateTime = new Date();
 
-    const currReqRide = allMyRequests
-      .filter((ride) => {
-        const rideStartTime = new Date(ride?.rideId?.startTime);
-
-        return (
-          !isNaN(rideStartTime) &&
-          rideStartTime <= currentDateTime &&
-          ride?.status === "ACCEPTED" &&
-          ride?.rideId?.travelStatus !== "Completed"
-        );
-      })
-      .map((ride) => ride.rideId);
-
+    // ✅ STEP 1: Declare myrides FIRST (moved to top)
     const myrides = mypost.filter((ride) => {
-      const rideStartTime = new Date(ride?.startTime);
-      // const rideEndTime = new Date(rideStartTime.getTime() + 3 * 60 * 60 * 1000);
-      return (
-        ride?.createdBy?._id === user.id &&
-        rideStartTime <= currentDateTime &&
-        ride?.travelStatus !== "Completed"
-      );
-    });
-
-    setCurrentRide([...currReqRide, ...myrides]);
-
-    const historyRide = allMyRequests
-      .filter((ride) => {
-        return (
-          ride?.rideId?.travelStatus == "Completed" || ride?.rideId?.travelStatus == "Cancelled"
-        )
-      })
-      .map((ride) => ride.rideId);
-
-    const histMyPost = mypost.filter((ride) => {
       const rideStartTime = new Date(ride?.startTime);
       return (
         ride?.createdBy?._id === user.id &&
         !isNaN(rideStartTime) &&
-        (ride?.travelStatus === "Completed" || ride?.travelStatus === "Cancelled")
+        rideStartTime <= currentDateTime &&
+        ride?.travelStatus !== "Completed" &&
+        ride?.travelStatus !== "Cancelled"
       );
     });
 
-    setHistory([...historyRide, ...histMyPost]);
+    // ✅ STEP 2: Get current rides from requests
+    const currReqRide = allMyRequests
+      .filter((ride) => {
+        const rideStartTime = new Date(ride?.rideId?.startTime);
+        return (
+          ride?.rideId?.createdBy?._id === user.id && // ✅ Fixed: access from rideId
+          !isNaN(rideStartTime) &&
+          rideStartTime <= currentDateTime &&
+          ride?.rideId?.travelStatus !== "Completed" && // ✅ Fixed: access from rideId
+          ride?.rideId?.travelStatus !== "Cancelled"
+        );
+      })
+      .map((ride) => ride.rideId)
+      .filter(Boolean); // Remove undefined/null
+
+    // ✅ STEP 3: Now set current ride (myrides is now defined)
+    setCurrentRide([...currReqRide, ...myrides]);
+
+    // ✅ STEP 4: History from requests
+    const historyFromRequests = allMyRequests
+      .filter(
+        (ride) =>
+          ride?.rideId?.travelStatus === "Completed" ||
+          ride?.rideId?.travelStatus === "Cancelled" ||
+          ride?.status === "CANCELLED" ||
+          ride?.status === "REJECTED" ||
+          ride?.status === "DELETED",
+      )
+      .map((ride) => ride.rideId)
+      .filter(Boolean);
+
+    // ✅ STEP 5: History from my posts
+    const historyFromMyPosts = mypost.filter((ride) => {
+      const rideStartTime = new Date(ride?.startTime);
+      return (
+        ride?.createdBy?._id === user.id &&
+        !isNaN(rideStartTime) &&
+        (ride?.travelStatus === "Completed" ||
+          ride?.travelStatus === "Cancelled")
+      );
+    });
+
+    // ✅ STEP 6: Combine and remove duplicates for history
+    const allHistory = [...historyFromRequests, ...historyFromMyPosts];
+    const uniqueHistory = allHistory.filter(
+      (ride, index, self) =>
+        ride && index === self.findIndex((r) => r?._id === ride?._id),
+    );
+
+    setHistory(uniqueHistory);
+
+    // ✅ STEP 7: Upcoming rides from requests
+    const upcomingFromRequests = allMyRequests
+      .filter((ride) => {
+        const rideStartTime = new Date(ride?.rideId?.startTime);
+        return (
+          !isNaN(rideStartTime) &&
+          rideStartTime > currentDateTime &&
+          ride?.status === "ACCEPTED" &&
+          ride?.rideId?.travelStatus !== "Completed" &&
+          ride?.rideId?.travelStatus !== "Cancelled"
+        );
+      })
+      .map((ride) => ride.rideId)
+      .filter(Boolean);
+
+    // ✅ STEP 8: Upcoming from my posts
+    const upcomingFromMyPosts = mypost.filter((ride) => {
+      const rideStartTime = new Date(ride?.startTime);
+      return (
+        ride?.createdBy?._id === user.id &&
+        !isNaN(rideStartTime) &&
+        rideStartTime > currentDateTime &&
+        ride?.travelStatus !== "Completed" &&
+        ride?.travelStatus !== "Cancelled"
+      );
+    });
+
+    // ✅ STEP 9: Combine and remove duplicates for upcoming
+    const allUpcoming = [...upcomingFromRequests, ...upcomingFromMyPosts];
+    const uniqueUpcoming = allUpcoming.filter(
+      (ride, index, self) =>
+        ride && index === self.findIndex((r) => r?._id === ride?._id),
+    );
+
+    setUpcoming(uniqueUpcoming);
   }, [allMyRequests, mypost, notifications]);
 
   useEffect(() => {
@@ -1833,9 +1930,11 @@ const MyRides = () => {
     showEdit = false,
     showDelete = false,
     isCurrentRide = false,
+    isHistory = false,
   ) =>
     list.map((ride) => {
       const isCompleted = ride.travelStatus === "Completed";
+      const isCancelled = ride.travelStatus === "Cancelled";
 
       return (
         <RideCard
@@ -1845,16 +1944,17 @@ const MyRides = () => {
           notificationRide={notificationRide}
           isCurrentRide={isCurrentRide}
           setNotificationRide={setNotificationRide}
-          showEdit={showEdit && !isCompleted}
+          showEdit={showEdit && !isCompleted && !isCancelled}
           confirmRide={confirmRide}
           setConfirmRide={setConfirmRide}
-          showDelete={showDelete && !isCompleted}
+          showDelete={showDelete && !isCompleted && !isCancelled}
           fetchRides={fetchRides}
           onEdit={setEditRide}
           onDelete={setDeleteRide}
           allRequests={allRequests}
-          fetchAllRequests={fetchAllRequests}
           setAllRequests={setAllRequests}
+          isHistory={isHistory}
+          fetchAllRequests={fetchAllRequests}
         />
       );
     });
@@ -1969,7 +2069,6 @@ const MyRides = () => {
           {/* <Typography variant="h5" sx={{ color: '#E8650A', fontWeight: 900, fontSize: { xs: "1.2rem", sm: "1.2rem", md: "1.35rem", lg: "1.5rem" } }}>
           My <span style={{ color: '#138808' }}>Rides</span>
         </Typography> */}
-
         </Box>
 
         <Box
@@ -2136,7 +2235,13 @@ const MyRides = () => {
                 <Box>
                   {history.length > 0 ? (
                     <>
-                      {renderList(paginate(history, historyPage), false, false)}
+                      {renderList(
+                        paginate(history, historyPage),
+                        false,
+                        false,
+                        false,
+                        true,
+                      )}
                       <RidePaginationBar
                         count={Math.ceil(history.length / ITEMS_PER_PAGE)}
                         page={historyPage}

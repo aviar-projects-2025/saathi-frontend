@@ -54,6 +54,7 @@ export default function Ridebook({
   const [existingMembers, setExistingMembers] = useState([]);
   const [newMembers, setNewMembers] = useState([]);
   const isTab = useMediaQuery(theme.breakpoints.down("sm"));
+
   const calculateAge = (dob) => {
     if (!dob) return "";
 
@@ -377,7 +378,6 @@ export default function Ridebook({
       setRequestLoading(false);
     }
   };
-
   const titleText = isFlight
     ? isEditMode
       ? "Edit Travel Companion Request"
