@@ -47,6 +47,10 @@ export default function Ridebook({
   const isFlight = ride?.modeOfTravel === "Flight";
   const isEditMode = Boolean(requestToEdit);
   const [requests, setRequests] = useState();
+  const [requestLoading, setRequestLoading] = useState(false);
+
+  // existingMembers = already CONFIRMED/APPROVED members on this request.
+  // Read-only, shown for context, never sent back to the backend.
   const [existingMembers, setExistingMembers] = useState([]);
   const [newMembers, setNewMembers] = useState([]);
   const isTab = useMediaQuery(theme.breakpoints.down("sm"));
@@ -328,6 +332,9 @@ export default function Ridebook({
 
 
   const handleRequestSubmit = async () => {
+
+    setRequestLoading(true);
+
     if (!ride) return;
     if (!validate()) return;
 
@@ -367,6 +374,8 @@ export default function Ridebook({
     } catch (error) {
       console.log(error);
       toast.error(error.response?.data?.message || "Request failed", TOASTS);
+    } finally {
+      setRequestLoading(false);
     }
   };
   const titleText = isFlight
@@ -803,6 +812,7 @@ export default function Ridebook({
           fullWidth={isMobile}
           size={isMobile ? "small" : "medium"}
           onClick={handleRequestSubmit}
+          disabled={requestLoading}
           sx={{
             bgcolor: ORANGE,
             "&:hover": { bgcolor: "#e68a00" },
@@ -814,7 +824,7 @@ export default function Ridebook({
             px: 3,
           }}
         >
-          {isEditMode ? "Update Request" : "Submit Request"}
+          {requestLoading ? "Submitting..." : isEditMode ? "Update Request" : "Submit Request"}
         </Button>
       </DialogActions>
     </Dialog>

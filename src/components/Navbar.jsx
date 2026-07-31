@@ -33,8 +33,16 @@ import { useNotifications } from "../context/NotificationContext.jsx";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import LogoutIcon from "@mui/icons-material/Logout";
+import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
+import { useTheme, useMediaQuery } from "@mui/material";
+
+
 
 const TopNav = ({ onMenuClick }) => {
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
   const [open, setOpen] = useState(false);
   const { tabNotification, notifications } = useNotifications();
 
@@ -186,7 +194,24 @@ const TopNav = ({ onMenuClick }) => {
           </Box>
         </Box>
 
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1.2 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.2, sm: 1.5 } }}>
+
+          {isMobile && (
+            <IconButton
+              onClick={() => navigate("/discover")}
+              sx={{
+                color: "#5f4632",
+                transition: "color 0.2s ease",
+                "&:hover": {
+                  color: "#f97316",
+                },
+              }}
+            >
+              <EmojiEventsIcon />
+            </IconButton>
+          )}
+
+
           <IconButton onClick={handleOpenNotifications} sx={{ color: "#5f4632" }}>
             <Badge color="error" badgeContent={unreadCount} invisible={unreadCount === 0}>
               <NotificationsNoneIcon

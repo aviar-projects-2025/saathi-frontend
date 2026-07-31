@@ -57,11 +57,11 @@ import CloseIcon from "@mui/icons-material/Close";
 import { useNavigate } from "react-router-dom";
 
 const pillBtn = {
-  textTransform: "none",
-  border: "none",
-  fontSize: { xs: "0.72rem", sm: "0.85rem", md: "1.1rem" },
-  color: SAFFRON,
-  fontWeight: 600,
+    textTransform: "none",
+    border: "none",
+    fontSize: { xs: "0.72rem", sm: "0.85rem", md: "0.9rem" },
+    color: SAFFRON,
+    fontWeight: 600,
 };
 const SectionCard = ({ children, sx = {} }) => (
   <Paper

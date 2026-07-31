@@ -229,7 +229,6 @@ const Discover = () => {
                         ))}
                     </Paper>
                 </Grid>
-
             </Grid>
         </Box>
     );
