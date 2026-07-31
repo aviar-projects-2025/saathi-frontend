@@ -47,11 +47,13 @@ export default function Ridebook({
   const isFlight = ride?.modeOfTravel === "Flight";
   const isEditMode = Boolean(requestToEdit);
   const [requests, setRequests] = useState();
+  const [requestLoading, setRequestLoading] = useState(false);
+
+  // existingMembers = already CONFIRMED/APPROVED members on this request.
+  // Read-only, shown for context, never sent back to the backend.
   const [existingMembers, setExistingMembers] = useState([]);
   const [newMembers, setNewMembers] = useState([]);
   const isTab = useMediaQuery(theme.breakpoints.down("sm"));
-
-  const TOASTS = ToastConfig();
 
   const calculateAge = (dob) => {
     if (!dob) return "";
@@ -71,11 +73,38 @@ export default function Ridebook({
 
     return age;
   };
-
+  const availableSeat = ride?.availableSeats || 0;
   const defaultSelfMember = () => ({
     name: `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`.trim(),
     age: calculateAge(currentUser?.dob),
   });
+  const emptyRequestData = {
+    seatsRequested: 1,
+    message: "",
+    membersCount: 1,
+    members: [defaultSelfMember()],
+  };
+  const [requestData, setRequestData] = useState(emptyRequestData);
+  const totalOccupied = isEditMode
+    ? existingMembers.length + newMembers.length
+    : requestData.members.length;
+
+
+  const remainingAvailableSeats = isEditMode
+    ? Math.max(
+      ride?.availableSeats - (existingMembers.length + newMembers.length),
+      0
+    )
+    : Math.max(
+      ride?.availableSeats - requestData?.members.length,
+      0
+    );
+
+  const TOASTS = ToastConfig();
+
+
+
+
 
   const handleAddMember = () => {
     if (isEditMode) {
@@ -84,17 +113,28 @@ export default function Ridebook({
         if (!isFlight && totalSeats >= maxSeats) return prev;
         return [...prev, { name: "", age: "" }];
       });
+
       return;
     }
 
     setRequestData((prev) => {
+
+
       if (!isFlight && prev.members.length >= maxSeats) return prev;
+
       const updatedMembers = [...prev.members, { name: "", age: "" }];
 
-      const newSeats = Math.max(prev.seatsRequested, updatedMembers.length);
-      return { ...prev, members: updatedMembers, seatsRequested: newSeats };
+
+
+      return {
+        ...prev,
+        members: updatedMembers,
+        seatsRequested: updatedMembers.length,
+      };
     });
+
   };
+
 
   const handleRemoveMember = (index) => {
     if (isEditMode) {
@@ -155,14 +195,8 @@ export default function Ridebook({
   const [editingRequest, setEditingRequest] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const emptyRequestData = {
-    seatsRequested: 1,
-    message: "",
-    membersCount: 1,
-    members: [defaultSelfMember()],
-  };
 
-  const [requestData, setRequestData] = useState(emptyRequestData);
+
 
   useEffect(() => {
     if (editingRequest) {
@@ -180,11 +214,11 @@ export default function Ridebook({
       setNewMembers(
         requestToEdit.pendingMembers?.length
           ? requestToEdit.pendingMembers
-          : [defaultSelfMember()]
+          : []
       );
     } else {
       setExistingMembers([]);
-      setNewMembers([defaultSelfMember()]);
+      setNewMembers([]);
     }
   }, [isEditMode, requestToEdit, currentUser]);
 
@@ -298,6 +332,9 @@ export default function Ridebook({
 
 
   const handleRequestSubmit = async () => {
+
+    setRequestLoading(true);
+
     if (!ride) return;
     if (!validate()) return;
 
@@ -337,9 +374,10 @@ export default function Ridebook({
     } catch (error) {
       console.log(error);
       toast.error(error.response?.data?.message || "Request failed", TOASTS);
+    } finally {
+      setRequestLoading(false);
     }
   };
-
   const titleText = isFlight
     ? isEditMode
       ? "Edit Travel Companion Request"
@@ -350,9 +388,7 @@ export default function Ridebook({
 
   // The list actually rendered in the editable member cards.
   const editableMembers = isEditMode ? newMembers : requestData.members;
-  const totalOccupied = isEditMode
-    ? existingMembers.length + newMembers.length
-    : requestData.members.length;
+
 
   return (
     <Dialog
@@ -462,7 +498,7 @@ export default function Ridebook({
               Available Seats
             </Typography>
             <Chip
-              label={`${totalOccupied} / ${totalSeat}`}
+              label={`${remainingAvailableSeats}`}
               size="small"
               sx={{
                 bgcolor: ORANGE,
@@ -776,6 +812,7 @@ export default function Ridebook({
           fullWidth={isMobile}
           size={isMobile ? "small" : "medium"}
           onClick={handleRequestSubmit}
+          disabled={requestLoading}
           sx={{
             bgcolor: ORANGE,
             "&:hover": { bgcolor: "#e68a00" },
@@ -787,7 +824,7 @@ export default function Ridebook({
             px: 3,
           }}
         >
-          {isEditMode ? "Update Request" : "Submit Request"}
+          {requestLoading ? "Submitting..." : isEditMode ? "Update Request" : "Submit Request"}
         </Button>
       </DialogActions>
     </Dialog>

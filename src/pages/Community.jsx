@@ -176,8 +176,8 @@ export default function Community() {
 
   const tier = useResponsiveTier();
   const isMobile = tier === 'xs';                 // phones
-  const isTablet = tier === 'sm' || tier === 'md'; // tablets / small laptops
-  const isDesktop = tier === 'lg' || tier === 'xl'; // laptops and up
+  const isTablet = tier === 'sm'; // tablets / small laptops
+  const isDesktop = tier === 'md' || tier === 'lg' || tier === 'xl'; // laptops and up
 
   const showSidebar = !isMobile;
 
@@ -649,7 +649,10 @@ export default function Community() {
                       <Button
                         onClick={() => {
                           if (isProfileComplete) {
-                            setOpenMediaDialog((prev) => !prev);
+                            // setOpenMediaDialog((prev) => !prev);
+                            isDesktop
+                              ? fileInputRef.current?.click()
+                              : setOpenMediaDialog(true);
                           }
                         }}
                         disabled={!isProfileComplete}
@@ -665,6 +668,16 @@ export default function Community() {
                       >
                         Media
                       </Button>
+
+                      {/* Hidden File Input */}
+                      <input
+                        ref={fileInputRef}
+                        hidden
+                        type="file"
+                        accept="image/*"
+                        onChange={handleMediaSelect}
+                      />
+
                     </span>
                   </Tooltip>
 
@@ -1010,19 +1023,22 @@ export default function Community() {
                               />
 
                               <Box sx={{ mt: 2 }}>
-                                <Box
-                                  component="img"
-                                  src={editImage ? URL.createObjectURL(editImage) : previewImage}
-                                  alt="Preview"
-                                  sx={{
-                                    width: "100%",
-                                    height: { xs: 160, sm: 220, md: 280 },
-                                    objectFit: "cover",
-                                    borderRadius: 2,
-                                    border: "1px solid #eee",
-                                    mb: 1.5,
-                                  }}
-                                />
+
+                                {previewImage && (
+                                  <Box
+                                    component="img"
+                                    src={editImage ? URL.createObjectURL(editImage) : previewImage}
+                                    alt="Preview"
+                                    sx={{
+                                      width: "100%",
+                                      height: { xs: 160, sm: 220, md: 280 },
+                                      objectFit: "cover",
+                                      borderRadius: 2,
+                                      border: "1px solid #eee",
+                                      mb: 1.5,
+                                    }}
+                                  />
+                                )}
 
                                 <Button
                                   variant="contained"
@@ -1044,7 +1060,7 @@ export default function Community() {
                                     },
                                   }}
                                 >
-                                  Change Image
+                                  {!previewImage ? "Add Image" : "Change Image"}
                                 </Button>
 
 
@@ -1298,8 +1314,8 @@ export default function Community() {
               <Discover />
             </Box>
           )}
-        </Box>
-      </PageLayout>
+        </Box >
+      </PageLayout >
     </>
 
 
