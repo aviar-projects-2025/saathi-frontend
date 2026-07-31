@@ -4,6 +4,8 @@ import { toast } from "react-toastify";
 import socket from "../socket";
 import axios from "axios";
 import Api from "../Api";
+import { useTheme, useMediaQuery } from '@mui/material';
+import ToastConfig from "../components/ToastConfig";
 
 const NotificationContext = createContext();
 
@@ -14,12 +16,17 @@ export const NotificationProvider = ({ children }) => {
     const user = JSON.parse(localStorage.getItem('user'))
     const [tabNotification, setTabNotification] = useState([]);
 
+    const toasts = ToastConfig();
+
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
     const fetchNotifications = async () => {
         try {
             const res = await axios.get(Api + `/notification/${user.id}/`)
             setTabNotification(res?.data?.data)
         } catch (error) {
-            toast.error(error.message)
+            toast.error(error.message, toasts);
             console.log(error)
         }
     }
@@ -34,6 +41,8 @@ export const NotificationProvider = ({ children }) => {
     useEffect(() => {
         if (!user?.id) return;
         socket.emit("join", user.id);
+        socket.emit("rides_room");
+
         // console.log('joined ', user.id)
         const handleEvent = (payload) => {
             const { type, data, message, category } = payload;
@@ -41,24 +50,25 @@ export const NotificationProvider = ({ children }) => {
             audio.currentTime = 0;
             audio.play();
 
+            console.log(payload)
+
+            // console.log(payload,'payload')
             const newNotification = {
-                id: data._id || Date.now(),
+                _id: data._id || Date.now(),
                 type,
                 category: category || "general",
                 data,
                 message,
-                isRead: false,
+                isRead: type == "ride_started" ? true : false,
                 createdAt: new Date()
             };
 
             setNotifications((prev) => [newNotification, ...prev]);
             setTabNotification((prev) => [newNotification, ...prev]);
 
-            toast.info(message || "New notification");
+            toast.info(message || "New notification", toasts);
         };
-
         socket.on("notification", handleEvent);
-
         return () => {
             socket.off("notification", handleEvent);
         };

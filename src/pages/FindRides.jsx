@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
   Container,
@@ -27,7 +28,7 @@ import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import TrainIcon from "@mui/icons-material/Train";
 import FilterListOffIcon from "@mui/icons-material/FilterListOff";
-
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import RideCard from "./RideCard.jsx";
 import Api from "../Api";
 
@@ -44,7 +45,7 @@ const saffron = {
   800: "#7C4500",
   900: "#502C00",
 };
-
+const ORANGE = "#FF9933";
 const inputFieldSx = {
   "& .MuiOutlinedInput-root": {
     borderRadius: "10px",
@@ -111,10 +112,10 @@ export default function FindRides() {
   const [rides, setRides] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filtersOpen, setFiltersOpen] = useState(false); // collapsed by default
-
+  const navigate = useNavigate();
   const [searchFrom, setSearchFrom] = useState("");
   const [searchDestination, setSearchDestination] = useState("");
-
+  const [search, setSearch] = useState("");
   // Staged filter values: edited live inside the panel, but only
   // committed to `appliedFilters` (and therefore the results) on Apply.
   const [draftFilters, setDraftFilters] = useState(emptyFilters);
@@ -137,6 +138,8 @@ export default function FindRides() {
       setLoading(false);
     }
   };
+
+
 
   // ── Filter panel open/close + scroll-to-collapse ──────────────────────
   const openFilters = () => {
@@ -238,9 +241,7 @@ export default function FindRides() {
     .filter((ride) => ride.createdBy?._id !== currentUser?._id)
     .filter((ride) => {
       // Hide past rides
-      if (new Date(ride.startTime) <= now) {
-        return false;
-      }
+      if (new Date(ride.startTime) <= now) return false;
 
       const fromValue =
         ride.modeOfTravel === "Flight"
@@ -255,30 +256,40 @@ export default function FindRides() {
       const fromMatch = fromValue.toLowerCase().includes(searchFrom.toLowerCase());
       const destinationMatch = destinationValue.toLowerCase().includes(searchDestination.toLowerCase());
 
-      const transportMatch =
-        !appliedTransportMode || ride.modeOfTravel === appliedTransportMode;
+      // General search box (top hero field) — matches across all key fields
+      const searchText = search.toLowerCase();
+      const generalSearchMatch =
+        !search ||
+        ride.from?.toLowerCase().includes(searchText) ||
+        ride.destination?.toLowerCase().includes(searchText) ||
+        ride.fromAirport?.toLowerCase().includes(searchText) ||
+        ride.destinationAirport?.toLowerCase().includes(searchText) ||
+        ride.airlineName?.toLowerCase().includes(searchText) ||
+        ride.flightNumber?.toLowerCase().includes(searchText) ||
+        ride.createdBy?.firstName?.toLowerCase().includes(searchText) ||
+        ride.createdBy?.lastName?.toLowerCase().includes(searchText);
 
-      const genderMatch =
-        !appliedGender || ride.genderPreference === appliedGender;
-
+      const transportMatch = !appliedTransportMode || ride.modeOfTravel === appliedTransportMode;
+      const genderMatch = !appliedGender || ride.genderPreference === appliedGender;
       const fuelMatch =
         appliedFuelSharing === "" ||
         ride.modeOfTravel === "Flight" ||
         ride.fuelSharing?.toString() === appliedFuelSharing;
-
       const languageMatch =
-        !appliedLanguage ||
-        ride.language?.toLowerCase().includes(appliedLanguage.toLowerCase());
+        !appliedLanguage || ride.language?.toLowerCase().includes(appliedLanguage.toLowerCase());
 
       return (
         fromMatch &&
         destinationMatch &&
+        generalSearchMatch &&
         transportMatch &&
         genderMatch &&
         fuelMatch &&
         languageMatch
       );
     });
+
+
 
   if (loading) {
     return (
@@ -297,21 +308,20 @@ export default function FindRides() {
   }
 
   return (
-    // Outer wrapper: full viewport height minus navbar, no overflow on itself
+
     <Box
       sx={{
         height: `calc(100vh - ${NAVBAR_HEIGHT}px)`,
         display: "flex",
         flexDirection: "column",
         width: "100%",
-        maxWidth: { xs: "100%", sm: 720 },
+        // maxWidth: { xs: "100%" },
         boxSizing: "border-box",
         overflowX: "hidden",
+        p: 1
       }}
     >
-      {/* ── Sticky block: ONLY the hero + From/To/Filter search bar.
-             The expanded filter panel lives OUTSIDE this sticky block,
-             so it scrolls/collapses away instead of staying pinned. ── */}
+
       <Box
         sx={{
           position: "sticky",
@@ -326,12 +336,12 @@ export default function FindRides() {
           sx={{
             color: "#000000",
             pt: { xs: 1, sm: 2, md: 5 },
-            pb: { xs: 0, sm: 3, md: 3.5 },
-            px: { xs: 0, sm: 2 },
+            pb: { xs: 0, sm: 2, md: 3 },
+            // px: { xs: 0, sm: 2 },
 
           }}
         >
-          <Container maxWidth="md" disableGutters sx={{ px: { xs: 0, sm: 2 } }}>
+          <Container disableGutters >
             {/* Title */}
             <Typography
               fontWeight={800}
@@ -344,7 +354,10 @@ export default function FindRides() {
               Find Rides & Flight Companions
             </Typography>
 
-            {/* Search row: From / To / Filter — this is what stays sticky */}
+            {/* <Typography variant="h5" sx={{ color: '#E8650A', fontWeight: 900, fontSize: { xs: "1.2rem", sm: "1.2rem", md: "1.35rem", lg: "1.5rem" } }}>
+              Find Rides & <span style={{ color: '#138808' }}>Flight Companions</span>
+            </Typography> */}
+
             <Box
               sx={{
                 display: "flex",
@@ -354,10 +367,52 @@ export default function FindRides() {
                 mt: { xs: 2.3, sm: 1.5 },
               }}
             >
+              <TextField
+                size="small"
+                placeholder="Search by From / To / Airport / City..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon
+                        sx={{
+                          color: saffron[500],
+                          fontSize: 20,
+                        }}
+                      />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  flex: 1,
+                  minWidth: 0,
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: "12px",
+                    background: "rgba(255,255,255,0.96)",
+                    fontSize: { xs: "0.65rem", sm: "0.84rem" },
+                    height: { xs: 32, sm: 40 },
+                    "& fieldset": { border: "none" },
+                    "& input": { py: 0, px: { xs: 1, sm: 1 } },
+                    "& .MuiInputAdornment-root": { ml: { xs: 0.75, sm: 1 }, mr: { xs: 0.25, sm: 0.5 } },
+                  },
+                }}
+              />
+            </Box>
+            <Box
+              sx={{
+                display: "flex",
+                gap: { xs: 1, sm: 1.25 },
+                alignItems: "center",
+                flexDirection: "row",
+                mt: { xs: 2, sm: 1.5 },
+                mb: { xs: 1, sm: 1 }
+              }}
+            >
               {/* From */}
               <TextField
                 size="small"
-                placeholder={isMobile ? "From / City" : " From / City / Airport"}
+                placeholder={isMobile ? "From" : "From / City / Airport"}
                 value={searchFrom}
                 onChange={(e) => setSearchFrom(e.target.value)}
                 InputProps={{
@@ -371,11 +426,10 @@ export default function FindRides() {
                   flex: 1,
                   minWidth: 0,
                   "& .MuiOutlinedInput-root": {
-                    borderRadius: "50px",
+                    borderRadius: "12px",
                     background: "rgba(255,255,255,0.96)",
-                    fontSize: { xs: "0.7rem", sm: "0.84rem" },
+                    fontSize: { xs: "0.65rem", sm: "0.84rem" },
                     height: { xs: 34, sm: 40 },
-                    pr: 0.5,
                     "& fieldset": { border: "none" },
                     "& input": { py: 0, px: { xs: 1, sm: 1 } },
                     "& .MuiInputAdornment-root": { ml: { xs: 0.75, sm: 1 }, mr: { xs: 0.25, sm: 0.5 } },
@@ -386,13 +440,13 @@ export default function FindRides() {
               {/* To */}
               <TextField
                 size="small"
-                placeholder={isMobile ? "To / City" : " To / City / Airport"}
+                placeholder={isMobile ? "To" : "To / City / Airport"}
                 value={searchDestination}
                 onChange={(e) => setSearchDestination(e.target.value)}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <SearchIcon sx={{ color: saffron[500], fontSize: { xs: 14, sm: 17 } }} />
+                      <SearchIcon sx={{ color: saffron[500], fontSize: { xs: 12, sm: 17 } }} />
                     </InputAdornment>
                   ),
                 }}
@@ -400,9 +454,9 @@ export default function FindRides() {
                   flex: 1,
                   minWidth: 0,
                   "& .MuiOutlinedInput-root": {
-                    borderRadius: "50px",
+                    borderRadius: "12px",
                     background: "rgba(255,255,255,0.96)",
-                    fontSize: { xs: "0.7rem", sm: "0.84rem" },
+                    fontSize: { xs: "0.65rem", sm: "0.84rem" },
                     height: { xs: 34, sm: 40 },
                     pr: 0.5,
                     "& fieldset": { border: "none" },
@@ -440,6 +494,7 @@ export default function FindRides() {
                 <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
                   Filters{activeFilters.length > 0 ? ` (${activeFilters.length})` : ""}
                 </Box>
+
                 {isMobile && activeFilters.length > 0 && (
                   <Box
                     sx={{
@@ -452,10 +507,30 @@ export default function FindRides() {
                   />
                 )}
               </Button>
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<VisibilityIcon />}
+                onClick={() => navigate("/request-ride")}
+                sx={{
+                  bgcolor: ORANGE,
+                  color: "#ffffff",
+                  "&:hover": { bgcolor: "#e68a00" },
+                  "&.Mui-disabled": { bgcolor: "#e0e0e0" },
+                  fontWeight: 700,
+                  fontSize: { xs: "0.7rem", sm: "0.875rem" },
+                  px: { xs: 1.5, sm: 3 },
+                  py: { xs: 0.5, sm: 1 },
+                  borderRadius: 2,
+                  whiteSpace: "nowrap",
+                  boxShadow: "none",
+                  textTransform: "none",
+                }}
+              >
+                View Your Requests
+              </Button>
             </Box>
 
-            {/* Applied filter chips live just under the sticky search row
-                 so the user can see/clear them without opening the panel. */}
             {activeFilters.length > 0 && (
               <Box sx={{ display: "flex", flexWrap: "wrap", gap: { xs: 0.5, sm: 0.75 }, mt: 1.25 }}>
                 {activeFilters.map((f) => (
@@ -483,11 +558,7 @@ export default function FindRides() {
         </Box>
       </Box>
 
-      {/* ── Scrollable results area. The filter panel renders as the
-             FIRST thing inside this scrollable area (not in the sticky
-             block), so: scrolling naturally moves it out of view, AND
-             we additionally force-collapse it past a small scroll delta
-             so it doesn't loiter half-visible. ── */}
+
       <Box
         ref={resultsRef}
         onScroll={handleResultsScroll}

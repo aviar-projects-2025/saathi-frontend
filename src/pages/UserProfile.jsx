@@ -46,6 +46,8 @@ import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import CommunityComments from "./CommunityComments.jsx";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 
+import ToastConfig from "../components/ToastConfig.jsx";
+
 const SAFFRON = "#E8650A";
 const SAFFRON_LIGHT = "#FDF0E8";
 const CARD_BORDER = "1px solid #F0E6DC";
@@ -59,7 +61,7 @@ import { useNavigate } from "react-router-dom";
 const pillBtn = {
     textTransform: "none",
     border: "none",
-    fontSize: { xs: "0.60rem", sm: "0.8rem", md: "0.875rem" },
+    fontSize: { xs: "0.72rem", sm: "0.85rem", md: "1.1rem" },
     color: SAFFRON,
     fontWeight: 600,
 };
@@ -109,6 +111,7 @@ const StatBlock = ({ value, label }) => (
 const UserProfile = () => {
     const theme = useTheme();
 
+    const toasts = ToastConfig();
 
     const [openComments, setOpenComments] = useState({});
     const handleToggleComments = (id) => {
@@ -118,12 +121,14 @@ const UserProfile = () => {
         }));
     };
     const { currentUser, getuserData } = useUser()
+
     const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
     const [editProfile, setEditProfile] = useState(false)
     const [profileImage, setProfileImage] = useState(currentUser?.profileImage || "");
     const [profileFile, setProfileFile] = useState(null);
     const [submitLoading, setSubmitLoading] = useState(false)
     const [passwordModel, setPasswordModel] = useState('')
+    const [errors, setErrors] = useState({});
     const user = JSON.parse(localStorage.getItem('user'))
     const [passwordData, setPasswordData] = useState({
         currentPassword: "",
@@ -136,6 +141,9 @@ const UserProfile = () => {
     const [selectedPost, setSelectedPost] = useState(null);
     const handleOpenShare = () => setOpenShare(true);
     const handleCloseShare = () => setOpenShare(false);
+
+    // const theme = useTheme();
+    const isTab = useMediaQuery(theme.breakpoints.down("sm"));
 
 
     const [openImage, setOpenImage] = useState(false);
@@ -152,6 +160,19 @@ const UserProfile = () => {
         }));
     };
 
+    const resetForm = () => {
+        setFormData({
+            firstName: currentUser?.firstName,
+            lastName: currentUser?.lastName,
+            email: currentUser?.email,
+            mobile: currentUser?.mobile || "",
+            dob: currentUser?.dob ? dayjs(currentUser.dob) : null,
+            gender: currentUser?.gender || "",
+            bio: currentUser?.bio || "",
+            profileImage: currentUser?.profileImage || "",
+        })
+    }
+
 
     const [formData, setFormData] = useState({
         firstName: currentUser?.firstName || "",
@@ -163,6 +184,57 @@ const UserProfile = () => {
         bio: currentUser?.bio || "",
         profileImage: currentUser?.profileImage || "",
     });
+
+    const validateForm = (formData) => {
+        const errors = {};
+
+        // First Name
+        if (!formData.firstName?.trim()) {
+            errors.firstName = "First name is required";
+        } else if (formData.firstName.length < 2) {
+            errors.firstName = "Minimum 2 characters required";
+        }
+
+        // Last Name
+        if (!formData.lastName?.trim()) {
+            errors.lastName = "Last name is required";
+        }
+
+        // Email
+        if (!formData.email) {
+            errors.email = "Email is required";
+        } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
+            errors.email = "Invalid email format";
+        }
+
+        // Mobile
+        if (!formData.mobile) {
+            errors.mobile = "Mobile number is required";
+            if (!/^[6-9]\d{9}$/.test(formData.mobile)) {
+                errors.mobile = "Invalid mobile number";
+            }
+        }
+
+        // DOB (Age >= 18)
+        if (!formData.dob) {
+            errors.dob = "Date of birth is required";
+        } else {
+            const today = new Date();
+            const dob = new Date(formData.dob);
+            let age = today.getFullYear() - dob.getFullYear();
+
+            const m = today.getMonth() - dob.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+                age--;
+            }
+
+            if (age < 18) {
+                errors.dob = "You must be at least 18 years old";
+            }
+        }
+
+        return errors;
+    };
 
     useEffect(() => {
         if (currentUser) {
@@ -217,6 +289,12 @@ const UserProfile = () => {
             ...prev,
             [name]: value,
         }));
+
+
+        setErrors((prev) => ({
+            ...prev,
+            [name]: "",
+        }));
     };
     const [communityPosts, setCommunityPosts] = useState([]);
 
@@ -232,7 +310,7 @@ const UserProfile = () => {
 
 
             const postsRes = await axios.get(Api + "/community/");
-
+            console.log("postsRes", postsRes)
             // Only current user's posts
             const myPosts = postsRes.data.data.filter(
                 (item) => item.authorId?._id === currentUser?._id
@@ -245,8 +323,14 @@ const UserProfile = () => {
         }
     };
     const handleUpdateProfile = async () => {
+        setSubmitLoading(true);
         try {
-            setSubmitLoading(true)
+
+            const validationErrors = validateForm(formData);
+            if (Object.keys(validationErrors).length > 0) {
+                setErrors(validationErrors);
+                return;
+            }
             const data = new FormData();
 
             if (profileFile) {
@@ -260,12 +344,14 @@ const UserProfile = () => {
             data.append("gender", formData.gender);
             data.append("bio", formData.bio);
 
+
             await axios.post(Api + `/users/update/${user?.id}`, data)
             getuserData()
-            toast.success("Profile updated")
+            toast.success("Profile Updated", toasts);
             setEditProfile(false)
         } catch (error) {
-            console.log(error);
+            console.log(error.response);
+            toast.error(error.response.data.message, toasts);
         } finally {
             setSubmitLoading(false)
         }
@@ -274,17 +360,27 @@ const UserProfile = () => {
     const [tab, setTab] = useState(0);
     const handleCopy = (value) => {
         navigator.clipboard.writeText(value);
-        toast.success("Copied to clipboard!");
+        toast.success("Copied to Clipboard!", toasts);
     };
 
     return (
         <PageLayout>
-            <Box sx={{ maxWidth: 860, mx: "auto", px: { xs: 0, sm: 2, md: 0 } }}>
+            <Box sx={{ mx: "auto", px: { xs: 0, sm: 2, md: 0 } }}>
                 {/* Page heading */}
+                <Box sx={{ pt: { xs: 2, sm: 0 }, mb: 1, flexShrink: 0 }}>
+                    <Typography variant="h5" fontWeight={800} sx={{ fontSize: { xs: '1.1rem', sm: '1.35rem', md: '1.5rem' } }}>
+                        My Profile
+                    </Typography>
+
+                    {/* <Typography variant="h5" sx={{ color: '#E8650A', fontWeight: 900, fontSize: { xs: "1.2rem", sm: "1.2rem", md: "1.35rem", lg: "1.5rem" } }}>
+                        My <span style={{ color: '#138808' }}>Profile</span>
+                    </Typography> */}
+
+                </Box>
 
                 <Typography
                     color="text.secondary"
-                    sx={{ mt: { xs: 1, sm: 2 }, fontSize: { xs: "0.72rem", sm: "1rem", md: "1rem" } }}
+                    sx={{ mt: { xs: 1, sm: 1 }, fontSize: { xs: "0.72rem", sm: "1rem", md: "1rem" } }}
                 >
                     Manage your Saathi account, referrals, and preferences.
                 </Typography>
@@ -382,10 +478,13 @@ const UserProfile = () => {
                         <Stack
                             direction="row"
                             spacing={{ xs: 1, sm: 1.5 }}
-                            sx={{ mt: { xs: 1.5, sm: 2 } }}
+                            sx={{
+                                mt: { xs: 1.5, sm: 2 },
+                                display: "flex",
+                                justifyContent: "flex-end"
+                            }}
                         >
                             <Button
-                                fullWidth
                                 variant="outlined"
                                 onClick={() => setEditProfile(true)}
                                 sx={{ ...pillBtn, borderColor: "#EADFD3" }}
@@ -393,14 +492,14 @@ const UserProfile = () => {
                                 Edit Profile
                             </Button>
 
-                            <Button
+                            {/* <Button
                                 fullWidth
                                 variant="outlined"
                                 onClick={handleOpenShare}
                                 sx={{ ...pillBtn, borderColor: "#EADFD3" }}
                             >
                                 Share Profile
-                            </Button>
+                            </Button> */}
                         </Stack>
                     </SectionCard>
 
@@ -645,6 +744,8 @@ const UserProfile = () => {
                                         onChange={handleChange}
                                         InputProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
                                         InputLabelProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
+                                        error={!!errors.firstName}
+                                        helperText={errors.firstName}
                                     />
 
                                     <TextField
@@ -653,6 +754,8 @@ const UserProfile = () => {
                                         size="small"
                                         fullWidth
                                         value={formData?.lastName}
+                                        error={!!errors.lastName}
+                                        helperText={errors.lastName}
                                         onChange={handleChange}
                                         InputProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
                                         InputLabelProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
@@ -671,6 +774,8 @@ const UserProfile = () => {
                                         fullWidth
                                         value={formData?.email}
                                         onChange={handleChange}
+                                        error={!!errors.email}
+                                        helperText={errors.email}
                                         disabled
                                         InputProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
                                         InputLabelProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
@@ -683,6 +788,8 @@ const UserProfile = () => {
                                         fullWidth
                                         value={formData?.mobile}
                                         onChange={handleChange}
+                                        error={!!errors.mobile}
+                                        helperText={errors.mobile}
                                         InputProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
                                         InputLabelProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
                                     />
@@ -702,10 +809,16 @@ const UserProfile = () => {
                                                     ...prev,
                                                     dob: newValue,
                                                 }));
+                                                setErrors((prev) => ({
+                                                    ...prev,
+                                                    dob: "",
+                                                }));
                                             }}
                                             slotProps={{
                                                 textField: {
                                                     size: "small",
+                                                    error: !!errors.dob,
+                                                    helperText: errors.dob,
                                                     fullWidth: true,
                                                     InputProps: { sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } },
                                                     InputLabelProps: { sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } },
@@ -724,6 +837,8 @@ const UserProfile = () => {
                                         sx={{ width: { xs: "100%", sm: "48%" } }}
                                         value={formData?.gender}
                                         onChange={handleChange}
+                                        error={!!errors.gender}
+                                        helperText={errors.gender}
                                         InputProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
                                         InputLabelProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
                                     >
@@ -740,6 +855,8 @@ const UserProfile = () => {
                                     rows={3}
                                     fullWidth
                                     value={formData?.bio}
+                                    error={!!errors.bio}
+                                    helperText={errors.bio}
                                     onChange={handleChange}
                                     InputProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
                                     InputLabelProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
@@ -764,6 +881,8 @@ const UserProfile = () => {
                                         }}
                                         onClick={() => {
                                             setProfileImage("");
+                                            resetForm()
+                                            setErrors({})
                                             setEditProfile(false);
                                         }}
                                     >
@@ -783,7 +902,7 @@ const UserProfile = () => {
                                         onClick={handleUpdateProfile}
                                         disabled={submitLoading}
                                     >
-                                        Save Changes
+                                        {submitLoading ? "Saving Changes..." : "Save Changes"}
                                     </Button>
                                 </Stack>
                             </Stack>
@@ -791,137 +910,6 @@ const UserProfile = () => {
                     </Box>
                 }
             />
-
-
-            {/* ── Change Password Modal ── */}
-            {/* <Modal
-                open={passwordModel}
-                onClose={() => setPasswordModel(false)}
-            >
-                <Box
-                    sx={{
-                        position: "fixed",
-                        top: "50%",
-                        left: "50%",
-                        transform: "translate(-50%, -50%)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        width: { xs: "92%", sm: "100%" },
-                        px: { xs: 2, sm: 0 },
-                    }}
-                >
-                    <Box
-                        sx={{
-                            bgcolor: "#fff",
-                            width: { xs: "100%", sm: "85%", md: 420 },
-                            maxWidth: 420,
-                            borderRadius: { xs: 2, sm: 3 },
-                            p: { xs: 2, sm: 3 },
-                            boxShadow: 24,
-                            maxHeight: { xs: "85vh", sm: "90vh" },
-                            overflowY: "auto",
-                        }}
-                    >
-                        <Typography
-                            variant="h6"
-                            fontWeight={700}
-                            sx={{
-                                fontSize: { xs: "0.95rem", sm: "1.1rem", md: "1.25rem" },
-                                mb: { xs: 1.5, sm: 3 },
-                            }}
-                        >
-                            Change Password
-                        </Typography>
-
-                        <Stack spacing={{ xs: 1.5, sm: 2 }}>
-                            <TextField
-                                label="Current Password"
-                                name="currentPassword"
-                                type="password"
-                                size="small"
-                                fullWidth
-                                value={passwordData.currentPassword}
-                                onChange={handlePasswordChange}
-                                InputProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
-                                InputLabelProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
-                            />
-
-                            <TextField
-                                label="New Password"
-                                name="newPassword"
-                                type="password"
-                                size="small"
-                                fullWidth
-                                value={passwordData.newPassword}
-                                onChange={handlePasswordChange}
-                                InputProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
-                                InputLabelProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
-                            />
-
-                            <TextField
-                                label="Confirm Password"
-                                name="confirmPassword"
-                                type="password"
-                                size="small"
-                                fullWidth
-                                value={passwordData.confirmPassword}
-                                onChange={handlePasswordChange}
-                                InputProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
-                                InputLabelProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
-                            />
-
-                            <Stack
-                                direction={{ xs: "column-reverse", sm: "row" }}
-                                justifyContent="flex-end"
-                                alignItems="center"
-                                spacing={{ xs: 1, sm: 1.5 }}
-                                sx={{ mt: { xs: 0.5, sm: 1 } }}
-                            >
-                                <Button
-                                    variant="outlined"
-                                    size="small"
-                                    sx={{
-                                        width: { xs: "100%", sm: "auto" },
-                                        fontSize: { xs: "0.75rem", sm: "0.85rem" },
-                                        py: { xs: 0.5, sm: 0.75 },
-                                        px: { xs: 1.5, sm: 2.5 },
-                                        minWidth: { xs: "auto", sm: 90 },
-                                    }}
-                                    onClick={() => {
-                                        setPasswordModel(false)
-                                        setPasswordData({
-                                            confirmPassword: '',
-                                            currentPassword: '',
-                                            newPassword: ''
-                                        })
-                                    }}
-                                >
-                                    Cancel
-                                </Button>
-
-                                <Button
-                                    variant="contained"
-                                    size="small"
-                                    sx={{
-                                        width: { xs: "100%", sm: "auto" },
-                                        fontSize: { xs: "0.75rem", sm: "0.85rem" },
-                                        py: { xs: 0.5, sm: 0.75 },
-                                        px: { xs: 1.5, sm: 2.5 },
-                                        minWidth: { xs: "auto", sm: 130 },
-                                    }}
-                                    onClick={() => handleChangePassword()}
-                                >
-                                    Update Password
-                                </Button>
-                            </Stack>
-                        </Stack>
-                    </Box>
-                </Box>
-            </Modal> */}
-
-
-
 
         </PageLayout>
     );

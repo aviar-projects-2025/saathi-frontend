@@ -1,53 +1,83 @@
-import React, { useEffect, useState, useMemo, useRef } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import {
-  Box, Typography, Tabs, Tab, Paper, Chip, Button, Alert,
-  Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField, IconButton, Stack, FormControl, Grid,
-  InputLabel, Select, MenuItem, FormControlLabel, Switch, Slider,
-  CircularProgress, Card, CardContent, Divider, useMediaQuery, DialogContentText,
-  Badge, Collapse, Avatar
-} from '@mui/material';
-import { useTheme } from '@mui/material/styles';
+  Box,
+  Typography,
+  Tabs,
+  Tab,
+  Paper,
+  Chip,
+  Button,
+  Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  IconButton,
+  Stack,
+  FormControl,
+  Grid,
+  InputLabel,
+  Select,
+  MenuItem,
+  FormControlLabel,
+  Switch,
+  Slider,
+  CircularProgress,
+  Card,
+  CardContent,
+  Divider,
+  useMediaQuery,
+  DialogContentText,
+  Badge,
+  Collapse,
+  Avatar,
+  Pagination,
+  useTheme,
+} from "@mui/material";
+import Ridebook from "./Ridebook.jsx";
+// import { useTheme } from '@mui/material/styles';
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import CloseIcon from '@mui/icons-material/Close';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import LocalGasStationIcon from '@mui/icons-material/LocalGasStation';
-import EventSeatIcon from '@mui/icons-material/EventSeat';
-import WcIcon from '@mui/icons-material/Wc';
-import axios from 'axios';
-import Api from '../Api';
-import { toast } from 'react-toastify';
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import CloseIcon from "@mui/icons-material/Close";
+import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import LocalGasStationIcon from "@mui/icons-material/LocalGasStation";
+import EventSeatIcon from "@mui/icons-material/EventSeat";
+import WcIcon from "@mui/icons-material/Wc";
+import axios from "axios";
+import Api from "../Api";
+import { toast } from "react-toastify";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
 import FlightIcon from "@mui/icons-material/Flight";
 import DirectionsBoatIcon from "@mui/icons-material/DirectionsBoat";
 import TrainIcon from "@mui/icons-material/Train";
-import PersonIcon from '@mui/icons-material/Person';
-import WomanIcon from '@mui/icons-material/Woman';
-import GroupsIcon from '@mui/icons-material/Groups';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import CancelIcon from '@mui/icons-material/Cancel';
-import socket from '../socket'
+import PersonIcon from "@mui/icons-material/Person";
+import WomanIcon from "@mui/icons-material/Woman";
+import GroupsIcon from "@mui/icons-material/Groups";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CancelIcon from "@mui/icons-material/Cancel";
+import socket from "../socket";
 import { useRide } from "../context/RideContext";
-import notificationSound from '../sounds/notifysound.wav'
-import { useLocation, useNavigate } from 'react-router-dom';
-import { useNotifications } from '../context/NotificationContext';
-import RideDetailsModal from './RideDetails'
-import moment from 'moment';
+import notificationSound from "../sounds/notifysound.wav";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useNotifications } from "../context/NotificationContext";
+import RideDetailsModal from "./RideDetails";
+import moment from "moment";
+import ToastConfig from "../components/ToastConfig.jsx";
 
 const statusConfig = {
-  FULL: { label: 'Filled', color: '#2D6A4F', bg: '#E8F5E9', icon: '✅' },
-  OPEN: { label: 'Opened', color: '#E8650A', bg: '#FFF3E0', icon: '⏳' },
+  FULL: { label: "Filled", color: "#2D6A4F", bg: "#E8F5E9", icon: "✅" },
+  OPEN: { label: "Opened", color: "#E8650A", bg: "#FFF3E0", icon: "⏳" },
   // CLOSED: { label: 'Closed', color: '#555577', bg: '#F5F5F5', icon: '🏁' },
-  CLOSED: { label: 'Cancelled', color: '#9B2226', bg: '#FFEBEE', icon: '❌' },
+  CLOSED: { label: "Cancelled", color: "#9B2226", bg: "#FFEBEE", icon: "❌" },
 };
 
 // const statusMap = {
@@ -67,18 +97,18 @@ const travelIcons = {
 };
 
 const travelIcon = {
-  Car: '🚗',
-  Bus: '🚌',
-  Bike: '🏍️',
-  Flight: '✈️',
-  Ship: '🚢',
-  Train: '🚆',
+  Car: "🚗",
+  Bus: "🚌",
+  Bike: "🏍️",
+  Flight: "✈️",
+  Ship: "🚢",
+  Train: "🚆",
 };
 
 const genderIcons = {
-  Male: '👨',
-  Female: '👩',
-  Any: '👥',
+  Male: "👨",
+  Female: "👩",
+  Any: "👥",
 };
 
 const genderIcon = {
@@ -88,47 +118,54 @@ const genderIcon = {
 };
 
 const fuelColor = {
-  Yes: 'success',
-  No: 'default',
-  Shared: 'success',
-  'Not shared': 'default',
+  Yes: "success",
+  No: "default",
+  Shared: "success",
+  "Not shared": "default",
 };
 
-const formFrom = (ride) => ride?.from || '—';
-const formTo = (ride) => ride?.destination || ride?.to || '—';
+const formFrom = (ride) => ride?.from || "—";
+const formTo = (ride) => ride?.destination || ride?.to || "—";
 
 const noZoomInputSx = {
-  '& .MuiInputBase-input, & .MuiSelect-select': {
-    fontSize: { xs: '16px', sm: '0.875rem' },
+  "& .MuiInputBase-input, & .MuiSelect-select": {
+    fontSize: { xs: "16px", sm: "0.875rem" },
   },
 };
 
+// Pagination config: how many ride cards to show per page on each tab
+const ITEMS_PER_PAGE = 10;
 
 // ── Empty State ──────────────────────────────────────────────────────────────
 function EmptyState({ emoji, message, actionLabel, actionHref }) {
   return (
     <Paper
       sx={{
-        p: { xs: 3, sm: 4 },
-        textAlign: 'center',
+        p: { xs: 2.5, sm: 3.5, md: 4 },
+        textAlign: "center",
 
-        border: '1px dashed #E0D5CC',
-        bgcolor: '#FFF8F2',
+        // border: '1px dashed #E0D5CC',
+        // bgcolor: '#FFF8F2',
         borderRadius: 2,
-        mx: 'auto',
-        maxWidth: 480,
+        mx: "auto",
+        maxWidth: { xs: "100%", sm: 440, md: 480 },
       }}
       elevation={0}
     >
-      <Typography fontSize="2rem">{emoji}</Typography>
-      <Typography fontWeight={600} color="text.secondary" mt={1} sx={{ fontSize: { xs: '0.9rem', sm: '1rem' } }}>
+      {/* <Typography sx={{ fontSize: { xs: '1.6rem', sm: '1.8rem', md: '2rem' } }}>{emoji}</Typography> */}
+      <Typography
+        fontWeight={600}
+        color="text.secondary"
+        mt={1}
+        sx={{ fontSize: { xs: "0.85rem", sm: "0.95rem", md: "1rem" } }}
+      >
         {message}
       </Typography>
       {actionLabel && (
         <Button
           variant="contained"
           href={actionHref}
-          sx={{ mt: 2, width: { xs: '100%', sm: 'auto' }, minHeight: 44 }}
+          sx={{ mt: 2, width: { xs: "100%", sm: "auto" }, minHeight: 44 }}
         >
           {actionLabel}
         </Button>
@@ -137,63 +174,94 @@ function EmptyState({ emoji, message, actionLabel, actionHref }) {
   );
 }
 
+// ── Pagination Bar ───────────────────────────────────────────────────────────
+function RidePaginationBar({ count, page, onChange, isMobile }) {
+  if (count <= 1) return null;
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        justifyContent: "center",
+        mt: { xs: 2, sm: 2.5, md: 3 },
+        mb: { xs: 2, sm: 1 },
+      }}
+    >
+      <Pagination
+        count={count}
+        page={page}
+        onChange={onChange}
+        shape="rounded"
+        size={isMobile ? "small" : "medium"}
+        siblingCount={isMobile ? 0 : 1}
+        sx={{
+          "& .MuiPaginationItem-root": {
+            fontWeight: 600,
+            color: "#fd6100",
+            borderColor: "#fd6100",
+            minWidth: { xs: 28, sm: 32 },
+            height: { xs: 28, sm: 32 },
+          },
+          "& .MuiPaginationItem-root.Mui-selected": {
+            backgroundColor: "#fd6100",
+            color: "#fff",
+            "&:hover": {
+              backgroundColor: "#e55a00",
+            },
+          },
+        }}
+      />
+    </Box>
+  );
+}
+
 // ── Edit Ride Modal ──────────────────────────────────────────────────────────
 function EditRideModal({ ride, onSave, onClose }) {
   const theme = useTheme();
-  const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
+  const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
-  // Helper to zero-pad numbers (e.g. 5 -> "05")
-  const pad2 = (n) => String(n).padStart(2, '0');
+  const pad2 = (n) => String(n).padStart(2, "0");
 
   const startDate = new Date(ride.startTime);
 
-  // FIX: use LOCAL date/time getters, not toISOString().
-  // toISOString() converts to UTC, which shifts the displayed date/time
-  // away from the actual local time, and causes drift on every save.
   const initialDate = !isNaN(startDate)
     ? `${startDate.getFullYear()}-${pad2(startDate.getMonth() + 1)}-${pad2(startDate.getDate())}`
-    : '';
+    : "";
   const initialTime = !isNaN(startDate)
     ? `${pad2(startDate.getHours())}:${pad2(startDate.getMinutes())}`
-    : '';
+    : "";
 
   const [form, setForm] = useState({
-    from: ride.from ?? '',
-    destination: ride.destination ?? ride.to ?? '',
+    from: ride.from ?? "",
+    destination: ride.destination ?? ride.to ?? "",
     date: initialDate,
     time: initialTime,
-    modeOfTravel: ride.modeOfTravel ?? '',
-    description: ride.description ?? '',
+    modeOfTravel: ride.modeOfTravel ?? "",
+    description: ride.description ?? "",
     availableSeats: ride.availableSeats ?? ride.seats ?? 1,
-    genderPreference: ride.genderPreference ?? 'Any',
+    genderPreference: ride.genderPreference ?? "Any",
     fuelSharing: ride.fuelSharing ?? false,
   });
 
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const update = (field, value) => setForm((f) => ({ ...f, [field]: value }));
 
   const handleEdit = async () => {
     setSaving(true);
-    setError('');
+    setError("");
 
-    // Basic guard: don't attempt to save with an empty/invalid date or time.
     if (!form.date || !form.time) {
-      setError('Please select both a date and a time.');
+      setError("Please select both a date and a time.");
       setSaving(false);
       return;
     }
 
     try {
-      // form.date and form.time are LOCAL values coming from the inputs.
-      // `new Date('YYYY-MM-DDTHH:mm:00')` (no timezone suffix) is parsed
-      // as local time by the JS engine, so this correctly round-trips with
-      // the local getters used above, then converts to UTC for storage.
       const localDateTime = new Date(`${form.date}T${form.time}:00`);
 
       if (isNaN(localDateTime)) {
-        setError('Invalid date or time. Please check your input.');
+        setError("Invalid date or time. Please check your input.");
         setSaving(false);
         return;
       }
@@ -201,11 +269,17 @@ function EditRideModal({ ride, onSave, onClose }) {
       const startTime = localDateTime.toISOString();
       const { date, time, ...rest } = form;
       const payload = { ...rest, startTime };
-      const response = await axios.patch(`${Api}/rides/edit/${ride._id || ride.id}`, payload);
+      const response = await axios.patch(
+        `${Api}/rides/edit/${ride._id || ride.id}`,
+        payload,
+      );
       const updated = response.data?.data ?? { ...ride, ...payload };
       onSave(updated);
     } catch (err) {
-      setError(err?.response?.data?.message || 'Failed to update ride. Please try again.');
+      setError(
+        err?.response?.data?.message ||
+        "Failed to update ride. Please try again.",
+      );
     } finally {
       setSaving(false);
     }
@@ -218,14 +292,31 @@ function EditRideModal({ ride, onSave, onClose }) {
       maxWidth="sm"
       fullWidth
       fullScreen={fullScreen}
-      PaperProps={{ sx: { borderRadius: { xs: 0, sm: 3 } } }}
+      PaperProps={{
+        sx: { borderRadius: { xs: 0, sm: 3 }, m: { xs: 0, sm: 2, md: 4 } },
+      }}
+      sx={{ p: 1.5 }}
     >
-      <DialogTitle sx={{ fontWeight: 800, pb: 0, pr: 5 }}>
+      <DialogTitle
+        sx={{
+          fontWeight: 800,
+          pb: 0,
+          pr: 5,
+          fontSize: { xs: "1.05rem", sm: "1.25rem" },
+        }}
+      >
         Edit Ride
         <IconButton
           onClick={onClose}
           aria-label="Close"
-          sx={{ position: 'absolute', right: 8, top: 8, color: 'text.secondary', width: 44, height: 44 }}
+          sx={{
+            position: "absolute",
+            right: 8,
+            top: 8,
+            color: "text.secondary",
+            width: 44,
+            height: 44,
+          }}
         >
           <CloseIcon fontSize="small" />
         </IconButton>
@@ -233,44 +324,103 @@ function EditRideModal({ ride, onSave, onClose }) {
 
       <DialogContent sx={{ pt: 3, mt: 1, ...noZoomInputSx }}>
         <Stack spacing={2} sx={{ mt: 2 }}>
-          <TextField label="From" fullWidth size="small" value={form.from} onChange={(e) => update('from', e.target.value)} placeholder="Chennai" />
-          <TextField label="Destination" fullWidth size="small" value={form.destination} onChange={(e) => update('destination', e.target.value)} placeholder="Bangalore" />
+          <TextField
+            label="From"
+            fullWidth
+            size="small"
+            value={form.from}
+            onChange={(e) => update("from", e.target.value)}
+            placeholder="Chennai"
+          />
+          <TextField
+            label="Destination"
+            fullWidth
+            size="small"
+            value={form.destination}
+            onChange={(e) => update("destination", e.target.value)}
+            placeholder="Bangalore"
+          />
 
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
             <Stack sx={{ flex: 1 }}>
               <InputLabel shrink>Date</InputLabel>
-              <TextField fullWidth size="small" type="date" value={form.date} onChange={(e) => update('date', e.target.value)} InputLabelProps={{ shrink: true }} />
+              <TextField
+                fullWidth
+                size="small"
+                type="date"
+                value={form.date}
+                onChange={(e) => update("date", e.target.value)}
+                InputLabelProps={{ shrink: true }}
+              />
             </Stack>
             <Stack sx={{ flex: 1 }}>
               <InputLabel shrink>Time</InputLabel>
-              <TextField fullWidth size="small" type="time" value={form.time} onChange={(e) => update('time', e.target.value)} InputLabelProps={{ shrink: true }} />
+              <TextField
+                fullWidth
+                size="small"
+                type="time"
+                value={form.time}
+                onChange={(e) => update("time", e.target.value)}
+                InputLabelProps={{ shrink: true }}
+              />
             </Stack>
           </Stack>
 
           <FormControl fullWidth size="small">
             <InputLabel>Mode of Travel</InputLabel>
-            <Select value={form.modeOfTravel} label="Mode of Travel" onChange={(e) => update('modeOfTravel', e.target.value)}>
+            <Select
+              value={form.modeOfTravel}
+              label="Mode of Travel"
+              onChange={(e) => update("modeOfTravel", e.target.value)}
+            >
               <MenuItem value="Car">🚗 Car</MenuItem>
               <MenuItem value="Bus">🚌 Bus</MenuItem>
               <MenuItem value="Bike">🏍️ Bike</MenuItem>
               <MenuItem value="Flight">✈️ Flight</MenuItem>
-              <MenuItem value="Ship">🚢 Ship</MenuItem>
+              {/* <MenuItem value="Ship">🚢 Ship</MenuItem> */}
               <MenuItem value="Train">🚆 Train</MenuItem>
             </Select>
           </FormControl>
 
-          <TextField label="Description" fullWidth multiline rows={3} size="small" value={form.description} onChange={(e) => update('description', e.target.value)} placeholder="Traveling to Bangalore for a weekend trip..." />
+          <TextField
+            label="Description"
+            fullWidth
+            multiline
+            rows={3}
+            size="small"
+            value={form.description}
+            onChange={(e) => update("description", e.target.value)}
+            placeholder="Traveling to Bangalore for a weekend trip..."
+          />
 
           <Box>
-            <Typography variant="subtitle2" fontWeight={700} gutterBottom>
+            <Typography
+              variant="subtitle2"
+              fontWeight={700}
+              gutterBottom
+              sx={{ fontSize: { xs: "0.8rem", sm: "0.875rem" } }}
+            >
               Available seats: {form.availableSeats}
             </Typography>
-            <Slider value={form.availableSeats} onChange={(_, value) => update('availableSeats', value)} min={1} max={7} step={1} marks valueLabelDisplay="auto" sx={{ color: 'primary.main', py: { xs: 1.5, sm: 1 } }} />
+            <Slider
+              value={form.availableSeats}
+              onChange={(_, value) => update("availableSeats", value)}
+              min={1}
+              max={7}
+              step={1}
+              marks
+              valueLabelDisplay="auto"
+              sx={{ color: "primary.main", py: { xs: 1.5, sm: 1 } }}
+            />
           </Box>
 
           <FormControl fullWidth size="small">
             <InputLabel>Gender Preference</InputLabel>
-            <Select value={form.genderPreference} label="Gender Preference" onChange={(e) => update('genderPreference', e.target.value)}>
+            <Select
+              value={form.genderPreference}
+              label="Gender Preference"
+              onChange={(e) => update("genderPreference", e.target.value)}
+            >
               <MenuItem value="Any">Any</MenuItem>
               <MenuItem value="Male">Male</MenuItem>
               <MenuItem value="Female">Female</MenuItem>
@@ -278,52 +428,87 @@ function EditRideModal({ ride, onSave, onClose }) {
           </FormControl>
 
           <FormControlLabel
-            control={<Switch checked={form.fuelSharing} onChange={(e) => update('fuelSharing', e.target.checked)} color="primary" />}
+            control={
+              <Switch
+                checked={form.fuelSharing}
+                onChange={(e) => update("fuelSharing", e.target.checked)}
+                color="primary"
+              />
+            }
             label="Fuel Sharing"
           />
 
-          {error && <Alert severity="error" sx={{ borderRadius: 2 }}>{error}</Alert>}
+          {error && (
+            <Alert severity="error" sx={{ borderRadius: 2 }}>
+              {error}
+            </Alert>
+          )}
         </Stack>
       </DialogContent>
 
-      <DialogActions sx={{ px: 3, pb: 2.5, gap: 1, flexWrap: 'wrap' }}>
-        <Button onClick={onClose} variant="outlined" sx={{ borderRadius: 2, textTransform: 'none', flex: { xs: '1 1 auto', sm: '0 0 auto' }, minHeight: 44 }}>
+      <DialogActions sx={{ px: 3, pb: 2.5, gap: 1, flexWrap: "wrap" }}>
+        <Button
+          onClick={onClose}
+          variant="outlined"
+          sx={{
+            borderRadius: 2,
+            textTransform: "none",
+            flex: { xs: "1 1 auto", sm: "0 0 auto" },
+            minHeight: 44,
+          }}
+        >
           Cancel
         </Button>
-        <Button onClick={handleEdit} variant="contained" disabled={saving} sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700, flex: { xs: '1 1 auto', sm: '0 0 auto' }, minHeight: 44 }}>
-          {saving ? 'Saving...' : 'Save changes'}
+        <Button
+          onClick={handleEdit}
+          variant="contained"
+          disabled={saving}
+          sx={{
+            borderRadius: 2,
+            textTransform: "none",
+            fontWeight: 700,
+            flex: { xs: "1 1 auto", sm: "0 0 auto" },
+            minHeight: 44,
+          }}
+        >
+          {saving ? "Saving..." : "Save changes"}
         </Button>
       </DialogActions>
     </Dialog>
   );
 }
 
-
-
 // ── Delete Confirm Dialog ────────────────────────────────────────────────────
 function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
   const [deleting, setDeleting] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
-  const isPost = ride.role === 'offered' && (ride.status === 'pending' || ride.status === 'confirmed');
-  const label = isPost ? 'Remove post' : 'Cancel ride';
-  const body = isPost
-    ? 'This will remove your ride post. Passengers who requested this ride will be notified.'
-    : 'This will cancel your booking. The driver will be notified.';
+  // const isPost = ride.role === 'offered' && (ride.status === 'pending' || ride.status === 'confirmed');
+  // const label = isPost ? 'Remove post' : 'Cancel ride';
+  // const body = isPost
+  //   ? 'This will remove your ride post. Passengers who requested this ride will be notified.'
+  //   : 'This will cancel your booking. The driver will be notified.';
 
   const startDate = new Date(ride.startTime);
   const dateLabel = !isNaN(startDate)
-    ? startDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
-    : '—';
+    ? startDate.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    })
+    : "—";
 
   const handleConfirm = async () => {
     setDeleting(true);
-    setError('');
+    setError("");
     try {
       await axios.delete(`${Api}/rides/${ride._id || ride.id}`);
       onConfirm(ride);
     } catch (err) {
-      setError(err?.response?.data?.message || 'Failed to delete ride. Please try again.');
+      setError(
+        err?.response?.data?.message ||
+        "Failed to delete ride. Please try again.",
+      );
     } finally {
       setDeleting(false);
     }
@@ -335,32 +520,56 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
       onClose={onClose}
       maxWidth="xs"
       fullWidth
-      PaperProps={{ sx: { borderRadius: 3, mx: { xs: 2, sm: 'auto' }, width: { xs: 'calc(100% - 32px)', sm: '100%' } } }}
+      PaperProps={{
+        sx: {
+          borderRadius: 3,
+          mx: { xs: 2, sm: "auto" },
+          width: { xs: "calc(100% - 32px)", sm: "100%" },
+        },
+      }}
     >
-      <DialogTitle sx={{ fontWeight: 800, pr: 5 }}>
-        {label}?
+      <DialogTitle sx={{ fontWeight: 800, pr: 5, fontSize: { xs: '1rem', sm: '1.15rem' } }}>
+        Are you Cancel Ride?
         <IconButton onClick={onClose} aria-label="Close" sx={{ position: 'absolute', right: 8, top: 8, color: 'text.secondary', width: 44, height: 44 }}>
           <CloseIcon fontSize="small" />
         </IconButton>
       </DialogTitle>
 
       <DialogContent>
-        <Typography color="text.secondary" fontSize="0.9rem">{body}</Typography>
+        <Typography color="text.secondary" sx={{ fontSize: { xs: '0.82rem', sm: '0.9rem' } }}>This will cancel your booking. The driver will be notified...</Typography>
         <Paper sx={{ mt: 2, p: 1.5, bgcolor: '#FFF8F2', border: '1px solid #F0E6DC', borderRadius: 2 }} elevation={0}>
-          <Typography fontSize="0.85rem" fontWeight={700} sx={{ wordBreak: 'break-word' }}>
+          <Typography sx={{ fontSize: { xs: '0.78rem', sm: '0.85rem' } }} fontWeight={700} wordBreak="break-word">
             {formFrom(ride)} → {formTo(ride)}
           </Typography>
-          <Typography fontSize="0.78rem" color="text.secondary">{dateLabel}</Typography>
+          <Typography
+            sx={{ fontSize: { xs: "0.72rem", sm: "0.78rem" } }}
+            color="text.secondary"
+          >
+            {dateLabel}
+          </Typography>
         </Paper>
-        {error && <Alert severity="error" sx={{ mt: 1.5, borderRadius: 2 }}>{error}</Alert>}
+        {error && (
+          <Alert severity="error" sx={{ mt: 1.5, borderRadius: 2 }}>
+            {error}
+          </Alert>
+        )}
       </DialogContent>
 
-      <DialogActions sx={{ px: 3, pb: 2.5, gap: 1, flexWrap: 'wrap' }}>
-        <Button onClick={onClose} variant="outlined" sx={{ borderRadius: 2, textTransform: 'none', flex: { xs: '1 1 auto', sm: '0 0 auto' }, minHeight: 44 }}>
+      <DialogActions sx={{ px: 3, pb: 2.5, gap: 1, flexWrap: "wrap" }}>
+        <Button
+          onClick={onClose}
+          variant="outlined"
+          sx={{
+            borderRadius: 2,
+            textTransform: "none",
+            flex: { xs: "1 1 auto", sm: "0 0 auto" },
+            minHeight: 44,
+          }}
+        >
           Keep it
         </Button>
         <Button onClick={handleConfirm} variant="contained" color="error" disabled={deleting} sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700, flex: { xs: '1 1 auto', sm: '0 0 auto' }, minHeight: 44 }}>
-          {deleting ? 'Deleting...' : label}
+          {deleting ? 'Deleting...' : "Delete"}
         </Button>
       </DialogActions>
     </Dialog>
@@ -373,54 +582,99 @@ function RequestItem({ request, onApprove, onReject }) {
 
   const getStatusColor = (status) => {
     switch (status?.toUpperCase()) {
-      case 'ACCEPTED': return 'success';
-      case 'APPROVED': return 'success';
-      case 'REJECTED': return 'error';
-      case 'PENDING': return 'warning';
-      default: return 'default';
+      case "ACCEPTED":
+        return "success";
+      case "APPROVED":
+        return "success";
+      case "REJECTED":
+        return "error";
+      case "PENDING":
+        return "warning";
+      default:
+        return "default";
     }
   };
 
   const getStatusLabel = (status) => {
     switch (status?.toUpperCase()) {
-      case 'ACCEPTED': return 'Approved ✓';
-      case 'APPROVED': return 'Approved ✓';
-      case 'REJECTED': return 'Rejected ✗';
-      case 'PENDING': return 'Pending ⏳';
-      default: return status || 'Pending';
+      case "ACCEPTED":
+        return "Approved ✓";
+      case "APPROVED":
+        return "Approved ✓";
+      case "REJECTED":
+        return "Rejected ✗";
+      case "PENDING":
+        return "Pending ⏳";
+      default:
+        return status || "Pending";
     }
   };
 
   return (
-    <Card sx={{ mb: 2, borderRadius: 2, border: '1px solid #f0e6dc' }}>
-      <CardContent sx={{ p: 2 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <Box sx={{ flex: 1 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-              <Avatar sx={{ width: 32, height: 32, bgcolor: '#FF9933', fontSize: '0.9rem' }}>
-                {request.requestedBy?.firstName?.[0] || 'U'}
+    <Card sx={{ mb: 2, borderRadius: 2, border: "1px solid #f0e6dc" }}>
+      <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            flexWrap: { xs: "wrap", sm: "nowrap" },
+            gap: 1,
+          }}
+        >
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Box
+              sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}
+            >
+              <Avatar
+                sx={{
+                  width: { xs: 28, sm: 32 },
+                  height: { xs: 28, sm: 32 },
+                  bgcolor: "#FF9933",
+                  fontSize: { xs: "0.8rem", sm: "0.9rem" },
+                }}
+              >
+                {request.requestedBy?.firstName?.[0] || "U"}
               </Avatar>
-              <Typography fontWeight={700} fontSize="0.95rem">
-                {request.requestedBy?.firstName} {request.requestedBy?.lastName || ''}
+              <Typography
+                fontWeight={700}
+                sx={{ fontSize: { xs: "0.85rem", sm: "0.95rem" } }}
+              >
+                {request.requestedBy?.firstName}{" "}
+                {request.requestedBy?.lastName || ""}
               </Typography>
             </Box>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, ml: 5 }}>
+            <Box
+              sx={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 1,
+                ml: { xs: 4.5, sm: 5 },
+              }}
+            >
               <Chip
                 size="small"
-                label={`${request?.seatsRequested || 1} seat${request?.seatsRequested > 1 ? 's' : ''}`}
+                label={`${request?.seatsRequested || 1} seat${request?.seatsRequested > 1 ? "s" : ""}`}
                 icon={<EventSeatIcon sx={{ fontSize: 14 }} />}
-                sx={{ fontSize: '0.7rem' }}
+                sx={{ fontSize: { xs: "0.65rem", sm: "0.7rem" } }}
               />
               <Chip
                 size="small"
                 label={getStatusLabel(request?.status)}
                 color={getStatusColor(request?.status)}
-                sx={{ fontSize: '0.7rem' }}
+                sx={{ fontSize: { xs: "0.65rem", sm: "0.7rem" } }}
               />
             </Box>
           </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            {request.status?.toUpperCase() === 'PENDING' && (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              flexWrap: "wrap",
+            }}
+          >
+            {request.status?.toUpperCase() === "PENDING" && (
               <>
                 <Button
                   variant="contained"
@@ -428,7 +682,10 @@ function RequestItem({ request, onApprove, onReject }) {
                   size="small"
                   startIcon={<CheckCircleIcon />}
                   onClick={() => onApprove(request._id)}
-                  sx={{ textTransform: 'none', fontSize: '0.7rem' }}
+                  sx={{
+                    textTransform: "none",
+                    fontSize: { xs: "0.65rem", sm: "0.7rem" },
+                  }}
                 >
                   Approve
                 </Button>
@@ -438,7 +695,10 @@ function RequestItem({ request, onApprove, onReject }) {
                   size="small"
                   startIcon={<CancelIcon />}
                   onClick={() => onReject(request._id)}
-                  sx={{ textTransform: 'none', fontSize: '0.7rem' }}
+                  sx={{
+                    textTransform: "none",
+                    fontSize: { xs: "0.65rem", sm: "0.7rem" },
+                  }}
                 >
                   Reject
                 </Button>
@@ -451,19 +711,27 @@ function RequestItem({ request, onApprove, onReject }) {
         </Box>
 
         <Collapse in={expanded}>
-          <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid #f0e6dc' }}>
+          <Box sx={{ mt: 2, pt: 2, borderTop: "1px solid #f0e6dc" }}>
             <Stack spacing={1}>
-              <Typography fontSize="0.85rem">
-                <strong>Message:</strong> {request.message || 'No message'}
+              <Typography sx={{ fontSize: { xs: "0.78rem", sm: "0.85rem" } }}>
+                <strong>Message:</strong> {request.message || "No message"}
               </Typography>
-              <Typography fontSize="0.85rem">
-                <strong>Phone:</strong> {request.phone || 'Not provided'}
+              <Typography sx={{ fontSize: { xs: "0.78rem", sm: "0.85rem" } }}>
+                <strong>Phone:</strong> {request.phone || "Not provided"}
               </Typography>
               {request.members?.length > 0 && (
                 <>
-                  <Typography fontSize="0.85rem" fontWeight={700}>Members:</Typography>
+                  <Typography
+                    sx={{ fontSize: { xs: "0.78rem", sm: "0.85rem" } }}
+                    fontWeight={700}
+                  >
+                    Members:
+                  </Typography>
                   {request.members.map((m, i) => (
-                    <Typography key={i} fontSize="0.82rem" sx={{ ml: 2 }}>
+                    <Typography
+                      key={i}
+                      sx={{ fontSize: { xs: "0.75rem", sm: "0.82rem" }, ml: 2 }}
+                    >
                       • {m.name} ({m.age} yrs)
                     </Typography>
                   ))}
@@ -477,85 +745,143 @@ function RequestItem({ request, onApprove, onReject }) {
   );
 }
 
-
 // ── Ride Card ────────────────────────────────────────────────────────────────
-function RideCard({ ride, fetchRides, confirmRide, setConfirmRide, showEdit, showDelete, onEdit, isCurrentRide, notificationRide, setNotificationRide, onDelete, allRequests, setAllRequests }) {
+function RideCard({
+  ride,
+  fetchRides,
+  user,
+  confirmRide,
+  setConfirmRide,
+  showEdit,
+  showDelete,
+  onEdit,
+  isCurrentRide,
+  notificationRide,
+  setNotificationRide,
+  onDelete,
+  allRequests,
+  setAllRequests,
+}) {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [showRequests, setShowRequests] = useState(false);
   const [loadingRequests, setLoadingRequests] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState([]);
 
+  const [approveLoading, setApproveLoading] = useState(null);
+  const [rejectLoading, setRejectLoading] = useState(null);
+
+  const [members, setMembers] = useState([])
+  const [pendingMembers, setPendingMembers] = useState([])
+
+
+  const toasts = ToastConfig();
+
+  const theme = useTheme();
+  const isTab = useMediaQuery(theme.breakpoints.down("sm"));
+
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
   const navigate = useNavigate();
 
   const status = statusConfig[ride?.status];
 
-  // console.log(ride, 'ride inside ridecard')
-
   const startDate = new Date(ride.startTime);
   const date = !isNaN(startDate)
-    ? startDate.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+    ? startDate.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    })
     : "—";
   const time = !isNaN(startDate)
-    ? startDate.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })
+    ? startDate.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    })
     : "—";
 
   const fuelLabel = ride.fuelSharing ? "Yes" : "No";
 
   // Get requests for this specific ride
-  const rideRequests = allRequests?.filter(
-    (req) => req.rideId?.toString() === ride._id?.toString()
-  ) || [];
+  const rideRequests =
+    allRequests?.filter(
+      (req) => req.rideId?._id?.toString() === ride._id?.toString(),
+    ) || [];
+
 
   const pendingCount = rideRequests.filter(
-    r => r.status?.toUpperCase() === 'PENDING'
+    (r) => r.status?.toUpperCase() === "PENDING",
   ).length;
 
   const handleApprove = async (requestId) => {
-    
+    setApproveLoading(requestId);
     try {
-      const res = await axios.patch(`${Api}/bookride/${requestId}/status?type=Approve`, { status: 'ACCEPTED' });
-      // console.log(res.data.succes, 'res')
-      setAllRequests(prev => prev.map(req =>
-        req._id === requestId ? { ...req, status: 'ACCEPTED' } : req
-      ));
-      fetchRides();
-      toast.success('Request approved successfully!');
+      const res = await axios.patch(
+        `${Api}/bookride/${requestId}/status?type=Approve`,
+        { status: "ACCEPTED" },
+      );
+
+      console.log(res,'res after approve')
+      if (res.status) {
+        setAllRequests((prev) =>
+          prev.map((req) =>
+            req._id === requestId ? { ...req, status: "ACCEPTED" } : req,
+          ),
+        );
+        fetchRides();
+        toast.success("Request approved successfully!", toasts);
+      }
     } catch (error) {
-      toast.error('Failed to approve request');
+      toast.error(error.response.data.message, toasts);
+    } finally {
+      setApproveLoading(null);
     }
   };
 
   const handleReject = async (requestId) => {
+    setRejectLoading(requestId);
     try {
-      await axios.patch(`${Api}/bookride/${requestId}/status?type=Reject`, { status: 'REJECTED' });
-      setAllRequests(prev => prev.map(req =>
-        req._id === requestId ? { ...req, status: 'REJECTED' } : req
-      ));
-      toast.success('Request rejected');
-      fetchRides()
+      await axios.patch(`${Api}/bookride/${requestId}/status?type=Reject`, {
+        status: "REJECTED",
+      });
+      setAllRequests((prev) =>
+        prev.map((req) =>
+          req._id === requestId ? { ...req, status: "REJECTED" } : req,
+        ),
+      );
+      toast.success("Request rejected", toasts);
+      fetchRides();
     } catch (error) {
-      toast.error('Failed to reject request');
+      toast.error('Failed to reject request', toasts);
+    } finally {
+      setRejectLoading(null);
     }
   };
 
   const handleEdit = async (rideId, status) => {
     try {
+      if (status === "Waiting") {
+        const response = await axios.patch(`${Api}/rides/edit/${rideId}`, {
+          travelStatus: "Started",
+          startTime: new Date().toISOString(),
+        });
 
-      if (status === 'Waiting') {
-        const response = await axios.patch(`${Api}/rides/edit/${rideId}`, { travelStatus: 'Started', startTime: new Date().toISOString() })
-
-        setConfirmRide(null)
-        fetchRides()
-        toast.success('Ride Started');
+        setConfirmRide(null);
+        fetchRides();
+        toast.success("Ride Started", toasts);
       } else if (status === "Started") {
-        const response = await axios.patch(`${Api}/rides/edit/${rideId}`, { travelStatus: 'Completed', endTime: new Date().toISOString() })
+        const response = await axios.patch(`${Api}/rides/edit/${rideId}`, {
+          travelStatus: "Completed",
+          endTime: new Date().toISOString(),
+        });
 
-        setConfirmRide(null)
-        fetchRides()
-        toast.success('Ride Completed');
+        setConfirmRide(null);
+        fetchRides();
+        toast.success("Ride Completed", toasts);
       }
     } catch (error) {
-      toast.error('Failed');
+      toast.error("Failed", toasts);
     }
   };
 
@@ -571,20 +897,23 @@ function RideCard({ ride, fetchRides, confirmRide, setConfirmRide, showEdit, sho
     }
   }, [notificationRide, ride]);
 
-
+  const isOwner = ride.createdBy._id === user?.id;
+  const isStarted = ride?.travelStatus === "Started";
+  const isCompleted = ride?.travelStatus === "Completed";
 
   return (
     <>
       <Box
+        onClick={() => setDetailsOpen(true)}
         sx={{
-          p: { xs: 0.5, sm: 0 },
+          p: { xs: 0, sm: 0 },
           width: "100%",
-          maxWidth: 1000,
-          mx: "auto",
-          mb: 2.5,
+          // maxWidth: "100%",
+          // mx: "auto",
+          mb: { xs: 1.5, sm: 2 },
           transition: "all .3s ease",
           "&:hover": {
-            transform: { xs: "none", sm: "translateY(-6px)" },
+            transform: { xs: "none", sm: "translateY(-5px)" },
           },
         }}
       >
@@ -593,86 +922,152 @@ function RideCard({ ride, fetchRides, confirmRide, setConfirmRide, showEdit, sho
           sx={{
             background: "linear-gradient(135deg, #0e0e3b, #271c45)",
             color: "#fff",
-            borderRadius: "18px 18px 0 0",
-            px: { xs: 2, sm: 3 },
-            py: { xs: 1.5, sm: 2 },
+            borderRadius: "15px 15px 0 0",
+            px: { xs: 1.5, sm: 2.5, md: 3 },
+            py: { xs: 1.25, sm: 1.75, md: 2 },
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            boxShadow: "0 6px 15px rgba(255,153,51,.25)",
+            gap: 1,
+            flexWrap: "wrap",
           }}
         >
+          {/* Ride Owner */}
           <Box sx={{ minWidth: 0, flex: 1 }}>
             <Typography
               fontWeight={700}
               sx={{
-                fontSize: { xs: '0.85rem', sm: '1rem' },
+                fontSize: { xs: "0.8rem", sm: "0.92rem", md: "1rem" },
                 lineHeight: 1.3,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
               }}
             >
               {ride.createdBy?.firstName} {ride.createdBy?.lastName}
             </Typography>
           </Box>
 
-          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-            {isCurrentRide && ride?.travelStatus != "Completed" && (
-              <Button
-                onClick={() => { handleEdit(ride._id, ride?.travelStatus) }}
-                sx={{
-                  color: 'white',
-                  background: ride?.travelStatus != "Started" ? "Orange" : "Red",
-                  width: '100%',
-                  height: '30px',
-                  fontSize: 13,
-                }}
-              >
-                {ride?.travelStatus === "Started" ? "Complete Ride" : "Start Ride"}
-              </Button>
-            )}
-            <Chip
-              size="small"
-              label={`${status.icon} ${status.label}`}
-              sx={{
-                bgcolor: status.bg,
-                color: status.color,
-                fontWeight: 700,
-                fontSize: { xs: '0.62rem', sm: '0.7rem' },
-                height: { xs: 22, sm: 24 },
-                flexShrink: 0,
-              }}
-            />
+          {/* Actions */}
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "flex-end",
+              gap: { xs: 0.5, sm: 1 },
+              flexWrap: "wrap",
 
-            {rideRequests.length > 0 && (
+              "& .MuiChip-root, & .MuiButton-root": {
+                height: { xs: 22, sm: 26, md: 28 },
+                minHeight: { xs: 22, sm: 26, md: 28 },
+                fontSize: { xs: "0.55rem", sm: "0.65rem", md: "0.7rem" },
+                textTransform: "none",
+                borderRadius: 1.5,
+              },
+
+              "& .MuiChip-label": {
+                px: { xs: 0.75, sm: 1, md: 1.25 },
+                fontWeight: 700,
+              },
+            }}
+          >
+            {/* Completed Chip */}
+            {ride?.travelStatus === "Completed" && (
+              <Chip
+                size="small"
+                label={isMobile ? "Completed" : "Completed Ride"}
+                sx={{
+                  bgcolor: status.bg,
+                  color: status.color,
+                  fontWeight: 700,
+                }}
+              />
+            )}
+
+            {/* Status Chip */}
+            {ride?.travelStatus !== "Completed" && (
+              <Chip
+                size="small"
+                label={`${status.icon} ${status.label}`}
+                sx={{
+                  bgcolor: status.bg,
+                  color: status.color,
+                  fontWeight: 700,
+                }}
+              />
+            )}
+
+            {/* View Requests */}
+            {rideRequests.length > 0 && ride?.travelStatus !== "Completed" && (
               <Badge
                 badgeContent={pendingCount}
                 color="error"
                 invisible={pendingCount === 0}
+                sx={{
+                  "& .MuiBadge-badge": {
+                    fontSize: { xs: "0.55rem", sm: "0.7rem" },
+                    minWidth: { xs: 14, sm: 18 },
+                    height: { xs: 14, sm: 18 },
+                    p: 0,
+                  },
+                }}
               >
                 <Button
-                  size="small"
                   variant="outlined"
-                  // onClick={() => setShowRequests(!showRequests)}
+                  size="small"
                   onClick={() => setDetailsOpen(true)}
                   sx={{
-                    color: '#FF9933',
-                    borderColor: '#FF9933',
-                    textTransform: 'none',
-                    fontSize: { xs: '0.6rem', sm: '0.7rem' },
-                    minHeight: 24,
-                    height: { xs: 24, sm: 28 },
-                    px: 1,
-                    '&:hover': {
-                      borderColor: '#FF9933',
-                      backgroundColor: 'rgba(27, 15, 88, 0.1)',
-                    }
+                    color: "#FF9933",
+                    borderColor: "#FF9933",
+                    "&:hover": {
+                      borderColor: "#FF9933",
+                      bgcolor: "rgba(255,153,51,0.08)",
+                    },
                   }}
                 >
-                  {showRequests ? 'Hide Requests' : 'View Requests'}
+                  {showRequests ? "Hide Requests" : "View Requests"}
                 </Button>
               </Badge>
+            )}
+
+            {/* Start / Complete Ride */}
+            {isCurrentRide && (
+              <>
+                {isOwner && !isCompleted ? (
+                  <Button
+                    size="small"
+                    onClick={() => handleEdit(ride._id, ride?.travelStatus)}
+                    sx={{
+                      color: "#fff",
+                      bgcolor: isStarted ? "red" : "orange",
+                      px: { xs: 1, sm: 1.5 },
+                      whiteSpace: "nowrap",
+                      "&:hover": {
+                        bgcolor: isStarted ? "darkred" : "darkorange",
+                      },
+                    }}
+                  >
+                    {isStarted ? "Complete Ride" : "Start Ride"}
+                  </Button>
+                ) : (
+                  <span
+                    style={{
+                      color: isCompleted
+                        ? "green"
+                        : isStarted
+                          ? "orange"
+                          : "gray",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {isCompleted
+                      ? "Completed"
+                      : isStarted
+                        ? "Ongoing"
+                        : "Not Started"}
+                  </span>
+                )}
+              </>
             )}
           </Box>
         </Box>
@@ -680,12 +1075,11 @@ function RideCard({ ride, fetchRides, confirmRide, setConfirmRide, showEdit, sho
         {/* ── Card body ── */}
         <Card
           elevation={0}
-          onClick={() => setDetailsOpen(true)}
           sx={{
             borderRadius: "0 0 18px 18px",
             background: "#fff",
             border: "1px solid #FFE2C2",
-            boxShadow: "0 10px 30px rgba(255,153,51,.12)",
+            // boxShadow: "0 10px 30px rgba(255,153,51,.12)",
             overflow: "hidden",
             transition: ".3s",
             // "&:hover": {
@@ -696,109 +1090,232 @@ function RideCard({ ride, fetchRides, confirmRide, setConfirmRide, showEdit, sho
         >
           <CardContent
             sx={{
-              p: { xs: '12px !important', sm: '20px 24px !important' },
+              p: {
+                xs: "10px !important",
+                sm: "16px 18px !important",
+                md: "20px 24px !important",
+              },
             }}
           >
             <Box>
               {/* FROM / TO row */}
               <Box
                 sx={{
-                  display: 'flex',
-                  alignItems: 'center',
+                  display: isMobile ? 'block' : 'flex',
                   justifyContent: 'space-between',
-                  gap: 1,
-                  pb: { xs: 1.25, sm: 2 },
-                  mb: { xs: 1.25, sm: 2 },
-                  borderBottom: '1px solid rgba(255,153,51,0.2)',
+                  // alignItems:'center',
                 }}
               >
-                <Box sx={{ minWidth: 0, flex: 1 }}>
-                  <Typography
-                    variant="caption"
-                    sx={{ color: "#FF9933", fontWeight: 700, letterSpacing: 0.8, fontSize: { xs: '0.6rem', sm: '0.7rem' } }}
-                  >
-                    FROM
-                  </Typography>
-                  <Typography
-                    fontWeight={700}
+                <Box
+                  sx={{
+                    // border:'1px solid black',
+                    display: "flex",
+                    width: isMobile ? "100%" : "35%",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 1,
+                    pb: isMobile && { xs: 1.2, sm: 1.5, md: 2 },
+                    // mb: { xs: 1.1, sm: 1.5, md: 2 },
+                    // borderBottom: '1px solid rgba(255,153,51,0.2)',
+                  }}
+                >
+                  <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: "#FF9933",
+                        fontWeight: 700,
+                        letterSpacing: 0.8,
+                        fontSize: {
+                          xs: "0.58rem",
+                          sm: "0.65rem",
+                          md: "0.7rem",
+                        },
+                      }}
+                    >
+                      FROM
+                    </Typography>
+                    <Typography
+                      fontWeight={700}
+                      sx={{
+                        wordBreak: "break-word",
+                        fontSize: {
+                          xs: "0.78rem",
+                          sm: "0.88rem",
+                          md: "0.95rem",
+                        },
+                        lineHeight: 1.3,
+                      }}
+                    >
+                      📍 {formFrom(ride)}
+                    </Typography>
+                  </Box>
+
+                  <ArrowForwardIcon
                     sx={{
-                      wordBreak: 'break-word',
-                      fontSize: { xs: '0.82rem', sm: '0.95rem' },
-                      lineHeight: 1.3,
+                      color: "#FF9933",
+                      fontSize: { xs: 14, sm: 18, md: 20 },
+                      flexShrink: 0,
                     }}
-                  >
-                    📍 {formFrom(ride)}
-                  </Typography>
+                  />
+
+                  <Box sx={{ minWidth: 0, flex: 1, textAlign: "right" }}>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: "#FF9933",
+                        fontWeight: 700,
+                        letterSpacing: 0.8,
+                        fontSize: {
+                          xs: "0.58rem",
+                          sm: "0.65rem",
+                          md: "0.7rem",
+                        },
+                      }}
+                    >
+                      TO
+                    </Typography>
+                    <Typography
+                      fontWeight={700}
+                      sx={{
+                        wordBreak: "break-word",
+                        fontSize: {
+                          xs: "0.78rem",
+                          sm: "0.88rem",
+                          md: "0.95rem",
+                        },
+                        lineHeight: 1.3,
+                      }}
+                    >
+                      📍 {formTo(ride)}
+                    </Typography>
+                  </Box>
                 </Box>
+                <Box
+                  sx={{
+                    // border:'1px solid black',
+                    justifyContent: 'space-around',
+                    display: 'flex',
+                    width: isMobile ? '100%' : '60%',
+                    gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(3, 1fr)' },
+                    gap: { xs: '10px 6px', sm: '16px', md: 3 },
+                  }}
+                >
+                  <Box>
+                    <Typography
+                      sx={{
+                        fontSize: {
+                          xs: "0.62rem",
+                          sm: "0.68rem",
+                          md: "0.7rem",
+                        },
+                        color: "text.secondary",
+                        mb: 0.5,
+                      }}
+                    >
+                      Date &amp; time
+                    </Typography>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <CalendarTodayIcon
+                        sx={{
+                          color: "#FF9933",
+                          fontSize: { xs: 14, sm: 16, md: 18 },
+                        }}
+                      />
+                      <Typography
+                        sx={{
+                          fontSize: {
+                            xs: "0.7rem",
+                            sm: "0.8rem",
+                            md: "0.875rem",
+                          },
+                          fontWeight: 600,
+                        }}
+                      >
+                        {date} · {time}
+                      </Typography>
+                    </Stack>
+                  </Box>
 
-                <ArrowForwardIcon sx={{ color: '#FF9933', fontSize: { xs: 16, sm: 20 }, flexShrink: 0 }} />
+                  <Box>
+                    <Typography
+                      sx={{
+                        fontSize: {
+                          xs: "0.62rem",
+                          sm: "0.68rem",
+                          md: "0.7rem",
+                        },
+                        color: "text.secondary",
+                        mb: 0.5,
+                      }}
+                    >
+                      Seats available
+                    </Typography>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <EventSeatIcon
+                        sx={{
+                          color: "#FF9933",
+                          fontSize: { xs: 14, sm: 16, md: 18 },
+                        }}
+                      />
+                      <Typography
+                        sx={{
+                          fontSize: {
+                            xs: "0.7rem",
+                            sm: "0.8rem",
+                            md: "0.875rem",
+                          },
+                          fontWeight: 600,
+                        }}
+                      >
+                        {ride.availableSeats} seat
+                        {ride.availableSeats === 1 ? "" : "s"}
+                      </Typography>
+                    </Stack>
+                  </Box>
 
-                <Box sx={{ minWidth: 0, flex: 1, textAlign: 'right' }}>
-                  <Typography
-                    variant="caption"
-                    sx={{ color: "#FF9933", fontWeight: 700, letterSpacing: 0.8, fontSize: { xs: '0.6rem', sm: '0.7rem' } }}
-                  >
-                    TO
-                  </Typography>
-                  <Typography
-                    fontWeight={700}
-                    sx={{
-                      wordBreak: 'break-word',
-                      fontSize: { xs: '0.82rem', sm: '0.95rem' },
-                      lineHeight: 1.3,
-                    }}
-                  >
-                    📍 {formTo(ride)}
-                  </Typography>
+                  <Box>
+                    <Typography
+                      sx={{
+                        fontSize: {
+                          xs: "0.62rem",
+                          sm: "0.68rem",
+                          md: "0.7rem",
+                        },
+                        color: "text.secondary",
+                        mb: 0.5,
+                      }}
+                    >
+                      Travel mode
+                    </Typography>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      {React.cloneElement(
+                        travelIcons[ride.modeOfTravel] || travelIcons.Car,
+                        {
+                          sx: {
+                            color: "#FF9933",
+                            fontSize: { xs: 14, sm: 16, md: 18 },
+                          },
+                        },
+                      )}
+                      <Typography
+                        sx={{
+                          fontSize: {
+                            xs: "0.7rem",
+                            sm: "0.8rem",
+                            md: "0.875rem",
+                          },
+                          fontWeight: 600,
+                        }}
+                      >
+                        {ride.modeOfTravel}
+                      </Typography>
+                    </Stack>
+                  </Box>
                 </Box>
               </Box>
 
               {/* Details grid */}
-              <Box
-                sx={{
-                  display: 'grid',
-                  gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(3, 1fr)' },
-                  gap: { xs: '12px 8px', sm: 3 },
-                }}
-              >
-                <Box>
-                  <Typography sx={{ fontSize: { xs: '0.65rem', sm: '0.7rem' }, color: 'text.secondary', mb: 0.5 }}>
-                    Date &amp; time
-                  </Typography>
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <CalendarTodayIcon sx={{ color: "#FF9933", fontSize: { xs: 15, sm: 18 } }} />
-                    <Typography sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, fontWeight: 600 }}>
-                      {date} · {time}
-                    </Typography>
-                  </Stack>
-                </Box>
-
-                <Box>
-                  <Typography sx={{ fontSize: { xs: '0.65rem', sm: '0.7rem' }, color: 'text.secondary', mb: 0.5 }}>
-                    Seats available
-                  </Typography>
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <EventSeatIcon sx={{ color: "#FF9933", fontSize: { xs: 15, sm: 18 } }} />
-                    <Typography sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, fontWeight: 600 }}>
-                      {ride.availableSeats} seat{ride.availableSeats === 1 ? '' : 's'}
-                    </Typography>
-                  </Stack>
-                </Box>
-
-                <Box>
-                  <Typography sx={{ fontSize: { xs: '0.65rem', sm: '0.7rem' }, color: 'text.secondary', mb: 0.5 }}>
-                    Travel mode
-                  </Typography>
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    {React.cloneElement(travelIcons[ride.modeOfTravel] || travelIcons.Car, {
-                      sx: { color: "#FF9933", fontSize: { xs: 15, sm: 18 } },
-                    })}
-                    <Typography sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, fontWeight: 600 }}>
-                      {ride.modeOfTravel}
-                    </Typography>
-                  </Stack>
-                </Box>
-              </Box>
             </Box>
 
             {/* Requests section */}
@@ -840,6 +1357,7 @@ function RideCard({ ride, fetchRides, confirmRide, setConfirmRide, showEdit, sho
 
         <RideDetailsModal
           ride={ride}
+          user={user}
           showEdit={showEdit}
           showDelete={showDelete}
           onEdit={onEdit}
@@ -848,22 +1366,52 @@ function RideCard({ ride, fetchRides, confirmRide, setConfirmRide, showEdit, sho
           requests={rideRequests}
           onApprove={handleApprove}
           onReject={handleReject}
+          approveLoading={approveLoading}
+          rejectLoading={rejectLoading}
         />
       )}
 
-      <Dialog open={!!confirmRide}>
+      <Dialog
+        open={!!confirmRide}
+        PaperProps={{
+          sx: {
+            borderRadius: { xs: 2, sm: 3 },
+            mx: { xs: 2, sm: "auto" },
+            width: { xs: "calc(100% - 32px)", sm: "100%" },
+          },
+        }}
+      >
         <DialogContent>
-          Looks like your ride is starting 🚗
+          <Typography sx={{ fontSize: { xs: "0.9rem", sm: "1rem" } }}>
+            Looks like your ride is starting 🚗
+          </Typography>
         </DialogContent>
-        <DialogContent>
-          <Typography>From : {confirmRide?.from}</Typography>
-          <Typography>To : {confirmRide?.destination}</Typography>
-          <Typography>Time : {moment(confirmRide?.startTime).format("DD MMM YYYY, hh:mm A")}</Typography>
-
+        <DialogContent sx={{ pt: 0 }}>
+          <Typography sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem" } }}>
+            From : {confirmRide?.from}
+          </Typography>
+          <Typography sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem" } }}>
+            To : {confirmRide?.destination}
+          </Typography>
+          <Typography sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem" } }}>
+            Time :{" "}
+            {moment(confirmRide?.startTime).format("DD MMM YYYY, hh:mm A")}
+          </Typography>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setConfirmRide(null)}>not yet</Button>
-          <Button onClick={() => handleEdit(confirmRide._id, confirmRide.travelStatus)}>
+        <DialogActions sx={{ px: 2, pb: 2, gap: 1, flexWrap: "wrap" }}>
+          <Button
+            onClick={() => setConfirmRide(null)}
+            sx={{ flex: { xs: "1 1 auto", sm: "0 0 auto" }, minHeight: 40 }}
+          >
+            not yet
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() =>
+              handleEdit(confirmRide._id, confirmRide.travelStatus)
+            }
+            sx={{ flex: { xs: "1 1 auto", sm: "0 0 auto" }, minHeight: 40 }}
+          >
             Started
           </Button>
         </DialogActions>
@@ -874,6 +1422,10 @@ function RideCard({ ride, fetchRides, confirmRide, setConfirmRide, showEdit, sho
 
 // ── Main Component ─────────────────────────────────────────────────────────
 const MyRides = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
+
   const [tab, setTab] = useState(0);
   const [mypost, setMypost] = useState([]);
   const [upcoming, setUpcoming] = useState([]);
@@ -886,9 +1438,20 @@ const MyRides = () => {
   const [allRequests, setAllRequests] = useState([]);
   const [allMyRequests, setAllMyRequests] = useState([]);
   const { notifications } = useNotifications();
-  const [confirmRide, setConfirmRide] = useState(null)
+  const [confirmRide, setConfirmRide] = useState(null);
+
+  // Pagination state — one page counter per tab so each tab remembers its own position
+  const [currentRidePage, setCurrentRidePage] = useState(1);
+  const [upcomingPage, setUpcomingPage] = useState(1);
+  const [mypostPage, setMypostPage] = useState(1);
+  const [historyPage, setHistoryPage] = useState(1);
+
+  const toastss = ToastConfig();
 
   const processedIds = useRef(new Set());
+
+  // const theme = useTheme();
+  const isTab = useMediaQuery(theme.breakpoints.down("sm"));
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -899,13 +1462,11 @@ const MyRides = () => {
 
         const start = new Date(ride.startTime);
 
-        if (
-          now >= start &&
-          !processedIds.current.has(ride._id)
-        ) {
-          toast.info("Your ride is starting now 🚗");
+        if (now >= start && !processedIds.current.has(ride._id)) {
+          ride.createdBy._id == user.id &&
+            toast.info("Your ride is starting now 🚗", toastss);
 
-          setConfirmRide(ride);
+          ride.createdBy._id == user.id && setConfirmRide(ride);
 
           processedIds.current.add(ride._id);
         }
@@ -915,38 +1476,17 @@ const MyRides = () => {
     return () => clearInterval(interval);
   }, [currentRide]);
 
-  // console.log(notifications, 'from my rides')
-
-  // useEffect(() => {
-  //   if (!notifications?.length) return;
-
-  //   const latest = notifications[0];
-  //   if (latest.type === "request_update" || latest.type === "new_request" || latest.type === "request_accepted") {
-  //     const requestData = latest;
-
-  //     setAllMyRequests((prev) => {
-  //       console.log(prev, 'prev')
-  //       console.log(requestData, 'requestData')
-
-  //       const exists = prev.find(r => r.rideId._id === requestData.data.rideId);
-
-  //       if (exists) {
-  //         return prev.map(r =>
-  //           r.rideId._id === requestData.data.rideId ? requestData : r
-  //         );
-  //       }
-
-  //       return [requestData, ...prev];
-  //     });
-  //   }
-
-  // }, [notifications]);
+  useEffect(() => {
+    if (!notifications?.length) return;
+    fetchRides();
+    fetchAllSends();
+  }, [notifications]);
 
   useEffect(() => {
     if (!notifications?.length) return;
 
     const newNotifs = notifications.filter(
-      (n) => !processedIds.current.has(n.id)
+      (n) => !processedIds.current.has(n.id),
     );
 
     if (!newNotifs.length) return;
@@ -954,124 +1494,239 @@ const MyRides = () => {
     newNotifs.forEach((n) => processedIds.current.add(n.id));
 
     const shouldRefetch = newNotifs.some((n) =>
-      ["request_update", "request_accepted", "request_rejected"].includes(n.type)
+      ["request_update", "request_accepted", "request_rejected"].includes(
+        n.type,
+      ),
     );
 
-    const shouldRefetchReceived = newNotifs.some((n) =>
-      n.type === "new_request"
+    const shouldRefetchReceived = newNotifs.some(
+      (n) => n.type === "new_request",
     );
 
     if (shouldRefetchReceived) {
       fetchAllRequests();
     }
 
+    fetchRides();
+
     if (shouldRefetch) {
       fetchAllSends();
     }
   }, [notifications]);
 
-  const user = JSON.parse(localStorage.getItem('user'));
+  const user = JSON.parse(localStorage.getItem("user"));
   const location = useLocation();
   useEffect(() => {
     if (location.state?.tab !== undefined) {
       setTab(location.state.tab);
-      setNotificationRide(location.state.rideId)
+      setNotificationRide(location.state.rideId);
     }
   }, [location.state]);
 
   const { refreshRide } = useRide();
 
   const fetchRides = async () => {
-
     const currentDateTime = new Date();
     try {
       const response = await axios.get(`${Api}/rides/get`);
       const all = (response.data.data || []).sort(
-        (a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
+        (a, b) =>
+          new Date(b.startTime).getTime() - new Date(a.startTime).getTime(),
       );
 
       setMypost(all.filter((item) => item?.createdBy?._id === user.id));
 
-
       setUpcoming(
         all.filter((ride) => {
-          console.log(ride, 'upcoming ride settting')
           const rideStartTime = new Date(ride?.startTime);
-          return ride?.createdBy?._id === user.id && !isNaN(rideStartTime) && rideStartTime > currentDateTime;
-        })
+          return (
+            ride?.createdBy?._id === user.id &&
+            !isNaN(rideStartTime) &&
+            rideStartTime > currentDateTime
+          );
+        }),
       );
 
       setHistory(
         all.filter((ride) => {
           const rideStartTime = new Date(ride?.startTime);
           // const rideEndTime = new Date(rideStartTime.getTime() + 3 * 60 * 60 * 1000);
-          return ride?.createdBy?._id === user.id && !isNaN(rideStartTime) && ride?.travelStatus === "Completed";
-        })
+          return (
+            ride?.createdBy?._id === user.id &&
+            !isNaN(rideStartTime) &&
+            ride?.travelStatus === "Completed"
+          );
+        }),
       );
 
       setCurrentRide(
+        //   const currentDateTime = new Date();
+        //   const currReqRide = allMyRequests.filter((ride)=>{
+
+        //     const rideStartTime = new Date(ride?.rideId?.startTime);
+        //     return(
+        //       !isNaN(rideStartTime) &&
+        //       rideStartTime <= currentDateTime
+        //     )
+        //   })
+
         all.filter((ride) => {
           const rideStartTime = new Date(ride?.startTime);
           // const rideEndTime = new Date(rideStartTime.getTime() + 3 * 60 * 60 * 1000);
-          return ride?.createdBy?._id === user.id && rideStartTime <= currentDateTime && ride?.travelStatus !== "Completed";
-        })
+          return (
+            ride?.createdBy?._id === user.id &&
+            rideStartTime >= currentDateTime &&
+            ride?.travelStatus !== "Completed"
+          );
+        }),
       );
     } catch (error) {
-      console.error('Error fetching rides:', error.message);
+      console.error("Error fetching rides:", error.message);
     } finally {
       setLoading(false);
     }
   };
   useEffect(() => {
     fetchRides();
-  }, [refreshRide]);
+  }, [refreshRide, notifications]);
 
+  // Upcoming Ride Condition for both req and post
   useEffect(() => {
-    console.log(allMyRequests?.length, "hello")
     if (!allMyRequests?.length) return;
-    console.log("hello")
+
     const currentDateTime = new Date();
 
     const acceptedRides = allMyRequests
-      .filter((ride) => ride?.status?.trim() === "ACCEPTED" && ride.rideId)
+      .filter((ride) => {
+        // ride?.status?.trim() === "ACCEPTED" && ride.rideId
+        const rideStartTime = new Date(ride?.rideId?.startTime);
+        return (
+          !isNaN(rideStartTime) &&
+          rideStartTime > currentDateTime &&
+          ride?.status === "ACCEPTED"
+        );
+      })
       .map((ride) => ride.rideId);
 
     const myUpcoming = mypost.filter((ride) => {
       const rideStartTime = new Date(ride?.startTime);
-      return (
-        !isNaN(rideStartTime) &&
-        rideStartTime > currentDateTime
-      );
+      return !isNaN(rideStartTime) && rideStartTime > currentDateTime;
     });
 
     setUpcoming([...acceptedRides, ...myUpcoming]);
-  }, [allMyRequests, mypost]);
+  }, [allMyRequests, mypost, notifications]);
+
+  useEffect(() => {
+    console.log("🔥 notifications changed", notifications);
+  }, [notifications]);
+
+  useEffect(() => {
+    const currentDateTime = new Date();
+
+    const currReqRide = allMyRequests
+      .filter((ride) => {
+        const rideStartTime = new Date(ride?.rideId?.startTime);
+
+        return (
+          !isNaN(rideStartTime) &&
+          rideStartTime <= currentDateTime &&
+          ride?.status === "ACCEPTED" &&
+          ride?.rideId?.travelStatus !== "Completed"
+        );
+      })
+      .map((ride) => ride.rideId);
+
+    const myrides = mypost.filter((ride) => {
+      const rideStartTime = new Date(ride?.startTime);
+      // const rideEndTime = new Date(rideStartTime.getTime() + 3 * 60 * 60 * 1000);
+      return (
+        ride?.createdBy?._id === user.id &&
+        rideStartTime <= currentDateTime &&
+        ride?.travelStatus !== "Completed"
+      );
+    });
+
+    setCurrentRide([...currReqRide, ...myrides]);
+
+    const historyRide = allMyRequests
+      .filter((ride) => ride?.rideId?.travelStatus == "Completed")
+      .map((ride) => ride.rideId);
+
+    const histMyPost = mypost.filter((ride) => {
+      const rideStartTime = new Date(ride?.startTime);
+      return (
+        ride?.createdBy?._id === user.id &&
+        !isNaN(rideStartTime) &&
+        ride?.travelStatus == "Completed"
+      );
+    });
+
+    setHistory([...historyRide, ...histMyPost]);
+  }, [allMyRequests, mypost, notifications]);
+
+  useEffect(() => {
+    if (!notifications?.length) return;
+
+    const newRequestsFromNotifications = notifications
+      .filter((noti) => noti.type === "new_request")
+      .map((noti) => {
+        const booking = noti.data.bookingData;
+
+        return {
+          ...booking,
+          _id: booking._id,
+
+          // normalize rideId (VERY IMPORTANT)
+          rideId: {
+            _id: booking.rideId,
+          },
+
+          // attach profile image
+          requestedBy: {
+            _id: booking.requestedBy,
+            profileImage: noti.data.profileImage,
+            firstName: noti.data.requestBy.requestedBy.firstName,
+            lastName: noti.data.requestBy.requestedBy.lastName,
+          },
+        };
+      });
+
+    setAllRequests((prev) => {
+      const merged = [...newRequestsFromNotifications, ...prev];
+
+      // remove duplicates
+      const unique = merged.filter(
+        (item, index, self) =>
+          index === self.findIndex((t) => t._id === item._id),
+      );
+
+      return unique;
+    });
+  }, [notifications]);
 
   const fetchAllRequests = async () => {
     try {
       const res = await axios.get(`${Api}/bookride/${user.id}?type=received`);
       setAllRequests(res.data.data || []);
     } catch (error) {
-      console.error('Error fetching requests:', error);
+      console.error("Error fetching requests:", error);
     }
   };
 
   const fetchAllSends = async () => {
     try {
       const res = await axios.get(`${Api}/bookride/send/${user.id}`);
-      console.log(res.data.data, 'res.data.data')
+      // console.log(res.data.data, 'res.data.data')
       setAllMyRequests(res.data.data || []);
     } catch (error) {
-      console.error('Error fetching requests:', error);
+      console.error("Error fetching requests:", error);
     }
   };
 
   useEffect(() => {
-
     fetchAllSends();
     fetchAllRequests();
   }, []);
-
 
   // const getBookRideStatus =(`${Api}/bookride/`)=>{
   //   try{
@@ -1133,46 +1788,61 @@ const MyRides = () => {
 
   const handleEdit = (updated) => {
     const id = updated._id || updated.id;
-    const merge = (list) => list.map((r) => ((r._id || r.id) === id ? updated : r));
+    const merge = (list) =>
+      list.map((r) => ((r._id || r.id) === id ? updated : r));
     setMypost(merge(mypost));
     setUpcoming(merge(upcoming));
     setHistory(merge(history));
-    setCurrentRide(prev => merge(prev));
+    setCurrentRide((prev) => merge(prev));
     setEditRide(null);
-    toast.success('Ride Updated Successfully...!');
+    toast.success("Ride Updated Successfully...!", toastss);
   };
 
   const handleDelete = (deleted) => {
     const id = deleted._id || deleted.id;
     const remove = (list) => list.filter((r) => (r._id || r.id) !== id);
-    setMypost(prev => remove(prev));
-    setUpcoming(prev => remove(prev));
-    setHistory(prev => remove(prev));
+    setMypost((prev) => remove(prev));
+    setUpcoming((prev) => remove(prev));
+    setHistory((prev) => remove(prev));
     setDeleteRide(null);
-    toast.success('Ride Deleted Successfully...!');
+    toast.success("Ride Deleted Successfully...!", toastss);
   };
   const [openCancelDialog, setOpenCancelDialog] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
-  const renderList = (list, showEdit = false, showDelete = false, isCurrentRide = false) =>
-    list.map((ride) => (
-      <RideCard
-        key={ride._id || ride.id}
-        ride={ride}
-        notificationRide={notificationRide}
-        isCurrentRide={isCurrentRide}
-        setNotificationRide={setNotificationRide}
-        showEdit={showEdit}
-        confirmRide={confirmRide}
-        setConfirmRide={setConfirmRide}
-        showDelete={showDelete}
-        fetchRides={fetchRides}
-        onEdit={setEditRide}
-        onDelete={setDeleteRide}
-        allRequests={allRequests}
-        setAllRequests={setAllRequests}
-      />
-    ));
 
+  // Slices a list down to the given page's worth of items (ITEMS_PER_PAGE per page)
+  const paginate = (list, page) =>
+    list.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+
+  const renderList = (
+    list,
+    showEdit = false,
+    showDelete = false,
+    isCurrentRide = false,
+  ) =>
+    list.map((ride) => {
+      const isCompleted = ride.travelStatus === "Completed";
+
+      return (
+        <RideCard
+          key={ride._id || ride.id}
+          user={user}
+          ride={ride}
+          notificationRide={notificationRide}
+          isCurrentRide={isCurrentRide}
+          setNotificationRide={setNotificationRide}
+          showEdit={showEdit && !isCompleted}
+          confirmRide={confirmRide}
+          setConfirmRide={setConfirmRide}
+          showDelete={showDelete && !isCompleted}
+          fetchRides={fetchRides}
+          onEdit={setEditRide}
+          onDelete={setDeleteRide}
+          allRequests={allRequests}
+          setAllRequests={setAllRequests}
+        />
+      );
+    });
   const handleCancelClick = (request) => {
     setSelectedRequest(request);
     setOpenCancelDialog(true);
@@ -1185,81 +1855,119 @@ const MyRides = () => {
 
   const handleConfirmCancel = async () => {
     try {
-      // Call your delete/cancel API here
       await axios.delete(`${Api}/bookride/${selectedRequest._id}`);
-
 
       handleCloseDialog();
 
-      // Refresh request list
       getMyRequests();
     } catch (err) {
       console.error(err);
     }
   };
-  // Rides you've requested/booked that haven't happened yet
+
   const upcomingRequests = useMemo(() => {
     const now = new Date();
     return allMyRequests.filter((booking) => {
-      const rideStart = booking.rideId?.startTime ? new Date(booking.rideId.startTime) : null;
+      const rideStart = booking.rideId?.startTime
+        ? new Date(booking.rideId.startTime)
+        : null;
       return rideStart && !isNaN(rideStart.getTime()) && rideStart > now;
     });
   }, [allMyRequests]);
 
-  // Rides you've requested/booked that already happened (with approve/reject outcome)
   const pastRequests = useMemo(() => {
     const now = new Date();
     return allMyRequests.filter((booking) => {
-      const rideStart = booking.rideId?.startTime ? new Date(booking.rideId.startTime) : null;
+      const rideStart = booking.rideId?.startTime
+        ? new Date(booking.rideId.startTime)
+        : null;
       return rideStart && !isNaN(rideStart.getTime()) && rideStart <= now;
     });
   }, [allMyRequests]);
 
+  useEffect(() => {
+    const maxPage = Math.max(1, Math.ceil(currentRide.length / ITEMS_PER_PAGE));
+    if (currentRidePage > maxPage) setCurrentRidePage(maxPage);
+  }, [currentRide, currentRidePage]);
+
+  useEffect(() => {
+    const maxPage = Math.max(1, Math.ceil(upcoming.length / ITEMS_PER_PAGE));
+    if (upcomingPage > maxPage) setUpcomingPage(maxPage);
+  }, [upcoming, upcomingPage]);
+
+  useEffect(() => {
+    const maxPage = Math.max(1, Math.ceil(mypost.length / ITEMS_PER_PAGE));
+    if (mypostPage > maxPage) setMypostPage(maxPage);
+  }, [mypost, mypostPage]);
+
+  useEffect(() => {
+    const maxPage = Math.max(1, Math.ceil(history.length / ITEMS_PER_PAGE));
+    if (historyPage > maxPage) setHistoryPage(maxPage);
+  }, [history, historyPage]);
+
   const tabLabels = [
-    { short: 'Current', count: currentRide.length },
-    { short: 'Upcoming', count: upcoming.length },
-    { short: 'My Posts', count: mypost.length },
-    { short: 'History', count: history.length },
+    { short: "Current", count: currentRide.length },
+    { short: "Upcoming", count: upcoming.length },
+    { short: "My Posts", count: mypost.length },
+    { short: "History", count: history.length },
   ];
 
   return (
     <Box
       sx={{
         display: "flex",
-        gap: 3,
+        gap: { xs: 1, sm: 2.5, md: 3 },
         alignItems: "flex-start",
         flexDirection: { xs: "column", lg: "row", md: "row" },
+        width: "100%",
       }}
     >
       <Box
         sx={{
-          width: '100%',
-          maxWidth: { xs: '100%', sm: 720 },
-          px: { xs: 0, sm: 3 },
-          py: { xs: 0, sm: 3 },
-          boxSizing: 'border-box',
-          display: 'flex',
-          flexDirection: 'column',
-          height: { xs: '100dvh', sm: 'auto' },
+          width: "100%",
+          // maxWidth: { xs: '100%', sm: '100%', md: 900, lg: 1200 },
+          mx: { md: "auto", lg: 0 },
+          // px: { xs: 0, sm: 2, md: 3 },
+          // py: { xs: 0, sm: 2, md: 3 },
+          boxSizing: "border-box",
+          display: "flex",
+          flexDirection: "column",
+          height: { xs: "100dvh", sm: "auto" },
         }}
       >
-        <Box sx={{ px: { xs: 1.5, sm: 0 }, pt: { xs: 2, sm: 0 }, mb: 2, flexShrink: 0 }}>
-          <Typography variant="h5" fontWeight={800} sx={{ fontSize: { xs: '1.2rem', sm: '1.5rem' } }}>
+        <Box
+          sx={{
+            px: { xs: 1.5, sm: 0 },
+            pt: { xs: 2, sm: 0 },
+            mb: 2,
+            flexShrink: 0,
+          }}
+        >
+          <Typography
+            variant="h5"
+            fontWeight={800}
+            sx={{ fontSize: { xs: "1.1rem", sm: "1.35rem", md: "1.5rem" } }}
+          >
             My Rides
           </Typography>
+
+          {/* <Typography variant="h5" sx={{ color: '#E8650A', fontWeight: 900, fontSize: { xs: "1.2rem", sm: "1.2rem", md: "1.35rem", lg: "1.5rem" } }}>
+          My <span style={{ color: '#138808' }}>Rides</span>
+        </Typography> */}
+
         </Box>
 
         <Box
           sx={{
-            width: '100%',
-            borderBottom: '1px solid',
-            borderColor: 'divider',
+            width: "100%",
+            borderBottom: "1px solid",
+            borderColor: "divider",
             mb: 0,
             flexShrink: 0,
-            position: { xs: 'sticky', sm: 'sticky' },
-            top: { xs: -10, sm: -12 },
+            position: { xs: "sticky", sm: "sticky" },
+            top: { xs: -3, sm: -3 },
             zIndex: { xs: 10, sm: 10 },
-            bgcolor: 'background.paper',
+            bgcolor: "background.paper",
           }}
         >
           <Tabs
@@ -1267,14 +1975,14 @@ const MyRides = () => {
             onChange={(_, v) => setTab(v)}
             variant="fullWidth"
             sx={{
-              minHeight: { xs: 50, sm: 48 },
+              minHeight: { xs: 40, sm: 48, md: 50 },
               "& .MuiTab-root": {
                 minWidth: 0,
-                padding: { xs: "4px 2px", sm: "12px 16px" },
-                fontSize: { xs: "0.7rem", sm: "0.82rem" },
+                padding: { xs: "4px 2px", sm: "8px 12px", md: "12px 16px" },
+                fontSize: { xs: "0.68rem", sm: "0.78rem", md: "0.82rem" },
                 fontWeight: 600,
                 textTransform: "none",
-                minHeight: { xs: 38, sm: 48 },
+                minHeight: { xs: 36, sm: 44, md: 48 },
                 lineHeight: 1.1,
               },
               "& .MuiTabs-indicator": {
@@ -1286,14 +1994,25 @@ const MyRides = () => {
               <Tab
                 key={i}
                 label={
-                  <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px' }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      gap: "3px",
+                    }}
+                  >
                     <Typography
                       component="span"
                       sx={{
-                        fontSize: { xs: '0.65rem', sm: "0.8rem" },
+                        fontSize: {
+                          xs: "0.62rem",
+                          sm: "0.72rem",
+                          md: "0.8rem",
+                        },
                         fontWeight: "bold",
                         lineHeight: 1.5,
-                        whiteSpace: 'nowrap',
+                        whiteSpace: "nowrap",
                       }}
                     >
                       {`${short} ( ${count} )`}
@@ -1308,53 +2027,111 @@ const MyRides = () => {
         <Box
           sx={{
             flex: 1,
-            overflowY: { xs: 'auto', sm: 'visible' },
-            px: { xs: 1.5, sm: 0 },
-            pt: 2.5,
+            overflowY: { xs: "auto", sm: "visible" },
+            px: { xs: 0.5, sm: 0 },
+            pt: 1.5,
             pb: { xs: 3, sm: 0 },
-            '&::-webkit-scrollbar': { width: '4px' },
-            '&::-webkit-scrollbar-track': { bgcolor: 'transparent' },
-            '&::-webkit-scrollbar-thumb': { bgcolor: 'divider', borderRadius: '4px' },
+            "&::-webkit-scrollbar": { width: "4px" },
+            "&::-webkit-scrollbar-track": { bgcolor: "transparent" },
+            "&::-webkit-scrollbar-thumb": {
+              bgcolor: "divider",
+              borderRadius: "4px",
+            },
           }}
         >
           {loading ? (
-            <Box sx={{ width: '100%', mt: '5rem', display: 'flex', justifyContent: 'center' }}>
+            <Box
+              sx={{
+                width: "100%",
+                mt: "5rem",
+                display: "flex",
+                justifyContent: "center",
+              }}
+            >
               <CircularProgress size={50} />
             </Box>
           ) : (
             <>
               {tab === 0 && (
                 <Box>
-                  {currentRide.length > 0
-                    ? renderList(currentRide, false, false, true)
-                    : <EmptyState emoji="🚗" message="You don't have any active rides at the moment"
-
+                  {currentRide.length > 0 ? (
+                    <>
+                      {renderList(
+                        paginate(currentRide, currentRidePage),
+                        true,
+                        true,
+                        true,
+                      )}
+                      <RidePaginationBar
+                        count={Math.ceil(currentRide.length / ITEMS_PER_PAGE)}
+                        page={currentRidePage}
+                        onChange={(_, value) => setCurrentRidePage(value)}
+                        isMobile={isMobile}
+                      />
+                    </>
+                  ) : (
+                    <EmptyState
+                      emoji="🚗"
+                      message="You don't have any active rides at the moment"
                     />
-                  }
+                  )}
                 </Box>
               )}
 
               {tab === 1 && (
                 <Box>
-                  {upcoming.length > 0
-                    ? renderList(upcoming, true, true)
-                    : <EmptyState emoji="🗓️" message="No upcoming rides" />}
+                  {upcoming.length > 0 ? (
+                    <>
+                      {renderList(paginate(upcoming, upcomingPage), true, true)}
+                      <RidePaginationBar
+                        count={Math.ceil(upcoming.length / ITEMS_PER_PAGE)}
+                        page={upcomingPage}
+                        onChange={(_, value) => setUpcomingPage(value)}
+                        isMobile={isMobile}
+                      />
+                    </>
+                  ) : (
+                    <EmptyState emoji="🗓️" message="No upcoming rides" />
+                  )}
                 </Box>
               )}
 
               {tab === 2 && (
                 <Box>
-                  {mypost.length > 0
-                    ? renderList(mypost, true, true)
-                    : <EmptyState emoji="🚗" message="You haven't posted any rides yet" />}
+                  {mypost.length > 0 ? (
+                    <>
+                      {renderList(paginate(mypost, mypostPage), true, true)}
+                      <RidePaginationBar
+                        count={Math.ceil(mypost.length / ITEMS_PER_PAGE)}
+                        page={mypostPage}
+                        onChange={(_, value) => setMypostPage(value)}
+                        isMobile={isMobile}
+                      />
+                    </>
+                  ) : (
+                    <EmptyState
+                      emoji="🚗"
+                      message="You haven't posted any rides yet"
+                    />
+                  )}
                 </Box>
               )}
 
               {tab === 3 && (
                 <Box>
-                  {history.length > 0
-                    ? renderList(history, false, false)
-                    : <EmptyState emoji="🕰️" message="No past rides yet" />}
+                  {history.length > 0 ? (
+                    <>
+                      {renderList(paginate(history, historyPage), false, false)}
+                      <RidePaginationBar
+                        count={Math.ceil(history.length / ITEMS_PER_PAGE)}
+                        page={historyPage}
+                        onChange={(_, value) => setHistoryPage(value)}
+                        isMobile={isMobile}
+                      />
+                    </>
+                  ) : (
+                    <EmptyState emoji="🕰️" message="No past rides yet" />
+                  )}
                 </Box>
               )}
             </>
@@ -1362,211 +2139,23 @@ const MyRides = () => {
         </Box>
 
         {editRide && (
-          <EditRideModal ride={editRide} onSave={handleEdit} onClose={() => setEditRide(null)} />
+          <EditRideModal
+            ride={editRide}
+            onSave={handleEdit}
+            onClose={() => setEditRide(null)}
+          />
         )}
 
         {deleteRide && (
-          <DeleteConfirmDialog ride={deleteRide} onConfirm={handleDelete} onClose={() => setDeleteRide(null)} />
+          <DeleteConfirmDialog
+            ride={deleteRide}
+            onConfirm={handleDelete}
+            onClose={() => setDeleteRide(null)}
+          />
         )}
       </Box>
-
     </Box>
   );
 };
 
 export default MyRides;
-
-
-
-//my ride request ui
-// <Box
-//       sx={{
-//         flex: 1,
-//         minWidth: { lg: 340 },
-//         maxHeight: "90vh",
-//         overflowY: "auto",
-//         position: "sticky",
-//         top: 30,
-//       }}
-//     >
-//       <Typography variant="h5" fontWeight={800} sx={{ fontSize: { xs: '1.2rem', sm: '1.5rem' } }}>
-//         My Requests
-//       </Typography>
-//       <br />
-//       {allMyRequests
-//         .filter(req => req?.rideId)
-//         .map((request) => (
-//           <Card
-//             key={request._id}
-//             sx={{
-//               mb: 3,
-//               borderRadius: "20px",
-//               overflow: "hidden",
-//               background: "linear-gradient(135deg, #ffffff 0%, #f8fbff 100%)",
-//               boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-//               transition: "0.3s",
-//               position: "relative",
-//               "&:hover": {
-//                 transform: "translateY(-4px)",
-//                 boxShadow: "0 18px 40px rgba(0,0,0,0.12)",
-//               },
-//             }}
-//           >
-//             {/* Delete Button */}
-//             <IconButton
-//               color="error"
-//               onClick={() => handleCancelClick(request)}
-//               sx={{
-//                 position: "absolute",
-//                 top: 15,
-//                 right: 15,
-//                 bgcolor: "#fff",
-//                 boxShadow: 2,
-//                 "&:hover": {
-//                   bgcolor: "#ffebee",
-//                 },
-//               }}
-//             >
-//               <DeleteIcon />
-//             </IconButton>
-
-//             <CardContent
-//               sx={{
-//                 display: "flex",
-//                 alignItems: "center",
-//                 justifyContent: "space-between",
-//                 flexWrap: "wrap",
-//                 gap: 2,
-//                 p: 2.5,
-//                 pr: 8, // Space for delete button
-//               }}
-//             >
-//               {/* Rider */}
-//               <Box
-//                 sx={{
-//                   display: "flex",
-//                   alignItems: "center",
-//                   gap: 1,
-//                   minWidth: 220,
-//                 }}
-//               >
-//                 <Avatar
-//                   sx={{
-//                     bgcolor: "#FF9933",
-//                     width: 42,
-//                     height: 42,
-//                   }}
-//                 >
-//                   <PersonIcon />
-//                 </Avatar>
-
-//                 <Typography fontWeight={700}>
-//                   {request.rideId?.createdBy?.firstName}{" "}
-//                   {request.rideId?.createdBy?.lastName}
-//                 </Typography>
-//               </Box>
-
-//               {/* Route */}
-//               <Box
-//                 sx={{
-//                   display: "flex",
-//                   alignItems: "center",
-//                   gap: 1,
-//                   minWidth: 250,
-//                 }}
-//               >
-//                 <LocationOnIcon sx={{ color: "#FF9933" }} />
-
-//                 <Typography fontWeight={600}>
-//                   {request.rideId?.from}
-//                 </Typography>
-
-//                 <ArrowForwardIcon sx={{ color: "#FF9933" }} />
-
-//                 <Typography fontWeight={600}>
-//                   {request.rideId?.destination}
-//                 </Typography>
-//               </Box>
-
-//               {/* Date */}
-//               <Box
-//                 sx={{
-//                   display: "flex",
-//                   alignItems: "center",
-//                   gap: 1,
-//                 }}
-//               >
-//                 <CalendarMonthIcon sx={{ color: "#FF9933" }} />
-
-//                 <Typography>
-//                   {new Date(request?.rideId?.startTime).toLocaleDateString()}
-//                 </Typography>
-//               </Box>
-
-//               {/* Time */}
-//               <Box
-//                 sx={{
-//                   display: "flex",
-//                   alignItems: "center",
-//                   gap: 1,
-//                 }}
-//               >
-//                 <AccessTimeIcon sx={{ color: "#FF9933" }} />
-
-//                 <Typography>
-//                   {new Date(request.createdAt).toLocaleTimeString([], {
-//                     hour: "2-digit",
-//                     minute: "2-digit",
-//                   })}
-//                 </Typography>
-//               </Box>
-
-//               {/* Status */}
-//               <Chip
-//                 label={request.status}
-//                 color={
-//                   request.status === "ACCEPTED"
-//                     ? "success"
-//                     : request.status === "REJECTED"
-//                       ? "error"
-//                       : "warning"
-//                 }
-//                 sx={{
-//                   fontWeight: 700,
-//                   borderRadius: 5,
-//                 }}
-//               />
-//             </CardContent>
-//           </Card>
-//         ))}
-//       <Dialog
-//         open={openCancelDialog}
-//         onClose={handleCloseDialog}
-//         maxWidth="xs"
-//         fullWidth
-//       >
-//         <DialogTitle>Cancel Ride Request</DialogTitle>
-
-//         <DialogContent>
-//           <DialogContentText>
-//             Are you sure you want to cancel this ride request?
-//             <br />
-//             This action cannot be undone.
-//           </DialogContentText>
-//         </DialogContent>
-
-//         <DialogActions>
-//           <Button onClick={handleCloseDialog}>
-//             No
-//           </Button>
-
-//           <Button
-//             color="error"
-//             variant="contained"
-//             onClick={handleConfirmCancel}
-//           >
-//             Yes, Cancel
-//           </Button>
-//         </DialogActions>
-//       </Dialog>
-//     </Box>

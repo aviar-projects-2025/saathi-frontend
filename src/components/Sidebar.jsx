@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   Paper, Stack, Typography, Box, Button, CircularProgress,
-  Avatar
+  Avatar, Collapse
 } from "@mui/material";
 
 import SearchIcon from "@mui/icons-material/Search";
@@ -20,17 +20,10 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
   const { currentUser, completion } = useUser();
   const navigate = useNavigate();
   const location = useLocation();
-  const { pendingReferralCount } = useReferral();
+  const { notificationLengthcount } = useReferral();
   const { notifications } = useNotifications();
-  const [notificationLengthcount, setNotificationLengthcount] = useState(0);
+
   const [openDropdown, setOpenDropdown] = useState(null);
-
-  useEffect(() => {
-    const total =
-      (pendingReferralCount || 0) + (notifications?.length || 0);
-
-    setNotificationLengthcount(total);
-  }, [notifications, pendingReferralCount]);
 
   const SAFFRON = "#E8650A";
   const CARD_BORDER = "1px solid #F0E6DC";
@@ -145,16 +138,70 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
             </Avatar>
           </Box>
 
-          <Box sx={{ minWidth: 0 }}>
-            <Typography fontWeight={700} sx={{ fontSize: { xs: "0.8rem", sm: "1rem" } }} noWrap>
+          <Box
+            sx={{
+              minWidth: 0,
+              width: "100%",
+              maxWidth: {
+                xs: 100,
+                sm: 135,
+                md: 150,
+              },
+              overflow: "hidden",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+            }}
+          >
+            <Typography
+              sx={{
+                fontWeight: 700,
+                fontSize: {
+                  xs: "0.8rem",
+                  sm: "1rem",
+                },
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                lineHeight: 1.3,
+                color: "text.primary",
+              }}
+            >
               {currentUser?.firstName} {currentUser?.lastName}
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: "0.75rem", sm: "1rem" } }} noWrap>
+
+            <Typography
+              sx={{
+                fontSize: {
+                  xs: "0.75rem",
+                  sm: "0.9rem",
+                },
+                color: "text.secondary",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                lineHeight: 1.3,
+                mt: 0.25,
+              }}
+            >
               {currentUser?.email}
             </Typography>
+
             <Typography
-              variant="caption"
-              sx={{ fontWeight: 700, color: SAFFRON, display: "block", mt: 0.25 }}
+              sx={{
+                fontSize: {
+                  xs: "0.7rem",
+                  sm: "0.75rem",
+                },
+                fontWeight: 700,
+                color: SAFFRON,
+                display: "block",
+                mt: 0.5,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                lineHeight: 1.2,
+              }}
             >
               {Math.round(completion)}% complete
             </Typography>
@@ -165,7 +212,10 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
           fullWidth
           size="small"
           variant="contained"
-          onClick={() => navigate("/user-profile")}
+          onClick={() => {
+            navigate("/user-profile");
+            onItemClick?.();
+          }}
           sx={{
             mt: 1,
             bgcolor: "#FF9933",
@@ -244,31 +294,65 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
                 </Box>
 
                 {/* Children */}
-                {isDropdown && isOpen && (
-                  <Stack sx={{ pl: 5, mt: 0.5 }}>
-                    {item.children.map((sub) => {
-                      const active = location.pathname === sub.link;
-
-                      return (
-                        <Box
-                          key={sub.id}
-                          onClick={() => goTo(sub.link)}
-                          sx={{
-                            py: 0.8,
-                            cursor: "pointer",
-                            borderRadius: 2,
-                            color: active ? "#d97706" : "#5f4632",
-                            fontWeight: active ? 700 : 500,
-                            "&:hover": { color: "#d97706" },
-                          }}
-                        >
-                          <Typography sx={{ fontSize: 12 }}>
-                            {sub.label}
-                          </Typography>
-                        </Box>
-                      );
-                    })}
-                  </Stack>
+                {isDropdown && (
+                  <Collapse in={isOpen} timeout={250} unmountOnExit>
+                    <Stack
+                      sx={{
+                        pl: 2,
+                        pr: 1,
+                        mt: 1,
+                        mb: 0.5,
+                        ml: 2,
+                        // borderLeft: "2px solid #f0e4d7",
+                      }}
+                    >
+                      {item.children.map((sub) => {
+                        const active = location.pathname === sub.link;
+                        return (
+                          <Box
+                            key={sub.id}
+                            onClick={() => goTo(sub.link)}
+                            sx={{
+                              py: 1,
+                              px: 1.5,
+                              mb: 0.3,
+                              cursor: "pointer",
+                              borderRadius: 1.5,
+                              position: "relative",
+                              // backgroundColor: active ? "rgba(217, 119, 6, 0.08)" : "transparent",
+                              transition: "background-color 0.2s ease, color 0.2s ease",
+                              "&:hover": {
+                                // backgroundColor: "rgba(217, 119, 6, 0.06)",
+                              },
+                              "&::before": {
+                                content: '""',
+                                position: "absolute",
+                                left: -2,
+                                top: "50%",
+                                transform: "translateY(-50%)",
+                                width: 2,
+                                height: active ? "70%" : 0,
+                                backgroundColor: "#d97706",
+                                borderRadius: 2,
+                                transition: "height 0.2s ease",
+                              },
+                            }}
+                          >
+                            <Typography
+                              sx={{
+                                fontSize: 12.5,
+                                color: active ? "#d97706" : "#5f4632",
+                                fontWeight: active ? 700 : 500,
+                                transition: "color 0.2s ease",
+                              }}
+                            >
+                              {sub.label}
+                            </Typography>
+                          </Box>
+                        );
+                      })}
+                    </Stack>
+                  </Collapse>
                 )}
               </Box>
             );
@@ -296,6 +380,6 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
         <LogoutIcon sx={{ fontSize: 21 }} />
         <Typography sx={{ fontSize: 14, fontWeight: 700 }}>Logout</Typography>
       </Box>
-    </Paper>
+    </Paper >
   );
 }

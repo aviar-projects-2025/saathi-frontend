@@ -19,6 +19,7 @@ import {
   Grid,
   CircularProgress,
 } from "@mui/material";
+import Close from "@mui/icons-material/Close";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import LockIcon from "@mui/icons-material/Lock";
 import ThumbUpOffAltIcon from "@mui/icons-material/ThumbUpOffAlt";
@@ -37,8 +38,14 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
 import { toast } from "react-toastify";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import CloseIcon from "@mui/icons-material/Close";
+import {
+  InputAdornment,
+} from "@mui/material";
 import { useNavigate } from "react-router-dom";
-
+import ToastConfig from "../components/ToastConfig.jsx";
 
 
 const SAFFRON = "#E8650A";
@@ -104,6 +111,19 @@ const Myprofile = () => {
     newPassword: "",
     confirmPassword: "",
   });
+  const [showPassword, setShowPassword] = useState({
+    current: false,
+    new: false,
+    confirm: false,
+  });
+
+  const [passwordLoading, setPasswordLoading] = useState(false);
+
+  const toasts = ToastConfig();
+
+  // const theme = useTheme();
+  const isTab = useMediaQuery(theme.breakpoints.down("sm"));
+
   const handlePasswordChange = (e) => {
     const { name, value } = e.target;
 
@@ -119,25 +139,64 @@ const Myprofile = () => {
   const [communityPosts, setCommunityPosts] = useState([]);
   const handleCopy = (value) => {
     navigator.clipboard.writeText(value);
-    toast.success("Copied to clipboard!");
+    toast.success("Copied to Clipboard!", toasts);
   };
   useEffect(() => {
     if (currentUser?._id) {
       getCommunityPost();
     }
   }, [currentUser]);
-  const getCommunityPost = async () => {
 
+  const handleChangePassword = async () => {
+    setPasswordLoading(true);
     try {
+      // Frontend validation
+      if (
+        !passwordData.currentPassword ||
+        !passwordData.newPassword ||
+        !passwordData.confirmPassword
+      ) {
+        return toast.error("All fields are required", toasts);
+      }
 
+      if (passwordData.newPassword !== passwordData.confirmPassword) {
+        return toast.error("Passwords do not match", toasts);
+      }
 
+      const res = await axios.patch(
+        `${Api}/users/change-password/${currentUser?._id}`,
+        {
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword,
+          confirmPassword: passwordData.confirmPassword,
+        }
+      );
+
+      toast.success(res.data.message, toasts);
+
+      setPasswordModel(false);
+      setPasswordData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.message || "Something went wrong", toasts);
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
+  const getCommunityPost = async () => {
+    try {
       const postsRes = await axios.get(Api + "/community/");
 
       // Only current user's posts
       const myPosts = postsRes.data.data.filter(
         (item) => item.authorId?._id === currentUser?._id
       );
-
       setCommunityPosts(myPosts);
 
     } catch (error) {
@@ -164,15 +223,29 @@ const Myprofile = () => {
   return (
     <Box
       sx={{
-        maxWidth: 700,
+        // maxWidth: 1000,
         // mx: "auto",
-        px: 2,
-        py: 3,
+        // px: 1.5,
+        py: 1,
+        pb: 3
       }}
     >
+      <Typography
+        variant="h5"
+        sx={{
+          // color: '#E8650A',
+          color: '#000000',
+          fontWeight: 600,
+          fontSize: { xs: "1.2rem", sm: "1.2rem", md: "1.35rem", lg: "1.5rem" },
+          mb: { xs: "1.2rem", sm: "1.2rem", md: "1.35rem", lg: "1.5rem" }
+        }}>
+        Settings
+        {/* <span style={{ color: '#138808' }}>Profile</span> */}
+      </Typography>
+
       <SectionCard
         sx={{
-          p: { xs: 1, sm: 3 },
+          p: { xs: 1, sm: 2 },
           border: "1px solid",
           borderColor: "divider",
           borderRadius: 3,
@@ -223,7 +296,7 @@ const Myprofile = () => {
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
-                  mt:1
+                  mt: 1
                 }}
               >
                 {currentUser?.firstName} {currentUser?.lastName}
@@ -250,8 +323,8 @@ const Myprofile = () => {
             sx={{
               ...pillBtn,
               // width: { xs: "auto", sm: "auto" },
-              display:"flex",
-              justifyContent:{xs:"flex-end"}
+              display: "flex",
+              justifyContent: { xs: "flex-end" }
             }}
           >
             View Profile
@@ -260,7 +333,7 @@ const Myprofile = () => {
       </SectionCard>
 
 
-      <SectionCard sx={{ mt: 3 }}>
+      {/* <SectionCard sx={{ mt: 3 }}>
         <SectionHeader icon={<PersonIcon />} label="Account" />
         <Divider sx={{ mt: 1 }} />
         <Stack>
@@ -290,7 +363,7 @@ const Myprofile = () => {
             Manage ride preferences
           </Button>
         </Stack>
-      </SectionCard>
+      </SectionCard> */}
 
 
       {/* ── Security ── */}
@@ -318,7 +391,6 @@ const Myprofile = () => {
         </Grid>
       </SectionCard>
 
-      {/* ── Change Password Modal ── */}
       <Modal
         open={passwordModel}
         onClose={() => setPasswordModel(false)}
@@ -326,124 +398,224 @@ const Myprofile = () => {
         <Box
           sx={{
             position: "fixed",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
+            inset: 0,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            width: { xs: "92%", sm: "100%" },
-            px: { xs: 2, sm: 0 },
+            bgcolor: "rgba(0,0,0,0.45)",
+            p: 2,
           }}
         >
           <Box
             sx={{
               bgcolor: "#fff",
-              width: { xs: "100%", sm: "85%", md: 420 },
-              maxWidth: 420,
-              borderRadius: { xs: 2, sm: 3 },
-              p: { xs: 2, sm: 3 },
-              boxShadow: 24,
-              maxHeight: { xs: "85vh", sm: "90vh" },
-              overflowY: "auto",
+              width: {
+                xs: "100%",
+                sm: "90%",
+                md: 430,
+              },
+              maxWidth: 430,
+              borderRadius: 3,
+              boxShadow: 10,
+              overflow: "hidden",
             }}
           >
-            <Typography
-              variant="h6"
-              fontWeight={700}
+            {/* Header */}
+            <Box
               sx={{
-                fontSize: { xs: "0.95rem", sm: "1.1rem", md: "1.25rem" },
-                mb: { xs: 1.5, sm: 3 },
+                px: 3,
+                py: 2,
+                borderBottom: "1px solid #EAEAEA",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
               }}
             >
-              Change Password
-            </Typography>
-
-            <Stack spacing={{ xs: 1.5, sm: 2 }}>
-              <TextField
-                label="Current Password"
-                name="currentPassword"
-                type="password"
-                size="small"
-                fullWidth
-                value={passwordData.currentPassword}
-                onChange={handlePasswordChange}
-                InputProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
-                InputLabelProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
-              />
-
-              <TextField
-                label="New Password"
-                name="newPassword"
-                type="password"
-                size="small"
-                fullWidth
-                value={passwordData.newPassword}
-                onChange={handlePasswordChange}
-                InputProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
-                InputLabelProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
-              />
-
-              <TextField
-                label="Confirm Password"
-                name="confirmPassword"
-                type="password"
-                size="small"
-                fullWidth
-                value={passwordData.confirmPassword}
-                onChange={handlePasswordChange}
-                InputProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
-                InputLabelProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
-              />
-
-              <Stack
-                direction={{ xs: "column-reverse", sm: "row" }}
-                justifyContent="flex-end"
-                alignItems="center"
-                spacing={{ xs: 1, sm: 1.5 }}
-                sx={{ mt: { xs: 0.5, sm: 1 } }}
+              <Typography
+                // variant={{xs:"h1", sm:"h9"}}
+                sx={{
+                  fontWeight: 700,
+                  color: "#333",
+                }}
               >
-                <Button
-                  variant="outlined"
-                  size="small"
-                  sx={{
-                    width: { xs: "100%", sm: "auto" },
-                    fontSize: { xs: "0.75rem", sm: "0.85rem" },
-                    py: { xs: 0.5, sm: 0.75 },
-                    px: { xs: 1.5, sm: 2.5 },
-                    minWidth: { xs: "auto", sm: 90 },
-                  }}
-                  onClick={() => {
-                    setPasswordModel(false)
-                    setPasswordData({
-                      confirmPassword: '',
-                      currentPassword: '',
-                      newPassword: ''
-                    })
-                  }}
-                >
-                  Cancel
-                </Button>
+                Change Password
+              </Typography>
 
-                <Button
-                  variant="contained"
-                  size="small"
-                  sx={{
-                    width: { xs: "100%", sm: "auto" },
-                    fontSize: { xs: "0.75rem", sm: "0.85rem" },
-                    py: { xs: 0.5, sm: 0.75 },
-                    px: { xs: 1.5, sm: 2.5 },
-                    minWidth: { xs: "auto", sm: 130 },
+              <IconButton onClick={() => setPasswordModel(false)} size="small">
+                <Close />
+              </IconButton>
+            </Box>
+
+            {/* Body */}
+            <Box
+              sx={{
+                p: {
+                  xs: 2,
+                  sm: 3,
+                },
+              }}
+            >
+              <Stack spacing={2.5}>
+                {/* Current Password */}
+                <TextField
+                  fullWidth
+                  label="Current Password"
+                  type={showPassword.current ? "text" : "password"}
+                  name="currentPassword"
+                  value={passwordData.currentPassword}
+                  onChange={handlePasswordChange}
+                  slotProps={{
+                    input: {
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            edge="end"
+                            onClick={() =>
+                              setShowPassword((prev) => ({
+                                ...prev,
+                                current: !prev.current,
+                              }))
+                            }
+                          >
+                            {showPassword.current ? (
+                              <VisibilityOff />
+                            ) : (
+                              <Visibility />
+                            )}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    },
                   }}
-                  onClick={() => handleChangePassword()}
+                />
+
+                {/* New Password */}
+                <TextField
+                  fullWidth
+                  label="New Password"
+                  type={showPassword.new ? "text" : "password"}
+                  name="newPassword"
+                  value={passwordData.newPassword}
+                  onChange={handlePasswordChange}
+                  slotProps={{
+                    input: {
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            edge="end"
+                            onClick={() =>
+                              setShowPassword((prev) => ({
+                                ...prev,
+                                new: !prev.new,
+                              }))
+                            }
+                          >
+                            {showPassword.new ? (
+                              <VisibilityOff />
+                            ) : (
+                              <Visibility />
+                            )}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    },
+                  }}
+                />
+
+                {/* Confirm Password */}
+                <TextField
+                  fullWidth
+                  label="Confirm Password"
+                  type={showPassword.confirm ? "text" : "password"}
+                  name="confirmPassword"
+                  value={passwordData.confirmPassword}
+                  onChange={handlePasswordChange}
+                  slotProps={{
+                    input: {
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            edge="end"
+                            onClick={() =>
+                              setShowPassword((prev) => ({
+                                ...prev,
+                                confirm: !prev.confirm,
+                              }))
+                            }
+                          >
+                            {showPassword.confirm ? (
+                              <VisibilityOff />
+                            ) : (
+                              <Visibility />
+                            )}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    },
+                  }}
+                />
+
+                {/* Buttons */}
+                <Stack
+                  direction={{ xs: "column", sm: "row" }}
+                  spacing={2}
+                  justifyContent="flex-end"
+                  sx={{
+                    pt: 2,
+                    display: "flex",
+                    justifyContent: "flex-end"
+                  }}
                 >
-                  Update Password
-                </Button>
+                  <Button
+                    variant="outlined"
+                    onClick={() => {
+                      setPasswordModel(false);
+                      setPasswordData({
+                        currentPassword: "",
+                        newPassword: "",
+                        confirmPassword: "",
+                      });
+                    }}
+                    sx={{
+                      width: { xs: "100%", sm: "auto" },
+                      minWidth: { sm: 140 },
+                      borderColor: "#E8650A",
+                      color: "#E8650A",
+                      textTransform: "none",
+                      fontWeight: 600,
+                      "&:hover": {
+                        borderColor: "#D65A00",
+                        bgcolor: "#FFF6E5",
+                      },
+                    }}
+                  >
+                    Cancel
+                  </Button>
+
+                  <Button
+                    variant="contained"
+                    onClick={handleChangePassword}
+                    disabled={passwordLoading}
+                    sx={{
+                      width: { xs: "100%", sm: "auto" },
+                      minWidth: { sm: 180 },
+                      bgcolor: "#E8650A",
+                      textTransform: "none",
+                      fontWeight: 600,
+                      "&:hover": {
+                        bgcolor: "#D65A00",
+                      },
+                    }}
+                  >
+                    {passwordLoading ? " Updating Password... " : " Update Password "}
+                  </Button>
+                </Stack>
               </Stack>
-            </Stack>
+            </Box>
           </Box>
         </Box>
       </Modal>
+
       <Modal open={openShare} onClose={handleCloseShare}>
         <Box
           sx={{
@@ -460,6 +632,7 @@ const Myprofile = () => {
         >
           <Box
             sx={{
+              position: "relative",
               bgcolor: "white",
               width: { xs: "100%", sm: 320 },
               maxWidth: 320,
@@ -468,11 +641,25 @@ const Myprofile = () => {
               boxShadow: 24,
             }}
           >
+            <IconButton
+              onClick={handleCloseShare}
+              size="small"
+              sx={{
+                position: "absolute",
+                top: 8,
+                right: 8,
+                color: "grey.500",
+              }}
+            >
+              <CloseIcon fontSize="small" />
+            </IconButton>
+
             <Typography
               fontWeight={600}
               sx={{
                 fontSize: { xs: "0.9rem", sm: "1rem" },
                 mb: { xs: 1.5, sm: 2 },
+                pr: 3,
               }}
             >
               Share your referral link
@@ -522,7 +709,7 @@ const Myprofile = () => {
                       url: shareLink,
                     });
                   } else {
-                    toast.info("Sharing not supported on this device");
+                    toast.info("Sharing not supported on this device", toasts);
                   }
                 }}
               >
@@ -534,7 +721,7 @@ const Myprofile = () => {
       </Modal>
 
       {/* ── Notifications ── */}
-      <SectionCard sx={{ mt: 3 }}>
+      {/* <SectionCard sx={{ mt: 3 }}>
         <SectionHeader icon={<NotificationsIcon />} label="Notifications" />
         <Divider sx={{ mt: 1 }} />
         <Stack spacing={0} divider={<Divider />}>
@@ -571,7 +758,7 @@ const Myprofile = () => {
             />
           ))}
         </Stack>
-      </SectionCard>
+      </SectionCard> */}
 
       {/* ── Referral ── */}
       <SectionCard sx={{ mt: 3 }}>
@@ -641,7 +828,7 @@ const Myprofile = () => {
         <Grid
           sx={{
             display: 'flex',
-            justifyContent: { xs: "center", sm: "end" },
+            justifyContent: { xs: "end", sm: "end" },
             mt: 2,
             mx: 1
           }}>
@@ -659,7 +846,7 @@ const Myprofile = () => {
             >
               Logout
             </Button>
-            <Button
+            {/* <Button
               startIcon={<DeleteIcon sx={{ fontSize: { xs: 5, sm: 17 } }} />}
               sx={{
                 ...pillBtn,
@@ -667,7 +854,7 @@ const Myprofile = () => {
               }}
             >
               Hide Account From Users
-            </Button>
+            </Button> */}
           </Stack>
         </Grid>
       </SectionCard>

@@ -13,24 +13,37 @@ import { data, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Api from '../Api';
 import { toast } from 'react-toastify';
+import { useReferral } from '../context/ReferralContext';
 
 export default function NotificationTab({ handleCloseNotifications }) {
     const { tabNotification, fetchNotifications } = useNotifications();
+    const { getPendingReferralCount } = useReferral();
+
+    const uniqueNotifications = Object.values(
+        (tabNotification || []).reduce((acc, curr) => {
+            acc[curr._id] = curr; // handle both cases
+            return acc;
+        }, {})
+    );
 
     const navigate = useNavigate();
 
     const handleNavigation = (item) => {
+        console.log(item.type, 'item.type')
         switch (item.type) {
             case "new_request":
             case "request_accepted":
             case "request_rejected":
                 navigate("/myride", { state: { tab: 2, rideId: item.data?.rideId }, });
                 break;
-
-            case "referral_pending":
             case "referral_approved":
+                break
+            case "referral_pending":
             case "referral_rejected":
                 navigate("/my-referalls");
+                break;
+            case "ride_started":
+                navigate("/myride")
                 break;
 
             default:
@@ -39,22 +52,21 @@ export default function NotificationTab({ handleCloseNotifications }) {
     }
 
     const handleIsRead = (id, item) => {
+
         if (item?.isRead) return;
         try {
             axios.patch(Api + `/notification/${id}`)
                 .then((res) => {
-                    console.log(res, 'res')
                     fetchNotifications();
+                    getPendingReferralCount();
                 })
         } catch (error) {
             console.log(error.message)
         }
     }
 
+
     return (
-        // Outer wrapper controls the visible box: fixed max height + hidden overflow
-        // so the list itself scrolls inside this frame rather than pushing content
-        // off the top or getting clipped.
         <Box
             sx={{
                 width: '100%',
@@ -65,7 +77,7 @@ export default function NotificationTab({ handleCloseNotifications }) {
                 overflow: 'hidden',
                 display: 'flex',
                 flexDirection: 'column',
-                
+
             }}
         >
             <List
@@ -89,18 +101,19 @@ export default function NotificationTab({ handleCloseNotifications }) {
                     },
                 }}
             >
-                {tabNotification?.length === 0 ? (
+                {uniqueNotifications?.length === 0 ? (
                     <Typography sx={{ p: 2, textAlign: 'center' }}>No notifications</Typography>
                 ) : (
-                    tabNotification.map((item) => {
+                    uniqueNotifications.map((item) => {
                         const isUnread = !item.isRead;
+                        const itemId = item.id || item._id;
 
                         return (
                             <React.Fragment key={item._id}>
                                 <ListItem
                                     onClick={() => {
                                         handleNavigation(item);
-                                        handleIsRead(item._id, item);
+                                        handleIsRead(itemId, item);
                                         handleCloseNotifications();
                                     }}
                                     alignItems="flex-start"
@@ -116,7 +129,7 @@ export default function NotificationTab({ handleCloseNotifications }) {
                                     }}
                                 >
                                     <ListItemAvatar>
-                                        <Avatar src={item?.actorId?.profileImage}>
+                                        <Avatar src={item?.actorId?.profileImage || item?.data?.profileImage}>
                                             {item?.actorId?.firstName?.[0] || "U"}
                                         </Avatar>
                                     </ListItemAvatar>
@@ -144,7 +157,7 @@ export default function NotificationTab({ handleCloseNotifications }) {
                                                         textOverflow: 'ellipsis',
                                                     }}
                                                 >
-                                                    {item.title}
+                                                    {item.title || item.category}
                                                 </Typography>
 
                                                 <Typography
@@ -197,42 +210,3 @@ export default function NotificationTab({ handleCloseNotifications }) {
         </Box>
     );
 }
-
-
-{/* <ListItemText
-                                    primary={
-                                        <Box display="flex" alignItems="center" justifyContent="space-between">
-                                            <Typography
-                                                sx={{
-                                                    marginTop:-0.5,
-                                                    fontSize:14,
-                                                    fontWeight: isUnread ? 700 : 500
-                                                }}
-                                            >
-                                                {item.title}
-                                            </Typography>
-
-                                            <Typography
-                                                variant="caption"
-                                                sx={{ color: 'gray', fontSize:11, marginTop:-2,}}
-                                            >
-                                                {moment(item.createdAt).fromNow()}
-                                            </Typography>
-                                        </Box>
-                                    }
-                                    secondary={
-                                        <>
-                                            <Typography
-                                                component="span"
-                                                variant="body2"
-                                                sx={{
-                                                    fontWeight: isUnread ? 400 : 300,
-                                                    fontSize:11,
-                                                }}
-                                            >
-                                                {item?.requestedById?.firstName} {item?.requestedById?.lastName}
-                                            </Typography>
-                                            {" — " + item.message}
-                                        </>
-                                    }
-                                /> */}

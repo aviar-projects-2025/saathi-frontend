@@ -241,14 +241,14 @@ const CommunityImage = ({ src }) => {
               xs: "90vw",
               sm: 500,
               md: 700,
-              lg: 900,
+              lg: 500,
             },
 
             height: {
               xs: "60vh",
               sm: 400,
               md: 500,
-              lg: 600,
+              lg: 500,
             },
 
             m: 2,

@@ -1,14 +1,13 @@
-
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   Box, Typography, Grid, Paper, Chip, Avatar, Button,
   Divider, Stack, LinearProgress,
   TextField,
   CircularProgress,
   Tooltip,
-  useMediaQuery,
   useTheme,
-  IconButton
+  IconButton,
+  useMediaQuery
 } from '@mui/material';
 import GroupsIcon from '@mui/icons-material/Groups';
 import StarIcon from '@mui/icons-material/Star';
@@ -20,12 +19,15 @@ import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import UserAvatar from '../components/UserAvatar.jsx';
 import PageLayout from '../components/PageLayout.jsx';
 import ChatIcon from '@mui/icons-material/Chat';
+import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder'
 import ShareIcon from '@mui/icons-material/Share';
 import PermMediaIcon from '@mui/icons-material/PermMedia';
 import CloseIcon from '@mui/icons-material/Close';
 import Api from '../Api.jsx';
 import axios from 'axios';
+import Discover from './Discover.jsx'
 
+import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import {
@@ -39,6 +41,36 @@ import { toast } from 'react-toastify';
 import CommunityImage from '../components/CommunityImage.jsx';
 import CommunityComments from './CommunityComments.jsx';
 import { useUser } from '../context/userConetext.jsx';
+import CameraAltIcon from "@mui/icons-material/CameraAlt";
+import FolderIcon from "@mui/icons-material/Folder";
+import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
+import ToastConfig from '../components/ToastConfig.jsx';
+
+const BREAKPOINTS = { xs: 0, sm: 600, md: 900, lg: 1200, xl: 1536 }; // MUI defaults
+
+function getTier(width) {
+  if (width < BREAKPOINTS.sm) return 'xs';
+  if (width < BREAKPOINTS.md) return 'sm';
+  if (width < BREAKPOINTS.lg) return 'md';
+  if (width < BREAKPOINTS.xl) return 'lg';
+  return 'xl';
+}
+
+function useResponsiveTier() {
+  const [tier, setTier] = useState(
+    typeof window !== 'undefined' ? getTier(window.innerWidth) : 'md'
+  );
+  useEffect(() => {
+    const handleResize = () => setTier(getTier(window.innerWidth));
+    // Run once on mount in case the initial state above was computed
+    // before layout/zoom settled.
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  return tier;
+}
 
 export default function Community() {
   const [post, setPost] = useState("");
@@ -52,28 +84,116 @@ export default function Community() {
   const [postId, setPostId] = useState([])
   const [editImage, setEditImage] = useState(null);
   const [previewImage, setPreviewImage] = useState("");
+  const [openMediaDialog, setOpenMediaDialog] = useState(false);
+  const { currentUser } = useUser()
+  const [tooltipOpen, setTooltipOpen] = useState(false);
+  const [tooltip2Open, setTooltip2Open] = useState(false);
+  const [imagePostLoading, setImagePostLoading] = useState(false);
+
+  const [commentCounts, setCommentCounts] = useState({});
+  const toasts = ToastConfig();
+
 
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
-  const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
+  const isTab = useMediaQuery(theme.breakpoints.down("sm"));
+
+  const cameraInputRef = useRef(null);
+  const fileInputRef = useRef(null);
+
+  const handleMediaClick = () => {
+    if (!isProfileComplete) return;
+
+    if (isMobile) {
+      setOpenMediaDialog(true);
+    } else {
+      fileInputRef.current?.click();
+    }
+  };
 
 
-  const showSidebar = useMediaQuery(theme.breakpoints.up('sm'));
+  const getCommmunityPost = async () => {
+    try {
+      setPostLoading(true);
+      const postsRes = await axios.get(Api + "/community/");
+      const likesRes = await axios.get(Api + `/likes/liked-posts/${user.id}`);
+      const likedPostIds = likesRes?.data?.data || [];
+      const updatedPosts = postsRes?.data?.data?.map((post) => ({
+        ...post,
+        isLiked: likedPostIds.includes(post._id),
+      }));
+      const postIds = postsRes.data.data.map((item) => item._id);
+      setCommunityPosts(updatedPosts);
+      setPostId(postIds);
+
+      // fetch comment counts for all posts in parallel
+      const countEntries = await Promise.all(
+        updatedPosts.map(async (p) => {
+          try {
+            const res = await axios.get(Api + `/community/comments/${p._id}`);
+            return [p._id, res.data.data.comments.length];
+          } catch {
+            return [p._id, 0];
+          }
+        })
+      );
+      setCommentCounts(Object.fromEntries(countEntries));
+    } catch (error) {
+      console.error(error.message);
+    } finally {
+      setPostLoading(false);
+    }
+  };
+
+  const getComments = async (postId) => {
+    try {
+      setLoading(true);
+      const res = await axios.get(Api + `/community/comments/${postId}`);
+      setCommentCounts((prev) => ({ ...prev, [postId]: res.data.data.comments.length }));
+    } catch (error) {
+      console.log(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // inside your component:
+  const [imageMenuAnchor, setImageMenuAnchor] = useState(null);
+  const isImageMenuOpen = Boolean(imageMenuAnchor);
+
+  const openImageMenu = (e) => setImageMenuAnchor(e.currentTarget);
+  const closeImageMenu = () => setImageMenuAnchor(null);
+
+  const onImageSelected = (e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+      setEditImage(selectedFile);
+      setPreviewImage(URL.createObjectURL(selectedFile));
+    }
+    closeImageMenu();
+    e.target.value = null; // allow re-selecting same file next time
+  };
+
+
+  const tier = useResponsiveTier();
+  const isMobile = tier === 'xs';                 // phones
+  const isTablet = tier === 'sm' || tier === 'md'; // tablets / small laptops
+  const isDesktop = tier === 'lg' || tier === 'xl'; // laptops and up
+
+  const showSidebar = !isMobile;
 
   const SAFFRON = "#E8650A";
   const CARD_BORDER = "1px solid #F0E6DC";
 
-  const avatarSize = isMobile ? 30 : 35;
+  const POST_BOX_WIDTH_SX = { xs: '100%', sm: '100%', md: '600px', lg: '640px', xl: '640px' };
+
+  const avatarSize = isMobile ? 30 : isTablet ? 33 : 35;
   const iconFontSize = isMobile ? 'small' : 'medium';
-  const btnFontSize = isMobile ? '0.5rem' : '0.7rem';
-  const bodyFontSize = isMobile ? '0.7rem' : '0.8rem';
+  const btnFontSize = isMobile ? '0.5rem' : isTablet ? '0.65rem' : '0.7rem';
+  const bodyFontSize = isMobile ? '0.7rem' : isTablet ? '0.76rem' : '0.8rem';
   const captionSize = isMobile ? '0.6rem' : '0.6rem';
-  const avatarFontSize = isMobile ? '0.6rem' : '1.1rem';
+  const avatarFontSize = isMobile ? '0.6rem' : isTablet ? '0.9rem' : '1.1rem';
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedPost, setSelectedPost] = useState(null);
-
-  const currentUser = JSON.parse(localStorage.getItem("user"));
 
   const handleMenuOpen = (event, post) => {
     setAnchorEl(event.currentTarget);
@@ -83,18 +203,26 @@ export default function Community() {
   const handleMenuClose = () => {
     setAnchorEl(null);
   };
+
+  const handleMediaSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setMedia(file);
+
+    setPreview(URL.createObjectURL(file));
+    e.target.value = "";
+
+    setOpenMediaDialog(false);
+  };
+
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editDescription, setEditDescription] = useState("");
   const { completion } = useUser();
 
   const isProfileComplete = completion === 100;
-  // ── Scroll behavior ────────────────────────────────────────────────────
-  // Only the SIDEBAR gets its own independent scroll container (fixed height).
-  // The feed/main content scrolls with the page itself (normal page scroll),
-  // so scrolling anywhere on the page scrolls the page/feed, except when the
-  // cursor is over the sidebar, which scrolls independently.
-  const SIDEBAR_SCROLL_HEIGHT = 'calc(100vh - 130px)';
+  const SIDEBAR_SCROLL_HEIGHT = 'calc(100vh - 120px)';
   const handleEdit = (post) => {
     setSelectedPost(post);
     setEditDescription(post.description);
@@ -103,6 +231,9 @@ export default function Community() {
     setEditOpen(true);
   };
   const handleUpdate = async () => {
+
+    setImagePostLoading(true);
+
     try {
       const user = JSON.parse(localStorage.getItem("user"));
 
@@ -125,6 +256,7 @@ export default function Community() {
       );
 
       setCommunityPosts((prev) =>
+
         prev.map((post) =>
           post._id === selectedPost._id
             ? {
@@ -136,13 +268,14 @@ export default function Community() {
         )
       );
 
-      toast.success(res.data.message);
+      toast.success(res.data.message, toasts);
 
       setEditOpen(false);
       setSelectedPost(null);
       setEditImage(null);
+      setImagePostLoading(false);
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to update post");
+      toast.error(error.response?.data?.message || "Failed to update post", toasts);
     }
   };
   const handleCreatePost = async () => {
@@ -165,37 +298,21 @@ export default function Community() {
       setPost("");
       setMedia(null);
       setPreview("");
-      toast.success("Posted");
+      toast.success("Posted!...", toasts);
     } catch (error) {
       console.log(error);
+      // toast.error(error.message, {
+      //   position: isMobile ? "top-center" : "top-right",
+      // });
+      toast.error(error.message, toasts);
+
     } finally {
       setLoading(false);
       getCommmunityPost();
     }
   };
 
-  const getCommmunityPost = async () => {
-    try {
-      setPostLoading(true);
-      const postsRes = await axios.get(Api + "/community/");
-      const likesRes = await axios.get(Api + `/likes/liked-posts/${user.id}`);
-      const likedPostIds = likesRes?.data?.data || [];
-      const updatedPosts = postsRes?.data?.data?.map((post) => ({
-        ...post,
-        isLiked: likedPostIds.includes(post._id),
-      }));
-      const postIds = postsRes.data.data.map((item) => item._id
 
-      )
-      setCommunityPosts(updatedPosts);
-      setPostId(postIds)
-
-    } catch (error) {
-      console.error(error.message);
-    } finally {
-      setPostLoading(false);
-    }
-  };
 
   useEffect(() => {
     getCommmunityPost();
@@ -209,6 +326,17 @@ export default function Community() {
     });
 
   const addLike = async (id) => {
+    setCommunityPosts((prev) =>
+      prev.map((post) =>
+        post._id === id
+          ? {
+            ...post,
+            isLiked: true,
+            likes: (post.likes || 0) + 1,
+          }
+          : post
+      )
+    );
     try {
       const res = await axios.post(Api + `/likes/${id}/${user.id}`);
       setCommunityPosts((prev) =>
@@ -218,9 +346,23 @@ export default function Community() {
             : post
         )
       );
-    } catch (error) { }
+    } catch (error) {
+      console.error(error);
+      setCommunityPosts((prev) =>
+        prev.map((post) =>
+          post._id === id
+            ? {
+              ...post,
+              isLiked: false,
+              likes: (post.likes || 1) - 1,
+            }
+            : post
+        )
+      );
+    }
   };
   const handleDelete = async (postId) => {
+    setImagePostLoading(true);
     try {
       const user = JSON.parse(localStorage.getItem("user"));
 
@@ -234,14 +376,28 @@ export default function Community() {
         prev.filter((post) => post._id !== postId)
       );
 
-      toast.success(res.data.message);
+      toast.success(res.data.message, toasts);
+
+
     } catch (error) {
       toast.error(
-        error.response?.data?.message || "Failed to delete post"
-      );
+        error.response?.data?.message || "Failed to delete post", toasts);
+    } finally {
+      setImagePostLoading(false);
     }
   };
   const removeLike = async (id) => {
+    setCommunityPosts((prev) =>
+      prev.map((post) =>
+        post._id === id
+          ? {
+            ...post,
+            isLiked: false,
+            likes: Math.max((post.likes || 1) - 1, 0),
+          }
+          : post
+      )
+    );
     try {
       const res = await axios.delete(Api + `/likes/${id}/${user.id}`);
       setCommunityPosts((prev) =>
@@ -251,245 +407,251 @@ export default function Community() {
             : post
         )
       );
-    } catch (error) { }
+    } catch (error) {
+      console.error(error);
+      setCommunityPosts((prev) =>
+        prev.map((post) =>
+          post._id === id
+            ? {
+              ...post,
+              isLiked: true,
+              likes: (post.likes || 0) + 1,
+            }
+            : post
+        )
+      );
+    }
   };
 
-  // ── Discover data ──────────────────────────────────────────────────────────────
-  const topMembers = [
-    { name: "Vijay Patel", initials: "VP", rides: 67, city: "Frisco", badge: "🏅 Founding member", verified: true },
-    { name: "Deepa Iyer", initials: "DI", rides: 42, city: "Plano", badge: "⭐ Community elder", verified: true },
-    { name: "Rahul Sharma", initials: "RS", rides: 34, city: "Dallas", badge: null, verified: true },
-    { name: "Ananya Krishnan", initials: "AK", rides: 18, city: "Houston", badge: null, verified: true },
-    { name: "Sunita Mehta", initials: "SM", rides: 12, city: "Chicago", badge: null, verified: false },
-  ];
-
-  const activities = [
-    { text: "Vijay P. gave a free temple ride to 4 members", time: "2h ago", icon: "🛕" },
-    { text: "Deepa I. helped Neel K.'s parents from the airport", time: "5h ago", icon: "✈️" },
-    { text: "Rahul S. completed his 34th community ride!", time: "1d ago", icon: "🎉" },
-    { text: "3 new members joined from Houston", time: "2d ago", icon: "👋" },
-    { text: "Sunita M. got 5 ride offers for her family trip", time: "3d ago", icon: "🙏" },
-  ];
-
-  // ── Small avatar used in the leaderboard ─────────────────────────────────────
-  const LeaderAvatar = ({ initials, verified }) => (
-    <Box sx={{
-      width: 36, height: 36, borderRadius: '50%', background: '#FFE8D6',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontWeight: 800, fontSize: 13, position: 'relative', flexShrink: 0
-    }}>
-      {initials}
-      {verified && (
-        <Box sx={{
-          position: 'absolute', right: -2, bottom: -2, background: '#2196f3',
-          color: '#fff', borderRadius: '50%', width: 13, height: 13, fontSize: 9,
-          display: 'flex', alignItems: 'center', justifyContent: 'center'
-        }}>
-          ✓
-        </Box>
-      )}
-    </Box>
-  );
-
-  // ── Sidebar content extracted for reuse ──────────────────────────────────────
-  const SidebarContent = () => (
-    <Box sx={{ width: '100%' }}>
-      {/* Top Members */}
-      <Paper elevation={0} sx={{ p: 2, borderRadius: 3, border: '1px solid #F0E6DC', mb: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-          <EmojiEventsIcon sx={{ color: '#F4A261', fontSize: 20 }} />
-          <Typography fontWeight={700} fontSize="0.9rem">Top Community Members</Typography>
-        </Box>
-
-        {topMembers.map((member, index) => (
-          <Box key={member.name}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2, py: 1 }}>
-              <Typography sx={{ width: 18, fontWeight: 800, color: 'text.secondary', fontSize: 12 }}>
-                {index + 1}
-              </Typography>
-              <LeaderAvatar initials={member.initials} verified={member.verified} />
-              <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Typography fontWeight={600} fontSize="0.8rem" noWrap>{member.name}</Typography>
-                <Typography variant="caption" color="text.secondary" fontSize="0.68rem">
-                  {member.city}
-                </Typography>
-                {member.badge && (
-                  <Typography variant="caption" sx={{
-                    display: 'block', color: '#E8650A',
-                    fontWeight: 600, fontSize: '0.65rem'
-                  }}>
-                    {member.badge}
-                  </Typography>
-                )}
-              </Box>
-              <Box textAlign="right" sx={{ flexShrink: 0 }}>
-                <Typography fontWeight={700} color="primary.main" fontSize={13}>
-                  {member.rides}
-                </Typography>
-                <Typography variant="caption" color="text.secondary" fontSize="0.65rem">
-                  rides
-                </Typography>
-              </Box>
-            </Box>
-            {index !== topMembers.length - 1 && <Divider />}
-          </Box>
-        ))}
-      </Paper>
-
-      {/* Recent Activity */}
-      <Paper elevation={0} sx={{ p: 2, borderRadius: 3, border: '1px solid #F0E6DC', mb: 2 }}>
-        <Typography fontWeight={700} fontSize="0.9rem" mb={1.5} sx={{ mb: 2 }}>Recent Activity</Typography>
-        {activities.map((a, i) => (
-          <Box key={i} sx={{ display: 'flex', gap: 1, mb: 1.2 }}>
-            <Typography fontSize={16}>{a.icon}</Typography>
-            <Box>
-              <Typography variant="body2" fontSize="0.78rem">{a.text}</Typography>
-              <Typography variant="caption" color="text.secondary" fontSize="0.65rem">{a.time}</Typography>
-            </Box>
-          </Box>
-        ))}
-      </Paper>
-
-      {/* Invite */}
-      <Paper elevation={0} sx={{
-        p: 2, borderRadius: 3,
-        background: 'linear-gradient(135deg, #E8650A, #FF8C42)', color: '#fff'
-      }}>
-        <Typography fontWeight={800} mb={0.5} fontSize="0.9rem">Invite a friend 🙏</Typography>
-        <Typography variant="body2" sx={{ opacity: 0.9, mb: 1.5, fontSize: '0.78rem' }}>
-          Saathi grows through trust. Invite someone from your community to join.
-        </Typography>
-        <Button size="small" variant="contained"
-          sx={{
-            background: '#fff', color: '#E8650A', fontWeight: 700,
-            '&:hover': { background: '#FFF8F2' }, fontSize: '0.75rem'
-          }}>
-          Share invite link
-        </Button>
-      </Paper>
-    </Box>
-  );
 
   return (
     <>
-      <Box sx={{
-        display: "flex",
-        gap: 5
-      }}>
-        <PageLayout>
-          {/* Page header */}
-          <Typography variant="h5" fontWeight={800} sx={{ mb: { xs: 0.5, sm: 0.5 }, fontSize: { xs: "1rem", sm: "1.5rem" } }}>
-            Saathi <span style={{ color: '#E8650A' }}>Community</span>
-          </Typography>
-          <Typography color="text.secondary" sx={{ mb: { xs: 1, sm: 2 }, fontSize: { xs: "0.7rem", sm: "1.2rem" } }}>
-            Built on trust, referrals, and shared roots
-          </Typography>
+      <PageLayout>
+        {/* Page header */}
+        <Typography variant="h5" fontWeight={800} sx={{ mb: { xs: 0.5, sm: 0.5 }, fontSize: { xs: "1rem", sm: "1.2rem", md: "1.35rem", lg: "1.5rem" } }}>
+          Saathi <span style={{ color: '#E8650A' }}>Community</span>
+        </Typography>
+        <Typography color="text.secondary" sx={{ mb: { xs: 1, sm: 2 }, fontSize: { xs: "0.7rem", sm: "0.9rem", md: "1.05rem", lg: "1.2rem" } }}>
+          Built on trust, referrals, and shared roots
+        </Typography>
 
-          {/* Main layout: feed + sidebar side by side on sm+ */}
+        {/* Main layout: Community box + SidebarContent box, single flex row, gap 2, responsive */}
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column', sm: 'row' },
+            // gap: 1,
+            alignItems: 'flex-start',
+            width: '100%',
+            maxWidth: "1200px"
+          }}
+        >
+
+          {/* ── Community feed box ── */}
           <Box
             sx={{
-              display: 'flex',
-              gap: { xs: 0, sm: 2, md: 3 },
-              alignItems: 'flex-start',
+              flex: 1,
+              minWidth: 0,
               width: '100%',
-              maxWidth: "1200px"
             }}
           >
-            {/* ── Left: Post Feed (scrolls with the page, no independent scroll) ── */}
+
             <Box
               sx={{
-                flex: 1,
-                minWidth: 0, // prevents flex child from overflowing
-                pr: isMobile ? 0.5 : 1,
+                p: { xs: 1, sm: 1.5, md: 2 },
+                borderRadius: 3,
+                border: CARD_BORDER,
+                mb: 2,
+                width: POST_BOX_WIDTH_SX,
+                boxSizing: 'border-box',
               }}
             >
-              {/* Create post box */}
-              <Box
-                sx={{
-                  p: isMobile ? 1.5 : 2,
-                  borderRadius: 3,
-                  border: CARD_BORDER,
-                  mb: 2,
-                }}
-              >
-                <Box sx={{ display: 'flex', gap: isMobile ? 1 : 1.5, alignItems: 'flex-start' }}>
-                  <UserAvatar
-                    size={avatarSize}
-                    verified
-                    currentUser={currentUser}
-                  />
+              <Box sx={{ display: 'flex', gap: isMobile ? 1 : 1.5, alignItems: 'flex-start' }}>
+                <UserAvatar
+                  size={avatarSize}
+                  verified
+                  currentUser={currentUser}
+                />
 
-                  <TextField
-                    fullWidth
-                    multiline
-                    minRows={1}
-                    maxRows={5}
-                    value={post}
-                    onChange={(e) => setPost(e.target.value)}
-                    placeholder="Make a post"
-                    variant="outlined"
-                    size={isMobile ? 'small' : 'medium'}
-                    inputProps={{ style: { fontSize: bodyFontSize } }}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 3,
-                        alignItems: 'flex-start',
-                        fontSize: { xs: "10px", sm: "12px" }
+                <Tooltip
+                  title="Complete your profile to 100% before creating a post."
+                  arrow
+                  open={!isProfileComplete && tooltipOpen}
+                  onClose={() => setTooltipOpen(false)}
+                  slotProps={{
+                    tooltip: {
+                      sx: {
+                        fontSize: {
+                          xs: "10px",
+                          sm: "12px",
+                          md: "13px",
+                        },
+                        py: {
+                          xs: 0.5,
+                          sm: 1,
+                        },
+                        px: {
+                          xs: 1,
+                          sm: 1.5,
+                        },
+                        maxWidth: {
+                          xs: 180,
+                          sm: 250,
+                        },
+                        textAlign: "center",
                       },
-                    }}
-                  />
-                </Box>
-
-                {/* Image preview */}
-                {preview && (
-                  <Box
-                    sx={{
-                      mt: 2,
-                      position: 'relative',
-                      borderRadius: 3,
-                      overflow: 'hidden',
-                      border: '1px solid #eee',
+                    },
+                    arrow: {
+                      sx: {
+                        fontSize: {
+                          xs: "0.6rem",
+                          sm: "0.8rem",
+                        },
+                      },
+                    },
+                  }}
+                >
+                  <span
+                    style={{ display: "block", width: "100%" }}
+                    onClick={() => {
+                      if (!isProfileComplete) {
+                        setTooltipOpen(true);
+                        setTimeout(() => setTooltipOpen(false), 5000);
+                      }
                     }}
                   >
-                    <Box
-                      component="img"
-                      src={preview}
-                      alt="preview"
+                    <TextField
+                      fullWidth
+                      multiline
+                      minRows={1}
+                      maxRows={5}
+                      value={post}
+                      onChange={(e) => setPost(e.target.value)}
+                      placeholder="Make a post"
+                      variant="outlined"
+                      size={isMobile ? "small" : "medium"}
+                      onKeyDown={() => {
+                        if (!isProfileComplete) {
+                          setTooltipOpen(true);
+                          setTimeout(() => setTooltipOpen(false), 3000);
+                        }
+                      }}
+                      inputProps={{
+                        style: {
+                          fontSize: bodyFontSize,
+                          readOnly: !isProfileComplete,
+                        },
+                      }}
                       sx={{
-                        width: '100%',
-                        maxHeight: isMobile ? 200 : 300,
-                        objectFit: 'cover',
-                        display: 'block',
+                        "& .MuiOutlinedInput-root": {
+                          borderRadius: 3,
+                          alignItems: "flex-start",
+                          fontSize: { xs: "10px", sm: "12px" },
+                        },
                       }}
                     />
-                    <Button
-                      size="small"
-                      onClick={() => { setMedia(null); setPreview(""); }}
-                      sx={{
-                        position: 'absolute', top: 8, right: 8,
-                        minWidth: 0, bgcolor: '#fff', borderRadius: '50%',
-                        width: isMobile ? 28 : 34, height: isMobile ? 28 : 34,
+                  </span>
+                </Tooltip>
+
+              </Box>
+
+              {/* Image preview */}
+              {preview && (
+                <Box
+                  sx={{
+                    mt: 2,
+                    position: 'relative',
+                    borderRadius: 3,
+                    overflow: 'hidden',
+                    border: '1px solid #eee',
+                  }}
+                >
+                  <Box
+                    component="img"
+                    src={preview}
+                    alt="preview"
+                    sx={{
+                      width: '100%',
+                      maxHeight: { xs: 200, sm: 240, md: 280, lg: 300 },
+                      objectFit: 'cover',
+                      display: 'block',
+                    }}
+                  />
+                  <Button
+                    size="small"
+                    onClick={() => { setMedia(null); setPreview(""); }}
+                    sx={{
+                      position: 'absolute', top: 8, right: 8,
+                      minWidth: 0, bgcolor: '#fff', borderRadius: '50%',
+                      width: isMobile ? 28 : 34, height: isMobile ? 28 : 34,
+                    }}
+                  >
+                    <CloseIcon fontSize={iconFontSize} />
+                  </Button>
+                </Box>
+              )}
+
+              <Divider sx={{ my: 1.5 }} />
+
+              <Stack direction="row" alignItems="center" justifyContent="space-between">
+
+                <Box component="span">
+                  <Tooltip
+                    title="Complete your profile to 100% before creating a post."
+                    arrow
+                    open={!isProfileComplete && tooltip2Open}
+                    onClose={() => setTooltip2Open(false)}
+                    slotProps={{
+                      tooltip: {
+                        sx: {
+                          fontSize: {
+                            xs: "10px",
+                            sm: "12px",
+                            md: "13px",
+                          },
+                          py: {
+                            xs: 0.5,
+                            sm: 1,
+                          },
+                          px: {
+                            xs: 1,
+                            sm: 1.5,
+                          },
+                          maxWidth: {
+                            xs: 180,
+                            sm: 250,
+                          },
+                          textAlign: "center",
+                        },
+                      },
+                      arrow: {
+                        sx: {
+                          fontSize: {
+                            xs: "0.6rem",
+                            sm: "0.8rem",
+                          },
+                        },
+                      },
+                    }}
+                  >
+                    <span
+                      style={{ display: "inline-block", width: "100%" }}
+                      onClick={() => {
+                        if (!isProfileComplete) {
+                          setTooltip2Open(true);
+
+                          setTimeout(() => {
+                            setTooltip2Open(false);
+                          }, 5000);
+                        }
                       }}
                     >
-                      <CloseIcon fontSize={iconFontSize} />
-                    </Button>
-                  </Box>
-                )}
-
-                <Divider sx={{ my: 1.5 }} />
-
-                <Stack direction="row" alignItems="center" justifyContent="space-between">
-                  <Tooltip
-                    title={
-                      !isProfileComplete
-                        ? "Complete your profile to 100% before creating a post."
-                        : ""
-                    }
-                    arrow
-                  >
-                    <Box component="span">
                       <Button
-                        component="label"
+                        onClick={() => {
+                          if (isProfileComplete) {
+                            setOpenMediaDialog((prev) => !prev);
+                          }
+                        }}
                         disabled={!isProfileComplete}
                         startIcon={<PermMediaIcon fontSize={iconFontSize} />}
                         size={isMobile ? "small" : "medium"}
@@ -516,389 +678,644 @@ export default function Community() {
                           }}
                         />
                       </Button>
-                    </Box>
+                    </span>
                   </Tooltip>
 
-                  <Tooltip
-                    title={
-                      !isProfileComplete
-                        ? "Complete your profile to 100% before creating a post."
-                        : ""
-                    }
-                    arrow
-                  >
-                    <Box component="span" sx={{ ml: "auto" }}>
-                      <Button
-                        variant="contained"
-                        disabled={
-                          loading ||
-                          (!post.trim() && !media) ||
-                          !isProfileComplete
-                        }
-                        onClick={handleCreatePost}
-                        size={isMobile ? "small" : "medium"}
-                        sx={{
-                          borderRadius: 999,
-                          textTransform: "none",
-                          bgcolor: "#E8650A",
-                          fontSize: btnFontSize,
 
-                          "&:hover": {
-                            bgcolor: "#c85608",
-                          },
-
-                          "&.Mui-disabled": {
-                            bgcolor: "#d1d5db",
-                            color: "#6b7280",
-                          },
-                        }}
-                      >
-                        {loading ? "Posting…" : "Post"}
-                      </Button>
-                    </Box>
-                  </Tooltip>
-                </Stack>
-              </Box>
-
-              {/* Posts list */}
-              {postLoading ? (
-                <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', py: 4 }}>
-                  <CircularProgress size={isMobile ? 36 : 50} />
-                </Box>
-              ) : (
-                communityPosts?.map((post, index) => (
-                  <Paper
-                    key={index}
-                    elevation={0}
-                    sx={{ borderRadius: 3, border: CARD_BORDER, mb: 2, overflow: 'hidden' }}
-                  >
-                    <Box sx={{ p: isMobile ? 1.5 : 2 }}>
-                      {/* Post header */}
-                      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: isMobile ? 1 : 1.5 }}>
-                        <Avatar
-                          src={post?.authorId?.profileImage}
+                  {openMediaDialog && (
+                    <>
+                      <Stack direction="row" spacing={1.5} sx={{ mt: 1 }}>
+                        <Button
+                          startIcon={<CameraAltIcon />}
+                          onClick={() => cameraInputRef.current?.click()}
+                          size={isMobile ? "small" : "medium"}
                           sx={{
-                            width: avatarSize,
-                            height: avatarSize,
-                            bgcolor: SAFFRON,
-                            color: '#fff',
-                            fontWeight: 800,
-                            fontSize: avatarFontSize,
-                            flexShrink: 0,
-                            mt: { xs: 0.4, sm: 0.5 }
+                            textTransform: "none",
+                            fontSize: { xs: "9px", sm: "10px" },
+                            borderRadius: 5,
+                            px: 1.5,
+                            bgcolor: "#1976d2",
+                            color: "#fff",
+
+                            "& .MuiButton-startIcon svg": {
+                              fontSize: { xs: "13px", sm: "14px" } // 14px, 16px, 18px, etc.
+                            },
+
+                            "&:hover": {
+                              bgcolor: "#1565c0",
+                            },
                           }}
                         >
-                          {!currentUser?.profileImage &&
-                            `${currentUser?.firstName?.[0] || ''}${currentUser?.lastName?.[0] || ''}`}
-                        </Avatar>
+                          {isMobile ? "Camera" : "Camera / Webcam"}
+                        </Button>
 
-                        <Box sx={{ flex: 1, minWidth: 0 }}>
-                          <Typography fontWeight={700}
-                            sx={{ fontSize: { xs: "0.7rem", sm: "0.92rem" } }}
-                            noWrap>
-                            {post?.authorId?.firstName} {post?.authorId?.lastName}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary" fontSize={captionSize}
-                            sx={{ fontSize: { xs: "0.6rem", sm: "0.72rem" } }}>
-                            {'tvm'} | {formattedDateTime(post?.createdAt)}
-                          </Typography>
-                        </Box>
+                        <Button
+                          // variant="contained"
+                          startIcon={<FolderIcon />}
+                          onClick={() => fileInputRef.current?.click()}
+                          size={isMobile ? "small" : "medium"}
+                          sx={{
+                            textTransform: "none",
+                            fontSize: { xs: "9px", sm: "10px" },
+                            borderRadius: 5,
+                            px: 1.5,
+                            bgcolor: "#2e7d32",
+                            color: "#fff",
+                            "& .MuiButton-startIcon svg": {
+                              fontSize: { xs: "13px", sm: "14px" } // 14px, 16px, 18px, etc.
+                            },
 
-                        {post?.authorId?._id === currentUser.id && (
-                          <>
-                            <IconButton onClick={(e) => handleMenuOpen(e, post)}>
-                              <MoreHorizIcon
-                                fontSize={iconFontSize}
-                                sx={{ color: "text.secondary" }}
+                            "&:hover": {
+                              bgcolor: "#1b5e20",
+
+                            },
+                          }}
+                        >
+                          {isMobile ? "Gallery" : "File"}
+                        </Button>
+                      </Stack>
+
+                      {/* Hidden Camera Input */}
+                      <input
+                        ref={cameraInputRef}
+                        hidden
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        onChange={handleMediaSelect}
+                      />
+
+                      {/* Hidden File Input */}
+                      <input
+                        ref={fileInputRef}
+                        hidden
+                        type="file"
+                        accept="image/*"
+                        onChange={handleMediaSelect}
+                      />
+                    </>
+                  )}
+
+                </Box>
+
+                <Tooltip
+                  title={
+                    !isProfileComplete
+                      ? "Complete your profile to 100% before creating a post."
+                      : ""
+                  }
+                  arrow
+                >
+                  <Box component="span" sx={{ ml: "auto" }}>
+                    <Button
+                      variant="contained"
+                      disabled={
+                        loading ||
+                        (!post.trim() && !media) ||
+                        !isProfileComplete
+                      }
+                      onClick={handleCreatePost}
+                      size={isMobile ? "small" : "medium"}
+                      sx={{
+                        borderRadius: 999,
+                        textTransform: "none",
+                        bgcolor: "#E8650A",
+                        fontSize: btnFontSize,
+
+                        "&:hover": {
+                          bgcolor: "#c85608",
+                        },
+
+                        "&.Mui-disabled": {
+                          bgcolor: "#d1d5db",
+                          color: "#6b7280",
+                        },
+                      }}
+                    >
+                      {loading ? "Posting…" : "Post"}
+                    </Button>
+                  </Box>
+                </Tooltip>
+              </Stack>
+            </Box>
+
+            {/* Posts list */}
+            {postLoading ? (
+              <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', py: 4 }}>
+                <CircularProgress size={isMobile ? 36 : 50} />
+              </Box>
+            ) : (
+              communityPosts?.map((post, index) => (
+                <Paper
+                  key={index}
+                  elevation={0}
+                  sx={{
+                    borderRadius: 3, border: CARD_BORDER, mb: 2, overflow: 'hidden',
+                    width: POST_BOX_WIDTH_SX,
+                    boxSizing: 'border-box',
+                  }}
+                >
+                  <Box sx={{ p: isMobile ? 1.5 : 2 }}>
+                    {/* Post header */}
+                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: isMobile ? 1 : 1.5 }}>
+                      <Avatar
+                        src={post?.authorId?.profileImage}
+                        sx={{
+                          width: avatarSize,
+                          height: avatarSize,
+                          bgcolor: SAFFRON,
+                          color: '#fff',
+                          fontWeight: 800,
+                          fontSize: avatarFontSize,
+                          flexShrink: 0,
+                          mt: { xs: 0.4, sm: 0.5 }
+                        }}
+                      >
+                        {!currentUser?.profileImage &&
+                          `${currentUser?.firstName?.[0] || ''}${currentUser?.lastName?.[0] || ''}`}
+                      </Avatar>
+
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography fontWeight={700}
+                          sx={{ fontSize: { xs: "0.7rem", sm: "0.92rem" } }}
+                          noWrap>
+                          {post?.authorId?.firstName} {post?.authorId?.lastName}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" fontSize={captionSize}
+                          sx={{ fontSize: { xs: "0.6rem", sm: "0.72rem" } }}>
+                          {'tvm'} | {formattedDateTime(post?.createdAt)}
+                        </Typography>
+                      </Box>
+
+                      {post?.authorId?._id === currentUser._id && (
+                        <>
+                          <IconButton onClick={(e) => handleMenuOpen(e, post)}>
+                            <MoreHorizIcon
+                              fontSize={iconFontSize}
+                              sx={{ color: "text.secondary" }}
+                            />
+                          </IconButton>
+
+                          <Menu
+                            anchorEl={anchorEl}
+                            open={Boolean(anchorEl)}
+                            onClose={handleMenuClose}
+                          >
+                            <MenuItem
+                              onClick={() => {
+                                handleMenuClose();
+                                handleEdit(selectedPost);
+                              }}
+                            >
+                              <ListItemIcon>
+                                <EditIcon fontSize="small" />
+                              </ListItemIcon>
+                              <ListItemText>Edit</ListItemText>
+                            </MenuItem>
+
+                            <MenuItem
+                              onClick={() => {
+                                handleMenuClose();
+                                setDeleteOpen(true);
+                              }}
+                            >
+                              <ListItemIcon>
+                                <DeleteIcon fontSize="small" color="error" />
+                              </ListItemIcon>
+                              <ListItemText>Delete</ListItemText>
+                            </MenuItem>
+                          </Menu>
+                          <Dialog
+                            open={deleteOpen}
+                            onClose={() => setDeleteOpen(false)}
+                            fullWidth
+                            maxWidth="xs"
+                            PaperProps={{
+                              sx: {
+                                width: { xs: "95%", sm: "100%" },
+                                m: { xs: 1.5, sm: 2 },
+                                borderRadius: { xs: 2, sm: 3 },
+                              },
+                            }}
+                          >
+                            <DialogTitle
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1,
+                                fontWeight: 600,
+                              }}
+                            >
+                              <WarningAmberRoundedIcon color="error" />
+                              Delete Post ?
+                            </DialogTitle>
+
+                            <DialogContent sx={{ pt: 1 }}>
+                              <Typography
+                                sx={{
+                                  fontSize: { xs: "0.9rem", sm: "1rem" },
+                                  color: "text.secondary",
+                                }}
+                              >
+                                Are you sure you want to delete this post?
+                              </Typography>
+                            </DialogContent>
+
+                            <DialogActions
+                              sx={{
+                                px: { xs: 2, sm: 3 },
+                                pb: { xs: 2, sm: 3 },
+                                gap: 1,
+                              }}
+                            >
+                              <Button
+                                variant="contained"
+                                onClick={() => setDeleteOpen(false)}
+                                sx={{
+                                  flex: 1,
+                                  py: 1,
+                                  fontSize: { xs: "0.8rem", sm: "0.9rem" },
+                                  fontWeight: 600,
+                                  bgcolor: "grey.500",
+                                  color: "#fff",
+                                  "&:hover": {
+                                    bgcolor: "grey.700",
+                                  },
+                                }}
+                              >
+                                Cancel
+                              </Button>
+
+                              <Button
+                                variant="contained"
+                                color="error"
+                                disabled={imagePostLoading}
+                                onClick={() => {
+                                  const postId = selectedPost._id;
+                                  handleMenuClose();
+                                  handleDelete(postId);
+                                  setDeleteOpen(false);
+                                }}
+                                sx={{
+                                  flex: 1,
+                                  py: 1,
+                                  fontSize: { xs: "0.8rem", sm: "0.9rem" },
+                                  fontWeight: 600,
+                                }}
+                              >
+                                {imagePostLoading ? "Deleting..." : "Delete"}
+                              </Button>
+                            </DialogActions>
+                          </Dialog>
+
+                          {/* Edit post of Community Image */}
+
+                          <Dialog
+                            open={editOpen}
+                            onClose={() => setEditOpen(false)}
+                            fullWidth
+                            maxWidth="sm"
+                            // fullScreen// pass in `useMediaQuery(theme.breakpoints.down('sm'))`
+                            PaperProps={{
+                              sx: {
+                                borderRadius: { xs: 0, sm: 3 },
+                                m: { xs: 0, sm: 2 },
+                              },
+                            }}
+                          >
+                            {/* Dialog Header */}
+                            <DialogTitle
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                fontWeight: 600,
+                                fontSize: { xs: "1rem", sm: "1.15rem" },
+                                py: 1.5,
+                                px: 2,
+                              }}
+                            >
+                              Edit Post
+
+                              <IconButton
+                                onClick={() => setEditOpen(false)}
+                                size="small"
+                                sx={{
+                                  color: "#666",
+                                  "&:hover": { bgcolor: "#f5f5f5" },
+                                }}
+                              >
+                                <CloseIcon fontSize="small" />
+                              </IconButton>
+                            </DialogTitle>
+
+                            {/* Dialog Content */}
+                            <DialogContent dividers sx={{ px: { xs: 1.5, sm: 3 }, py: 2 }}>
+                              <TextField
+                                fullWidth
+                                multiline
+                                minRows={3}
+                                margin="dense"
+                                size="small"
+                                label="Description"
+                                value={editDescription}
+                                onChange={(e) => setEditDescription(e.target.value)}
                               />
-                            </IconButton>
 
-                            <Menu
-                              anchorEl={anchorEl}
-                              open={Boolean(anchorEl)}
-                              onClose={handleMenuClose}
-                            >
-                              <MenuItem
-                                onClick={() => {
-                                  handleMenuClose();
-                                  handleEdit(selectedPost);
-                                }}
-                              >
-                                <ListItemIcon>
-                                  <EditIcon fontSize="small" />
-                                </ListItemIcon>
-                                <ListItemText>Edit</ListItemText>
-                              </MenuItem>
+                              <Box sx={{ mt: 2 }}>
+                                <Box
+                                  component="img"
+                                  src={editImage ? URL.createObjectURL(editImage) : previewImage}
+                                  alt="Preview"
+                                  sx={{
+                                    width: "100%",
+                                    height: { xs: 160, sm: 220, md: 280 },
+                                    objectFit: "cover",
+                                    borderRadius: 2,
+                                    border: "1px solid #eee",
+                                    mb: 1.5,
+                                  }}
+                                />
 
-                              <MenuItem
-                                onClick={() => {
-                                  handleMenuClose();
-                                  setDeleteOpen(true);
-                                }}
-                              >
-                                <ListItemIcon>
-                                  <DeleteIcon fontSize="small" color="error" />
-                                </ListItemIcon>
-                                <ListItemText>Delete</ListItemText>
-                              </MenuItem>
-                            </Menu>
-                            <Dialog
-                              open={deleteOpen}
-                              onClose={() => setDeleteOpen(false)}
-                              maxWidth="xs"
-                              fullWidth
-                            >
-                              <DialogTitle>Delete Post</DialogTitle>
-
-                              <DialogContent>
-                                <Typography>
-                                  Are you sure you want to delete this post?
-                                </Typography>
-                              </DialogContent>
-
-                              <DialogActions sx={{ px: 3, pb: 2 }}>
                                 <Button
                                   variant="contained"
-                                  onClick={() => setDeleteOpen(false)}
+                                  size="small"
+                                  onClick={openImageMenu}
                                   sx={{
-                                    bgcolor: "grey.500",
+                                    width: "fit-content", // or "auto"
+                                    minWidth: "unset",    // optional: removes MUI's default minimum width
+                                    height: 36,
+                                    bgcolor: "#FF9933",
                                     color: "#fff",
+                                    fontWeight: 600,
+                                    fontSize: "0.8rem",
+                                    textTransform: "none",
+                                    borderRadius: 2,
+                                    px: 2, // horizontal padding
                                     "&:hover": {
-                                      bgcolor: "grey.700",
+                                      bgcolor: "#E68A00",
+                                    },
+                                  }}
+                                >
+                                  Change Image
+                                </Button>
+
+
+                                {/* Image Menu */}
+                                <Menu
+                                  anchorEl={imageMenuAnchor}
+                                  open={isImageMenuOpen}
+                                  onClose={closeImageMenu}
+                                  anchorOrigin={{ vertical: "top", horizontal: "center" }}
+                                  transformOrigin={{ vertical: "bottom", horizontal: "center" }}
+                                >
+                                  <MenuItem component="label" dense >
+                                    <ListItemIcon>
+                                      <CameraAltIcon fontSize="small" sx={{ color: "#FF9933" }} />
+                                    </ListItemIcon>
+                                    <ListItemText primaryTypographyProps={{ fontSize: "0.85rem" }}>
+                                      Camera
+                                    </ListItemText>
+                                    <input
+                                      hidden
+                                      type="file"
+                                      accept="image/*"
+                                      capture="environment"
+                                      onChange={onImageSelected}
+                                    />
+                                  </MenuItem>
+
+                                  <MenuItem component="label" dense>
+                                    <ListItemIcon>
+                                      <InsertDriveFileIcon fontSize="small" sx={{ color: "#FF9933" }} />
+                                    </ListItemIcon>
+                                    <ListItemText primaryTypographyProps={{ fontSize: "0.85rem" }}>
+                                      Gallery
+                                    </ListItemText>
+                                    <input
+                                      hidden
+                                      type="file"
+                                      accept="image/*"
+                                      onChange={onImageSelected}
+                                    />
+                                  </MenuItem>
+                                </Menu>
+                              </Box>
+                            </DialogContent>
+
+                            {/* Dialog Footer */}
+                            <DialogActions
+                              sx={{
+                                p: { xs: 1.5, sm: 2 },
+                                display: "flex",
+                                flexDirection: { xs: "column", sm: "row" },
+                                gap: 1,
+                              }}
+                            >
+                              <Stack
+                                direction="row"
+                                spacing={2}
+                                justifyContent="flex-end"
+                                sx={{ pt: 2 }}
+                              >
+                                <Button
+                                  variant="outlined"
+                                  size="small"
+                                  onClick={() => setEditOpen(false)}
+                                  sx={{
+                                    width: "fit-content",
+                                    minWidth: "unset",
+                                    px: 2,
+                                    height: 36,
+                                    borderColor: "#BDBDBD",
+                                    color: "#616161",
+                                    fontWeight: 600,
+                                    fontSize: "0.8rem",
+                                    textTransform: "none",
+                                    borderRadius: 2,
+                                    "&:hover": {
+                                      borderColor: "#757575",
+                                      bgcolor: "#F5F5F5",
                                     },
                                   }}
                                 >
                                   Cancel
                                 </Button>
+
                                 <Button
                                   variant="contained"
-                                  color="error"
-                                  onClick={() => {
-                                    const postId = selectedPost._id;
-                                    handleMenuClose();
-                                    handleDelete(postId);
-                                    setDeleteOpen(false);
+                                  size="small"
+                                  disabled={imagePostLoading}
+                                  onClick={handleUpdate}
+                                  sx={{
+                                    width: "fit-content",
+                                    minWidth: "unset",
+                                    px: 2,
+                                    height: 36,
+                                    bgcolor: "#FF9933",
+                                    color: "#fff",
+                                    fontWeight: 600,
+                                    fontSize: "0.8rem",
+                                    textTransform: "none",
+                                    borderRadius: 2,
+                                    "&:hover": {
+                                      bgcolor: "#E68A00",
+                                    },
                                   }}
                                 >
-                                  Delete
+                                  {imagePostLoading ? "Saving..." : "Save Changes"}
                                 </Button>
-                              </DialogActions>
-                            </Dialog>
-                            <Dialog open={editOpen} onClose={() => setEditOpen(false)} fullWidth maxWidth="sm">
-                              <DialogTitle>Edit Post</DialogTitle>
-
-                              <DialogContent>
-                                <TextField
-                                  fullWidth
-                                  multiline
-                                  minRows={4}
-                                  margin="dense"
-                                  label="Description"
-                                  value={editDescription}
-                                  onChange={(e) => setEditDescription(e.target.value)}
-                                />
-                              </DialogContent>
-
-                              <DialogActions>
-                                <Box sx={{ mb: 2 }}>
-                                  <img
-                                    src={editImage ? URL.createObjectURL(editImage) : previewImage}
-                                    alt="Post"
-                                    style={{
-                                      width: "100%",
-                                      maxHeight: "250px",
-                                      objectFit: "cover",
-                                      borderRadius: "8px",
-                                      marginBottom: "16px",
-                                    }}
-                                  />
-
-                                  <Box
-                                    sx={{
-                                      display: "flex",
-                                      justifyContent: "space-between",
-                                      alignItems: "center",
-                                      flexWrap: "wrap",
-                                      gap: 2,
-                                    }}
-                                  >
-                                    <Button
-                                      variant="contained"
-                                      component="label"
-                                      sx={{
-                                        bgcolor: "#FF9933",
-                                        color: "#fff",
-                                        fontWeight: 600,
-                                        textTransform: "none",
-                                        "&:hover": {
-                                          bgcolor: "#e68a00",
-                                        },
-                                      }}
-                                    >
-                                      Change Image
-                                      <input
-                                        hidden
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={(e) => {
-                                          const file = e.target.files[0];
-                                          if (file) {
-                                            setEditImage(file);
-                                            setPreviewImage(URL.createObjectURL(file));
-                                          }
-                                        }}
-                                      />
-                                    </Button>
-
-                                    <Box
-                                      sx={{
-                                        display: "flex",
-                                        gap: 2,
-                                      }}
-                                    >
-                                      <Button
-                                        onClick={() => setEditOpen(false)}
-                                        variant="contained"
-                                        sx={{
-                                          bgcolor: "#9E9E9E",
-                                          color: "#fff",
-                                          "&:hover": {
-                                            bgcolor: "#757575",
-                                          },
-                                        }}
-                                      >
-                                        Cancel
-                                      </Button>
-
-                                      <Button
-                                        variant="contained"
-                                        onClick={handleUpdate}
-                                        sx={{
-                                          bgcolor: "#FF9933",
-                                          "&:hover": {
-                                            bgcolor: "#e68a00",
-                                          },
-                                        }}
-                                      >
-                                        Save
-                                      </Button>
-                                    </Box>
-                                  </Box>
-                                </Box>
+                              </Stack>
+                            </DialogActions>
+                          </Dialog>
 
 
-                              </DialogActions>
-                            </Dialog>
-                            {editImage && (
-                              <img
-                                src={URL.createObjectURL(editImage)}
-                                alt="Preview"
-                                width={150}
-                                style={{ marginTop: 10, borderRadius: 8 }}
-                              />
-                            )}
-                          </>
-                        )}
+                          {editImage && (
+                            <img
+                              src={URL.createObjectURL(editImage)}
+                              alt="Preview"
+                              width={150}
+                              style={{ marginTop: 10, borderRadius: 8 }}
+                            />
+                          )}
+                        </>
+                      )}
 
-                      </Box>
-
-                      {/* Post body */}
-                      <Typography sx={{ mt: 1.5, fontSize: bodyFontSize, lineHeight: 1.6 }}>
-                        {post.description}
-                      </Typography>
                     </Box>
 
-                    {/* Post image */}
-                    {post.postImage && <CommunityImage src={post.postImage} />}
+                    {/* Post body */}
+                    <Typography sx={{ mt: 1.5, fontSize: bodyFontSize, lineHeight: 1.6 }}>
+                      {post.description}
+                    </Typography>
+                  </Box>
 
-                    <Divider />
+                  {/* Post image */}
+                  {post.postImage && <CommunityImage src={post.postImage} />}
 
-                    {/* Action buttons */}
-                    <Stack
-                      direction="row"
-                      sx={{
-                        py: isMobile ? 0.25 : 0.5,
-                        px: isMobile ? 0.5 : 2,
-                        gap: isMobile ? 0 : 5,
-                        // justifyContent: isMobile ? 'space-around' : 'flex-start',
-                        justifyContent: 'space-around',
-                      }}
+                  <Divider />
+
+                  {/* Action buttons */}
+                  <Stack
+                    direction="row"
+                    sx={{
+                      py: isMobile ? 0.25 : 0.5,
+                      px: isMobile ? 0.5 : 2,
+                      gap: isMobile ? 0 : 5,
+                      // justifyContent: isMobile ? 'space-around' : 'flex-start',
+                      justifyContent: 'space-around',
+                    }}
+                  >
+                    <Button
+                      onClick={() => post.isLiked ? removeLike(post._id) : addLike(post._id)}
+                      startIcon={
+                        post.isLiked
+                          ? <ThumbUpIcon fontSize={iconFontSize} sx={{ color: '#0084ff' }} />
+                          : <ThumbUpOffAltIcon fontSize={iconFontSize} />
+                      }
+                      size={isMobile ? 'small' : 'medium'}
+                      sx={{ textTransform: 'none', color: 'text.secondary', fontSize: btnFontSize }}
                     >
-                      <Button
-                        onClick={() => post.isLiked ? removeLike(post._id) : addLike(post._id)}
-                        startIcon={
-                          post.isLiked
-                            ? <ThumbUpIcon fontSize={iconFontSize} sx={{ color: '#0084ff' }} />
-                            : <ThumbUpOffAltIcon fontSize={iconFontSize} />
+                      {post?.likes || 0}
+                    </Button>
+
+                    <Button
+                      startIcon={
+                        activeCommentPostId === post._id
+                          ? <ChatIcon fontSize={iconFontSize} sx={{ color: '#0084ff' }} />
+                          : <ChatIcon fontSize={iconFontSize} />
+                      }
+                      onClick={() => {
+                        const next = activeCommentPostId === post._id ? null : post._id;
+                        setActiveCommentPostId(next);
+                        if (next) getComments(next);
+                      }}
+                      size={isMobile ? 'small' : 'medium'}
+                      sx={{ textTransform: 'none', color: 'text.secondary', fontSize: btnFontSize }}
+                    >
+                      {commentCounts[post._id] ?? 0}
+                    </Button>
+
+                    <Button
+                      startIcon={<BookmarkBorderIcon fontSize={iconFontSize} />}
+                      size={isMobile ? 'small' : 'medium'}
+                      sx={{ textTransform: 'none', color: 'text.secondary', fontSize: btnFontSize }}
+                    >
+                      Save
+                    </Button>
+                  </Stack>
+
+                  <Divider />
+
+                  {activeCommentPostId === post._id && (
+                    <Box sx={{ margin: isMobile ? 1 : 1.5 }}>
+                      <CommunityComments
+                        post={post}
+                        user={user}
+                        onCommentsChanged={(newCount) =>
+                          setCommentCounts((prev) => ({ ...prev, [post._id]: newCount }))
                         }
-                        size={isMobile ? 'small' : 'medium'}
-                        sx={{ textTransform: 'none', color: 'text.secondary', fontSize: btnFontSize }}
-                      >
-                        Like {post?.likes || 0}
-                      </Button>
-
-                      <Button
-                        startIcon={
-                          activeCommentPostId === post._id
-                            ? <ChatIcon fontSize={iconFontSize} sx={{ color: '#0084ff' }} />
-                            : <ChatIcon fontSize={iconFontSize} />
-                        }
-                        onClick={() =>
-                          setActiveCommentPostId((prev) => prev === post._id ? null : post._id)
-                        }
-                        size={isMobile ? 'small' : 'medium'}
-                        sx={{ textTransform: 'none', color: 'text.secondary', fontSize: btnFontSize }}
-                      >
-                        Comments
-                      </Button>
-
-                      <Button
-                        startIcon={<ShareIcon fontSize={iconFontSize} />}
-                        size={isMobile ? 'small' : 'medium'}
-                        sx={{ textTransform: 'none', color: 'text.secondary', fontSize: btnFontSize }}
-                      >
-                        Share
-                      </Button>
-                    </Stack>
-
-                    <Divider />
-
-                    {activeCommentPostId === post._id && (
-                      <Box sx={{ margin: isMobile ? 1 : 1.5 }}>
-                        <CommunityComments post={post} user={user} />
-                      </Box>
-                    )}
-                  </Paper>
-                ))
-              )}
-            </Box>
+                      />
+                    </Box>
+                  )}
+                </Paper>
+              ))
+            )}
           </Box>
-        </PageLayout>
 
-        {/* ── Right: Sidebar (visible on sm and up, independent fixed scroll) ── */}
-        {showSidebar && (
-          <Grid
-            sx={{
-              mt: { sm: 8, md: 12 },
-              width: { sm: '260px', md: '340px', lg: '380px' },
-              minWidth: { sm: '260px', md: '340px', lg: '380px' },
-              flexShrink: 0,
-              position: 'sticky',
-              top: 20,
-              height: SIDEBAR_SCROLL_HEIGHT,
-              overflowY: 'auto',
-              overflowX: 'hidden',
-              pr: 1,
-              '&::-webkit-scrollbar': { width: 6 },
-              '&::-webkit-scrollbar-thumb': { backgroundColor: '#E0D4C8', borderRadius: 4 },
-            }}
-          >
-            <SidebarContent />
-          </Grid>
-        )}
-      </Box>
+          {/* SidebarContent */}
+          {showSidebar && (
+            <Box
+              sx={{
+                flex: {
+                  sm: "0 0 300px",
+                  md: "0 0 340px",
+                  lg: "0 0 360px",
+                  xl: "0 0 380px",
+                },
+                width: "100%",
+                maxWidth: {
+                  sm: 300,
+                  md: 340,
+                  lg: 360,
+                  xl: 380,
+                },
+                minWidth: {
+                  sm: 260,
+                  md: 280,
+                  lg: 300,
+                },
+                flexShrink: 0,
+
+                position: "sticky",
+                top: 20,
+                height: SIDEBAR_SCROLL_HEIGHT,
+                maxHeight: SIDEBAR_SCROLL_HEIGHT,
+
+                overflowY: "auto",
+                overflowX: "hidden",
+
+                "&::-webkit-scrollbar": {
+                  width: 1,
+                },
+                "&::-webkit-scrollbar-thumb": {
+                  backgroundColor: "#E0D4C8",
+                  borderRadius: 4,
+                },
+                "&::-webkit-scrollbar-thumb:hover": {
+                  backgroundColor: "#D4C4B4",
+                },
+                scrollbarWidth: "thin",
+                scrollbarColor: "#E0D4C8 transparent",
+              }}
+            >
+              <Discover />
+            </Box>
+          )}
+        </Box>
+      </PageLayout>
     </>
 
 
   );
 }
+
