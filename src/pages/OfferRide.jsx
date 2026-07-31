@@ -228,6 +228,82 @@ export default function OfferRide() {
 
   const TOASTS = ToastConfig();
 
+const reviewItems = isFlight
+  ? [
+      [MapPin, "Route", `${form.fromAirport || "—"} → ${form.toAirport || "—"}`],
+      [MapPin, "Country", `${form.fromCountry || "—"} → ${form.toCountry || "—"}`],
+      [Calendar, "Date & Departure", `${form.date || "—"} at ${form.time || "—"}`],
+      [Clock, "Journey Duration", form.duration || "—"],
+      [Plane, "Flight Number", form.flightNumber || "—"],
+      [Plane, "Airline Name", form.airlineName || "—"],
+
+      form.travellerType && [Users, "Traveller Type", form.travellerType],
+      form.language?.length > 0 && [
+        Languages,
+        "Language",
+        form.language.join(", "),
+      ],
+
+      [Users, "Gender Preference", form.genderPreference],
+      [Users, "Age Group Preference", form.ageGroupPreference],
+      [HeartPulse, "Medical Assistance", form.medicalAssistance ? "Yes" : "No"],
+      [Languages, "Language Support", form.languageSupport ? "Yes" : "No"],
+      [MapPin, "Transit Help", form.transitHelp ? "Yes" : "No"],
+      [Luggage, "Baggage Help", form.baggageHelp ? "Yes" : "No"],
+    ].filter(Boolean)
+  : [
+      [MapPin, "From → Destination", `${form.from || "—"} → ${form.destination || "—"}`],
+      [Calendar, "Date & Time", `${form.date || "—"} at ${form.time || "—"}`],
+
+      // Duration only for Car & Bike
+      (isCar || isBike) && [Clock, "Journey Duration", form.duration || "—"],
+
+      [Car, "Mode of Travel", form.modeOfTravel],
+
+      // Seats only for Car
+      isCar && [Users, "Available Seats", form.availableSeats],
+
+      form.travellerType && [Users, "Traveller Type", form.travellerType],
+
+      form.language?.length > 0 && [
+        Languages,
+        "Language",
+        form.language.join(", "),
+      ],
+
+      [Users, "Gender Preference", form.genderPreference],
+
+      ...(isCar
+  ? [
+      [
+        HeartPulse,
+        "Medical Assistance",
+        form.medicalAssistance ? "Yes" : "No",
+      ],
+      [
+        MapPin,
+        "Transit Help",
+        form.transitHelp ? "Yes" : "No",
+      ],
+      [
+        Luggage,
+        "Baggage Help",
+        form.baggageHelp ? "Yes" : "No",
+      ],
+    ]
+  : []),
+      (isCar || isBike) &&
+        form.fuelSharing && [
+          Fuel,
+          "Fuel Sharing",
+          `₹ ${form.price}`,
+        ],
+
+      [Users, "Age Group Preference", form.ageGroupPreference],
+
+      [Languages, "Language Support", form.languageSupport ? "Yes" : "No"],
+
+    ].filter(Boolean);
   /* ──────────────── VALIDATION (unchanged logic) ──────────────── */
   const validateStep = () => {
     setShowErrors(true);
@@ -1284,127 +1360,16 @@ export default function OfferRide() {
                     "&:last-child": { pb: { xs: 1.1, sm: 2.25 } },
                   }}
                 >
-                  <Stack spacing={0}>
-                    {(isFlight
-                      ? [
-                        [
-                          MapPin,
-                          "Route",
-                          `${form.fromAirport || "—"} → ${form.toAirport || "—"}`,
-                        ],
-                        [
-                          MapPin,
-                          "Country",
-                          `${form.fromCountry || "—"} → ${form.toCountry || "—"}`,
-                        ],
-                        [
-                          Calendar,
-                          "Date & Departure",
-                          `${form.date || "—"} at ${form.time || "—"}`,
-                        ],
-                        [Clock, "Journey Duration", form.duration || "—"],
-                        [Plane, "Flight Number", form.flightNumber || "—"],
-                        [Plane, "Airline Name", form.airlineName || "—"],
-                        // [
-                        //   MapPin,
-                        //   "Transit Airport",
-                        //   form.transitAirport || "No transit",
-                        // ],
-                        [Users, "Traveller Type", form.travellerType || "—"],
-                        [Languages, "Language", form.language || "—"],
-                        [Users, "Gender Preference", form.genderPreference],
-                        [
-                          Users,
-                          "Age Group Preference",
-                          form.ageGroupPreference,
-                        ],
-                        [
-                          HeartPulse,
-                          "Medical Assistance",
-                          form.medicalAssistance ? "Yes" : "No",
-                        ],
-                        [
-                          Languages,
-                          "Language Support",
-                          form.languageSupport ? "Yes" : "No",
-                        ],
-                        [
-                          MapPin,
-                          "Transit Help",
-                          form.transitHelp ? "Yes" : "No",
-                        ],
-                        [
-                          Luggage,
-                          "Baggage Help",
-                          form.baggageHelp ? "Yes" : "No",
-                        ],
-                      ]
-                      : [
-                        [
-                          MapPin,
-                          "From → Destination",
-                          `${form.from || "—"} → ${form.destination || "—"}`,
-                        ],
-                        [
-                          Calendar,
-                          "Date & Time",
-                          `${form.date || "—"} at ${form.time || "—"}`,
-                        ],
-                        [Clock, "Journey Duration", form.duration || "—"],
-                        [Car, "Mode of Travel", form.modeOfTravel],
-                        [Users, "Available Seats", form.availableSeats],
-                        [Users, "Traveller Type", form.travellerType || "—"],
-                        [Languages, "Language", form.language || "—"],
-                        [Users, "Gender Preference", form.genderPreference],
-                        [
-                          Fuel,
-                          "Fuel Sharing",
-                          // form.fuelSharing ? "Yes" : "No",
-                          form.price,
-                        ],
-                        [
-                          Users,
-                          "Age Group Preference",
-                          form.ageGroupPreference,
-                        ],
-                        [
-                          HeartPulse,
-                          "Medical Assistance",
-                          form.medicalAssistance ? "Yes" : "No",
-                        ],
-                        [
-                          Languages,
-                          "Language Support",
-                          form.languageSupport ? "Yes" : "No",
-                        ],
-                        [
-                          MapPin,
-                          "Transit Help",
-                          form.transitHelp ? "Yes" : "No",
-                        ],
-                        [
-                          Luggage,
-                          "Baggage Help",
-                          form.baggageHelp ? "Yes" : "No",
-                        ],
-                        [
-                          Fuel,
-                          "Fuel Sharing",
-                          // form.fuelSharing ? "Yes" : "No",
-                          // form.price,
-                          `$ - ${form.price}`,
-                        ],
-                        [Users, "Gender Preference", form.genderPreference],
-                      ]
-                    ).map(([Icon, label, value]) => (
-                      <ReviewItem
-                        key={label}
-                        icon={Icon}
-                        label={label}
-                        value={value}
-                      />
-                    ))}
-                  </Stack>
+              <Stack spacing={0}>
+  {reviewItems.map(([Icon, label, value]) => (
+    <ReviewItem
+      key={label}
+      icon={Icon}
+      label={label}
+      value={value}
+    />
+  ))}
+</Stack>
                 </CardContent>
               </Card>
 

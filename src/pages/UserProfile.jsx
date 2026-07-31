@@ -356,6 +356,7 @@ const UserProfile = () => {
   };
 
   const [tab, setTab] = useState(0);
+  
   const handleCopy = (value) => {
     navigator.clipboard.writeText(value);
     toast.success("Copied to Clipboard!", toasts);

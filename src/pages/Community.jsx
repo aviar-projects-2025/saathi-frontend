@@ -146,7 +146,7 @@ export default function Community() {
 
   const getComments = async (postId) => {
     try {
-      setLoading(true);
+      // setLoading(true);
       const res = await axios.get(Api + `/community/comments/${postId}`);
       setCommentCounts((prev) => ({ ...prev, [postId]: res.data.data.comments.length }));
     } catch (error) {
