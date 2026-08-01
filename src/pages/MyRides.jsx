@@ -36,6 +36,7 @@ import {
   useTheme,
 } from "@mui/material";
 import Ridebook from "./Ridebook.jsx";
+import OfferRide from "./OfferRide.jsx";
 // import { useTheme } from '@mui/material/styles';
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
@@ -214,80 +215,15 @@ function RidePaginationBar({ count, page, onChange, isMobile }) {
   );
 }
 
-// ── Edit Ride Modal ──────────────────────────────────────────────────────────
+
+
 function EditRideModal({ ride, onSave, onClose }) {
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
-  const pad2 = (n) => String(n).padStart(2, "0");
-
-  const startDate = new Date(ride.startTime);
-
-  const initialDate = !isNaN(startDate)
-    ? `${startDate.getFullYear()}-${pad2(startDate.getMonth() + 1)}-${pad2(startDate.getDate())}`
-    : "";
-  const initialTime = !isNaN(startDate)
-    ? `${pad2(startDate.getHours())}:${pad2(startDate.getMinutes())}`
-    : "";
-
-  const [form, setForm] = useState({
-    from: ride.from ?? "",
-    destination: ride.destination ?? ride.to ?? "",
-    date: initialDate,
-    time: initialTime,
-    modeOfTravel: ride.modeOfTravel ?? "",
-    description: ride.description ?? "",
-    availableSeats: ride.availableSeats ?? ride.seats ?? 1,
-    genderPreference: ride.genderPreference ?? "Any",
-    fuelSharing: ride.fuelSharing ?? false,
-  });
-
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-
-  const update = (field, value) => setForm((f) => ({ ...f, [field]: value }));
-
-  const handleEdit = async () => {
-    setSaving(true);
-    setError("");
-
-    if (!form.date || !form.time) {
-      setError("Please select both a date and a time.");
-      setSaving(false);
-      return;
-    }
-
-    try {
-      const localDateTime = new Date(`${form.date}T${form.time}:00`);
-
-      if (isNaN(localDateTime)) {
-        setError("Invalid date or time. Please check your input.");
-        setSaving(false);
-        return;
-      }
-
-      const startTime = localDateTime.toISOString();
-      const { date, time, ...rest } = form;
-      const payload = { ...rest, startTime };
-      const response = await axios.patch(
-        `${Api}/rides/edit/${ride._id || ride.id}`,
-        payload,
-      );
-      const updated = response.data?.data ?? { ...ride, ...payload };
-      onSave(updated);
-    } catch (err) {
-      setError(
-        err?.response?.data?.message ||
-        "Failed to update ride. Please try again.",
-      );
-    } finally {
-      setSaving(false);
-    }
-  };
-
   return (
     <Dialog
-      open
+      open={Boolean(ride)}
       onClose={onClose}
       maxWidth="sm"
       fullWidth
@@ -295,7 +231,6 @@ function EditRideModal({ ride, onSave, onClose }) {
       PaperProps={{
         sx: { borderRadius: { xs: 0, sm: 3 }, m: { xs: 0, sm: 2, md: 4 } },
       }}
-      sx={{ p: 1.5 }}
     >
       <DialogTitle
         sx={{
@@ -322,161 +257,16 @@ function EditRideModal({ ride, onSave, onClose }) {
         </IconButton>
       </DialogTitle>
 
-      <DialogContent sx={{ pt: 3, mt: 1, ...noZoomInputSx }}>
-        <Stack spacing={2} sx={{ mt: 2 }}>
-          <TextField
-            label="From"
-            fullWidth
-            size="small"
-            value={form.from}
-            onChange={(e) => update("from", e.target.value)}
-            placeholder="Chennai"
-          />
-          <TextField
-            label="Destination"
-            fullWidth
-            size="small"
-            value={form.destination}
-            onChange={(e) => update("destination", e.target.value)}
-            placeholder="Bangalore"
-          />
-
-          <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-            <Stack sx={{ flex: 1 }}>
-              <InputLabel shrink>Date</InputLabel>
-              <TextField
-                fullWidth
-                size="small"
-                type="date"
-                value={form.date}
-                onChange={(e) => update("date", e.target.value)}
-                InputLabelProps={{ shrink: true }}
-              />
-            </Stack>
-            <Stack sx={{ flex: 1 }}>
-              <InputLabel shrink>Time</InputLabel>
-              <TextField
-                fullWidth
-                size="small"
-                type="time"
-                value={form.time}
-                onChange={(e) => update("time", e.target.value)}
-                InputLabelProps={{ shrink: true }}
-              />
-            </Stack>
-          </Stack>
-
-          <FormControl fullWidth size="small">
-            <InputLabel>Mode of Travel</InputLabel>
-            <Select
-              value={form.modeOfTravel}
-              label="Mode of Travel"
-              onChange={(e) => update("modeOfTravel", e.target.value)}
-            >
-              <MenuItem value="Car">🚗 Car</MenuItem>
-              <MenuItem value="Bus">🚌 Bus</MenuItem>
-              <MenuItem value="Bike">🏍️ Bike</MenuItem>
-              <MenuItem value="Flight">✈️ Flight</MenuItem>
-              {/* <MenuItem value="Ship">🚢 Ship</MenuItem> */}
-              <MenuItem value="Train">🚆 Train</MenuItem>
-            </Select>
-          </FormControl>
-
-          <TextField
-            label="Description"
-            fullWidth
-            multiline
-            rows={3}
-            size="small"
-            value={form.description}
-            onChange={(e) => update("description", e.target.value)}
-            placeholder="Traveling to Bangalore for a weekend trip..."
-          />
-
-          <Box>
-            <Typography
-              variant="subtitle2"
-              fontWeight={700}
-              gutterBottom
-              sx={{ fontSize: { xs: "0.8rem", sm: "0.875rem" } }}
-            >
-              Available seats: {form.availableSeats}
-            </Typography>
-            <Slider
-              value={form.availableSeats}
-              onChange={(_, value) => update("availableSeats", value)}
-              min={1}
-              max={7}
-              step={1}
-              marks
-              valueLabelDisplay="auto"
-              sx={{ color: "primary.main", py: { xs: 1.5, sm: 1 } }}
-            />
-          </Box>
-
-          <FormControl fullWidth size="small">
-            <InputLabel>Gender Preference</InputLabel>
-            <Select
-              value={form.genderPreference}
-              label="Gender Preference"
-              onChange={(e) => update("genderPreference", e.target.value)}
-            >
-              <MenuItem value="Any">Any</MenuItem>
-              <MenuItem value="Male">Male</MenuItem>
-              <MenuItem value="Female">Female</MenuItem>
-            </Select>
-          </FormControl>
-
-          <FormControlLabel
-            control={
-              <Switch
-                checked={form.fuelSharing}
-                onChange={(e) => update("fuelSharing", e.target.checked)}
-                color="primary"
-              />
-            }
-            label="Fuel Sharing"
-          />
-
-          {error && (
-            <Alert severity="error" sx={{ borderRadius: 2 }}>
-              {error}
-            </Alert>
-          )}
-        </Stack>
-      </DialogContent>
-
-      <DialogActions sx={{ px: 3, pb: 2.5, gap: 1, flexWrap: "wrap" }}>
-        <Button
-          onClick={onClose}
-          variant="outlined"
-          sx={{
-            borderRadius: 2,
-            textTransform: "none",
-            flex: { xs: "1 1 auto", sm: "0 0 auto" },
-            minHeight: 44,
-          }}
-        >
-          Cancel
-        </Button>
-        <Button
-          onClick={handleEdit}
-          variant="contained"
-          disabled={saving}
-          sx={{
-            borderRadius: 2,
-            textTransform: "none",
-            fontWeight: 700,
-            flex: { xs: "1 1 auto", sm: "0 0 auto" },
-            minHeight: 44,
-          }}
-        >
-          {saving ? "Saving..." : "Save changes"}
-        </Button>
-      </DialogActions>
+      {/* OfferRide owns the form, stepper, validation, and its own
+          Back / Continue / Save Changes buttons — nothing extra needed here */}
+      {ride && (
+        <OfferRide ride={ride} onSave={onSave} onClose={onClose} />
+      )}
     </Dialog>
   );
 }
+
+
 
 // ── Delete Confirm Dialog ────────────────────────────────────────────────────
 function DeleteConfirmDialog({ ride, onConfirm, onClose }) {

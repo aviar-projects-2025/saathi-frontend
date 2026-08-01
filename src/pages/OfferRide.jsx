@@ -53,7 +53,6 @@ import { toast } from "react-toastify";
 import ToastConfig from "../components/ToastConfig";
 
 /* ──────────────── THEME TOKENS ──────────────── */
-// Saffron accent — swap these two if you ever want to re-theme.
 const ACCENT = "#FF9933";
 const ACCENT_DARK = "#CC7722";
 const ACCENT_TINT = "rgba(255,153,51,0.12)";
@@ -88,7 +87,6 @@ const INITIAL_FORM = {
   toAirport: "",
   flightNumber: "",
   airlineName: "",
-  // transitAirport: "",
   travellerType: "",
   language: [],
   ageGroupPreference: "Any",
@@ -202,13 +200,25 @@ function ReviewItem({ icon: Icon, label, value }) {
   );
 }
 
-export default function OfferRide() {
+/**
+ * OfferRide doubles as the "create" and "edit" modal.
+ *
+ * Props:
+ *  - ride:     existing ride object -> when present, component opens in EDIT mode
+ *  - onSave:   callback(updatedRide) called after a successful edit
+ *  - onClose:  optional callback called after create/edit finishes (e.g. to close a dialog)
+ */
+export default function OfferRide({ ride, onSave, onClose, selectedRide }) {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTiny = useMediaQuery("(max-width:300px)");
   const inputSize = isMobile ? "small" : "medium";
 
+  const isEditMode = Boolean(ride);
+
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
   const [step, setStep] = useState(0);
   const [submitted, setSubmitted] = useState(false);
   const [showErrors, setShowErrors] = useState(false);
@@ -228,82 +238,88 @@ export default function OfferRide() {
 
   const TOASTS = ToastConfig();
 
-const reviewItems = isFlight
-  ? [
-      [MapPin, "Route", `${form.fromAirport || "—"} → ${form.toAirport || "—"}`],
-      [MapPin, "Country", `${form.fromCountry || "—"} → ${form.toCountry || "—"}`],
-      [Calendar, "Date & Departure", `${form.date || "—"} at ${form.time || "—"}`],
-      [Clock, "Journey Duration", form.duration || "—"],
-      [Plane, "Flight Number", form.flightNumber || "—"],
-      [Plane, "Airline Name", form.airlineName || "—"],
+  /* ──────────────── HYDRATE FORM WHEN EDITING ──────────────── */
+  useEffect(() => {
+    if (!ride) return;
 
-      form.travellerType && [Users, "Traveller Type", form.travellerType],
-      form.language?.length > 0 && [
-        Languages,
-        "Language",
-        form.language.join(", "),
-      ],
+    const start = ride.startTime ? new Date(ride.startTime) : null;
+    const pad = (n) => String(n).padStart(2, "0");
 
-      [Users, "Gender Preference", form.genderPreference],
-      [Users, "Age Group Preference", form.ageGroupPreference],
-      [HeartPulse, "Medical Assistance", form.medicalAssistance ? "Yes" : "No"],
-      [Languages, "Language Support", form.languageSupport ? "Yes" : "No"],
-      [MapPin, "Transit Help", form.transitHelp ? "Yes" : "No"],
-      [Luggage, "Baggage Help", form.baggageHelp ? "Yes" : "No"],
-    ].filter(Boolean)
-  : [
-      [MapPin, "From → Destination", `${form.from || "—"} → ${form.destination || "—"}`],
-      [Calendar, "Date & Time", `${form.date || "—"} at ${form.time || "—"}`],
+    const date = start
+      ? `${start.getFullYear()}-${pad(start.getMonth() + 1)}-${pad(start.getDate())}`
+      : "";
+    const time = start ? `${pad(start.getHours())}:${pad(start.getMinutes())}` : "";
 
-      // Duration only for Car & Bike
-      (isCar || isBike) && [Clock, "Journey Duration", form.duration || "—"],
+    setForm({
+      ...INITIAL_FORM,
+      ...ride,
+      date,
+      time,
+      availableSeats: ride.availableSeats ?? ride.totalSeats ?? 1,
+      price: ride.fuelSharing || ride.price || "",
+      fuelSharing: Boolean(ride.fuelSharing || ride.price),
+      language: ride.language || [],
+    });
+  }, [ride]);
 
-      [Car, "Mode of Travel", form.modeOfTravel],
+  const reviewItems = isFlight
+    ? [
+        [MapPin, "Route", `${form.fromAirport || "—"} → ${form.toAirport || "—"}`],
+        [MapPin, "Country", `${form.fromCountry || "—"} → ${form.toCountry || "—"}`],
+        [Calendar, "Date & Departure", `${form.date || "—"} at ${form.time || "—"}`],
+        [Clock, "Journey Duration", form.duration || "—"],
+        [Plane, "Flight Number", form.flightNumber || "—"],
+        [Plane, "Airline Name", form.airlineName || "—"],
 
-      // Seats only for Car
-      isCar && [Users, "Available Seats", form.availableSeats],
-
-      form.travellerType && [Users, "Traveller Type", form.travellerType],
-
-      form.language?.length > 0 && [
-        Languages,
-        "Language",
-        form.language.join(", "),
-      ],
-
-      [Users, "Gender Preference", form.genderPreference],
-
-      ...(isCar
-  ? [
-      [
-        HeartPulse,
-        "Medical Assistance",
-        form.medicalAssistance ? "Yes" : "No",
-      ],
-      [
-        MapPin,
-        "Transit Help",
-        form.transitHelp ? "Yes" : "No",
-      ],
-      [
-        Luggage,
-        "Baggage Help",
-        form.baggageHelp ? "Yes" : "No",
-      ],
-    ]
-  : []),
-      (isCar || isBike) &&
-        form.fuelSharing && [
-          Fuel,
-          "Fuel Sharing",
-          `₹ ${form.price}`,
+        form.travellerType && [Users, "Traveller Type", form.travellerType],
+        form.language?.length > 0 && [
+          Languages,
+          "Language",
+          form.language.join(", "),
         ],
 
-      [Users, "Age Group Preference", form.ageGroupPreference],
+        [Users, "Gender Preference", form.genderPreference],
+        [Users, "Age Group Preference", form.ageGroupPreference],
+        [HeartPulse, "Medical Assistance", form.medicalAssistance ? "Yes" : "No"],
+        [Languages, "Language Support", form.languageSupport ? "Yes" : "No"],
+        [MapPin, "Transit Help", form.transitHelp ? "Yes" : "No"],
+        [Luggage, "Baggage Help", form.baggageHelp ? "Yes" : "No"],
+      ].filter(Boolean)
+    : [
+        [MapPin, "From → Destination", `${form.from || "—"} → ${form.destination || "—"}`],
+        [Calendar, "Date & Time", `${form.date || "—"} at ${form.time || "—"}`],
 
-      [Languages, "Language Support", form.languageSupport ? "Yes" : "No"],
+        (isCar || isBike) && [Clock, "Journey Duration", form.duration || "—"],
 
-    ].filter(Boolean);
+        [Car, "Mode of Travel", form.modeOfTravel],
+
+        isCar && [Users, "Available Seats", form.availableSeats],
+
+        form.travellerType && [Users, "Traveller Type", form.travellerType],
+
+        form.language?.length > 0 && [
+          Languages,
+          "Language",
+          form.language.join(", "),
+        ],
+
+        [Users, "Gender Preference", form.genderPreference],
+
+        ...(isCar
+          ? [
+              [HeartPulse, "Medical Assistance", form.medicalAssistance ? "Yes" : "No"],
+              [MapPin, "Transit Help", form.transitHelp ? "Yes" : "No"],
+              [Luggage, "Baggage Help", form.baggageHelp ? "Yes" : "No"],
+            ]
+          : []),
+        (isCar || isBike) &&
+          form.fuelSharing && [Fuel, "Fuel Sharing", `₹ ${form.price}`],
+
+        [Users, "Age Group Preference", form.ageGroupPreference],
+
+        [Languages, "Language Support", form.languageSupport ? "Yes" : "No"],
+      ].filter(Boolean);
+
   /* ──────────────── VALIDATION (unchanged logic) ──────────────── */
   const validateStep = () => {
     setShowErrors(true);
@@ -323,27 +339,22 @@ const reviewItems = isFlight
           toast.error("Please enter From Country", TOASTS);
           return false;
         }
-
         if (!form.fromAirport.trim()) {
           toast.error("Please enter From Airport", TOASTS);
           return false;
         }
-
         if (!form.toCountry.trim()) {
           toast.error("Please enter To Country", TOASTS);
           return false;
         }
-
         if (!form.toAirport.trim()) {
           toast.error("Please enter To Airport", TOASTS);
           return false;
         }
-
         if (!form.flightNumber.trim()) {
           toast.error("Please enter Flight Number", TOASTS);
           return false;
         }
-
         if (!form.airlineName.trim()) {
           toast.error("Please enter Airline Name", TOASTS);
           return false;
@@ -353,7 +364,6 @@ const reviewItems = isFlight
           toast.error("Please enter From location", TOASTS);
           return false;
         }
-
         if (!form.destination.trim()) {
           toast.error("Please enter Destination", TOASTS);
           return false;
@@ -364,7 +374,6 @@ const reviewItems = isFlight
         toast.error("Please select Date", TOASTS);
         return false;
       }
-
       if (!form.time) {
         toast.error("Please select Time", TOASTS);
         return false;
@@ -382,22 +391,14 @@ const reviewItems = isFlight
 
       if (isFlight) {
         minimumAllowedTime.setHours(minimumAllowedTime.getHours() + 3);
-
         if (selectedDateTime < minimumAllowedTime) {
-          toast.error(
-            "Flight departure must be at least 3 hours from now.",
-            TOASTS
-          );
+          toast.error("Flight departure must be at least 3 hours from now.", TOASTS);
           return false;
         }
       } else {
         minimumAllowedTime.setHours(minimumAllowedTime.getHours() + 1);
-
         if (selectedDateTime < minimumAllowedTime) {
-          toast.error(
-            "Ride start time must be at least 1 hour from now.",
-            TOASTS
-          );
+          toast.error("Ride start time must be at least 1 hour from now.", TOASTS);
           return false;
         }
       }
@@ -406,12 +407,10 @@ const reviewItems = isFlight
         toast.error("Please enter Description", TOASTS);
         return false;
       }
-
-      // Duration required only for Car & Bike
-      if ((isCar || isBike) && !form.duration.trim()) {
-        toast.error("Please enter Journey Duration", TOASTS);
-        return false;
-      }
+if (!isEditMode && (isCar || isBike) && !String(form.duration ?? "").trim()) {
+  toast.error("Please enter Journey Duration", TOASTS);
+  return false;
+}
     }
 
     if (step === 1) {
@@ -425,20 +424,17 @@ const reviewItems = isFlight
           toast.error("Please select Traveller Type", TOASTS);
           return false;
         }
-
         if (!form.language || form.language.length === 0) {
           toast.error("Select at least one language", TOASTS);
           return false;
         }
       }
 
-      // Available seats only for Car
       if (isCar && Number(form.availableSeats) < 1) {
         toast.error("Available seats should be at least 1", TOASTS);
         return false;
       }
 
-      // Fuel sharing amount required for Car & Bike only
       if ((isCar || isBike) && form.fuelSharing && !form.price) {
         toast.error("Enter Split Amount", TOASTS);
         return false;
@@ -447,27 +443,26 @@ const reviewItems = isFlight
 
     return true;
   };
+
   const { refreshRides } = useRide();
 
   const formReset = () => setForm(INITIAL_FORM);
 
-  const handleSubmit = async () => {
-    if (isSubmitted) return;
-    const payload = {
-      createdBy: user?.id,
-      modeOfTravel: form.modeOfTravel,
-      startTime: new Date(`${form.date}T${form.time}`).toISOString(),
-      description: form.description,
-      duration: form.duration,
-      genderPreference: form.genderPreference,
-      travellerType: form.travellerType,
-      language: form.language,
-      ageGroupPreference: form.ageGroupPreference,
-      medicalAssistance: form.medicalAssistance,
-      languageSupport: form.languageSupport,
-      status: "OPEN",
-      ...(isFlight
-        ? {
+  const buildPayload = () => ({
+    createdBy: user?.id,
+    modeOfTravel: form.modeOfTravel,
+    startTime: new Date(`${form.date}T${form.time}`).toISOString(),
+    description: form.description,
+    duration: form.duration,
+    genderPreference: form.genderPreference,
+    travellerType: form.travellerType,
+    language: form.language,
+    ageGroupPreference: form.ageGroupPreference,
+    medicalAssistance: form.medicalAssistance,
+    languageSupport: form.languageSupport,
+    status: form.status || "OPEN",
+    ...(isFlight
+      ? {
           fromCountry: form.fromCountry,
           fromAirport: form.fromAirport,
           toCountry: form.toCountry,
@@ -476,7 +471,6 @@ const reviewItems = isFlight
           destination: form.toAirport,
           flightNumber: form.flightNumber,
           airlineName: form.airlineName,
-          // transitAirport: form.transitAirport,
           travellerType: form.travellerType,
           language: form.language,
           ageGroupPreference: form.ageGroupPreference,
@@ -484,14 +478,17 @@ const reviewItems = isFlight
           languageSupport: form.languageSupport,
           baggageHelp: form.baggageHelp,
         }
-        : {
+      : {
           from: form.from,
           destination: form.destination,
           availableSeats: form.availableSeats,
           totalSeats: form.availableSeats,
           fuelSharing: form.price,
         }),
-    };
+  });
+
+  const createRide = async () => {
+    const payload = buildPayload();
 
     try {
       setIsSubmitted(true);
@@ -533,11 +530,79 @@ const reviewItems = isFlight
       });
     } finally {
       setIsSubmitted(false);
-
       setTimeout(() => {
-        navigate("/myride");
+        if (onClose) onClose();
+        else navigate("/myride");
       }, 3000);
     }
+  };
+
+  const updateRide = async () => {
+    setError("");
+
+    if (!form.date || !form.time) {
+      setError("Please select both a date and a time.");
+      return;
+    }
+
+    const localDateTime = new Date(`${form.date}T${form.time}:00`);
+    if (isNaN(localDateTime)) {
+      setError("Invalid date or time. Please check your input.");
+      return;
+    }
+
+    const payload = buildPayload();
+
+    try {
+      setIsSubmitted(true);
+      setSaving(true);
+
+      const response = await axios.patch(
+        `${Api}/rides/edit/${ride._id || ride.id}`,
+        payload
+      );
+      const updated = response.data?.data ?? { ...ride, ...payload };
+
+      toast.success("Ride Updated Successfully...!", {
+        position: isTab ? "top-center" : "top-right",
+        autoClose: 2000,
+        hideProgressBar: true,
+        closeButton: false,
+        style: {
+          width: isTab ? "90vw" : "360px",
+          maxWidth: isTab ? "320px" : "360px",
+          fontSize: isTab ? "13px" : "15px",
+          padding: isTab ? "8px 12px" : "12px 16px",
+          borderRadius: isTab ? "8px" : "10px",
+          minHeight: isTab ? "42px" : "52px",
+          margin: "0 auto",
+        },
+      });
+
+      refreshRides();
+      setSubmitted(true);
+      setShowErrors(false);
+      onSave?.(updated);
+    } catch (err) {
+      setError(
+        err?.response?.data?.message || "Failed to update ride. Please try again."
+      );
+      toast.error(
+        err?.response?.data?.message || err.message,
+        TOASTS
+      );
+    } finally {
+      setIsSubmitted(false);
+      setSaving(false);
+      setTimeout(() => {
+        if (onClose) onClose();
+      }, 1500);
+    }
+  };
+
+  const handleSubmit = () => {
+    if (isSubmitted) return;
+    return isEditMode ? updateRide() : createRide();
   };
 
   const languages = [
@@ -570,19 +635,10 @@ const reviewItems = isFlight
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          // overflow: "hidden",
           boxSizing: "border-box",
-          // px: { xs: 2, sm: 3 },
         }}
       >
-        <Box
-          sx={{
-            maxWidth: 480,
-            width: "100%",
-            textAlign: "center",
-          }}
-        >
-          {/* Icon in a soft circular badge */}
+        <Box sx={{ maxWidth: 480, width: "100%", textAlign: "center" }}>
           <Box
             sx={{
               width: isMobile ? 72 : 88,
@@ -593,14 +649,9 @@ const reviewItems = isFlight
               alignItems: "center",
               justifyContent: "center",
               mx: "auto",
-              // mb: 3,
             }}
           >
-            <CheckCircle2
-              size={isMobile ? 40 : 48}
-              color="#52B788"
-              strokeWidth={2.2}
-            />
+            <CheckCircle2 size={isMobile ? 40 : 48} color="#52B788" strokeWidth={2.2} />
           </Box>
 
           <Typography
@@ -608,26 +659,28 @@ const reviewItems = isFlight
             fontWeight={800}
             sx={{ fontSize: { xs: "1.25rem", sm: "1.6rem" }, mb: 1 }}
           >
-            You're all set!
+            {isEditMode ? "Changes saved!" : "You're all set!"}
           </Typography>
 
           <Typography
             color="text.secondary"
             sx={{ fontSize: { xs: "0.88rem", sm: "1rem" }, mb: 0.5 }}
           >
-            Your ride has been shared with the Saathi community.
+            {isEditMode
+              ? "Your ride details have been updated."
+              : "Your ride has been shared with the Saathi community."}
           </Typography>
 
-          <Typography
-            color="text.secondary"
-            sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem" }, mb: 4 }}
-          >
-            We'll notify you when someone requests to join.
+          <Typography color="text.secondary" sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem" }, mb: 4 }}>
+            {isEditMode
+              ? "Riders will see the latest details right away."
+              : "We'll notify you when someone requests to join."}
           </Typography>
         </Box>
       </Box>
     );
   }
+
   /* ──────────────── MAIN RENDER ──────────────── */
   return (
     <PageLayout>
@@ -668,18 +721,12 @@ const reviewItems = isFlight
             <Typography
               variant="h5"
               fontWeight={800}
-              sx={{
-                fontSize: { xs: "0.95rem", sm: "1.3rem", md: "1.5rem" },
-                lineHeight: 1.25,
-              }}
+              sx={{ fontSize: { xs: "0.95rem", sm: "1.3rem", md: "1.5rem" }, lineHeight: 1.25 }}
             >
-              Offer a Ride
+              {isEditMode ? "Edit Ride" : "Offer a Ride"}
             </Typography>
-            <Typography
-              color="text.secondary"
-              sx={{ fontSize: { xs: "0.65rem", sm: "0.8rem" } }}
-            >
-              Share your journey with the community
+            <Typography color="text.secondary" sx={{ fontSize: { xs: "0.65rem", sm: "0.8rem" } }}>
+              {isEditMode ? "Update your ride details" : "Share your journey with the community"}
             </Typography>
           </Box>
         </Stack>
@@ -710,8 +757,7 @@ const reviewItems = isFlight
               "& .MuiStepIcon-root": {
                 fontSize: { xs: "1.1rem", sm: "1.6rem", md: "1.8rem" },
               },
-              "& .MuiStepIcon-root.Mui-active, & .MuiStepIcon-root.Mui-completed":
-              {
+              "& .MuiStepIcon-root.Mui-active, & .MuiStepIcon-root.Mui-completed": {
                 color: ACCENT,
               },
               "& .MuiStepConnector-line": { minWidth: { xs: 2, sm: 16 } },
@@ -755,62 +801,34 @@ const reviewItems = isFlight
                   onChange={(e) => update("modeOfTravel", e.target.value)}
                   sx={selectSx}
                 >
-                  <MenuItem value="Car" sx={menuItemSx}>
-                    🚗 Car
-                  </MenuItem>
-                  <MenuItem value="Bus" sx={menuItemSx}>
-                    🚌 Bus
-                  </MenuItem>
-                  <MenuItem value="Bike" sx={menuItemSx}>
-                    🏍️ Bike
-                  </MenuItem>
-                  <MenuItem value="Flight" sx={menuItemSx}>
-                    ✈️ Flight
-                  </MenuItem>
-                  <MenuItem value="Train" sx={menuItemSx}>
-                    🚆 Train
-                  </MenuItem>
+                  <MenuItem value="Car" sx={menuItemSx}>🚗 Car</MenuItem>
+                  <MenuItem value="Bus" sx={menuItemSx}>🚌 Bus</MenuItem>
+                  <MenuItem value="Bike" sx={menuItemSx}>🏍️ Bike</MenuItem>
+                  <MenuItem value="Flight" sx={menuItemSx}>✈️ Flight</MenuItem>
+                  <MenuItem value="Train" sx={menuItemSx}>🚆 Train</MenuItem>
                 </Select>
               </FormControl>
 
               {isFlight ? (
-                <Card
-                  variant="outlined"
-                  sx={{ borderRadius: 3, borderStyle: "dashed" }}
-                >
-                  <CardContent
-                    sx={{
-                      p: { xs: 1.25, sm: 2.5 },
-                      "&:last-child": { pb: { xs: 1.25, sm: 2.5 } },
-                    }}
-                  >
+                <Card variant="outlined" sx={{ borderRadius: 3, borderStyle: "dashed" }}>
+                  <CardContent sx={{ p: { xs: 1.25, sm: 2.5 }, "&:last-child": { pb: { xs: 1.25, sm: 2.5 } } }}>
                     <Stack spacing={{ xs: 1.5, sm: 2 }}>
                       <Typography
                         fontWeight={700}
-                        sx={{
-                          color: ACCENT_DARK,
-                          fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" },
-                        }}
+                        sx={{ color: ACCENT_DARK, fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" } }}
                       >
                         ✈️ Flight Details
                       </Typography>
 
-                      <Stack
-                        direction={{ xs: "column", sm: "row" }}
-                        spacing={{ xs: 1.5, sm: 2 }}
-                      >
+                      <Stack direction={{ xs: "column", sm: "row" }} spacing={{ xs: 1.5, sm: 2 }}>
                         <TextField
                           label="From Country"
                           fullWidth
                           size={inputSize}
                           value={form.fromCountry}
-                          onChange={(e) =>
-                            update("fromCountry", e.target.value)
-                          }
+                          onChange={(e) => update("fromCountry", e.target.value)}
                           error={!form.fromCountry && showErrors}
-                          helperText={
-                            !form.fromCountry && showErrors ? "Required" : ""
-                          }
+                          helperText={!form.fromCountry && showErrors ? "Required" : ""}
                           sx={tfSx}
                         />
                         <TextField
@@ -818,21 +836,14 @@ const reviewItems = isFlight
                           fullWidth
                           size={inputSize}
                           value={form.fromAirport}
-                          onChange={(e) =>
-                            update("fromAirport", e.target.value)
-                          }
+                          onChange={(e) => update("fromAirport", e.target.value)}
                           error={!form.fromAirport && showErrors}
-                          helperText={
-                            !form.fromAirport && showErrors ? "Required" : ""
-                          }
+                          helperText={!form.fromAirport && showErrors ? "Required" : ""}
                           sx={tfSx}
                         />
                       </Stack>
 
-                      <Stack
-                        direction={{ xs: "column", sm: "row" }}
-                        spacing={{ xs: 1.5, sm: 2 }}
-                      >
+                      <Stack direction={{ xs: "column", sm: "row" }} spacing={{ xs: 1.5, sm: 2 }}>
                         <TextField
                           label="To Country"
                           fullWidth
@@ -840,9 +851,7 @@ const reviewItems = isFlight
                           value={form.toCountry}
                           onChange={(e) => update("toCountry", e.target.value)}
                           error={!form.toCountry && showErrors}
-                          helperText={
-                            !form.toCountry && showErrors ? "Required" : ""
-                          }
+                          helperText={!form.toCountry && showErrors ? "Required" : ""}
                           sx={tfSx}
                         />
                         <TextField
@@ -852,29 +861,20 @@ const reviewItems = isFlight
                           value={form.toAirport}
                           onChange={(e) => update("toAirport", e.target.value)}
                           error={!form.toAirport && showErrors}
-                          helperText={
-                            !form.toAirport && showErrors ? "Required" : ""
-                          }
+                          helperText={!form.toAirport && showErrors ? "Required" : ""}
                           sx={tfSx}
                         />
                       </Stack>
 
-                      <Stack
-                        direction={{ xs: "column", sm: "row" }}
-                        spacing={{ xs: 1.5, sm: 2 }}
-                      >
+                      <Stack direction={{ xs: "column", sm: "row" }} spacing={{ xs: 1.5, sm: 2 }}>
                         <TextField
                           label="Flight Number"
                           fullWidth
                           size={inputSize}
                           value={form.flightNumber}
-                          onChange={(e) =>
-                            update("flightNumber", e.target.value)
-                          }
+                          onChange={(e) => update("flightNumber", e.target.value)}
                           error={!form.flightNumber && showErrors}
-                          helperText={
-                            !form.flightNumber && showErrors ? "Required" : ""
-                          }
+                          helperText={!form.flightNumber && showErrors ? "Required" : ""}
                           sx={tfSx}
                         />
                         <TextField
@@ -882,25 +882,17 @@ const reviewItems = isFlight
                           fullWidth
                           size={inputSize}
                           value={form.airlineName}
-                          onChange={(e) =>
-                            update("airlineName", e.target.value)
-                          }
+                          onChange={(e) => update("airlineName", e.target.value)}
                           error={!form.airlineName && showErrors}
-                          helperText={
-                            !form.airlineName && showErrors ? "Required" : ""
-                          }
+                          helperText={!form.airlineName && showErrors ? "Required" : ""}
                           sx={tfSx}
                         />
                       </Stack>
-
                     </Stack>
                   </CardContent>
                 </Card>
               ) : (
-                <Stack
-                  direction={{ xs: "column", sm: "row" }}
-                  spacing={{ xs: 2, sm: 2 }}
-                >
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={{ xs: 2, sm: 2 }}>
                   <TextField
                     label="From"
                     fullWidth
@@ -920,9 +912,7 @@ const reviewItems = isFlight
                     onChange={(e) => update("destination", e.target.value)}
                     placeholder="Bangalore"
                     error={!form.destination && showErrors}
-                    helperText={
-                      !form.destination && showErrors ? "Required" : ""
-                    }
+                    helperText={!form.destination && showErrors ? "Required" : ""}
                     sx={tfSx}
                   />
                 </Stack>
@@ -930,10 +920,7 @@ const reviewItems = isFlight
 
               <Divider sx={{ my: { xs: 0.5, sm: 1 } }} />
 
-              <Stack
-                direction={{ xs: "column", sm: "row" }}
-                spacing={{ xs: 1.5, sm: 2 }}
-              >
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={{ xs: 1.5, sm: 2 }}>
                 <Stack sx={{ flex: 1, minWidth: 0 }}>
                   <InputLabel sx={labelSx}>
                     <Stack direction="row" spacing={0.5} alignItems="center">
@@ -955,8 +942,7 @@ const reviewItems = isFlight
                 <Stack sx={{ flex: 1, minWidth: 0 }}>
                   <InputLabel sx={labelSx}>
                     <Stack direction="row" spacing={0.5} alignItems="center">
-                      <Clock size={14} />{" "}
-                      <span>{isFlight ? "Departure Time" : "Time"}</span>
+                      <Clock size={14} /> <span>{isFlight ? "Departure Time" : "Time"}</span>
                     </Stack>
                   </InputLabel>
                   <TextField
@@ -972,7 +958,7 @@ const reviewItems = isFlight
                   />
                 </Stack>
               </Stack>
-              {isFlight || !isBusTrain && (
+              {(isFlight || !isBusTrain) && (
                 <TextField
                   label="Journey Duration (Approximate)"
                   fullWidth
@@ -981,22 +967,16 @@ const reviewItems = isFlight
                   value={form.duration}
                   onChange={(e) => {
                     const value = e.target.value;
-
-                    // Allow empty value or numbers up to 2 digits
                     if (value === "" || /^\d{0,2}$/.test(value)) {
                       update("duration", value);
                     }
                   }}
-                  inputProps={{
-                    min: 0,
-                    max: 99,
-                  }}
+                  inputProps={{ min: 0, max: 99 }}
                   error={!form.duration && showErrors}
                   helperText={!form.duration && showErrors ? "Required" : ""}
                   sx={tfSx}
                 />
               )}
-
 
               <TextField
                 label="Description"
@@ -1024,19 +1004,11 @@ const reviewItems = isFlight
               <SectionHeader
                 icon={Users}
                 title="Preferences"
-                subtitle={
-                  isFlight
-                    ? "Help us match the right companion"
-                    : "Set your ride preferences"
-                }
+                subtitle={isFlight ? "Help us match the right companion" : "Set your ride preferences"}
               />
 
               <>
-                <FormControl
-                  fullWidth
-                  size={inputSize}
-                  error={!form.travellerType && showErrors}
-                >
+                <FormControl fullWidth size={inputSize} error={!form.travellerType && showErrors}>
                   <InputLabel sx={ilSx}>Traveller Type</InputLabel>
                   <Select
                     value={form.travellerType}
@@ -1045,27 +1017,16 @@ const reviewItems = isFlight
                     sx={selectSx}
                   >
                     {TRAVELLER_TYPES.map((v) => (
-                      <MenuItem key={v} value={v} sx={menuItemSx}>
-                        {v}
-                      </MenuItem>
+                      <MenuItem key={v} value={v} sx={menuItemSx}>{v}</MenuItem>
                     ))}
                   </Select>
                   {!form.travellerType && showErrors && (
-                    <FormHelperText
-                      sx={{ fontSize: { xs: "0.62rem", sm: "0.7rem" } }}
-                    >
-                      Required
-                    </FormHelperText>
+                    <FormHelperText sx={{ fontSize: { xs: "0.62rem", sm: "0.7rem" } }}>Required</FormHelperText>
                   )}
                 </FormControl>
 
-                <FormControl
-                  fullWidth
-                  size={inputSize}
-                  error={!form.language?.length && showErrors}
-                >
+                <FormControl fullWidth size={inputSize} error={!form.language?.length && showErrors}>
                   <InputLabel sx={ilSx}>Language</InputLabel>
-
                   <Select
                     multiple
                     value={form.language || []}
@@ -1079,34 +1040,22 @@ const reviewItems = isFlight
                             key={value}
                             label={value}
                             size="small"
-                            onMouseDown={(e) => e.stopPropagation()} // 🔥 prevent dropdown open
+                            onMouseDown={(e) => e.stopPropagation()}
                             onDelete={() => {
-                              update(
-                                "language",
-                                form.language.filter((item) => item !== value),
-                              );
+                              update("language", form.language.filter((item) => item !== value));
                             }}
                           />
                         ))}
                       </Box>
                     )}
-                    MenuProps={{
-                      disablePortal: true, // keeps dropdown under field
-                    }}
+                    MenuProps={{ disablePortal: true }}
                   >
                     {languages.map((lang) => (
-                      <MenuItem key={lang} value={lang} sx={menuItemSx}>
-                        {lang}
-                      </MenuItem>
+                      <MenuItem key={lang} value={lang} sx={menuItemSx}>{lang}</MenuItem>
                     ))}
                   </Select>
-
                   {!form.language?.length && showErrors && (
-                    <FormHelperText
-                      sx={{ fontSize: { xs: "0.62rem", sm: "0.7rem" } }}
-                    >
-                      Required
-                    </FormHelperText>
+                    <FormHelperText sx={{ fontSize: { xs: "0.62rem", sm: "0.7rem" } }}>Required</FormHelperText>
                   )}
                 </FormControl>
 
@@ -1115,35 +1064,23 @@ const reviewItems = isFlight
                   <Select
                     value={form.ageGroupPreference}
                     label="Age Group Preference"
-                    onChange={(e) =>
-                      update("ageGroupPreference", e.target.value)
-                    }
+                    onChange={(e) => update("ageGroupPreference", e.target.value)}
                     sx={selectSx}
                   >
                     {AGE_GROUPS.map((v) => (
-                      <MenuItem key={v} value={v} sx={menuItemSx}>
-                        {v}
-                      </MenuItem>
+                      <MenuItem key={v} value={v} sx={menuItemSx}>{v}</MenuItem>
                     ))}
                   </Select>
                 </FormControl>
+
                 {!isBike && (
                   <Card variant="outlined" sx={{ borderRadius: 3 }}>
-                    <CardContent
-                      sx={{
-                        p: { xs: 1.1, sm: 2 },
-                        "&:last-child": { pb: { xs: 1.1, sm: 2 } },
-                      }}
-                    >
+                    <CardContent sx={{ p: { xs: 1.1, sm: 2 }, "&:last-child": { pb: { xs: 1.1, sm: 2 } } }}>
                       <Typography
                         variant="caption"
                         fontWeight={700}
                         color="text.secondary"
-                        sx={{
-                          fontSize: { xs: "0.62rem", sm: "0.72rem" },
-                          textTransform: "uppercase",
-                          letterSpacing: 0.4,
-                        }}
+                        sx={{ fontSize: { xs: "0.62rem", sm: "0.72rem" }, textTransform: "uppercase", letterSpacing: 0.4 }}
                       >
                         Assistance Needed
                       </Typography>
@@ -1151,10 +1088,7 @@ const reviewItems = isFlight
                         sx={{
                           mt: 1,
                           display: "grid",
-                          gridTemplateColumns: {
-                            xs: "repeat(auto-fit, minmax(130px, 1fr))",
-                            sm: "1fr 1fr",
-                          },
+                          gridTemplateColumns: { xs: "repeat(auto-fit, minmax(130px, 1fr))", sm: "1fr 1fr" },
                           gap: { xs: 0.25, sm: 0.5 },
                         }}
                       >
@@ -1175,26 +1109,10 @@ const reviewItems = isFlight
                               />
                             }
                             label={
-                              <Stack
-                                direction="row"
-                                spacing={0.5}
-                                alignItems="center"
-                                sx={{ minWidth: 0, mt: 1.5 }}
-                              >
-                                <Icon
-                                  size={14}
-                                  color={ACCENT_DARK}
-                                  style={{ flexShrink: 0 }}
-                                />
+                              <Stack direction="row" spacing={0.5} alignItems="center" sx={{ minWidth: 0, mt: 1.5 }}>
+                                <Icon size={14} color={ACCENT_DARK} style={{ flexShrink: 0 }} />
                                 <Typography
-                                  sx={{
-                                    fontSize: {
-                                      xs: "0.68rem",
-                                      sm: "0.8rem",
-                                      md: "0.875rem",
-                                    },
-                                    wordBreak: "break-word",
-                                  }}
+                                  sx={{ fontSize: { xs: "0.68rem", sm: "0.8rem", md: "0.875rem" }, wordBreak: "break-word" }}
                                 >
                                   {label}
                                 </Typography>
@@ -1207,28 +1125,17 @@ const reviewItems = isFlight
                     </CardContent>
                   </Card>
                 )}
-
               </>
+
               {isCar && (
                 <Card variant="outlined" sx={{ borderRadius: 3 }}>
-                  <CardContent
-                    sx={{
-                      p: { xs: 1.25, sm: 2.5 },
-                      "&:last-child": { pb: { xs: 1.25, sm: 2.5 } },
-                    }}
-                  >
+                  <CardContent sx={{ p: { xs: 1.25, sm: 2.5 }, "&:last-child": { pb: { xs: 1.25, sm: 2.5 } } }}>
                     <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5 }}>
                       <Users size={16} color={ACCENT_DARK} />
                       <Typography
                         variant="subtitle2"
                         fontWeight={700}
-                        sx={{
-                          fontSize: {
-                            xs: "0.75rem",
-                            sm: "0.825rem",
-                            md: "0.875rem",
-                          },
-                        }}
+                        sx={{ fontSize: { xs: "0.75rem", sm: "0.825rem", md: "0.875rem" } }}
                       >
                         Available seats: {form.availableSeats}
                       </Typography>
@@ -1242,13 +1149,7 @@ const reviewItems = isFlight
                       step={1}
                       marks
                       valueLabelDisplay="auto"
-                      sx={{
-                        mx: { xs: 0.5, sm: 0.5 },
-                        color: ACCENT,
-                        "& .MuiSlider-markLabel": {
-                          fontSize: { xs: "0.62rem", sm: "0.7rem" },
-                        },
-                      }}
+                      sx={{ mx: { xs: 0.5, sm: 0.5 }, color: ACCENT, "& .MuiSlider-markLabel": { fontSize: { xs: "0.62rem", sm: "0.7rem" } } }}
                     />
                   </CardContent>
                 </Card>
@@ -1259,11 +1160,7 @@ const reviewItems = isFlight
                   direction={{ xs: "column", sm: "row" }}
                   spacing={2}
                   alignItems={{ xs: "stretch", sm: "center" }}
-                  sx={{
-                    width: "100%",
-                    display: "flex",
-                    justifyContent: "space-between",
-                  }}
+                  sx={{ width: "100%", display: "flex", justifyContent: "space-between" }}
                 >
                   <FormControlLabel
                     sx={{ m: 0 }}
@@ -1273,21 +1170,15 @@ const reviewItems = isFlight
                         onChange={(e) => update("fuelSharing", e.target.checked)}
                         size={isMobile ? "small" : "medium"}
                         sx={{
-                          "& .MuiSwitch-switchBase.Mui-checked": {
-                            color: ACCENT,
-                          },
-                          "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                            backgroundColor: ACCENT,
-                          },
+                          "& .MuiSwitch-switchBase.Mui-checked": { color: ACCENT },
+                          "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": { backgroundColor: ACCENT },
                         }}
                       />
                     }
                     label={
                       <Stack direction="row" spacing={0.6} alignItems="center">
                         <Fuel size={16} color={ACCENT_DARK} />
-                        <Typography sx={{ fontSize: { xs: "0.8rem", sm: "0.875rem" } }}>
-                          Fuel Sharing
-                        </Typography>
+                        <Typography sx={{ fontSize: { xs: "0.8rem", sm: "0.875rem" } }}>Fuel Sharing</Typography>
                       </Stack>
                     }
                   />
@@ -1301,14 +1192,7 @@ const reviewItems = isFlight
                       placeholder="$5"
                       error={!form.price && showErrors}
                       helperText={!form.price && showErrors ? "Required" : ""}
-                      sx={{
-                        ...tfSx,
-                        width: {
-                          xs: "100%",
-                          sm: 180,
-                          md: 220,
-                        },
-                      }}
+                      sx={{ ...tfSx, width: { xs: "100%", sm: 180, md: 220 } }}
                     />
                   )}
                 </Stack>
@@ -1323,9 +1207,7 @@ const reviewItems = isFlight
                   sx={selectSx}
                 >
                   {GENDER_OPTIONS.map((v) => (
-                    <MenuItem key={v} value={v} sx={menuItemSx}>
-                      {v}
-                    </MenuItem>
+                    <MenuItem key={v} value={v} sx={menuItemSx}>{v}</MenuItem>
                   ))}
                 </Select>
               </FormControl>
@@ -1338,56 +1220,38 @@ const reviewItems = isFlight
               <SectionHeader
                 icon={ShieldCheck}
                 title="Review & Confirm"
-                subtitle="Double-check before you post"
+                subtitle={isEditMode ? "Double-check your updates" : "Double-check before you post"}
               />
+
+              {error && (
+                <Alert severity="error" sx={{ mb: { xs: 1.5, sm: 2 }, borderRadius: 2 }}>
+                  {error}
+                </Alert>
+              )}
 
               <Alert
                 icon={<CheckCircle2 size={18} />}
                 severity="info"
-                sx={{
-                  mb: { xs: 1.5, sm: 2 },
-                  borderRadius: 2,
-                  fontSize: { xs: "0.72rem", sm: "0.8rem", md: "0.875rem" },
-                }}
+                sx={{ mb: { xs: 1.5, sm: 2 }, borderRadius: 2, fontSize: { xs: "0.72rem", sm: "0.8rem", md: "0.875rem" } }}
               >
-                Please review your details before posting.
+                {isEditMode
+                  ? "Please review your changes before saving."
+                  : "Please review your details before posting."}
               </Alert>
 
               <Card variant="outlined" sx={{ borderRadius: 3 }}>
-                <CardContent
-                  sx={{
-                    p: { xs: 1.1, sm: 2.25 },
-                    "&:last-child": { pb: { xs: 1.1, sm: 2.25 } },
-                  }}
-                >
-              <Stack spacing={0}>
-  {reviewItems.map(([Icon, label, value]) => (
-    <ReviewItem
-      key={label}
-      icon={Icon}
-      label={label}
-      value={value}
-    />
-  ))}
-</Stack>
+                <CardContent sx={{ p: { xs: 1.1, sm: 2.25 }, "&:last-child": { pb: { xs: 1.1, sm: 2.25 } } }}>
+                  <Stack spacing={0}>
+                    {reviewItems.map(([Icon, label, value]) => (
+                      <ReviewItem key={label} icon={Icon} label={label} value={value} />
+                    ))}
+                  </Stack>
                 </CardContent>
               </Card>
 
               {form.description && (
-                <Box
-                  sx={{
-                    bgcolor: "#FFF8F2",
-                    borderRadius: 2,
-                    p: { xs: 1, sm: 1.75 },
-                    mt: 1.5,
-                  }}
-                >
-                  <Stack
-                    direction="row"
-                    spacing={0.6}
-                    alignItems="center"
-                    sx={{ mb: 0.5 }}
-                  >
+                <Box sx={{ bgcolor: "#FFF8F2", borderRadius: 2, p: { xs: 1, sm: 1.75 }, mt: 1.5 }}>
+                  <Stack direction="row" spacing={0.6} alignItems="center" sx={{ mb: 0.5 }}>
                     <FileText size={14} color={ACCENT_DARK} />
                     <Typography
                       variant="caption"
@@ -1398,13 +1262,7 @@ const reviewItems = isFlight
                       DESCRIPTION
                     </Typography>
                   </Stack>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                      wordBreak: "break-word",
-                    }}
-                  >
+                  <Typography variant="body2" sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" }, wordBreak: "break-word" }}>
                     {form.description}
                   </Typography>
                 </Box>
@@ -1413,11 +1271,7 @@ const reviewItems = isFlight
           )}
 
           {/* ── Navigation buttons ── */}
-          <Stack
-            direction="row"
-            spacing={{ xs: 1, sm: 1.5 }}
-            sx={{ mt: { xs: 2.5, sm: 4 } }}
-          >
+          <Stack direction="row" spacing={{ xs: 1, sm: 1.5 }} sx={{ mt: { xs: 2.5, sm: 4 } }}>
             {step > 0 && (
               <Button
                 variant="outlined"
@@ -1438,6 +1292,25 @@ const reviewItems = isFlight
                 }}
               >
                 Back
+              </Button>
+            )}
+
+            {onClose && (
+              <Button
+                variant="text"
+                onClick={onClose}
+                size="small"
+                sx={{
+                  fontSize: { xs: "0.68rem", sm: "0.8rem", md: "0.875rem" },
+                  py: { xs: 0.9, sm: 1, md: 1.1 },
+                  px: { xs: 0.75, sm: 1.5 },
+                  minHeight: 40,
+                  borderRadius: 2.5,
+                  color: "text.secondary",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Cancel
               </Button>
             )}
 
@@ -1472,7 +1345,7 @@ const reviewItems = isFlight
               <Button
                 variant="contained"
                 onClick={handleSubmit}
-                disable={isSubmitted}
+                disabled={isSubmitted || saving}
                 size="small"
                 sx={{
                   flex: 1,
@@ -1488,7 +1361,13 @@ const reviewItems = isFlight
                   "&:hover": { bgcolor: ACCENT_DARK, boxShadow: "none" },
                 }}
               >
-                {isSubmitted ? " Ride Posting... " : " Post Your Ride "}
+                {isEditMode
+                  ? isSubmitted || saving
+                    ? " Saving Changes... "
+                    : " Save Changes "
+                  : isSubmitted
+                    ? " Ride Posting... "
+                    : " Post Your Ride "}
               </Button>
             )}
           </Stack>
