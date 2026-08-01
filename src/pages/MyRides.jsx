@@ -848,8 +848,6 @@ function RideCard({
       (req) => req.rideId?._id?.toString() === ride._id?.toString(),
     ) || [];
 
-  console.log(rideRequests, "rideRequests");
-
   const pendingCount = rideRequests.filter(
     (r) => r.status?.toUpperCase() === "PENDING",
   ).length;
@@ -946,7 +944,6 @@ function RideCard({
   return (
     <>
       <Box
-        onClick={() => setDetailsOpen(true)}
         sx={{
           p: { xs: 0, sm: 0 },
           width: "100%",
@@ -1022,22 +1019,11 @@ function RideCard({
                 }}
               />
             )}
-            {/* Completed Chip */}
-            {ride?.travelStatus === "Cancelled" && (
-              <Chip
-                size="small"
-                label="❌ Cancelled"
-                sx={{
-                  bgcolor: "#FFEBEE",
-                  color: "#9B2226",
-                  fontWeight: 700,
-                }}
-              />
-            )}
+
             {ride?.travelStatus === "Completed" && (
               <Chip
                 size="small"
-                label="✅ Completed"
+                label="Completed"
                 sx={{
                   bgcolor: "#E8F5E9",
                   color: "#2E7D32",
@@ -1138,6 +1124,7 @@ function RideCard({
           }}
         >
           <CardContent
+            onClick={() => setDetailsOpen(true)}
             sx={{
               p: {
                 xs: "10px !important",
@@ -1320,8 +1307,8 @@ function RideCard({
                           fontWeight: 600,
                         }}
                       >
-                        {ride.availableSeats} seat
-                        {ride.availableSeats === 1 ? "" : "s"}
+                        {ride.totalSeats} seat
+                        {ride.totalSeats === 1 ? "" : "s"}
                       </Typography>
                     </Stack>
                   </Box>
@@ -1533,7 +1520,6 @@ const MyRides = () => {
   useEffect(() => {
     // Listen for ride data changes from other components
     const handleRideDataChange = (event) => {
-      console.log("Ride data changed:", event.detail);
       // Refresh all data
       fetchRides();
       fetchAllSends();
@@ -1614,7 +1600,7 @@ const MyRides = () => {
           return (
             ride?.createdBy?._id === user.id &&
             !isNaN(rideStartTime) &&
-            rideStartTime > currentDateTime
+            rideStartTime > currentDateTime && ride.travelStatus != "Cancelled"
           );
         }),
       );
@@ -1626,7 +1612,7 @@ const MyRides = () => {
           return (
             ride?.createdBy?._id === user.id &&
             !isNaN(rideStartTime) &&
-            ride?.travelStatus === "Completed"
+            (ride?.travelStatus === "Completed" || ride?.travelStatus === "Cancelled")
           );
         }),
       );
@@ -1648,7 +1634,7 @@ const MyRides = () => {
           return (
             ride?.createdBy?._id === user.id &&
             rideStartTime >= currentDateTime &&
-            ride?.travelStatus !== "Completed"
+            (ride?.travelStatus !== "Completed" || ride?.travelStatus !== "Cancelled")
           );
         }),
       );
@@ -1688,9 +1674,6 @@ const MyRides = () => {
     setUpcoming([...acceptedRides, ...myUpcoming]);
   }, [allMyRequests, mypost, notifications]);
 
-  useEffect(() => {
-    console.log("🔥 notifications changed", notifications);
-  }, [notifications]);
 
   useEffect(() => {
     const currentDateTime = new Date();
@@ -1698,12 +1681,11 @@ const MyRides = () => {
     const currReqRide = allMyRequests
       .filter((ride) => {
         const rideStartTime = new Date(ride?.rideId?.startTime);
-
         return (
           !isNaN(rideStartTime) &&
           rideStartTime <= currentDateTime &&
           ride?.status === "ACCEPTED" &&
-          ride?.rideId?.travelStatus !== "Completed"
+          (ride?.rideId?.travelStatus !== "Completed")
         );
       })
       .map((ride) => ride.rideId);
@@ -1711,17 +1693,22 @@ const MyRides = () => {
     const myrides = mypost.filter((ride) => {
       const rideStartTime = new Date(ride?.startTime);
       // const rideEndTime = new Date(rideStartTime.getTime() + 3 * 60 * 60 * 1000);
+      console.log(ride,'ride')
       return (
         ride?.createdBy?._id === user.id &&
         rideStartTime <= currentDateTime &&
-        ride?.travelStatus !== "Completed"
+        (ride?.travelStatus !== "Completed" && ride?.travelStatus !== "Cancelled")
       );
     });
 
     setCurrentRide([...currReqRide, ...myrides]);
 
     const historyRide = allMyRequests
-      .filter((ride) => ride?.rideId?.travelStatus == "Completed")
+      .filter((ride) => {
+        return (
+          ride?.rideId?.travelStatus == "Completed" || ride.travelStatus === "Cancelled"
+        )
+      })
       .map((ride) => ride.rideId);
 
     const histMyPost = mypost.filter((ride) => {
@@ -1729,7 +1716,9 @@ const MyRides = () => {
       return (
         ride?.createdBy?._id === user.id &&
         !isNaN(rideStartTime) &&
-        ride?.travelStatus == "Completed"
+        (
+          ride?.travelStatus == "Completed" || ride.travelStatus === "Cancelled"
+        )
       );
     });
 

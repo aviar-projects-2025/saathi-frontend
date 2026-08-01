@@ -156,6 +156,34 @@ export default function Community() {
     }
   };
 
+  const savePost = async (post) => {
+    try {
+      const res = await axios.post(
+        `${Api}/save-post/${post._id}/${currentUser._id}`
+      );
+
+      setSavedPost((prev) => [
+        ...prev,
+        {
+          _id: res.data.data._id,
+          postId: post,
+          userId: currentUser._id,
+        },
+      ]);
+
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  
+
+  const isPostSaved = (postId) => {
+    return savedPost?.some(
+      (item) => item.postId?._id === postId
+    );
+  };
+
   // inside your component:
   const [imageMenuAnchor, setImageMenuAnchor] = useState(null);
   const isImageMenuOpen = Boolean(imageMenuAnchor);
@@ -219,7 +247,7 @@ export default function Community() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editDescription, setEditDescription] = useState("");
-  const { completion } = useUser();
+  const { completion, savedPost, setSavedPost, removeSavedPost } = useUser();
 
   const isProfileComplete = completion === 100;
   const SIDEBAR_SCROLL_HEIGHT = 'calc(100vh - 120px)';
@@ -843,7 +871,7 @@ export default function Community() {
                         </Typography>
                         <Typography variant="caption" color="text.secondary" fontSize={captionSize}
                           sx={{ fontSize: { xs: "0.6rem", sm: "0.72rem" } }}>
-                          {'tvm'} | {formattedDateTime(post?.createdAt)}
+                          {formattedDateTime(post?.createdAt)}
                         </Typography>
                       </Box>
 
@@ -1239,11 +1267,24 @@ export default function Community() {
                     </Button>
 
                     <Button
-                      startIcon={<BookmarkBorderIcon fontSize={iconFontSize} />}
+                      onClick={() => {
+                        isPostSaved(post._id)
+                          ? removeSavedPost(post._id)
+                          : savePost(post);
+                      }}
+                      startIcon={
+                        isPostSaved(post._id)
+                          ? <BookmarkBorderIcon sx={{ color: "#0084ff" }} fontSize={iconFontSize} />
+                          : <BookmarkBorderIcon fontSize={iconFontSize} />
+                      }
                       size={isMobile ? 'small' : 'medium'}
-                      sx={{ textTransform: 'none', color: 'text.secondary', fontSize: btnFontSize }}
+                      sx={{
+                        textTransform: 'none',
+                        color: isPostSaved(post._id) ? '#0084ff' : 'text.secondary',
+                        fontSize: btnFontSize
+                      }}
                     >
-                      Save
+                      {isPostSaved(post._id) ? "Saved" : "Save"}
                     </Button>
                   </Stack>
 

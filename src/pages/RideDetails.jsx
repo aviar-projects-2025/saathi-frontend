@@ -834,7 +834,7 @@ export default function RideDetailsModal({
           '&:hover': { bgcolor: TOKENS.red, color: '#fff' },
         }}
       >
-        Delete ride
+        Cancel Ride
       </Button>
     )
   )}
