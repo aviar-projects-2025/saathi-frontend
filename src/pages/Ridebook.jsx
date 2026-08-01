@@ -607,10 +607,10 @@ export default function Ridebook({
           {isEditMode ? "Requested Members" : "Traveling Members"}
         </Typography>
 
-        {/* Member cards (editable) */}
+
         <Stack spacing={1.25}>
           {editableMembers.map((member, index) => {
-            const isLockedSelfSlot = !isEditMode && index === 0;
+            const isLockedSelfSlot = index === 0;
             return (
               <Box
                 key={index}

@@ -129,7 +129,7 @@ export default function Community() {
       const countEntries = await Promise.all(
         updatedPosts.map(async (p) => {
           try {
-            const res = await axios.get(Api + `/community/comments/${p._id}`);
+            const res = await axios.get(Api + `/community/comments/${p._id}/${user.id}`);
             return [p._id, res.data.data.comments.length];
           } catch {
             return [p._id, 0];
@@ -146,7 +146,7 @@ export default function Community() {
 
   const getComments = async (postId) => {
     try {
-      setLoading(true);
+      // setLoading(true);
       const res = await axios.get(Api + `/community/comments/${postId}`);
       setCommentCounts((prev) => ({ ...prev, [postId]: res.data.data.comments.length }));
     } catch (error) {
@@ -843,7 +843,7 @@ export default function Community() {
                         </Typography>
                         <Typography variant="caption" color="text.secondary" fontSize={captionSize}
                           sx={{ fontSize: { xs: "0.6rem", sm: "0.72rem" } }}>
-                          {'tvm'} | {formattedDateTime(post?.createdAt)}
+                          {formattedDateTime(post?.createdAt)}
                         </Typography>
                       </Box>
 
