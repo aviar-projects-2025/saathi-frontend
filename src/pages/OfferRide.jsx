@@ -231,6 +231,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide }) {
   const isFlight = form.modeOfTravel === "Flight";
   const isCar = form.modeOfTravel === "Car";
   const isBike = form.modeOfTravel === "Bike";
+  const isBus = form.modeOfTravel === "Bus";
   const isBusTrain = ["Bus", "Train"].includes(form.modeOfTravel);
   const update = (key, val) => setForm((prev) => ({ ...prev, [key]: val }));
 
@@ -264,61 +265,89 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide }) {
 
   const reviewItems = isFlight
     ? [
-        [MapPin, "Route", `${form.fromAirport || "—"} → ${form.toAirport || "—"}`],
-        [MapPin, "Country", `${form.fromCountry || "—"} → ${form.toCountry || "—"}`],
-        [Calendar, "Date & Departure", `${form.date || "—"} at ${form.time || "—"}`],
-        [Clock, "Journey Duration", form.duration || "—"],
-        [Plane, "Flight Number", form.flightNumber || "—"],
-        [Plane, "Airline Name", form.airlineName || "—"],
+      [MapPin, "Route", `${form.fromAirport || "—"} → ${form.toAirport || "—"}`],
+      [MapPin, "Country", `${form.fromCountry || "—"} → ${form.toCountry || "—"}`],
+      [Calendar, "Date & Departure", `${form.date || "—"} at ${form.time || "—"}`],
+      // [Clock, "Journey Duration", form.duration || "—"],
+      [Plane, "Flight Number", form.flightNumber || "—"],
+      [Plane, "Airline Name", form.airlineName || "—"],
 
-        form.travellerType && [Users, "Traveller Type", form.travellerType],
+      form.travellerType && [Users, "Traveller Type", form.travellerType],
+      form.language?.length > 0 && [
+        Languages,
+        "Language",
+        form.language.join(", "),
+      ],
+
+      [Users, "Gender Preference", form.genderPreference],
+      [Users, "Age Group Preference", form.ageGroupPreference],
+      [HeartPulse, "Medical Assistance", form.medicalAssistance ? "Yes" : "No"],
+      [Languages, "Language Support", form.languageSupport ? "Yes" : "No"],
+      [MapPin, "Transit Help", form.transitHelp ? "Yes" : "No"],
+      [Luggage, "Baggage Help", form.baggageHelp ? "Yes" : "No"],
+    ].filter(Boolean)
+    : [
+      [MapPin, "From → Destination", `${form.from || "—"} → ${form.destination || "—"}`],
+      [Calendar, "Date & Time", `${form.date || "—"} at ${form.time || "—"}`],
+
+      (isCar || isBike) && [Clock, "Journey Duration", form.duration || "—"],
+
+      [Car, "Mode of Travel", form.modeOfTravel],
+
+      isCar && [Users, "Available Seats", form.availableSeats],
+
+      ...(isCar
+        ? [
+          [Users, "Traveller Type", form.travellerType],
+          form.language?.length > 0 && [
+            Languages,
+            "Language",
+            form.language.join(", "),
+          ],
+          [HeartPulse, "Medical Assistance", form.medicalAssistance ? "Yes" : "No"],
+          [MapPin, "Transit Help", form.transitHelp ? "Yes" : "No"],
+          [Luggage, "Baggage Help", form.baggageHelp ? "Yes" : "No"],
+          [Users, "Gender Preference", form.genderPreference],
+        ]
+        : []),
+      ...(isBus ? [
+        [Users, "Traveller Type", form.travellerType],
         form.language?.length > 0 && [
           Languages,
           "Language",
           form.language.join(", "),
         ],
-
-        [Users, "Gender Preference", form.genderPreference],
-        [Users, "Age Group Preference", form.ageGroupPreference],
         [HeartPulse, "Medical Assistance", form.medicalAssistance ? "Yes" : "No"],
-        [Languages, "Language Support", form.languageSupport ? "Yes" : "No"],
         [MapPin, "Transit Help", form.transitHelp ? "Yes" : "No"],
         [Luggage, "Baggage Help", form.baggageHelp ? "Yes" : "No"],
-      ].filter(Boolean)
-    : [
-        [MapPin, "From → Destination", `${form.from || "—"} → ${form.destination || "—"}`],
-        [Calendar, "Date & Time", `${form.date || "—"} at ${form.time || "—"}`],
-
-        (isCar || isBike) && [Clock, "Journey Duration", form.duration || "—"],
-
-        [Car, "Mode of Travel", form.modeOfTravel],
-
-        isCar && [Users, "Available Seats", form.availableSeats],
-
-        form.travellerType && [Users, "Traveller Type", form.travellerType],
-
-        form.language?.length > 0 && [
-          Languages,
-          "Language",
-          form.language.join(", "),
-        ],
-
         [Users, "Gender Preference", form.genderPreference],
-
-        ...(isCar
-          ? [
-              [HeartPulse, "Medical Assistance", form.medicalAssistance ? "Yes" : "No"],
-              [MapPin, "Transit Help", form.transitHelp ? "Yes" : "No"],
-              [Luggage, "Baggage Help", form.baggageHelp ? "Yes" : "No"],
-            ]
-          : []),
-        (isCar || isBike) &&
+      ]
+        : []),
+      ...(isCar || isBike
+        ? [
+          (isCar || isBike) &&
           form.fuelSharing && [Fuel, "Fuel Sharing", `₹ ${form.price}`],
 
-        [Users, "Age Group Preference", form.ageGroupPreference],
+          form.travellerType && [
+            Users,
+            "Traveller Type",
+            form.travellerType,
+          ],
 
-        [Languages, "Language Support", form.languageSupport ? "Yes" : "No"],
-      ].filter(Boolean);
+          form.language?.length > 0 && [
+            Languages,
+            "Language",
+            form.language.join(", "),
+          ],
+          [Users, "Gender Preference", form.genderPreference],
+        ]
+        : []),
+      [Users, "Age Group Preference", form.ageGroupPreference],
+
+      [Languages, "Language Support", form.languageSupport ? "Yes" : "No"],
+
+
+    ].filter(Boolean);
 
   /* ──────────────── VALIDATION (unchanged logic) ──────────────── */
   const validateStep = () => {
@@ -407,10 +436,10 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide }) {
         toast.error("Please enter Description", TOASTS);
         return false;
       }
-if (!isEditMode && (isCar || isBike) && !String(form.duration ?? "").trim()) {
-  toast.error("Please enter Journey Duration", TOASTS);
-  return false;
-}
+      if (!isEditMode && (isCar || isBike) && !String(form.duration ?? "").trim()) {
+        toast.error("Please enter Journey Duration", TOASTS);
+        return false;
+      }
     }
 
     if (step === 1) {
@@ -463,28 +492,28 @@ if (!isEditMode && (isCar || isBike) && !String(form.duration ?? "").trim()) {
     status: form.status || "OPEN",
     ...(isFlight
       ? {
-          fromCountry: form.fromCountry,
-          fromAirport: form.fromAirport,
-          toCountry: form.toCountry,
-          toAirport: form.toAirport,
-          from: form.fromAirport,
-          destination: form.toAirport,
-          flightNumber: form.flightNumber,
-          airlineName: form.airlineName,
-          travellerType: form.travellerType,
-          language: form.language,
-          ageGroupPreference: form.ageGroupPreference,
-          medicalAssistance: form.medicalAssistance,
-          languageSupport: form.languageSupport,
-          baggageHelp: form.baggageHelp,
-        }
+        fromCountry: form.fromCountry,
+        fromAirport: form.fromAirport,
+        toCountry: form.toCountry,
+        toAirport: form.toAirport,
+        from: form.fromAirport,
+        destination: form.toAirport,
+        flightNumber: form.flightNumber,
+        airlineName: form.airlineName,
+        travellerType: form.travellerType,
+        language: form.language,
+        ageGroupPreference: form.ageGroupPreference,
+        medicalAssistance: form.medicalAssistance,
+        languageSupport: form.languageSupport,
+        baggageHelp: form.baggageHelp,
+      }
       : {
-          from: form.from,
-          destination: form.destination,
-          availableSeats: form.availableSeats,
-          totalSeats: form.availableSeats,
-          fuelSharing: form.price,
-        }),
+        from: form.from,
+        destination: form.destination,
+        availableSeats: form.availableSeats,
+        totalSeats: form.availableSeats,
+        fuelSharing: form.price,
+      }),
   });
 
   const createRide = async () => {
@@ -805,7 +834,7 @@ if (!isEditMode && (isCar || isBike) && !String(form.duration ?? "").trim()) {
                   <MenuItem value="Bus" sx={menuItemSx}>🚌 Bus</MenuItem>
                   <MenuItem value="Bike" sx={menuItemSx}>🏍️ Bike</MenuItem>
                   <MenuItem value="Flight" sx={menuItemSx}>✈️ Flight</MenuItem>
-                  <MenuItem value="Train" sx={menuItemSx}>🚆 Train</MenuItem>
+                  {/* <MenuItem value="Train" sx={menuItemSx}>🚆 Train</MenuItem> */}
                 </Select>
               </FormControl>
 
