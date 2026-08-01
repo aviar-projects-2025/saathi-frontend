@@ -241,11 +241,6 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
           py: 1,
         }}
       >
-        <Typography
-          sx={{ fontSize: { xs: 11, sm: 13 }, fontWeight: 800, color: "#d97706", mb: { xs: 2, sm: 2.5 }, px: 1 }}
-        >
-          Saathi Menu
-        </Typography>
 
         <Stack spacing={{ xs: 2, sm: 2 }}>
           {menuItems.map((item) => {

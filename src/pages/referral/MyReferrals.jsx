@@ -17,17 +17,29 @@ import {
     Tooltip,
     useTheme, useMediaQuery
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import PeopleAltOutlinedIcon from "@mui/icons-material/PeopleAltOutlined";
 import PageLayout from "../../components/PageLayout";
 import axios from "axios";
 import Api from "../../Api";
+import { useUser } from "../../context/userConetext.jsx";
 import { toast } from "react-toastify";
 import { useNotifications } from "../../context/NotificationContext";
 import { useReferral } from "../../context/ReferralContext";
 import ToastConfig from "../../components/ToastConfig";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 
+
+const SAFFRON = "#E8650A";
+const pillBtn = {
+    textTransform: "none",
+    border: "none",
+    fontSize: { xs: "0.72rem", sm: "0.8rem", md: "0.875rem" },
+    color: SAFFRON,
+    fontWeight: 600,
+};
 const MyReferrals = () => {
     const handleOpenShare = () => setOpenShare(true);
     const handleCloseShare = () => setOpenShare(false);
@@ -38,16 +50,21 @@ const MyReferrals = () => {
     const [loading, setLoading] = useState(false);
     const { notifications } = useNotifications()
     const { getPendingReferralCount } = useReferral();
-
+    const { completion, currentUser } = useUser();
     const [approveLoading, setApproveLoading] = useState(false);
     const [rejectLoading, setRejectLoading] = useState(false);
 
     const toasts = ToastConfig();
-
+    const handleOpenProfileMenu = (event) => {
+        setProfileAnchorEl(event.currentTarget);
+    };
     const theme = useTheme();
     const isTab = useMediaQuery(theme.breakpoints.down("sm"));
 
-
+    const handleCopy = (value) => {
+        navigator.clipboard.writeText(value);
+        toast.success("Copied to Clipboard!", toasts);
+    };
 
     useEffect(() => {
         if (notifications?.length) {
@@ -66,6 +83,7 @@ const MyReferrals = () => {
                 getReferrals();
             }
         }
+
     }, [notifications]);
 
 
@@ -91,6 +109,7 @@ const MyReferrals = () => {
 
     useEffect(() => {
         getReferrals();
+
     }, []);
 
     const approveUser = async (id) => {
@@ -156,6 +175,7 @@ const MyReferrals = () => {
             >
                 Refer Now
             </Button>
+
             <Modal open={openShare} onClose={handleCloseShare}>
                 <Box
                     sx={{
@@ -172,6 +192,7 @@ const MyReferrals = () => {
                 >
                     <Box
                         sx={{
+                            position: "relative",
                             bgcolor: "white",
                             width: { xs: "100%", sm: 320 },
                             maxWidth: 320,
@@ -180,11 +201,25 @@ const MyReferrals = () => {
                             boxShadow: 24,
                         }}
                     >
+                        <IconButton
+                            onClick={handleCloseShare}
+                            size="small"
+                            sx={{
+                                position: "absolute",
+                                top: 8,
+                                right: 8,
+                                color: "grey.500",
+                            }}
+                        >
+                            <CloseIcon fontSize="small" />
+                        </IconButton>
+
                         <Typography
                             fontWeight={600}
                             sx={{
                                 fontSize: { xs: "0.9rem", sm: "1rem" },
                                 mb: { xs: 1.5, sm: 2 },
+                                pr: 3,
                             }}
                         >
                             Share your referral link
@@ -248,13 +283,28 @@ const MyReferrals = () => {
     );
 
     const ReferralCard = ({ user: u, showActions = false }) => {
-
+        const [userImage, setUserImage] = useState();
         const userData = {
             firstName: u?.data?.user?.firstName || u?.firstName || "",
             lastName: u?.data?.user?.lastName || u?.lastName || "",
             email: u?.data?.user?.email || u?.email || "",
             id: u?.data?.userId || u?._id
         };
+        const userId = u._id;
+        const getUserData = async () => {
+            try {
+                const res = await axios.get(`${Api}/users/${userId}`);
+                setUserImage(res.data.data.profileImage || "");
+            } catch (err) {
+                console.log(err);
+            }
+        };
+
+        useEffect(() => {
+            if (userId) {
+                getUserData();
+            }
+        }, [userId]);
 
         return (
             <Paper
@@ -282,19 +332,18 @@ const MyReferrals = () => {
                         alignItems="center"
                         sx={{ minWidth: 0, flex: 1 }}
                     >
-                        <Avatar
+
+                        <Avatar src={userImage || undefined}
                             sx={{
                                 bgcolor: "#f0ebe3",
                                 color: "#ff8400",
-                                fontWeight: 700,
-                                fontSize: { xs: 12, sm: 14 },
-                                width: { xs: 40, sm: 44 },
-                                height: { xs: 40, sm: 44 },
-                                flexShrink: 0,
+                                width: 44,
+                                height: 44,
                             }}
                         >
-                            {getInitials(userData.firstName, userData.lastName)}
+                            {!userImage && getInitials(userData.firstName, userData.lastName)}
                         </Avatar>
+
 
                         <Box sx={{ minWidth: 0 }}>
                             <Typography

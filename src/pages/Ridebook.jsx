@@ -337,7 +337,7 @@ export default function Ridebook({
 
     if (!ride) return;
     if (!validate()) return;
-
+    const userMobile = currentUser?.mobile;
     const storedUser = JSON.parse(localStorage.getItem("user"));
 
     // Only the new/unapproved members are ever sent — existingMembers
@@ -351,7 +351,7 @@ export default function Ridebook({
       seatsRequested: isFlight ? null : seatsRequested,
       membersCount: seatsRequested,
       pendingMembers: membersToSubmit,
-      phone: requestData.phone,
+      phone: userMobile,
       message: requestData.message,
       requestType: isFlight ? "COMPANION" : "SEAT",
     };
@@ -607,106 +607,128 @@ export default function Ridebook({
           {isEditMode ? "Requested Members" : "Traveling Members"}
         </Typography>
 
-        {/* Member cards (editable) */}
+
         <Stack spacing={1.25}>
           {editableMembers.map((member, index) => {
-            const isLockedSelfSlot = !isEditMode && index === 0;
+            const isLockedSelfSlot = index === 0;
             return (
-              <Box
-                key={index}
-                sx={{
-                  display: "flex",
-                  gap: 1.25,
-                  alignItems: "center",
-                  p: 1.25,
-                  borderRadius: 2.5,
-                  border: "1px solid #EEE",
-                  bgcolor: "#FCFCFC",
-                  "&:hover": { borderColor: ORANGE },
-                }}
-              >
-                <Avatar
+              <>
+                <Box
+                  key={index}
                   sx={{
-                    width: 30,
-                    height: 30,
-                    fontSize: "0.8rem",
-                    fontWeight: 700,
-                    bgcolor: "#FFE3C2",
-                    color: "#8A5200",
+                    display: "flex",
+                    gap: 1.25,
+                    alignItems: "center",
+                    p: 1.25,
+                    borderRadius: 2.5,
+                    border: "1px solid #EEE",
+                    bgcolor: "#FCFCFC",
+                    "&:hover": { borderColor: ORANGE },
                   }}
                 >
-                  {index + 1}
-                </Avatar>
+                  <Avatar
+                    sx={{
+                      width: 30,
+                      height: 30,
+                      fontSize: "0.8rem",
+                      fontWeight: 700,
+                      bgcolor: "#FFE3C2",
+                      color: "#8A5200",
+                    }}
+                  >
+                    {index + 1}
+                  </Avatar>
 
+                  <TextField
+                    placeholder="Full name"
+                    fullWidth
+                    size="small"
+                    variant="standard"
+                    InputProps={{ disableUnderline: true }}
+                    value={
+                      isLockedSelfSlot
+                        ? `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`.trim()
+                        : member.name
+                    }
+                    disabled={isLockedSelfSlot}
+                    sx={{
+                      "& .MuiInputBase-input": {
+                        fontSize: "0.85rem",
+                        fontFamily: "'Inter', sans-serif",
+                        fontWeight: 500,
+                      },
+                      "& .MuiInputBase-input.Mui-disabled": {
+                        WebkitTextFillColor: "#555",
+                        opacity: 1,
+                      },
+                    }}
+                    onChange={(e) =>
+                      !isLockedSelfSlot &&
+                      handleMemberChange(index, "name", e.target.value)
+                    }
+                  />
+
+                  <TextField
+                    placeholder="Age"
+                    type="number"
+                    size="small"
+                    variant="standard"
+                    InputProps={{ disableUnderline: true }}
+                    sx={{
+                      width: 56,
+                      "& .MuiInputBase-input": {
+                        fontSize: "0.85rem",
+                        textAlign: "center",
+                      },
+                    }}
+                    value={
+                      isLockedSelfSlot
+                        ? calculateAge(currentUser?.dob)
+                        : member.age
+                    }
+                    disabled={isLockedSelfSlot}
+                    inputProps={{ min: 1, max: 120 }}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (
+                        value === "" ||
+                        (Number(value) >= 1 && Number(value) <= 120)
+                      ) {
+                        handleMemberChange(index, "age", value);
+                      }
+                    }}
+                  />
+
+                  <IconButton
+                    color="error"
+                    onClick={() => handleRemoveMember(index)}
+                    disabled={isLockedSelfSlot}
+                    size="small"
+                  >
+                    <RemoveCircle fontSize="small" />
+                  </IconButton>
+
+
+                </Box>
                 <TextField
-                  placeholder="Full name"
                   fullWidth
-                  size="small"
-                  variant="standard"
-                  InputProps={{ disableUnderline: true }}
-                  value={
-                    isLockedSelfSlot
-                      ? `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`.trim()
-                      : member.name
-                  }
+                  label="Phone Number"
+                  size={isMobile ? "small" : "medium"}
+                  value={currentUser?.mobile}
                   disabled={isLockedSelfSlot}
                   sx={{
-                    "& .MuiInputBase-input": {
-                      fontSize: "0.85rem",
+                    mb: 2,
+                    "& .MuiInputBase-input.Mui-disabled": {
                       fontFamily: "'Inter', sans-serif",
                       fontWeight: 500,
-                    },
-                    "& .MuiInputBase-input.Mui-disabled": {
                       WebkitTextFillColor: "#555",
-                      opacity: 1,
                     },
                   }}
                   onChange={(e) =>
-                    !isLockedSelfSlot &&
-                    handleMemberChange(index, "name", e.target.value)
+                    setRequestData({ ...requestData, mobile: e.target.value })
                   }
                 />
-
-                <TextField
-                  placeholder="Age"
-                  type="number"
-                  size="small"
-                  variant="standard"
-                  InputProps={{ disableUnderline: true }}
-                  sx={{
-                    width: 56,
-                    "& .MuiInputBase-input": {
-                      fontSize: "0.85rem",
-                      textAlign: "center",
-                    },
-                  }}
-                  value={
-                    isLockedSelfSlot
-                      ? calculateAge(currentUser?.dob)
-                      : member.age
-                  }
-                  disabled={isLockedSelfSlot}
-                  inputProps={{ min: 1, max: 120 }}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    if (
-                      value === "" ||
-                      (Number(value) >= 1 && Number(value) <= 120)
-                    ) {
-                      handleMemberChange(index, "age", value);
-                    }
-                  }}
-                />
-
-                <IconButton
-                  color="error"
-                  onClick={() => handleRemoveMember(index)}
-                  disabled={isLockedSelfSlot}
-                  size="small"
-                >
-                  <RemoveCircle fontSize="small" />
-                </IconButton>
-              </Box>
+              </>
             );
           })}
         </Stack>
@@ -744,24 +766,6 @@ export default function Ridebook({
           Contact Details
         </Typography>
 
-        <TextField
-          fullWidth
-          label="Phone Number"
-          size={isMobile ? "small" : "medium"}
-          value={currentUser?.mobile}
-          disabled
-          sx={{
-            mb: 2,
-            "& .MuiInputBase-input.Mui-disabled": {
-              fontFamily: "'Inter', sans-serif",
-              fontWeight: 500,
-              WebkitTextFillColor: "#555",
-            },
-          }}
-          onChange={(e) =>
-            setRequestData({ ...requestData, mobile: e.target.value })
-          }
-        />
 
         <TextField
           fullWidth
