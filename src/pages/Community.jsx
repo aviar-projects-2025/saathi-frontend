@@ -30,6 +30,7 @@ import Discover from './Discover.jsx'
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import InboxOutlinedIcon from "@mui/icons-material/InboxOutlined";
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   Menu,
@@ -129,7 +130,7 @@ export default function Community() {
       const countEntries = await Promise.all(
         updatedPosts.map(async (p) => {
           try {
-            const res = await axios.get(Api + `/community/comments/${p._id}`);
+            const res = await axios.get(Api + `/community/comments/${p._id}/${user.id}`);
             return [p._id, res.data.data.comments.length];
           } catch {
             return [p._id, 0];
@@ -146,7 +147,7 @@ export default function Community() {
 
   const getComments = async (postId) => {
     try {
-      setLoading(true);
+      // setLoading(true);
       const res = await axios.get(Api + `/community/comments/${postId}`);
       setCommentCounts((prev) => ({ ...prev, [postId]: res.data.data.comments.length }));
     } catch (error) {
@@ -154,6 +155,34 @@ export default function Community() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const savePost = async (post) => {
+    try {
+      const res = await axios.post(
+        `${Api}/save-post/${post._id}/${currentUser._id}`
+      );
+
+      setSavedPost((prev) => [
+        ...prev,
+        {
+          _id: res.data.data._id,
+          postId: post,
+          userId: currentUser._id,
+        },
+      ]);
+
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  
+
+  const isPostSaved = (postId) => {
+    return savedPost?.some(
+      (item) => item.postId?._id === postId
+    );
   };
 
   // inside your component:
@@ -176,8 +205,8 @@ export default function Community() {
 
   const tier = useResponsiveTier();
   const isMobile = tier === 'xs';                 // phones
-  const isTablet = tier === 'sm' || tier === 'md'; // tablets / small laptops
-  const isDesktop = tier === 'lg' || tier === 'xl'; // laptops and up
+  const isTablet = tier === 'sm'; // tablets / small laptops
+  const isDesktop = tier === 'md' || tier === 'lg' || tier === 'xl'; // laptops and up
 
   const showSidebar = !isMobile;
 
@@ -219,7 +248,7 @@ export default function Community() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editDescription, setEditDescription] = useState("");
-  const { completion } = useUser();
+  const { completion, savedPost, setSavedPost, removeSavedPost } = useUser();
 
   const isProfileComplete = completion === 100;
   const SIDEBAR_SCROLL_HEIGHT = 'calc(100vh - 120px)';
@@ -649,7 +678,10 @@ export default function Community() {
                       <Button
                         onClick={() => {
                           if (isProfileComplete) {
-                            setOpenMediaDialog((prev) => !prev);
+                            // setOpenMediaDialog((prev) => !prev);
+                            isDesktop
+                              ? fileInputRef.current?.click()
+                              : setOpenMediaDialog(true);
                           }
                         }}
                         disabled={!isProfileComplete}
@@ -678,6 +710,16 @@ export default function Community() {
                           }}
                         />
                       </Button>
+
+                      {/* Hidden File Input */}
+                      <input
+                        ref={fileInputRef}
+                        hidden
+                        type="file"
+                        accept="image/*"
+                        onChange={handleMediaSelect}
+                      />
+
                     </span>
                   </Tooltip>
 
@@ -804,6 +846,37 @@ export default function Community() {
               <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', py: 4 }}>
                 <CircularProgress size={isMobile ? 36 : 50} />
               </Box>
+            ) : communityPosts.length == 0 ? (
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  py: 8,
+                  textAlign: "center",
+                }}
+              >
+                <InboxOutlinedIcon
+                  sx={{
+                    fontSize: { xs: 40, sm: 64 },
+                    color: "text.disabled",
+                    mb: 2,
+                  }}
+                />
+
+                <Typography variant="h6" fontWeight={600} color="text.primary">
+                  No Posts Yet
+                </Typography>
+
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mt: 1, maxWidth: 320 }}
+                >
+                  There are no posts to display at the moment.
+                </Typography>
+              </Box>
             ) : (
               communityPosts?.map((post, index) => (
                 <Paper
@@ -843,7 +916,7 @@ export default function Community() {
                         </Typography>
                         <Typography variant="caption" color="text.secondary" fontSize={captionSize}
                           sx={{ fontSize: { xs: "0.6rem", sm: "0.72rem" } }}>
-                          {'tvm'} | {formattedDateTime(post?.createdAt)}
+                          {formattedDateTime(post?.createdAt)}
                         </Typography>
                       </Box>
 
@@ -1023,19 +1096,22 @@ export default function Community() {
                               />
 
                               <Box sx={{ mt: 2 }}>
-                                <Box
-                                  component="img"
-                                  src={editImage ? URL.createObjectURL(editImage) : previewImage}
-                                  alt="Preview"
-                                  sx={{
-                                    width: "100%",
-                                    height: { xs: 160, sm: 220, md: 280 },
-                                    objectFit: "cover",
-                                    borderRadius: 2,
-                                    border: "1px solid #eee",
-                                    mb: 1.5,
-                                  }}
-                                />
+
+                                {previewImage && (
+                                  <Box
+                                    component="img"
+                                    src={editImage ? URL.createObjectURL(editImage) : previewImage}
+                                    alt="Preview"
+                                    sx={{
+                                      width: "100%",
+                                      height: { xs: 160, sm: 220, md: 280 },
+                                      objectFit: "cover",
+                                      borderRadius: 2,
+                                      border: "1px solid #eee",
+                                      mb: 1.5,
+                                    }}
+                                  />
+                                )}
 
                                 <Button
                                   variant="contained"
@@ -1057,7 +1133,7 @@ export default function Community() {
                                     },
                                   }}
                                 >
-                                  Change Image
+                                  {!previewImage ? "Add Image" : "Change Image"}
                                 </Button>
 
 
@@ -1236,11 +1312,24 @@ export default function Community() {
                     </Button>
 
                     <Button
-                      startIcon={<BookmarkBorderIcon fontSize={iconFontSize} />}
+                      onClick={() => {
+                        isPostSaved(post._id)
+                          ? removeSavedPost(post._id)
+                          : savePost(post);
+                      }}
+                      startIcon={
+                        isPostSaved(post._id)
+                          ? <BookmarkBorderIcon sx={{ color: "#0084ff" }} fontSize={iconFontSize} />
+                          : <BookmarkBorderIcon fontSize={iconFontSize} />
+                      }
                       size={isMobile ? 'small' : 'medium'}
-                      sx={{ textTransform: 'none', color: 'text.secondary', fontSize: btnFontSize }}
+                      sx={{
+                        textTransform: 'none',
+                        color: isPostSaved(post._id) ? '#0084ff' : 'text.secondary',
+                        fontSize: btnFontSize
+                      }}
                     >
-                      Save
+                      {isPostSaved(post._id) ? "Saved" : "Save"}
                     </Button>
                   </Stack>
 
@@ -1311,8 +1400,8 @@ export default function Community() {
               <Discover />
             </Box>
           )}
-        </Box>
-      </PageLayout>
+        </Box >
+      </PageLayout >
     </>
 
 

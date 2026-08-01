@@ -50,7 +50,7 @@ export const NotificationProvider = ({ children }) => {
             audio.currentTime = 0;
             audio.play();
 
-            console.log(payload)
+            console.log(payload,'notification payliad')
 
             // console.log(payload,'payload')
             const newNotification = {
