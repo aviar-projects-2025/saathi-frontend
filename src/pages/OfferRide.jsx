@@ -232,6 +232,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide }) {
   const isFlight = form.modeOfTravel === "Flight";
   const isCar = form.modeOfTravel === "Car";
   const isBike = form.modeOfTravel === "Bike";
+  const isBus = form.modeOfTravel === "Bus";
   const isBusTrain = ["Bus", "Train"].includes(form.modeOfTravel);
   const update = (key, val) => setForm((prev) => ({ ...prev, [key]: val }));
 
@@ -268,7 +269,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide }) {
       [MapPin, "Route", `${form.fromAirport || "—"} → ${form.toAirport || "—"}`],
       [MapPin, "Country", `${form.fromCountry || "—"} → ${form.toCountry || "—"}`],
       [Calendar, "Date & Departure", `${form.date || "—"} at ${form.time || "—"}`],
-      [Clock, "Journey Duration", form.duration || "—"],
+      // [Clock, "Journey Duration", form.duration || "—"],
       [Plane, "Flight Number", form.flightNumber || "—"],
       [Plane, "Airline Name", form.airlineName || "—"],
 
@@ -296,29 +297,57 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide }) {
 
       isCar && [Users, "Available Seats", form.availableSeats],
 
-      form.travellerType && [Users, "Traveller Type", form.travellerType],
-
-      form.language?.length > 0 && [
-        Languages,
-        "Language",
-        form.language.join(", "),
-      ],
-
-      [Users, "Gender Preference", form.genderPreference],
-
       ...(isCar
         ? [
+          [Users, "Traveller Type", form.travellerType],
+          form.language?.length > 0 && [
+            Languages,
+            "Language",
+            form.language.join(", "),
+          ],
           [HeartPulse, "Medical Assistance", form.medicalAssistance ? "Yes" : "No"],
           [MapPin, "Transit Help", form.transitHelp ? "Yes" : "No"],
           [Luggage, "Baggage Help", form.baggageHelp ? "Yes" : "No"],
+          [Users, "Gender Preference", form.genderPreference],
         ]
         : []),
-      (isCar || isBike) &&
-      form.fuelSharing && [Fuel, "Fuel Sharing", `₹ ${form.price}`],
+      ...(isBus ? [
+        [Users, "Traveller Type", form.travellerType],
+        form.language?.length > 0 && [
+          Languages,
+          "Language",
+          form.language.join(", "),
+        ],
+        [HeartPulse, "Medical Assistance", form.medicalAssistance ? "Yes" : "No"],
+        [MapPin, "Transit Help", form.transitHelp ? "Yes" : "No"],
+        [Luggage, "Baggage Help", form.baggageHelp ? "Yes" : "No"],
+        [Users, "Gender Preference", form.genderPreference],
+      ]
+        : []),
+      ...(isCar || isBike
+        ? [
+          (isCar || isBike) &&
+          form.fuelSharing && [Fuel, "Fuel Sharing", `₹ ${form.price}`],
 
+          form.travellerType && [
+            Users,
+            "Traveller Type",
+            form.travellerType,
+          ],
+
+          form.language?.length > 0 && [
+            Languages,
+            "Language",
+            form.language.join(", "),
+          ],
+          [Users, "Gender Preference", form.genderPreference],
+        ]
+        : []),
       [Users, "Age Group Preference", form.ageGroupPreference],
 
       [Languages, "Language Support", form.languageSupport ? "Yes" : "No"],
+
+
     ].filter(Boolean);
 
   /* ──────────────── VALIDATION (unchanged logic) ──────────────── */
@@ -842,7 +871,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide }) {
                   <MenuItem value="Bus" sx={menuItemSx}>🚌 Bus</MenuItem>
                   <MenuItem value="Bike" sx={menuItemSx}>🏍️ Bike</MenuItem>
                   <MenuItem value="Flight" sx={menuItemSx}>✈️ Flight</MenuItem>
-                  <MenuItem value="Train" sx={menuItemSx}>🚆 Train</MenuItem>
+                  {/* <MenuItem value="Train" sx={menuItemSx}>🚆 Train</MenuItem> */}
                 </Select>
               </FormControl>
 

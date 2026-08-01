@@ -722,8 +722,6 @@ function RideCard({
       (req) => req.rideId?._id?.toString() === ride._id?.toString(),
     ) || [];
 
-  console.log(rideRequests, "rideRequests");
-
   const pendingCount = rideRequests.filter(
     (r) => r.status?.toUpperCase() === "PENDING",
   ).length;
@@ -1407,7 +1405,7 @@ const MyRides = () => {
   useEffect(() => {
     // Listen for ride data changes from other components
     const handleRideDataChange = (event) => {
-      console.log("Ride data changed:", event.detail);
+
       // Refresh all data
       fetchRides();
       fetchAllSends();
