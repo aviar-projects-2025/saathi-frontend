@@ -223,6 +223,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide }) {
   const [submitted, setSubmitted] = useState(false);
   const [showErrors, setShowErrors] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [resetForm, setResetForm] = useState(null);
 
   const user = JSON.parse(localStorage.getItem("user"));
 
@@ -264,61 +265,61 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide }) {
 
   const reviewItems = isFlight
     ? [
-        [MapPin, "Route", `${form.fromAirport || "—"} → ${form.toAirport || "—"}`],
-        [MapPin, "Country", `${form.fromCountry || "—"} → ${form.toCountry || "—"}`],
-        [Calendar, "Date & Departure", `${form.date || "—"} at ${form.time || "—"}`],
-        [Clock, "Journey Duration", form.duration || "—"],
-        [Plane, "Flight Number", form.flightNumber || "—"],
-        [Plane, "Airline Name", form.airlineName || "—"],
+      [MapPin, "Route", `${form.fromAirport || "—"} → ${form.toAirport || "—"}`],
+      [MapPin, "Country", `${form.fromCountry || "—"} → ${form.toCountry || "—"}`],
+      [Calendar, "Date & Departure", `${form.date || "—"} at ${form.time || "—"}`],
+      [Clock, "Journey Duration", form.duration || "—"],
+      [Plane, "Flight Number", form.flightNumber || "—"],
+      [Plane, "Airline Name", form.airlineName || "—"],
 
-        form.travellerType && [Users, "Traveller Type", form.travellerType],
-        form.language?.length > 0 && [
-          Languages,
-          "Language",
-          form.language.join(", "),
-        ],
+      form.travellerType && [Users, "Traveller Type", form.travellerType],
+      form.language?.length > 0 && [
+        Languages,
+        "Language",
+        form.language.join(", "),
+      ],
 
-        [Users, "Gender Preference", form.genderPreference],
-        [Users, "Age Group Preference", form.ageGroupPreference],
-        [HeartPulse, "Medical Assistance", form.medicalAssistance ? "Yes" : "No"],
-        [Languages, "Language Support", form.languageSupport ? "Yes" : "No"],
-        [MapPin, "Transit Help", form.transitHelp ? "Yes" : "No"],
-        [Luggage, "Baggage Help", form.baggageHelp ? "Yes" : "No"],
-      ].filter(Boolean)
+      [Users, "Gender Preference", form.genderPreference],
+      [Users, "Age Group Preference", form.ageGroupPreference],
+      [HeartPulse, "Medical Assistance", form.medicalAssistance ? "Yes" : "No"],
+      [Languages, "Language Support", form.languageSupport ? "Yes" : "No"],
+      [MapPin, "Transit Help", form.transitHelp ? "Yes" : "No"],
+      [Luggage, "Baggage Help", form.baggageHelp ? "Yes" : "No"],
+    ].filter(Boolean)
     : [
-        [MapPin, "From → Destination", `${form.from || "—"} → ${form.destination || "—"}`],
-        [Calendar, "Date & Time", `${form.date || "—"} at ${form.time || "—"}`],
+      [MapPin, "From → Destination", `${form.from || "—"} → ${form.destination || "—"}`],
+      [Calendar, "Date & Time", `${form.date || "—"} at ${form.time || "—"}`],
 
-        (isCar || isBike) && [Clock, "Journey Duration", form.duration || "—"],
+      (isCar || isBike) && [Clock, "Journey Duration", form.duration || "—"],
 
-        [Car, "Mode of Travel", form.modeOfTravel],
+      [Car, "Mode of Travel", form.modeOfTravel],
 
-        isCar && [Users, "Available Seats", form.availableSeats],
+      isCar && [Users, "Available Seats", form.availableSeats],
 
-        form.travellerType && [Users, "Traveller Type", form.travellerType],
+      form.travellerType && [Users, "Traveller Type", form.travellerType],
 
-        form.language?.length > 0 && [
-          Languages,
-          "Language",
-          form.language.join(", "),
-        ],
+      form.language?.length > 0 && [
+        Languages,
+        "Language",
+        form.language.join(", "),
+      ],
 
-        [Users, "Gender Preference", form.genderPreference],
+      [Users, "Gender Preference", form.genderPreference],
 
-        ...(isCar
-          ? [
-              [HeartPulse, "Medical Assistance", form.medicalAssistance ? "Yes" : "No"],
-              [MapPin, "Transit Help", form.transitHelp ? "Yes" : "No"],
-              [Luggage, "Baggage Help", form.baggageHelp ? "Yes" : "No"],
-            ]
-          : []),
-        (isCar || isBike) &&
-          form.fuelSharing && [Fuel, "Fuel Sharing", `₹ ${form.price}`],
+      ...(isCar
+        ? [
+          [HeartPulse, "Medical Assistance", form.medicalAssistance ? "Yes" : "No"],
+          [MapPin, "Transit Help", form.transitHelp ? "Yes" : "No"],
+          [Luggage, "Baggage Help", form.baggageHelp ? "Yes" : "No"],
+        ]
+        : []),
+      (isCar || isBike) &&
+      form.fuelSharing && [Fuel, "Fuel Sharing", `₹ ${form.price}`],
 
-        [Users, "Age Group Preference", form.ageGroupPreference],
+      [Users, "Age Group Preference", form.ageGroupPreference],
 
-        [Languages, "Language Support", form.languageSupport ? "Yes" : "No"],
-      ].filter(Boolean);
+      [Languages, "Language Support", form.languageSupport ? "Yes" : "No"],
+    ].filter(Boolean);
 
   /* ──────────────── VALIDATION (unchanged logic) ──────────────── */
   const validateStep = () => {
@@ -407,10 +408,10 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide }) {
         toast.error("Please enter Description", TOASTS);
         return false;
       }
-if (!isEditMode && (isCar || isBike) && !String(form.duration ?? "").trim()) {
-  toast.error("Please enter Journey Duration", TOASTS);
-  return false;
-}
+      if (!isEditMode && (isCar || isBike) && !String(form.duration ?? "").trim()) {
+        toast.error("Please enter Journey Duration", TOASTS);
+        return false;
+      }
     }
 
     if (step === 1) {
@@ -446,7 +447,39 @@ if (!isEditMode && (isCar || isBike) && !String(form.duration ?? "").trim()) {
 
   const { refreshRides } = useRide();
 
-  const formReset = () => setForm(INITIAL_FORM);
+  // const formReset = () => setForm(INITIAL_FORM);
+
+  const formReset = () => {
+    if (isEditMode && ride) {
+      const start = ride.startTime ? new Date(ride.startTime) : null;
+      const pad = (n) => String(n).padStart(2, "0");
+
+      const date = start
+        ? `${start.getFullYear()}-${pad(start.getMonth() + 1)}-${pad(start.getDate())}`
+        : "";
+
+      const time = start
+        ? `${pad(start.getHours())}:${pad(start.getMinutes())}`
+        : "";
+
+      setForm({
+        ...INITIAL_FORM,
+        ...ride,
+        date,
+        time,
+        availableSeats: ride.availableSeats ?? ride.totalSeats ?? 1,
+        price: ride.fuelSharing || ride.price || "",
+        fuelSharing: Boolean(ride.fuelSharing || ride.price),
+        language: ride.language || [],
+      });
+    } else {
+      setForm(INITIAL_FORM);
+    }
+
+    setStep(0);
+    setShowErrors(false);
+    setError("");
+  };
 
   const buildPayload = () => ({
     createdBy: user?.id,
@@ -463,28 +496,28 @@ if (!isEditMode && (isCar || isBike) && !String(form.duration ?? "").trim()) {
     status: form.status || "OPEN",
     ...(isFlight
       ? {
-          fromCountry: form.fromCountry,
-          fromAirport: form.fromAirport,
-          toCountry: form.toCountry,
-          toAirport: form.toAirport,
-          from: form.fromAirport,
-          destination: form.toAirport,
-          flightNumber: form.flightNumber,
-          airlineName: form.airlineName,
-          travellerType: form.travellerType,
-          language: form.language,
-          ageGroupPreference: form.ageGroupPreference,
-          medicalAssistance: form.medicalAssistance,
-          languageSupport: form.languageSupport,
-          baggageHelp: form.baggageHelp,
-        }
+        fromCountry: form.fromCountry,
+        fromAirport: form.fromAirport,
+        toCountry: form.toCountry,
+        toAirport: form.toAirport,
+        from: form.fromAirport,
+        destination: form.toAirport,
+        flightNumber: form.flightNumber,
+        airlineName: form.airlineName,
+        travellerType: form.travellerType,
+        language: form.language,
+        ageGroupPreference: form.ageGroupPreference,
+        medicalAssistance: form.medicalAssistance,
+        languageSupport: form.languageSupport,
+        baggageHelp: form.baggageHelp,
+      }
       : {
-          from: form.from,
-          destination: form.destination,
-          availableSeats: form.availableSeats,
-          totalSeats: form.availableSeats,
-          fuelSharing: form.price,
-        }),
+        from: form.from,
+        destination: form.destination,
+        availableSeats: form.availableSeats,
+        totalSeats: form.availableSeats,
+        fuelSharing: form.price,
+      }),
   });
 
   const createRide = async () => {
@@ -563,6 +596,8 @@ if (!isEditMode && (isCar || isBike) && !String(form.duration ?? "").trim()) {
       );
       const updated = response.data?.data ?? { ...ride, ...payload };
 
+
+
       toast.success("Ride Updated Successfully...!", {
         position: isTab ? "top-center" : "top-right",
         autoClose: 2000,
@@ -578,6 +613,8 @@ if (!isEditMode && (isCar || isBike) && !String(form.duration ?? "").trim()) {
           margin: "0 auto",
         },
       });
+
+      setResetForm(updated);
 
       refreshRides();
       setSubmitted(true);
@@ -1271,20 +1308,26 @@ if (!isEditMode && (isCar || isBike) && !String(form.duration ?? "").trim()) {
           )}
 
           {/* ── Navigation buttons ── */}
-          <Stack direction="row" spacing={{ xs: 1, sm: 1.5 }} sx={{ mt: { xs: 2.5, sm: 4 } }}>
+          <Stack
+            direction="row"
+            spacing={1.5}
+            justifyContent="space-between"
+            alignItems="center"
+            sx={{
+              mt: { xs: 2.5, sm: 4 },
+              width: "100%",
+            }}
+          >
             {step > 0 && (
               <Button
                 variant="outlined"
                 onClick={() => setStep((s) => s - 1)}
-                size="small"
                 startIcon={<ArrowLeft size={16} />}
                 sx={{
                   flex: 1,
-                  minWidth: 0,
-                  fontSize: { xs: "0.68rem", sm: "0.8rem", md: "0.875rem" },
-                  py: { xs: 0.9, sm: 1, md: 1.1 },
-                  px: { xs: 0.75, sm: 2 },
-                  minHeight: 40,
+                  fontSize: { xs: "0.55rem", sm: "0.875rem" },
+                  py: 1,
+                  minHeight: 42,
                   borderRadius: 2.5,
                   borderColor: "divider",
                   color: "text.primary",
@@ -1297,20 +1340,20 @@ if (!isEditMode && (isCar || isBike) && !String(form.duration ?? "").trim()) {
 
             {onClose && (
               <Button
-                variant="text"
-                onClick={onClose}
-                size="small"
+                variant="outlined"
+                onClick={(formReset)}
                 sx={{
-                  fontSize: { xs: "0.68rem", sm: "0.8rem", md: "0.875rem" },
-                  py: { xs: 0.9, sm: 1, md: 1.1 },
-                  px: { xs: 0.75, sm: 1.5 },
-                  minHeight: 40,
+                  flex: 1,
+                  fontSize: { xs: "0.55rem", sm: "0.875rem" },
+                  py: 1,
+                  minHeight: 42,
                   borderRadius: 2.5,
                   color: "text.secondary",
+                  borderColor: "divider",
                   whiteSpace: "nowrap",
                 }}
               >
-                Cancel
+                reset
               </Button>
             )}
 
@@ -1323,20 +1366,20 @@ if (!isEditMode && (isCar || isBike) && !String(form.duration ?? "").trim()) {
                     setStep((s) => s + 1);
                   }
                 }}
-                size={isMobile ? "small" : "medium"}
                 endIcon={<ArrowRight size={16} />}
                 sx={{
                   flex: 1,
-                  minWidth: 0,
-                  fontSize: { xs: "0.7rem", sm: "0.8rem", md: "0.875rem" },
-                  py: { xs: 0.9, sm: 1, md: 1.1 },
-                  px: { xs: 0.75, sm: 2 },
-                  minHeight: 40,
+                  fontSize: { xs: "0.55rem", sm: "0.875rem" },
+                  py: 1,
+                  minHeight: 42,
                   borderRadius: 2.5,
                   bgcolor: ACCENT,
                   boxShadow: "none",
                   whiteSpace: "nowrap",
-                  "&:hover": { bgcolor: ACCENT_DARK, boxShadow: "none" },
+                  "&:hover": {
+                    bgcolor: ACCENT_DARK,
+                    boxShadow: "none",
+                  },
                 }}
               >
                 Continue
@@ -1346,33 +1389,33 @@ if (!isEditMode && (isCar || isBike) && !String(form.duration ?? "").trim()) {
                 variant="contained"
                 onClick={handleSubmit}
                 disabled={isSubmitted || saving}
-                size="small"
                 sx={{
                   flex: 1,
-                  minWidth: 0,
-                  fontSize: { xs: "0.56rem", sm: "0.8rem", md: "0.875rem" },
-                  py: { xs: 0.9, sm: 1, md: 1.1 },
-                  px: { xs: 0.75, sm: 2 },
-                  minHeight: 40,
+                  fontSize: { xs: "0.55rem", sm: "0.80rem" },
+                  py: 1,
+                  minHeight: 42,
                   borderRadius: 2.5,
                   bgcolor: ACCENT,
                   boxShadow: "none",
                   whiteSpace: "nowrap",
-                  "&:hover": { bgcolor: ACCENT_DARK, boxShadow: "none" },
+                  "&:hover": {
+                    bgcolor: ACCENT_DARK,
+                    boxShadow: "none",
+                  },
                 }}
               >
                 {isEditMode
                   ? isSubmitted || saving
-                    ? " Saving Changes... "
-                    : " Save Changes "
+                    ? "Saving Changes..."
+                    : "Save Changes"
                   : isSubmitted
-                    ? " Ride Posting... "
-                    : " Post Your Ride "}
+                    ? "Ride Posting..."
+                    : "Post Your Ride"}
               </Button>
             )}
           </Stack>
         </Paper>
       </Box>
-    </PageLayout>
+    </PageLayout >
   );
 }

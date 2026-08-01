@@ -218,51 +218,135 @@ function RidePaginationBar({ count, page, onChange, isMobile }) {
 
 
 function EditRideModal({ ride, onSave, onClose }) {
+
   const theme = useTheme();
-  const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
 
   return (
-    <Dialog
-      open={Boolean(ride)}
-      onClose={onClose}
-      maxWidth="sm"
-      fullWidth
-      fullScreen={fullScreen}
-      PaperProps={{
-        sx: { borderRadius: { xs: 0, sm: 3 }, m: { xs: 0, sm: 2, md: 4 } },
-      }}
-    >
-      <DialogTitle
-        sx={{
-          fontWeight: 800,
-          pb: 0,
-          pr: 5,
-          fontSize: { xs: "1.05rem", sm: "1.25rem" },
+    <>
+      {/* <Dialog
+        open={Boolean(ride)}
+        onClose={onClose}
+        maxWidth="sm"
+        fullWidth
+        fullScreen={fullScreen}
+        PaperProps={{
+          sx: { borderRadius: { xs: 0, sm: 3 }, m: { xs: 0, sm: 2, md: 4 } },
         }}
       >
-        Edit Ride
-        <IconButton
-          onClick={onClose}
-          aria-label="Close"
+        <DialogTitle
           sx={{
-            position: "absolute",
-            right: 8,
-            top: 8,
-            color: "text.secondary",
-            width: 44,
-            height: 44,
+            fontWeight: 800,
+            pb: 0,
+            pr: 5,
+            fontSize: { xs: "1.05rem", sm: "1.25rem" },
           }}
         >
-          <CloseIcon fontSize="small" />
-        </IconButton>
-      </DialogTitle>
+          Edit Ride
+          <IconButton
+            onClick={onClose}
+            aria-label="Close"
+            sx={{
+              position: "absolute",
+              right: 8,
+              top: 8,
+              color: "text.secondary",
+              width: 44,
+              height: 44,
+            }}
+          >
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </DialogTitle>
 
-      {/* OfferRide owns the form, stepper, validation, and its own
+        {/* OfferRide owns the form, stepper, validation, and its own
           Back / Continue / Save Changes buttons — nothing extra needed here */}
-      {ride && (
-        <OfferRide ride={ride} onSave={onSave} onClose={onClose} />
-      )}
-    </Dialog>
+      {/* {ride && (
+          <OfferRide ride={ride} onSave={onSave} onClose={onClose} />
+        )}
+      </Dialog> */}
+
+      <Dialog
+        open={Boolean(ride)}
+        onClose={onClose}
+        fullWidth
+        maxWidth="md"
+        fullScreen={isMobile}
+        PaperProps={{
+          sx: {
+            width: {
+              xs: "100%",
+              sm: "95%",
+              md: "90%",
+            },
+            maxWidth: {
+              sm: 600,
+              md: 800,
+            },
+            borderRadius: {
+              xs: 0,
+              sm: 3,
+            },
+            m: {
+              xs: 0,
+              sm: 2,
+            },
+            overflow: "hidden",
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            position: "relative",
+            // textAlign: "center",
+            fontWeight: 700,
+            py: 2,
+            pr: 6,
+          }}
+        >
+          Edit Ride
+
+          <IconButton
+            aria-label="close"
+            onClick={onClose}
+            sx={{
+              position: "absolute",
+              top: 12,
+              right: 12,
+              color: "text.secondary",
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+
+        <DialogContent
+          dividers
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            p: {
+              xs: 1,
+              sm: 3,
+            },
+            overflowY: "auto",
+            maxHeight: {
+              xs: "100vh",
+              sm: "80vh",
+            },
+          }}
+        >
+          {ride && (
+            <OfferRide
+              ride={ride}
+              onSave={onSave}
+              onClose={onClose}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
