@@ -53,7 +53,7 @@ const MyReferrals = () => {
     const { completion, currentUser } = useUser();
     const [approveLoading, setApproveLoading] = useState(false);
     const [rejectLoading, setRejectLoading] = useState(false);
-    const [userImage, setUserImage] = useState();
+
     const toasts = ToastConfig();
     const handleOpenProfileMenu = (event) => {
         setProfileAnchorEl(event.currentTarget);
@@ -283,10 +283,7 @@ const MyReferrals = () => {
     );
 
     const ReferralCard = ({ user: u, showActions = false }) => {
-
-        useEffect(() => {
-            getUserData();
-        }, [])
+        const [userImage, setUserImage] = useState();
         const userData = {
             firstName: u?.data?.user?.firstName || u?.firstName || "",
             lastName: u?.data?.user?.lastName || u?.lastName || "",
@@ -294,17 +291,20 @@ const MyReferrals = () => {
             id: u?.data?.userId || u?._id
         };
         const userId = u._id;
-
         const getUserData = async () => {
             try {
-                const res = await axios.get(`${Api}/users/${userId}`)
-                setUserImage(res?.data?.data?.profileImage)
-
-            } catch (error) {
-                console.log(error);
+                const res = await axios.get(`${Api}/users/${userId}`);
+                setUserImage(res.data.data.profileImage || "");
+            } catch (err) {
+                console.log(err);
             }
+        };
 
-        }
+        useEffect(() => {
+            if (userId) {
+                getUserData();
+            }
+        }, [userId]);
 
         return (
             <Paper
@@ -332,22 +332,18 @@ const MyReferrals = () => {
                         alignItems="center"
                         sx={{ minWidth: 0, flex: 1 }}
                     >
-                        <Avatar
-                            src={userImage || ""}
-                            onClick={handleOpenProfileMenu}
+
+                        <Avatar src={userImage || undefined}
                             sx={{
                                 bgcolor: "#f0ebe3",
                                 color: "#ff8400",
-                                fontWeight: 700,
-                                fontSize: { xs: 12, sm: 14 },
-                                width: { xs: 40, sm: 44 },
-                                height: { xs: 40, sm: 44 },
-                                flexShrink: 0,
+                                width: 44,
+                                height: 44,
                             }}
                         >
-                            {getInitials(userData.firstName, userData.lastName)}
-                            {/* {!currentUser?.profileImage && (currentUser?.firstName?.[0] || "U")} */}
+                            {!userImage && getInitials(userData.firstName, userData.lastName)}
                         </Avatar>
+
 
                         <Box sx={{ minWidth: 0 }}>
                             <Typography

@@ -149,18 +149,11 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
   const getComments = async () => {
     try {
       // setLoading(true);
-      const res = await axios.get(Api + `/community/comments/${post?._id}`);
+      const res = await axios.get(Api + `/community/comments/${post?._id}/${user.id}`);
       const list = res.data.data.comments;
-      const likedComments =
-        JSON.parse(localStorage.getItem("likedComments")) || [];
 
-      const updatedComments = list.map((item) => ({
-        ...item,
-        likedByCurrentUser:
-          likedComments.includes(item._id) || item.likedByCurrentUser,
-      }));
 
-      setCommentsFetched(updatedComments);
+      setCommentsFetched(res.data.data.comments);
       onCommentsChanged?.(list.length);
     } catch (error) {
       console.log(error.message);
@@ -182,16 +175,16 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
   };
 
   const replySend = async (postId, parentId) => {
-      if (!reply.trim()) return;
+    if (!reply.trim()) return;
     try {
       await axios.post(
         Api + `/community/comments/${postId}/reply/${parentId}/${user.id}`,
         { reply },
       );
       setReply("");
-       setIsReply(null);
+      setIsReply(null);
       getComments();
-         
+
     } catch (error) {
       console.log(error.message);
     }
@@ -204,22 +197,8 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
   const likeComment = async (commentId) => {
     try {
       const res = await axios.post(
-        Api + `/community/likes/comment/${commentId}/${user.id}`,
+        `${Api}/community/likes/comment/${commentId}/${user.id}`
       );
-      let likedComments =
-        JSON.parse(localStorage.getItem("likedComments")) || [];
-
-      // Add or remove comment id
-      if (res.data.liked) {
-        if (!likedComments.includes(commentId)) {
-          likedComments.push(commentId);
-        }
-      } else {
-        likedComments = likedComments.filter((id) => id !== commentId);
-      }
-
-      // Save in localStorage
-      localStorage.setItem("likedComments", JSON.stringify(likedComments));
 
       setCommentsFetched((prev) =>
         prev.map((item) =>
@@ -229,8 +208,8 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
               likes: res.data.likes,
               likedByCurrentUser: res.data.liked,
             }
-            : item,
-        ),
+            : item
+        )
       );
     } catch (error) {
       console.log(error.message);
@@ -497,12 +476,13 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
                           userSelect: "none",
                         }}
                       >
-                        {item.likes ? (
-                          <ThumbUpAltIcon sx={{ fontSize: 14, color: '#0084ff' }} />
+                        {item.likedByCurrentUser ? (
+                          <ThumbUpAltIcon sx={{ fontSize: 14 }} />
                         ) : (
                           <ThumbUpAltOutlinedIcon sx={{ fontSize: 14 }} />
                         )}
                         {item.likes > 0 ? `${item.likes}` : ""}
+
                       </Typography>
                       <Typography
                         variant="caption"
@@ -526,17 +506,17 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
                 </Stack>
 
                 {/* reply input for parent */}
-        {isReply === item._id && (
-  <Box sx={{ ml: { xs: 3.5, sm: 4.5, md: 5 }, mb: 0.75 }}>
-    <CommentInput
-      value={reply}
-      onChange={(e) => setReply(e.target.value)}
-      onSend={() => replySend(post._id, item._id)}
-      placeholder="Write a reply…"
-    />
-  </Box>
-)}
-                {console.log("isReply",isReply,"item._id",item._id)}
+                {isReply === item._id && (
+                  <Box sx={{ ml: { xs: 3.5, sm: 4.5, md: 5 }, mb: 0.75 }}>
+                    <CommentInput
+                      value={reply}
+                      onChange={(e) => setReply(e.target.value)}
+                      onSend={() => replySend(post._id, item._id)}
+                      placeholder="Write a reply…"
+                    />
+                  </Box>
+                )}
+
 
                 {/* toggle replies */}
                 {replies.length > 0 && (
@@ -615,7 +595,7 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
                                 userSelect: "none",
                               }}
                             >
-                              {replyItem.likes ? (
+                              {replyItem.likedByCurrentUser ? (
                                 <ThumbUpAltIcon sx={{ fontSize: 14 }} />
                               ) : (
                                 <ThumbUpAltOutlinedIcon sx={{ fontSize: 13 }} />
