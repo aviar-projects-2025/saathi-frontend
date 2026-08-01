@@ -36,14 +36,13 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import { useTheme, useMediaQuery } from "@mui/material";
 
-
-
 const TopNav = ({ onMenuClick }) => {
-
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const [open, setOpen] = useState(false);
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+
   const { tabNotification, notifications } = useNotifications();
 
   // const unreadCount = tabNotification?.filter(n => !n.isRead).length;
@@ -67,11 +66,10 @@ const TopNav = ({ onMenuClick }) => {
       }
 
       return acc;
-    }, {})
+    }, {}),
   ).length;
   // console.log(unreadCount,'unreadCount')
   const [selectedMenu, setSelectedMenu] = useState("");
-
 
   const { completion, currentUser } = useUser();
   const navigate = useNavigate();
@@ -120,9 +118,8 @@ const TopNav = ({ onMenuClick }) => {
   ];
 
   const handleLogout = () => {
-    localStorage.clear();
-    navigate("/login");
-    // onItemClick?.();
+    setLogoutDialogOpen(true);
+    handleCloseProfileMenu();
   };
 
   const handleSelect = (option) => {
@@ -133,6 +130,16 @@ const TopNav = ({ onMenuClick }) => {
     } else if (option.link) {
       navigate(option.link);
     }
+  };
+
+  const confirmLogout = () => {
+    localStorage.clear();
+    setLogoutDialogOpen(false);
+    navigate("/login");
+  };
+
+  const cancelLogout = () => {
+    setLogoutDialogOpen(false);
   };
 
   return (
@@ -154,8 +161,7 @@ const TopNav = ({ onMenuClick }) => {
           justifyContent: "space-between",
         }}
       >
-        <Box
-          sx={{ display: "flex", alignItems: "center" }}>
+        <Box sx={{ display: "flex", alignItems: "center" }}>
           <IconButton
             onClick={onMenuClick}
             sx={{
@@ -171,9 +177,9 @@ const TopNav = ({ onMenuClick }) => {
             sx={{
               display: "flex",
               alignItems: "center",
-              cursor: "pointer"
+              cursor: "pointer",
             }}
-            onClick={() => navigate('/community')}
+            onClick={() => navigate("/community")}
           >
             <img
               src={saathilogo1}
@@ -194,8 +200,13 @@ const TopNav = ({ onMenuClick }) => {
           </Box>
         </Box>
 
-        <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.2, sm: 1.5 } }}>
-
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: { xs: 0.2, sm: 1.5 },
+          }}
+        >
           {isMobile && (
             <IconButton
               onClick={() => navigate("/discover")}
@@ -211,9 +222,15 @@ const TopNav = ({ onMenuClick }) => {
             </IconButton>
           )}
 
-
-          <IconButton onClick={handleOpenNotifications} sx={{ color: "#5f4632" }}>
-            <Badge color="error" badgeContent={unreadCount} invisible={unreadCount === 0}>
+          <IconButton
+            onClick={handleOpenNotifications}
+            sx={{ color: "#5f4632" }}
+          >
+            <Badge
+              color="error"
+              badgeContent={unreadCount}
+              invisible={unreadCount === 0}
+            >
               <NotificationsNoneIcon
                 sx={{
                   color: openNotifications ? "#f97316" : "#5f4632",
@@ -248,7 +265,9 @@ const TopNav = ({ onMenuClick }) => {
                 overflowY: "auto",
               }}
             >
-              <NotificationTab handleCloseNotifications={handleCloseNotifications} />
+              <NotificationTab
+                handleCloseNotifications={handleCloseNotifications}
+              />
             </Box>
           </Menu>
 
@@ -296,24 +315,50 @@ const TopNav = ({ onMenuClick }) => {
               setOpen(false);
             }}
             fullWidth
-            maxWidth="sm"
+            maxWidth="md"
+            fullScreen={isMobile}
+            PaperProps={{
+              sx: {
+                width: {
+                  xs: "100%",
+                  sm: "95%",
+                  md: "90%",
+                },
+                maxWidth: {
+                  sm: 600,
+                  md: 800,
+                },
+                borderRadius: {
+                  xs: 0,
+                  sm: 3,
+                },
+                m: {
+                  xs: 0,
+                  sm: 2,
+                },
+                overflow: "hidden",
+              },
+            }}
           >
             <DialogTitle
               sx={{
                 position: "relative",
-                textAlign: "center",
+                // textAlign: "center",
                 fontWeight: 700,
+                py: 2,
+                pr: 6,
               }}
             >
+              Offer Ride
+
               <IconButton
                 aria-label="close"
                 onClick={() => setOpen(false)}
                 sx={{
                   position: "absolute",
+                  top: 12,
                   right: 12,
-                  top: "80%",
-                  transform: "translateY(-50%)",
-                  color: "grey.600",
+                  color: "text.secondary",
                 }}
               >
                 <CloseIcon />
@@ -321,9 +366,17 @@ const TopNav = ({ onMenuClick }) => {
             </DialogTitle>
 
             <DialogContent
+              dividers
               sx={{
-                display: "flex",
-                justifyContent: "center",
+                p: {
+                  xs: 1,
+                  sm: 3,
+                },
+                overflowY: "auto",
+                maxHeight: {
+                  xs: "100vh",
+                  sm: "80vh",
+                },
               }}
             >
               <OfferRide />
@@ -361,7 +414,8 @@ const TopNav = ({ onMenuClick }) => {
                   cursor: "pointer",
                 }}
               >
-                {!currentUser?.profileImage && (currentUser?.firstName?.[0] || "U")}
+                {!currentUser?.profileImage &&
+                  (currentUser?.firstName?.[0] || "U")}
               </Avatar>
             </Box>
             <Menu
@@ -389,7 +443,8 @@ const TopNav = ({ onMenuClick }) => {
                 >
                   <ListItemIcon
                     sx={{
-                      color: selectedMenu === option.label ? "#FF9933" : "inherit",
+                      color:
+                        selectedMenu === option.label ? "#FF9933" : "inherit",
                     }}
                   >
                     {option.icon}
@@ -401,6 +456,145 @@ const TopNav = ({ onMenuClick }) => {
             </Menu>
           </Stack>
         </Box>
+        <Dialog
+          open={logoutDialogOpen}
+          onClose={cancelLogout}
+          PaperProps={{
+            sx: {
+              borderRadius: 4,
+              mx: { xs: 2, sm: "auto" },
+              width: { xs: "calc(100% - 32px)", sm: "100%" },
+              maxWidth: "xs",
+              overflow: "hidden",
+              position: "relative",
+              background: "linear-gradient(145deg, #ffffff, #faf5f0)",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.15)",
+            },
+          }}
+        >
+          {/* Decorative Top Bar */}
+          <Box
+            sx={{
+              height: 4,
+              background: "linear-gradient(90deg, #f97316, #dc2626)",
+              width: "100%",
+            }}
+          />
+
+          <IconButton
+            onClick={cancelLogout}
+            aria-label="Close"
+            sx={{
+              position: "absolute",
+              right: 12,
+              top: 12,
+              color: "#E85D26",
+              zIndex: 10,
+              bgcolor: "#f3f4f6",
+              "&:hover": {
+                bgcolor: "#fee2e2",
+                color: "#E85D26",
+              },
+              width: 36,
+              height: 36,
+            }}
+          >
+            <CloseIcon fontSize="small" />
+          </IconButton>
+
+          <DialogTitle
+            sx={{
+              fontWeight: 800,
+              fontSize: { xs: "1.1rem", sm: "1.25rem" },
+              pt: 4,
+              pb: 0,
+              textAlign: "center",
+              color: "#1F2430",
+            }}
+          >
+          </DialogTitle>
+
+          <DialogContent sx={{ pt: 2, pb: 1 }}>
+            <Box sx={{ textAlign: "center", px: 1 }}>
+              <Typography
+                sx={{
+                  fontSize: { xs: "0.95rem", sm: "1rem" },
+                  fontWeight: 500,
+                  color: "#374151",
+                  mb: 1,
+                }}
+              >
+                Are you sure you want to logout?
+              </Typography>
+              <Typography
+                color="text.secondary"
+                sx={{
+                  fontSize: { xs: "0.8rem", sm: "0.85rem" },
+                  color: "#6b7280",
+                  lineHeight: 1.6,
+                }}
+              >
+                You'll need to login again to access your account.
+              </Typography>
+            </Box>
+          </DialogContent>
+
+          <DialogActions
+            sx={{
+              px: 3,
+              pb: 3.5,
+              pt: 1.5,
+              gap: 1.5,
+              flexWrap: "wrap",
+              justifyContent: "center",
+            }}
+          >
+            <Button
+              onClick={cancelLogout}
+              variant="outlined"
+              sx={{
+                borderRadius: 2.5,
+                textTransform: "none",
+                fontWeight: 600,
+                flex: { xs: "1 1 auto", sm: "0 0 auto" },
+                minWidth: 110,
+                minHeight: 46,
+                borderColor: "#E85D26",
+                color: "#e5e7eb",
+                bgcolor: "#E85D26",
+                "&:hover": {
+                  borderColor: "#E85D26",
+                  bgcolor: "#E85D26",
+                },
+                px: 3,
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={confirmLogout}
+              variant="contained"
+              sx={{
+                borderRadius: 2.5,
+                textTransform: "none",
+                fontWeight: 700,
+                flex: { xs: "1 1 auto", sm: "0 0 auto" },
+                minWidth: 110,
+                minHeight: 46,
+                background: "linear-gradient(135deg, #dc2626, #b91c1c)",
+                color: "#ffffff",
+                "&:hover": {
+                  background: "linear-gradient(135deg, #b91c1c, #991b1b)",
+                },
+                boxShadow: "0 4px 15px rgba(220, 38, 38, 0.35)",
+                px: 3,
+              }}
+              startIcon={<LogoutIcon />}
+            >
+              Logout
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Toolbar>
     </AppBar>
   );

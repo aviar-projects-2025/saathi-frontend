@@ -48,6 +48,7 @@ import CommunityComments from "./CommunityComments.jsx";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 
 import ToastConfig from "../components/ToastConfig.jsx";
+import CircularProgress from "@mui/material/CircularProgress";
 
 const SAFFRON = "#E8650A";
 const SAFFRON_LIGHT = "#FDF0E8";
@@ -151,6 +152,8 @@ const UserProfile = () => {
 
   const [openImage, setOpenImage] = useState(false);
   const [selectedImage, setSelectedImage] = useState("");
+
+  const [communityLoading, setCommunityLoading] = useState(false);
 
   const shareLink = `${window.location.origin}/register?ref=${user?.referralCode}`;
 
@@ -310,6 +313,8 @@ const UserProfile = () => {
     }
   }, [currentUser]);
   const getCommunityPost = async () => {
+
+    setCommunityLoading(true);
     try {
       const postsRes = await axios.get(Api + "/community/");
       // Only current user's posts
@@ -320,6 +325,8 @@ const UserProfile = () => {
       setCommunityPosts(myPosts);
     } catch (error) {
       console.error(error);
+    } finally {
+      setCommunityLoading(false);
     }
   };
 
@@ -358,6 +365,7 @@ const UserProfile = () => {
   };
 
   const [tab, setTab] = useState(0);
+  
   const handleCopy = (value) => {
     navigator.clipboard.writeText(value);
     toast.success("Copied to Clipboard!", toasts);
@@ -537,72 +545,91 @@ const UserProfile = () => {
                   alignItems: "center",
                 }}
               >
-                {communityPosts.map((post) => (
-                  <Grid item xs={4} key={post._id} sx={{ mt: 1 }}>
-                    {post.postImage && (
-                      <Box
-                        // onClick={() => setSelectedPost(post)}
-                        onClick={() => {
-                          setSelectedImage(
-                            Array.isArray(post.postImage)
-                              ? post.postImage[0]
-                              : post.postImage,
-                          );
-                          setOpenImage(true);
-                        }}
-                        sx={{
-                          position: "relative",
-                          cursor: "pointer",
-                          width: { xs: 90, sm: 100, md: 130, lg: 150 },
-                          height: { xs: 110, sm: 130, md: 160, lg: 180 },
-                          overflow: "hidden",
-                          borderRadius: { xs: 0.5, sm: 1 },
-                          "&:hover .postOverlay": { opacity: 1 },
-                          display: "flex",
-                          justifyContent: "center",
-                          alignItems: "center",
-                        }}
-                      >
-                        <img
-                          src={
-                            Array.isArray(post.postImage)
-                              ? post.postImage[0]
-                              : post.postImage
-                          }
-                          alt=""
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover ",
-                            display: "block",
-                          }}
-                        />
+                {communityLoading ? (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      width: 45,
+                      height: 45,
+                    }}
+                  >
+                    <CircularProgress
+                      size={30}
+                      thickness={5}
+                      sx={{
+                        color: "#FF9933", // Saffron
+                      }}
+                    />
+                  </Box>
+                ) : (
+                  communityPosts.map((post) => (
+                    <Grid item xs={4} key={post._id} sx={{ mt: 1 }}>
+                      {post.postImage && (
                         <Box
-                          className="postOverlay"
+                          // onClick={() => setSelectedPost(post)}
+                          onClick={() => {
+                            setSelectedImage(
+                              Array.isArray(post.postImage)
+                                ? post.postImage[0]
+                                : post.postImage,
+                            );
+                            setOpenImage(true);
+                          }}
                           sx={{
-                            position: "absolute",
-                            inset: 0,
-                            bgcolor: "rgba(0,0,0,0.15)",
-                            opacity: 0,
-                            transition: "opacity 0.15s ease",
-                            display: { xs: "none", sm: "flex" },
-                            alignItems: "center",
+                            position: "relative",
+                            cursor: "pointer",
+                            width: { xs: 90, sm: 100, md: 130, lg: 150 },
+                            height: { xs: 110, sm: 130, md: 160, lg: 180 },
+                            overflow: "hidden",
+                            borderRadius: { xs: 0.5, sm: 1 },
+                            "&:hover .postOverlay": { opacity: 1 },
+                            display: "flex",
                             justifyContent: "center",
+                            alignItems: "center",
                           }}
                         >
-                          <Stack
-                            direction="row"
-                            spacing={2}
-                            sx={{ color: "#fff" }}
+                          <img
+                            src={
+                              Array.isArray(post.postImage)
+                                ? post.postImage[0]
+                                : post.postImage
+                            }
+                            alt=""
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover ",
+                              display: "block",
+                            }}
+                          />
+                          <Box
+                            className="postOverlay"
+                            sx={{
+                              position: "absolute",
+                              inset: 0,
+                              bgcolor: "rgba(0,0,0,0.15)",
+                              opacity: 0,
+                              transition: "opacity 0.15s ease",
+                              display: { xs: "none", sm: "flex" },
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
                           >
-                            <ThumbUpOffAltIcon fontSize="small" />
-                            <ChatIcon fontSize="small" />
-                          </Stack>
+                            <Stack
+                              direction="row"
+                              spacing={2}
+                              sx={{ color: "#fff" }}
+                            >
+                              <ThumbUpOffAltIcon fontSize="small" />
+                              <ChatIcon fontSize="small" />
+                            </Stack>
+                          </Box>
                         </Box>
-                      </Box>
-                    )}
-                  </Grid>
-                ))}
+                      )}
+                    </Grid>
+                  )))}
               </Grid>
             )}
 
