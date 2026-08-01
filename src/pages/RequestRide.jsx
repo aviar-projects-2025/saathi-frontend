@@ -56,6 +56,7 @@ import PageLayout from "../components/PageLayout";
 import { toast } from "react-toastify";
 import ToastConfig from "../components/ToastConfig.jsx";
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
+import RideDetailsModal from "./RideDetails.jsx";
 
 const RequestRide = () => {
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -69,6 +70,10 @@ const RequestRide = () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [isCancelling, setIsCancelling] = useState(false);
   const user = JSON.parse(localStorage.getItem("user"));
+
+  // FIX: track the actual request object that was clicked, not a shared boolean.
+  // This ensures exactly one modal renders, showing the correct ride's details.
+  const [selectedRideDetails, setSelectedRideDetails] = useState(null);
 
   const toasts = ToastConfig();
   const open = Boolean(anchorEl);
@@ -131,23 +136,23 @@ const RequestRide = () => {
       // Soft delete - update status to DELETED
       await axios.patch(
         `${Api}/bookride/${requestId}/status?type=Cancel`,
-        { 
+        {
           status: "DELETED",
           cancelledBy: user?.id,
           cancelledAt: new Date().toISOString()
         }
       );
-      
+
       // Remove from local state (hide from list)
       setAllMyRequests((prev) =>
         prev.filter((request) => request._id !== requestId),
       );
-      
+
       toast.success("Ride request deleted successfully", toasts);
-      
+
       // Refresh data and notify MyRides
       await fetchAllSends();
-      window.dispatchEvent(new CustomEvent('rideDataChanged', { 
+      window.dispatchEvent(new CustomEvent('rideDataChanged', {
         detail: { action: 'deleted', requestId: requestId }
       }));
     } catch (error) {
@@ -170,7 +175,7 @@ const RequestRide = () => {
       // Soft delete - update status to DELETED
       await axios.patch(
         `${Api}/bookride/${selectedRequest._id}/status?type=Cancel`,
-        { 
+        {
           status: "DELETED",
           cancelledBy: user?.id,
           cancelledAt: new Date().toISOString()
@@ -184,12 +189,12 @@ const RequestRide = () => {
 
       handleCloseDialog();
       await fetchAllSends();
-      
+
       // Notify MyRides to update history
-      window.dispatchEvent(new CustomEvent('rideDataChanged', { 
+      window.dispatchEvent(new CustomEvent('rideDataChanged', {
         detail: { action: 'cancelled', requestId: selectedRequest._id }
       }));
-      
+
       toast.success("Ride request cancelled successfully", toasts);
     } catch (err) {
       console.error("Error cancelling request:", err);
@@ -198,7 +203,7 @@ const RequestRide = () => {
         try {
           await axios.patch(
             `${Api}/bookride/${selectedRequest._id}/status?type=Reject`,
-            { 
+            {
               status: "CANCELLED",
               cancelledBy: user?.id,
               cancelledAt: new Date().toISOString()
@@ -212,12 +217,12 @@ const RequestRide = () => {
 
           handleCloseDialog();
           await fetchAllSends();
-          
+
           // Notify MyRides to update history
-          window.dispatchEvent(new CustomEvent('rideDataChanged', { 
+          window.dispatchEvent(new CustomEvent('rideDataChanged', {
             detail: { action: 'cancelled', requestId: selectedRequest._id }
           }));
-          
+
           toast.success("Ride request cancelled successfully", toasts);
         } catch (retryErr) {
           toast.error(
@@ -238,10 +243,10 @@ const RequestRide = () => {
 
   // Filter: Only show ACTIVE requests (not deleted/cancelled/rejected)
   const activeRequests = allMyRequests.filter(
-    (req) => 
-      req?.rideId && 
-      req.status !== "DELETED" && 
-      req.status !== "CANCELLED" && 
+    (req) =>
+      req?.rideId &&
+      req.status !== "DELETED" &&
+      req.status !== "CANCELLED" &&
       req.status !== "REJECTED"
   );
 
@@ -316,6 +321,8 @@ const RequestRide = () => {
                     boxShadow: "0 8px 20px rgba(0,0,0,0.08)",
                     cursor: "pointer",
                   }}
+                  // FIX: store the clicked request itself instead of flipping a shared boolean
+                  onClick={() => setSelectedRideDetails(request)}
                 >
                   {/* Header bar */}
                   <Box
@@ -505,6 +512,20 @@ const RequestRide = () => {
               );
             })}
           </>
+        )}
+
+        {/*
+          FIX: single modal instance, rendered once, driven by whichever request was clicked.
+          IMPORTANT: RideDetailsModal expects `ride` to be the actual ride document
+          (it reads ride.startTime, ride.modeOfTravel, ride.createdBy, formFrom(ride), etc.).
+          `selectedRideDetails` is the *request* wrapper (status, createdAt, rideId, members...),
+          so the real ride data lives at `selectedRideDetails.rideId` — pass that instead.
+        */}
+        {selectedRideDetails && (
+          <RideDetailsModal
+            onClose={() => setSelectedRideDetails(null)}
+            ride={selectedRideDetails.rideId}
+          />
         )}
 
         <Menu

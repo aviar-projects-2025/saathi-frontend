@@ -34,7 +34,19 @@ import {
   Avatar,
   Pagination,
   useTheme,
+  FormHelperText,
+  Checkbox,
 } from "@mui/material";
+import {
+  Calendar,
+  Clock,
+  Fuel,
+  HeartPulse,
+  Languages,
+  Luggage,
+  MapPin,
+  Users,
+} from "lucide-react";
 import Ridebook from "./Ridebook.jsx";
 import OfferRide from "./OfferRide.jsx";
 // import { useTheme } from '@mui/material/styles';
@@ -118,12 +130,12 @@ const genderIcon = {
   Any: <GroupsIcon sx={{ color: "#FF9933" }} />,
 };
 
-const fuelColor = {
-  Yes: "success",
-  No: "default",
-  Shared: "success",
-  "Not shared": "default",
-};
+// const fuelColor = {
+//   Yes: "success",
+//   No: "default",
+//   Shared: "success",
+//   "Not shared": "default",
+// };
 
 const formFrom = (ride) => ride?.from || "—";
 const formTo = (ride) => ride?.destination || ride?.to || "—";
@@ -714,7 +726,7 @@ function RideCard({
     })
     : "—";
 
-  const fuelLabel = ride.fuelSharing ? "Yes" : "No";
+  // const fuelLabel = ride.fuelSharing ? "Yes" : "No";
 
   // Get requests for this specific ride
   const rideRequests =

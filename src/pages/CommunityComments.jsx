@@ -72,7 +72,7 @@ const CommentInput = ({ value, onChange, onSend, placeholder }) => (
 );
 
 /* ── inline edit box for a comment/reply, also defined OUTSIDE ── */
-const EditCommentInput = ({ value, onChange, onSave, onCancel }) => (
+const EditCommentInput = ({ value, onChange, onSave, onCancel, load }) => (
   <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
     <TextField
       fullWidth
@@ -92,7 +92,11 @@ const EditCommentInput = ({ value, onChange, onSave, onCancel }) => (
       }}
     />
     <IconButton size="small" color="primary" onClick={onSave}>
-      <CheckIcon sx={{ fontSize: "1rem" }} />
+      {load ? (
+        <CircularProgress size={16} thickness={5} />
+      ) : (
+        <CheckIcon sx={{ fontSize: "1rem" }} />
+      )}
     </IconButton>
     <IconButton size="small" onClick={onCancel}>
       <CloseIcon sx={{ fontSize: "1rem" }} />
@@ -141,6 +145,8 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
 
   // const theme = useTheme();
   const isTab = useMediaQuery(theme.breakpoints.down("sm"));
+
+  const [commentsLoading, setCommentsLoading] = useState(false);
 
   useEffect(() => {
     getComments();
@@ -242,6 +248,9 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
   };
 
   const handleEditSave = async (commentId) => {
+
+    setCommentsLoading(true);
+
     try {
       await axios.patch(`${Api}/community/comments/${commentId}/${user.id}`, {
         comment: editText,
@@ -257,6 +266,8 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
         error.response?.data?.message || "Failed to update comment",
         toasts,
       );
+    } finally {
+      setCommentsLoading(false);
     }
   };
 
@@ -321,6 +332,7 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
             onChange={(e) => setEditText(e.target.value)}
             onSave={() => handleEditSave(item._id)}
             onCancel={handleEditCancel}
+            load={commentsLoading}
           />
         ) : (
           <Stack

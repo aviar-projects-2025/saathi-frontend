@@ -30,6 +30,7 @@ import Discover from './Discover.jsx'
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import InboxOutlinedIcon from "@mui/icons-material/InboxOutlined";
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   Menu,
@@ -803,6 +804,37 @@ export default function Community() {
             {postLoading ? (
               <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', py: 4 }}>
                 <CircularProgress size={isMobile ? 36 : 50} />
+              </Box>
+            ) : communityPosts.length == 0 ? (
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  py: 8,
+                  textAlign: "center",
+                }}
+              >
+                <InboxOutlinedIcon
+                  sx={{
+                    fontSize: { xs: 40, sm: 64 },
+                    color: "text.disabled",
+                    mb: 2,
+                  }}
+                />
+
+                <Typography variant="h6" fontWeight={600} color="text.primary">
+                  No Posts Yet
+                </Typography>
+
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mt: 1, maxWidth: 320 }}
+                >
+                  There are no posts to display at the moment.
+                </Typography>
               </Box>
             ) : (
               communityPosts?.map((post, index) => (
