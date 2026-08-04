@@ -29,28 +29,18 @@ const ForgotPassword = () => {
             .required("Email is required"),
     });
 
-    const handleSubmit = async (values, { setFieldError, resetForm }) => {
-        console.log("🚀 1. Form submitted with email:", values.email);
-        
+    const handleSubmit = async (values, { setFieldError, resetForm }) => {        
         setIsSubmitting(true);
         setError(null);
         
         try {
-            console.log("📡 2. Making API call to:", 'http://localhost:3000/api/v1/auth/forgot-password');
-            console.log("📧 3. Sending data:", { email: values.email });
-            
-            const response = await axios.post(
+          
+              const response = await axios.post(
                 'http://localhost:3000/api/v1/auth/forgot-password',
                 { email: values.email }
             );
-            
-            console.log("API Response:", response);
-            console.log("Response data:", response.data);
-            
             toast.success(response.data.message || "OTP sent to your email!", toasts);
             sessionStorage.setItem("resetEmail", values.email);
-            
-            console.log("🔄 6. Navigating to /verify-otp");
             navigate("/verify-otp");
             
         } catch (error) {
@@ -69,7 +59,6 @@ const ForgotPassword = () => {
             setError(errorMessage);
         } finally {
             setIsSubmitting(false);
-            console.log("🏁 11. Finished submission");
         }
     };
 
