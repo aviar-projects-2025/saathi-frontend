@@ -175,6 +175,7 @@ export default function Ridebook({
     });
   };
 
+
   const handleMemberChange = (index, field, value) => {
     if (isEditMode) {
       setNewMembers((prev) => {
@@ -386,10 +387,28 @@ export default function Ridebook({
       ? "Edit Seat Request"
       : "Request Seat";
 
-  // The list actually rendered in the editable member cards.
+  // 1. Which list is actually being edited
   const editableMembers = isEditMode ? newMembers : requestData.members;
 
+  // 2. Self-identity helpers
+  const selfFullName = `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`
+    .trim()
+    .toLowerCase();
 
+  const isSelfMember = (m) => (m?.name || "").trim().toLowerCase() === selfFullName;
+
+  const isSelfAlreadyConfirmed = existingMembers?.some(isSelfMember);
+
+  // 3. Tag + filter
+  const editableMembersWithMeta = editableMembers.map((member, originalIndex) => ({
+    ...member,
+    originalIndex,
+    isSelf: isSelfMember(member),
+  }));
+
+  const visibleMembers = editableMembersWithMeta.filter(
+    (member) => !(member.isSelf && isSelfAlreadyConfirmed)
+  );
   return (
     <Dialog
       open={open}
@@ -609,8 +628,10 @@ export default function Ridebook({
 
 
         <Stack spacing={1.25}>
-          {editableMembers.map((member, index) => {
-            const isLockedSelfSlot = index === 0;
+          {visibleMembers.map((member) => {
+            const isLockedSelfSlot = member.isSelf;
+            const index = member.originalIndex;
+
             return (
               <>
                 <Box
@@ -710,29 +731,30 @@ export default function Ridebook({
 
 
                 </Box>
-                <TextField
-                  fullWidth
-                  label="Phone Number"
-                  size={isMobile ? "small" : "medium"}
-                  value={currentUser?.mobile}
-                  disabled={isLockedSelfSlot}
-                  sx={{
-                    mb: 2,
-                    "& .MuiInputBase-input.Mui-disabled": {
-                      fontFamily: "'Inter', sans-serif",
-                      fontWeight: 500,
-                      WebkitTextFillColor: "#555",
-                    },
-                  }}
-                  onChange={(e) =>
-                    setRequestData({ ...requestData, mobile: e.target.value })
-                  }
-                />
+
               </>
             );
           })}
         </Stack>
-
+        <br />
+        <TextField
+          fullWidth
+          label="Phone Number"
+          size={isMobile ? "small" : "medium"}
+          value={currentUser?.mobile}
+          // disabled={isLockedSelfSlot}
+          sx={{
+            mb: 2,
+            "& .MuiInputBase-input.Mui-disabled": {
+              fontFamily: "'Inter', sans-serif",
+              fontWeight: 500,
+              WebkitTextFillColor: "#555",
+            },
+          }}
+          onChange={(e) =>
+            setRequestData({ ...requestData, mobile: e.target.value })
+          }
+        />
         <Button
           startIcon={<AddCircleOutlineIcon />}
           onClick={handleAddMember}
