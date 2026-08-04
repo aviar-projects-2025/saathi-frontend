@@ -333,8 +333,6 @@ export default function Ridebook({
 
   const handleRequestSubmit = async () => {
 
-    setRequestLoading(true);
-
     if (!ride) return;
     if (!validate()) return;
     const userMobile = currentUser?.mobile;
@@ -357,6 +355,8 @@ export default function Ridebook({
     };
 
     try {
+      setRequestLoading(true);
+      
       const res = isEditMode
         ? await axios.put(`${Api}/bookride/edit/${requestToEdit._id}`, payload)
         : await axios.post(`${Api}/bookride/${ride._id}`, payload);
@@ -378,6 +378,32 @@ export default function Ridebook({
       setRequestLoading(false);
     }
   };
+
+  const handleReset = () => {
+    if (isEditMode && requestToEdit) {
+      // Restore original edit data
+      setExistingMembers(requestToEdit.members || []);
+      setNewMembers(requestToEdit.pendingMembers || []);
+
+      setRequestData((prev) => ({
+        ...prev,
+        message: requestToEdit.message || "",
+        phone: requestToEdit.phone || "",
+      }));
+    } else {
+      // Restore new request defaults
+      setExistingMembers([]);
+      setNewMembers([]);
+
+      setRequestData({
+        seatsRequested: 1,
+        message: "",
+        membersCount: 1,
+        members: [defaultSelfMember()],
+      });
+    }
+  };
+
   const titleText = isFlight
     ? isEditMode
       ? "Edit Travel Companion Request"
@@ -710,24 +736,6 @@ export default function Ridebook({
 
 
                 </Box>
-                <TextField
-                  fullWidth
-                  label="Phone Number"
-                  size={isMobile ? "small" : "medium"}
-                  value={currentUser?.mobile}
-                  disabled={isLockedSelfSlot}
-                  sx={{
-                    mb: 2,
-                    "& .MuiInputBase-input.Mui-disabled": {
-                      fontFamily: "'Inter', sans-serif",
-                      fontWeight: 500,
-                      WebkitTextFillColor: "#555",
-                    },
-                  }}
-                  onChange={(e) =>
-                    setRequestData({ ...requestData, mobile: e.target.value })
-                  }
-                />
               </>
             );
           })}
@@ -750,6 +758,24 @@ export default function Ridebook({
         >
           Add Member
         </Button>
+
+        <TextField
+          fullWidth
+          label="Phone Number"
+          size={isMobile ? "small" : "medium"}
+          value={currentUser?.mobile}
+          sx={{
+            mb: 2,
+            "& .MuiInputBase-input.Mui-disabled": {
+              fontFamily: "'Inter', sans-serif",
+              fontWeight: 500,
+              WebkitTextFillColor: "#555",
+            },
+          }}
+          onChange={(e) =>
+            setRequestData({ ...requestData, mobile: e.target.value })
+          }
+        />
 
         {/* Contact + message */}
         <Typography
@@ -800,7 +826,7 @@ export default function Ridebook({
         <Button
           fullWidth={isMobile}
           size={isMobile ? "small" : "medium"}
-          onClick={onClose}
+          onClick={handleReset}
           sx={{
             textTransform: "none",
             borderRadius: 2.5,
@@ -828,7 +854,11 @@ export default function Ridebook({
             px: 3,
           }}
         >
-          {requestLoading ? "Submitting..." : isEditMode ? "Update Request" : "Submit Request"}
+          {
+            requestLoading
+              ? (isEditMode ? "Updating..." : "Submitting...")
+              : (isEditMode ? "Update Request" : "Submit Request")
+          }
         </Button>
       </DialogActions>
     </Dialog>

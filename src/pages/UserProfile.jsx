@@ -363,7 +363,7 @@ const UserProfile = () => {
   };
 
   const [tab, setTab] = useState(0);
-  
+
   const handleCopy = (value) => {
     navigator.clipboard.writeText(value);
     toast.success("Copied to Clipboard!", toasts);
@@ -722,8 +722,48 @@ const UserProfile = () => {
                 overflowY: "auto",
               }}
             >
-              <Stack spacing={{ xs: 1.5, sm: 2.5 }} sx={{ width: "100%" }}>
+              <Box
+                sx={{
+                  position: "relative",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  mb: 3
+                }}
+              >
                 <Typography
+                  variant="h6"
+                  sx={{
+                    fontWeight: 700,
+                    fontSize: {
+                      xs: "1rem",
+                      sm: "1.15rem",
+                      md: "1.25rem",
+                    },
+                  }}
+                >
+                  Edit Profile
+                </Typography>
+
+                <IconButton
+                  aria-label="close"
+                  onClick={() => setEditProfile(false)}
+                  sx={{
+                    position: "absolute",
+                    right: 0,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    color: "text.secondary",
+                    "&:hover": {
+                      bgcolor: "action.hover",
+                    },
+                  }}
+                >
+                  <CloseIcon />
+                </IconButton>
+              </Box>
+
+              <Stack spacing={{ xs: 1.5, sm: 2.5 }} sx={{ width: "100%" }}>
+                {/* <Typography
                   variant="h6"
                   fontWeight={700}
                   sx={{
@@ -732,7 +772,7 @@ const UserProfile = () => {
                   }}
                 >
                   Edit Profile
-                </Typography>
+                </Typography> */}
 
                 <Stack alignItems="center" spacing={1}>
                   <Avatar
@@ -953,7 +993,7 @@ const UserProfile = () => {
                 />
 
                 <Stack
-                  direction={{ xs: "row-reverse", sm: "row" }}
+                  direction={{ xs: "row", sm: "row" }}
                   spacing={{ xs: 1, sm: 1.5 }}
                   // justifyContent="flex-end"
                   // alignItems="center"
@@ -978,7 +1018,7 @@ const UserProfile = () => {
                       setProfileImage("");
                       resetForm();
                       setErrors({});
-                      setEditProfile(false);
+                      // setEditProfile(false);
                     }}
                   >
                     Cancel

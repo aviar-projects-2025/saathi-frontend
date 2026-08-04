@@ -199,15 +199,7 @@ function ReviewItem({ icon: Icon, label, value }) {
     </Stack>
   );
 }
-
-/**
- * OfferRide doubles as the "create" and "edit" modal.
- *
- * Props:
- *  - ride:     existing ride object -> when present, component opens in EDIT mode
- *  - onSave:   callback(updatedRide) called after a successful edit
- *  - onClose:  optional callback called after create/edit finishes (e.g. to close a dialog)
- */
+ 
 export default function OfferRide({ ride, onSave, onClose, selectedRide }) {
   const navigate = useNavigate();
   const theme = useTheme();
