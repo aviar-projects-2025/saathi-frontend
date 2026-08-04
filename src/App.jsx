@@ -146,6 +146,9 @@ const WaitingApproval = React.lazy(() =>
 const ForgotPassword = React.lazy(() =>
   import("./components/Auth/ForgotPassword.jsx")
 );
+const ResetPassword = React.lazy(() =>
+  import("./components/Auth/ResetPassword.jsx")
+);
 const VerifyOTP = React.lazy(() =>
   import("./components/Auth/VerifyOTP.jsx")
 );
@@ -226,7 +229,7 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/forget-password" element={<ForgotPassword />} />
             <Route path="/verify-otp" element={<VerifyOTP />} />
-            <Route path="/reset-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
           </Route>
 
           {/* ADMIN only routes */}
