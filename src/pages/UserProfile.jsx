@@ -16,6 +16,7 @@ import {
   MenuItem,
   Dialog,
   DialogContent,
+  Tooltip,
 } from "@mui/material";
 
 import NotificationsIcon from "@mui/icons-material/Notifications";
@@ -122,7 +123,7 @@ const UserProfile = () => {
       [id]: !prev[id],
     }));
   };
-  const { currentUser, getuserData } = useUser();
+  const { currentUser, getuserData, savedPost, removeSavedPost } = useUser();
 
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [editProfile, setEditProfile] = useState(false);
@@ -316,7 +317,6 @@ const UserProfile = () => {
     setCommunityLoading(true);
     try {
       const postsRes = await axios.get(Api + "/community/");
-      console.log("postsRes", postsRes);
       // Only current user's posts
       const myPosts = postsRes.data.data.filter(
         (item) => item.authorId?._id === currentUser?._id,
@@ -329,6 +329,8 @@ const UserProfile = () => {
       setCommunityLoading(false);
     }
   };
+
+
   const handleUpdateProfile = async () => {
     setSubmitLoading(true);
     try {
@@ -631,6 +633,82 @@ const UserProfile = () => {
               </Grid>
             )}
 
+            {tab === 1 && !selectedPost && (
+              <Grid
+                container
+                spacing={{ xs: "12px", sm: "15px", md: "20px" }}
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                {savedPost?.map((post) => (
+                  <Grid item xs={4} key={post._id} sx={{ mt: 1 }}>
+                    {post.postId?.postImage && (
+                      <Box
+                        onClick={() => {
+                          setSelectedImage(
+                            Array.isArray(post.postId.postImage)
+                              ? post.postId.postImage[0]
+                              : post.postId.postImage
+                          );
+                          setOpenImage(true);
+                        }}
+                        sx={{
+                          position: "relative",
+                          cursor: "pointer",
+                          width: { xs: 90, sm: 100, md: 130, lg: 150 },
+                          height: { xs: 110, sm: 130, md: 160, lg: 180 },
+                          overflow: "hidden",
+                          borderRadius: { xs: 0.5, sm: 1 },
+                          "&:hover .postOverlay": { opacity: 1 },
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                      >
+                        <img
+                          src={
+                            Array.isArray(post.postId.postImage)
+                              ? post.postId.postImage[0]
+                              : post.postId.postImage
+                          }
+                          alt=""
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                            display: "block",
+                          }}
+                        />
+
+                        <Box
+                          className="postOverlay"
+                          sx={{
+                            position: "absolute",
+                            inset: 0,
+                            bgcolor: "rgba(0,0,0,0.15)",
+                            opacity: 0,
+                            transition: "opacity 0.15s ease",
+                            display: { xs: "none", sm: "flex" },
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <Stack direction="row" spacing={2} sx={{ color: "#fff" }}>
+                            <ThumbUpOffAltIcon fontSize="small" />
+                            <ChatIcon fontSize="small" />
+                          </Stack>
+                        </Box>
+                      </Box>
+                    )}
+                  </Grid>
+                ))}
+              </Grid>
+            )}
+
             <Dialog
               open={openImage}
               onClose={() => setOpenImage(false)}
@@ -647,47 +725,76 @@ const UserProfile = () => {
                 },
               }}
             >
-              <IconButton
-                onClick={() => setOpenImage(false)}
+              <Box
                 sx={{
-                  position: "absolute",
-                  top: 8,
-                  right: 8,
-                  color: "#fff",
-                  bgcolor: "rgba(0,0,0,0.5)",
-                  "&:hover": {
-                    bgcolor: "rgba(0,0,0,0.7)",
-                  },
-                  zIndex: 10,
+                  position: "relative",
                 }}
               >
-                <CloseIcon />
-              </IconButton>
-
-              <DialogContent
-                sx={{
-                  p: 0,
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  bgcolor: "transparent",
-                }}
-              >
-                <Box
-                  component="img"
-                  src={selectedImage}
-                  alt="Post"
+                <IconButton
+                  onClick={() => removeSavedPost(selectedPost._id)}
                   sx={{
-                    display: "block",
-                    maxWidth: "95vw",
-                    maxHeight: "90vh",
-                    width: "auto",
-                    height: "auto",
-                    objectFit: "contain",
-                    borderRadius: 2,
+                    position: "absolute",
+                    top: 8,
+                    left: 8,
+                    color: "#fff",
+                    bgcolor: "rgba(0,0,0,0.5)",
+                    "&:hover": {
+                      bgcolor: "rgba(0,0,0,0.7)",
+                    },
+                    zIndex: 10,
                   }}
-                />
-              </DialogContent>
+                >
+                  <Tooltip title="Remove from saved">
+                    <BookmarkBorderIcon
+                      fontSize="small"
+                      sx={{ color: "#ff5e00ff" }}
+                    />
+                  </Tooltip>
+                </IconButton>
+
+                <IconButton
+                  onClick={() => setOpenImage(false)}
+                  sx={{
+                    position: "absolute",
+                    top: 8,
+                    right: 8,
+                    color: "#fff",
+                    bgcolor: "rgba(0,0,0,0.5)",
+                    "&:hover": {
+                      bgcolor: "rgba(0,0,0,0.7)",
+                    },
+                    zIndex: 10,
+                  }}
+                >
+                  <CloseIcon />
+                </IconButton>
+
+
+                <DialogContent
+                  sx={{
+                    p: 0,
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    bgcolor: "transparent",
+                  }}
+                >
+                  <Box
+                    component="img"
+                    src={selectedImage}
+                    alt="Post"
+                    sx={{
+                      display: "block",
+                      maxWidth: "95vw",
+                      maxHeight: "90vh",
+                      width: "auto",
+                      height: "auto",
+                      objectFit: "contain",
+                      borderRadius: 2,
+                    }}
+                  />
+                </DialogContent>
+              </Box>
             </Dialog>
           </SectionCard>
         </Stack>
