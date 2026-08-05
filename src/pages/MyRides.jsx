@@ -739,8 +739,9 @@ function RideCard({
   ).length;
 
   const handleApprove = async (requestId) => {
-    setApproveLoading(requestId);
+
     try {
+      setApproveLoading(requestId);
       const res = await axios.patch(
         `${Api}/bookride/${requestId}/status?type=Approve`,
         { status: "ACCEPTED" },
@@ -764,8 +765,9 @@ function RideCard({
   };
 
   const handleReject = async (requestId) => {
-    setRejectLoading(requestId);
+
     try {
+      setRejectLoading(requestId);
       await axios.patch(`${Api}/bookride/${requestId}/status?type=Reject`, {
         status: "REJECTED",
       });
@@ -1174,7 +1176,7 @@ function RideCard({
                         mb: 0.5,
                       }}
                     >
-                      Seats available
+                      Total Seats
                     </Typography>
                     <Stack direction="row" spacing={1} alignItems="center">
                       <EventSeatIcon
@@ -1579,7 +1581,7 @@ const MyRides = () => {
     const myrides = mypost.filter((ride) => {
       const rideStartTime = new Date(ride?.startTime);
       // const rideEndTime = new Date(rideStartTime.getTime() + 3 * 60 * 60 * 1000);
-      console.log(ride,'ride')
+      console.log(ride, 'ride')
       return (
         ride?.createdBy?._id === user.id &&
         rideStartTime <= currentDateTime &&

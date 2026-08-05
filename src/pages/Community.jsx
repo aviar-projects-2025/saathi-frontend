@@ -180,7 +180,7 @@ export default function Community() {
     }
   };
 
-  
+
 
   const isPostSaved = (postId) => {
     return savedPost?.some(
@@ -268,10 +268,9 @@ export default function Community() {
     setEditOpen(true);
   };
   const handleUpdate = async () => {
-
-    setImagePostLoading(true);
-
     try {
+      setImagePostLoading(true);
+
       const user = JSON.parse(localStorage.getItem("user"));
 
       const formData = new FormData();
@@ -313,6 +312,8 @@ export default function Community() {
       setImagePostLoading(false);
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to update post", toasts);
+    } finally {
+      setImagePostLoading(false);
     }
   };
 
@@ -407,8 +408,11 @@ export default function Community() {
     }
   };
   const handleDelete = async (postId) => {
-    setImagePostLoading(true);
+
     try {
+
+      setImagePostLoading(true);
+
       const user = JSON.parse(localStorage.getItem("user"));
 
       const res = await axios.delete(`${Api}/community/${postId}`, {

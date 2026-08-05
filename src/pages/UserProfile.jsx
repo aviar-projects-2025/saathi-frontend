@@ -314,8 +314,9 @@ const UserProfile = () => {
   }, [currentUser]);
   const getCommunityPost = async () => {
 
-    setCommunityLoading(true);
+
     try {
+      setCommunityLoading(true);
       const postsRes = await axios.get(Api + "/community/");
       // Only current user's posts
       const myPosts = postsRes.data.data.filter(
@@ -332,8 +333,9 @@ const UserProfile = () => {
 
 
   const handleUpdateProfile = async () => {
-    setSubmitLoading(true);
+
     try {
+      setSubmitLoading(true);
       const validationErrors = validateForm(formData);
       if (Object.keys(validationErrors).length > 0) {
         setErrors(validationErrors);

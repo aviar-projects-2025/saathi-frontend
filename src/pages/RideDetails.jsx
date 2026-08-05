@@ -50,6 +50,11 @@ import FamilyRestroomIcon from "@mui/icons-material/FamilyRestroom";
 import TranslateIcon from "@mui/icons-material/Translate";
 import BadgeIcon from "@mui/icons-material/Badge";
 
+import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
+import LanguageIcon from "@mui/icons-material/Language";
+import LuggageIcon from "@mui/icons-material/Luggage";
+import TransferWithinAStationIcon from "@mui/icons-material/TransferWithinAStation";
+
 
 // ── Design tokens ────────────────────────────────────────────────────────
 const TOKENS = {
@@ -120,8 +125,8 @@ function stationCode(name = '') {
   return words.slice(0, 3).map((w) => w[0]).join('').toUpperCase();
 }
 
-const formFrom = (ride) => ride?.from || ride?.source || '—';
-const formTo = (ride) => ride?.to || ride?.destination || '—';
+const formFrom = (ride) => ride?.from || '—';
+const formTo = (ride) => ride?.destination || '—';
 
 // ── Perforated tear-line (the signature ticket element) ─────────────────
 function Perforation() {
@@ -568,61 +573,169 @@ export default function RideDetailsModal({
           </Typography>
         </Stack>
 
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.2, sm: 2 } }}>
-          <Box sx={{ minWidth: 0 }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: { xs: 2, md: 3 },
+            py: 1,
+          }}
+        >
+          {/* FROM */}
+          <Box
+            sx={{
+              width: { xs: "34%", md: "30%" },
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-start",
+              minWidth: 0,
+            }}
+          >
             <Typography
               sx={{
                 fontFamily: TOKENS.displayFont,
-                fontWeight: 700,
-                fontSize: { xs: '1.9rem', sm: '2.4rem' },
+                fontWeight: 800,
+                fontSize: { xs: "1.5rem", md: "2.25rem" },
                 lineHeight: 1,
+                color: "#fff",
+                letterSpacing: "0.04em",
               }}
             >
               {stationCode(formFrom(ride))}
             </Typography>
+
             <Typography
               noWrap
               sx={{
+                mt: 0.5,
                 fontFamily: TOKENS.bodyFont,
-                fontSize: { xs: '0.68rem', sm: '0.75rem' },
-                color: 'rgba(250,246,236,0.65)',
-                mt: 0.3,
-                maxWidth: { xs: 100, sm: 140 },
+                fontWeight: 600,
+                fontSize: { xs: "0.82rem", md: "0.9rem" },
+                color: "#F5F5F5",
               }}
             >
               {formFrom(ride)}
             </Typography>
+
+            <Typography
+              sx={{
+                mt: 0.25,
+                fontFamily: TOKENS.bodyFont,
+                fontSize: "0.72rem",
+                color: "rgba(255,255,255,.65)",
+                textTransform: "uppercase",
+                letterSpacing: ".12em",
+              }}
+            >
+              {ride.fromCountry}
+            </Typography>
           </Box>
 
-          <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: 1, position: 'relative', top: -8 }}>
-            <Box sx={{ flex: 1, borderTop: '2px dashed rgba(250,246,236,0.35)' }} />
-            <FlightTakeoffIcon sx={{ fontSize: { xs: 16, sm: 19 }, color: TOKENS.accent, transform: 'rotate(0deg)' }} />
-            <Box sx={{ flex: 1, borderTop: '2px dashed rgba(250,246,236,0.35)' }} />
+          {/* FLIGHT PATH */}
+          <Box
+            sx={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              px: 1,
+            }}
+          >
+            <Box
+              sx={{
+                width: "100%",
+                display: "flex",
+                alignItems: "center",
+                // gap: 1,
+                mb: { xs: 3, sm: 1.5 }
+              }}
+            >
+              <Box
+                sx={{
+                  flex: 1,
+                  borderTop: "2px dashed rgba(255,255,255,.30)",
+                }}
+              />
+
+              <Box
+                sx={{
+                  width: 38,
+                  height: 38,
+                  // borderRadius: "50%",
+                  // bgcolor: "rgba(255,255,255,.08)",
+                  // border: "1px solid rgba(255,255,255,.15)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <TravelIcon
+                  sx={{
+                    fontSize: 24,
+                    color: "#fff",
+                  }}
+                />
+              </Box>
+
+              <Box
+                sx={{
+                  flex: 1,
+                  borderTop: "2px dashed rgba(255,255,255,.30)",
+                }}
+              />
+            </Box>
           </Box>
 
-          <Box sx={{ minWidth: 0, textAlign: 'right' }}>
+          {/* TO */}
+          <Box
+            sx={{
+              width: { xs: "34%", md: "30%" },
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-end",
+              textAlign: "right",
+              minWidth: 0,
+            }}
+          >
             <Typography
               sx={{
                 fontFamily: TOKENS.displayFont,
-                fontWeight: 700,
-                fontSize: { xs: '1.9rem', sm: '2.4rem' },
+                fontWeight: 800,
+                fontSize: { xs: "1.5rem", md: "2.25rem" },
                 lineHeight: 1,
+                color: "#fff",
+                letterSpacing: "0.04em",
               }}
             >
               {stationCode(formTo(ride))}
             </Typography>
+
             <Typography
               noWrap
               sx={{
+                mt: 0.5,
                 fontFamily: TOKENS.bodyFont,
-                fontSize: { xs: '0.68rem', sm: '0.75rem' },
-                color: 'rgba(250,246,236,0.65)',
-                mt: 0.3,
-                maxWidth: { xs: 100, sm: 140 },
-                ml: 'auto',
+                fontWeight: 600,
+                fontSize: { xs: "0.82rem", md: "0.9rem" },
+                color: "#F5F5F5",
               }}
             >
               {formTo(ride)}
+            </Typography>
+
+            <Typography
+              sx={{
+                mt: 0.25,
+                fontFamily: TOKENS.bodyFont,
+                fontSize: "0.72rem",
+                color: "rgba(255,255,255,.65)",
+                textTransform: "uppercase",
+                letterSpacing: ".12em",
+              }}
+            >
+              {ride.toCountry}
             </Typography>
           </Box>
         </Box>
@@ -647,6 +760,8 @@ export default function RideDetailsModal({
         />
       </Box>
 
+      {console.log("Ride details ===> ", ride)}
+
       <DialogContent sx={{ px: { xs: 2.5, sm: 4 }, py: { xs: 3, sm: 3.5 } }}>
         {/* ── Ticket data fields ── */}
         <Box
@@ -656,24 +771,30 @@ export default function RideDetailsModal({
             gap: { xs: 2, sm: 2.5 },
           }}
         >
-          <Field icon={CalendarTodayIcon} label="Date" value={dateLabel} />
-          <Field icon={AccessTimeIcon} label="Time" value={timeLabel} />
+          <Field icon={CalendarTodayIcon} label="Date" value={dateLabel || '—'} />
+          <Field icon={AccessTimeIcon} label="Time" value={timeLabel || '—'} />
           <Field icon={TravelIcon} label="Mode" value={ride.modeOfTravel || '—'} />
           <Field icon={AccessTimeIcon} label="Travel Time" value={ride.duration || '—'} />
           <Field icon={TravellerTypeIcon} label="Traveller Type" value={ride.travellerType || '—'} />
-          <Field icon={BadgeIcon} label="Age Preference" value={ride.ageGroupPreference || '—'} />
-          {ride.availableSeats > 0 && (<Field icon={EventSeatIcon} label="Seats avail." value={ride.availableSeats ?? ride.seats ?? '—'} />)}
-          <Field icon={GenderIcon} label="Gender pref." value={ride.genderPreference || 'Any'} />
-          {ride.airlineName && (<Field icon={FlightIcon} label="Airline" value={ride.airlineName || '—'} />)}
-          {ride.flightNumber && (<Field icon={ConfirmationNumberIcon} label="Flight Number" value={ride.flightNumber} />)}
-          {ride.fuelSharing && (<Field
-            icon={LocalGasStationIcon}
-            label="Fuel Cost"
-            // value={ride.fuelSharing ? (ride.fuelAmount ? `₹${ride.fuelAmount}/rider` : 'Yes') : 'No'}
-            value={ride.fuelSharing || '—'}
-          />)}
+          <Field icon={BadgeIcon} label="Age Group Pref." value={ride.ageGroupPreference || '—'} />
+          {ride.availableSeats && (<Field icon={EventSeatIcon} label="Seats avail." value={ride.availableSeats ?? ride.seats ?? '—'} />)}
+          <Field icon={GenderIcon} label="Gender Pref." value={ride.genderPreference || 'Any'} />
+          {ride.airlineName && (<Field icon={FlightIcon} label="Airline Name" value={ride.airlineName || '—'} />)}
+          {ride.flightNumber && (<Field icon={ConfirmationNumberIcon} label="Flight Number" value={ride.flightNumber || '—'} />)}
+
+          {ride.modeOfTravel !== 'Bike' ? (
+            <>
+              <Field icon={MedicalServicesIcon} label="Medical Assistance" value={ride.medicalAssistance ? "Yes" : "No"} />
+              <Field icon={LanguageIcon} label="Language Support" value={ride.languageSupport ? "Yes" : "No"} />
+              <Field icon={LuggageIcon} label="Baggage Help" value={ride.baggageHelp ? "Yes" : "No"} />
+              <Field icon={TransferWithinAStationIcon} label="Transit Help" value={ride.transitHelp ? "Yes" : "No"} />
+            </>
+          ) : null}
+
+          {ride.fuelSharing !== 0 && (<Field icon={LocalGasStationIcon} label="Fuel Cost" value={`₹${ride.fuelSharing}/Person` || '—'} />)}
+
           {ride.description && (
-            <Field icon={DescriptionIcon} label="Notes" value={ride.description || '—'} span />
+            <Field icon={DescriptionIcon} label="Description" value={ride.description || '—'} span />
           )}
         </Box>
 
@@ -689,17 +810,17 @@ export default function RideDetailsModal({
               // wordBreak: 'break-word',
             }}
           >
-            {ride.language?.join(" , ") || '—'}
+            {ride.language?.join(", ") || '—'}
           </Typography>
         </Stack>
 
 
         {requests.length > 0 && (
           <>
+
             <Perforation />
 
             <Box>
-
               {requests.length === 0 ? (
                 <Box
                   sx={{
@@ -741,8 +862,8 @@ export default function RideDetailsModal({
                         />
                       )}
                     </Stack>
-                    <Typography sx={{ fontFamily: TOKENS.monoFont, fontSize: '0.9rem', color: TOKENS.inkSoft, mx: 2 }}>
-                      {requests.length} total
+                    <Typography sx={{ fontFamily: TOKENS.monoFont, fontSize: '0.9rem', color: TOKENS.inkSoft, mx: 2, mt: 0.3 }}>
+                      {requests.length} Total
                     </Typography>
                   </Stack>
 
@@ -777,88 +898,88 @@ export default function RideDetailsModal({
         )}
 
       </DialogContent>
-  {/* ── Actions ── */}
-<Box
-  sx={{
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: 1,
-    px: { xs: 2.5, sm: 4 },
-    py: { xs: 2, sm: 2.5 },
-    borderTop: `1px solid ${TOKENS.line}`,
-  }}
->
-  {showEdit && (
-    (ride.createdBy?._id === user?.id || 
-     typeof ride.createdBy === 'string' && ride.createdBy === user?.id) && (
-      <Button
-        onClick={() => onEdit(ride)}
-        startIcon={<EditIcon sx={{ fontSize: { xs: 16, sm: 18 } }} />}
-        size={isMd ? 'medium' : 'small'}
+      {/* ── Actions ── */}
+      <Box
         sx={{
-          fontFamily: TOKENS.bodyFont,
-          textTransform: 'none',
-          fontWeight: 700,
-          fontSize: { xs: '0.8rem', sm: '0.88rem' },
-          color: TOKENS.ink,
-          border: `1.5px solid ${TOKENS.ink}`,
-          borderRadius: 5,
-          px: { xs: 1.6, sm: 2.2 },
-          minHeight: { xs: 40, sm: 44 },
-          flex: { xs: '1 1 auto', sm: '0 0 auto' },
-          '&:hover': { bgcolor: TOKENS.ink, color: TOKENS.paper },
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 1,
+          px: { xs: 2.5, sm: 4 },
+          py: { xs: 2, sm: 2.5 },
+          borderTop: `1px solid ${TOKENS.line}`,
         }}
       >
-        Edit ride
-      </Button>
-    )
-  )}
-  {showDelete && (
-    (ride.createdBy?._id === user?.id || 
-     typeof ride.createdBy === 'string' && ride.createdBy === user?.id) && (
-      <Button
-        onClick={() => onDelete(ride)}
-        startIcon={<DeleteIcon sx={{ fontSize: { xs: 16, sm: 18 } }} />}
-        size={isMd ? 'medium' : 'small'}
-        sx={{
-          fontFamily: TOKENS.bodyFont,
-          textTransform: 'none',
-          fontWeight: 700,
-          fontSize: { xs: '0.8rem', sm: '0.88rem' },
-          color: TOKENS.red,
-          border: `1.5px solid ${TOKENS.red}`,
-          borderRadius: 5,
-          px: { xs: 1.6, sm: 2.2 },
-          minHeight: { xs: 40, sm: 44 },
-          flex: { xs: '1 1 auto', sm: '0 0 auto' },
-          '&:hover': { bgcolor: TOKENS.red, color: '#fff' },
-        }}
-      >
-        Cancel Ride
-      </Button>
-    )
-  )}
-  <Box sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }} />
-  <Button
-    onClick={onClose}
-    size={isMd ? 'medium' : 'small'}
-    sx={{
-      fontFamily: TOKENS.bodyFont,
-      textTransform: 'none',
-      fontWeight: 700,
-      fontSize: { xs: '0.8rem', sm: '0.88rem' },
-      color: TOKENS.inkSoft,
-      border: `1.5px solid ${TOKENS.line}`,
-      borderRadius: 5,
-      px: { xs: 1.6, sm: 2.2 },
-      minHeight: { xs: 40, sm: 44 },
-      flex: { xs: '1 1 auto', sm: '0 0 auto' },
-      '&:hover': { bgcolor: TOKENS.paperDim },
-    }}
-  >
-    Close
-  </Button>
-</Box>
+        {showEdit && (
+          (ride.createdBy?._id === user?.id ||
+            typeof ride.createdBy === 'string' && ride.createdBy === user?.id) && (
+            <Button
+              onClick={() => onEdit(ride)}
+              startIcon={<EditIcon sx={{ fontSize: { xs: 16, sm: 18 } }} />}
+              size={isMd ? 'medium' : 'small'}
+              sx={{
+                fontFamily: TOKENS.bodyFont,
+                textTransform: 'none',
+                fontWeight: 700,
+                fontSize: { xs: '0.8rem', sm: '0.88rem' },
+                color: TOKENS.ink,
+                border: `1.5px solid ${TOKENS.ink}`,
+                borderRadius: 5,
+                px: { xs: 1.6, sm: 2.2 },
+                minHeight: { xs: 40, sm: 44 },
+                flex: { xs: '1 1 auto', sm: '0 0 auto' },
+                '&:hover': { bgcolor: TOKENS.ink, color: TOKENS.paper },
+              }}
+            >
+              Edit ride
+            </Button>
+          )
+        )}
+        {showDelete && (
+          (ride.createdBy?._id === user?.id ||
+            typeof ride.createdBy === 'string' && ride.createdBy === user?.id) && (
+            <Button
+              onClick={() => onDelete(ride)}
+              startIcon={<DeleteIcon sx={{ fontSize: { xs: 16, sm: 18 } }} />}
+              size={isMd ? 'medium' : 'small'}
+              sx={{
+                fontFamily: TOKENS.bodyFont,
+                textTransform: 'none',
+                fontWeight: 700,
+                fontSize: { xs: '0.8rem', sm: '0.88rem' },
+                color: TOKENS.red,
+                border: `1.5px solid ${TOKENS.red}`,
+                borderRadius: 5,
+                px: { xs: 1.6, sm: 2.2 },
+                minHeight: { xs: 40, sm: 44 },
+                flex: { xs: '1 1 auto', sm: '0 0 auto' },
+                '&:hover': { bgcolor: TOKENS.red, color: '#fff' },
+              }}
+            >
+              Cancel Ride
+            </Button>
+          )
+        )}
+        <Box sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }} />
+        <Button
+          onClick={onClose}
+          size={isMd ? 'medium' : 'small'}
+          sx={{
+            fontFamily: TOKENS.bodyFont,
+            textTransform: 'none',
+            fontWeight: 700,
+            fontSize: { xs: '0.8rem', sm: '0.88rem' },
+            color: TOKENS.inkSoft,
+            border: `1.5px solid ${TOKENS.line}`,
+            borderRadius: 5,
+            px: { xs: 1.6, sm: 2.2 },
+            minHeight: { xs: 40, sm: 44 },
+            flex: { xs: '1 1 auto', sm: '0 0 auto' },
+            '&:hover': { bgcolor: TOKENS.paperDim },
+          }}
+        >
+          Close
+        </Button>
+      </Box>
     </Dialog>
   );
 }

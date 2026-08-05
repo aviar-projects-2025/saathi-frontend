@@ -91,8 +91,11 @@ const RequestRide = () => {
   }, [refreshRide]);
 
   async function fetchAllSends() {
-    setLoadingRequests(true);
+
     try {
+      
+      setLoadingRequests(true);
+
       if (!user?.id) return;
       const res = await axios.get(`${Api}/bookride/send/${user.id}`);
       const requestUser = res.data.data.map((item) => item.members);
