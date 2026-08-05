@@ -20,31 +20,31 @@ import { Route as RouteIcon } from '@mui/icons-material';
 // ──────────────────────────────────────────────
 const testimonials = [
   {
-    name: 'Aditya Mehta',
-    location: 'Mumbai',
+    name: "Michael Johnson",
+    location: "Chicago, IL",
     avatar:
-      'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=1974&auto=format&fit=crop&crop=face',
-    text: 'Saathi made my Goa trip unforgettable! Found amazing travel buddies and saved so much on fuel costs. Highly recommended!',
+      "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=1974&auto=format&fit=crop&crop=face",
+    text: "Saathi made my road trip to Nashville incredible! I found great travel companions, split fuel costs, and had a safe, enjoyable journey.",
     rating: 5,
-    trip: 'Mumbai → Goa',
+    trip: "Chicago → Nashville",
   },
   {
-    name: 'Sneha Kapoor',
-    location: 'Delhi',
+    name: "Emily Carter",
+    location: "Austin, TX",
     avatar:
-      'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=1976&auto=format&fit=crop&crop=face',
-    text: "As a solo female traveler, safety was my priority. Saathi's verified drivers and community reviews gave me complete peace of mind.",
+      "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=1976&auto=format&fit=crop&crop=face",
+    text: "As a solo traveler, safety was my biggest concern. Saathi's verified community gave me confidence to travel and meet amazing people.",
     rating: 5,
-    trip: 'Delhi → Manali',
+    trip: "Austin → Dallas",
   },
   {
-    name: 'Vikram Reddy',
-    location: 'Hyderabad',
+    name: "David Miller",
+    location: "Los Angeles, CA",
     avatar:
-      'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=1974&auto=format&fit=crop&crop=face',
-    text: 'The best way to travel on a budget! Met incredible people and discovered hidden gems along the way. Will use again!',
+      "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=1974&auto=format&fit=crop&crop=face",
+    text: "An excellent way to save on travel expenses. I met friendly travelers, shared the ride, and enjoyed the trip without breaking my budget.",
     rating: 5,
-    trip: 'Hyderabad → Bangalore',
+    trip: "Los Angeles → San Francisco",
   },
 ];
 
@@ -65,7 +65,8 @@ const TestimonialsSection = () => (
             fontWeight: 700,
           }}
         >
-          Hear from our community of 50,000+ happy travelers across India.
+          Join a growing community of trusted travelers across the USA who choose
+          Saathi for seamless ride sharing, meaningful connections, and unforgettable journeys.
         </Typography>
       </Box>
 

@@ -94,14 +94,14 @@ const Footer = () => (
                 variant="body1"
                 sx={{
                   maxWidth: 600,
-                  mx: 'auto',
-                  color: 'rgba(255,255,255,.68)',
+                  mx: "auto",
+                  color: "rgba(255,255,255,.68)",
                   lineHeight: 1.8,
                 }}
               >
-                India's most trusted travel companion platform. Connect,
-                share rides, split costs, and explore together with
-                verified travelers.
+                The USA's trusted travel companion platform. Connect with verified
+                travelers, share rides, split travel expenses, and enjoy safer,
+                smarter journeys together.
               </Typography>
             </Box>
 
@@ -154,7 +154,7 @@ const Footer = () => (
               },
               {
                 Icon: LocationIcon,
-                text: 'Thiruvannamalai, Tamil Nadu, India',
+                text: "Illinois, USA",
               },
             ].map(({ Icon, text }) => (
               <Stack key={text} direction="row" spacing={1.5} alignItems="center">
@@ -188,9 +188,11 @@ const Footer = () => (
 
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
-        spacing={1}
-        justifyContent="center"
-        alignItems="center"
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
       >
         <Typography
           variant="body2"
@@ -201,7 +203,11 @@ const Footer = () => (
         >
           © 2026 AVIAR Technology Services
         </Typography>
-
+      </Stack>
+      <Box
+        sx={{
+          textAlign: 'center',
+        }}>
         <Typography
           variant="body2"
           sx={{
@@ -209,9 +215,9 @@ const Footer = () => (
             textAlign: 'center',
           }}
         >
-          Made in India
+          Made in USA
         </Typography>
-      </Stack>
+      </Box>
     </Container>
   </Box>
 );

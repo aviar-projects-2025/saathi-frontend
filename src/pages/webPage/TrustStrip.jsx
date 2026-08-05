@@ -12,11 +12,22 @@ import {
 // Trust Badges Strip
 // ──────────────────────────────────────────────
 const trustItems = [
-  { icon: <VerifiedUserIcon fontSize="small" />, text: 'Verified Drivers' },
-  { icon: <ShieldIcon fontSize="small" />, text: 'Secure Payments' },
-  { icon: <HeadsetMicIcon fontSize="small" />, text: '24/7 Support' },
-  { icon: <PublicIcon fontSize="small" />, text: '100+ Destinations' },
-  { icon: <TrophyIcon fontSize="small" />, text: '#1 Travel Platform' },
+  {
+    icon: <VerifiedUserIcon fontSize="small" />,
+    text: "Verified Community",
+  },
+  {
+    icon: <ShieldIcon fontSize="small" />,
+    text: "Privacy & Safety First",
+  },
+  {
+    icon: <HeadsetMicIcon fontSize="small" />,
+    text: "24/7 Travel Assistance",
+  },
+  {
+    icon: <TrophyIcon fontSize="small" />,
+    text: "Trusted Across the USA",
+  },
 ];
 
 const TrustStrip = () => (

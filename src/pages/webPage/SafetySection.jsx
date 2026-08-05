@@ -53,9 +53,15 @@ const SafetySection = () => (
       </Typography>
       <Typography
         variant="body1"
-        sx={{ color: 'rgba(10, 10, 10, 0.72)', lineHeight: 2, m: 4, fontWeight: 700 }}
+        sx={{
+          color: "rgba(10, 10, 10, 0.72)",
+          lineHeight: 2,
+          m: 4,
+          fontWeight: 700,
+        }}
       >
-        We've built industry-leading safety features so you can focus on enjoying the journey.
+        Experience travel with complete peace of mind through verified profiles,
+        trusted connections, and thoughtfully designed safety features.
       </Typography>
     </Box>
 

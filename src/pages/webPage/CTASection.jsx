@@ -81,14 +81,15 @@ const CTASection = ({ onSearchClick }) => {
           <Typography
             variant="h6"
             sx={{
-              color: 'rgba(255,255,255,0.9)',
+              color: "rgba(255,255,255,0.9)",
               fontWeight: 400,
-              fontSize: { xs: '1rem', sm: '1.1rem' },
+              fontSize: { xs: "1rem", sm: "1.1rem" },
               lineHeight: 1.7,
             }}
           >
-            Join 50,000+ travelers already using Saathi. Connect, share rides,
-            and save money on every journey.
+            Discover a smarter way to travel across the USA. Join the Saathi
+            community to connect with verified travelers, share rides, and reduce
+            travel costs.
           </Typography>
 
           {/* Buttons */}
