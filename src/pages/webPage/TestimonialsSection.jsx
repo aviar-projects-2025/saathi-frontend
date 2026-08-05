@@ -26,7 +26,7 @@ const testimonials = [
       "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=1974&auto=format&fit=crop&crop=face",
     text: "Saathi made my journey across North America effortless. I found trusted travel companions, shared travel expenses, and enjoyed a safe, comfortable trip.",
     rating: 5,
-    trip: "United States → Canada",
+    trip: "Delhi → Chicago",
   },
   {
     name: "Emily Carter",
@@ -35,7 +35,7 @@ const testimonials = [
       "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=1976&auto=format&fit=crop&crop=face",
     text: "Traveling solo felt much safer with Saathi. The verified community helped me meet reliable travelers and made my international trip stress-free.",
     rating: 5,
-    trip: "United Kingdom → France",
+    trip: "Bengaluru → San Francisco",
   },
   {
     name: "David Miller",
@@ -44,7 +44,7 @@ const testimonials = [
       "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=1974&auto=format&fit=crop&crop=face",
     text: "Saathi is an excellent platform for international travel. Sharing rides reduced my costs while giving me the chance to meet amazing people from around the world.",
     rating: 5,
-    trip: "Germany → Netherlands",
+    trip: "Mumbai → New York",
   },
 ];
 
