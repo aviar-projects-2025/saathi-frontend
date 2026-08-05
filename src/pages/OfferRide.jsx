@@ -208,7 +208,7 @@ function ReviewItem({ icon: Icon, label, value }) {
  *  - onSave:   callback(updatedRide) called after a successful edit
  *  - onClose:  optional callback called after create/edit finishes (e.g. to close a dialog)
  */
-export default function OfferRide({ ride, onSave, onClose, selectedRide }) {
+export default function OfferRide({ ride, onSave, onClose, selectedRide , setOpen}) {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -576,6 +576,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide }) {
       formReset();
       setSubmitted(true);
       setShowErrors(false);
+      setOpen(false)
     } catch (error) {
       toast.error(error.response?.data?.message || error.message, {
         position: isTab ? "top-center" : "top-right",
