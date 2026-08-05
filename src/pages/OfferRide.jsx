@@ -971,6 +971,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide , setOpe
                     helperText={!form.from && showErrors ? "Required" : ""}
                     sx={tfSx}
                   />
+
                   <TextField
                     label="Destination"
                     fullWidth
@@ -1025,26 +1026,26 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide , setOpe
                   />
                 </Stack>
               </Stack>
-              {(isFlight || !isBusTrain) && (
-                <TextField
-                  label="Journey Duration (Approximate)"
-                  fullWidth
-                  type="number"
-                  size={inputSize}
-                  value={form.duration}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    if (value === "" || /^\d{0,2}$/.test(value)) {
-                      update("duration", value);
-                    }
-                  }}
-                  inputProps={{ min: 0, max: 99 }}
-                  error={!form.duration && showErrors}
-                  helperText={!form.duration && showErrors ? "Required" : ""}
-                  sx={tfSx}
-                />
-              )}
-
+         
+                               {(!isFlight && !isBusTrain && !isBus) && (
+  <TextField
+    label="Journey Duration (Approximate)"
+    fullWidth
+    type="number"
+    size={inputSize}
+    value={form.duration}
+    onChange={(e) => {
+      const value = e.target.value;
+      if (value === "" || /^\d{0,2}$/.test(value)) {
+        update("duration", value);
+      }
+    }}
+    inputProps={{ min: 0, max: 99 }}
+    error={!form.duration && showErrors}
+    helperText={!form.duration && showErrors ? "Required" : ""}
+    sx={tfSx}
+  />
+)}
               <TextField
                 label="Description"
                 fullWidth
