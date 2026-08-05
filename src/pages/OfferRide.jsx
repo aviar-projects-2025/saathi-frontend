@@ -308,7 +308,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide , setOpe
           [HeartPulse, "Medical Assistance", form.medicalAssistance ? "Yes" : "No"],
           [MapPin, "Transit Help", form.transitHelp ? "Yes" : "No"],
           [Luggage, "Baggage Help", form.baggageHelp ? "Yes" : "No"],
-          [Users, "Gender Preference", form.genderPreference],
+         
         ]
         : []),
       ...(isBus ? [
@@ -340,7 +340,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide , setOpe
             "Language",
             form.language.join(", "),
           ],
-     
+           [Users, "Gender Preference", form.genderPreference],
         ]
         : []),
       [Users, "Age Group Preference", form.ageGroupPreference],
