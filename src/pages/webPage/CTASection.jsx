@@ -1,8 +1,7 @@
-import React from 'react';
-import { Box, Container, Typography, Button, Stack } from '@mui/material';
-import { keyframes } from '@mui/system';
+import React from "react";
+import { Box, Container, Typography, Button, Stack } from "@mui/material";
+import { keyframes } from "@mui/system";
 import { useNavigate } from "react-router-dom";
-
 
 // ──────────────────────────────────────────────
 // CTA Section
@@ -15,51 +14,50 @@ const gradientShift = keyframes`
 `;
 
 const CTASection = ({ onSearchClick }) => {
-
   const navigate = useNavigate();
 
   return (
     <Box
       sx={{
-        position: 'relative',
+        position: "relative",
         py: { xs: 8, md: 12 },
-        overflow: 'hidden',
+        overflow: "hidden",
         background:
-          'linear-gradient(135deg, #FF6B35 0%, #FF9F1C 50%, #FF6B35 100%)',
-        backgroundSize: '200% 200%',
+          "linear-gradient(135deg, #FF6B35 0%, #FF9F1C 50%, #FF6B35 100%)",
+        backgroundSize: "200% 200%",
         animation: `${gradientShift} 10s ease infinite`,
       }}
     >
       {/* Decorative background blobs */}
       <Box
         sx={{
-          position: 'absolute',
+          position: "absolute",
           top: -80,
-          left: '10%',
+          left: "10%",
           width: 240,
           height: 240,
-          borderRadius: '50%',
-          background: 'rgba(255,255,255,0.08)',
-          filter: 'blur(2px)',
+          borderRadius: "50%",
+          background: "rgba(255,255,255,0.08)",
+          filter: "blur(2px)",
         }}
       />
       <Box
         sx={{
-          position: 'absolute',
+          position: "absolute",
           bottom: -70,
-          right: '8%',
+          right: "8%",
           width: 200,
           height: 200,
-          borderRadius: '50%',
-          background: 'rgba(255,255,255,0.06)',
-          filter: 'blur(2px)',
+          borderRadius: "50%",
+          background: "rgba(255,255,255,0.06)",
+          filter: "blur(2px)",
         }}
       />
 
-      <Container maxWidth="md" sx={{ position: 'relative', zIndex: 1 }}>
+      <Container maxWidth="md" sx={{ position: "relative", zIndex: 1 }}>
         <Box
           sx={{
-            textAlign: 'center',
+            textAlign: "center",
             px: { xs: 2, sm: 4 },
           }}
         >
@@ -69,55 +67,64 @@ const CTASection = ({ onSearchClick }) => {
             fontWeight={800}
             color="#fff"
             sx={{
-              fontSize: { xs: '1.8rem', sm: '2.4rem', md: '3rem' },
+              fontSize: { xs: "1.5rem", sm: "2.2rem", md: "2.5rem" },
               lineHeight: 1.2,
               mb: 2,
             }}
           >
-            Ready to hit the road?
+            Your Next Journey Starts with Saathi
           </Typography>
 
           {/* Subtext */}
           <Typography
             variant="h6"
             sx={{
-              color: 'rgba(255,255,255,0.9)',
+              color: "rgba(255,255,255,0.9)",
               fontWeight: 400,
-              fontSize: { xs: '1rem', sm: '1.1rem' },
+              fontSize: { xs: "1rem", sm: "1.1rem" },
               lineHeight: 1.7,
+              maxWidth: 760,
+              mx: "auto",
             }}
           >
-            Join 50,000+ travelers already using Saathi. Connect, share rides,
-            and save money on every journey.
+            Travel smarter with Saathi. Connect with verified travelers, share
+            rides, split travel expenses, and enjoy safe, affordable, and
+            comfortable journeys across cities and countries. Whether you're
+            commuting or exploring new destinations, Saathi makes every trip
+            better together.
           </Typography>
 
           {/* Buttons */}
           <Stack
-            direction={{ xs: 'column', sm: 'row' }}
+            direction={{ xs: "column", sm: "row" }}
             spacing={2}
-            sx={{ justifyContent: 'center', alignItems: 'center', mt: 3 }}
+            sx={{
+              justifyContent: "center",
+              alignItems: "center",
+              mt: 4,
+            }}
           >
             <Button
               variant="contained"
-              onClick={() => navigate('/login')}
+              onClick={() => navigate("/login")}
               sx={{
                 px: 6,
                 py: 1.6,
                 borderRadius: 50,
                 fontWeight: 700,
-                fontSize: '1rem',
+                fontSize: "1rem",
                 minWidth: 200,
-                width: { xs: '100%', sm: 'auto' },
-                bgcolor: '#fff',
-                color: 'primary.main',
-                textTransform: 'none',
-                transition: 'all 0.3s ease',
-                boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
+                width: { xs: "100%", sm: "auto" },
+                bgcolor: "#fff",
+                color: "primary.main",
+                textTransform: "none",
+                transition: "all 0.3s ease",
+                boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
 
-                '&:hover': {
-                  bgcolor: '#f5f5f5',
-                  transform: 'translateY(-4px)',
-                  boxShadow: '0 15px 40px rgba(0,0,0,0.25)',
+                "&:hover": {
+                  bgcolor: "#f5f5f5",
+                  transform: "translateY(-4px)",
+                  boxShadow: "0 15px 40px rgba(0,0,0,0.25)",
                 },
               }}
             >
@@ -132,30 +139,29 @@ const CTASection = ({ onSearchClick }) => {
                 py: 1.6,
                 borderRadius: 50,
                 fontWeight: 700,
-                fontSize: '1rem',
+                fontSize: "1rem",
                 minWidth: 200,
-                width: { xs: '100%', sm: 'auto' },
-                color: '#fff',
-                borderColor: 'rgba(255,255,255,0.7)',
+                width: { xs: "100%", sm: "auto" },
+                color: "#fff",
+                borderColor: "rgba(255,255,255,0.7)",
                 borderWidth: 2,
-                textTransform: 'none',
-                transition: 'all 0.3s ease',
+                textTransform: "none",
+                transition: "all 0.3s ease",
 
-                '&:hover': {
-                  borderColor: '#fff',
-                  bgcolor: 'rgba(255,255,255,0.12)',
-                  transform: 'translateY(-4px)',
+                "&:hover": {
+                  borderColor: "#fff",
+                  bgcolor: "rgba(255,255,255,0.12)",
+                  transform: "translateY(-4px)",
                 },
               }}
             >
-              Learn More
+              Explore Rides
             </Button>
           </Stack>
         </Box>
       </Container>
     </Box>
   );
-
 };
 
 export default CTASection;

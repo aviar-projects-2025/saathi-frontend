@@ -148,8 +148,9 @@ const Myprofile = () => {
   }, [currentUser]);
 
   const handleChangePassword = async () => {
-    setPasswordLoading(true);
+
     try {
+      setPasswordLoading(true);
       // Frontend validation
       if (
         !passwordData.currentPassword ||

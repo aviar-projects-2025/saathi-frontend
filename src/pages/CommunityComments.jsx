@@ -249,9 +249,10 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
 
   const handleEditSave = async (commentId) => {
 
-    setCommentsLoading(true);
-
     try {
+
+      setCommentsLoading(true);
+
       await axios.patch(`${Api}/community/comments/${commentId}/${user.id}`, {
         comment: editText,
       });
@@ -286,8 +287,10 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
   const handleDeleteConfirm = async () => {
     if (!commentToDelete) return;
 
-    setDeleteLoading(true);
     try {
+
+      setDeleteLoading(true);
+
       const res = await axios.delete(
         `${Api}/community/comments/${commentToDelete._id}/${user.id}`,
       );

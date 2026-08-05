@@ -13,37 +13,38 @@ import {
 const safetyFeatures = [
   {
     icon: <VerifiedUserIcon sx={{ fontSize: 44 }} />,
-    title: 'ID Verified Drivers',
+    title: "Verified Travelers",
     description:
-      'Every driver undergoes government ID verification and background checks before being listed.',
-    color: '#f36f03',
-    bgcolor: '#f36f03',
+      "Every traveler completes identity verification, helping build a trusted and reliable travel community.",
+    color: "#f36f03",
+    bgcolor: "#f36f03",
   },
   {
     icon: <CreditCardIcon sx={{ fontSize: 44 }} />,
-    title: 'Secure Transactions',
+    title: "Secure Payments",
     description:
-      'All payments are processed through encrypted channels. Your financial data is always protected.',
-    color: '#0cebeb',
-    bgcolor: '#0cebeb',
+      "Book rides confidently with encrypted payment processing that keeps every transaction safe and secure.",
+    color: "#0cebeb",
+    bgcolor: "#0cebeb",
   },
   {
     icon: <MapIcon sx={{ fontSize: 44 }} />,
-    title: 'Live Trip Tracking',
+    title: "Real-Time Trip Sharing",
     description:
-      'Share your live location with trusted contacts. Real-time GPS tracking for complete peace of mind.',
-    color: '#67e910',
-    bgcolor: '#67e910',
+      "Share your journey with family and friends using live location updates for added peace of mind.",
+    color: "#67e910",
+    bgcolor: "#67e910",
   },
   {
     icon: <SupportAgentIcon sx={{ fontSize: 44 }} />,
-    title: '24/7 Emergency Support',
+    title: "24/7 Customer Support",
     description:
-      'Our dedicated support team is available around the clock to assist you with any concerns.',
-    color: '#f70d0d',
-    bgcolor: '#f70d0d',
+      "Our support team is available around the clock to help whenever you need assistance during your journey.",
+    color: "#f70d0d",
+    bgcolor: "#f70d0d",
   },
 ];
+
 
 const SafetySection = () => (
   <Box sx={{ bgcolor: '#fff' }}>
@@ -53,9 +54,15 @@ const SafetySection = () => (
       </Typography>
       <Typography
         variant="body1"
-        sx={{ color: 'rgba(10, 10, 10, 0.72)', lineHeight: 2, m: 4, fontWeight: 700 }}
+        sx={{
+          color: "rgba(10, 10, 10, 0.72)",
+          lineHeight: 2,
+          m: 4,
+          fontWeight: 700,
+        }}
       >
-        We've built industry-leading safety features so you can focus on enjoying the journey.
+        Experience travel with complete peace of mind through verified profiles,
+        trusted connections, and thoughtfully designed safety features.
       </Typography>
     </Box>
 

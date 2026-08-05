@@ -315,13 +315,13 @@ const TopNav = ({ onMenuClick }) => {
               setOpen(false);
             }}
             fullWidth
-            maxWidth="md"
+            maxWidth="sm"
             fullScreen={isMobile}
             PaperProps={{
               sx: {
                 width: {
                   xs: "100%",
-                  sm: "95%",
+                  sm: "80%",
                   md: "90%",
                 },
                 maxWidth: {
@@ -334,7 +334,7 @@ const TopNav = ({ onMenuClick }) => {
                 },
                 m: {
                   xs: 0,
-                  sm: 2,
+                  sm: 3,
                 },
                 overflow: "hidden",
               },
@@ -370,12 +370,12 @@ const TopNav = ({ onMenuClick }) => {
               sx={{
                 p: {
                   xs: 1,
-                  sm: 3,
+                  sm: 2,
                 },
                 overflowY: "auto",
                 maxHeight: {
                   xs: "100vh",
-                  sm: "80vh",
+                  sm: "75vh",
                 },
               }}
             >
