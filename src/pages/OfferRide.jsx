@@ -29,6 +29,7 @@ import { useTheme } from "@mui/material/styles";
 import {
   Car,
   Plane,
+  Bus,
   MapPin,
   Bike,
   Calendar,
