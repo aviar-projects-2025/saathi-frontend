@@ -789,7 +789,7 @@ export default function RideDetailsModal({
             </>
           ) : null}
 
-          {ride.fuelSharing !== 0 && (<Field icon={LocalGasStationIcon} label="Fuel Cost" value={`₹${ride.fuelSharing}/Person` || '—'} />)}
+          {ride.modeOfTravel !== 'Flight' && ride.modeOfTravel !== 'Bus' && (<Field icon={LocalGasStationIcon} label="Fuel Cost" value={`${ride.fuelSharing === null ? '—' : `$ ${ride.fuelSharing}/Person`} ` || '—'} />)}
 
           {ride.description && (
             <Field icon={DescriptionIcon} label="Description" value={ride.description || '—'} span />
