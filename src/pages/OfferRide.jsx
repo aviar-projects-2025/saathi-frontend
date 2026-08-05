@@ -208,7 +208,7 @@ function ReviewItem({ icon: Icon, label, value }) {
  *  - onSave:   callback(updatedRide) called after a successful edit
  *  - onClose:  optional callback called after create/edit finishes (e.g. to close a dialog)
  */
-export default function OfferRide({ ride, onSave, onClose, selectedRide , setOpen}) {
+export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen }) {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -269,6 +269,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide , setOpe
       [MapPin, "Route", `${form.fromAirport || "—"} → ${form.toAirport || "—"}`],
       [MapPin, "Country", `${form.fromCountry || "—"} → ${form.toCountry || "—"}`],
       [Calendar, "Date & Departure", `${form.date || "—"} at ${form.time || "—"}`],
+      [Plane, "Mode of Travel", form.modeOfTravel],
       // [Clock, "Journey Duration", form.duration || "—"],
       [Plane, "Flight Number", form.flightNumber || "—"],
       [Plane, "Airline Name", form.airlineName || "—"],
@@ -308,7 +309,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide , setOpe
           [HeartPulse, "Medical Assistance", form.medicalAssistance ? "Yes" : "No"],
           [MapPin, "Transit Help", form.transitHelp ? "Yes" : "No"],
           [Luggage, "Baggage Help", form.baggageHelp ? "Yes" : "No"],
-         
+
         ]
         : []),
       ...(isBus ? [
@@ -340,7 +341,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide , setOpe
             "Language",
             form.language.join(", "),
           ],
-           [Users, "Gender Preference", form.genderPreference],
+          [Users, "Gender Preference", form.genderPreference],
         ]
         : []),
       [Users, "Age Group Preference", form.ageGroupPreference],
@@ -1026,26 +1027,26 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide , setOpe
                   />
                 </Stack>
               </Stack>
-         
-                               {(!isFlight && !isBusTrain && !isBus) && (
-  <TextField
-    label="Journey Duration (Approximate)"
-    fullWidth
-    type="number"
-    size={inputSize}
-    value={form.duration}
-    onChange={(e) => {
-      const value = e.target.value;
-      if (value === "" || /^\d{0,2}$/.test(value)) {
-        update("duration", value);
-      }
-    }}
-    inputProps={{ min: 0, max: 99 }}
-    error={!form.duration && showErrors}
-    helperText={!form.duration && showErrors ? "Required" : ""}
-    sx={tfSx}
-  />
-)}
+
+              {(!isFlight && !isBusTrain && !isBus) && (
+                <TextField
+                  label="Journey Duration (Approximate)"
+                  fullWidth
+                  type="number"
+                  size={inputSize}
+                  value={form.duration}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === "" || /^\d{0,2}$/.test(value)) {
+                      update("duration", value);
+                    }
+                  }}
+                  inputProps={{ min: 0, max: 99 }}
+                  error={!form.duration && showErrors}
+                  helperText={!form.duration && showErrors ? "Required" : ""}
+                  sx={tfSx}
+                />
+              )}
               <TextField
                 label="Description"
                 fullWidth
