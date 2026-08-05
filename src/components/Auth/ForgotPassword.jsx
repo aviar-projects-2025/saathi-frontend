@@ -47,11 +47,11 @@ const ForgotPassword = () => {
             let errorMessage = "Failed to send OTP";
             
             if (error.code === 'ERR_NETWORK') {
-                errorMessage = "Cannot connect to server. Make sure backend is running on port 5000";
+                errorMessage = "Please check your network connection.";
             } else if (error.response) {
                 errorMessage = error.response.data?.message || "Server error";
             } else if (error.request) {
-                errorMessage = "No response from server. Check if backend is running.";
+                errorMessage = "Please check your network connection.";
             }
             
             toast.error(errorMessage, toasts);
