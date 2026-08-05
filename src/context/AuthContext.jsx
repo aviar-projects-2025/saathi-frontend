@@ -1,23 +1,49 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import Api from "../Api";
 import axios from "axios";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-
-
     const [token, setToken] = useState(localStorage.getItem("token"));
-    const [role, setRole] = useState(localStorage.getItem("role"));
-    const [user, setUser] = useState(
-        JSON.parse(localStorage.getItem("user"))
-    );
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
 
+    // ✅ VERIFY USER ON APP LOAD
+    useEffect(() => {
+        const verifyUser = async () => {
+            if (!token) {
+                setLoading(false);
+                return;
+            }
 
+            try {
+                const res = await axios.get(`${Api}/users/me`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
 
+                console.log(res, 'res')
+
+                setUser(res.data);
+            } catch (err) {
+                if (err.response?.status === 401) {
+                    localStorage.removeItem("token");
+                    setToken(null);
+                    setUser(null);
+                }
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        verifyUser();
+    }, [token]);
+
+    // ✅ LOGIN
     const login = async (credentials) => {
         try {
             const res = await axios.post(`${Api}/users/login`, credentials);
+            console.log(res, 'res login')
             const user = res.data.user;
             const token = res.data.token;
 
@@ -26,29 +52,24 @@ export const AuthProvider = ({ children }) => {
             localStorage.setItem("user", JSON.stringify(user));
 
             setToken(token);
-            setRole(user.role);
             setUser(user);
 
-            return {
-                success: true,
-                user,
-                token,
-            };
+            return { success: true, user, token };
         } catch (error) {
             const message =
                 error.response?.data?.message ||
                 error.message ||
-                "Login failed. Please try again.";
+                "Login failed";
 
             throw new Error(message);
         }
     };
 
+    // ✅ LOGOUT
     const logout = () => {
-        localStorage.clear();
+        localStorage.removeItem("token");
 
         setToken(null);
-        setRole(null);
         setUser(null);
 
         window.location.replace("/login");
@@ -58,11 +79,11 @@ export const AuthProvider = ({ children }) => {
         <AuthContext.Provider
             value={{
                 token,
-                role,
                 user,
                 login,
                 logout,
-                isAuthenticated: !!token,
+                loading,
+                isAuthenticated: !!user,
             }}
         >
             {children}

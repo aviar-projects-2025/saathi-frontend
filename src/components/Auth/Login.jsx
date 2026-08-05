@@ -24,8 +24,6 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import ToastConfig from "../ToastConfig";
 
-// LAYOUT 4: Card with a colored top banner and a centered avatar badge
-// straddling the seam — a classic "app-like" login card, softly modernized.
 
 const Login = () => {
     const { login } = useAuth();
