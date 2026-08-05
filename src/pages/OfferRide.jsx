@@ -295,7 +295,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
 
       (isCar || isBike) && [Clock, "Journey Duration", form.duration || "—"],
 
-[isBus ? Bus : isBike ? Bike : Car, "Mode of Travel", form.modeOfTravel],
+      [isBus ? Bus : isBike ? Bike : Car, "Mode of Travel", form.modeOfTravel],
 
       isCar && [Users, "Available Seats", form.availableSeats],
 
