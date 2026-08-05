@@ -299,12 +299,12 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide , setOpe
 
       ...(isCar
         ? [
-          [Users, "Traveller Type", form.travellerType],
-          form.language?.length > 0 && [
-            Languages,
-            "Language",
-            form.language.join(", "),
-          ],
+          // [Users, "Traveller Type", form.travellerType],
+          // form.language?.length > 0 && [
+          //   Languages,
+          //   "Language",
+          //   form.language.join(", "),
+          // ],
           [HeartPulse, "Medical Assistance", form.medicalAssistance ? "Yes" : "No"],
           [MapPin, "Transit Help", form.transitHelp ? "Yes" : "No"],
           [Luggage, "Baggage Help", form.baggageHelp ? "Yes" : "No"],
@@ -340,7 +340,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide , setOpe
             "Language",
             form.language.join(", "),
           ],
-          [Users, "Gender Preference", form.genderPreference],
+     
         ]
         : []),
       [Users, "Age Group Preference", form.ageGroupPreference],
@@ -966,7 +966,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide , setOpe
                     size={inputSize}
                     value={form.from}
                     onChange={(e) => update("from", e.target.value)}
-                    placeholder="Chennai"
+                    placeholder=""
                     error={!form.from && showErrors}
                     helperText={!form.from && showErrors ? "Required" : ""}
                     sx={tfSx}
@@ -977,7 +977,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide , setOpe
                     size={inputSize}
                     value={form.destination}
                     onChange={(e) => update("destination", e.target.value)}
-                    placeholder="Bangalore"
+                    placeholder=""
                     error={!form.destination && showErrors}
                     helperText={!form.destination && showErrors ? "Required" : ""}
                     sx={tfSx}
