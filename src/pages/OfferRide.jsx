@@ -957,7 +957,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide }) {
                     size={inputSize}
                     value={form.from}
                     onChange={(e) => update("from", e.target.value)}
-                    placeholder="Chennai"
+                    placeholder=""
                     error={!form.from && showErrors}
                     helperText={!form.from && showErrors ? "Required" : ""}
                     sx={tfSx}
@@ -968,7 +968,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide }) {
                     size={inputSize}
                     value={form.destination}
                     onChange={(e) => update("destination", e.target.value)}
-                    placeholder="Bangalore"
+                    placeholder=""
                     error={!form.destination && showErrors}
                     helperText={!form.destination && showErrors ? "Required" : ""}
                     sx={tfSx}

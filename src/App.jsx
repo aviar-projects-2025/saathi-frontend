@@ -132,6 +132,7 @@ import AdminLayout from "./components/AdminLayout.jsx";
 import UserLayout from "./components/UserLayout.jsx";
 import PublicRoute from "./routes/PublicRoute.jsx";
 
+
 // ---------- Lazy-loaded Pages ----------
 
 // Public Pages
@@ -142,6 +143,16 @@ const Unauthorized = React.lazy(() => import("./pages/Unauthorized.jsx"));
 const WaitingApproval = React.lazy(() =>
   import("./components/Auth/WaitingApproval.jsx")
 );
+const ForgotPassword = React.lazy(() =>
+  import("./components/Auth/ForgotPassword.jsx")
+);
+const ResetPassword = React.lazy(() =>
+  import("./components/Auth/ResetPassword.jsx")
+);
+const VerifyOTP = React.lazy(() =>
+  import("./components/Auth/VerifyOTP.jsx")
+);
+
 
 // Shared (both roles)
 const Invite = React.lazy(() => import("./pages/Invite.jsx"));
@@ -216,6 +227,9 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/waiting-approval" element={<WaitingApproval />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/forget-password" element={<ForgotPassword />} />
+            <Route path="/verify-otp" element={<VerifyOTP />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
           </Route>
 
           {/* ADMIN only routes */}
