@@ -760,8 +760,6 @@ export default function RideDetailsModal({
         />
       </Box>
 
-      {console.log("Ride details ===> ", ride)}
-
       <DialogContent sx={{ px: { xs: 2.5, sm: 4 }, py: { xs: 3, sm: 3.5 } }}>
         {/* ── Ticket data fields ── */}
         <Box
