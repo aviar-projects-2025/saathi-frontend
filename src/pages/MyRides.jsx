@@ -1581,7 +1581,6 @@ const MyRides = () => {
     const myrides = mypost.filter((ride) => {
       const rideStartTime = new Date(ride?.startTime);
       // const rideEndTime = new Date(rideStartTime.getTime() + 3 * 60 * 60 * 1000);
-      console.log(ride, 'ride')
       return (
         ride?.createdBy?._id === user.id &&
         rideStartTime <= currentDateTime &&

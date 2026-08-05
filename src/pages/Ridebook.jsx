@@ -333,14 +333,10 @@ export default function Ridebook({
 
 
   const handleRequestSubmit = async () => {
-
     if (!ride) return;
     if (!validate()) return;
     const userMobile = currentUser?.mobile;
     const storedUser = JSON.parse(localStorage.getItem("user"));
-
-    // Only the new/unapproved members are ever sent — existingMembers
-    // (already confirmed) are never re-sent to the backend.
     const membersToSubmit = isEditMode ? newMembers : requestData.members;
     const seatsRequested = membersToSubmit.length;
 
@@ -357,7 +353,6 @@ export default function Ridebook({
 
     try {
       setRequestLoading(true);
-
       const res = isEditMode
         ? await axios.put(`${Api}/bookride/edit/${requestToEdit._id}`, payload)
         : await axios.post(`${Api}/bookride/${ride._id}`, payload);

@@ -379,7 +379,7 @@ const TopNav = ({ onMenuClick }) => {
                 },
               }}
             >
-              <OfferRide  />
+              <OfferRide setOpen={setOpen}/>
             </DialogContent>
           </Dialog>
 
