@@ -524,6 +524,8 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
     language: form.language,
     ageGroupPreference: form.ageGroupPreference,
     medicalAssistance: form.medicalAssistance,
+    transitHelp: form.transitHelp,
+    baggageHelp: form.baggageHelp,
     languageSupport: form.languageSupport,
     status: form.status || "OPEN",
     ...(isFlight
@@ -627,6 +629,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
         `${Api}/rides/edit/${ride._id || ride.id}`,
         payload
       );
+      console.log("hbhbuhubuj", response)
       const updated = response.data?.data ?? { ...ride, ...payload };
 
 
@@ -868,7 +871,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                 <Select
                   value={form.modeOfTravel}
                   label="Mode of Travel"
-                  disabled ={isEditMode}
+                  disabled={isEditMode}
                   onChange={(e) => update("modeOfTravel", e.target.value)}
                   sx={selectSx}
                 >
