@@ -868,6 +868,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                 <Select
                   value={form.modeOfTravel}
                   label="Mode of Travel"
+                  disabled ={isEditMode}
                   onChange={(e) => update("modeOfTravel", e.target.value)}
                   sx={selectSx}
                 >
