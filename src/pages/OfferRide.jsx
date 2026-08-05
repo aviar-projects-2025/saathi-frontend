@@ -629,7 +629,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
         `${Api}/rides/edit/${ride._id || ride.id}`,
         payload
       );
-      console.log("hbhbuhubuj", response)
+
       const updated = response.data?.data ?? { ...ride, ...payload };
 
 
