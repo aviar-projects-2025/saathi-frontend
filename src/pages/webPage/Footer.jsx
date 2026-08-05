@@ -99,9 +99,9 @@ const Footer = () => (
                   lineHeight: 1.8,
                 }}
               >
-                The USA's trusted travel companion platform. Connect with verified
-                travelers, share rides, split travel expenses, and enjoy safer,
-                smarter journeys together.
+                Saathi is your trusted global travel companion platform. Connect with
+                verified travelers, share rides, split travel expenses, and enjoy safer,
+                smarter, and more affordable journeys wherever you go.
               </Typography>
             </Box>
 

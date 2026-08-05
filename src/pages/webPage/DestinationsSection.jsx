@@ -1,61 +1,73 @@
 import React from 'react';
-import { Box, Container, Typography, Grid, Card, Stack, Chip, Grow } from '@mui/material';
-import { DirectionsCar as CarIcon, Star as StarIcon } from '@mui/icons-material';
+import {
+  Box,
+  Container,
+  Typography,
+  Grid,
+  Card,
+  Stack,
+  Chip,
+  Grow,
+} from '@mui/material';
+import {
+  DirectionsCar as CarIcon,
+  Star as StarIcon,
+} from '@mui/icons-material';
 
 // ──────────────────────────────────────────────
 // Featured Destinations Section
 // ──────────────────────────────────────────────
 const destinations = [
   {
-    city: "New York City",
-    state: "New York",
+    city: "Paris",
+    state: "France",
     image:
-      "https://images.unsplash.com/photo-1499092346589-b9b6be3e94b2?q=80&w=2070&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=2070&auto=format&fit=crop",
     trips: 486,
     rating: 4.9,
     price: "$45",
   },
   {
-    city: "Los Angeles",
-    state: "California",
+    city: "Tokyo",
+    state: "Japan",
     image:
-      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=2070&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?q=80&w=2070&auto=format&fit=crop",
     trips: 421,
     rating: 4.8,
     price: "$55",
   },
   {
-    city: "Miami",
-    state: "Florida",
+    city: "Dubai",
+    state: "United Arab Emirates",
     image:
-      "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=2070&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?q=80&w=2070&auto=format&fit=crop",
     trips: 367,
     rating: 4.8,
     price: "$40",
   },
   {
-    city: "Las Vegas",
-    state: "Nevada",
+    city: "Singapore",
+    state: "Singapore",
     image:
-      "https://images.unsplash.com/photo-1605833556294-ea5c7a74f57d?q=80&w=2070&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1525625293386-3f8f99389edd?q=80&w=2070&auto=format&fit=crop",
     trips: 298,
     rating: 4.9,
     price: "$60",
   },
   {
-    city: "Denver",
-    state: "Colorado",
+    city: "Sydney",
+    state: "Australia",
     image:
-      "https://images.unsplash.com/photo-1546156929-a4c0ac411f47?q=80&w=2070&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?q=80&w=2070&auto=format&fit=crop",
     trips: 245,
     rating: 4.8,
     price: "$50",
   },
   {
-    city: "Nashville",
-    state: "Tennessee",
+    city: "London",
+    state: "United Kingdom",
     image:
-      "https://images.unsplash.com/photo-1518391846015-55a9cc003b25?q=80&w=2070&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?q=80&w=2070&auto=format&fit=crop",
     trips: 214,
     rating: 4.7,
     price: "$42",
@@ -68,7 +80,7 @@ const DestinationsSection = () => {
       <Container maxWidth="lg">
         <Box sx={{ textAlign: 'center' }} mb={7}>
           <Typography variant="h2" fontWeight={800} mb={2}>
-            Find the Perfect Travel Companion
+            Explore Popular Destinations Around the World
           </Typography>
 
           <Typography
@@ -80,18 +92,16 @@ const DestinationsSection = () => {
               fontSize: "1.1rem",
             }}
           >
-            Every journey is better together. Join a trusted community of verified
-            travelers, enjoy safer ride sharing, split expenses, and experience
-            seamless travel across the USA.
+            Discover exciting destinations across the globe. Connect with
+            verified travelers, share rides, split travel expenses, and enjoy
+            safer, smarter, and more affordable journeys wherever your next
+            adventure takes you.
           </Typography>
         </Box>
 
         <Grid container spacing={4}>
           {destinations.map((dest, index) => (
-            <Grid
-              key={dest.city}
-              size={{ xs: 12, sm: 6, md: 4 }} // MUI v7
-            >
+            <Grid key={dest.city} size={{ xs: 12, sm: 6, md: 4 }}>
               <Grow in timeout={400 + index * 100}>
                 <Card
                   sx={{
@@ -163,8 +173,6 @@ const DestinationsSection = () => {
 
                     <Typography
                       variant="body2"
-                      color="rgba(255,255,255,.8)"
-                      mb={2.5}
                       sx={{ color: '#fff', mb: 2 }}
                     >
                       {dest.state}

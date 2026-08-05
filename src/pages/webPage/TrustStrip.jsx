@@ -14,48 +14,54 @@ import {
 const trustItems = [
   {
     icon: <VerifiedUserIcon fontSize="small" />,
-    text: "Verified Community",
+    text: "Verified Travelers",
   },
   {
     icon: <ShieldIcon fontSize="small" />,
-    text: "Privacy & Safety First",
+    text: "Safe & Secure Journeys",
   },
   {
     icon: <HeadsetMicIcon fontSize="small" />,
-    text: "24/7 Travel Assistance",
+    text: "24/7 Customer Support",
+  },
+  {
+    icon: <PublicIcon fontSize="small" />,
+    text: "Worldwide Travel Community",
   },
   {
     icon: <TrophyIcon fontSize="small" />,
-    text: "Trusted Across the USA",
+    text: "Trusted by Thousands",
   },
 ];
 
 const TrustStrip = () => (
   <Box
     sx={{
-      bgcolor: '#F7F5F2',
+      bgcolor: "#F7F5F2",
       py: { xs: 2.5, md: 2 },
-      borderBottom: '1px solid rgba(0,0,0,0.06)',
-      overflow: 'hidden',
-      whiteSpace: 'nowrap',
+      borderBottom: "1px solid rgba(0,0,0,0.06)",
+      overflow: "hidden",
+      whiteSpace: "nowrap",
     }}
   >
-    <Container maxWidth="lg" sx={{ overflow: 'hidden' }}>
+    <Container maxWidth="lg" sx={{ overflow: "hidden" }}>
       <Box
         sx={{
-          display: 'flex',
-          width: 'max-content',
-          animation: 'marquee 20s linear infinite',
-          '@keyframes marquee': {
-            '0%': {
-              transform: 'translateX(0)',
+          display: "flex",
+          width: "max-content",
+          animation: "marquee 20s linear infinite",
+
+          "@keyframes marquee": {
+            "0%": {
+              transform: "translateX(0)",
             },
-            '100%': {
-              transform: 'translateX(-50%)',
+            "100%": {
+              transform: "translateX(-50%)",
             },
           },
-          '&:hover': {
-            animationPlayState: 'paused',
+
+          "&:hover": {
+            animationPlayState: "paused",
           },
         }}
       >
@@ -63,17 +69,17 @@ const TrustStrip = () => (
           <Box
             key={index}
             sx={{
-              display: 'flex',
-              alignItems: 'center',
+              display: "flex",
+              alignItems: "center",
               gap: 0.8,
               mx: { xs: 2.5, md: 4 },
             }}
           >
             <Box
               sx={{
-                color: 'primary.main',
-                display: 'flex',
-                alignItems: 'center',
+                color: "primary.main",
+                display: "flex",
+                alignItems: "center",
               }}
             >
               {item.icon}
@@ -83,7 +89,7 @@ const TrustStrip = () => (
               variant="body2"
               fontWeight={600}
               color="text.secondary"
-              sx={{ whiteSpace: 'nowrap' }}
+              sx={{ whiteSpace: "nowrap" }}
             >
               {item.text}
             </Typography>

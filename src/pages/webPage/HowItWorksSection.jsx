@@ -12,24 +12,24 @@ import {
 const steps = [
   {
     icon: <SearchIcon sx={{ fontSize: 36 }} />,
-    title: 'Find Your Ride',
+    title: "Search Your Journey",
     description:
-      'Search thousands of rides to your destination. Filter by date, seats, and preferences.',
-    color: '#FF6B35',
+      "Find rides across cities and countries. Search by destination, travel date, available seats, and your preferred travel options.",
+    color: "#FF6B35",
   },
   {
     icon: <VerifiedUserIcon sx={{ fontSize: 36 }} />,
-    title: 'Verify & Book',
+    title: "Choose & Book",
     description:
-      'Check driver profiles, reviews, and ratings. Book your seat securely in seconds.',
-    color: '#1B4332',
+      "View verified traveler profiles, ratings, and reviews. Choose your preferred ride and book your seat securely in minutes.",
+    color: "#1B4332",
   },
   {
     icon: <GroupIcon sx={{ fontSize: 36 }} />,
-    title: 'Travel Together',
+    title: "Travel Together",
     description:
-      'Meet at the pickup point, share the journey, split costs, and make new friends.',
-    color: '#457B9D',
+      "Meet your travel companions, enjoy a safe and comfortable journey, share travel costs, and create memorable experiences together.",
+    color: "#457B9D",
   },
 ];
 
