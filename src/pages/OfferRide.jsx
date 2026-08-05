@@ -29,7 +29,9 @@ import { useTheme } from "@mui/material/styles";
 import {
   Car,
   Plane,
+  Bus,
   MapPin,
+  Bike,
   Calendar,
   Clock,
   FileText,
@@ -208,7 +210,7 @@ function ReviewItem({ icon: Icon, label, value }) {
  *  - onSave:   callback(updatedRide) called after a successful edit
  *  - onClose:  optional callback called after create/edit finishes (e.g. to close a dialog)
  */
-export default function OfferRide({ ride, onSave, onClose, selectedRide }) {
+export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen }) {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -269,6 +271,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide }) {
       [MapPin, "Route", `${form.fromAirport || "—"} → ${form.toAirport || "—"}`],
       [MapPin, "Country", `${form.fromCountry || "—"} → ${form.toCountry || "—"}`],
       [Calendar, "Date & Departure", `${form.date || "—"} at ${form.time || "—"}`],
+      [Plane, "Mode of Travel", form.modeOfTravel],
       // [Clock, "Journey Duration", form.duration || "—"],
       [Plane, "Flight Number", form.flightNumber || "—"],
       [Plane, "Airline Name", form.airlineName || "—"],
@@ -293,22 +296,22 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide }) {
 
       (isCar || isBike) && [Clock, "Journey Duration", form.duration || "—"],
 
-      [Car, "Mode of Travel", form.modeOfTravel],
+      [isBus ? Bus : isBike ? Bike : Car, "Mode of Travel", form.modeOfTravel],
 
       isCar && [Users, "Available Seats", form.availableSeats],
 
       ...(isCar
         ? [
-          [Users, "Traveller Type", form.travellerType],
-          form.language?.length > 0 && [
-            Languages,
-            "Language",
-            form.language.join(", "),
-          ],
+          // [Users, "Traveller Type", form.travellerType],
+          // form.language?.length > 0 && [
+          //   Languages,
+          //   "Language",
+          //   form.language.join(", "),
+          // ],
           [HeartPulse, "Medical Assistance", form.medicalAssistance ? "Yes" : "No"],
           [MapPin, "Transit Help", form.transitHelp ? "Yes" : "No"],
           [Luggage, "Baggage Help", form.baggageHelp ? "Yes" : "No"],
-          [Users, "Gender Preference", form.genderPreference],
+
         ]
         : []),
       ...(isBus ? [
@@ -521,6 +524,8 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide }) {
     language: form.language,
     ageGroupPreference: form.ageGroupPreference,
     medicalAssistance: form.medicalAssistance,
+    transitHelp: form.transitHelp,
+    baggageHelp: form.baggageHelp,
     languageSupport: form.languageSupport,
     status: form.status || "OPEN",
     ...(isFlight
@@ -576,6 +581,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide }) {
       formReset();
       setSubmitted(true);
       setShowErrors(false);
+      setOpen(false)
     } catch (error) {
       toast.error(error.response?.data?.message || error.message, {
         position: isTab ? "top-center" : "top-right",
@@ -623,6 +629,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide }) {
         `${Api}/rides/edit/${ride._id || ride.id}`,
         payload
       );
+
       const updated = response.data?.data ?? { ...ride, ...payload };
 
 
@@ -864,6 +871,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide }) {
                 <Select
                   value={form.modeOfTravel}
                   label="Mode of Travel"
+                  disabled={isEditMode}
                   onChange={(e) => update("modeOfTravel", e.target.value)}
                   sx={selectSx}
                 >
@@ -965,18 +973,19 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide }) {
                     size={inputSize}
                     value={form.from}
                     onChange={(e) => update("from", e.target.value)}
-                    placeholder="Chennai"
+                    placeholder=""
                     error={!form.from && showErrors}
                     helperText={!form.from && showErrors ? "Required" : ""}
                     sx={tfSx}
                   />
+
                   <TextField
                     label="Destination"
                     fullWidth
                     size={inputSize}
                     value={form.destination}
                     onChange={(e) => update("destination", e.target.value)}
-                    placeholder="Bangalore"
+                    placeholder=""
                     error={!form.destination && showErrors}
                     helperText={!form.destination && showErrors ? "Required" : ""}
                     sx={tfSx}
@@ -1024,7 +1033,8 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide }) {
                   />
                 </Stack>
               </Stack>
-              {(isFlight || !isBusTrain) && (
+
+              {(!isFlight && !isBusTrain && !isBus) && (
                 <TextField
                   label="Journey Duration (Approximate)"
                   fullWidth
@@ -1043,7 +1053,6 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide }) {
                   sx={tfSx}
                 />
               )}
-
               <TextField
                 label="Description"
                 fullWidth

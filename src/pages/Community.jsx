@@ -101,6 +101,9 @@ export default function Community() {
   const cameraInputRef = useRef(null);
   const fileInputRef = useRef(null);
 
+  const [originalDescription, setOriginalDescription] = useState("");
+  const [originalImage, setOriginalImage] = useState(null);
+
   const handleMediaClick = () => {
     if (!isProfileComplete) return;
 
@@ -177,7 +180,7 @@ export default function Community() {
     }
   };
 
-  
+
 
   const isPostSaved = (postId) => {
     return savedPost?.some(
@@ -252,18 +255,22 @@ export default function Community() {
 
   const isProfileComplete = completion === 100;
   const SIDEBAR_SCROLL_HEIGHT = 'calc(100vh - 120px)';
+
   const handleEdit = (post) => {
     setSelectedPost(post);
     setEditDescription(post.description);
     setPreviewImage(post.postImage);
+
+    setOriginalDescription(post.description);
+    setOriginalImage(post.postImage);
+
     setEditImage(null);
     setEditOpen(true);
   };
   const handleUpdate = async () => {
-
-    setImagePostLoading(true);
-
     try {
+      setImagePostLoading(true);
+
       const user = JSON.parse(localStorage.getItem("user"));
 
       const formData = new FormData();
@@ -305,8 +312,18 @@ export default function Community() {
       setImagePostLoading(false);
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to update post", toasts);
+    } finally {
+      setImagePostLoading(false);
     }
   };
+
+  const handleReset = () => {
+    setEditDescription(originalDescription);
+
+    setEditImage(null);               // remove selected File
+    setPreviewImage(originalImage);   // restore original image URL
+  };
+
   const handleCreatePost = async () => {
     try {
       setLoading(true);
@@ -391,8 +408,11 @@ export default function Community() {
     }
   };
   const handleDelete = async (postId) => {
-    setImagePostLoading(true);
+
     try {
+
+      setImagePostLoading(true);
+
       const user = JSON.parse(localStorage.getItem("user"));
 
       const res = await axios.delete(`${Api}/community/${postId}`, {
@@ -1197,7 +1217,7 @@ export default function Community() {
                                 <Button
                                   variant="outlined"
                                   size="small"
-                                  onClick={() => setEditOpen(false)}
+                                  onClick={handleReset}
                                   sx={{
                                     width: "fit-content",
                                     minWidth: "unset",
