@@ -299,12 +299,12 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide }) {
 
       ...(isCar
         ? [
-          [Users, "Traveller Type", form.travellerType],
-          form.language?.length > 0 && [
-            Languages,
-            "Language",
-            form.language.join(", "),
-          ],
+          // [Users, "Traveller Type", form.travellerType],
+          // form.language?.length > 0 && [
+          //   Languages,
+          //   "Language",
+          //   form.language.join(", "),
+          // ],
           [HeartPulse, "Medical Assistance", form.medicalAssistance ? "Yes" : "No"],
           [MapPin, "Transit Help", form.transitHelp ? "Yes" : "No"],
           [Luggage, "Baggage Help", form.baggageHelp ? "Yes" : "No"],
@@ -340,7 +340,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide }) {
             "Language",
             form.language.join(", "),
           ],
-          [Users, "Gender Preference", form.genderPreference],
+     
         ]
         : []),
       [Users, "Age Group Preference", form.ageGroupPreference],
