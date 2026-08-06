@@ -30,6 +30,7 @@ import Discover from './Discover.jsx'
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import InboxOutlinedIcon from "@mui/icons-material/InboxOutlined";
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   Menu,
@@ -100,6 +101,9 @@ export default function Community() {
   const cameraInputRef = useRef(null);
   const fileInputRef = useRef(null);
 
+  const [originalDescription, setOriginalDescription] = useState("");
+  const [originalImage, setOriginalImage] = useState(null);
+
   const handleMediaClick = () => {
     if (!isProfileComplete) return;
 
@@ -129,7 +133,7 @@ export default function Community() {
       const countEntries = await Promise.all(
         updatedPosts.map(async (p) => {
           try {
-            const res = await axios.get(Api + `/community/comments/${p._id}`);
+            const res = await axios.get(Api + `/community/comments/${p._id}/${user.id}`);
             return [p._id, res.data.data.comments.length];
           } catch {
             return [p._id, 0];
@@ -146,7 +150,7 @@ export default function Community() {
 
   const getComments = async (postId) => {
     try {
-      setLoading(true);
+      // setLoading(true);
       const res = await axios.get(Api + `/community/comments/${postId}`);
       setCommentCounts((prev) => ({ ...prev, [postId]: res.data.data.comments.length }));
     } catch (error) {
@@ -154,6 +158,34 @@ export default function Community() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const savePost = async (post) => {
+    try {
+      const res = await axios.post(
+        `${Api}/save-post/${post._id}/${currentUser._id}`
+      );
+
+      setSavedPost((prev) => [
+        ...prev,
+        {
+          _id: res.data.data._id,
+          postId: post,
+          userId: currentUser._id,
+        },
+      ]);
+
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+
+
+  const isPostSaved = (postId) => {
+    return savedPost?.some(
+      (item) => item.postId?._id === postId
+    );
   };
 
   // inside your component:
@@ -219,22 +251,26 @@ export default function Community() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editDescription, setEditDescription] = useState("");
-  const { completion } = useUser();
+  const { completion, savedPost, setSavedPost, removeSavedPost } = useUser();
 
   const isProfileComplete = completion === 100;
   const SIDEBAR_SCROLL_HEIGHT = 'calc(100vh - 120px)';
+
   const handleEdit = (post) => {
     setSelectedPost(post);
     setEditDescription(post.description);
     setPreviewImage(post.postImage);
+
+    setOriginalDescription(post.description);
+    setOriginalImage(post.postImage);
+
     setEditImage(null);
     setEditOpen(true);
   };
   const handleUpdate = async () => {
-
-    setImagePostLoading(true);
-
     try {
+      setImagePostLoading(true);
+
       const user = JSON.parse(localStorage.getItem("user"));
 
       const formData = new FormData();
@@ -276,8 +312,18 @@ export default function Community() {
       setImagePostLoading(false);
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to update post", toasts);
+    } finally {
+      setImagePostLoading(false);
     }
   };
+
+  const handleReset = () => {
+    setEditDescription(originalDescription);
+
+    setEditImage(null);               // remove selected File
+    setPreviewImage(originalImage);   // restore original image URL
+  };
+
   const handleCreatePost = async () => {
     try {
       setLoading(true);
@@ -362,8 +408,11 @@ export default function Community() {
     }
   };
   const handleDelete = async (postId) => {
-    setImagePostLoading(true);
+
     try {
+
+      setImagePostLoading(true);
+
       const user = JSON.parse(localStorage.getItem("user"));
 
       const res = await axios.delete(`${Api}/community/${postId}`, {
@@ -667,6 +716,19 @@ export default function Community() {
                         }}
                       >
                         Media
+                        <input
+                          hidden
+                          type="file"
+                          accept="image/*"
+                          disabled={!isProfileComplete}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            setMedia(file);
+                            setPreview(URL.createObjectURL(file));
+                            e.target.value = "";
+                          }}
+                        />
                       </Button>
 
                       {/* Hidden File Input */}
@@ -804,6 +866,37 @@ export default function Community() {
               <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', py: 4 }}>
                 <CircularProgress size={isMobile ? 36 : 50} />
               </Box>
+            ) : communityPosts.length == 0 ? (
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  py: 8,
+                  textAlign: "center",
+                }}
+              >
+                <InboxOutlinedIcon
+                  sx={{
+                    fontSize: { xs: 40, sm: 64 },
+                    color: "text.disabled",
+                    mb: 2,
+                  }}
+                />
+
+                <Typography variant="h6" fontWeight={600} color="text.primary">
+                  No Posts Yet
+                </Typography>
+
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mt: 1, maxWidth: 320 }}
+                >
+                  There are no posts to display at the moment.
+                </Typography>
+              </Box>
             ) : (
               communityPosts?.map((post, index) => (
                 <Paper
@@ -843,7 +936,7 @@ export default function Community() {
                         </Typography>
                         <Typography variant="caption" color="text.secondary" fontSize={captionSize}
                           sx={{ fontSize: { xs: "0.6rem", sm: "0.72rem" } }}>
-                          {'tvm'} | {formattedDateTime(post?.createdAt)}
+                          {formattedDateTime(post?.createdAt)}
                         </Typography>
                       </Box>
 
@@ -1124,7 +1217,7 @@ export default function Community() {
                                 <Button
                                   variant="outlined"
                                   size="small"
-                                  onClick={() => setEditOpen(false)}
+                                  onClick={handleReset}
                                   sx={{
                                     width: "fit-content",
                                     minWidth: "unset",
@@ -1239,11 +1332,24 @@ export default function Community() {
                     </Button>
 
                     <Button
-                      startIcon={<BookmarkBorderIcon fontSize={iconFontSize} />}
+                      onClick={() => {
+                        isPostSaved(post._id)
+                          ? removeSavedPost(post._id)
+                          : savePost(post);
+                      }}
+                      startIcon={
+                        isPostSaved(post._id)
+                          ? <BookmarkBorderIcon sx={{ color: "#0084ff" }} fontSize={iconFontSize} />
+                          : <BookmarkBorderIcon fontSize={iconFontSize} />
+                      }
                       size={isMobile ? 'small' : 'medium'}
-                      sx={{ textTransform: 'none', color: 'text.secondary', fontSize: btnFontSize }}
+                      sx={{
+                        textTransform: 'none',
+                        color: isPostSaved(post._id) ? '#0084ff' : 'text.secondary',
+                        fontSize: btnFontSize
+                      }}
                     >
-                      Save
+                      {isPostSaved(post._id) ? "Saved" : "Save"}
                     </Button>
                   </Stack>
 

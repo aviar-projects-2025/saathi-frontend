@@ -69,60 +69,20 @@ const HeroSection = () => {
                 <Typography
                   variant="h6"
                   sx={{
-                    color: 'rgba(255,255,255,0.88)',
+                    color: "rgba(255,255,255,0.88)",
                     mb: 5,
                     fontWeight: 400,
                     maxWidth: 520,
-                    textShadow: '0 1px 8px rgba(0,0,0,0.25)',
+                    textShadow: "0 1px 8px rgba(0,0,0,0.25)",
                     lineHeight: 1.65,
-                    fontSize: { xs: '1rem', md: '1.1rem' },
+                    fontSize: { xs: "1rem", md: "1.1rem" },
                   }}
                 >
-                  India's most trusted travel companion platform. Connect with verified travelers,
-                  share fuel costs, and make every journey memorable.
+                  Every great journey begins with the right companion. Join a trusted
+                  community of verified travelers to share rides, save on travel costs,
+                  and explore the USA together.
                 </Typography>
 
-                <Stack
-                  direction={{ xs: 'column', sm: 'row' }}
-                  spacing={2}
-                  sx={{ mb: { xs: 5, md: 6 } }}
-                >
-                  <Button
-                    variant="contained"
-                    size="large"
-                    endIcon={<SearchIcon />}
-                    sx={{
-                      px: 4,
-                      py: 1.7,
-                      fontSize: '1rem',
-                      fontWeight: 700,
-                      borderRadius: 50,
-                      width: { xs: '100%', sm: 'auto' },
-                    }}
-                  >
-                    Find a Ride
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    size="large"
-                    sx={{
-                      px: 4,
-                      py: 1.7,
-                      fontSize: '1rem',
-                      fontWeight: 700,
-                      borderRadius: 50,
-                      borderColor: 'rgba(255,255,255,0.6)',
-                      color: '#FFFFFF',
-                      width: { xs: '100%', sm: 'auto' },
-                      '&:hover': {
-                        borderColor: '#FFFFFF',
-                        bgcolor: 'rgba(255,255,255,0.12)',
-                      },
-                    }}
-                  >
-                    Offer a Ride
-                  </Button>
-                </Stack>
 
                 {/* Stats row */}
                 <Stack

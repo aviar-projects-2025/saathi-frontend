@@ -8,6 +8,7 @@ export const UserProvider = ({ children }) => {
 
     const storedUser = JSON.parse(localStorage.getItem("user"));
     const [currentUser, setCurrentUser] = useState(null);
+    const [savedPost, setSavedPost] = useState([]);
 
     const requiredFields = [
         "firstName",
@@ -38,6 +39,7 @@ export const UserProvider = ({ children }) => {
     useEffect(() => {
         if (storedUser?.id) {
             getuserData();
+            getSavedPost();
         }
     }, []);
 
@@ -50,6 +52,34 @@ export const UserProvider = ({ children }) => {
         }
     };
 
+    const removeSavedPost = async (postId) => {
+        try {
+            console.log(postId, 'postId');
+
+            await axios.delete(
+                `${Api}/save-post/${postId}/${currentUser._id}`
+            );
+
+            setSavedPost((prev) =>
+                prev.filter((item) => item.postId._id !== postId)
+            );
+
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    const getSavedPost = async () => {
+        try {
+            axios.get(Api + `/save-post/${storedUser.id}`)
+                .then((res) => {
+                    setSavedPost(res?.data?.savedPosts)
+                })
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
     return (
         <UserContext.Provider
             value={{
@@ -57,6 +87,9 @@ export const UserProvider = ({ children }) => {
                 setCurrentUser,
                 getuserData,
                 completion,
+                savedPost,
+                setSavedPost,
+                removeSavedPost
             }}
         >
             {children}

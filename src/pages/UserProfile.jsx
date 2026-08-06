@@ -16,6 +16,7 @@ import {
   MenuItem,
   Dialog,
   DialogContent,
+  Tooltip,
 } from "@mui/material";
 
 import NotificationsIcon from "@mui/icons-material/Notifications";
@@ -47,6 +48,7 @@ import CommunityComments from "./CommunityComments.jsx";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 
 import ToastConfig from "../components/ToastConfig.jsx";
+import CircularProgress from "@mui/material/CircularProgress";
 
 const SAFFRON = "#E8650A";
 const SAFFRON_LIGHT = "#FDF0E8";
@@ -57,11 +59,11 @@ import CloseIcon from "@mui/icons-material/Close";
 import { useNavigate } from "react-router-dom";
 
 const pillBtn = {
-    textTransform: "none",
-    border: "none",
-    fontSize: { xs: "0.72rem", sm: "0.85rem", md: "0.9rem" },
-    color: SAFFRON,
-    fontWeight: 600,
+  textTransform: "none",
+  border: "none",
+  fontSize: { xs: "0.72rem", sm: "0.85rem", md: "0.9rem" },
+  color: SAFFRON,
+  fontWeight: 600,
 };
 const SectionCard = ({ children, sx = {} }) => (
   <Paper
@@ -121,7 +123,7 @@ const UserProfile = () => {
       [id]: !prev[id],
     }));
   };
-  const { currentUser, getuserData } = useUser();
+  const { currentUser, getuserData, savedPost, removeSavedPost } = useUser();
 
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [editProfile, setEditProfile] = useState(false);
@@ -150,6 +152,8 @@ const UserProfile = () => {
 
   const [openImage, setOpenImage] = useState(false);
   const [selectedImage, setSelectedImage] = useState("");
+
+  const [communityLoading, setCommunityLoading] = useState(false);
 
   const shareLink = `${window.location.origin}/register?ref=${user?.referralCode}`;
 
@@ -202,14 +206,14 @@ const UserProfile = () => {
     }
 
     // Email
-     if (!formData.email) {
-        errors.email = "Email is required";
+    if (!formData.email) {
+      errors.email = "Email is required";
     } else {
-        // Proper email validation
-        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-        if (!emailRegex.test(formData.email)) {
-            errors.email = "Please enter a valid email address (e.g., name@domain.com)";
-        }
+      // Proper email validation
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if (!emailRegex.test(formData.email)) {
+        errors.email = "Please enter a valid email address (e.g., name@domain.com)";
+      }
     }
 
 
@@ -309,9 +313,11 @@ const UserProfile = () => {
     }
   }, [currentUser]);
   const getCommunityPost = async () => {
+
+
     try {
+      setCommunityLoading(true);
       const postsRes = await axios.get(Api + "/community/");
-      console.log("postsRes", postsRes);
       // Only current user's posts
       const myPosts = postsRes.data.data.filter(
         (item) => item.authorId?._id === currentUser?._id,
@@ -320,11 +326,16 @@ const UserProfile = () => {
       setCommunityPosts(myPosts);
     } catch (error) {
       console.error(error);
+    } finally {
+      setCommunityLoading(false);
     }
   };
+
+
   const handleUpdateProfile = async () => {
-    setSubmitLoading(true);
+
     try {
+      setSubmitLoading(true);
       const validationErrors = validateForm(formData);
       if (Object.keys(validationErrors).length > 0) {
         setErrors(validationErrors);
@@ -356,6 +367,7 @@ const UserProfile = () => {
   };
 
   const [tab, setTab] = useState(0);
+
   const handleCopy = (value) => {
     navigator.clipboard.writeText(value);
     toast.success("Copied to Clipboard!", toasts);
@@ -535,16 +547,114 @@ const UserProfile = () => {
                   alignItems: "center",
                 }}
               >
-                {communityPosts.map((post) => (
+                {communityLoading ? (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      width: 45,
+                      height: 45,
+                    }}
+                  >
+                    <CircularProgress
+                      size={30}
+                      thickness={5}
+                      sx={{
+                        color: "#FF9933", // Saffron
+                      }}
+                    />
+                  </Box>
+                ) : (
+                  communityPosts.map((post) => (
+                    <Grid item xs={4} key={post._id} sx={{ mt: 1 }}>
+                      {post.postImage && (
+                        <Box
+                          // onClick={() => setSelectedPost(post)}
+                          onClick={() => {
+                            setSelectedImage(
+                              Array.isArray(post.postImage)
+                                ? post.postImage[0]
+                                : post.postImage,
+                            );
+                            setOpenImage(true);
+                          }}
+                          sx={{
+                            position: "relative",
+                            cursor: "pointer",
+                            width: { xs: 90, sm: 100, md: 130, lg: 150 },
+                            height: { xs: 110, sm: 130, md: 160, lg: 180 },
+                            overflow: "hidden",
+                            borderRadius: { xs: 0.5, sm: 1 },
+                            "&:hover .postOverlay": { opacity: 1 },
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                          }}
+                        >
+                          <img
+                            src={
+                              Array.isArray(post.postImage)
+                                ? post.postImage[0]
+                                : post.postImage
+                            }
+                            alt=""
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover ",
+                              display: "block",
+                            }}
+                          />
+                          <Box
+                            className="postOverlay"
+                            sx={{
+                              position: "absolute",
+                              inset: 0,
+                              bgcolor: "rgba(0,0,0,0.15)",
+                              opacity: 0,
+                              transition: "opacity 0.15s ease",
+                              display: { xs: "none", sm: "flex" },
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                          >
+                            <Stack
+                              direction="row"
+                              spacing={2}
+                              sx={{ color: "#fff" }}
+                            >
+                              <ThumbUpOffAltIcon fontSize="small" />
+                              <ChatIcon fontSize="small" />
+                            </Stack>
+                          </Box>
+                        </Box>
+                      )}
+                    </Grid>
+                  )))}
+              </Grid>
+            )}
+
+            {tab === 1 && !selectedPost && (
+              <Grid
+                container
+                spacing={{ xs: "12px", sm: "15px", md: "20px" }}
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                {savedPost?.map((post) => (
                   <Grid item xs={4} key={post._id} sx={{ mt: 1 }}>
-                    {post.postImage && (
+                    {post.postId?.postImage && (
                       <Box
-                        // onClick={() => setSelectedPost(post)}
                         onClick={() => {
                           setSelectedImage(
-                            Array.isArray(post.postImage)
-                              ? post.postImage[0]
-                              : post.postImage,
+                            Array.isArray(post.postId.postImage)
+                              ? post.postId.postImage[0]
+                              : post.postId.postImage
                           );
                           setOpenImage(true);
                         }}
@@ -563,18 +673,19 @@ const UserProfile = () => {
                       >
                         <img
                           src={
-                            Array.isArray(post.postImage)
-                              ? post.postImage[0]
-                              : post.postImage
+                            Array.isArray(post.postId.postImage)
+                              ? post.postId.postImage[0]
+                              : post.postId.postImage
                           }
                           alt=""
                           style={{
                             width: "100%",
                             height: "100%",
-                            objectFit: "cover ",
+                            objectFit: "cover",
                             display: "block",
                           }}
                         />
+
                         <Box
                           className="postOverlay"
                           sx={{
@@ -588,11 +699,7 @@ const UserProfile = () => {
                             justifyContent: "center",
                           }}
                         >
-                          <Stack
-                            direction="row"
-                            spacing={2}
-                            sx={{ color: "#fff" }}
-                          >
+                          <Stack direction="row" spacing={2} sx={{ color: "#fff" }}>
                             <ThumbUpOffAltIcon fontSize="small" />
                             <ChatIcon fontSize="small" />
                           </Stack>
@@ -620,47 +727,76 @@ const UserProfile = () => {
                 },
               }}
             >
-              <IconButton
-                onClick={() => setOpenImage(false)}
+              <Box
                 sx={{
-                  position: "absolute",
-                  top: 8,
-                  right: 8,
-                  color: "#fff",
-                  bgcolor: "rgba(0,0,0,0.5)",
-                  "&:hover": {
-                    bgcolor: "rgba(0,0,0,0.7)",
-                  },
-                  zIndex: 10,
+                  position: "relative",
                 }}
               >
-                <CloseIcon />
-              </IconButton>
-
-              <DialogContent
-                sx={{
-                  p: 0,
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  bgcolor: "transparent",
-                }}
-              >
-                <Box
-                  component="img"
-                  src={selectedImage}
-                  alt="Post"
+                <IconButton
+                  onClick={() => removeSavedPost(selectedPost._id)}
                   sx={{
-                    display: "block",
-                    maxWidth: "95vw",
-                    maxHeight: "90vh",
-                    width: "auto",
-                    height: "auto",
-                    objectFit: "contain",
-                    borderRadius: 2,
+                    position: "absolute",
+                    top: 8,
+                    left: 8,
+                    color: "#fff",
+                    bgcolor: "rgba(0,0,0,0.5)",
+                    "&:hover": {
+                      bgcolor: "rgba(0,0,0,0.7)",
+                    },
+                    zIndex: 10,
                   }}
-                />
-              </DialogContent>
+                >
+                  <Tooltip title="Remove from saved">
+                    <BookmarkBorderIcon
+                      fontSize="small"
+                      sx={{ color: "#ff5e00ff" }}
+                    />
+                  </Tooltip>
+                </IconButton>
+
+                <IconButton
+                  onClick={() => setOpenImage(false)}
+                  sx={{
+                    position: "absolute",
+                    top: 8,
+                    right: 8,
+                    color: "#fff",
+                    bgcolor: "rgba(0,0,0,0.5)",
+                    "&:hover": {
+                      bgcolor: "rgba(0,0,0,0.7)",
+                    },
+                    zIndex: 10,
+                  }}
+                >
+                  <CloseIcon />
+                </IconButton>
+
+
+                <DialogContent
+                  sx={{
+                    p: 0,
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    bgcolor: "transparent",
+                  }}
+                >
+                  <Box
+                    component="img"
+                    src={selectedImage}
+                    alt="Post"
+                    sx={{
+                      display: "block",
+                      maxWidth: "95vw",
+                      maxHeight: "90vh",
+                      width: "auto",
+                      height: "auto",
+                      objectFit: "contain",
+                      borderRadius: 2,
+                    }}
+                  />
+                </DialogContent>
+              </Box>
             </Dialog>
           </SectionCard>
         </Stack>
@@ -695,8 +831,48 @@ const UserProfile = () => {
                 overflowY: "auto",
               }}
             >
-              <Stack spacing={{ xs: 1.5, sm: 2.5 }} sx={{ width: "100%" }}>
+              <Box
+                sx={{
+                  position: "relative",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  mb: 3
+                }}
+              >
                 <Typography
+                  variant="h6"
+                  sx={{
+                    fontWeight: 700,
+                    fontSize: {
+                      xs: "1rem",
+                      sm: "1.15rem",
+                      md: "1.25rem",
+                    },
+                  }}
+                >
+                  Edit Profile
+                </Typography>
+
+                <IconButton
+                  aria-label="close"
+                  onClick={() => setEditProfile(false)}
+                  sx={{
+                    position: "absolute",
+                    right: 0,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    color: "text.secondary",
+                    "&:hover": {
+                      bgcolor: "action.hover",
+                    },
+                  }}
+                >
+                  <CloseIcon />
+                </IconButton>
+              </Box>
+
+              <Stack spacing={{ xs: 1.5, sm: 2.5 }} sx={{ width: "100%" }}>
+                {/* <Typography
                   variant="h6"
                   fontWeight={700}
                   sx={{
@@ -705,7 +881,7 @@ const UserProfile = () => {
                   }}
                 >
                   Edit Profile
-                </Typography>
+                </Typography> */}
 
                 <Stack alignItems="center" spacing={1}>
                   <Avatar
@@ -926,7 +1102,7 @@ const UserProfile = () => {
                 />
 
                 <Stack
-                  direction={{ xs: "row-reverse", sm: "row" }}
+                  direction={{ xs: "row", sm: "row" }}
                   spacing={{ xs: 1, sm: 1.5 }}
                   // justifyContent="flex-end"
                   // alignItems="center"
@@ -951,7 +1127,7 @@ const UserProfile = () => {
                       setProfileImage("");
                       resetForm();
                       setErrors({});
-                      setEditProfile(false);
+                      // setEditProfile(false);
                     }}
                   >
                     Cancel

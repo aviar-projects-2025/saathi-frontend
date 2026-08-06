@@ -72,7 +72,7 @@ const CommentInput = ({ value, onChange, onSend, placeholder }) => (
 );
 
 /* ── inline edit box for a comment/reply, also defined OUTSIDE ── */
-const EditCommentInput = ({ value, onChange, onSave, onCancel }) => (
+const EditCommentInput = ({ value, onChange, onSave, onCancel, load }) => (
   <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
     <TextField
       fullWidth
@@ -92,7 +92,11 @@ const EditCommentInput = ({ value, onChange, onSave, onCancel }) => (
       }}
     />
     <IconButton size="small" color="primary" onClick={onSave}>
-      <CheckIcon sx={{ fontSize: "1rem" }} />
+      {load ? (
+        <CircularProgress size={16} thickness={5} />
+      ) : (
+        <CheckIcon sx={{ fontSize: "1rem" }} />
+      )}
     </IconButton>
     <IconButton size="small" onClick={onCancel}>
       <CloseIcon sx={{ fontSize: "1rem" }} />
@@ -142,25 +146,20 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
   // const theme = useTheme();
   const isTab = useMediaQuery(theme.breakpoints.down("sm"));
 
+  const [commentsLoading, setCommentsLoading] = useState(false);
+
   useEffect(() => {
     getComments();
   }, [post]);
 
   const getComments = async () => {
     try {
-      setLoading(true);
-      const res = await axios.get(Api + `/community/comments/${post?._id}`);
+      // setLoading(true);
+      const res = await axios.get(Api + `/community/comments/${post?._id}/${user.id}`);
       const list = res.data.data.comments;
-      const likedComments =
-        JSON.parse(localStorage.getItem("likedComments")) || [];
 
-      const updatedComments = list.map((item) => ({
-        ...item,
-        likedByCurrentUser:
-          likedComments.includes(item._id) || item.likedByCurrentUser,
-      }));
 
-      setCommentsFetched(updatedComments);
+      setCommentsFetched(res.data.data.comments);
       onCommentsChanged?.(list.length);
     } catch (error) {
       console.log(error.message);
@@ -182,13 +181,16 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
   };
 
   const replySend = async (postId, parentId) => {
+    if (!reply.trim()) return;
     try {
       await axios.post(
         Api + `/community/comments/${postId}/reply/${parentId}/${user.id}`,
         { reply },
       );
       setReply("");
+      setIsReply(null);
       getComments();
+
     } catch (error) {
       console.log(error.message);
     }
@@ -201,22 +203,8 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
   const likeComment = async (commentId) => {
     try {
       const res = await axios.post(
-        Api + `/community/likes/comment/${commentId}/${user.id}`,
+        `${Api}/community/likes/comment/${commentId}/${user.id}`
       );
-      let likedComments =
-        JSON.parse(localStorage.getItem("likedComments")) || [];
-
-      // Add or remove comment id
-      if (res.data.liked) {
-        if (!likedComments.includes(commentId)) {
-          likedComments.push(commentId);
-        }
-      } else {
-        likedComments = likedComments.filter((id) => id !== commentId);
-      }
-
-      // Save in localStorage
-      localStorage.setItem("likedComments", JSON.stringify(likedComments));
 
       setCommentsFetched((prev) =>
         prev.map((item) =>
@@ -226,8 +214,8 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
               likes: res.data.likes,
               likedByCurrentUser: res.data.liked,
             }
-            : item,
-        ),
+            : item
+        )
       );
     } catch (error) {
       console.log(error.message);
@@ -260,7 +248,11 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
   };
 
   const handleEditSave = async (commentId) => {
+
     try {
+
+      setCommentsLoading(true);
+
       await axios.patch(`${Api}/community/comments/${commentId}/${user.id}`, {
         comment: editText,
       });
@@ -275,6 +267,8 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
         error.response?.data?.message || "Failed to update comment",
         toasts,
       );
+    } finally {
+      setCommentsLoading(false);
     }
   };
 
@@ -293,8 +287,10 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
   const handleDeleteConfirm = async () => {
     if (!commentToDelete) return;
 
-    setDeleteLoading(true);
     try {
+
+      setDeleteLoading(true);
+
       const res = await axios.delete(
         `${Api}/community/comments/${commentToDelete._id}/${user.id}`,
       );
@@ -339,6 +335,7 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
             onChange={(e) => setEditText(e.target.value)}
             onSave={() => handleEditSave(item._id)}
             onCancel={handleEditCancel}
+            load={commentsLoading}
           />
         ) : (
           <Stack
@@ -494,12 +491,13 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
                           userSelect: "none",
                         }}
                       >
-                        {item.likedByCurrentUser || item.likes ? (
-                          <ThumbUpAltIcon sx={{ fontSize: 14, color: '#0084ff' }} />
+                        {item.likedByCurrentUser ? (
+                          <ThumbUpAltIcon sx={{ fontSize: 14 }} />
                         ) : (
                           <ThumbUpAltOutlinedIcon sx={{ fontSize: 14 }} />
                         )}
                         {item.likes > 0 ? `${item.likes}` : ""}
+
                       </Typography>
                       <Typography
                         variant="caption"
@@ -533,6 +531,7 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
                     />
                   </Box>
                 )}
+
 
                 {/* toggle replies */}
                 {replies.length > 0 && (
@@ -611,8 +610,8 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
                                 userSelect: "none",
                               }}
                             >
-                              {replyItem.likedByCurrentUser || replyItem.likes ? (
-                                <ThumbUpAltIcon sx={{ fontSize: 14, color: '#0084ff' }} />
+                              {replyItem.likedByCurrentUser ? (
+                                <ThumbUpAltIcon sx={{ fontSize: 14 }} />
                               ) : (
                                 <ThumbUpAltOutlinedIcon sx={{ fontSize: 13 }} />
                               )}

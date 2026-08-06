@@ -7,58 +7,58 @@ import { DirectionsCar as CarIcon, Star as StarIcon } from '@mui/icons-material'
 // ──────────────────────────────────────────────
 const destinations = [
   {
-    city: 'Goa',
-    state: 'Coastal Paradise',
+    city: "New York City",
+    state: "New York",
     image:
-      'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?q=80&w=1974&auto=format&fit=crop',
+      "https://images.unsplash.com/photo-1499092346589-b9b6be3e94b2?q=80&w=2070&auto=format&fit=crop",
+    trips: 486,
+    rating: 4.9,
+    price: "$45",
+  },
+  {
+    city: "Los Angeles",
+    state: "California",
+    image:
+      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=2070&auto=format&fit=crop",
+    trips: 421,
+    rating: 4.8,
+    price: "$55",
+  },
+  {
+    city: "Miami",
+    state: "Florida",
+    image:
+      "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=2070&auto=format&fit=crop",
+    trips: 367,
+    rating: 4.8,
+    price: "$40",
+  },
+  {
+    city: "Las Vegas",
+    state: "Nevada",
+    image:
+      "https://images.unsplash.com/photo-1605833556294-ea5c7a74f57d?q=80&w=2070&auto=format&fit=crop",
+    trips: 298,
+    rating: 4.9,
+    price: "$60",
+  },
+  {
+    city: "Denver",
+    state: "Colorado",
+    image:
+      "https://images.unsplash.com/photo-1546156929-a4c0ac411f47?q=80&w=2070&auto=format&fit=crop",
     trips: 245,
     rating: 4.8,
-    price: '₹1,200',
+    price: "$50",
   },
   {
-    city: 'Manali',
-    state: 'Himachal Pradesh',
+    city: "Nashville",
+    state: "Tennessee",
     image:
-      'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?q=80&w=2070&auto=format&fit=crop',
-    trips: 189,
-    rating: 4.9,
-    price: '₹2,500',
-  },
-  {
-    city: 'Jaipur',
-    state: 'Rajasthan',
-    image:
-      'https://images.unsplash.com/photo-1477587458883-47145ed94245?q=80&w=2070&auto=format&fit=crop',
-    trips: 312,
+      "https://images.unsplash.com/photo-1518391846015-55a9cc003b25?q=80&w=2070&auto=format&fit=crop",
+    trips: 214,
     rating: 4.7,
-    price: '₹1,800',
-  },
-  {
-    city: 'Kerala',
-    state: "God's Own Country",
-    image:
-      'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?q=80&w=2070&auto=format&fit=crop',
-    trips: 178,
-    rating: 4.9,
-    price: '₹3,000',
-  },
-  {
-    city: 'Varanasi',
-    state: 'Uttar Pradesh',
-    image:
-      'https://images.unsplash.com/photo-1561361513-2d000a50f0dc?q=80&w=2076&auto=format&fit=crop',
-    trips: 156,
-    rating: 4.6,
-    price: '₹1,500',
-  },
-  {
-    city: 'Thiruvannamalai',
-    state: 'Tamil Nadu',
-    image:
-      'https://plus.unsplash.com/premium_photo-1697729536647-4e23a32dd324?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8dGVtcGxlfGVufDB8fDB8fHww',
-    trips: 134,
-    rating: 4.8,
-    price: '₹1,600',
+    price: "$42",
   },
 ];
 
@@ -77,12 +77,12 @@ const DestinationsSection = () => {
             sx={{
               lineHeight: 1.8,
               m: 4,
-              fontSize: '1.1rem',
+              fontSize: "1.1rem",
             }}
           >
-            Find the perfect travel companion for your next adventure. Connect
-            with trusted people heading the same way, share the journey,
-            split travel costs, and create unforgettable memories together.
+            Every journey is better together. Join a trusted community of verified
+            travelers, enjoy safer ride sharing, split expenses, and experience
+            seamless travel across the USA.
           </Typography>
         </Box>
 

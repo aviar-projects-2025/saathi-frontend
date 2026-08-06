@@ -403,7 +403,7 @@ export default function RideCard({ ride }) {
       {
         label: "Fuel sharing",
         icon: <LocalGasStationIcon sx={iconSx} />,
-        value: ride.fuelSharing,
+        value: ride.fuelSharing || "0",
       },
 
 

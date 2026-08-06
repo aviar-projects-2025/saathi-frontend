@@ -56,6 +56,7 @@ import PageLayout from "../components/PageLayout";
 import { toast } from "react-toastify";
 import ToastConfig from "../components/ToastConfig.jsx";
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
+import RideDetailsModal from "./RideDetails.jsx";
 
 const RequestRide = () => {
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -69,6 +70,10 @@ const RequestRide = () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [isCancelling, setIsCancelling] = useState(false);
   const user = JSON.parse(localStorage.getItem("user"));
+
+  // FIX: track the actual request object that was clicked, not a shared boolean.
+  // This ensures exactly one modal renders, showing the correct ride's details.
+  const [selectedRideDetails, setSelectedRideDetails] = useState(null);
 
   const toasts = ToastConfig();
   const open = Boolean(anchorEl);
@@ -86,8 +91,11 @@ const RequestRide = () => {
   }, [refreshRide]);
 
   async function fetchAllSends() {
-    setLoadingRequests(true);
+
     try {
+      
+      setLoadingRequests(true);
+
       if (!user?.id) return;
       const res = await axios.get(`${Api}/bookride/send/${user.id}`);
       const requestUser = res.data.data.map((item) => item.members);
@@ -131,23 +139,23 @@ const RequestRide = () => {
       // Soft delete - update status to DELETED
       await axios.patch(
         `${Api}/bookride/${requestId}/status?type=Cancel`,
-        { 
+        {
           status: "DELETED",
           cancelledBy: user?.id,
           cancelledAt: new Date().toISOString()
         }
       );
-      
+
       // Remove from local state (hide from list)
       setAllMyRequests((prev) =>
         prev.filter((request) => request._id !== requestId),
       );
-      
+
       toast.success("Ride request deleted successfully", toasts);
-      
+
       // Refresh data and notify MyRides
       await fetchAllSends();
-      window.dispatchEvent(new CustomEvent('rideDataChanged', { 
+      window.dispatchEvent(new CustomEvent('rideDataChanged', {
         detail: { action: 'deleted', requestId: requestId }
       }));
     } catch (error) {
@@ -170,7 +178,7 @@ const RequestRide = () => {
       // Soft delete - update status to DELETED
       await axios.patch(
         `${Api}/bookride/${selectedRequest._id}/status?type=Cancel`,
-        { 
+        {
           status: "DELETED",
           cancelledBy: user?.id,
           cancelledAt: new Date().toISOString()
@@ -184,12 +192,12 @@ const RequestRide = () => {
 
       handleCloseDialog();
       await fetchAllSends();
-      
+
       // Notify MyRides to update history
-      window.dispatchEvent(new CustomEvent('rideDataChanged', { 
+      window.dispatchEvent(new CustomEvent('rideDataChanged', {
         detail: { action: 'cancelled', requestId: selectedRequest._id }
       }));
-      
+
       toast.success("Ride request cancelled successfully", toasts);
     } catch (err) {
       console.error("Error cancelling request:", err);
@@ -198,7 +206,7 @@ const RequestRide = () => {
         try {
           await axios.patch(
             `${Api}/bookride/${selectedRequest._id}/status?type=Reject`,
-            { 
+            {
               status: "CANCELLED",
               cancelledBy: user?.id,
               cancelledAt: new Date().toISOString()
@@ -212,12 +220,12 @@ const RequestRide = () => {
 
           handleCloseDialog();
           await fetchAllSends();
-          
+
           // Notify MyRides to update history
-          window.dispatchEvent(new CustomEvent('rideDataChanged', { 
+          window.dispatchEvent(new CustomEvent('rideDataChanged', {
             detail: { action: 'cancelled', requestId: selectedRequest._id }
           }));
-          
+
           toast.success("Ride request cancelled successfully", toasts);
         } catch (retryErr) {
           toast.error(
@@ -238,35 +246,16 @@ const RequestRide = () => {
 
   // Filter: Only show ACTIVE requests (not deleted/cancelled/rejected)
   const activeRequests = allMyRequests.filter(
-    (req) => 
-      req?.rideId && 
-      req.status !== "DELETED" && 
-      req.status !== "CANCELLED" && 
+    (req) =>
+      req?.rideId &&
+      req.status !== "DELETED" &&
+      req.status !== "CANCELLED" &&
       req.status !== "REJECTED"
   );
 
   return (
     <PageLayout>
-      <Box
-        sx={{
-          minHeight: "65vh",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          flexDirection: "column",
-          textAlign: "center",
-          px: 2,
-        }}
-      >
-        {activeRequests.length === 0 && (
-          <DirectionsCarFilledOutlinedIcon
-            sx={{
-              fontSize: 55,
-              color: "#bdbdbd",
-              mb: 2,
-            }}
-          />
-        )}
+      <Box>
         <Typography
           sx={{
             fontSize: {
@@ -279,7 +268,30 @@ const RequestRide = () => {
         >
           My Request Rides
         </Typography>
-        <br />
+      </Box>
+
+      <Box
+        sx={{
+          minHeight: "65vh",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          flexDirection: "column",
+          textAlign: "center",
+          // px: 2,
+        }}
+      >
+        {activeRequests.length === 0 && (
+          <DirectionsCarFilledOutlinedIcon
+            sx={{
+              fontSize: 55,
+              color: "#bdbdbd",
+              mb: 2,
+            }}
+          />
+        )}
+
+        {/* <br /> */}
 
         {loadingRequests ? (
           <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
@@ -308,21 +320,27 @@ const RequestRide = () => {
                   sx={{
                     width: "100%",
                     maxWidth: "1200px",
-                    minHeight: "220px",
-                    mb: 4,
-                    borderRadius: "20px",
+                    minHeight: { xs: "auto", sm: "200px", md: "220px" },
+                    mb: { xs: 2, sm: 3, md: 4 },
+                    borderRadius: { xs: "14px", sm: "18px", md: "20px" },
                     overflow: "hidden",
                     border: "1px solid #f0d9c0",
                     boxShadow: "0 8px 20px rgba(0,0,0,0.08)",
                     cursor: "pointer",
+                    transition: "all .3s ease",
+                    "&:hover": {
+                      transform: { xs: "none", sm: "translateY(-5px)" },
+                    },
                   }}
+                  // FIX: store the clicked request itself instead of flipping a shared boolean
+                  onClick={() => setSelectedRideDetails(request)}
                 >
                   {/* Header bar */}
                   <Box
                     sx={{
                       bgcolor: "#1a1030",
-                      px: 3,
-                      py: 2,
+                      px: { xs: 1.5, sm: 2.5, md: 3 },
+                      py: { xs: 1.25, sm: 1.75, md: 2 },
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
@@ -334,7 +352,11 @@ const RequestRide = () => {
                       sx={{
                         color: "#fff",
                         fontWeight: 600,
-                        fontSize: 15,
+                        fontSize: { xs: 12.5, sm: 14, md: 15 },
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        maxWidth: { xs: "55%", sm: "70%" },
                       }}
                     >
                       {request.rideId?.createdBy?.firstName}{" "}
@@ -345,7 +367,7 @@ const RequestRide = () => {
                       sx={{
                         display: "flex",
                         alignItems: "center",
-                        gap: 1,
+                        gap: { xs: 0.5, sm: 1 },
                       }}
                     >
                       <Chip
@@ -354,6 +376,8 @@ const RequestRide = () => {
                         sx={{
                           fontWeight: 700,
                           borderRadius: "20px",
+                          fontSize: { xs: 10, sm: 11.5, md: 13 },
+                          height: { xs: 22, sm: 26, md: 28 },
                           bgcolor:
                             request.status === "ACCEPTED"
                               ? "#e8f7e8"
@@ -373,30 +397,32 @@ const RequestRide = () => {
                         onClick={(event) => handleMenuOpen(event, request)}
                         sx={{
                           color: "#fff",
+                          p: { xs: 0.5, sm: 0.75, md: 1 },
                         }}
                       >
-                        <MoreVertIcon />
+                        <MoreVertIcon sx={{ fontSize: { xs: 18, sm: 20, md: 24 } }} />
                       </IconButton>
                     </Box>
                   </Box>
 
                   <CardContent
                     sx={{
-                      p: 4,
+                      // p: { xs: 2, sm: 3, md: 4 },
                     }}
                   >
                     <Box
                       sx={{
                         display: "flex",
+                        textAlign: "left",
                         alignItems: "center",
                         justifyContent: "space-between",
-                        gap: 1,
+                        gap: { xs: 1, sm: 1.5 },
                       }}
                     >
-                      <Box>
+                      <Box sx={{ minWidth: 0, flex: 1 }}>
                         <Typography
                           sx={{
-                            fontSize: 11,
+                            fontSize: { xs: 10, sm: 10.5, md: 11 },
                             color: "#FF9933",
                             fontWeight: 600,
                           }}
@@ -408,21 +434,35 @@ const RequestRide = () => {
                             display: "flex",
                             alignItems: "center",
                             gap: 0.5,
+                            minWidth: 0,
+                            mt: 1
                           }}
                         >
                           <LocationOnIcon
-                            sx={{ color: "#e2483d", fontSize: 18 }}
+                            sx={{ color: "#e2483d", fontSize: { xs: 15, sm: 17, md: 18 } }}
                           />
-                          <Typography fontWeight={600}>
+                          <Typography fontWeight={600}
+                            sx={{
+                              fontSize: { xs: 12.5, sm: 14, md: 16 },
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                            }}
+                          >
                             {request.rideId?.from}
                           </Typography>
                         </Box>
                       </Box>
-                      <ArrowForwardIcon sx={{ color: "#FF9933" }} />
-                      <Box sx={{ textAlign: "right" }}>
+                      <ArrowForwardIcon
+                        sx={{
+                          color: "#FF9933",
+                          fontSize: { xs: 16, sm: 20, md: 24 },
+                          flexShrink: 0,
+                        }} />
+                      <Box sx={{ textAlign: "right", minWidth: 0, flex: 1 }}>
                         <Typography
                           sx={{
-                            fontSize: 11,
+                            fontSize: { xs: 10, sm: 10.5, md: 11 },
                             color: "#FF9933",
                             fontWeight: 600,
                           }}
@@ -435,24 +475,37 @@ const RequestRide = () => {
                             alignItems: "center",
                             gap: 0.5,
                             justifyContent: "flex-end",
+                            minWidth: 0,
+                            mt: 1
                           }}
                         >
                           <LocationOnIcon
-                            sx={{ color: "#e2483d", fontSize: 18 }}
+                            sx={{ color: "#e2483d", fontSize: { xs: 15, sm: 17, md: 18 } }}
                           />
-                          <Typography fontWeight={600}>
+                          <Typography fontWeight={600}
+                            sx={{
+                              fontSize: { xs: 12.5, sm: 14, md: 16 },
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                            }}
+                          >
                             {request.rideId?.destination}
                           </Typography>
                         </Box>
                       </Box>
                     </Box>
-                    <Box sx={{ borderTop: "1px solid #f0e6d8", my: 2 }} />
+                    <Box sx={{ borderTop: "1px solid #f0e6d8", my: { xs: 1.5, sm: 2 } }} />
                     <Box
-                      sx={{ display: "flex", gap: 3, flexWrap: "wrap" }}
+                      sx={{
+                        display: "flex",
+                        gap: { xs: 3, sm: 3, md: 3 },
+                        flexWrap: "nowrap",
+                      }}
                     >
-                      <Box>
+                      <Box sx={{ minWidth: 0 }}>
                         <Typography
-                          sx={{ fontSize: 11, color: "text.secondary" }}
+                          sx={{ fontSize: { xs: 10, sm: 10.5, md: 11 }, color: "text.secondary" }}
                         >
                           Date
                         </Typography>
@@ -460,22 +513,26 @@ const RequestRide = () => {
                           sx={{
                             display: "flex",
                             alignItems: "center",
-                            gap: 0.5,
+                            gap: 1,
+                            mt: 0.7
                           }}
                         >
                           <CalendarMonthIcon
-                            sx={{ color: "#FF9933", fontSize: 16 }}
+                            sx={{ color: "#FF9933", fontSize: { xs: 14, sm: 15, md: 16 } }}
                           />
-                          <Typography fontWeight={600} fontSize={13}>
+                          <Typography
+                            fontWeight={600}
+                            sx={{ fontSize: { xs: 11.5, sm: 12.5, md: 13 } }}
+                          >
                             {new Date(
                               request.createdAt,
                             ).toLocaleDateString()}
                           </Typography>
                         </Box>
                       </Box>
-                      <Box>
+                      <Box sx={{ minWidth: 0 }}>
                         <Typography
-                          sx={{ fontSize: 11, color: "text.secondary" }}
+                          sx={{ fontSize: { xs: 10, sm: 10.5, md: 11 }, color: "text.secondary" }}
                         >
                           Time
                         </Typography>
@@ -484,12 +541,14 @@ const RequestRide = () => {
                             display: "flex",
                             alignItems: "center",
                             gap: 0.5,
+                            mt: 0.7
                           }}
                         >
                           <AccessTimeIcon
-                            sx={{ color: "#FF9933", fontSize: 16 }}
-                          />
-                          <Typography fontWeight={600} fontSize={13}>
+                            sx={{ color: "#FF9933", fontSize: { xs: 14, sm: 15, md: 16 } }} />
+                          <Typography
+                            fontWeight={600}
+                            sx={{ fontSize: { xs: 11.5, sm: 12.5, md: 13 } }} >
                             {new Date(
                               request.createdAt,
                             ).toLocaleTimeString([], {
@@ -505,6 +564,13 @@ const RequestRide = () => {
               );
             })}
           </>
+        )}
+
+        {selectedRideDetails && (
+          <RideDetailsModal
+            onClose={() => setSelectedRideDetails(null)}
+            ride={selectedRideDetails.rideId}
+          />
         )}
 
         <Menu
