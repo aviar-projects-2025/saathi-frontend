@@ -125,6 +125,7 @@ export default function Community() {
         ...post,
         isLiked: likedPostIds.includes(post._id),
       }));
+
       const postIds = postsRes.data.data.map((item) => item._id);
       setCommunityPosts(updatedPosts);
       setPostId(postIds);
@@ -141,6 +142,7 @@ export default function Community() {
         })
       );
       setCommentCounts(Object.fromEntries(countEntries));
+
     } catch (error) {
       console.error(error.message);
     } finally {
@@ -1316,6 +1318,7 @@ export default function Community() {
                       sx={{ textTransform: 'none', color: 'text.secondary', fontSize: btnFontSize }}
                     >
                       {commentCounts[post._id] ?? 0}
+
                     </Button>
 
                     <Button

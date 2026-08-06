@@ -200,7 +200,7 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
   const isPending = request?.status?.toUpperCase() === 'PENDING';
   const firstName = request.requestedBy?.firstName || request?.data?.requestBy?.requestedBy?.firstName || 'U';
   const lastName = request.requestedBy?.lastName || '';
-  const profilePic = request.requestedBy?.profileImage
+  const profilePic = request.requestedBy?.profileImage;
   const seats = request?.approvedSeats || 1;
   const pendingReq = request?.pendingReqSeats || 0;
   const approvedSeats = request?.approvedSeats || 0;
@@ -496,6 +496,7 @@ export default function RideDetailsModal({
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down('sm'));
   const isMd = useMediaQuery(theme.breakpoints.up('md'));
+  const pendingMember = requests.map((item) => item.pendingMembers);
 
   const startDate = new Date(ride.startTime);
   const dateLabel = !isNaN(startDate)
@@ -907,7 +908,8 @@ export default function RideDetailsModal({
           borderTop: `1px solid ${TOKENS.line}`,
         }}
       >
-        {showEdit && (
+        {(!pendingMember || pendingMember.length === 0) && showEdit && (
+
           (ride.createdBy?._id === user?.id ||
             typeof ride.createdBy === 'string' && ride.createdBy === user?.id) && (
             <Button
@@ -928,6 +930,7 @@ export default function RideDetailsModal({
                 '&:hover': { bgcolor: TOKENS.ink, color: TOKENS.paper },
               }}
             >
+
               Edit ride
             </Button>
           )
