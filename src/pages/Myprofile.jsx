@@ -18,6 +18,10 @@ import {
   useTheme,
   Grid,
   CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import Close from "@mui/icons-material/Close";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
@@ -41,12 +45,9 @@ import { toast } from "react-toastify";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import CloseIcon from "@mui/icons-material/Close";
-import {
-  InputAdornment,
-} from "@mui/material";
+import { InputAdornment } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import ToastConfig from "../components/ToastConfig.jsx";
-
 
 const SAFFRON = "#E8650A";
 const SAFFRON_LIGHT = "#FDF0E8";
@@ -59,7 +60,7 @@ const compactBtn = {
   py: { xs: 0.5, sm: 0.75 },
   borderRadius: 2,
 };
-const user = JSON.parse(localStorage.getItem('user'))
+const user = JSON.parse(localStorage.getItem("user"));
 // Pill outlined style (mobile) matching the reference button
 const pillBtn = {
   textTransform: "none",
@@ -83,7 +84,12 @@ const SectionCard = ({ children, sx = {} }) => (
   </Paper>
 );
 const SectionHeader = ({ icon, label }) => (
-  <Stack direction="row" spacing={1} alignItems="center" mb={{ xs: 1, sm: 1.5 }}>
+  <Stack
+    direction="row"
+    spacing={1}
+    alignItems="center"
+    mb={{ xs: 1, sm: 1.5 }}
+  >
     {React.cloneElement(icon, {
       sx: { color: SAFFRON, fontSize: { xs: 18, sm: 20 } },
     })}
@@ -99,13 +105,15 @@ const SectionHeader = ({ icon, label }) => (
 const Myprofile = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const { currentUser, getuserData } = useUser()
+  const { currentUser, getuserData } = useUser();
   const handleOpenShare = () => setOpenShare(true);
   const handleCloseShare = () => setOpenShare(false);
   const [openShare, setOpenShare] = useState(false);
   const feedRef = useRef(null);
+
   const navigate = useNavigate();
-  const [passwordModel, setPasswordModel] = useState('')
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+  const [passwordModel, setPasswordModel] = useState("");
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
     newPassword: "",
@@ -147,8 +155,32 @@ const Myprofile = () => {
     }
   }, [currentUser]);
 
-  const handleChangePassword = async () => {
+  const handleLogout = () => {
+    setLogoutDialogOpen(true);
+    handleCloseProfileMenu();
+  };
 
+  const handleSelect = (option) => {
+    setSelectedMenu(option.label);
+    handleCloseProfileMenu();
+    if (option.label === "Log out") {
+      handleLogout();
+    } else if (option.link) {
+      navigate(option.link);
+    }
+  };
+
+  const confirmLogout = () => {
+    localStorage.clear();
+    setLogoutDialogOpen(false);
+    navigate("/login");
+  };
+
+  const cancelLogout = () => {
+    setLogoutDialogOpen(false);
+  };
+
+  const handleChangePassword = async () => {
     try {
       setPasswordLoading(true);
       // Frontend validation
@@ -170,7 +202,7 @@ const Myprofile = () => {
           currentPassword: passwordData.currentPassword,
           newPassword: passwordData.newPassword,
           confirmPassword: passwordData.confirmPassword,
-        }
+        },
       );
 
       toast.success(res.data.message, toasts);
@@ -181,10 +213,12 @@ const Myprofile = () => {
         newPassword: "",
         confirmPassword: "",
       });
-
     } catch (error) {
       console.error(error);
-      toast.error(error.response?.data?.message || "Something went wrong", toasts);
+      toast.error(
+        error.response?.data?.message || "Something went wrong",
+        toasts,
+      );
     } finally {
       setPasswordLoading(false);
     }
@@ -196,10 +230,9 @@ const Myprofile = () => {
 
       // Only current user's posts
       const myPosts = postsRes.data.data.filter(
-        (item) => item.authorId?._id === currentUser?._id
+        (item) => item.authorId?._id === currentUser?._id,
       );
       setCommunityPosts(myPosts);
-
     } catch (error) {
       console.error(error);
     }
@@ -208,7 +241,10 @@ const Myprofile = () => {
     <Box sx={{ textAlign: "center", minWidth: { xs: 52, sm: 64 } }}>
       <Typography
         fontWeight={800}
-        sx={{ fontSize: { xs: "0.85rem", sm: "0.95rem", md: "1.05rem" }, lineHeight: 1.2 }}
+        sx={{
+          fontSize: { xs: "0.85rem", sm: "0.95rem", md: "1.05rem" },
+          lineHeight: 1.2,
+        }}
       >
         {value}
       </Typography>
@@ -228,18 +264,19 @@ const Myprofile = () => {
         // mx: "auto",
         // px: 1.5,
         py: 1,
-        pb: 3
+        pb: 3,
       }}
     >
       <Typography
         variant="h5"
         sx={{
           // color: '#E8650A',
-          color: '#000000',
+          color: "#000000",
           fontWeight: 600,
           fontSize: { xs: "1.2rem", sm: "1.2rem", md: "1.35rem", lg: "1.5rem" },
-          mb: { xs: "1.2rem", sm: "1.2rem", md: "1.35rem", lg: "1.5rem" }
-        }}>
+          mb: { xs: "1.2rem", sm: "1.2rem", md: "1.35rem", lg: "1.5rem" },
+        }}
+      >
         Settings
         {/* <span style={{ color: '#138808' }}>Profile</span> */}
       </Typography>
@@ -284,11 +321,12 @@ const Myprofile = () => {
               }}
             >
               {!currentUser?.profileImage &&
-                `${currentUser?.firstName?.[0] || ""}${currentUser?.lastName?.[0] || ""
+                `${currentUser?.firstName?.[0] || ""}${
+                  currentUser?.lastName?.[0] || ""
                 }`}
             </Avatar>
 
-            <Box sx={{ minWidth: 0, flex: 1, }}>
+            <Box sx={{ minWidth: 0, flex: 1 }}>
               <Typography
                 sx={{
                   fontWeight: 700,
@@ -297,7 +335,7 @@ const Myprofile = () => {
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
-                  mt: 1
+                  mt: 1,
                 }}
               >
                 {currentUser?.firstName} {currentUser?.lastName}
@@ -325,14 +363,13 @@ const Myprofile = () => {
               ...pillBtn,
               // width: { xs: "auto", sm: "auto" },
               display: "flex",
-              justifyContent: { xs: "flex-end" }
+              justifyContent: { xs: "flex-end" },
             }}
           >
             View Profile
           </Button>
         </Stack>
       </SectionCard>
-
 
       {/* <SectionCard sx={{ mt: 3 }}>
         <SectionHeader icon={<PersonIcon />} label="Account" />
@@ -366,21 +403,22 @@ const Myprofile = () => {
         </Stack>
       </SectionCard> */}
 
-
       {/* ── Security ── */}
 
       <SectionCard sx={{ mt: 3 }}>
         <SectionHeader icon={<LockIcon />} label="Security" />
         <Divider sx={{ mt: 1 }} />
-        <Grid sx={{
-          display: "flex",
-          justifyContent: "flex-end",
-        }}>
-
-
+        <Grid
+          sx={{
+            display: "flex",
+            justifyContent: "flex-end",
+          }}
+        >
           <Button
             variant="outlined"
-            onClick={() => { setPasswordModel(true) }}
+            onClick={() => {
+              setPasswordModel(true);
+            }}
             sx={{
               ...pillBtn,
               width: { xs: "auto", sm: "auto" },
@@ -392,10 +430,7 @@ const Myprofile = () => {
         </Grid>
       </SectionCard>
 
-      <Modal
-        open={passwordModel}
-        onClose={() => setPasswordModel(false)}
-      >
+      <Modal open={passwordModel} onClose={() => setPasswordModel(false)}>
         <Box
           sx={{
             position: "fixed",
@@ -564,7 +599,7 @@ const Myprofile = () => {
                   sx={{
                     pt: 2,
                     display: "flex",
-                    justifyContent: "flex-end"
+                    justifyContent: "flex-end",
                   }}
                 >
                   <Button
@@ -608,7 +643,9 @@ const Myprofile = () => {
                       },
                     }}
                   >
-                    {passwordLoading ? " Updating Password... " : " Update Password "}
+                    {passwordLoading
+                      ? " Updating Password... "
+                      : " Update Password "}
                   </Button>
                 </Stack>
               </Stack>
@@ -771,7 +808,8 @@ const Myprofile = () => {
             display: "flex",
             justifyContent: "space-between",
             mt: 2,
-          }}>
+          }}
+        >
           <Grid>
             <Typography
               variant="body2"
@@ -798,7 +836,9 @@ const Myprofile = () => {
             <Button
               variant="outlined"
               onClick={() => handleCopy(user?.referralCode)}
-              startIcon={<ContentCopyIcon sx={{ fontSize: { xs: 14, sm: 16 } }} />}
+              startIcon={
+                <ContentCopyIcon sx={{ fontSize: { xs: 14, sm: 16 } }} />
+              }
               sx={{
                 ...pillBtn,
                 width: { xs: "100%", sm: "auto" },
@@ -818,9 +858,8 @@ const Myprofile = () => {
               Share invite
             </Button>
           </Stack>
-
         </Grid>
-      </SectionCard >
+      </SectionCard>
 
       {/* ── Account Actions ── */}
       <SectionCard sx={{ mt: 3 }}>
@@ -828,25 +867,185 @@ const Myprofile = () => {
         <Divider sx={{ mt: 1 }} />
         <Grid
           sx={{
-            display: 'flex',
+            display: "flex",
             justifyContent: { xs: "end", sm: "end" },
             mt: 2,
-            mx: 1
-          }}>
+            mx: 1,
+          }}
+        >
           <Stack direction={{ xs: "row", sm: "row" }} spacing={2}>
-
             <Button
               variant="outlined"
               startIcon={<LogoutIcon sx={{ fontSize: { xs: 15, sm: 17 } }} />}
-              onClick={logout}
+              onClick={handleLogout}
               sx={{
                 ...pillBtn,
                 width: { xs: "auto", sm: "auto" },
-
               }}
             >
               Logout
             </Button>
+            <Dialog
+              open={logoutDialogOpen}
+              onClose={cancelLogout}
+              fullWidth
+              maxWidth="xs"
+              PaperProps={{
+                sx: {
+                  borderRadius: { xs: 3, sm: 4 },
+                  mx: { xs: 2, sm: "auto" },
+                  width: { xs: "calc(100% - 24px)", sm: "100%" },
+                  maxWidth: { xs: 320, sm: 400 },
+                  overflow: "hidden",
+                  position: "relative",
+                  background: "linear-gradient(145deg, #ffffff, #faf5f0)",
+                  boxShadow: "0 20px 60px rgba(0,0,0,0.15)",
+                  my: { xs: 2, sm: "auto" },
+                  maxHeight: { xs: "90vh", sm: "auto" },
+                },
+              }}
+            >
+              {/* Decorative Top Bar */}
+              <Box
+                sx={{
+                  height: { xs: 3, sm: 4 },
+                  background: "linear-gradient(90deg, #f97316, #dc2626)",
+                  width: "100%",
+                  flexShrink: 0,
+                }}
+              />
+
+              {/* Close Button */}
+              <IconButton
+                onClick={cancelLogout}
+                aria-label="Close"
+                sx={{
+                  position: "absolute",
+                  right: { xs: 8, sm: 12 },
+                  top: { xs: 8, sm: 12 },
+                  color: "#E85D26",
+                  zIndex: 10,
+                  bgcolor: "#f3f4f6",
+                  "&:hover": {
+                    bgcolor: "#fee2e2",
+                    color: "#E85D26",
+                  },
+                  width: { xs: 28, sm: 36 },
+                  height: { xs: 28, sm: 36 },
+                  p: 0,
+                }}
+              >
+                <CloseIcon sx={{ fontSize: { xs: 14, sm: 20 } }} />
+              </IconButton>
+
+              <DialogTitle
+                sx={{
+                  fontWeight: 800,
+                  fontSize: { xs: "0.95rem", sm: "1.25rem" },
+                  pt: { xs: 2.5, sm: 4 },
+                  pb: 0,
+                  textAlign: "center",
+                  color: "#1F2430",
+                  px: { xs: 2, sm: 3 },
+                }}
+              />
+
+              <DialogContent
+                sx={{
+                  pt: { xs: 1.5, sm: 2.5 },
+                  pb: { xs: 0.5, sm: 1.5 },
+                  px: { xs: 2, sm: 3 },
+                }}
+              >
+                <Box sx={{ textAlign: "center", px: { xs: 0.5, sm: 1 } }}>
+                  <Typography
+                    sx={{
+                      fontSize: { xs: "0.85rem", sm: "1rem" },
+                      fontWeight: 600,
+                      color: "#1F2430",
+                      mb: { xs: 0.5, sm: 1 },
+                    }}
+                  >
+                    Are you sure you want to logout?
+                  </Typography>
+                  <Typography
+                    color="text.secondary"
+                    sx={{
+                      fontSize: { xs: "0.7rem", sm: "0.85rem" },
+                      color: "#6b7280",
+                      lineHeight: 1.5,
+                      px: { xs: 0.5, sm: 2 },
+                    }}
+                  >
+                    You'll need to login again to access your account.
+                  </Typography>
+                </Box>
+              </DialogContent>
+
+              <DialogActions
+                sx={{
+                  px: { xs: 1.5, sm: 3 },
+                  pb: { xs: 2, sm: 3.5 },
+                  pt: { xs: 1, sm: 2 },
+                  gap: { xs: 0.75, sm: 1.5 },
+                  justifyContent: "center",
+                  flexDirection: "row", // Always in row
+                }}
+              >
+                <Button
+                  onClick={cancelLogout}
+                  variant="outlined"
+                  sx={{
+                    borderRadius: 2,
+                    textTransform: "none",
+                    fontWeight: 600,
+                    flex: { xs: 1, sm: "0 0 auto" },
+                    minWidth: { xs: "auto", sm: 110 },
+                    minHeight: { xs: 32, sm: 46 },
+                    height: { xs: 32, sm: 46 },
+                    borderColor: "#6b7280",
+                    color: "#ffffff",
+                    bgcolor: "#6b7280",
+                    "&:hover": {
+                      borderColor: "#6b7280",
+                      bgcolor: "#6b7280",
+                    },
+                    px: { xs: 1.5, sm: 3 },
+                    fontSize: { xs: "0.7rem", sm: "0.9rem" },
+                    py: { xs: 0.5, sm: 1 },
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={confirmLogout}
+                  variant="contained"
+                  sx={{
+                    borderRadius: 2,
+                    textTransform: "none",
+                    fontWeight: 700,
+                    flex: { xs: 1, sm: "0 0 auto" },
+                    minWidth: { xs: "auto", sm: 110 },
+                    minHeight: { xs: 32, sm: 46 },
+                    height: { xs: 32, sm: 46 },
+                    background: "linear-gradient(135deg, #E85D26, #E85D26)",
+                    color: "#ffffff",
+                    "&:hover": {
+                      background: "linear-gradient(135deg, #D65A00, #D65A00)",
+                    },
+                    boxShadow: "0 4px 15px rgba(232, 93, 38, 0.3)",
+                    px: { xs: 1.5, sm: 3 },
+                    fontSize: { xs: "0.7rem", sm: "0.9rem" },
+                    py: { xs: 0.5, sm: 1 },
+                  }}
+                  startIcon={
+                    <LogoutIcon sx={{ fontSize: { xs: 14, sm: 20 } }} />
+                  }
+                >
+                  Logout
+                </Button>
+              </DialogActions>
+            </Dialog>
             {/* <Button
               startIcon={<DeleteIcon sx={{ fontSize: { xs: 5, sm: 17 } }} />}
               sx={{

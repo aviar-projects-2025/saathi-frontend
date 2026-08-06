@@ -1,8 +1,23 @@
 import React, { useEffect, useState } from "react";
 import {
-  Paper, Stack, Typography, Box, Button, CircularProgress,
-  Avatar, Collapse
+  Paper,
+  Stack,
+  Typography,
+  Box,
+  Button,
+  CircularProgress,
+  Avatar,
+  Collapse,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  IconButton,
+  Menu,
+  MenuItem,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+import MenuIcon from "@mui/icons-material/Menu";
 
 import SearchIcon from "@mui/icons-material/Search";
 import RouteIcon from "@mui/icons-material/Route";
@@ -22,6 +37,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
   const location = useLocation();
   const { notificationLengthcount } = useReferral();
   const { notifications } = useNotifications();
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
 
   const [openDropdown, setOpenDropdown] = useState(null);
 
@@ -34,9 +50,29 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
   };
 
   const handleLogout = () => {
-    localStorage.clear();
-    navigate("/login");
+    setLogoutDialogOpen(true);
+    handleCloseProfileMenu();
     onItemClick?.();
+  };
+
+  const handleSelect = (option) => {
+    setSelectedMenu(option.label);
+    handleCloseProfileMenu();
+    if (option.label === "Log out") {
+      handleLogout();
+    } else if (option.link) {
+      navigate(option.link);
+    }
+  };
+
+  const confirmLogout = () => {
+    localStorage.clear();
+    setLogoutDialogOpen(false);
+    navigate("/login");
+  };
+
+  const cancelLogout = () => {
+    setLogoutDialogOpen(false);
   };
 
   // NOTE: every item now has a stable, unique `id` string.
@@ -44,25 +80,41 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
   // comparison — `label` can be JSX (see "referrals") and JSX is not
   // a valid/stable value for keys or state equality checks.
   const menuItems = [
-    { id: "community", label: "Community", icon: <DashboardIcon />, link: "/community" },
+    {
+      id: "community",
+      label: "Community",
+      icon: <DashboardIcon />,
+      link: "/community",
+    },
     {
       id: "find-ride",
       label: "Find Ride",
       icon: <SearchIcon />,
       children: [
         { id: "search-ride", label: "Search Ride", link: "/find-ride" },
-        { id: "requested-rides", label: "Requested Rides", link: "/request-ride" },
+        {
+          id: "requested-rides",
+          label: "Requested Rides",
+          link: "/request-ride",
+        },
       ],
     },
     { id: "my-rides", label: "My Rides", icon: <RouteIcon />, link: "/myride" },
-    { id: "my-profile", label: "My Profile", icon: <PersonIcon />, link: "/user-profile" },
+    {
+      id: "my-profile",
+      label: "My Profile",
+      icon: <PersonIcon />,
+      link: "/user-profile",
+    },
     {
       id: "referrals",
       label: (
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <span>My Referrals</span>
           {notificationLengthcount > 0 && (
-            <Typography sx={{ fontSize: 12, fontWeight: 700, color: "#ff0000" }}>
+            <Typography
+              sx={{ fontSize: 12, fontWeight: 700, color: "#ff0000" }}
+            >
               ({notificationLengthcount})
             </Typography>
           )}
@@ -71,7 +123,12 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
       icon: <HandshakeIcon />,
       link: "/my-referalls",
     },
-    { id: "settings", label: "Settings", icon: <SettingsIcon />, link: "/myprofile" },
+    {
+      id: "settings",
+      label: "Settings",
+      icon: <SettingsIcon />,
+      link: "/myprofile",
+    },
   ];
 
   return (
@@ -241,14 +298,14 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
           py: 1,
         }}
       >
-
         <Stack spacing={{ xs: 2, sm: 2 }}>
           {menuItems.map((item) => {
             const isDropdown = Boolean(item.children);
             const isOpen = openDropdown === item.id;
             const isParentActive =
               location.pathname === item.link ||
-              (isDropdown && item.children.some((c) => c.link === location.pathname));
+              (isDropdown &&
+                item.children.some((c) => c.link === location.pathname));
 
             return (
               <Box key={item.id}>
@@ -315,7 +372,8 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
                               borderRadius: 1.5,
                               position: "relative",
                               // backgroundColor: active ? "rgba(217, 119, 6, 0.08)" : "transparent",
-                              transition: "background-color 0.2s ease, color 0.2s ease",
+                              transition:
+                                "background-color 0.2s ease, color 0.2s ease",
                               "&:hover": {
                                 // backgroundColor: "rgba(217, 119, 6, 0.06)",
                               },
@@ -374,7 +432,166 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
       >
         <LogoutIcon sx={{ fontSize: 21 }} />
         <Typography sx={{ fontSize: 14, fontWeight: 700 }}>Logout</Typography>
+        <Dialog
+          open={logoutDialogOpen}
+          onClose={cancelLogout}
+          fullWidth
+          maxWidth="xs"
+          PaperProps={{
+            sx: {
+              borderRadius: { xs: 3, sm: 4 },
+              mx: { xs: 2, sm: "auto" },
+              width: { xs: "calc(100% - 24px)", sm: "100%" },
+              maxWidth: { xs: 320, sm: 400 },
+              overflow: "hidden",
+              position: "relative",
+              background: "linear-gradient(145deg, #ffffff, #faf5f0)",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.15)",
+              my: { xs: 2, sm: "auto" },
+              maxHeight: { xs: "90vh", sm: "auto" },
+            },
+          }}
+        >
+          {/* Decorative Top Bar */}
+          <Box
+            sx={{
+              height: { xs: 3, sm: 4 },
+              background: "linear-gradient(90deg, #f97316, #dc2626)",
+              width: "100%",
+              flexShrink: 0,
+            }}
+          />
+
+          {/* Close Button */}
+          <IconButton
+            onClick={cancelLogout}
+            aria-label="Close"
+            sx={{
+              position: "absolute",
+              right: { xs: 8, sm: 12 },
+              top: { xs: 8, sm: 12 },
+              color: "#E85D26",
+              zIndex: 10,
+              bgcolor: "#f3f4f6",
+              "&:hover": {
+                bgcolor: "#fee2e2",
+                color: "#E85D26",
+              },
+              width: { xs: 28, sm: 36 },
+              height: { xs: 28, sm: 36 },
+              p: 0,
+            }}
+          >
+            <CloseIcon sx={{ fontSize: { xs: 14, sm: 20 } }} />
+          </IconButton>
+
+          <DialogTitle
+            sx={{
+              fontWeight: 800,
+              fontSize: { xs: "0.95rem", sm: "1.25rem" },
+              pt: { xs: 2.5, sm: 4 },
+              pb: 0,
+              textAlign: "center",
+              color: "#1F2430",
+              px: { xs: 2, sm: 3 },
+            }}
+          />
+
+          <DialogContent
+            sx={{
+              pt: { xs: 1.5, sm: 2.5 },
+              pb: { xs: 0.5, sm: 1.5 },
+              px: { xs: 2, sm: 3 },
+            }}
+          >
+            <Box sx={{ textAlign: "center", px: { xs: 0.5, sm: 1 } }}>
+              <Typography
+                sx={{
+                  fontSize: { xs: "0.85rem", sm: "1rem" },
+                  fontWeight: 600,
+                  color: "#1F2430",
+                  mb: { xs: 0.5, sm: 1 },
+                }}
+              >
+                Are you sure you want to logout?
+              </Typography>
+              <Typography
+                color="text.secondary"
+                sx={{
+                  fontSize: { xs: "0.7rem", sm: "0.85rem" },
+                  color: "#6b7280",
+                  lineHeight: 1.5,
+                  px: { xs: 0.5, sm: 2 },
+                }}
+              >
+                You'll need to login again to access your account.
+              </Typography>
+            </Box>
+          </DialogContent>
+
+          <DialogActions
+            sx={{
+              px: { xs: 1.5, sm: 3 },
+              pb: { xs: 2, sm: 3.5 },
+              pt: { xs: 1, sm: 2 },
+              gap: { xs: 0.75, sm: 1.5 },
+              justifyContent: "center",
+              flexDirection: "row", // Always in row
+            }}
+          >
+            <Button
+              onClick={cancelLogout}
+              variant="outlined"
+              sx={{
+                borderRadius: 2,
+                textTransform: "none",
+                fontWeight: 600,
+                flex: { xs: 1, sm: "0 0 auto" },
+                minWidth: { xs: "auto", sm: 110 },
+                minHeight: { xs: 32, sm: 46 },
+                height: { xs: 32, sm: 46 },
+                borderColor: "#6b7280",
+                color: "#ffffff",
+                bgcolor: "#6b7280",
+                "&:hover": {
+                  borderColor: "#6b7280",
+                  bgcolor: "#6b7280",
+                },
+                px: { xs: 1.5, sm: 3 },
+                fontSize: { xs: "0.7rem", sm: "0.9rem" },
+                py: { xs: 0.5, sm: 1 },
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={confirmLogout}
+              variant="contained"
+              sx={{
+                borderRadius: 2,
+                textTransform: "none",
+                fontWeight: 700,
+                flex: { xs: 1, sm: "0 0 auto" },
+                minWidth: { xs: "auto", sm: 110 },
+                minHeight: { xs: 32, sm: 46 },
+                height: { xs: 32, sm: 46 },
+                background: "linear-gradient(135deg, #E85D26, #E85D26)",
+                color: "#ffffff",
+                "&:hover": {
+                  background: "linear-gradient(135deg, #D65A00, #D65A00)",
+                },
+                boxShadow: "0 4px 15px rgba(232, 93, 38, 0.3)",
+                px: { xs: 1.5, sm: 3 },
+                fontSize: { xs: "0.7rem", sm: "0.9rem" },
+                py: { xs: 0.5, sm: 1 },
+              }}
+              startIcon={<LogoutIcon sx={{ fontSize: { xs: 14, sm: 20 } }} />}
+            >
+              Logout
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Box>
-    </Paper >
+    </Paper>
   );
 }
