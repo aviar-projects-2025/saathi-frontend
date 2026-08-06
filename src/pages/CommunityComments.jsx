@@ -649,6 +649,7 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
       </Menu>
 
       {/* delete confirmation modal */}
+      
       <Dialog
         open={deleteDialogOpen}
         onClose={(event, reason) => {
@@ -697,6 +698,10 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
             variant="outlined"
             color="inherit"
             disabled={deleteLoading}
+            sx={{
+              color: "#757575",
+              border: "1px solid #E2D7C3"
+            }}
           >
             Cancel
           </Button>

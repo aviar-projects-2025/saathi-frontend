@@ -1009,15 +1009,15 @@ export default function Community() {
                               }}
                             >
                               <Button
-                                variant="contained"
+                                variant="outlined"
                                 onClick={() => setDeleteOpen(false)}
                                 sx={{
                                   flex: 1,
                                   py: 1,
                                   fontSize: { xs: "0.8rem", sm: "0.9rem" },
                                   fontWeight: 600,
-                                  bgcolor: "grey.500",
-                                  color: "#fff",
+                                  color: "#757575",
+                                  border: "1px solid #E2D7C3",
                                   "&:hover": {
                                     bgcolor: "grey.700",
                                   },
@@ -1198,8 +1198,12 @@ export default function Community() {
                               <Stack
                                 direction="row"
                                 spacing={2}
-                                justifyContent="flex-end"
-                                sx={{ pt: 2 }}
+                                // justifyContent="flex-end"
+                                sx={{
+                                  pt: 2,
+                                  display: "flex",
+                                  justifyContent: { xs: "center", sm: "flex-end" },
+                                }}
                               >
                                 <Button
                                   variant="outlined"
@@ -1275,10 +1279,10 @@ export default function Community() {
                   {/* Post image */}
                   {post.postImage && <CommunityImage src={post.postImage} />}
 
-                  <Divider />
+                  < Divider />
 
                   {/* Action buttons */}
-                  <Stack
+                  < Stack
                     direction="row"
                     sx={{
                       py: isMobile ? 0.25 : 0.5,

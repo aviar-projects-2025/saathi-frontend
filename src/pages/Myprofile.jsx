@@ -570,7 +570,7 @@ const Myprofile = () => {
                   <Button
                     variant="outlined"
                     onClick={() => {
-                      setPasswordModel(false);
+                      // setPasswordModel(false);
                       setPasswordData({
                         currentPassword: "",
                         newPassword: "",
@@ -580,13 +580,13 @@ const Myprofile = () => {
                     sx={{
                       width: { xs: "100%", sm: "auto" },
                       minWidth: { sm: 140 },
-                      borderColor: "#E8650A",
-                      color: "#E8650A",
+                      borderColor: "#757575",
+                      color: "#757575",
                       textTransform: "none",
                       fontWeight: 600,
                       "&:hover": {
                         borderColor: "#D65A00",
-                        bgcolor: "#FFF6E5",
+                        bgcolor: "#757575",
                       },
                     }}
                   >
@@ -600,11 +600,11 @@ const Myprofile = () => {
                     sx={{
                       width: { xs: "100%", sm: "auto" },
                       minWidth: { sm: 180 },
-                      bgcolor: "#E8650A",
+                      bgcolor: "#FF9933",
                       textTransform: "none",
                       fontWeight: 600,
                       "&:hover": {
-                        bgcolor: "#D65A00",
+                        bgcolor: "#e66a12",
                       },
                     }}
                   >
@@ -688,6 +688,10 @@ const Myprofile = () => {
                 sx={{
                   fontSize: { xs: "0.75rem", sm: "0.85rem" },
                   py: { xs: 0.5, sm: 0.75 },
+                  textTransform: "none",
+                  color: "#ffff",
+                  bgcolor: "#FF9933",
+                  "&:hover": { bgcolor: "#da9a3a" },
                 }}
                 onClick={() => handleCopy(shareLink)}
               >
@@ -701,6 +705,9 @@ const Myprofile = () => {
                 sx={{
                   fontSize: { xs: "0.75rem", sm: "0.85rem" },
                   py: { xs: 0.5, sm: 0.75 },
+                  textTransform: "none",
+                  color: "#ffff",
+                  bgcolor: "#09710f"
                 }}
                 onClick={() => {
                   if (navigator.share) {
@@ -824,7 +831,7 @@ const Myprofile = () => {
 
       {/* ── Account Actions ── */}
       <SectionCard sx={{ mt: 3 }}>
-        <SectionHeader icon={<SettingsIcon />} label="Account actions" />
+        <SectionHeader icon={<SettingsIcon />} label="Account Actions" />
         <Divider sx={{ mt: 1 }} />
         <Grid
           sx={{

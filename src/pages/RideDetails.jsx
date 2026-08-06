@@ -458,7 +458,13 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
               }}
               onClick={() => onApprove(request._id)}
             >
-              <CheckCircleIcon />
+              {
+                approveLoading === request._id ? (
+                  <CircularProgress size={16} color="inherit" />
+                ) : (
+                  <CheckCircleIcon sx={{ fontSize: 16 }} />
+                )
+              }
             </IconButton>
 
             <IconButton
@@ -469,7 +475,13 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
               }}
               onClick={() => onReject(request._id)}
             >
-              <CancelIcon />
+              {
+                rejectLoading === request._id ? (
+                  <CircularProgress size={16} color="inherit" />
+                ) : (
+                  <CancelIcon sx={{ fontSize: 16 }} />
+                )
+              }
             </IconButton>
           </Box>
         </Box>
@@ -966,7 +978,7 @@ export default function RideDetailsModal({
             textTransform: 'none',
             fontWeight: 700,
             fontSize: { xs: '0.8rem', sm: '0.88rem' },
-            color: TOKENS.inkSoft,
+            color: "text.secondary",
             border: `1.5px solid ${TOKENS.line}`,
             borderRadius: 5,
             px: { xs: 1.6, sm: 2.2 },

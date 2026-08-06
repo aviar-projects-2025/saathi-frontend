@@ -646,68 +646,87 @@ const UserProfile = () => {
                   alignItems: "center",
                 }}
               >
-                {savedPost?.map((post) => (
-                  <Grid item xs={4} key={post._id} sx={{ mt: 1 }}>
-                    {post.postId?.postImage && (
-                      <Box
-                        onClick={() => {
-                          setSelectedImage(
-                            Array.isArray(post.postId.postImage)
-                              ? post.postId.postImage[0]
-                              : post.postId.postImage
-                          );
-                          setOpenImage(true);
-                        }}
-                        sx={{
-                          position: "relative",
-                          cursor: "pointer",
-                          width: { xs: 90, sm: 100, md: 130, lg: 150 },
-                          height: { xs: 110, sm: 130, md: 160, lg: 180 },
-                          overflow: "hidden",
-                          borderRadius: { xs: 0.5, sm: 1 },
-                          "&:hover .postOverlay": { opacity: 1 },
-                          display: "flex",
-                          justifyContent: "center",
-                          alignItems: "center",
-                        }}
-                      >
-                        <img
-                          src={
-                            Array.isArray(post.postId.postImage)
-                              ? post.postId.postImage[0]
-                              : post.postId.postImage
-                          }
-                          alt=""
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                            display: "block",
-                          }}
-                        />
-
+                {communityLoading ? (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      width: 45,
+                      height: 45,
+                    }}
+                  >
+                    <CircularProgress
+                      size={30}
+                      thickness={5}
+                      sx={{
+                        color: "#FF9933", // Saffron
+                      }}
+                    />
+                  </Box>
+                ) : (
+                  savedPost?.map((post) => (
+                    <Grid item xs={4} key={post._id} sx={{ mt: 1 }}>
+                      {post.postId?.postImage && (
                         <Box
-                          className="postOverlay"
+                          onClick={() => {
+                            setSelectedImage(
+                              Array.isArray(post.postId.postImage)
+                                ? post.postId.postImage[0]
+                                : post.postId.postImage
+                            );
+                            setOpenImage(true);
+                          }}
                           sx={{
-                            position: "absolute",
-                            inset: 0,
-                            bgcolor: "rgba(0,0,0,0.15)",
-                            opacity: 0,
-                            transition: "opacity 0.15s ease",
-                            display: { xs: "none", sm: "flex" },
-                            alignItems: "center",
+                            position: "relative",
+                            cursor: "pointer",
+                            width: { xs: 90, sm: 100, md: 130, lg: 150 },
+                            height: { xs: 110, sm: 130, md: 160, lg: 180 },
+                            overflow: "hidden",
+                            borderRadius: { xs: 0.5, sm: 1 },
+                            "&:hover .postOverlay": { opacity: 1 },
+                            display: "flex",
                             justifyContent: "center",
+                            alignItems: "center",
                           }}
                         >
-                          <Stack direction="row" spacing={2} sx={{ color: "#fff" }}>
-                            <ThumbUpOffAltIcon fontSize="small" />
-                            <ChatIcon fontSize="small" />
-                          </Stack>
+                          <img
+                            src={
+                              Array.isArray(post.postId.postImage)
+                                ? post.postId.postImage[0]
+                                : post.postId.postImage
+                            }
+                            alt=""
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                              display: "block",
+                            }}
+                          />
+
+                          <Box
+                            className="postOverlay"
+                            sx={{
+                              position: "absolute",
+                              inset: 0,
+                              bgcolor: "rgba(0,0,0,0.15)",
+                              opacity: 0,
+                              transition: "opacity 0.15s ease",
+                              display: { xs: "none", sm: "flex" },
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                          >
+                            <Stack direction="row" spacing={2} sx={{ color: "#fff" }}>
+                              <ThumbUpOffAltIcon fontSize="small" />
+                              <ChatIcon fontSize="small" />
+                            </Stack>
+                          </Box>
                         </Box>
-                      </Box>
-                    )}
-                  </Grid>
-                ))}
+                      )}
+                    </Grid>
+                  )))}
               </Grid>
             )}
 
@@ -902,7 +921,12 @@ const UserProfile = () => {
                     variant="outlined"
                     component="label"
                     size="small"
-                    sx={{ fontSize: { xs: "0.7rem", sm: "0.8125rem" } }}
+                    sx={{
+                      fontSize: { xs: "0.7rem", sm: "0.8125rem" },
+                      textTransform: "none",
+                      color: "#FF9933",
+                      border: "1px solid rgb(218, 132, 2)"
+                    }}
                   >
                     Change Photo
                     <input
@@ -1122,6 +1146,9 @@ const UserProfile = () => {
                       py: { xs: 0.5, sm: 0.75 },
                       px: { xs: 1.5, sm: 2.5 },
                       minWidth: { xs: "auto", sm: 90 },
+                      color: "text.secondary",
+                      border: "1px solid #E2D7C3",
+                      textTransform: "none",
                     }}
                     onClick={() => {
                       setProfileImage("");
@@ -1142,6 +1169,12 @@ const UserProfile = () => {
                       py: { xs: 0.5, sm: 0.75 },
                       px: { xs: 1.5, sm: 2.5 },
                       minWidth: { xs: "auto", sm: 110 },
+                      bgcolor: "#FF9933", // Saffron
+                      color: "#fff",
+                      textTransform: "none",
+                      "&:hover": {
+                        bgcolor: "#ef9104",
+                      },
                     }}
                     onClick={handleUpdateProfile}
                     disabled={submitLoading}

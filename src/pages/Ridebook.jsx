@@ -837,6 +837,7 @@ export default function Ridebook({
         }}
       >
         <Button
+          variant="outlined"
           fullWidth={isMobile}
           size={isMobile ? "small" : "medium"}
           onClick={handleReset}
@@ -845,8 +846,11 @@ export default function Ridebook({
             borderRadius: 2.5,
             fontWeight: 600,
             fontFamily: "'Inter', sans-serif",
-            color: "text.secondary",
+            color: "#757575",
+            border: "1px solid #E2D7C3"
+            
           }}
+
         >
           Cancel
         </Button>
@@ -858,7 +862,7 @@ export default function Ridebook({
           disabled={requestLoading}
           sx={{
             bgcolor: ORANGE,
-            "&:hover": { bgcolor: "#e68a00" },
+            "&:hover": { bgcolor: "#FF9933" },
             fontWeight: 700,
             textTransform: "none",
             borderRadius: 2.5,
