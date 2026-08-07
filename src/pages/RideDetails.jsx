@@ -785,10 +785,17 @@ export default function RideDetailsModal({
           <Field icon={CalendarTodayIcon} label="Date" value={dateLabel || '—'} />
           <Field icon={AccessTimeIcon} label="Time" value={timeLabel || '—'} />
           <Field icon={TravelIcon} label="Mode" value={ride.modeOfTravel || '—'} />
-          <Field icon={AccessTimeIcon} label="Travel Time" value={ride.duration || '—'} />
+          <Field icon={AccessTimeIcon} label="Travel Duration" value={ride.duration || '—'} />
           <Field icon={TravellerTypeIcon} label="Traveller Type" value={ride.travellerType || '—'} />
           <Field icon={BadgeIcon} label="Age Group Pref." value={ride.ageGroupPreference || '—'} />
-          {ride.availableSeats && (<Field icon={EventSeatIcon} label="Seats avail." value={ride.availableSeats ?? ride.seats ?? '—'} />)}
+          {ride.availableSeats !== null &&
+            ride.availableSeats !== undefined && (
+              <Field
+                icon={EventSeatIcon}
+                label="Seats avail."
+                value={Number(ride.availableSeats) === 0 ? "Seats Filled" : ride.availableSeats}
+              />
+            )}
           <Field icon={GenderIcon} label="Gender Pref." value={ride.genderPreference || 'Any'} />
           {ride.airlineName && (<Field icon={FlightIcon} label="Airline Name" value={ride.airlineName || '—'} />)}
           {ride.flightNumber && (<Field icon={ConfirmationNumberIcon} label="Flight Number" value={ride.flightNumber || '—'} />)}
