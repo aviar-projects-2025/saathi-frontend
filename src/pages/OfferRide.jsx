@@ -560,6 +560,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
           margin: "0 auto",
         },
       });
+
       refreshRides();
       setStep(0);
       formReset();
