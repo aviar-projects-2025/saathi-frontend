@@ -210,20 +210,33 @@ const UserProfile = () => {
       errors.email = "Email is required";
     } else {
       // Proper email validation
-      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      // const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      const emailRegex = /^[A-Za-z0-9](?:[A-Za-z0-9._%+-]{0,62}[A-Za-z0-9])?@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z]{2,})+$/;
       if (!emailRegex.test(formData.email)) {
-        errors.email = "Please enter a valid email address (e.g., name@domain.com)";
+        errors.email = "Please enter a valid email address (e.g., name@domain.com) || (e.g., avair123@aviartech.com) ";
       }
     }
 
 
     // Mobile
-    if (!formData.mobile) {
+    // if (!formData.mobile) {
+    //   errors.mobile = "Mobile number is required";
+    //   if (!/^[6-9]\d{9}$/.test(formData.mobile)) {
+    //     errors.mobile = "Invalid mobile number";
+    //   }
+    // }
+
+    const phone = formData.mobile?.trim();
+
+    if (!phone) {
       errors.mobile = "Mobile number is required";
-      if (!/^[6-9]\d{9}$/.test(formData.mobile)) {
-        errors.mobile = "Invalid mobile number";
-      }
+    } else if (
+      !/^(\+?[1-9]\d{1,14}|[6-9]\d{9})$/.test(phone)
+    ) {
+      errors.mobile =
+        "Please enter a valid International or Indian mobile number";
     }
+
 
     // DOB (Age >= 18)
     if (!formData.dob) {
@@ -1006,27 +1019,37 @@ const UserProfile = () => {
                     name="mobile"
                     size="small"
                     fullWidth
-                    value={formData?.mobile}
+                    value={formData?.mobile || ""}
                     onChange={(e) => {
-                      // Only allow numbers and limit to 10 digits
-                      const value = e.target.value
-                        .replace(/\D/g, "")
-                        .slice(0, 10);
+                      let value = e.target.value;
+
+                      // Allow only digits and one leading +
+                      value = value
+                        .replace(/[^\d+]/g, "")
+                        .replace(/(?!^)\+/g, "") // Remove any + except the first one
+                        .slice(0, 16); // Max length: + followed by 15 digits (E.164)
+
                       handleChange({
                         target: {
                           name: "mobile",
-                          value: value,
+                          value,
                         },
                       });
                     }}
                     error={!!errors.mobile}
                     helperText={errors.mobile}
+                    inputProps={{
+                      maxLength: 16,
+                    }}
                     InputProps={{
-                      sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } },
-                      inputProps: { maxLength: 10 }, // This also limits input
+                      sx: {
+                        fontSize: { xs: "0.8rem", sm: "0.9rem" },
+                      },
                     }}
                     InputLabelProps={{
-                      sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } },
+                      sx: {
+                        fontSize: { xs: "0.8rem", sm: "0.9rem" },
+                      },
                     }}
                   />
                 </Stack>

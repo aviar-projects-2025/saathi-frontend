@@ -389,33 +389,38 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
         if (!form.destination.trim())
           newErrors.destination = "Please enter Destination";
       }
-
-      if (!form.date)
+      if (!form.date) {
         newErrors.date = "Please select Date";
+      }
 
-      if (!form.time)
+      if (!form.time) {
         newErrors.time = "Please select Time";
+      }
 
       if (form.date && form.time) {
-        const selectedDateTime = new Date(`${form.date}T${form.time}`);
+        const selectedDateTime = new Date(`${form.date}T${form.time}:00`);
         const now = new Date();
 
-        if (selectedDateTime <= now) {
+        // Past date/time
+        if (selectedDateTime.getTime() <= now.getTime()) {
           newErrors.time = "Please select a future date and time";
         } else {
-          const minimumAllowedTime = new Date(now);
+          // Minimum allowed time
+          const minimumAllowedTime = new Date(now.getTime());
 
           if (isFlight) {
             minimumAllowedTime.setHours(minimumAllowedTime.getHours() + 3);
 
-            if (selectedDateTime < minimumAllowedTime) {
-              newErrors.time = "Flight departure must be at least 3 hours from now.";
+            if (selectedDateTime.getTime() < minimumAllowedTime.getTime()) {
+              newErrors.time =
+                "Flight departure must be at least 3 hours from now.";
             }
           } else {
             minimumAllowedTime.setHours(minimumAllowedTime.getHours() + 1);
 
-            if (selectedDateTime < minimumAllowedTime) {
-              newErrors.time = "Ride start time must be at least 1 hour from now.";
+            if (selectedDateTime.getTime() < minimumAllowedTime.getTime()) {
+              newErrors.time =
+                "Ride start time must be at least 1 hour from now.";
             }
           }
         }
@@ -424,7 +429,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
       if (!form.description.trim())
         newErrors.description = "Please enter Description";
 
-      if (!isEditMode && (isCar || isBike) && !String(form.duration ?? "").trim()) {
+      if ((isCar || isBike) && !String(form.duration ?? "").trim()) {
         newErrors.duration = "Please enter Journey Duration";
       }
     }
@@ -580,7 +585,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
       setTimeout(() => {
         if (onClose) onClose();
         else navigate("/myride");
-      }, 3000);
+      }, 1000);
     }
   };
 
