@@ -152,7 +152,6 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
     try {
       // setLoading(true);
       const res = await axios.get(Api + `/community/comments/${post?._id}/${user.id}`);
-      console.log("Comments ===> ", res.data.data);
       const list = res.data.data.comments;
 
 
