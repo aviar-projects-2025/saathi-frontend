@@ -158,7 +158,7 @@ const MyReferrals = () => {
                 {message}
             </Typography>
             <Button
-                variant="outlined"
+                variant="contained"
                 size="small"
                 onClick={handleOpenShare}
                 sx={{
@@ -168,9 +168,9 @@ const MyReferrals = () => {
                     fontWeight: 600,
                     fontSize: 12,
                     px: 3,
-                    borderColor: "primary.main",
-                    color: "primary.main",
-                    "&:hover": { bgcolor: "primary.50" },
+                    color: "#ffff",
+                    bgcolor: "#FF9933",
+                    "&:hover": { bgcolor: "#da9a3a" },
                 }}
             >
                 Refer Now
@@ -247,6 +247,9 @@ const MyReferrals = () => {
                                 sx={{
                                     fontSize: { xs: "0.75rem", sm: "0.85rem" },
                                     py: { xs: 0.5, sm: 0.75 },
+                                    textTransform: "none",
+                                    color: "#fffff",
+                                    bgcolor: "#FF9933"
                                 }}
                                 onClick={() => handleCopy(shareLink)}
                             >
@@ -260,6 +263,9 @@ const MyReferrals = () => {
                                 sx={{
                                     fontSize: { xs: "0.75rem", sm: "0.85rem" },
                                     py: { xs: 0.5, sm: 0.75 },
+                                    textTransform: "none",
+                                    color: "#ffff",
+                                    bgcolor: "#09710f"
                                 }}
                                 onClick={() => {
                                     if (navigator.share) {

@@ -288,7 +288,9 @@ export default function FindRides() {
         languageMatch
       );
     });
-
+  const visibleRides = filteredRides.filter(
+    (ride) => ride.travelStatus !== "Cancelled"
+  );
 
 
   if (loading) {
@@ -754,18 +756,20 @@ export default function FindRides() {
                 }}
               >
                 <Button
-                  startIcon={<FilterListOffIcon sx={{ fontSize: { xs: 12, sm: 16 } }} />}
+                  startIon={<FilterListOffIcon sx={{ fontSize: { xs: 12, sm: 16 } }} />}
                   onClick={clearFilters}
+                  variant="contained"
                   sx={{
                     borderRadius: "50px",
-                    border: `1.5px solid ${saffron[300]}`,
-                    color: saffron[700],
+                    // border: `1.5px solid ${saffron[300]}`,
+                    color: "#ffff",
+                    bgcolor: "#757575",
                     fontWeight: 600,
                     fontSize: { xs: "0.7rem", sm: "0.82rem" },
                     px: { xs: 1.5, sm: 2.5 },
                     height: { xs: 30, sm: 36 },
                     textTransform: "none",
-                    "&:hover": { background: saffron[50], borderColor: saffron[300], color: saffron[500] },
+                    // "&:hover": { background: saffron[50], borderColor: saffron[300], color: saffron[500] },
                   }}
                 >
                   Clear all
@@ -798,28 +802,32 @@ export default function FindRides() {
           <Box
             sx={{
               display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              flexWrap: "wrap",
-              gap: { xs: 0.75, sm: 1 },
+              // alignItems: "center",
+              // justifyContent: "space-between",
+              // flexWrap: "wrap",
+              // gap: { xs: 0.75, sm: 1 },
               mb: { xs: 1.5, sm: 2 },
               mt: { xs: 2, sm: 1.5 },
 
             }}
           >
-            <Typography fontWeight={700} sx={{ color: saffron[800], fontSize: { xs: "0.83rem", sm: "1rem" } }}>
-              {filteredRides.length}{" "}
-              <Typography component="span" fontWeight={400} color="text.secondary" sx={{ fontSize: { xs: "0.83rem", sm: "1rem" } }}>
-                {filteredRides.length === 1 ? "result" : "results"} found
+            <Typography
+              fontWeight={700}
+              sx={{ color: saffron[800], fontSize: { xs: "0.83rem", sm: "1rem" } }}
+            >
+              {visibleRides.length}{" "}
+              <Typography component="span" fontWeight={400} color="text.secondary">
+                {visibleRides.length === 1 ? "result" : "results"} found
               </Typography>
             </Typography>
-          </Box>
 
-          {/* ── Ride cards ── */}
-          {filteredRides.length > 0 ? (
+
+          </Box>
+          {visibleRides.length > 0 ? (
             <Grid spacing={{ xs: 1, sm: 2 }}>
-              {filteredRides.map((ride) => {
+              {visibleRides.map((ride) => {
                 const isOwnRide = ride.createdBy?._id === currentUser?._id;
+
                 return (
                   <Grid item xs={12} sm={6} md={4} key={ride._id}>
                     <RideCard
@@ -850,7 +858,7 @@ export default function FindRides() {
               <Typography color="text.secondary" fontSize={{ xs: "0.78rem", sm: "0.88rem" }}>
                 Try adjusting your filters or search terms
               </Typography>
-              <Button
+              {/* <Button
                 onClick={clearFilters}
                 sx={{
                   mt: 2,
@@ -866,7 +874,7 @@ export default function FindRides() {
                 }}
               >
                 Clear filters
-              </Button>
+              </Button> */}
             </Box>
           )}
         </Container>

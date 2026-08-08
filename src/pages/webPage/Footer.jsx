@@ -204,7 +204,7 @@ const Footer = () => (
           © 2026 AVIAR Technology Services
         </Typography>
       </Stack>
-      <Box
+      {/* <Box
         sx={{
           textAlign: 'center',
         }}>
@@ -217,7 +217,7 @@ const Footer = () => (
         >
           Made in USA
         </Typography>
-      </Box>
+      </Box> */}
     </Container>
   </Box>
 );
