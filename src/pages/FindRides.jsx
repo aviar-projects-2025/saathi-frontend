@@ -822,7 +822,7 @@ export default function FindRides() {
 
           </Box>
           {visibleRides.length > 0 ? (
-            <Grid container spacing={{ xs: 1, sm: 2 }}>
+            <Grid spacing={{ xs: 1, sm: 2 }}>
               {visibleRides.map((ride) => {
                 const isOwnRide = ride.createdBy?._id === currentUser?._id;
 

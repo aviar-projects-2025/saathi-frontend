@@ -36,10 +36,23 @@ const Login = () => {
 
   const validationSchema = Yup.object({
     email: Yup.string()
-      .min(3, "email must be at least 3 characters")
-      .required("email is required"),
+      .trim()
+      .lowercase()
+      .email("Please enter a valid Email address")
+      .matches(
+        /^[A-Za-z0-9](?:[A-Za-z0-9._%+-]{0,62}[A-Za-z0-9])?@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z]{2,})+$/,
+        "Please enter a valid email address"
+      )
+      .required("Email is required"),
     password: Yup.string()
-      .min(6, "Password must be at least 6 characters")
+      .matches(/^[A-Z]/, "Password must start with an uppercase letter")
+      .matches(/[a-z]/, "Password must contain at least one lowercase letter")
+      .matches(/[0-9]/, "Password must contain at least one number")
+      .matches(
+        /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/,
+        "Password must contain at least one special character"
+      )
+      .min(8, "Password must be at least 8 characters")
       .required("Password is required"),
   });
 

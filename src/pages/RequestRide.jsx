@@ -93,7 +93,7 @@ const RequestRide = () => {
   async function fetchAllSends() {
 
     try {
-      
+
       setLoadingRequests(true);
 
       if (!user?.id) return;
@@ -710,6 +710,8 @@ const RequestRide = () => {
                 textTransform: "none",
                 flex: 1,
                 minHeight: 44,
+                color: "#757575",
+                border: "1px solid #E2D7C3"
               }}
               disabled={isCancelling}
             >
