@@ -116,6 +116,11 @@ const Myprofile = () => {
     new: false,
     confirm: false,
   });
+  const [errors, setErrors] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
 
   const [passwordLoading, setPasswordLoading] = useState(false);
 
@@ -131,38 +136,58 @@ const Myprofile = () => {
       ...prev,
       [name]: value,
     }));
+
+    setErrors((prev) => ({
+      ...prev,
+      [name]: "",
+    }));
   };
+
   const logout = () => {
     localStorage.clear();
     window.location.replace("/login");
   };
+
   const [communityPosts, setCommunityPosts] = useState([]);
+
   const handleCopy = (value) => {
     navigator.clipboard.writeText(value);
     toast.success("Copied to Clipboard!", toasts);
   };
+
   useEffect(() => {
     if (currentUser?._id) {
       getCommunityPost();
     }
   }, [currentUser]);
 
+  const validatePassword = () => {
+    const newErrors = {};
+
+    if (!passwordData.currentPassword.trim()) {
+      newErrors.currentPassword = "Current password is required";
+    }
+
+    if (!passwordData.newPassword.trim()) {
+      newErrors.newPassword = "New password is required";
+    }
+
+    if (!passwordData.confirmPassword.trim()) {
+      newErrors.confirmPassword = "Confirm password is required";
+    } else if (passwordData.newPassword !== passwordData.confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match to New Password";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleChangePassword = async () => {
+
+    if (!validatePassword()) return;
 
     try {
       setPasswordLoading(true);
-      // Frontend validation
-      if (
-        !passwordData.currentPassword ||
-        !passwordData.newPassword ||
-        !passwordData.confirmPassword
-      ) {
-        return toast.error("All fields are required", toasts);
-      }
-
-      if (passwordData.newPassword !== passwordData.confirmPassword) {
-        return toast.error("Passwords do not match", toasts);
-      }
 
       const res = await axios.patch(
         `${Api}/users/change-password/${currentUser?._id}`,
@@ -177,6 +202,12 @@ const Myprofile = () => {
 
       setPasswordModel(false);
       setPasswordData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+
+      setErrors({
         currentPassword: "",
         newPassword: "",
         confirmPassword: "",
@@ -465,6 +496,8 @@ const Myprofile = () => {
                   name="currentPassword"
                   value={passwordData.currentPassword}
                   onChange={handlePasswordChange}
+                  error={!!errors.currentPassword}
+                  helperText={errors.currentPassword}
                   slotProps={{
                     input: {
                       endAdornment: (
@@ -498,6 +531,8 @@ const Myprofile = () => {
                   name="newPassword"
                   value={passwordData.newPassword}
                   onChange={handlePasswordChange}
+                  error={!!errors.newPassword}
+                  helperText={errors.newPassword}
                   slotProps={{
                     input: {
                       endAdornment: (
@@ -531,6 +566,8 @@ const Myprofile = () => {
                   name="confirmPassword"
                   value={passwordData.confirmPassword}
                   onChange={handlePasswordChange}
+                  error={!!errors.confirmPassword}
+                  helperText={errors.confirmPassword}
                   slotProps={{
                     input: {
                       endAdornment: (
@@ -560,17 +597,16 @@ const Myprofile = () => {
                 <Stack
                   direction={{ xs: "column", sm: "row" }}
                   spacing={2}
-                  justifyContent="flex-end"
                   sx={{
                     pt: 2,
                     display: "flex",
-                    justifyContent: "flex-end"
+                    justifyContent: "center"
                   }}
                 >
                   <Button
                     variant="outlined"
                     onClick={() => {
-                      setPasswordModel(false);
+                      // setPasswordModel(false);
                       setPasswordData({
                         currentPassword: "",
                         newPassword: "",
@@ -580,14 +616,14 @@ const Myprofile = () => {
                     sx={{
                       width: { xs: "100%", sm: "auto" },
                       minWidth: { sm: 140 },
-                      borderColor: "#E8650A",
-                      color: "#E8650A",
+                      borderColor: "#757575",
+                      color: "#757575",
                       textTransform: "none",
                       fontWeight: 600,
-                      "&:hover": {
-                        borderColor: "#D65A00",
-                        bgcolor: "#FFF6E5",
-                      },
+                      // "&:hover": {
+                      //   borderColor: "#D65A00",
+                      //   bgcolor: "#757575",
+                      // },
                     }}
                   >
                     Cancel
@@ -600,11 +636,11 @@ const Myprofile = () => {
                     sx={{
                       width: { xs: "100%", sm: "auto" },
                       minWidth: { sm: 180 },
-                      bgcolor: "#E8650A",
+                      bgcolor: "#FF9933",
                       textTransform: "none",
                       fontWeight: 600,
                       "&:hover": {
-                        bgcolor: "#D65A00",
+                        bgcolor: "#e66a12",
                       },
                     }}
                   >
@@ -688,6 +724,10 @@ const Myprofile = () => {
                 sx={{
                   fontSize: { xs: "0.75rem", sm: "0.85rem" },
                   py: { xs: 0.5, sm: 0.75 },
+                  textTransform: "none",
+                  color: "#ffff",
+                  bgcolor: "#FF9933",
+                  "&:hover": { bgcolor: "#da9a3a" },
                 }}
                 onClick={() => handleCopy(shareLink)}
               >
@@ -701,6 +741,9 @@ const Myprofile = () => {
                 sx={{
                   fontSize: { xs: "0.75rem", sm: "0.85rem" },
                   py: { xs: 0.5, sm: 0.75 },
+                  textTransform: "none",
+                  color: "#ffff",
+                  bgcolor: "#09710f"
                 }}
                 onClick={() => {
                   if (navigator.share) {
@@ -824,7 +867,7 @@ const Myprofile = () => {
 
       {/* ── Account Actions ── */}
       <SectionCard sx={{ mt: 3 }}>
-        <SectionHeader icon={<SettingsIcon />} label="Account actions" />
+        <SectionHeader icon={<SettingsIcon />} label="Account Actions" />
         <Divider sx={{ mt: 1 }} />
         <Grid
           sx={{

@@ -477,6 +477,8 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
             textTransform: "none",
             flex: { xs: "1 1 auto", sm: "0 0 auto" },
             minHeight: 44,
+            color: "text.secondary",
+            border: "1px solid #E2D7C3",
           }}
         >
           Cancel
@@ -494,7 +496,7 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
             minHeight: 44,
           }}
         >
-          {deleting ? "Deleting..." : "Yes"}
+          {deleting ? "Canceling..." : "Cancel"}
         </Button>
       </DialogActions>
     </Dialog>
