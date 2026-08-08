@@ -15,6 +15,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useState } from "react";
 import axios from "axios";
+import Api from "../../Api.jsx";
 import ToastConfig from "../ToastConfig";
 
 const ForgotPassword = () => {
@@ -42,7 +43,7 @@ const ForgotPassword = () => {
         try {
 
             const response = await axios.post(
-                'http://localhost:3000/api/v1/auth/forgot-password',
+                `${Api}/auth/forgot-password`,
                 { email: values.email }
             );
             toast.success(response.data.message || "OTP sent to your email!", toasts);

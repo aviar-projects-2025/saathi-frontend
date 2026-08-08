@@ -15,6 +15,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useState, useEffect } from "react";
 import axios from "axios";
+import Api from "../../Api.jsx";
 import ToastConfig from "../ToastConfig";
 
 const VerifyOTP = () => {
@@ -55,7 +56,7 @@ const VerifyOTP = () => {
         
         try {
             const response = await axios.post(
-                'http://localhost:3000/api/v1/auth/verify-otp',
+                `${Api}/auth/verify-otp`,
                 {
                     email: email,
                     otp: values.otp,
@@ -81,7 +82,7 @@ const VerifyOTP = () => {
         
         try {
             const response = await axios.post(
-                'http://localhost:3000/api/v1/auth/resend-otp',
+                `${Api}/auth/resend-otp`,
                 { email: email }
             );
             
