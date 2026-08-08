@@ -52,8 +52,12 @@ export default function Ridebook({
   // existingMembers = already CONFIRMED/APPROVED members on this request.
   // Read-only, shown for context, never sent back to the backend.
   const [existingMembers, setExistingMembers] = useState([]);
+
   const [newMembers, setNewMembers] = useState([]);
   const isTab = useMediaQuery(theme.breakpoints.down("sm"));
+
+  const [memberErrors, setMemberErrors] = useState([]);
+  const [memberListError, setMemberListError] = useState("");
 
   const calculateAge = (dob) => {
     if (!dob) return "";
@@ -107,6 +111,9 @@ export default function Ridebook({
 
 
   const handleAddMember = () => {
+
+    setMemberListError("");
+
     if (isEditMode) {
       setNewMembers((prev) => {
         const totalSeats = existingMembers.length + prev.length;
@@ -119,20 +126,15 @@ export default function Ridebook({
 
     setRequestData((prev) => {
 
-
       if (!isFlight && prev.members.length >= maxSeats) return prev;
 
       const updatedMembers = [...prev.members, { name: "", age: "" }];
-
-
-
       return {
         ...prev,
         members: updatedMembers,
         seatsRequested: updatedMembers.length,
       };
     });
-
   };
 
 
@@ -177,6 +179,16 @@ export default function Ridebook({
 
 
   const handleMemberChange = (index, field, value) => {
+
+    setMemberErrors((prev) => {
+      const updated = [...prev];
+      updated[index] = {
+        ...updated[index],
+        [field]: "",
+      };
+      return updated;
+    });
+
     if (isEditMode) {
       setNewMembers((prev) => {
         const updated = [...prev];
@@ -312,20 +324,36 @@ export default function Ridebook({
       }
     }
 
+    // if (membersToValidate.length === 0) {
+    //   toast.error("Please add at least one member", TOASTS);
+    //   return false;
+    // }
+
     if (membersToValidate.length === 0) {
-      toast.error("Please add at least one member", TOASTS);
+      setMemberListError("Please add at least one member");
       return false;
     }
 
+    setMemberListError("");
+
+    const errors = [];
+
     for (let i = 0; i < membersToValidate.length; i++) {
+      errors[i] = {};
+
       if (!membersToValidate[i].name?.trim()) {
-        toast.error(`Please enter Member ${i + 1} name`, TOASTS);
-        return false;
+        errors[i].name = "Name is required";
       }
+
       if (!membersToValidate[i].age) {
-        toast.error(`Please enter Member ${i + 1} age`, TOASTS);
-        return false;
+        errors[i].age = "Age required";
       }
+    }
+
+    setMemberErrors(errors);
+
+    if (errors.some((e) => e.name || e.age)) {
+      return false;
     }
 
     return true;
@@ -434,14 +462,14 @@ export default function Ridebook({
     <Dialog
       open={open}
       onClose={onClose}
+      fullScreen={isMobile}
       fullWidth
       maxWidth="sm"
       PaperProps={{
         sx: {
-          m: { xs: 1, sm: 2 },
+          borderRadius: isMobile ? 0 : 4,
+          m: isMobile ? 0 : 2,
           width: "100%",
-          borderRadius: 4,
-          overflow: "hidden",
         },
       }}
     >
@@ -582,6 +610,7 @@ export default function Ridebook({
                     bgcolor: GREEN_BG,
                   }}
                 >
+
                   <Avatar
                     sx={{
                       width: 30,
@@ -693,6 +722,12 @@ export default function Ridebook({
                         : member.name
                     }
                     disabled={isLockedSelfSlot}
+                    error={!isLockedSelfSlot && !!memberErrors[index]?.name}
+                    helperText={
+                      !isLockedSelfSlot && memberErrors[index]?.name
+                        ? (isMobile ? "Required" : "Name is required")
+                        : ""
+                    }
                     sx={{
                       "& .MuiInputBase-input": {
                         fontSize: "0.85rem",
@@ -717,7 +752,7 @@ export default function Ridebook({
                     variant="standard"
                     InputProps={{ disableUnderline: true }}
                     sx={{
-                      width: 56,
+                      width: 125,
                       "& .MuiInputBase-input": {
                         fontSize: "0.85rem",
                         textAlign: "center",
@@ -729,6 +764,12 @@ export default function Ridebook({
                         : member.age
                     }
                     disabled={isLockedSelfSlot}
+                    error={!isLockedSelfSlot && !!memberErrors[index]?.age}
+                    helperText={
+                      !isLockedSelfSlot && memberErrors[index]?.age
+                        ? (isMobile ? "Required" : "Age required")
+                        : ""
+                    }
                     inputProps={{ min: 1, max: 120 }}
                     onChange={(e) => {
                       const value = e.target.value;
@@ -759,8 +800,8 @@ export default function Ridebook({
           onClick={handleAddMember}
           disabled={!isFlight && totalOccupied >= maxSeats}
           sx={{
-            mt: 1.5,
-            mb: 3,
+            mt: { xs: 1.5, sm: 1.5 },
+            mb: { xs: 2.5, sm: 2.5 },
             textTransform: "none",
             fontWeight: 700,
             fontFamily: "'Inter', sans-serif",
@@ -771,6 +812,31 @@ export default function Ridebook({
         >
           Add Member
         </Button>
+
+        {memberListError && (
+          <Typography
+            variant="caption"
+            sx={{
+              display: "block",
+              alignItems: "center",
+              mt: { xs: 0, sm: 0 },
+              mb: { xs: 3, sm: 3 },
+              px: 1.5,
+              py: 0.75,
+              borderRadius: 1,
+              bgcolor: "#FEE2E2",
+              color: "#D32F2F",
+              border: "1px solid #FCA5A5",
+              fontWeight: 600,
+              fontSize: {
+                xs: "0.75rem",
+                sm: "0.85rem",
+              },
+            }}
+          >
+            {memberListError}
+          </Typography>
+        )}
 
         <TextField
           fullWidth
@@ -829,7 +895,7 @@ export default function Ridebook({
 
       <DialogActions
         sx={{
-          px: { xs: 2.5, sm: 3 },
+          px: { xs: 2, sm: 3 },
           py: { xs: 1.5, sm: 2 },
           gap: 1,
           borderTop: `1px solid ${ORANGE_DIVIDER}`,
@@ -837,16 +903,20 @@ export default function Ridebook({
         }}
       >
         <Button
+          variant="contained"
           fullWidth={isMobile}
           size={isMobile ? "small" : "medium"}
           onClick={handleReset}
           sx={{
             textTransform: "none",
             borderRadius: 2.5,
-            fontWeight: 600,
+            fontWeight: 700,
             fontFamily: "'Inter', sans-serif",
-            color: "text.secondary",
+            color: "#ffff",
+            bgcolor: "#757575"
+
           }}
+
         >
           Cancel
         </Button>
@@ -858,7 +928,7 @@ export default function Ridebook({
           disabled={requestLoading}
           sx={{
             bgcolor: ORANGE,
-            "&:hover": { bgcolor: "#e68a00" },
+            "&:hover": { bgcolor: "#FF9933" },
             fontWeight: 700,
             textTransform: "none",
             borderRadius: 2.5,

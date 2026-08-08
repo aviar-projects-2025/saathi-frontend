@@ -93,7 +93,7 @@ const RequestRide = () => {
   async function fetchAllSends() {
 
     try {
-      
+
       setLoadingRequests(true);
 
       if (!user?.id) return;
@@ -703,13 +703,15 @@ const RequestRide = () => {
 
           <DialogActions sx={{ px: 3, pb: 3, gap: 1 }}>
             <Button
-              variant="outlined"
+              variant="contained"
               onClick={() => setOpenCancelDialog(false)}
               sx={{
                 borderRadius: 2,
                 textTransform: "none",
                 flex: 1,
                 minHeight: 44,
+                bgcolor: "#757575",
+                color:"#ffff"
               }}
               disabled={isCancelling}
             >

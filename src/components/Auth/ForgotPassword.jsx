@@ -25,27 +25,33 @@ const ForgotPassword = () => {
 
     const validationSchema = Yup.object({
         email: Yup.string()
-            .email("Invalid email format")
+            .trim()
+            .lowercase()
+            .email("Please enter a valid email address")
+            .matches(
+                /^[A-Za-z0-9](?:[A-Za-z0-9._%+-]{0,62}[A-Za-z0-9])?@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z]{2,})+$/,
+                "Please enter a valid email address"
+            )
             .required("Email is required"),
     });
 
-    const handleSubmit = async (values, { setFieldError, resetForm }) => {        
+    const handleSubmit = async (values, { setFieldError, resetForm }) => {
         setIsSubmitting(true);
         setError(null);
-        
+
         try {
-          
-              const response = await axios.post(
+
+            const response = await axios.post(
                 'http://localhost:3000/api/v1/auth/forgot-password',
                 { email: values.email }
             );
             toast.success(response.data.message || "OTP sent to your email!", toasts);
             sessionStorage.setItem("resetEmail", values.email);
             navigate("/verify-otp");
-            
+
         } catch (error) {
             let errorMessage = "Failed to send OTP";
-            
+
             if (error.code === 'ERR_NETWORK') {
                 errorMessage = "Please check your network connection.";
             } else if (error.response) {
@@ -53,7 +59,7 @@ const ForgotPassword = () => {
             } else if (error.request) {
                 errorMessage = "Please check your network connection.";
             }
-            
+
             toast.error(errorMessage, toasts);
             setFieldError("email", errorMessage);
             setError(errorMessage);
@@ -108,7 +114,7 @@ const ForgotPassword = () => {
                     <Formik
                         initialValues={{ email: "" }}
                         validationSchema={validationSchema}
-                        onSubmit={handleSubmit}  
+                        onSubmit={handleSubmit}
                     >
                         {({ errors, touched, handleChange, handleBlur, values, handleSubmit }) => (
                             <form onSubmit={handleSubmit}>
