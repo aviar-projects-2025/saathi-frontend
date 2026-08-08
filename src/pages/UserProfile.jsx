@@ -1161,7 +1161,7 @@ const UserProfile = () => {
                   }}
                 >
                   <Button
-                    variant="outlined"
+                    variant="contained"
                     size="small"
                     sx={{
                       width: { xs: "100%", sm: "auto" },
@@ -1169,8 +1169,9 @@ const UserProfile = () => {
                       py: { xs: 0.5, sm: 0.75 },
                       px: { xs: 1.5, sm: 2.5 },
                       minWidth: { xs: "auto", sm: 90 },
-                      color: "text.secondary",
-                      border: "1px solid #E2D7C3",
+                      bgcolor: "#757575",
+                      // border: "1px solid #E2D7C3",
+                      color: "#ffff",
                       textTransform: "none",
                     }}
                     onClick={() => {

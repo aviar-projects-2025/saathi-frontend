@@ -1011,18 +1011,16 @@ export default function Community() {
                               }}
                             >
                               <Button
-                                variant="outlined"
+                                variant="contained"
                                 onClick={() => setDeleteOpen(false)}
                                 sx={{
                                   flex: 1,
                                   py: 1,
                                   fontSize: { xs: "0.8rem", sm: "0.9rem" },
                                   fontWeight: 600,
-                                  color: "#757575",
-                                  border: "1px solid #E2D7C3",
-                                  "&:hover": {
-                                    bgcolor: "grey.700",
-                                  },
+                                  color: "#ffff",
+                                  bgcolor: "grey.700",
+        
                                 }}
                               >
                                 Cancel
@@ -1208,7 +1206,7 @@ export default function Community() {
                                 }}
                               >
                                 <Button
-                                  variant="outlined"
+                                  variant="contained"
                                   size="small"
                                   onClick={handleReset}
                                   sx={{
@@ -1216,16 +1214,12 @@ export default function Community() {
                                     minWidth: "unset",
                                     px: 2,
                                     height: 36,
-                                    borderColor: "#BDBDBD",
-                                    color: "#616161",
+                                    backgroundColor: "#838282",
+                                    color: "#fff",
                                     fontWeight: 600,
                                     fontSize: "0.8rem",
                                     textTransform: "none",
                                     borderRadius: 2,
-                                    "&:hover": {
-                                      borderColor: "#757575",
-                                      bgcolor: "#F5F5F5",
-                                    },
                                   }}
                                 >
                                   Cancel

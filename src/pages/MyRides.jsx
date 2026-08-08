@@ -438,25 +438,53 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
           This will cancel your ride, requested persons will be notified...
         </Typography>
         <Paper
+          elevation={0}
           sx={{
             mt: 2,
-            p: 1.5,
-            bgcolor: "#FFF8F2",
+            px: { xs: 1.5, sm: 2 },
+            py: { xs: 1.25, sm: 1.5 },
+            backgroundColor: "#FFF8F2",
             border: "1px solid #F0E6DC",
-            borderRadius: 2,
+            borderRadius: 2.5,
+            display: "flex",
+            flexDirection: "column",
+            gap: 0.5,
+            position: "relative",
+            overflow: "hidden",
           }}
-          elevation={0}
         >
           <Typography
-            sx={{ fontSize: { xs: "0.78rem", sm: "0.85rem" } }}
-            fontWeight={700}
-            wordBreak="break-word"
+            sx={{
+              fontSize: { xs: "0.85rem", sm: "0.95rem" },
+              fontWeight: 700,
+              color: "#2D2D2D",
+              lineHeight: 1.4,
+              wordBreak: "break-word",
+              pl: 0.5,
+            }}
           >
-            {formFrom(ride)} → {formTo(ride)}
+            {formFrom(ride)}{" "}
+            <Box
+              component="span"
+              sx={{
+                color: "#FF6B35",
+                mx: 0.5,
+                fontWeight: 800,
+              }}
+            >
+              →
+            </Box>{" "}
+            {formTo(ride)}
           </Typography>
+
           <Typography
-            sx={{ fontSize: { xs: "0.72rem", sm: "0.78rem" } }}
-            color="text.secondary"
+            sx={{
+              fontSize: { xs: "0.72rem", sm: "0.8rem" },
+              color: "#757575",
+              fontWeight: 500,
+              lineHeight: 1.4,
+              pl: 0.5,
+            }}
           >
             {dateLabel}
           </Typography>
@@ -477,8 +505,8 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
             textTransform: "none",
             flex: { xs: "1 1 auto", sm: "0 0 auto" },
             minHeight: 44,
-            color: "text.secondary",
-            border: "1px solid #E2D7C3",
+            bgcolor: "#757575",
+            color: "#ffff",
           }}
         >
           Cancel
@@ -496,7 +524,7 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
             minHeight: 44,
           }}
         >
-          {deleting ? "Canceling..." : "Cancel"}
+          {deleting ? "Canceling..." : "Cancel Ride"}
         </Button>
       </DialogActions>
     </Dialog>
@@ -1329,17 +1357,30 @@ function RideCard({
         </DialogContent>
         <DialogActions sx={{ px: 2, pb: 2, gap: 1, flexWrap: "wrap" }}>
           <Button
+            variant="contained"
             onClick={() => setConfirmRide(null)}
-            sx={{ flex: { xs: "1 1 auto", sm: "0 0 auto" }, minHeight: 40 }}
+            sx={{
+              flex: { xs: "1 1 auto", sm: "0 0 auto" },
+              minHeight: 40,
+              bgcolor: "#757575",
+              color: "#ffff",
+              textTransform: "none"
+            }}
           >
-            not yet
+            Not yet
           </Button>
           <Button
             variant="contained"
             onClick={() =>
               handleEdit(confirmRide._id, confirmRide.travelStatus)
             }
-            sx={{ flex: { xs: "1 1 auto", sm: "0 0 auto" }, minHeight: 40 }}
+            sx={{
+              flex: { xs: "1 1 auto", sm: "0 0 auto" },
+              minHeight: 40,
+              bgcolor: "#f89b04",
+              color: "#ffff",
+              textTransform: "none"
+            }}
           >
             Started
           </Button>
