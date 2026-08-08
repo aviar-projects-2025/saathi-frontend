@@ -91,6 +91,14 @@ export default function Community() {
   const [tooltip2Open, setTooltip2Open] = useState(false);
   const [imagePostLoading, setImagePostLoading] = useState(false);
 
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState(null);
+
+  const handleProfileClick = (author) => {
+    setSelectedProfile(author);
+    setProfileModalOpen(true);
+  };
+
   const [commentCounts, setCommentCounts] = useState({});
   const toasts = ToastConfig();
 
@@ -902,6 +910,8 @@ export default function Community() {
                     <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: isMobile ? 1 : 1.5 }}>
                       <Avatar
                         src={post?.authorId?.profileImage}
+                        alt={`${post?.authorId?.firstName || ""} ${post?.authorId?.lastName || ""}`}
+                        onClick={() => handleProfileClick(post?.authorId)}
                         sx={{
                           width: avatarSize,
                           height: avatarSize,
@@ -913,8 +923,11 @@ export default function Community() {
                           mt: { xs: 0.4, sm: 0.5 }
                         }}
                       >
-                        {!currentUser?.profileImage &&
-                          `${currentUser?.firstName?.[0] || ''}${currentUser?.lastName?.[0] || ''}`}
+                        {/* {!currentUser?.profileImage &&
+                          `${currentUser?.firstName?.[0] || ''}${currentUser?.lastName?.[0] || ''}`} */}
+                        {!post?.authorId?.profileImage &&
+                          `${post?.authorId?.firstName?.[0] || ""}${post?.authorId?.lastName?.[0] || ""
+                          }`}
                       </Avatar>
 
                       <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -1020,7 +1033,7 @@ export default function Community() {
                                   fontWeight: 600,
                                   color: "#ffff",
                                   bgcolor: "grey.700",
-        
+
                                 }}
                               >
                                 Cancel
@@ -1354,6 +1367,42 @@ export default function Community() {
               ))
             )}
           </Box>
+
+          <Dialog
+            open={profileModalOpen}
+            onClose={() => {
+              setProfileModalOpen(false);
+              setSelectedProfile(null);
+            }}
+            maxWidth="xs"
+            // fullWidth
+          >
+            <DialogContent sx={{ textAlign: "center", p: 4 }}>
+              <Avatar
+                src={selectedProfile?.profileImage || ""}
+                alt={`${selectedProfile?.firstName || ""} ${selectedProfile?.lastName || ""}`}
+                sx={{
+                  width: { xs: 120, sm: 160 },
+                  height: { xs: 120, sm: 160 },
+                  mx: "auto",
+                  mb: 2,
+                  bgcolor: SAFFRON,
+                  color: "#fff",
+                  fontSize: { xs: "2.5rem", sm: "3.5rem" },
+                  fontWeight: 800,
+                }}
+              />
+
+              <Typography
+                fontWeight={700}
+                sx={{
+                  fontSize: { xs: "1rem", sm: "1.25rem" },
+                }}
+              >
+                {selectedProfile?.firstName} {selectedProfile?.lastName}
+              </Typography>
+            </DialogContent>
+          </Dialog>
 
           {/* SidebarContent */}
           {showSidebar && (
