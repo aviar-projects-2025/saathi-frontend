@@ -1246,7 +1246,7 @@ export default function Community() {
                                     },
                                   }}
                                 >
-                                  {imagePostLoading ? "Saving..." : "Save Changes"}
+                                  {imagePostLoading ? "Saving..." : "Save"}
                                 </Button>
                               </Stack>
                             </DialogActions>

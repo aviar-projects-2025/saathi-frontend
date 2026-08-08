@@ -680,7 +680,7 @@ const Myprofile = () => {
                   >
                     {passwordLoading
                       ? " Updating Password... "
-                      : " Update Password "}
+                      : " Update "}
                   </Button>
                 </Stack>
               </Stack>
