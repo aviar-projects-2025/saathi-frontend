@@ -52,6 +52,7 @@ export default function Ridebook({
   // existingMembers = already CONFIRMED/APPROVED members on this request.
   // Read-only, shown for context, never sent back to the backend.
   const [existingMembers, setExistingMembers] = useState([]);
+
   const [newMembers, setNewMembers] = useState([]);
   const isTab = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -609,6 +610,7 @@ export default function Ridebook({
                     bgcolor: GREEN_BG,
                   }}
                 >
+
                   <Avatar
                     sx={{
                       width: 30,

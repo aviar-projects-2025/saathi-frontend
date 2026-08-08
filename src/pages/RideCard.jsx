@@ -99,6 +99,7 @@ export default function RideCard({ ride }) {
   const routeTo = isFlight
     ? ride.toAirport || ride.destination
     : ride.destination;
+  const userProfile = user?.profileImage;
 
   const storedUser = JSON.parse(localStorage.getItem("user"));
   const isProfileComplete = completion === 100;
@@ -441,6 +442,8 @@ export default function RideCard({ ride }) {
               sx={{ minWidth: 0, flex: 1 }}
             >
               <Avatar
+                src={userProfile}
+                alt={userProfile}
                 sx={{
                   bgcolor: isFlight ? "#1A3C5E" : "#2D6A4F",
                   width: { xs: 25, sm: 38 },
@@ -449,7 +452,7 @@ export default function RideCard({ ride }) {
                   flexShrink: 0,
                 }}
               >
-                {userName.charAt(0)}
+                {userProfile}
               </Avatar>
 
               {/* <Avatar

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Box, Paper, Typography, Divider, Button, Grid, Skeleton } from "@mui/material";
+import { Box, Paper, Typography, Divider, Button, Grid, Skeleton, Avatar } from "@mui/material";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import axios from "axios";
 import Api from "../Api.jsx";
@@ -26,46 +26,7 @@ const getBadge = (rank) => {
     return null;
 };
 
-// Simple avatar
-const UserAvatar = ({ initials, verified }) => (
-    <Box
-        sx={{
-            width: { xs: 34, sm: 40 },
-            height: { xs: 34, sm: 40 },
-            flexShrink: 0,
-            borderRadius: "50%",
-            background: "#FFE8D6",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontWeight: 800,
-            fontSize: { xs: 12, sm: 14 },
-            position: "relative",
-        }}
-    >
-        {initials}
-        {verified && (
-            <Box
-                sx={{
-                    position: "absolute",
-                    right: -2,
-                    bottom: -2,
-                    background: "#2196f3",
-                    color: "#fff",
-                    borderRadius: "50%",
-                    width: { xs: 12, sm: 14 },
-                    height: { xs: 12, sm: 14 },
-                    fontSize: { xs: 8, sm: 10 },
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                }}
-            >
-                ✓
-            </Box>
-        )}
-    </Box>
-);
+
 
 const Discover = () => {
     const [topMembers, setTopMembers] = useState([]);
@@ -81,15 +42,18 @@ const Discover = () => {
                 setLoading(true);
 
                 const res = await axios.get(`${Api}/users/top-riders`);
+
                 const riders = res.data?.data || [];
                 const formatted = riders.map((rider, index) => ({
                     name: `${rider.firstName} ${rider.lastName}`,
                     initials: getInitials(rider.firstName, rider.lastName),
                     rides: rider.completedRideCount,
+                    profileImage: rider.profileImage,
                     // city: rider.city || "",
                     badge: getBadge(index),
                     verified: rider.isVerified,
                 }));
+
 
                 setTopMembers(formatted);
             } catch (err) {
@@ -182,7 +146,21 @@ const Discover = () => {
                                         {index + 1}
                                     </Typography>
 
-                                    <UserAvatar initials={member.initials} verified={member.verified} />
+                                    <Avatar
+                                        src={member.profileImage}
+                                        sx={{
+                                            //   width: avatarSize,
+                                            //   height: avatarSize,
+                                            //   bgcolor: SAFFRON,
+                                            color: '#fff',
+                                            fontWeight: 800,
+                                            //   fontSize: avatarFontSize,
+                                            flexShrink: 0,
+                                            mt: { xs: 0.4, sm: 0.5 }
+                                        }}
+                                    >
+                                        {member.profileImage}
+                                    </Avatar>
 
                                     <Box sx={{ flex: 1, minWidth: 0 }}>
                                         <Typography
