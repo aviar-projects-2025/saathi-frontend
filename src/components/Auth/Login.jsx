@@ -34,6 +34,8 @@ const Login = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
+  const [serverError, setServerError] = useState("");
+
   const validationSchema = Yup.object({
     email: Yup.string()
       .trim()
@@ -71,7 +73,11 @@ const Login = () => {
             ? "/community"
             : "/waiting-approval";
     } catch (error) {
-      toast.error(error.message, toasts);
+      // toast.error(error.message, toasts);
+      setServerError(
+        error.message ||
+        "Something went wrong. Please try again."
+      );
     }
   };
 
@@ -234,6 +240,29 @@ const Login = () => {
                       },
                     }}
                   />
+
+                  {serverError && (
+                    <Box
+                      sx={{
+                        mt: 1,
+                        px: 1.5,
+                        py: 1,
+                        borderRadius: 1.5,
+                        backgroundColor: "#FFF0F0",
+                        border: "1px solid #FFCDD2",
+                      }}
+                    >
+                      <Typography
+                        color="error"
+                        sx={{
+                          fontSize: { xs: "0.78rem", sm: "0.85rem" },
+                          fontWeight: 600,
+                        }}
+                      >
+                        {serverError}
+                      </Typography>
+                    </Box>
+                  )}
 
                   <Button
                     type="submit"

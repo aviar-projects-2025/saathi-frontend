@@ -703,15 +703,15 @@ const RequestRide = () => {
 
           <DialogActions sx={{ px: 3, pb: 3, gap: 1 }}>
             <Button
-              variant="outlined"
+              variant="contained"
               onClick={() => setOpenCancelDialog(false)}
               sx={{
                 borderRadius: 2,
                 textTransform: "none",
                 flex: 1,
                 minHeight: 44,
-                color: "#757575",
-                border: "1px solid #E2D7C3"
+                bgcolor: "#757575",
+                color:"#ffff"
               }}
               disabled={isCancelling}
             >

@@ -903,7 +903,7 @@ export default function Ridebook({
         }}
       >
         <Button
-          variant="outlined"
+          variant="contained"
           fullWidth={isMobile}
           size={isMobile ? "small" : "medium"}
           onClick={handleReset}
@@ -912,8 +912,8 @@ export default function Ridebook({
             borderRadius: 2.5,
             fontWeight: 700,
             fontFamily: "'Inter', sans-serif",
-            color: "#757575",
-            border: "1px solid #E2D7C3"
+            color: "#ffff",
+            bgcolor: "#757575"
 
           }}
 

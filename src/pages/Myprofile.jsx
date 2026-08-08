@@ -195,28 +195,28 @@ const Myprofile = () => {
   };
 
   const handleChangePassword = async () => {
-  const validatePassword = () => {
-    const newErrors = {};
+    const validatePassword = () => {
+      const newErrors = {};
 
-    if (!passwordData.currentPassword.trim()) {
-      newErrors.currentPassword = "Current password is required";
-    }
+      if (!passwordData.currentPassword.trim()) {
+        newErrors.currentPassword = "Current password is required";
+      }
 
-    if (!passwordData.newPassword.trim()) {
-      newErrors.newPassword = "New password is required";
-    }
+      if (!passwordData.newPassword.trim()) {
+        newErrors.newPassword = "New password is required";
+      }
 
-    if (!passwordData.confirmPassword.trim()) {
-      newErrors.confirmPassword = "Confirm password is required";
-    } else if (passwordData.newPassword !== passwordData.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match to New Password";
-    }
+      if (!passwordData.confirmPassword.trim()) {
+        newErrors.confirmPassword = "Confirm password is required";
+      } else if (passwordData.newPassword !== passwordData.confirmPassword) {
+        newErrors.confirmPassword = "Passwords do not match to New Password";
+      }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+      setErrors(newErrors);
+      return Object.keys(newErrors).length === 0;
+    };
 
- 
+
 
     if (!validatePassword()) return;
 
@@ -355,8 +355,7 @@ const Myprofile = () => {
               }}
             >
               {!currentUser?.profileImage &&
-                `${currentUser?.firstName?.[0] || ""}${
-                  currentUser?.lastName?.[0] || ""
+                `${currentUser?.firstName?.[0] || ""}${currentUser?.lastName?.[0] || ""
                 }`}
             </Avatar>
 
@@ -642,7 +641,7 @@ const Myprofile = () => {
                   }}
                 >
                   <Button
-                    variant="outlined"
+                    variant="contained"
                     onClick={() => {
                       // setPasswordModel(false);
                       setPasswordData({
@@ -654,14 +653,11 @@ const Myprofile = () => {
                     sx={{
                       width: { xs: "100%", sm: "auto" },
                       minWidth: { sm: 140 },
-                      borderColor: "#757575",
-                      color: "#757575",
+                      bgcolor: "#757575",
+                      color: "#ffff",
                       textTransform: "none",
                       fontWeight: 600,
-                      // "&:hover": {
-                      //   borderColor: "#D65A00",
-                      //   bgcolor: "#757575",
-                      // },
+                  
                     }}
                   >
                     Cancel
@@ -684,7 +680,7 @@ const Myprofile = () => {
                   >
                     {passwordLoading
                       ? " Updating Password... "
-                      : " Update Password "}
+                      : " Update "}
                   </Button>
                 </Stack>
               </Stack>

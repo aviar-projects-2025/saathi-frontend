@@ -785,7 +785,7 @@ export default function RideDetailsModal({
           <Field icon={CalendarTodayIcon} label="Date" value={dateLabel || '—'} />
           <Field icon={AccessTimeIcon} label="Time" value={timeLabel || '—'} />
           <Field icon={TravelIcon} label="Mode" value={ride.modeOfTravel || '—'} />
-          <Field icon={AccessTimeIcon} label="Travel Duration" value={ride.duration || '—'} />
+          {ride.duration && <Field icon={AccessTimeIcon} label="Travel Duration" value={ride.duration || '—'} />}
           <Field icon={TravellerTypeIcon} label="Traveller Type" value={ride.travellerType || '—'} />
           <Field icon={BadgeIcon} label="Age Group Pref." value={ride.ageGroupPreference || '—'} />
           {ride.availableSeats !== null &&
@@ -809,7 +809,7 @@ export default function RideDetailsModal({
             </>
           ) : null}
 
-          {ride.modeOfTravel !== 'Flight' && ride.modeOfTravel !== 'Bus' && (<Field icon={LocalGasStationIcon} label="Fuel Cost" value={`${ride.fuelSharing === null ? '—' : `$ ${ride.fuelSharing}/Person`} ` || '—'} />)}
+          {ride.modeOfTravel !== 'Flight' && ride.modeOfTravel !== 'Bus' || ride.fuelSharing === 0 && (<Field icon={LocalGasStationIcon} label="Fuel Cost" value={`${ride.fuelSharing === null ? '—' : `$ ${ride.fuelSharing}/Person`} ` || '—'} />)}
 
           {ride.description && (
             <Field icon={DescriptionIcon} label="Description" value={ride.description || '—'} span />

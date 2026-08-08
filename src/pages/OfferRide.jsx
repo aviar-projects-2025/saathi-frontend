@@ -92,7 +92,7 @@ const INITIAL_FORM = {
   travellerType: "",
   language: [],
   ageGroupPreference: "Any",
-  price: "",
+  price: 0,
 
   medicalAssistance: false,
   languageSupport: false,
@@ -256,7 +256,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
       date,
       time,
       availableSeats: ride.availableSeats ?? ride.totalSeats ?? 1,
-      price: ride.fuelSharing || ride.price || "",
+      price: ride.fuelSharing || ride.price || 0,
       fuelSharing: Boolean(ride.fuelSharing || ride.price),
       language: ride.language || [],
     });
@@ -1250,16 +1250,38 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                   />
 
                   {form.fuelSharing && (
+                    // <TextField
+                    //   label="$ Price"
+                    //   size={inputSize}
+                    //   value={form.price}
+                    //   onChange={(e) => update("price", e.target.value)}
+                    //   placeholder="$5"
+                    //   error={showErrors && !!errors.price}
+                    //   helperText={showErrors ? errors.price : ""}
+                    //   sx={{ ...tfSx, width: { xs: "100%", sm: 180, md: 220 } }}
+                    // />
+
                     <TextField
                       label="$ Price"
                       size={inputSize}
+                      type="number"
                       value={form.price}
-                      onChange={(e) => update("price", e.target.value)}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (/^\d*\.?\d*$/.test(value)) {
+                          update("price", value);
+                        }
+                      }}
                       placeholder="$5"
                       error={showErrors && !!errors.price}
                       helperText={showErrors ? errors.price : ""}
                       sx={{ ...tfSx, width: { xs: "100%", sm: 180, md: 220 } }}
+                      inputProps={{
+                        min: 0,
+                        step: "0.01",
+                      }}
                     />
+
                   )}
                 </Stack>
               )}
@@ -1372,7 +1394,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
 
             {onClose && (
               <Button
-                variant="outlined"
+                variant="contained"
                 onClick={(formReset)}
                 sx={{
                   flex: 1,
@@ -1380,8 +1402,9 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                   // py: 1,
                   minHeight: 42,
                   borderRadius: 2.5,
-                  color: "text.secondary",
-                  borderColor: "divider",
+                  bgcolor: "text.secondary",
+                  // borderColor: "divider",
+                  color: "#ffff",
                   whiteSpace: "nowrap",
                   textTransform: "none",
                   fontWeight: 600,
