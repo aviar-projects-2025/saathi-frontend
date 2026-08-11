@@ -1194,42 +1194,44 @@ function RideCard({
                     </Stack>
                   </Box>
 
-                  <Box>
-                    <Typography
-                      sx={{
-                        fontSize: {
-                          xs: "0.62rem",
-                          sm: "0.68rem",
-                          md: "0.7rem",
-                        },
-                        color: "text.secondary",
-                        mb: 0.5,
-                      }}
-                    >
-                      Total Seats
-                    </Typography>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <EventSeatIcon
-                        sx={{
-                          color: "#FF9933",
-                          fontSize: { xs: 14, sm: 16, md: 18 },
-                        }}
-                      />
+                  {ride.modeOfTravel !== "Flight" &&
+                    <Box>
                       <Typography
                         sx={{
                           fontSize: {
-                            xs: "0.7rem",
-                            sm: "0.8rem",
-                            md: "0.875rem",
+                            xs: "0.62rem",
+                            sm: "0.68rem",
+                            md: "0.7rem",
                           },
-                          fontWeight: 600,
+                          color: "text.secondary",
+                          mb: 0.5,
                         }}
                       >
-                        {ride.totalSeats} seat
-                        {ride.totalSeats === 1 ? "" : "s"}
+                        Total Seats
                       </Typography>
-                    </Stack>
-                  </Box>
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <EventSeatIcon
+                          sx={{
+                            color: "#FF9933",
+                            fontSize: { xs: 14, sm: 16, md: 18 },
+                          }}
+                        />
+                        <Typography
+                          sx={{
+                            fontSize: {
+                              xs: "0.7rem",
+                              sm: "0.8rem",
+                              md: "0.875rem",
+                            },
+                            fontWeight: 600,
+                          }}
+                        >
+                          {ride.totalSeats} seat
+                          {ride.totalSeats === 1 ? "" : "s"}
+                        </Typography>
+                      </Stack>
+                    </Box>
+                  }
 
                   <Box>
                     <Typography
@@ -1786,7 +1788,7 @@ const MyRides = () => {
     setHistory(merge(history));
     setCurrentRide((prev) => merge(prev));
     setEditRide(null);
-    toast.success("Ride Updated Successfully...!", toastss);
+    // toast.success("Ride Updated Successfully...!", toastss);
   };
 
   const handleDelete = (deleted) => {
