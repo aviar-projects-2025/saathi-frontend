@@ -79,7 +79,7 @@ const INITIAL_FORM = {
   time: "",
   duration: "",
   modeOfTravel: "Car",
-  availableSeats: 1,
+  availableSeats: '',
   fuelSharing: false,
   description: "",
   genderPreference: "Any",
