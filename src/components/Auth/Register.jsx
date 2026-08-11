@@ -53,18 +53,14 @@ const Register = () => {
   };
 
   const validationSchema = Yup.object({
-
     firstName: Yup.string().required("First name is required"),
     lastName: Yup.string().required("Last name is required"),
-    email: Yup.string()
-      .trim()
-      .lowercase()
-      .email("Please enter a valid Email address")
-      .matches(
-        /^[A-Za-z0-9](?:[A-Za-z0-9._%+-]{0,62}[A-Za-z0-9])?@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z]{2,})+$/,
-        "Please enter a valid email address"
-      )
-      .required("Email is required"),
+email: Yup.string()
+  .required("Email is required")
+  .matches(
+    /^[a-z0-9]+(?:[._%+-][a-z0-9]+)*@[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z]{2,})+$/,
+    "Please enter a valid email address"
+  ),
     referralCode: Yup.string().required("Referral Code is required"),
     password: Yup.string()
       .matches(/^[A-Z]/, "Password must start with an uppercase letter")
@@ -72,7 +68,7 @@ const Register = () => {
       .matches(/[0-9]/, "Password must contain at least one number")
       .matches(
         /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/,
-        "Password must contain at least one special character"
+        "Password must contain at least one special character",
       )
       .min(8, "Password must be at least 8 characters")
       .required("Password is required"),
@@ -97,8 +93,7 @@ const Register = () => {
       }
     } catch (error) {
       // setServerError(error.response?.data?.message || "Registration failed");
-      const message =
-        error.response?.data?.message || "Registration failed";
+      const message = error.response?.data?.message || "Registration failed";
 
       if (message.toLowerCase().includes("email")) {
         setFieldErrors((prev) => ({ ...prev, email: message }));
@@ -264,7 +259,9 @@ const Register = () => {
                         setFieldErrors((prev) => ({ ...prev, email: "" }));
                       }}
                       onBlur={handleBlur}
-                      error={Boolean((touched.email && errors.email) || fieldErrors.email)}
+                      error={Boolean(
+                        (touched.email && errors.email) || fieldErrors.email,
+                      )}
                       helperText={
                         (touched.email && errors.email) || fieldErrors.email
                       }
@@ -324,7 +321,10 @@ const Register = () => {
                         }));
                       }}
                       onBlur={handleBlur}
-                      error={Boolean((touched.referralCode && errors.referralCode) || fieldErrors.referralCode)}
+                      error={Boolean(
+                        (touched.referralCode && errors.referralCode) ||
+                        fieldErrors.referralCode,
+                      )}
                       helperText={
                         (touched.referralCode && errors.referralCode) ||
                         fieldErrors.referralCode

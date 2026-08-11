@@ -452,7 +452,7 @@ export default function Ridebook({
   const editableMembersWithMeta = editableMembers.map((member, originalIndex) => ({
     ...member,
     originalIndex,
-    isSelf: isSelfMember(member),
+   isSelf: !isEditMode && originalIndex === 0,
   }));
 
   const visibleMembers = editableMembersWithMeta.filter(
