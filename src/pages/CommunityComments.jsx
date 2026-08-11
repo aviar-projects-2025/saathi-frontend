@@ -281,7 +281,9 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
       toast.success("Comment deleted", toasts);
 
       handleMenuClose();
-      getComments();
+      setReply("");
+      setIsReply(null);
+    await getComments();
     } catch (error) {
       toast.error(
         error.response?.data?.message || "Failed to delete comment",
@@ -295,8 +297,12 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
   const parentComments = commentsFetched.filter(
     (c) => c.parentCommentId === null,
   );
-  const getReplies = (parentId) =>
-    commentsFetched.filter((c) => c.parentCommentId === parentId);
+  const getReplies = (parentId, replyItem) =>
+    commentsFetched.filter((c) => c.parentCommentId === parentId && c.parentCommentId !== replyItem?._id);
+
+console.log("parentComments", parentComments);
+console.log("getReplies", getReplies);
+console.log("commentsFetched", commentsFetched);
 
   /* ── reusable renderer for a comment/reply bubble, with menu + edit ── */
   const renderCommentBody = (item, isChild = false) => {
