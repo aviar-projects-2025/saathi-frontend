@@ -86,6 +86,9 @@ export default function RideCard({ ride }) {
 
   const TOASTS = ToastConfig();
 
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState(null);
+
   const user = ride?.createdBy || {};
   const avaialableSeats = ride?.availableSeats;
   const totalSeats = ride?.totalSeats;
@@ -442,32 +445,30 @@ export default function RideCard({ ride }) {
               sx={{ minWidth: 0, flex: 1 }}
             >
               <Avatar
-                src={userProfile}
-                alt={userProfile}
+                src={userProfile || ""}
+                alt={userName}
+                onClick={() => {
+                  setSelectedProfile(user);
+                  setProfileModalOpen(true);
+                }}
                 sx={{
                   bgcolor: isFlight ? "#1A3C5E" : "#2D6A4F",
                   width: { xs: 25, sm: 38 },
                   height: { xs: 25, sm: 38 },
                   fontSize: { xs: "0.8rem", sm: "1.1rem" },
                   flexShrink: 0,
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+
+                  "&:hover": {
+                    transform: "scale(1.08)",
+                    boxShadow: "0 0 0 3px rgba(255,255,255,0.3)",
+                  },
                 }}
               >
-                {userProfile}
+                {!userProfile &&
+                  `${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`}
               </Avatar>
-
-              {/* <Avatar
-              src={} // e.g. user.profileImage
-              alt={userName}
-              sx={{
-                bgcolor: isFlight ? "#1A3C5E" : "#2D6A4F",
-                width: { xs: 25, sm: 38 },
-                height: { xs: 25, sm: 38 },
-                fontSize: { xs: "0.8rem", sm: "1.1rem" },
-                flexShrink: 0,
-              }}
-            >
-              {! && userName?.charAt(0).toUpperCase()}
-            </Avatar>  */}
 
               <Box sx={{ minWidth: 0 }}>
                 <Typography
@@ -1046,6 +1047,92 @@ export default function RideCard({ ride }) {
           </Card>
         </Box>
       )}
+
+      <Dialog
+        open={profileModalOpen}
+        onClose={() => {
+          setProfileModalOpen(false);
+          setSelectedProfile(null);
+        }}
+        maxWidth="sm"
+        fullWidth={false}
+        slotProps={{
+          paper: {
+            sx: {
+              backgroundColor: "transparent",
+              boxShadow: "none",
+              overflow: "visible",
+              m: 1,
+            },
+          },
+        }}
+      >
+        <IconButton
+          aria-label="close"
+          onClick={() => {
+            setProfileModalOpen(false);
+            setSelectedProfile(null);
+          }}
+          sx={{
+            position: "absolute",
+            top: { xs: 8, sm: 12 },
+            right: { xs: 8, sm: 12 },
+            zIndex: 10,
+            width: { xs: 36, sm: 42 },
+            height: { xs: 36, sm: 42 },
+            color: "#fff",
+            transition: "all 0.2s ease",
+
+            "&:hover": {
+              backgroundColor: "rgba(0, 0, 0, 0.7)",
+              transform: "rotate(90deg)",
+            },
+          }}
+        >
+          <CloseIcon />
+        </IconButton>
+
+        <DialogContent
+          sx={{
+            p: { xs: 1, sm: 2 },
+            textAlign: "center",
+            overflow: "visible",
+          }}
+        >
+          <Avatar
+            src={selectedProfile?.profileImage || ""}
+            alt={`${selectedProfile?.firstName || ""} ${selectedProfile?.lastName || ""
+              }`}
+            sx={{
+              width: { xs: 200, sm: 360 },
+              height: { xs: 200, sm: 360 },
+              mx: "auto",
+              mb: 1.5,
+              bgcolor: "#f16907",
+              color: "#fff",
+              fontSize: { xs: "3rem", sm: "5rem" },
+              fontWeight: 800,
+              border: "3px solid rgba(255,255,255,0.9)",
+              boxShadow: "0 8px 30px rgba(0,0,0,0.35)",
+            }}
+          >
+            {!selectedProfile?.profileImage &&
+              `${selectedProfile?.firstName?.[0] || ""}${selectedProfile?.lastName?.[0] || ""
+              }`}
+          </Avatar>
+
+          <Typography
+            fontWeight={700}
+            sx={{
+              color: "#fff",
+              fontSize: { xs: "1rem", sm: "1.25rem" },
+              textShadow: "0 2px 5px rgba(0,0,0,0.7)",
+            }}
+          >
+            {selectedProfile?.firstName} {selectedProfile?.lastName}
+          </Typography>
+        </DialogContent>
+      </Dialog>
 
       <Ridebook
         open={openEditModal}
