@@ -79,7 +79,7 @@ const INITIAL_FORM = {
   time: "",
   duration: "",
   modeOfTravel: "Car",
-  availableSeats: '',
+  availableSeats: "",
   fuelSharing: false,
   description: "",
   genderPreference: "Any",
@@ -255,16 +255,12 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
       ...ride,
       date,
       time,
-
       availableSeats:
         ride.modeOfTravel === "Flight"
-          ? ride.availableSeats ?? ride.totalSeats ?? null
+          ? null
           : ride.availableSeats ?? ride.totalSeats ?? 1,
-
       price: ride.fuelSharing || ride.price || 0,
-
       fuelSharing: Boolean(ride.fuelSharing || ride.price),
-
       language: ride.language || [],
     });
   }, [ride]);
@@ -489,7 +485,10 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
         ...ride,
         date,
         time,
-        availableSeats: ride.availableSeats ?? ride.totalSeats ?? 1,
+        availableSeats:
+          ride.modeOfTravel === "Flight"
+            ? null
+            : ride.availableSeats ?? ride.totalSeats ?? 1,
         price: ride.fuelSharing || ride.price || "",
         fuelSharing: Boolean(ride.fuelSharing || ride.price),
         language: ride.language || [],
@@ -545,13 +544,69 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
       }),
   });
 
+  // const createRide = async () => {
+  //   const payload = buildPayload();
+
+  //   try {
+  //     setIsSubmitted(true);
+  //     await axios.post(`${Api}/rides/`, payload);
+
+  //     toast.success("Ride Created Successfully...!", {
+  //       position: isTab ? "top-center" : "top-right",
+  //       autoClose: 2000,
+  //       hideProgressBar: true,
+  //       closeButton: false,
+  //       style: {
+  //         width: isTab ? "90vw" : "360px",
+  //         maxWidth: isTab ? "320px" : "360px",
+  //         fontSize: isTab ? "13px" : "15px",
+  //         padding: isTab ? "8px 12px" : "12px 16px",
+  //         borderRadius: isTab ? "8px" : "10px",
+  //         minHeight: isTab ? "42px" : "52px",
+  //         margin: "0 auto",
+  //       },
+  //     });
+
+  //     refreshRides();
+  //     setStep(0);
+  //     formReset();
+  //     setSubmitted(true);
+  //     setShowErrors(false);
+  //     setOpen(false)
+  //   } catch (error) {
+  //     toast.error(error.response?.data?.message || error.message, {
+  //       position: isTab ? "top-center" : "top-right",
+  //       autoClose: 3000,
+  //       hideProgressBar: true,
+  //       closeButton: false,
+  //       style: {
+  //         width: isTab ? "280px" : "360px",
+  //         fontSize: isTab ? "13px" : "15px",
+  //         padding: isTab ? "8px 12px" : "12px 16px",
+  //         borderRadius: isTab ? "8px" : "10px",
+  //         minHeight: isTab ? "42px" : "52px",
+  //       },
+  //     });
+  //   } finally {
+  //     setIsSubmitted(false);
+  //     setTimeout(() => {
+  //       if (onClose) onClose();
+  //       else navigate("/myride");
+  //     }, 1000);
+  //   }
+  // };
+
+
   const createRide = async () => {
     const payload = buildPayload();
 
+    setIsSubmitted(true);
+
     try {
-      setIsSubmitted(true);
+      // Only the API call is inside this try
       await axios.post(`${Api}/rides/`, payload);
 
+      // SUCCESS
       toast.success("Ride Created Successfully...!", {
         position: isTab ? "top-center" : "top-right",
         autoClose: 2000,
@@ -568,34 +623,54 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
         },
       });
 
-      refreshRides();
-      setStep(0);
-      formReset();
-      setSubmitted(true);
-      setShowErrors(false);
-      setOpen(false)
+      // UI updates should not trigger the API error toast
+      try {
+        refreshRides();
+        setStep(0);
+        formReset();
+        setSubmitted(true);
+        setShowErrors(false);
+        setOpen(false);
+      } catch (uiError) {
+        console.error("UI cleanup error:", uiError);
+      }
+
+      // Navigate/close after success
+      setTimeout(() => {
+        if (onClose) {
+          onClose();
+        } else {
+          navigate("/myride");
+        }
+      }, 1000);
+
     } catch (error) {
-      toast.error(error.response?.data?.message || error.message, {
-        position: isTab ? "top-center" : "top-right",
-        autoClose: 3000,
-        hideProgressBar: true,
-        closeButton: false,
-        style: {
-          width: isTab ? "280px" : "360px",
-          fontSize: isTab ? "13px" : "15px",
-          padding: isTab ? "8px 12px" : "12px 16px",
-          borderRadius: isTab ? "8px" : "10px",
-          minHeight: isTab ? "42px" : "52px",
-        },
-      });
+      // ONLY API errors come here
+      console.error("Create ride error:", error);
+
+      toast.error(
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to create ride",
+        {
+          position: isTab ? "top-center" : "top-right",
+          autoClose: 3000,
+          hideProgressBar: true,
+          closeButton: false,
+          style: {
+            width: isTab ? "280px" : "360px",
+            fontSize: isTab ? "13px" : "15px",
+            padding: isTab ? "8px 12px" : "12px 16px",
+            borderRadius: isTab ? "8px" : "10px",
+            minHeight: isTab ? "42px" : "52px",
+          },
+        }
+      );
     } finally {
       setIsSubmitted(false);
-      setTimeout(() => {
-        if (onClose) onClose();
-        else navigate("/myride");
-      }, 1000);
     }
   };
+
 
   const updateRide = async () => {
     setError("");

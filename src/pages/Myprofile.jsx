@@ -1033,17 +1033,6 @@ const Myprofile = () => {
                   >
                     Are you sure you want to logout?
                   </Typography>
-                  <Typography
-                    color="text.secondary"
-                    sx={{
-                      fontSize: { xs: "0.7rem", sm: "0.85rem" },
-                      color: "#6b7280",
-                      lineHeight: 1.5,
-                      px: { xs: 0.5, sm: 2 },
-                    }}
-                  >
-                    You'll need to login again to access your account.
-                  </Typography>
                 </Box>
               </DialogContent>
 
