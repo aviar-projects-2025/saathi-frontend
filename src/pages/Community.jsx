@@ -1374,16 +1374,47 @@ export default function Community() {
               setProfileModalOpen(false);
               setSelectedProfile(null);
             }}
-            maxWidth="xs"
-            // fullWidth
+            maxWidth="sm"
+            slotProps={{
+              paper: {
+                sx: {
+                  backgroundColor: "transparent",
+                  boxShadow: "none",
+                },
+              },
+            }}
           >
+            <IconButton
+              onClick={() => {
+                setProfileModalOpen(false);
+                setSelectedProfile(null);
+              }}
+              sx={{
+                position: "absolute",
+                top: 8,
+                right: 8,
+                zIndex: 3,
+                color: "#fff",
+                transition: "all 0.2s ease",
+
+                "&:hover": {
+                  backgroundColor: "rgba(255, 255, 255, 0.2)",
+                  color: "#fff",
+                  transform: "rotate(90deg)",
+                },
+              }}
+            >
+              <CloseIcon />
+            </IconButton>
+
             <DialogContent sx={{ textAlign: "center", p: 4 }}>
               <Avatar
                 src={selectedProfile?.profileImage || ""}
-                alt={`${selectedProfile?.firstName || ""} ${selectedProfile?.lastName || ""}`}
+                alt={`${selectedProfile?.firstName || ""} ${selectedProfile?.lastName || ""
+                  }`}
                 sx={{
-                  width: { xs: 120, sm: 160 },
-                  height: { xs: 120, sm: 160 },
+                  width: { xs: 180, sm: 360 },
+                  height: { xs: 180, sm: 360 },
                   mx: "auto",
                   mb: 2,
                   bgcolor: SAFFRON,
@@ -1397,6 +1428,7 @@ export default function Community() {
                 fontWeight={700}
                 sx={{
                   fontSize: { xs: "1rem", sm: "1.25rem" },
+                  color: "#fff",
                 }}
               >
                 {selectedProfile?.firstName} {selectedProfile?.lastName}

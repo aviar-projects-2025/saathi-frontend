@@ -274,10 +274,10 @@ const RequestRide = () => {
         sx={{
           minHeight: "65vh",
           display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
+          // justifyContent: "center",
+          // alignItems: "center",
           flexDirection: "column",
-          textAlign: "center",
+          // textAlign: "center",
           // px: 2,
         }}
       >
@@ -730,7 +730,7 @@ const RequestRide = () => {
               }}
               disabled={isCancelling}
             >
-              {isCancelling ? "Cancelling..." : "Yes, Cancel Ride"}
+              {isCancelling ? "Cancelling..." : "Cancel Ride"}
             </Button>
           </DialogActions>
         </Dialog>
