@@ -79,7 +79,7 @@ const INITIAL_FORM = {
   time: "",
   duration: "",
   modeOfTravel: "Car",
-  availableSeats: 1,
+  availableSeats: "",
   fuelSharing: false,
   description: "",
   genderPreference: "Any",
@@ -255,7 +255,10 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
       ...ride,
       date,
       time,
-      availableSeats: ride.availableSeats ?? ride.totalSeats ?? 1,
+      availableSeats:
+        ride.modeOfTravel === "Flight"
+          ? null
+          : ride.availableSeats ?? ride.totalSeats ?? 1,
       price: ride.fuelSharing || ride.price || 0,
       fuelSharing: Boolean(ride.fuelSharing || ride.price),
       language: ride.language || [],
@@ -482,7 +485,10 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
         ...ride,
         date,
         time,
-        availableSeats: ride.availableSeats ?? ride.totalSeats ?? 1,
+        availableSeats:
+          ride.modeOfTravel === "Flight"
+            ? null
+            : ride.availableSeats ?? ride.totalSeats ?? 1,
         price: ride.fuelSharing || ride.price || "",
         fuelSharing: Boolean(ride.fuelSharing || ride.price),
         language: ride.language || [],
