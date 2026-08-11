@@ -79,7 +79,7 @@ const INITIAL_FORM = {
   time: "",
   duration: "",
   modeOfTravel: "Car",
-  availableSeats: '',
+  availableSeats: 1,
   fuelSharing: false,
   description: "",
   genderPreference: "Any",
@@ -255,16 +255,9 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
       ...ride,
       date,
       time,
-
-      availableSeats:
-        ride.modeOfTravel === "Flight"
-          ? ride.availableSeats ?? ride.totalSeats ?? null
-          : ride.availableSeats ?? ride.totalSeats ?? 1,
-
+      availableSeats: ride.availableSeats ?? ride.totalSeats ?? 1,
       price: ride.fuelSharing || ride.price || 0,
-
       fuelSharing: Boolean(ride.fuelSharing || ride.price),
-
       language: ride.language || [],
     });
   }, [ride]);
@@ -489,10 +482,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
         ...ride,
         date,
         time,
-        availableSeats:
-          ride.modeOfTravel === "Flight"
-            ? ride.availableSeats ?? ride.totalSeats ?? null
-            : ride.availableSeats ?? ride.totalSeats ?? 1,
+        availableSeats: ride.availableSeats ?? ride.totalSeats ?? 1,
         price: ride.fuelSharing || ride.price || "",
         fuelSharing: Boolean(ride.fuelSharing || ride.price),
         language: ride.language || [],
@@ -554,6 +544,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
   //   try {
   //     setIsSubmitted(true);
   //     await axios.post(`${Api}/rides/`, payload);
+
   //     toast.success("Ride Created Successfully...!", {
   //       position: isTab ? "top-center" : "top-right",
   //       autoClose: 2000,
@@ -598,6 +589,8 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
   //     }, 1000);
   //   }
   // };
+
+
   const createRide = async () => {
     const payload = buildPayload();
 
@@ -671,6 +664,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
       setIsSubmitted(false);
     }
   };
+
 
   const updateRide = async () => {
     setError("");
