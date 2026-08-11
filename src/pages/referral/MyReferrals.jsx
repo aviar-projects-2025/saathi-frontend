@@ -30,6 +30,7 @@ import { useNotifications } from "../../context/NotificationContext";
 import { useReferral } from "../../context/ReferralContext";
 import ToastConfig from "../../components/ToastConfig";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import ProfileModal from '../Avatar.jsx'
 
 
 const SAFFRON = "#E8650A";
@@ -53,6 +54,9 @@ const MyReferrals = () => {
     const { completion, currentUser } = useUser();
     const [approveLoading, setApproveLoading] = useState(false);
     const [rejectLoading, setRejectLoading] = useState(false);
+
+    const [profileModalOpen, setProfileModalOpen] = useState(false);
+    const [selectedProfile, setSelectedProfile] = useState(null);
 
     const toasts = ToastConfig();
     const handleOpenProfileMenu = (event) => {
@@ -339,15 +343,32 @@ const MyReferrals = () => {
                         sx={{ minWidth: 0, flex: 1 }}
                     >
 
-                        <Avatar src={userImage || undefined}
+                        <Avatar
+                            src={userImage || undefined}
+                            alt={`${userData?.firstName || ""} ${userData?.lastName || ""}`}
+                            onClick={() => {
+                                setSelectedProfile({
+                                    ...userData,
+                                    profileImage: userImage,
+                                });
+                                setProfileModalOpen(true);
+                            }}
                             sx={{
                                 bgcolor: "#f0ebe3",
                                 color: "#ff8400",
                                 width: 44,
                                 height: 44,
+                                cursor: "pointer",
+                                transition: "all 0.2s ease",
+
+                                "&:hover": {
+                                    transform: "scale(1.08)",
+                                    boxShadow: "0 0 0 3px rgba(255, 132, 0, 0.25)",
+                                },
                             }}
                         >
-                            {!userImage && getInitials(userData.firstName, userData.lastName)}
+                            {!userImage &&
+                                getInitials(userData?.firstName, userData?.lastName)}
                         </Avatar>
 
 
@@ -491,6 +512,16 @@ const MyReferrals = () => {
                         </Box>
                     )}
                 </Stack>
+
+                <ProfileModal
+                    open={profileModalOpen}
+                    selectedProfile={selectedProfile}
+                    onClose={() => {
+                        setProfileModalOpen(false);
+                        setSelectedProfile(null);
+                    }}
+                />
+
             </Paper>
         );
     };

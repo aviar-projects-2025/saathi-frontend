@@ -48,6 +48,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { InputAdornment } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import ToastConfig from "../components/ToastConfig.jsx";
+import ProfileModal from './Avatar.jsx'
 
 const SAFFRON = "#E8650A";
 const SAFFRON_LIGHT = "#FDF0E8";
@@ -110,6 +111,9 @@ const Myprofile = () => {
   const handleCloseShare = () => setOpenShare(false);
   const [openShare, setOpenShare] = useState(false);
   const feedRef = useRef(null);
+
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState(null);
 
   const navigate = useNavigate();
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
@@ -352,6 +356,17 @@ const Myprofile = () => {
                 border: "4px solid #fff",
                 boxShadow: "0 6px 18px rgba(0,0,0,0.15)",
                 flexShrink: 0,
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+
+                "&:hover": {
+                  transform: "scale(1.08)",
+                  boxShadow: "0 0 0 3px rgba(255,255,255,0.3)",
+                },
+              }}
+              onClick={() => {
+                setSelectedProfile(user);
+                setProfileModalOpen(true);
               }}
             >
               {!currentUser?.profileImage &&
@@ -403,6 +418,14 @@ const Myprofile = () => {
           </Button>
         </Stack>
       </SectionCard>
+
+      <ProfileModal
+        open={profileModalOpen}
+        selectedProfile={selectedProfile}
+        onClose={() => {
+          setProfileModalOpen(false);
+        }}
+      />
 
       {/* <SectionCard sx={{ mt: 3 }}>
         <SectionHeader icon={<PersonIcon />} label="Account" />
@@ -657,7 +680,7 @@ const Myprofile = () => {
                       color: "#ffff",
                       textTransform: "none",
                       fontWeight: 600,
-                  
+
                     }}
                   >
                     Cancel

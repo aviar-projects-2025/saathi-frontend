@@ -49,6 +49,7 @@ import DirectionsBoatIcon from "@mui/icons-material/DirectionsBoat";
 import TrainIcon from "@mui/icons-material/Train";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import ToastConfig from "../components/ToastConfig.jsx";
+import ProfileModal from './Avatar.jsx';
 
 import Api from "../Api";
 import { toast } from "react-toastify";
@@ -1048,91 +1049,13 @@ export default function RideCard({ ride }) {
         </Box>
       )}
 
-      <Dialog
+      <ProfileModal
         open={profileModalOpen}
+        selectedProfile={selectedProfile}
         onClose={() => {
           setProfileModalOpen(false);
-          setSelectedProfile(null);
         }}
-        maxWidth="sm"
-        fullWidth={false}
-        slotProps={{
-          paper: {
-            sx: {
-              backgroundColor: "transparent",
-              boxShadow: "none",
-              overflow: "visible",
-              m: 1,
-            },
-          },
-        }}
-      >
-        <IconButton
-          aria-label="close"
-          onClick={() => {
-            setProfileModalOpen(false);
-            setSelectedProfile(null);
-          }}
-          sx={{
-            position: "absolute",
-            top: { xs: 8, sm: 12 },
-            right: { xs: 8, sm: 12 },
-            zIndex: 10,
-            width: { xs: 36, sm: 42 },
-            height: { xs: 36, sm: 42 },
-            color: "#fff",
-            transition: "all 0.2s ease",
-
-            "&:hover": {
-              backgroundColor: "rgba(0, 0, 0, 0.7)",
-              transform: "rotate(90deg)",
-            },
-          }}
-        >
-          <CloseIcon />
-        </IconButton>
-
-        <DialogContent
-          sx={{
-            p: { xs: 1, sm: 2 },
-            textAlign: "center",
-            overflow: "visible",
-          }}
-        >
-          <Avatar
-            src={selectedProfile?.profileImage || ""}
-            alt={`${selectedProfile?.firstName || ""} ${selectedProfile?.lastName || ""
-              }`}
-            sx={{
-              width: { xs: 200, sm: 360 },
-              height: { xs: 200, sm: 360 },
-              mx: "auto",
-              mb: 1.5,
-              bgcolor: "#f16907",
-              color: "#fff",
-              fontSize: { xs: "3rem", sm: "5rem" },
-              fontWeight: 800,
-              border: "3px solid rgba(255,255,255,0.9)",
-              boxShadow: "0 8px 30px rgba(0,0,0,0.35)",
-            }}
-          >
-            {!selectedProfile?.profileImage &&
-              `${selectedProfile?.firstName?.[0] || ""}${selectedProfile?.lastName?.[0] || ""
-              }`}
-          </Avatar>
-
-          <Typography
-            fontWeight={700}
-            sx={{
-              color: "#fff",
-              fontSize: { xs: "1rem", sm: "1.25rem" },
-              textShadow: "0 2px 5px rgba(0,0,0,0.7)",
-            }}
-          >
-            {selectedProfile?.firstName} {selectedProfile?.lastName}
-          </Typography>
-        </DialogContent>
-      </Dialog>
+      />
 
       <Ridebook
         open={openEditModal}

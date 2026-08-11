@@ -46,6 +46,7 @@ import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import FolderIcon from "@mui/icons-material/Folder";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import ToastConfig from '../components/ToastConfig.jsx';
+import ProfileModal from './Avatar.jsx';
 
 const BREAKPOINTS = { xs: 0, sm: 600, md: 900, lg: 1200, xl: 1536 }; // MUI defaults
 
@@ -93,11 +94,6 @@ export default function Community() {
 
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null);
-
-  const handleProfileClick = (author) => {
-    setSelectedProfile(author);
-    setProfileModalOpen(true);
-  };
 
   const [commentCounts, setCommentCounts] = useState({});
   const toasts = ToastConfig();
@@ -924,7 +920,10 @@ export default function Community() {
                       <Avatar
                         src={post?.authorId?.profileImage}
                         alt={`${post?.authorId?.firstName || ""} ${post?.authorId?.lastName || ""}`}
-                        onClick={() => handleProfileClick(post?.authorId)}
+                        onClick={() => {
+                          setSelectedProfile(post?.authorId);
+                          setProfileModalOpen(true);
+                        }}
                         sx={{
                           width: avatarSize,
                           height: avatarSize,
@@ -936,8 +935,6 @@ export default function Community() {
                           mt: { xs: 0.4, sm: 0.5 }
                         }}
                       >
-                        {/* {!currentUser?.profileImage &&
-                          `${currentUser?.firstName?.[0] || ''}${currentUser?.lastName?.[0] || ''}`} */}
                         {!post?.authorId?.profileImage &&
                           `${post?.authorId?.firstName?.[0] || ""}${post?.authorId?.lastName?.[0] || ""
                           }`}
@@ -1297,10 +1294,10 @@ export default function Community() {
                   {/* Post image */}
                   {post.postImage && <CommunityImage src={post.postImage} />}
 
-                  <Divider />
+                  < Divider />
 
                   {/* Action buttons */}
-                  <Stack
+                  < Stack
                     direction="row"
                     sx={{
                       py: isMobile ? 0.25 : 0.5,
@@ -1381,73 +1378,13 @@ export default function Community() {
             )}
           </Box>
 
-          <Dialog
+          <ProfileModal
             open={profileModalOpen}
+            selectedProfile={selectedProfile}
             onClose={() => {
               setProfileModalOpen(false);
-              setSelectedProfile(null);
             }}
-            maxWidth="sm"
-            slotProps={{
-              paper: {
-                sx: {
-                  backgroundColor: "transparent",
-                  boxShadow: "none",
-                },
-              },
-            }}
-          >
-            <IconButton
-              onClick={() => {
-                setProfileModalOpen(false);
-                setSelectedProfile(null);
-              }}
-              sx={{
-                position: "absolute",
-                top: 8,
-                right: 8,
-                zIndex: 3,
-                color: "#fff",
-                transition: "all 0.2s ease",
-
-                "&:hover": {
-                  backgroundColor: "rgba(255, 255, 255, 0.2)",
-                  color: "#fff",
-                  transform: "rotate(90deg)",
-                },
-              }}
-            >
-              <CloseIcon />
-            </IconButton>
-
-            <DialogContent sx={{ textAlign: "center", p: 4 }}>
-              <Avatar
-                src={selectedProfile?.profileImage || ""}
-                alt={`${selectedProfile?.firstName || ""} ${selectedProfile?.lastName || ""
-                  }`}
-                sx={{
-                  width: { xs: 180, sm: 360 },
-                  height: { xs: 180, sm: 360 },
-                  mx: "auto",
-                  mb: 2,
-                  bgcolor: SAFFRON,
-                  color: "#fff",
-                  fontSize: { xs: "2.5rem", sm: "3.5rem" },
-                  fontWeight: 800,
-                }}
-              />
-
-              <Typography
-                fontWeight={700}
-                sx={{
-                  fontSize: { xs: "1rem", sm: "1.25rem" },
-                  color: "#fff",
-                }}
-              >
-                {selectedProfile?.firstName} {selectedProfile?.lastName}
-              </Typography>
-            </DialogContent>
-          </Dialog>
+          />
 
           {/* SidebarContent */}
           {showSidebar && (

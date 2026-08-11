@@ -50,6 +50,8 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import ToastConfig from "../components/ToastConfig.jsx";
 import CircularProgress from "@mui/material/CircularProgress";
 
+import ProfileModal from './Avatar.jsx'
+
 const SAFFRON = "#E8650A";
 const SAFFRON_LIGHT = "#FDF0E8";
 const CARD_BORDER = "1px solid #F0E6DC";
@@ -141,6 +143,9 @@ const UserProfile = () => {
     confirmPassword: "",
   });
   const navigate = useNavigate();
+
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState(null);
 
   const [openShare, setOpenShare] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
@@ -432,6 +437,12 @@ const UserProfile = () => {
               >
                 <Avatar
                   src={currentUser?.profileImage || ""}
+                  alt={`${currentUser?.firstName || ""} ${currentUser?.lastName || ""
+                    }`}
+                  onClick={() => {
+                    setSelectedProfile(currentUser);
+                    setProfileModalOpen(true);
+                  }}
                   sx={{
                     width: { xs: 64, sm: 84, md: 96 },
                     height: { xs: 64, sm: 84, md: 96 },
@@ -440,10 +451,18 @@ const UserProfile = () => {
                     fontWeight: 800,
                     fontSize: { xs: "1rem", sm: "1.3rem", md: "1.5rem" },
                     flexShrink: 0,
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+
+                    "&:hover": {
+                      transform: "scale(1.05)",
+                      boxShadow: "0 0 0 4px rgba(232, 101, 10, 0.25)",
+                    },
                   }}
                 >
                   {!currentUser?.profileImage &&
-                    `${currentUser?.firstName?.[0] || ""}${currentUser?.lastName?.[0] || ""}`}
+                    `${currentUser?.firstName?.[0] || ""}${currentUser?.lastName?.[0] || ""
+                    }`}
                 </Avatar>
 
                 <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -832,6 +851,15 @@ const UserProfile = () => {
             </Dialog>
           </SectionCard>
         </Stack>
+
+        <ProfileModal
+          open={profileModalOpen}
+          selectedProfile={selectedProfile}
+          onClose={() => {
+            setProfileModalOpen(false);
+          }}
+        />
+
       </Box>
 
       {/* ── Edit Profile Modal ── */}
