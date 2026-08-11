@@ -489,7 +489,10 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
         ...ride,
         date,
         time,
-        availableSeats: ride.availableSeats ?? ride.totalSeats ?? 1,
+        availableSeats:
+          ride.modeOfTravel === "Flight"
+            ? ride.availableSeats ?? ride.totalSeats ?? null
+            : ride.availableSeats ?? ride.totalSeats ?? 1,
         price: ride.fuelSharing || ride.price || "",
         fuelSharing: Boolean(ride.fuelSharing || ride.price),
         language: ride.language || [],
@@ -551,7 +554,6 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
     try {
       setIsSubmitted(true);
       await axios.post(`${Api}/rides/`, payload);
-
       toast.success("Ride Created Successfully...!", {
         position: isTab ? "top-center" : "top-right",
         autoClose: 2000,
