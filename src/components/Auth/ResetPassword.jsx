@@ -18,6 +18,7 @@ import { toast } from "react-toastify";
 import { useState } from "react";
 import axios from "axios";
 import Visibility from "@mui/icons-material/Visibility";
+import Api from "../../Api.jsx";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import ToastConfig from "../ToastConfig";
 
@@ -52,7 +53,7 @@ const ResetPassword = () => {
         
         try {
             const response = await axios.post(
-                'http://localhost:3000/api/v1/auth/reset-password',
+               `${Api}/auth/reset-password`,
                 {
                     email: email,
                     token: token,

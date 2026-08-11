@@ -726,6 +726,19 @@ export default function Community() {
                         }}
                       >
                         Media
+                        <input
+                          hidden
+                          type="file"
+                          accept="image/*"
+                          disabled={!isProfileComplete}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            setMedia(file);
+                            setPreview(URL.createObjectURL(file));
+                            e.target.value = "";
+                          }}
+                        />
                       </Button>
 
                       {/* Hidden File Input */}
