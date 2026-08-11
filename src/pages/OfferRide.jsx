@@ -255,9 +255,16 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
       ...ride,
       date,
       time,
-      availableSeats: ride.availableSeats ?? ride.totalSeats ?? 1,
+
+      availableSeats:
+        ride.modeOfTravel === "Flight"
+          ? ride.availableSeats ?? ride.totalSeats ?? null
+          : ride.availableSeats ?? ride.totalSeats ?? 1,
+
       price: ride.fuelSharing || ride.price || 0,
+
       fuelSharing: Boolean(ride.fuelSharing || ride.price),
+
       language: ride.language || [],
     });
   }, [ride]);
