@@ -462,7 +462,7 @@ export default function Ridebook({
     <Dialog
       open={open}
       onClose={onClose}
-      fullScreen={isMobile}
+      // fullScreen={isMobile}
       fullWidth
       maxWidth="sm"
       PaperProps={{
