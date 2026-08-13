@@ -5,66 +5,34 @@ import { colors } from './theme';
 
 export default function Footers() {
     return (
-        <Box
+    <Box
+        sx={{
+            width: '100%',
+            bgcolor: '#fff',
+            py: { xs: 3, sm: 4, md: 5 },
+            px: { xs: 2, sm: 3, md: 4 },
+            boxSizing: 'border-box',
+            display: 'flex',
+            alignItems: 'center',
+            gap: { xs: 1.5, sm: 2, md: 3 },
+        }}
+    >
+        <Divider sx={{ flex: 1, borderColor: '#E5E7EB' }} />
+
+        <Typography
             sx={{
-                py: 5,
-                bgcolor: '#fff',
-                width: '100%',
+                fontSize: { xs: 11, sm: 13, md: 14 },
+                fontWeight: 600,
+                color: colors.navy,
+                textAlign: 'center',
+                lineHeight: 1.5,
+                whiteSpace: 'nowrap',
             }}
         >
-            <Stack
-                direction="row"
-                spacing={{ xs: 1, sm: 2 }}
-                sx={{
-                    width: '100%',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                }}
-            >
-                <Divider
-                    sx={{
-                        width: { xs: 30, sm: 50, md: 80 },
-                        borderColor: colors.border,
-                    }}
-                />
+            Referred. Approved. Connected. That &apos;s the Saathi way.
+        </Typography>
 
-                <Stack
-                    direction="row"
-                    spacing={1}
-                    sx={{
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
-                    }}
-                >
-                    <FavoriteBorderRoundedIcon
-                        sx={{
-                            color: colors.orange,
-                            fontSize: { xs: 16, sm: 18 },
-                            flexShrink: 0,
-                        }}
-                    />
-
-                    <Typography
-                        sx={{
-                            fontSize: { xs: 12, sm: 14 },
-                            fontWeight: 600,
-                            color: colors.navy,
-                            textAlign: 'center',
-                            lineHeight: 1.5,
-                        }}
-                    >
-                        Referred. Approved. Connected. That&apos;s the Saathi way.
-                    </Typography>
-                </Stack>
-
-                <Divider
-                    sx={{
-                        width: { xs: 30, sm: 50, md: 80 },
-                        borderColor: colors.border,
-                    }}
-                />
-            </Stack>
-        </Box>
+        <Divider sx={{ flex: 1, borderColor: '#E5E7EB' }} />
+    </Box>
     );
 }

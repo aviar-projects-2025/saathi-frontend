@@ -1374,10 +1374,10 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
               <Button
                 variant="outlined"
                 onClick={() => setStep((s) => s - 1)}
-                startIcon={<ArrowLeft size={14} />}
+                startIcon={<ArrowLeft size={20} />}
                 sx={{
                   flex: 1,
-                  fontSize: { xs: "0.70rem", sm: "0.875rem" },
+                  fontSize: { xs: "0.85rem", sm: "0.875rem" },
                   // py: 1,
                   minHeight: 42,
                   borderRadius: 2.5,
@@ -1398,7 +1398,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                 onClick={(formReset)}
                 sx={{
                   flex: 1,
-                  fontSize: { xs: "0.70rem", sm: "0.875rem" },
+                  fontSize: { xs: "0.85rem", sm: "0.875rem" },
                   // py: 1,
                   minHeight: 42,
                   borderRadius: 2.5,
@@ -1423,10 +1423,10 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                     setStep((s) => s + 1);
                   }
                 }}
-                endIcon={<ArrowRight size={14} />}
+                endIcon={<ArrowRight size={20} />}
                 sx={{
                   flex: 1,
-                  fontSize: { xs: "0.65rem", sm: "0.875rem" },
+                  fontSize: { xs: "0.85rem", sm: "0.875rem" },
                   // py: 1,
                   minHeight: 42,
                   borderRadius: 2.5,
@@ -1451,7 +1451,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                 disabled={isSubmitted || saving}
                 sx={{
                   flex: 1,
-                  fontSize: { xs: "0.60rem", sm: "0.875rem" },
+                  fontSize: { xs: "0.85rem", sm: "0.875rem" },
                   // py: 1,
                   minHeight: 42,
                   borderRadius: 2.5,
@@ -1468,7 +1468,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
               >
                 {isEditMode
                   ? isSubmitted || saving
-                    ? "Saving Changes..."
+                    ? "Saving..."
                     : "Save Changes"
                   : isSubmitted
                     ? "Ride Posting..."

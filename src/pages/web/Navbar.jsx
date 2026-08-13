@@ -40,12 +40,15 @@ const Navbar = ({ scrolled }) => {
                 <Toolbar
                     disableGutters
                     sx={{
-                        minHeight: { xs: 50, md: 72 },
+                        minHeight: scrolled
+                            ? { xs: 44, md: 56 }   // compact once scrolled
+                            : { xs: 50, md: 72 },  // full height at top
                         px: { xs: 0, sm: 2 },
-                        py: 1,
+                        py: scrolled ? 0.5 : 1,
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
+                        transition: 'all .35s ease',
                     }}
                 >
                     {/* Left Side */}
@@ -60,9 +63,14 @@ const Navbar = ({ scrolled }) => {
                             src={SaathiLogo}
                             alt="Saathi"
                             sx={{
-                                width: { xs: 30, md: 35 },
-                                height: { xs: 30, md: 35 },
+                                width: scrolled
+                                    ? { xs: 26, md: 30 }
+                                    : { xs: 30, md: 35 },
+                                height: scrolled
+                                    ? { xs: 26, md: 30 }
+                                    : { xs: 30, md: 35 },
                                 bgcolor: "transparent",
+                                transition: 'all .35s ease',
                             }}
                         />
 
@@ -79,9 +87,12 @@ const Navbar = ({ scrolled }) => {
                                 sx={{
                                     fontWeight: 900,
                                     letterSpacing: "-0.03em",
-                                    color: "inherit",
-                                    fontSize: { xs: "1.3rem", md: "1.8rem" },
+                                    color: "#0B2350",
+                                    fontSize: scrolled
+                                        ? { xs: "1.1rem", md: "1.5rem" }
+                                        : { xs: "1.3rem", md: "1.8rem" },
                                     lineHeight: 1,
+                                    transition: 'all .35s ease',
                                 }}
                             >
                                 Saathi
@@ -101,6 +112,7 @@ const Navbar = ({ scrolled }) => {
                             >
                                 Travel Together. Arrive Together.
                             </Typography>
+
                         </Box>
                     </Box>
 
@@ -127,18 +139,16 @@ const Navbar = ({ scrolled }) => {
                                 fontWeight: 700,
                                 textTransform: 'none',
                                 borderWidth: '2px',
-                                borderColor: scrolled
-                                    ? colors.navy
-                                    : 'rgba(255,255,255,.8)',
-                                color: '#fff',
+
+                                // Normal state
+                                borderColor: colors.navy,
+                                color: scrolled ? '#fff' : colors.navy,
+                                bgcolor: scrolled ? colors.navy : 'transparent',
+
                                 '&:hover': {
                                     borderWidth: '2px',
-                                    bgcolor: scrolled
-                                        ? colors.navyDark
-                                        : 'rgba(255,255,255,.15)',
-                                    borderColor: scrolled
-                                        ? colors.navyDark
-                                        : 'rgba(255,255,255,.8)',
+                                    borderColor: colors.navy,
+                                    bgcolor: colors.navy,
                                     color: '#fff',
                                 },
                             }}

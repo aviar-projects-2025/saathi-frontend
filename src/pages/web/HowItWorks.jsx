@@ -1,7 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Box, Container, Grid, Typography, Stack, Avatar, LinearProgress, Button, Chip, IconButton } from '@mui/material';
-import ArrowBackIosNewRoundedIcon from '@mui/icons-material/ArrowBackIosNewRounded';
-import ArrowForwardIosRoundedIcon from '@mui/icons-material/ArrowForwardIosRounded';
+import { Box, Container, Grid, Typography, Stack, Avatar, LinearProgress, Button, Chip } from '@mui/material';
 import PersonAddAlt1RoundedIcon from '@mui/icons-material/PersonAddAlt1Rounded';
 import Person2RoundedIcon from '@mui/icons-material/Person2Rounded';
 import VerifiedUserRoundedIcon from '@mui/icons-material/VerifiedUserRounded';
@@ -12,6 +10,7 @@ import HowToRegRoundedIcon from '@mui/icons-material/HowToRegRounded';
 import ChatBubbleOutlineRoundedIcon from '@mui/icons-material/ChatBubbleOutlineRounded';
 import DirectionsCarFilledRoundedIcon from '@mui/icons-material/DirectionsCarFilledRounded';
 import { colors } from './theme';
+import { useTheme, useMediaQuery } from '@mui/material';
 
 const steps = [
     {
@@ -72,10 +71,15 @@ const steps = [
     },
 ];
 
-// Card width (+gap) drives the scroll-snap math. Keep these two in sync with the sx values below.
-const CARD_WIDTH = 208;
-const CARD_GAP = 16;
-const CARD_STEP = CARD_WIDTH + CARD_GAP; // distance to slide to move exactly one card
+const CARD_WIDTH = 235;
+const CARD_GAP = 25;
+
+// Marquee speed in pixels/second — lower = slower, higher = faster. This is the single knob to tune.
+const MARQUEE_SPEED = 35;
+// Fallback duration (seconds) used before the track's real width has been measured on mount.
+const FALLBACK_DURATION = 50;
+// How long a manual touch-hold pause lasts before the marquee resumes on mobile.
+const RESUME_AFTER_TOUCH = 2000;
 
 function StepFooter({ step }) {
     switch (step.footer) {
@@ -153,45 +157,57 @@ function StepCard({ step, idx }) {
                 bgcolor: '#fff',
                 border: `1px solid ${colors.border}`,
                 borderRadius: 3,
-                p: 2,
+                p: 3,
+                pt: 4,
                 height: '100%',
-                minHeight: 240,
+                minHeight: 350,
                 width: CARD_WIDTH,
                 flex: `0 0 ${CARD_WIDTH}px`,
-                scrollSnapAlign: 'start',
                 display: 'flex',
                 flexDirection: 'column',
             }}
         >
+            {/* Step number badge — centered on the card's top edge */}
             <Avatar
                 sx={{
                     position: 'absolute',
-                    top: -12,
-                    left: -12,
-                    width: 24,
-                    height: 24,
+                    top: -15,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: 28,
+                    height: 28,
                     bgcolor: colors.navy,
-                    fontSize: 11,
+                    fontSize: 13,
                     fontWeight: 700,
+                    border: '2px solid #fff',
+                    boxShadow: '0 2px 6px rgba(16,38,73,0.2)',
                 }}
             >
                 {idx + 1}
             </Avatar>
 
-            <Box sx={{ position: 'relative', width: 38, height: 38 }}>
-                <Icon sx={{ fontSize: 28, color: idx % 2 === 0 ? colors.orange : colors.navy }} />
+            <Box
+                sx={{
+                    position: 'relative',
+                    width: '100%',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    mt: 0.5,
+                }}
+            >
+                <Icon sx={{ fontSize: 60, color: idx % 2 === 0 ? colors.orange : colors.navy }} />
                 {step.badge && (
                     <Box
                         sx={{
                             position: 'absolute',
                             top: -4,
-                            right: 2,
+                            right: 'calc(50% - 26px)',
                             bgcolor: '#E24444',
                             color: '#fff',
                             fontSize: 9,
                             fontWeight: 700,
-                            width: 14,
-                            height: 14,
+                            width: 17,
+                            height: 16,
                             borderRadius: '50%',
                             display: 'flex',
                             alignItems: 'center',
@@ -203,10 +219,10 @@ function StepCard({ step, idx }) {
                 )}
             </Box>
 
-            <Typography sx={{ fontWeight: 700, fontSize: 13.5, color: colors.navy, mt: 1.2 }}>
+            <Typography sx={{ fontWeight: 700, fontSize: 18.5, color: colors.navy, mt: 2, textAlign: 'center' }}>
                 {step.title}
             </Typography>
-            <Typography sx={{ fontSize: 11.5, color: colors.textSecondary, mt: 0.6, flexGrow: 1, lineHeight: 1.45 }}>
+            <Typography sx={{ fontSize: 17.5, color: colors.textSecondary, mt: 2.5, flexGrow: 1, lineHeight: 1.75, textAlign: 'center' }}>
                 {step.body}
             </Typography>
 
@@ -215,195 +231,284 @@ function StepCard({ step, idx }) {
     );
 }
 
-const AUTOPLAY_INTERVAL = 3000; // slide to the next step every 3s
-const RESUME_AFTER_INTERACTION = 6000; // give a manual swipe/click some breathing room before autoplay kicks back in
-const REAL_COUNT = steps.length;
-const SNAP_MS = 450; // roughly how long the smooth scroll takes to land, used to time the invisible loop-reset
+function StepCards({ step, idx }) {
+    const Icon = step.icon;
+    return (
+        <Box
+            sx={{
+                position: 'relative',
+                bgcolor: '#fff',
+                border: `1px solid ${colors.border}`,
+                borderRadius: 3,
+                p: 3,
+                pt: 4,
+                height: '100%',
+                minHeight: 350,
+                display: 'flex',
+                flexDirection: 'column',
+            }}
+        >
+            {/* Step number badge — centered on the card's top edge */}
+            <Avatar
+                sx={{
+                    position: 'absolute',
+                    top: -15,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: 28,
+                    height: 28,
+                    bgcolor: colors.navy,
+                    fontSize: 13,
+                    fontWeight: 700,
+                    border: '2px solid #fff',
+                    boxShadow: '0 2px 6px rgba(16,38,73,0.2)',
+                }}
+            >
+                {idx + 1}
+            </Avatar>
 
-// Clone the last card onto the front and the first card onto the end. This lets the strip keep
-// scrolling forward (or backward) past the "real" ends, so we can silently jump back to the
-// matching real card once the clone is in view — the loop feels like it's rotating instead of
-// snapping backwards.
-const extendedSteps = [
-    { ...steps[REAL_COUNT - 1], _idx: REAL_COUNT - 1, _key: 'clone-last' },
-    ...steps.map((step, i) => ({ ...step, _idx: i, _key: `real-${i}` })),
-    { ...steps[0], _idx: 0, _key: 'clone-first' },
-];
+            <Box
+                sx={{
+                    position: 'relative',
+                    width: '100%',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    mt: 0.5,
+                }}
+            >
+                <Icon sx={{ fontSize: 60, color: idx % 2 === 0 ? colors.orange : colors.navy }} />
+                {step.badge && (
+                    <Box
+                        sx={{
+                            position: 'absolute',
+                            top: -4,
+                            right: 'calc(50% - 26px)',
+                            bgcolor: '#E24444',
+                            color: '#fff',
+                            fontSize: 9,
+                            fontWeight: 700,
+                            width: 17,
+                            height: 16,
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}
+                    >
+                        {step.badge}
+                    </Box>
+                )}
+            </Box>
 
+            <Typography sx={{ fontWeight: 700, fontSize: 18, color: colors.navy, mt: 2, textAlign: 'center' }}>
+                {step.title}
+            </Typography>
+            <Typography sx={{ fontSize: 16, color: colors.textSecondary, mt: 2.5, flexGrow: 1, lineHeight: 1.75, textAlign: 'center' }}>
+                {step.body}
+            </Typography>
+
+            <StepFooter step={step} />
+        </Box>
+    );
+}
 export default function HowItWorks() {
-    const scrollRef = useRef(null);
+    const trackRef = useRef(null);
+    const [duration, setDuration] = useState(FALLBACK_DURATION);
     const [isPaused, setIsPaused] = useState(false);
-    const [index, setIndex] = useState(1); // 1 = first real card (index 0 is the leading clone)
     const resumeTimeoutRef = useRef(null);
-    const instantRef = useRef(true); // true = jump with no animation (used for the invisible loop reset)
 
-    // Keep the scroll position in sync with `index`. Most moves animate smoothly; the two loop
-    // "reset" jumps (clone -> matching real card) happen instantly so they're invisible to the user.
+    const theme = useTheme();
+    const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
+
     useEffect(() => {
-        const el = scrollRef.current;
-        if (!el) return undefined;
+        const el = trackRef.current;
+        if (!el) return;
 
-        el.scrollTo({ left: index * CARD_STEP, behavior: instantRef.current ? 'auto' : 'smooth' });
-        instantRef.current = false;
+        const singleLoopWidth = el.scrollWidth / 2;
 
-        let resetTimer;
-        if (index === REAL_COUNT + 1) {
-            // Landed on the cloned first card at the very end — rotate back to the real first card.
-            resetTimer = setTimeout(() => {
-                instantRef.current = true;
-                setIndex(1);
-            }, SNAP_MS);
-        } else if (index === 0) {
-            // Landed on the cloned last card at the very start — rotate back to the real last card.
-            resetTimer = setTimeout(() => {
-                instantRef.current = true;
-                setIndex(REAL_COUNT);
-            }, SNAP_MS);
+        if (singleLoopWidth > 0) {
+            setDuration(singleLoopWidth / MARQUEE_SPEED);
         }
-        return () => clearTimeout(resetTimer);
-    }, [index]);
-
-    // Auto-advance every 3s, one step at a time. Pauses on hover/touch (desktop + mobile)
-    // and briefly after any manual nudge.
-    useEffect(() => {
-        if (isPaused) return undefined;
-        const id = setInterval(() => setIndex((i) => i + 1), AUTOPLAY_INTERVAL);
-        return () => clearInterval(id);
-    }, [isPaused]);
-
-    const pauseThenResume = () => {
-        setIsPaused(true);
-        if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
-        resumeTimeoutRef.current = setTimeout(() => setIsPaused(false), RESUME_AFTER_INTERACTION);
-    };
-
-    useEffect(() => () => {
-        if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
     }, []);
 
-    const handleArrowClick = (direction) => {
-        pauseThenResume();
-        setIndex((i) => i + direction);
+    useEffect(() => {
+        return () => {
+            if (resumeTimeoutRef.current) {
+                clearTimeout(resumeTimeoutRef.current);
+            }
+        };
+    }, []);
+
+    const handleTouchStart = () => {
+        setIsPaused(true);
+
+        if (resumeTimeoutRef.current) {
+            clearTimeout(resumeTimeoutRef.current);
+        }
+
+        resumeTimeoutRef.current = setTimeout(() => {
+            setIsPaused(false);
+        }, RESUME_AFTER_TOUCH);
     };
 
     return (
-        <Box sx={{ bgcolor: '#F7FAFD', py: { xs: 6, md: 8 } }}>
-            <Container maxWidth="lg">
+        <Box
+            sx={{
+                bgcolor: '#F7FAFD',
+                py: { xs: 6, md: 8 },
+            }}
+        >
+            <style>
+                {`
+                    @keyframes saathiMarquee {
+                        from {
+                            transform: translateX(0);
+                        }
+
+                        to {
+                            transform: translateX(-50%);
+                        }
+                    }
+                `}
+            </style>
+
+            <Container maxWidth="xxl">
+
+                {/* Header */}
                 <Stack
+                    spacing={1}
                     sx={{
+                        mb: { xs: 4, md: 7 },
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        textAlign: "center",
-                        mb: 4,
+                        textAlign: "center"
                     }}
-                    spacing={1}
                 >
-                    <Stack
-                        direction="row"
-                        alignItems="center"
-                        justifyContent="center"
-                        spacing={2}
+                    <Typography
+                        variant="h3"
+                        sx={{
+                            fontSize: {
+                                xs: 26,
+                                md: 32,
+                            },
+                            color: colors.navy,
+                        }}
                     >
-                        {/* <Box sx={{ width: 40, height: 2, bgcolor: colors.orange }} /> */}
+                        How Saathi Works
+                    </Typography>
 
-                        <Typography
-                            variant="h3"
-                            sx={{
-                                fontSize: { xs: 26, md: 32 },
-                                color: colors.navy,
-                            }}
-                        >
-                            How Saathi Works
-                        </Typography>
-
-                        {/* <Box sx={{ width: 40, height: 2, bgcolor: colors.orange }} /> */}
-                    </Stack>
-
-                    <Typography sx={{ color: colors.textSecondary }}>
+                    <Typography
+                        sx={{
+                            color: colors.textSecondary,
+                        }}
+                    >
                         Simple steps. Built on trust.
                     </Typography>
                 </Stack>
 
-                <Box sx={{ position: 'relative' }}>
-                    {/* Left arrow — hidden on touch/mobile since swipe handles it there */}
-                    <IconButton
-                        onClick={() => handleArrowClick(-1)}
-                        sx={{
-                            display: { xs: 'none', sm: 'flex' },
-                            position: 'absolute',
-                            left: -18,
-                            top: '40%',
-                            transform: 'translateY(-50%)',
-                            zIndex: 2,
-                            bgcolor: '#fff',
-                            boxShadow: '0 2px 10px rgba(16,38,73,0.15)',
-                            width: 36,
-                            height: 36,
-                            '&:hover': { bgcolor: '#fff' },
-                        }}
-                    >
-                        <ArrowBackIosNewRoundedIcon sx={{ fontSize: 14, color: colors.navy, ml: 0.4 }} />
-                    </IconButton>
+                {isDesktop ? (
+
+                    /* ================= DESKTOP ================= */
 
                     <Box
-                        ref={scrollRef}
                         onMouseEnter={() => setIsPaused(true)}
                         onMouseLeave={() => setIsPaused(false)}
-                        onTouchStart={pauseThenResume}
+                        onTouchStart={handleTouchStart}
                         sx={{
-                            display: 'flex',
-                            gap: `${CARD_GAP}px`,
-                            overflowX: 'auto',
-                            scrollSnapType: 'x mandatory',
-                            scrollBehavior: 'smooth',
-                            pb: 2,
-                            pt: 1.5,
-                            px: 0.5,
-                            // Hide scrollbar across browsers, mobile still swipes natively
-                            '&::-webkit-scrollbar': { display: 'none' },
-                            msOverflowStyle: 'none',
-                            scrollbarWidth: 'none',
+                            overflow: 'hidden',
+                            position: 'relative',
+
+                            maskImage:
+                                'linear-gradient(to right, transparent 0, #000 32px, #000 calc(100% - 32px), transparent 100%)',
+
+                            WebkitMaskImage:
+                                'linear-gradient(to right, transparent 0, #000 32px, #000 calc(100% - 32px), transparent 100%)',
+                        }}
+                    >
+                        <Box
+                            ref={trackRef}
+                            sx={{
+                                display: 'flex',
+                                gap: `${CARD_GAP}px`,
+                                width: 'max-content',
+                                py: 1.5,
+                                px: 0.5,
+
+                                animation: `saathiMarquee ${duration}s linear infinite`,
+
+                                animationPlayState: isPaused
+                                    ? 'paused'
+                                    : 'running',
+
+                                willChange: 'transform',
+                            }}
+                        >
+                            {[...steps, ...steps].map((step, i) => (
+                                <StepCard
+                                    key={`${step.title}-${i}`}
+                                    step={step}
+                                    idx={i % steps.length}
+                                />
+                            ))}
+                        </Box>
+                    </Box>
+
+                ) : (
+
+                    <Box
+                        sx={{
+                            width: '100%',
+                            p: {
+                                xs: 1.5,
+                                sm: 2,
+                            },
+                            borderRadius: 3,
+                            border: '1px solid #E7ECF2',
+                            bgcolor: '#fff',
+                            boxSizing: 'border-box',
+
+                            display: 'grid',
+
+                            gridTemplateColumns: {
+                                xs: '1fr',                         // Mobile: 1
+                                sm: 'repeat(2, minmax(0, 1fr))',  // Tablet: 2
+                            },
+
+                            gap: {
+                                xs: 2,
+                                sm: 2.5,
+                                md: 3,
+                            },
                         }}
                     >
                         {steps.map((step, idx) => (
-                            <StepCard key={step.title} step={step} idx={idx} />
+                            <Box
+                                key={step.title}
+                                sx={{
+                                    width: '100%',
+                                    minWidth: 0,
+                                    p: {
+                                        xs: 2,
+                                        sm: 2.5,
+                                    },
+                                    borderRadius: 3,
+                                    bgcolor: '#fff',
+                                    boxSizing: 'border-box',
+
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                }}
+                            >
+                                <StepCards
+                                    step={step}
+                                    idx={idx}
+                                />
+                            </Box>
                         ))}
                     </Box>
+                )}
 
-                    {/* Right arrow */}
-                    <IconButton
-                        onClick={() => handleArrowClick(1)}
-                        sx={{
-                            display: { xs: 'none', sm: 'flex' },
-                            position: 'absolute',
-                            right: -18,
-                            top: '40%',
-                            transform: 'translateY(-50%)',
-                            zIndex: 2,
-                            bgcolor: '#fff',
-                            boxShadow: '0 2px 10px rgba(16,38,73,0.15)',
-                            width: 36,
-                            height: 36,
-                            '&:hover': { bgcolor: '#fff' },
-                        }}
-                    >
-                        <ArrowForwardIosRoundedIcon sx={{ fontSize: 14, color: colors.navy }} />
-                    </IconButton>
-                </Box>
-
-                {/* Mobile hint */}
-                <Typography
-                    sx={{
-                        display: { xs: 'block', sm: 'none' },
-                        textAlign: 'center',
-                        fontSize: 11,
-                        color: colors.textSecondary,
-                        mt: 0.5,
-                    }}
-                >
-                    Swipe to see all steps →
-                </Typography>
             </Container>
         </Box>
     );
