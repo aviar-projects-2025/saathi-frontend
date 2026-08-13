@@ -139,10 +139,6 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
 
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  // delete confirmation modal state
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [commentToDelete, setCommentToDelete] = useState(null);
-
   // const theme = useTheme();
   const isTab = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -272,38 +268,28 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
     }
   };
 
-  /* ── delete handlers ── */
-  const handleDeleteClick = () => {
-    setCommentToDelete(menuComment);
-    setDeleteDialogOpen(true);
-    handleMenuClose();
-  };
-
-  const handleDeleteCancel = () => {
-    setDeleteDialogOpen(false);
-    setCommentToDelete(null);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!commentToDelete) return;
+  const handleDeleteClick = async () => {
+    if (!menuComment) return;
 
     try {
-
       setDeleteLoading(true);
 
-      const res = await axios.delete(
-        `${Api}/community/comments/${commentToDelete._id}/${user.id}`,
+      await axios.delete(
+        `${Api}/community/comments/${menuComment._id}/${user.id}`
       );
+
       toast.success("Comment deleted", toasts);
-      getComments();
+
+      handleMenuClose();
+      setReply("");
+      setIsReply(null);
+    await getComments();
     } catch (error) {
       toast.error(
         error.response?.data?.message || "Failed to delete comment",
-        toasts,
+        toasts
       );
     } finally {
-      setDeleteDialogOpen(false);
-      setCommentToDelete(null);
       setDeleteLoading(false);
     }
   };
@@ -311,8 +297,12 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
   const parentComments = commentsFetched.filter(
     (c) => c.parentCommentId === null,
   );
-  const getReplies = (parentId) =>
-    commentsFetched.filter((c) => c.parentCommentId === parentId);
+  const getReplies = (parentId, replyItem) =>
+    commentsFetched.filter((c) => c.parentCommentId === parentId && c.parentCommentId !== replyItem?._id);
+
+console.log("parentComments", parentComments);
+console.log("getReplies", getReplies);
+console.log("commentsFetched", commentsFetched);
 
   /* ── reusable renderer for a comment/reply bubble, with menu + edit ── */
   const renderCommentBody = (item, isChild = false) => {
@@ -642,75 +632,11 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
           <EditIcon fontSize="small" sx={{ mr: 1 }} />
           Edit
         </MenuItem>
-        <MenuItem onClick={handleDeleteClick} sx={{ color: "error.main" }}>
+        <MenuItem onClick={handleDeleteClick} sx={{ color: "error.main" }} disabled={deleteLoading}>
           <DeleteIcon fontSize="small" sx={{ mr: 1 }} />
-          Delete
+          {deleteLoading ? "Deleting..." : "Delete"}
         </MenuItem>
       </Menu>
-
-      {/* delete confirmation modal */}
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={(event, reason) => {
-          if (deleteLoading) return;
-          if (reason === "backdropClick" || reason === "escapeKeyDown") return;
-          handleDeleteCancel();
-        }}
-        fullWidth
-        maxWidth="xs"
-        PaperProps={{
-          sx: {
-            borderRadius: 3,
-            p: 1,
-            width: { xs: "90%", sm: "100%" },
-            m: { xs: 2, sm: "auto" },
-          },
-        }}
-      >
-        <DialogTitle
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 1,
-            fontWeight: 600,
-          }}
-        >
-          <WarningAmberRoundedIcon color="error" />
-          Delete Comment?
-        </DialogTitle>
-
-        <DialogContent>
-          <DialogContentText
-            sx={{
-              color: "text.secondary",
-              fontSize: "0.95rem",
-            }}
-          >
-            Are you sure you want to delete this comment? This action cannot be
-            undone.
-          </DialogContentText>
-        </DialogContent>
-
-        <DialogActions sx={{ px: 3, pb: 2, gap: 1 }}>
-          <Button
-            onClick={handleDeleteCancel}
-            variant="outlined"
-            color="inherit"
-            disabled={deleteLoading}
-          >
-            Cancel
-          </Button>
-
-          <Button
-            color="error"
-            variant="contained"
-            onClick={() => handleDeleteConfirm(comment._id)}
-            disabled={deleteLoading}
-          >
-            {deleteLoading ? "Deleting..." : "Delete"}
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Box>
   );
 };

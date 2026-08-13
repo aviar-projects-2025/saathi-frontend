@@ -438,25 +438,53 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
           This will cancel your ride, requested persons will be notified...
         </Typography>
         <Paper
+          elevation={0}
           sx={{
             mt: 2,
-            p: 1.5,
-            bgcolor: "#FFF8F2",
+            px: { xs: 1.5, sm: 2 },
+            py: { xs: 1.25, sm: 1.5 },
+            backgroundColor: "#FFF8F2",
             border: "1px solid #F0E6DC",
-            borderRadius: 2,
+            borderRadius: 2.5,
+            display: "flex",
+            flexDirection: "column",
+            gap: 0.5,
+            position: "relative",
+            overflow: "hidden",
           }}
-          elevation={0}
         >
           <Typography
-            sx={{ fontSize: { xs: "0.78rem", sm: "0.85rem" } }}
-            fontWeight={700}
-            wordBreak="break-word"
+            sx={{
+              fontSize: { xs: "0.85rem", sm: "0.95rem" },
+              fontWeight: 700,
+              color: "#2D2D2D",
+              lineHeight: 1.4,
+              wordBreak: "break-word",
+              pl: 0.5,
+            }}
           >
-            {formFrom(ride)} → {formTo(ride)}
+            {formFrom(ride)}{" "}
+            <Box
+              component="span"
+              sx={{
+                color: "#FF6B35",
+                mx: 0.5,
+                fontWeight: 800,
+              }}
+            >
+              →
+            </Box>{" "}
+            {formTo(ride)}
           </Typography>
+
           <Typography
-            sx={{ fontSize: { xs: "0.72rem", sm: "0.78rem" } }}
-            color="text.secondary"
+            sx={{
+              fontSize: { xs: "0.72rem", sm: "0.8rem" },
+              color: "#757575",
+              fontWeight: 500,
+              lineHeight: 1.4,
+              pl: 0.5,
+            }}
           >
             {dateLabel}
           </Typography>
@@ -477,6 +505,8 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
             textTransform: "none",
             flex: { xs: "1 1 auto", sm: "0 0 auto" },
             minHeight: 44,
+            bgcolor: "#757575",
+            color: "#ffff",
           }}
         >
           Cancel
@@ -494,7 +524,7 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
             minHeight: 44,
           }}
         >
-          {deleting ? "Deleting..." : "Yes"}
+          {deleting ? "Canceling..." : "Cancel Ride"}
         </Button>
       </DialogActions>
     </Dialog>
@@ -1164,42 +1194,44 @@ function RideCard({
                     </Stack>
                   </Box>
 
-                  <Box>
-                    <Typography
-                      sx={{
-                        fontSize: {
-                          xs: "0.62rem",
-                          sm: "0.68rem",
-                          md: "0.7rem",
-                        },
-                        color: "text.secondary",
-                        mb: 0.5,
-                      }}
-                    >
-                      Total Seats
-                    </Typography>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <EventSeatIcon
-                        sx={{
-                          color: "#FF9933",
-                          fontSize: { xs: 14, sm: 16, md: 18 },
-                        }}
-                      />
+                  {ride.modeOfTravel !== "Flight" &&
+                    <Box>
                       <Typography
                         sx={{
                           fontSize: {
-                            xs: "0.7rem",
-                            sm: "0.8rem",
-                            md: "0.875rem",
+                            xs: "0.62rem",
+                            sm: "0.68rem",
+                            md: "0.7rem",
                           },
-                          fontWeight: 600,
+                          color: "text.secondary",
+                          mb: 0.5,
                         }}
                       >
-                        {ride.totalSeats} seat
-                        {ride.totalSeats === 1 ? "" : "s"}
+                        Total Seats
                       </Typography>
-                    </Stack>
-                  </Box>
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <EventSeatIcon
+                          sx={{
+                            color: "#FF9933",
+                            fontSize: { xs: 14, sm: 16, md: 18 },
+                          }}
+                        />
+                        <Typography
+                          sx={{
+                            fontSize: {
+                              xs: "0.7rem",
+                              sm: "0.8rem",
+                              md: "0.875rem",
+                            },
+                            fontWeight: 600,
+                          }}
+                        >
+                          {ride.totalSeats} seat
+                          {ride.totalSeats === 1 ? "" : "s"}
+                        </Typography>
+                      </Stack>
+                    </Box>
+                  }
 
                   <Box>
                     <Typography
@@ -1327,17 +1359,30 @@ function RideCard({
         </DialogContent>
         <DialogActions sx={{ px: 2, pb: 2, gap: 1, flexWrap: "wrap" }}>
           <Button
+            variant="contained"
             onClick={() => setConfirmRide(null)}
-            sx={{ flex: { xs: "1 1 auto", sm: "0 0 auto" }, minHeight: 40 }}
+            sx={{
+              flex: { xs: "1 1 auto", sm: "0 0 auto" },
+              minHeight: 40,
+              bgcolor: "#757575",
+              color: "#ffff",
+              textTransform: "none"
+            }}
           >
-            not yet
+            Not yet
           </Button>
           <Button
             variant="contained"
             onClick={() =>
               handleEdit(confirmRide._id, confirmRide.travelStatus)
             }
-            sx={{ flex: { xs: "1 1 auto", sm: "0 0 auto" }, minHeight: 40 }}
+            sx={{
+              flex: { xs: "1 1 auto", sm: "0 0 auto" },
+              minHeight: 40,
+              bgcolor: "#f89b04",
+              color: "#ffff",
+              textTransform: "none"
+            }}
           >
             Started
           </Button>
@@ -1359,14 +1404,19 @@ const MyRides = () => {
   const [history, setHistory] = useState([]);
   const [editRide, setEditRide] = useState(null);
   const [deleteRide, setDeleteRide] = useState(null);
-  const [currentRide, setCurrentRide] = useState([]);
-  const [notificationRide, setNotificationRide] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [allRequests, setAllRequests] = useState([]);
-  const [allMyRequests, setAllMyRequests] = useState([]);
-  const { notifications } = useNotifications();
-  const [confirmRide, setConfirmRide] = useState(null);
+ const [currentRide, setCurrentRide] = useState([]);
+const [notificationRide, setNotificationRide] = useState(null);
+const [allRequests, setAllRequests] = useState([]);
+const [allMyRequests, setAllMyRequests] = useState([]);
+const { notifications } = useNotifications();
+const [confirmRide, setConfirmRide] = useState(null);
 
+const [ridesLoaded, setRidesLoaded] = useState(false);
+const [requestsLoaded, setRequestsLoaded] = useState(false);
+const loading = !(ridesLoaded && requestsLoaded);
+
+// set ridesLoaded(true) in fetchRides' finally
+// set requestsLoaded(true) in fetchAllSends' finally
   // Pagination state — one page counter per tab so each tab remembers its own position
   const [currentRidePage, setCurrentRidePage] = useState(1);
   const [upcomingPage, setUpcomingPage] = useState(1);
@@ -1482,54 +1532,54 @@ const MyRides = () => {
 
       setMypost(all.filter((item) => item?.createdBy?._id === user.id));
 
-      setUpcoming(
-        all.filter((ride) => {
-          const rideStartTime = new Date(ride?.startTime);
-          return (
-            ride?.createdBy?._id === user.id &&
-            !isNaN(rideStartTime) &&
-            rideStartTime > currentDateTime && ride.travelStatus != "Cancelled"
-          );
-        }),
-      );
+      // setUpcoming(
+      //   all.filter((ride) => {
+      //     const rideStartTime = new Date(ride?.startTime);
+      //     return (
+      //       ride?.createdBy?._id === user.id &&
+      //       !isNaN(rideStartTime) &&
+      //       rideStartTime > currentDateTime && ride.travelStatus != "Cancelled"
+      //     );
+      //   }),
+      // );
 
-      setHistory(
-        all.filter((ride) => {
-          const rideStartTime = new Date(ride?.startTime);
-          // const rideEndTime = new Date(rideStartTime.getTime() + 3 * 60 * 60 * 1000);
-          return (
-            ride?.createdBy?._id === user.id &&
-            !isNaN(rideStartTime) &&
-            (ride?.travelStatus === "Completed" || ride?.travelStatus === "Cancelled")
-          );
-        }),
-      );
+      // setHistory(
+      //   all.filter((ride) => {
+      //     const rideStartTime = new Date(ride?.startTime);
+      //     // const rideEndTime = new Date(rideStartTime.getTime() + 3 * 60 * 60 * 1000);
+      //     return (
+      //       ride?.createdBy?._id === user.id &&
+      //       !isNaN(rideStartTime) &&
+      //       (ride?.travelStatus === "Completed" || ride?.travelStatus === "Cancelled")
+      //     );
+      //   }),
+      // );
+// 
+      // setCurrentRide(
+      //   //   const currentDateTime = new Date();
+      //   //   const currReqRide = allMyRequests.filter((ride)=>{
 
-      setCurrentRide(
-        //   const currentDateTime = new Date();
-        //   const currReqRide = allMyRequests.filter((ride)=>{
+      //   //     const rideStartTime = new Date(ride?.rideId?.startTime);
+      //   //     return(
+      //   //       !isNaN(rideStartTime) &&
+      //   //       rideStartTime <= currentDateTime
+      //   //     )
+      //   //   })
 
-        //     const rideStartTime = new Date(ride?.rideId?.startTime);
-        //     return(
-        //       !isNaN(rideStartTime) &&
-        //       rideStartTime <= currentDateTime
-        //     )
-        //   })
-
-        all.filter((ride) => {
-          const rideStartTime = new Date(ride?.startTime);
-          // const rideEndTime = new Date(rideStartTime.getTime() + 3 * 60 * 60 * 1000);
-          return (
-            ride?.createdBy?._id === user.id &&
-            rideStartTime >= currentDateTime &&
-            (ride?.travelStatus !== "Completed" || ride?.travelStatus !== "Cancelled")
-          );
-        }),
-      );
+      //   all.filter((ride) => {
+      //     const rideStartTime = new Date(ride?.startTime);
+      //     // const rideEndTime = new Date(rideStartTime.getTime() + 3 * 60 * 60 * 1000);
+      //     return (
+      //       ride?.createdBy?._id === user.id &&
+      //       rideStartTime >= currentDateTime &&
+      //       (ride?.travelStatus !== "Completed" || ride?.travelStatus !== "Cancelled")
+      //     );
+      //   }),
+      // );
     } catch (error) {
       console.error("Error fetching rides:", error.message);
     } finally {
-      setLoading(false);
+   setRidesLoaded(true);
     }
   };
   useEffect(() => {
@@ -1660,16 +1710,16 @@ const MyRides = () => {
       console.error("Error fetching requests:", error);
     }
   };
-
-  const fetchAllSends = async () => {
-    try {
-      const res = await axios.get(`${Api}/bookride/send/${user.id}`);
-      // console.log(res.data.data, 'res.data.data')
-      setAllMyRequests(res.data.data || []);
-    } catch (error) {
-      console.error("Error fetching requests:", error);
-    }
-  };
+const fetchAllSends = async () => {
+  try {
+    const res = await axios.get(`${Api}/bookride/send/${user.id}`);
+    setAllMyRequests(res.data.data || []);
+  } catch (error) {
+    console.error("Error fetching requests:", error);
+  } finally {
+    setRequestsLoaded(true);
+  }
+};
 
   useEffect(() => {
     fetchAllSends();
@@ -1743,7 +1793,7 @@ const MyRides = () => {
     setHistory(merge(history));
     setCurrentRide((prev) => merge(prev));
     setEditRide(null);
-    toast.success("Ride Updated Successfully...!", toastss);
+    // toast.success("Ride Updated Successfully...!", toastss);
   };
 
   const handleDelete = (deleted) => {

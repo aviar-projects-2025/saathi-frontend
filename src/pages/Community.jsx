@@ -46,6 +46,7 @@ import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import FolderIcon from "@mui/icons-material/Folder";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import ToastConfig from '../components/ToastConfig.jsx';
+import ProfileModal from './Avatar.jsx';
 
 const BREAKPOINTS = { xs: 0, sm: 600, md: 900, lg: 1200, xl: 1536 }; // MUI defaults
 
@@ -90,6 +91,9 @@ export default function Community() {
   const [tooltipOpen, setTooltipOpen] = useState(false);
   const [tooltip2Open, setTooltip2Open] = useState(false);
   const [imagePostLoading, setImagePostLoading] = useState(false);
+
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState(null);
 
   const [commentCounts, setCommentCounts] = useState({});
   const toasts = ToastConfig();
@@ -718,6 +722,19 @@ export default function Community() {
                         }}
                       >
                         Media
+                        <input
+                          hidden
+                          type="file"
+                          accept="image/*"
+                          disabled={!isProfileComplete}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            setMedia(file);
+                            setPreview(URL.createObjectURL(file));
+                            e.target.value = "";
+                          }}
+                        />
                       </Button>
 
                       {/* Hidden File Input */}
@@ -902,6 +919,11 @@ export default function Community() {
                     <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: isMobile ? 1 : 1.5 }}>
                       <Avatar
                         src={post?.authorId?.profileImage}
+                        alt={`${post?.authorId?.firstName || ""} ${post?.authorId?.lastName || ""}`}
+                        onClick={() => {
+                          setSelectedProfile(post?.authorId);
+                          setProfileModalOpen(true);
+                        }}
                         sx={{
                           width: avatarSize,
                           height: avatarSize,
@@ -913,8 +935,9 @@ export default function Community() {
                           mt: { xs: 0.4, sm: 0.5 }
                         }}
                       >
-                        {!currentUser?.profileImage &&
-                          `${currentUser?.firstName?.[0] || ''}${currentUser?.lastName?.[0] || ''}`}
+                        {!post?.authorId?.profileImage &&
+                          `${post?.authorId?.firstName?.[0] || ""}${post?.authorId?.lastName?.[0] || ""
+                          }`}
                       </Avatar>
 
                       <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -1018,11 +1041,9 @@ export default function Community() {
                                   py: 1,
                                   fontSize: { xs: "0.8rem", sm: "0.9rem" },
                                   fontWeight: 600,
-                                  bgcolor: "grey.500",
-                                  color: "#fff",
-                                  "&:hover": {
-                                    bgcolor: "grey.700",
-                                  },
+                                  color: "#ffff",
+                                  bgcolor: "grey.700",
+
                                 }}
                               >
                                 Cancel
@@ -1204,7 +1225,7 @@ export default function Community() {
                                 sx={{ pt: 2 }}
                               >
                                 <Button
-                                  variant="outlined"
+                                  variant="contained"
                                   size="small"
                                   onClick={handleReset}
                                   sx={{
@@ -1212,16 +1233,12 @@ export default function Community() {
                                     minWidth: "unset",
                                     px: 2,
                                     height: 36,
-                                    borderColor: "#BDBDBD",
-                                    color: "#616161",
+                                    backgroundColor: "#838282",
+                                    color: "#fff",
                                     fontWeight: 600,
                                     fontSize: "0.8rem",
                                     textTransform: "none",
                                     borderRadius: 2,
-                                    "&:hover": {
-                                      borderColor: "#757575",
-                                      bgcolor: "#F5F5F5",
-                                    },
                                   }}
                                 >
                                   Cancel
@@ -1248,7 +1265,7 @@ export default function Community() {
                                     },
                                   }}
                                 >
-                                  {imagePostLoading ? "Saving..." : "Save Changes"}
+                                  {imagePostLoading ? "Saving..." : "Save"}
                                 </Button>
                               </Stack>
                             </DialogActions>
@@ -1277,10 +1294,10 @@ export default function Community() {
                   {/* Post image */}
                   {post.postImage && <CommunityImage src={post.postImage} />}
 
-                  <Divider />
+                  < Divider />
 
                   {/* Action buttons */}
-                  <Stack
+                  < Stack
                     direction="row"
                     sx={{
                       py: isMobile ? 0.25 : 0.5,
@@ -1360,6 +1377,14 @@ export default function Community() {
               ))
             )}
           </Box>
+
+          <ProfileModal
+            open={profileModalOpen}
+            selectedProfile={selectedProfile}
+            onClose={() => {
+              setProfileModalOpen(false);
+            }}
+          />
 
           {/* SidebarContent */}
           {showSidebar && (

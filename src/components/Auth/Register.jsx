@@ -39,6 +39,11 @@ const Register = () => {
 
   const [showPassword, setShowPassword] = useState(false);
 
+  const [fieldErrors, setFieldErrors] = useState({
+    email: "",
+    referralCode: "",
+  });
+
   const handleClickShowPassword = () => {
     setShowPassword((show) => !show);
   };
@@ -50,14 +55,19 @@ const Register = () => {
   const validationSchema = Yup.object({
     firstName: Yup.string().required("First name is required"),
     lastName: Yup.string().required("Last name is required"),
-    email: Yup.string().email("Invalid email").required("Email is required"),
-    referralCode: Yup.string().required("Referral Code is MUST"),
+email: Yup.string()
+  .required("Email is required")
+  .matches(
+    /^[a-z0-9]+(?:[._%+-][a-z0-9]+)*@[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z]{2,})+$/,
+    "Please enter a valid email address"
+  ),
+    referralCode: Yup.string().required("Referral Code is required"),
     password: Yup.string()
       .matches(/^[A-Z]/, "Password must start with an uppercase letter")
       .matches(/[a-z]/, "Password must contain at least one lowercase letter")
       .matches(/[0-9]/, "Password must contain at least one number")
       .matches(
-        /[@$!%*?&#]/,
+        /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/,
         "Password must contain at least one special character",
       )
       .min(8, "Password must be at least 8 characters")
@@ -68,14 +78,30 @@ const Register = () => {
     try {
       setServerError("");
 
+      setServerError("");
+      setFieldErrors({
+        email: "",
+        referralCode: "",
+      });
+
       const res = await axios.post(`${Api}/users/`, values);
+
       toast.success("Registration Success - Waiting for approval!", toasts);
 
       if (res?.data?.data?.refApprove === "Waiting") {
         navigate("/waiting-approval");
       }
     } catch (error) {
-      setServerError(error.response?.data?.message || "Registration failed");
+      // setServerError(error.response?.data?.message || "Registration failed");
+      const message = error.response?.data?.message || "Registration failed";
+
+      if (message.toLowerCase().includes("email")) {
+        setFieldErrors((prev) => ({ ...prev, email: message }));
+      } else if (message.toLowerCase().includes("referral")) {
+        setFieldErrors((prev) => ({ ...prev, referralCode: message }));
+      } else {
+        setServerError(message);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -227,10 +253,18 @@ const Register = () => {
                       name="email"
                       type="email"
                       value={values.email}
-                      onChange={handleChange}
+                      // onChange={handleChange}
+                      onChange={(e) => {
+                        handleChange(e);
+                        setFieldErrors((prev) => ({ ...prev, email: "" }));
+                      }}
                       onBlur={handleBlur}
-                      error={touched.email && Boolean(errors.email)}
-                      helperText={touched.email && errors.email}
+                      error={Boolean(
+                        (touched.email && errors.email) || fieldErrors.email,
+                      )}
+                      helperText={
+                        (touched.email && errors.email) || fieldErrors.email
+                      }
                       margin="normal"
                       size="small"
                       sx={inputSx}
@@ -279,12 +313,22 @@ const Register = () => {
                       InputProps={{
                         readOnly: !!referralFromUrl,
                       }}
-                      onChange={handleChange}
+                      onChange={(e) => {
+                        handleChange(e);
+                        setFieldErrors((prev) => ({
+                          ...prev,
+                          referralCode: "", // or referralCode: ""
+                        }));
+                      }}
                       onBlur={handleBlur}
-                      error={
-                        touched.referralCode && Boolean(errors.referralCode)
+                      error={Boolean(
+                        (touched.referralCode && errors.referralCode) ||
+                        fieldErrors.referralCode,
+                      )}
+                      helperText={
+                        (touched.referralCode && errors.referralCode) ||
+                        fieldErrors.referralCode
                       }
-                      helperText={touched.referralCode && errors.referralCode}
                       margin="normal"
                       size="small"
                       sx={inputSx}

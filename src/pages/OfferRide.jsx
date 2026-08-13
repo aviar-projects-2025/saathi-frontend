@@ -92,8 +92,7 @@ const INITIAL_FORM = {
   travellerType: "",
   language: [],
   ageGroupPreference: "Any",
-  price: "",
-
+  price: 0,
   medicalAssistance: false,
   languageSupport: false,
   transitHelp: false,
@@ -202,14 +201,6 @@ function ReviewItem({ icon: Icon, label, value }) {
   );
 }
 
-/**
- * OfferRide doubles as the "create" and "edit" modal.
- *
- * Props:
- *  - ride:     existing ride object -> when present, component opens in EDIT mode
- *  - onSave:   callback(updatedRide) called after a successful edit
- *  - onClose:  optional callback called after create/edit finishes (e.g. to close a dialog)
- */
 export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen }) {
   const navigate = useNavigate();
   const theme = useTheme();
@@ -226,6 +217,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
   const [showErrors, setShowErrors] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [resetForm, setResetForm] = useState(null);
+  const [errors, setErrors] = useState({});
 
   const user = JSON.parse(localStorage.getItem("user"));
 
@@ -236,7 +228,10 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
   const isBike = form.modeOfTravel === "Bike";
   const isBus = form.modeOfTravel === "Bus";
   const isBusTrain = ["Bus", "Train"].includes(form.modeOfTravel);
-  const update = (key, val) => setForm((prev) => ({ ...prev, [key]: val }));
+  const update = (key, val) => {
+    setForm((prev) => ({ ...prev, [key]: val }));
+    setErrors((prev) => ({ ...prev, [key]: "" }));
+  };
 
   const isTab = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -260,7 +255,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
       date,
       time,
       availableSeats: ride.availableSeats ?? ride.totalSeats ?? 1,
-      price: ride.fuelSharing || ride.price || "",
+      price: ride.fuelSharing || ride.price || 0,
       fuelSharing: Boolean(ride.fuelSharing || ride.price),
       language: ride.language || [],
     });
@@ -353,9 +348,11 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
 
     ].filter(Boolean);
 
-  /* ──────────────── VALIDATION (unchanged logic) ──────────────── */
+  /* ──────────────── VALIDATION (same rules, now sets field-level errors instead of toasts) ──────────────── */
   const validateStep = () => {
     setShowErrors(true);
+
+    const newErrors = {};
 
     const isCar = form.modeOfTravel === "Car";
     const isBike = form.modeOfTravel === "Bike";
@@ -363,118 +360,103 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
 
     if (step === 0) {
       if (!form.modeOfTravel) {
-        toast.error("Please select mode of travel", TOASTS);
-        return false;
+        newErrors.modeOfTravel = "Please select mode of travel";
       }
 
       if (isFlight) {
-        if (!form.fromCountry.trim()) {
-          toast.error("Please enter From Country", TOASTS);
-          return false;
-        }
-        if (!form.fromAirport.trim()) {
-          toast.error("Please enter From Airport", TOASTS);
-          return false;
-        }
-        if (!form.toCountry.trim()) {
-          toast.error("Please enter To Country", TOASTS);
-          return false;
-        }
-        if (!form.toAirport.trim()) {
-          toast.error("Please enter To Airport", TOASTS);
-          return false;
-        }
-        if (!form.flightNumber.trim()) {
-          toast.error("Please enter Flight Number", TOASTS);
-          return false;
-        }
-        if (!form.airlineName.trim()) {
-          toast.error("Please enter Airline Name", TOASTS);
-          return false;
-        }
-      } else {
-        if (!form.from.trim()) {
-          toast.error("Please enter From location", TOASTS);
-          return false;
-        }
-        if (!form.destination.trim()) {
-          toast.error("Please enter Destination", TOASTS);
-          return false;
-        }
-      }
+        if (!form.fromCountry.trim())
+          newErrors.fromCountry = "Please enter From Country";
 
+        if (!form.fromAirport.trim())
+          newErrors.fromAirport = "Please enter From Airport";
+
+        if (!form.toCountry.trim())
+          newErrors.toCountry = "Please enter To Country";
+
+        if (!form.toAirport.trim())
+          newErrors.toAirport = "Please enter To Airport";
+
+        if (!form.flightNumber.trim())
+          newErrors.flightNumber = "Please enter Flight Number";
+
+        if (!form.airlineName.trim())
+          newErrors.airlineName = "Please enter Airline Name";
+      } else {
+        if (!form.from.trim())
+          newErrors.from = "Please enter From location";
+
+        if (!form.destination.trim())
+          newErrors.destination = "Please enter Destination";
+      }
       if (!form.date) {
-        toast.error("Please select Date", TOASTS);
-        return false;
+        newErrors.date = "Please select Date";
       }
+
       if (!form.time) {
-        toast.error("Please select Time", TOASTS);
-        return false;
+        newErrors.time = "Please select Time";
       }
 
-      const selectedDateTime = new Date(`${form.date}T${form.time}`);
-      const now = new Date();
+      if (form.date && form.time) {
+        const selectedDateTime = new Date(`${form.date}T${form.time}:00`);
+        const now = new Date();
 
-      if (selectedDateTime <= now) {
-        toast.error("Please select a future date and time", TOASTS);
-        return false;
-      }
+        // Past date/time
+        if (selectedDateTime.getTime() <= now.getTime()) {
+          newErrors.time = "Please select a future date and time";
+        } else {
+          // Minimum allowed time
+          const minimumAllowedTime = new Date(now.getTime());
 
-      const minimumAllowedTime = new Date(now);
+          if (isFlight) {
+            minimumAllowedTime.setHours(minimumAllowedTime.getHours() + 3);
 
-      if (isFlight) {
-        minimumAllowedTime.setHours(minimumAllowedTime.getHours() + 3);
-        if (selectedDateTime < minimumAllowedTime) {
-          toast.error("Flight departure must be at least 3 hours from now.", TOASTS);
-          return false;
+            if (selectedDateTime.getTime() < minimumAllowedTime.getTime()) {
+              newErrors.time =
+                "Flight departure must be at least 3 hours from now.";
+            }
+          } else {
+            minimumAllowedTime.setHours(minimumAllowedTime.getHours() + 1);
+
+            if (selectedDateTime.getTime() < minimumAllowedTime.getTime()) {
+              newErrors.time =
+                "Ride start time must be at least 1 hour from now.";
+            }
+          }
         }
-      } else {
-        minimumAllowedTime.setHours(minimumAllowedTime.getHours() + 1);
-        if (selectedDateTime < minimumAllowedTime) {
-          toast.error("Ride start time must be at least 1 hour from now.", TOASTS);
-          return false;
-        }
       }
 
-      if (!form.description.trim()) {
-        toast.error("Please enter Description", TOASTS);
-        return false;
-      }
-      if (!isEditMode && (isCar || isBike) && !String(form.duration ?? "").trim()) {
-        toast.error("Please enter Journey Duration", TOASTS);
-        return false;
+      if (!form.description.trim())
+        newErrors.description = "Please enter Description";
+
+      if ((isCar || isBike) && !String(form.duration ?? "").trim()) {
+        newErrors.duration = "Please enter Journey Duration";
       }
     }
 
     if (step === 1) {
-      if (!form.genderPreference) {
-        toast.error("Please select Gender Preference", TOASTS);
-        return false;
-      }
+      if (!form.genderPreference)
+        newErrors.genderPreference = "Please select Gender Preference";
 
-      if (isFlight) {
-        if (!form.travellerType) {
-          toast.error("Please select Traveller Type", TOASTS);
-          return false;
-        }
-        if (!form.language || form.language.length === 0) {
-          toast.error("Select at least one language", TOASTS);
-          return false;
-        }
+      if (isFlight || isBike || isBus || isCar) {
+        if (!form.travellerType)
+          newErrors.travellerType = "Please select Traveller Type";
+
+        if (!form.language || form.language.length === 0)
+          newErrors.language = "Select at least one language";
       }
 
       if (isCar && Number(form.availableSeats) < 1) {
-        toast.error("Available seats should be at least 1", TOASTS);
-        return false;
+        newErrors.availableSeats = "Available seats should be at least 1";
       }
 
       if ((isCar || isBike) && form.fuelSharing && !form.price) {
-        toast.error("Enter Split Amount", TOASTS);
-        return false;
+        newErrors.price = "Enter Split Amount";
       }
     }
 
-    return true;
+    setErrors(newErrors);
+
+    return Object.keys(newErrors).length === 0;
   };
 
   const { refreshRides } = useRide();
@@ -510,6 +492,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
 
     setStep(0);
     setShowErrors(false);
+    setErrors({});
     setError("");
   };
 
@@ -577,32 +560,52 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
         },
       });
 
-      refreshRides();
-      setStep(0);
-      formReset();
-      setSubmitted(true);
-      setShowErrors(false);
-      setOpen(false)
+
+      // UI updates should not trigger the API error toast
+      try {
+        refreshRides();
+        setStep(0);
+        formReset();
+        setSubmitted(true);
+        setShowErrors(false);
+        setOpen(false);
+      } catch (uiError) {
+        console.error("UI cleanup error:", uiError);
+      }
+
+      // Navigate/close after success
+      setTimeout(() => {
+        if (onClose) {
+          onClose();
+        } else {
+          navigate("/myride");
+        }
+      }, 1000);
+
     } catch (error) {
-      toast.error(error.response?.data?.message || error.message, {
-        position: isTab ? "top-center" : "top-right",
-        autoClose: 3000,
-        hideProgressBar: true,
-        closeButton: false,
-        style: {
-          width: isTab ? "280px" : "360px",
-          fontSize: isTab ? "13px" : "15px",
-          padding: isTab ? "8px 12px" : "12px 16px",
-          borderRadius: isTab ? "8px" : "10px",
-          minHeight: isTab ? "42px" : "52px",
-        },
-      });
+      // ONLY API errors come here
+      console.error("Create ride error:", error);
+
+      toast.error(
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to create ride",
+        {
+          position: isTab ? "top-center" : "top-right",
+          autoClose: 3000,
+          hideProgressBar: true,
+          closeButton: false,
+          style: {
+            width: isTab ? "280px" : "360px",
+            fontSize: isTab ? "13px" : "15px",
+            padding: isTab ? "8px 12px" : "12px 16px",
+            borderRadius: isTab ? "8px" : "10px",
+            minHeight: isTab ? "42px" : "52px",
+          },
+        }
+      );
     } finally {
       setIsSubmitted(false);
-      setTimeout(() => {
-        if (onClose) onClose();
-        else navigate("/myride");
-      }, 3000);
     }
   };
 
@@ -867,7 +870,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                 subtitle="Tell us how and when you're travelling"
               />
 
-              <FormControl fullWidth size={inputSize}>
+              <FormControl fullWidth size={inputSize} error={showErrors && !!errors.modeOfTravel}>
                 <InputLabel sx={ilSx}>Mode of Travel</InputLabel>
                 <Select
                   value={form.modeOfTravel}
@@ -882,6 +885,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                   <MenuItem value="Flight" sx={menuItemSx}>✈️ Flight</MenuItem>
                   {/* <MenuItem value="Train" sx={menuItemSx}>🚆 Train</MenuItem> */}
                 </Select>
+                <FormHelperText>{showErrors ? errors.modeOfTravel : ""}</FormHelperText>
               </FormControl>
 
               {isFlight ? (
@@ -902,8 +906,8 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                           size={inputSize}
                           value={form.fromCountry}
                           onChange={(e) => update("fromCountry", e.target.value)}
-                          error={!form.fromCountry && showErrors}
-                          helperText={!form.fromCountry && showErrors ? "Required" : ""}
+                          error={showErrors && !!errors.fromCountry}
+                          helperText={showErrors ? errors.fromCountry : ""}
                           sx={tfSx}
                         />
                         <TextField
@@ -912,8 +916,8 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                           size={inputSize}
                           value={form.fromAirport}
                           onChange={(e) => update("fromAirport", e.target.value)}
-                          error={!form.fromAirport && showErrors}
-                          helperText={!form.fromAirport && showErrors ? "Required" : ""}
+                          error={showErrors && !!errors.fromAirport}
+                          helperText={showErrors ? errors.fromAirport : ""}
                           sx={tfSx}
                         />
                       </Stack>
@@ -925,8 +929,8 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                           size={inputSize}
                           value={form.toCountry}
                           onChange={(e) => update("toCountry", e.target.value)}
-                          error={!form.toCountry && showErrors}
-                          helperText={!form.toCountry && showErrors ? "Required" : ""}
+                          error={showErrors && !!errors.toCountry}
+                          helperText={showErrors ? errors.toCountry : ""}
                           sx={tfSx}
                         />
                         <TextField
@@ -935,8 +939,8 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                           size={inputSize}
                           value={form.toAirport}
                           onChange={(e) => update("toAirport", e.target.value)}
-                          error={!form.toAirport && showErrors}
-                          helperText={!form.toAirport && showErrors ? "Required" : ""}
+                          error={showErrors && !!errors.toAirport}
+                          helperText={showErrors ? errors.toAirport : ""}
                           sx={tfSx}
                         />
                       </Stack>
@@ -948,8 +952,8 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                           size={inputSize}
                           value={form.flightNumber}
                           onChange={(e) => update("flightNumber", e.target.value)}
-                          error={!form.flightNumber && showErrors}
-                          helperText={!form.flightNumber && showErrors ? "Required" : ""}
+                          error={showErrors && !!errors.flightNumber}
+                          helperText={showErrors ? errors.flightNumber : ""}
                           sx={tfSx}
                         />
                         <TextField
@@ -958,8 +962,8 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                           size={inputSize}
                           value={form.airlineName}
                           onChange={(e) => update("airlineName", e.target.value)}
-                          error={!form.airlineName && showErrors}
-                          helperText={!form.airlineName && showErrors ? "Required" : ""}
+                          error={showErrors && !!errors.airlineName}
+                          helperText={showErrors ? errors.airlineName : ""}
                           sx={tfSx}
                         />
                       </Stack>
@@ -975,8 +979,8 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                     value={form.from}
                     onChange={(e) => update("from", e.target.value)}
                     placeholder=""
-                    error={!form.from && showErrors}
-                    helperText={!form.from && showErrors ? "Required" : ""}
+                    error={showErrors && !!errors.from}
+                    helperText={showErrors ? errors.from : ""}
                     sx={tfSx}
                   />
 
@@ -987,8 +991,8 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                     value={form.destination}
                     onChange={(e) => update("destination", e.target.value)}
                     placeholder=""
-                    error={!form.destination && showErrors}
-                    helperText={!form.destination && showErrors ? "Required" : ""}
+                    error={showErrors && !!errors.destination}
+                    helperText={showErrors ? errors.destination : ""}
                     sx={tfSx}
                   />
                 </Stack>
@@ -1009,8 +1013,8 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                     type="date"
                     value={form.date}
                     onChange={(e) => update("date", e.target.value)}
-                    error={!form.date && showErrors}
-                    helperText={!form.date && showErrors ? "Required" : ""}
+                    error={showErrors && !!errors.date}
+                    helperText={showErrors ? errors.date : ""}
                     InputLabelProps={{ shrink: true }}
                     sx={tfSx}
                   />
@@ -1027,8 +1031,8 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                     type="time"
                     value={form.time}
                     onChange={(e) => update("time", e.target.value)}
-                    error={!form.time && showErrors}
-                    helperText={!form.time && showErrors ? "Required" : ""}
+                    error={showErrors && !!errors.time}
+                    helperText={showErrors ? errors.time : ""}
                     InputLabelProps={{ shrink: true }}
                     sx={tfSx}
                   />
@@ -1049,8 +1053,8 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                     }
                   }}
                   inputProps={{ min: 0, max: 99 }}
-                  error={!form.duration && showErrors}
-                  helperText={!form.duration && showErrors ? "Required" : ""}
+                  error={showErrors && !!errors.duration}
+                  helperText={showErrors ? errors.duration : ""}
                   sx={tfSx}
                 />
               )}
@@ -1067,8 +1071,8 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                     ? "Need companion for airport, transit, baggage or language support..."
                     : "Traveling to Bangalore for a weekend trip..."
                 }
-                error={!form.description && showErrors}
-                helperText={!form.description && showErrors ? "Required" : ""}
+                error={showErrors && !!errors.description}
+                helperText={showErrors ? errors.description : ""}
                 sx={tfSx}
               />
             </Stack>
@@ -1084,7 +1088,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
               />
 
               <>
-                <FormControl fullWidth size={inputSize} error={!form.travellerType && showErrors}>
+                <FormControl fullWidth size={inputSize} error={showErrors && !!errors.travellerType}>
                   <InputLabel sx={ilSx}>Traveller Type</InputLabel>
                   <Select
                     value={form.travellerType}
@@ -1096,12 +1100,12 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                       <MenuItem key={v} value={v} sx={menuItemSx}>{v}</MenuItem>
                     ))}
                   </Select>
-                  {!form.travellerType && showErrors && (
-                    <FormHelperText sx={{ fontSize: { xs: "0.62rem", sm: "0.7rem" } }}>Required</FormHelperText>
+                  {showErrors && errors.travellerType && (
+                    <FormHelperText sx={{ fontSize: { xs: "0.62rem", sm: "0.7rem" } }}>{errors.travellerType}</FormHelperText>
                   )}
                 </FormControl>
 
-                <FormControl fullWidth size={inputSize} error={!form.language?.length && showErrors}>
+                <FormControl fullWidth size={inputSize} error={showErrors && !!errors.language}>
                   <InputLabel sx={ilSx}>Language</InputLabel>
                   <Select
                     multiple
@@ -1130,8 +1134,8 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                       <MenuItem key={lang} value={lang} sx={menuItemSx}>{lang}</MenuItem>
                     ))}
                   </Select>
-                  {!form.language?.length && showErrors && (
-                    <FormHelperText sx={{ fontSize: { xs: "0.62rem", sm: "0.7rem" } }}>Required</FormHelperText>
+                  {showErrors && errors.language && (
+                    <FormHelperText sx={{ fontSize: { xs: "0.62rem", sm: "0.7rem" } }}>{errors.language}</FormHelperText>
                   )}
                 </FormControl>
 
@@ -1227,6 +1231,11 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                       valueLabelDisplay="auto"
                       sx={{ mx: { xs: 0.5, sm: 0.5 }, color: ACCENT, "& .MuiSlider-markLabel": { fontSize: { xs: "0.62rem", sm: "0.7rem" } } }}
                     />
+                    {showErrors && errors.availableSeats && (
+                      <FormHelperText error sx={{ fontSize: { xs: "0.62rem", sm: "0.7rem" } }}>
+                        {errors.availableSeats}
+                      </FormHelperText>
+                    )}
                   </CardContent>
                 </Card>
               )}
@@ -1260,21 +1269,43 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                   />
 
                   {form.fuelSharing && (
+                    // <TextField
+                    //   label="$ Price"
+                    //   size={inputSize}
+                    //   value={form.price}
+                    //   onChange={(e) => update("price", e.target.value)}
+                    //   placeholder="$5"
+                    //   error={showErrors && !!errors.price}
+                    //   helperText={showErrors ? errors.price : ""}
+                    //   sx={{ ...tfSx, width: { xs: "100%", sm: 180, md: 220 } }}
+                    // />
+
                     <TextField
                       label="$ Price"
                       size={inputSize}
+                      type="number"
                       value={form.price}
-                      onChange={(e) => update("price", e.target.value)}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (/^\d*\.?\d*$/.test(value)) {
+                          update("price", value);
+                        }
+                      }}
                       placeholder="$5"
-                      error={!form.price && showErrors}
-                      helperText={!form.price && showErrors ? "Required" : ""}
+                      error={showErrors && !!errors.price}
+                      helperText={showErrors ? errors.price : ""}
                       sx={{ ...tfSx, width: { xs: "100%", sm: 180, md: 220 } }}
+                      inputProps={{
+                        min: 0,
+                        step: "0.01",
+                      }}
                     />
+
                   )}
                 </Stack>
               )}
 
-              <FormControl fullWidth size={inputSize}>
+              <FormControl fullWidth size={inputSize} error={showErrors && !!errors.genderPreference}>
                 <InputLabel sx={ilSx}>Gender Preference</InputLabel>
                 <Select
                   value={form.genderPreference}
@@ -1286,6 +1317,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                     <MenuItem key={v} value={v} sx={menuItemSx}>{v}</MenuItem>
                   ))}
                 </Select>
+                <FormHelperText>{showErrors ? errors.genderPreference : ""}</FormHelperText>
               </FormControl>
             </Stack>
           )}
@@ -1361,16 +1393,18 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
               <Button
                 variant="outlined"
                 onClick={() => setStep((s) => s - 1)}
-                startIcon={<ArrowLeft size={16} />}
+                startIcon={<ArrowLeft size={14} />}
                 sx={{
                   flex: 1,
-                  fontSize: { xs: "0.55rem", sm: "0.875rem" },
-                  py: 1,
+                  fontSize: { xs: "0.70rem", sm: "0.875rem" },
+                  // py: 1,
                   minHeight: 42,
                   borderRadius: 2.5,
                   borderColor: "divider",
-                  color: "text.primary",
+                  color: "text.secondary",
                   whiteSpace: "nowrap",
+                  textTransform: "none",
+                  fontWeight: 600,
                 }}
               >
                 Back
@@ -1379,20 +1413,23 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
 
             {onClose && (
               <Button
-                variant="outlined"
+                variant="contained"
                 onClick={(formReset)}
                 sx={{
                   flex: 1,
-                  fontSize: { xs: "0.55rem", sm: "0.875rem" },
-                  py: 1,
+                  fontSize: { xs: "0.70rem", sm: "0.875rem" },
+                  // py: 1,
                   minHeight: 42,
                   borderRadius: 2.5,
-                  color: "text.secondary",
-                  borderColor: "divider",
+                  bgcolor: "text.secondary",
+                  // borderColor: "divider",
+                  color: "#ffff",
                   whiteSpace: "nowrap",
+                  textTransform: "none",
+                  fontWeight: 600,
                 }}
               >
-                reset
+                Cancel
               </Button>
             )}
 
@@ -1405,20 +1442,23 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                     setStep((s) => s + 1);
                   }
                 }}
-                endIcon={<ArrowRight size={16} />}
+                endIcon={<ArrowRight size={14} />}
                 sx={{
                   flex: 1,
-                  fontSize: { xs: "0.55rem", sm: "0.875rem" },
-                  py: 1,
+                  fontSize: { xs: "0.65rem", sm: "0.875rem" },
+                  // py: 1,
                   minHeight: 42,
                   borderRadius: 2.5,
-                  bgcolor: ACCENT,
+                  bgcolor: "#FF9933",
                   boxShadow: "none",
                   whiteSpace: "nowrap",
                   "&:hover": {
-                    bgcolor: ACCENT_DARK,
+                    bgcolor: "FF9933",
                     boxShadow: "none",
                   },
+                  textTransform: "none",
+                  fontWeight: 600,
+
                 }}
               >
                 Continue
@@ -1430,17 +1470,19 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                 disabled={isSubmitted || saving}
                 sx={{
                   flex: 1,
-                  fontSize: { xs: "0.55rem", sm: "0.80rem" },
-                  py: 1,
+                  fontSize: { xs: "0.60rem", sm: "0.875rem" },
+                  // py: 1,
                   minHeight: 42,
                   borderRadius: 2.5,
-                  bgcolor: ACCENT,
+                  bgcolor: "#FF9933",
                   boxShadow: "none",
                   whiteSpace: "nowrap",
                   "&:hover": {
-                    bgcolor: ACCENT_DARK,
+                    bgcolor: "FF9933",
                     boxShadow: "none",
                   },
+                  textTransform: "none",
+                  fontWeight: 600,
                 }}
               >
                 {isEditMode

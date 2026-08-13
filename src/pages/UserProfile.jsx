@@ -50,6 +50,8 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import ToastConfig from "../components/ToastConfig.jsx";
 import CircularProgress from "@mui/material/CircularProgress";
 
+import ProfileModal from './Avatar.jsx'
+
 const SAFFRON = "#E8650A";
 const SAFFRON_LIGHT = "#FDF0E8";
 const CARD_BORDER = "1px solid #F0E6DC";
@@ -142,6 +144,9 @@ const UserProfile = () => {
   });
   const navigate = useNavigate();
 
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState(null);
+
   const [openShare, setOpenShare] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
   const handleOpenShare = () => setOpenShare(true);
@@ -210,20 +215,33 @@ const UserProfile = () => {
       errors.email = "Email is required";
     } else {
       // Proper email validation
-      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      // const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      const emailRegex = /^[A-Za-z0-9](?:[A-Za-z0-9._%+-]{0,62}[A-Za-z0-9])?@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z]{2,})+$/;
       if (!emailRegex.test(formData.email)) {
-        errors.email = "Please enter a valid email address (e.g., name@domain.com)";
+        errors.email = "Please enter a valid email address (e.g., name@domain.com) || (e.g., avair123@aviartech.com) ";
       }
     }
 
 
     // Mobile
-    if (!formData.mobile) {
+    // if (!formData.mobile) {
+    //   errors.mobile = "Mobile number is required";
+    //   if (!/^[6-9]\d{9}$/.test(formData.mobile)) {
+    //     errors.mobile = "Invalid mobile number";
+    //   }
+    // }
+
+    const phone = formData.mobile?.trim();
+
+    if (!phone) {
       errors.mobile = "Mobile number is required";
-      if (!/^[6-9]\d{9}$/.test(formData.mobile)) {
-        errors.mobile = "Invalid mobile number";
-      }
+    } else if (
+      !/^(\+?[1-9]\d{1,14}|[6-9]\d{9})$/.test(phone)
+    ) {
+      errors.mobile =
+        "Please enter a valid International or Indian mobile number";
     }
+
 
     // DOB (Age >= 18)
     if (!formData.dob) {
@@ -419,6 +437,12 @@ const UserProfile = () => {
               >
                 <Avatar
                   src={currentUser?.profileImage || ""}
+                  alt={`${currentUser?.firstName || ""} ${currentUser?.lastName || ""
+                    }`}
+                  onClick={() => {
+                    setSelectedProfile(currentUser);
+                    setProfileModalOpen(true);
+                  }}
                   sx={{
                     width: { xs: 64, sm: 84, md: 96 },
                     height: { xs: 64, sm: 84, md: 96 },
@@ -427,10 +451,18 @@ const UserProfile = () => {
                     fontWeight: 800,
                     fontSize: { xs: "1rem", sm: "1.3rem", md: "1.5rem" },
                     flexShrink: 0,
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+
+                    "&:hover": {
+                      transform: "scale(1.05)",
+                      boxShadow: "0 0 0 4px rgba(232, 101, 10, 0.25)",
+                    },
                   }}
                 >
                   {!currentUser?.profileImage &&
-                    `${currentUser?.firstName?.[0] || ""}${currentUser?.lastName?.[0] || ""}`}
+                    `${currentUser?.firstName?.[0] || ""}${currentUser?.lastName?.[0] || ""
+                    }`}
                 </Avatar>
 
                 <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -646,68 +678,87 @@ const UserProfile = () => {
                   alignItems: "center",
                 }}
               >
-                {savedPost?.map((post) => (
-                  <Grid item xs={4} key={post._id} sx={{ mt: 1 }}>
-                    {post.postId?.postImage && (
-                      <Box
-                        onClick={() => {
-                          setSelectedImage(
-                            Array.isArray(post.postId.postImage)
-                              ? post.postId.postImage[0]
-                              : post.postId.postImage
-                          );
-                          setOpenImage(true);
-                        }}
-                        sx={{
-                          position: "relative",
-                          cursor: "pointer",
-                          width: { xs: 90, sm: 100, md: 130, lg: 150 },
-                          height: { xs: 110, sm: 130, md: 160, lg: 180 },
-                          overflow: "hidden",
-                          borderRadius: { xs: 0.5, sm: 1 },
-                          "&:hover .postOverlay": { opacity: 1 },
-                          display: "flex",
-                          justifyContent: "center",
-                          alignItems: "center",
-                        }}
-                      >
-                        <img
-                          src={
-                            Array.isArray(post.postId.postImage)
-                              ? post.postId.postImage[0]
-                              : post.postId.postImage
-                          }
-                          alt=""
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                            display: "block",
-                          }}
-                        />
-
+                {communityLoading ? (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      width: 45,
+                      height: 45,
+                    }}
+                  >
+                    <CircularProgress
+                      size={30}
+                      thickness={5}
+                      sx={{
+                        color: "#FF9933", // Saffron
+                      }}
+                    />
+                  </Box>
+                ) : (
+                  savedPost?.map((post) => (
+                    <Grid item xs={4} key={post._id} sx={{ mt: 1 }}>
+                      {post.postId?.postImage && (
                         <Box
-                          className="postOverlay"
+                          onClick={() => {
+                            setSelectedImage(
+                              Array.isArray(post.postId.postImage)
+                                ? post.postId.postImage[0]
+                                : post.postId.postImage
+                            );
+                            setOpenImage(true);
+                          }}
                           sx={{
-                            position: "absolute",
-                            inset: 0,
-                            bgcolor: "rgba(0,0,0,0.15)",
-                            opacity: 0,
-                            transition: "opacity 0.15s ease",
-                            display: { xs: "none", sm: "flex" },
-                            alignItems: "center",
+                            position: "relative",
+                            cursor: "pointer",
+                            width: { xs: 90, sm: 100, md: 130, lg: 150 },
+                            height: { xs: 110, sm: 130, md: 160, lg: 180 },
+                            overflow: "hidden",
+                            borderRadius: { xs: 0.5, sm: 1 },
+                            "&:hover .postOverlay": { opacity: 1 },
+                            display: "flex",
                             justifyContent: "center",
+                            alignItems: "center",
                           }}
                         >
-                          <Stack direction="row" spacing={2} sx={{ color: "#fff" }}>
-                            <ThumbUpOffAltIcon fontSize="small" />
-                            <ChatIcon fontSize="small" />
-                          </Stack>
+                          <img
+                            src={
+                              Array.isArray(post.postId.postImage)
+                                ? post.postId.postImage[0]
+                                : post.postId.postImage
+                            }
+                            alt=""
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                              display: "block",
+                            }}
+                          />
+
+                          <Box
+                            className="postOverlay"
+                            sx={{
+                              position: "absolute",
+                              inset: 0,
+                              bgcolor: "rgba(0,0,0,0.15)",
+                              opacity: 0,
+                              transition: "opacity 0.15s ease",
+                              display: { xs: "none", sm: "flex" },
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                          >
+                            <Stack direction="row" spacing={2} sx={{ color: "#fff" }}>
+                              <ThumbUpOffAltIcon fontSize="small" />
+                              <ChatIcon fontSize="small" />
+                            </Stack>
+                          </Box>
                         </Box>
-                      </Box>
-                    )}
-                  </Grid>
-                ))}
+                      )}
+                    </Grid>
+                  )))}
               </Grid>
             )}
 
@@ -800,6 +851,15 @@ const UserProfile = () => {
             </Dialog>
           </SectionCard>
         </Stack>
+
+        <ProfileModal
+          open={profileModalOpen}
+          selectedProfile={selectedProfile}
+          onClose={() => {
+            setProfileModalOpen(false);
+          }}
+        />
+
       </Box>
 
       {/* ── Edit Profile Modal ── */}
@@ -902,7 +962,12 @@ const UserProfile = () => {
                     variant="outlined"
                     component="label"
                     size="small"
-                    sx={{ fontSize: { xs: "0.7rem", sm: "0.8125rem" } }}
+                    sx={{
+                      fontSize: { xs: "0.7rem", sm: "0.8125rem" },
+                      textTransform: "none",
+                      color: "#FF9933",
+                      border: "1px solid rgb(218, 132, 2)"
+                    }}
                   >
                     Change Photo
                     <input
@@ -982,27 +1047,37 @@ const UserProfile = () => {
                     name="mobile"
                     size="small"
                     fullWidth
-                    value={formData?.mobile}
+                    value={formData?.mobile || ""}
                     onChange={(e) => {
-                      // Only allow numbers and limit to 10 digits
-                      const value = e.target.value
-                        .replace(/\D/g, "")
-                        .slice(0, 10);
+                      let value = e.target.value;
+
+                      // Allow only digits and one leading +
+                      value = value
+                        .replace(/[^\d+]/g, "")
+                        .replace(/(?!^)\+/g, "") // Remove any + except the first one
+                        .slice(0, 16); // Max length: + followed by 15 digits (E.164)
+
                       handleChange({
                         target: {
                           name: "mobile",
-                          value: value,
+                          value,
                         },
                       });
                     }}
                     error={!!errors.mobile}
                     helperText={errors.mobile}
+                    inputProps={{
+                      maxLength: 16,
+                    }}
                     InputProps={{
-                      sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } },
-                      inputProps: { maxLength: 10 }, // This also limits input
+                      sx: {
+                        fontSize: { xs: "0.8rem", sm: "0.9rem" },
+                      },
                     }}
                     InputLabelProps={{
-                      sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } },
+                      sx: {
+                        fontSize: { xs: "0.8rem", sm: "0.9rem" },
+                      },
                     }}
                   />
                 </Stack>
@@ -1114,7 +1189,7 @@ const UserProfile = () => {
                   }}
                 >
                   <Button
-                    variant="outlined"
+                    variant="contained"
                     size="small"
                     sx={{
                       width: { xs: "100%", sm: "auto" },
@@ -1122,6 +1197,10 @@ const UserProfile = () => {
                       py: { xs: 0.5, sm: 0.75 },
                       px: { xs: 1.5, sm: 2.5 },
                       minWidth: { xs: "auto", sm: 90 },
+                      bgcolor: "#757575",
+                      // border: "1px solid #E2D7C3",
+                      color: "#ffff",
+                      textTransform: "none",
                     }}
                     onClick={() => {
                       setProfileImage("");
@@ -1142,6 +1221,12 @@ const UserProfile = () => {
                       py: { xs: 0.5, sm: 0.75 },
                       px: { xs: 1.5, sm: 2.5 },
                       minWidth: { xs: "auto", sm: 110 },
+                      bgcolor: "#FF9933", // Saffron
+                      color: "#fff",
+                      textTransform: "none",
+                      "&:hover": {
+                        bgcolor: "#ef9104",
+                      },
                     }}
                     onClick={handleUpdateProfile}
                     disabled={submitLoading}

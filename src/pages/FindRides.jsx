@@ -758,16 +758,18 @@ export default function FindRides() {
                 <Button
                   startIon={<FilterListOffIcon sx={{ fontSize: { xs: 12, sm: 16 } }} />}
                   onClick={clearFilters}
+                  variant="contained"
                   sx={{
                     borderRadius: "50px",
-                    border: `1.5px solid ${saffron[300]}`,
-                    color: saffron[700],
+                    // border: `1.5px solid ${saffron[300]}`,
+                    color: "#ffff",
+                    bgcolor: "#757575",
                     fontWeight: 600,
                     fontSize: { xs: "0.7rem", sm: "0.82rem" },
                     px: { xs: 1.5, sm: 2.5 },
                     height: { xs: 30, sm: 36 },
                     textTransform: "none",
-                    "&:hover": { background: saffron[50], borderColor: saffron[300], color: saffron[500] },
+                    // "&:hover": { background: saffron[50], borderColor: saffron[300], color: saffron[500] },
                   }}
                 >
                   Clear all
@@ -822,7 +824,7 @@ export default function FindRides() {
 
           </Box>
           {visibleRides.length > 0 ? (
-            <Grid container spacing={{ xs: 1, sm: 2 }}>
+            <Grid spacing={{ xs: 1, sm: 2 }}>
               {visibleRides.map((ride) => {
                 const isOwnRide = ride.createdBy?._id === currentUser?._id;
 

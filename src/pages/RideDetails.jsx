@@ -458,7 +458,13 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
               }}
               onClick={() => onApprove(request._id)}
             >
-              <CheckCircleIcon />
+              {
+                approveLoading === request._id ? (
+                  <CircularProgress size={16} color="inherit" />
+                ) : (
+                  <CheckCircleIcon sx={{ fontSize: 16 }} />
+                )
+              }
             </IconButton>
 
             <IconButton
@@ -469,7 +475,13 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
               }}
               onClick={() => onReject(request._id)}
             >
-              <CancelIcon />
+              {
+                rejectLoading === request._id ? (
+                  <CircularProgress size={16} color="inherit" />
+                ) : (
+                  <CancelIcon sx={{ fontSize: 16 }} />
+                )
+              }
             </IconButton>
           </Box>
         </Box>
@@ -773,10 +785,16 @@ export default function RideDetailsModal({
           <Field icon={CalendarTodayIcon} label="Date" value={dateLabel || '—'} />
           <Field icon={AccessTimeIcon} label="Time" value={timeLabel || '—'} />
           <Field icon={TravelIcon} label="Mode" value={ride.modeOfTravel || '—'} />
-          <Field icon={AccessTimeIcon} label="Travel Time" value={ride.duration || '—'} />
-          <Field icon={TravellerTypeIcon} label="Traveller Type" value={ride.travellerType || '—'} />
+          {ride.duration && <Field icon={AccessTimeIcon} label="Travel Duration" value={ride.duration || '—'} />}
           <Field icon={BadgeIcon} label="Age Group Pref." value={ride.ageGroupPreference || '—'} />
-          {ride.availableSeats && (<Field icon={EventSeatIcon} label="Seats avail." value={ride.availableSeats ?? ride.seats ?? '—'} />)}
+          {ride.availableSeats !== null &&
+            ride.availableSeats !== undefined && (
+              <Field
+                icon={EventSeatIcon}
+                label="Seats avail."
+                value={Number(ride.availableSeats) === 0 ? "Seats Filled" : ride.availableSeats}
+              />
+            )}
           <Field icon={GenderIcon} label="Gender Pref." value={ride.genderPreference || 'Any'} />
           {ride.airlineName && (<Field icon={FlightIcon} label="Airline Name" value={ride.airlineName || '—'} />)}
           {ride.flightNumber && (<Field icon={ConfirmationNumberIcon} label="Flight Number" value={ride.flightNumber || '—'} />)}
@@ -790,7 +808,8 @@ export default function RideDetailsModal({
             </>
           ) : null}
 
-          {ride.modeOfTravel !== 'Flight' && ride.modeOfTravel !== 'Bus' && (<Field icon={LocalGasStationIcon} label="Fuel Cost" value={`${ride.fuelSharing === null ? '—' : `$ ${ride.fuelSharing}/Person`} ` || '—'} />)}
+          {ride.modeOfTravel !== 'Flight' && ride.modeOfTravel !== 'Bus' && ride.fuelSharing >= 0 && (<Field icon={LocalGasStationIcon} label="Fuel Cost" value={`${ride.fuelSharing === null ? '—' : `$ ${ride.fuelSharing}/Person`} ` || '—'} />)}
+          <Field icon={TravellerTypeIcon} label="Traveller Type" value={ride.travellerType || '—'} />
 
           {ride.description && (
             <Field icon={DescriptionIcon} label="Description" value={ride.description || '—'} span />
@@ -969,7 +988,7 @@ export default function RideDetailsModal({
             textTransform: 'none',
             fontWeight: 700,
             fontSize: { xs: '0.8rem', sm: '0.88rem' },
-            color: TOKENS.inkSoft,
+            color: "text.secondary",
             border: `1.5px solid ${TOKENS.line}`,
             borderRadius: 5,
             px: { xs: 1.6, sm: 2.2 },

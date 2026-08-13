@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { Box, Paper, Typography, Divider, Button, Grid, Skeleton } from "@mui/material";
+import { Box, Paper, Typography, Divider, Button, Grid, Skeleton, Avatar } from "@mui/material";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import axios from "axios";
 import Api from "../Api.jsx";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import HistoryIcon from "@mui/icons-material/History";
+import ProfileModal from "./Avatar.jsx";
 
 
 
@@ -26,51 +27,15 @@ const getBadge = (rank) => {
     return null;
 };
 
-// Simple avatar
-const UserAvatar = ({ initials, verified }) => (
-    <Box
-        sx={{
-            width: { xs: 34, sm: 40 },
-            height: { xs: 34, sm: 40 },
-            flexShrink: 0,
-            borderRadius: "50%",
-            background: "#FFE8D6",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontWeight: 800,
-            fontSize: { xs: 12, sm: 14 },
-            position: "relative",
-        }}
-    >
-        {initials}
-        {verified && (
-            <Box
-                sx={{
-                    position: "absolute",
-                    right: -2,
-                    bottom: -2,
-                    background: "#2196f3",
-                    color: "#fff",
-                    borderRadius: "50%",
-                    width: { xs: 12, sm: 14 },
-                    height: { xs: 12, sm: 14 },
-                    fontSize: { xs: 8, sm: 10 },
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                }}
-            >
-                ✓
-            </Box>
-        )}
-    </Box>
-);
+
 
 const Discover = () => {
     const [topMembers, setTopMembers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+
+    const [profileModalOpen, setProfileModalOpen] = useState(false);
+    const [selectedProfile, setSelectedProfile] = useState(null);
 
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -81,15 +46,18 @@ const Discover = () => {
                 setLoading(true);
 
                 const res = await axios.get(`${Api}/users/top-riders`);
+
                 const riders = res.data?.data || [];
                 const formatted = riders.map((rider, index) => ({
                     name: `${rider.firstName} ${rider.lastName}`,
                     initials: getInitials(rider.firstName, rider.lastName),
                     rides: rider.completedRideCount,
+                    profileImage: rider.profileImage,
                     // city: rider.city || "",
                     badge: getBadge(index),
                     verified: rider.isVerified,
                 }));
+
 
                 setTopMembers(formatted);
             } catch (err) {
@@ -182,7 +150,30 @@ const Discover = () => {
                                         {index + 1}
                                     </Typography>
 
-                                    <UserAvatar initials={member.initials} verified={member.verified} />
+                                    <Avatar
+                                        src={member?.profileImage || ""}
+                                        alt={`${member?.firstName || ""} ${member?.lastName || ""}`}
+                                        onClick={() => {
+                                            setSelectedProfile(member);
+                                            setProfileModalOpen(true);
+                                        }}
+                                        sx={{
+                                            color: "#fff",
+                                            fontWeight: 800,
+                                            flexShrink: 0,
+                                            mt: { xs: 0.4, sm: 0.5 },
+                                            cursor: "pointer",
+                                            transition: "all 0.2s ease",
+
+                                            "&:hover": {
+                                                transform: "scale(1.08)",
+                                                boxShadow: "0 0 0 3px rgba(255,255,255,0.3)",
+                                            },
+                                        }}
+                                    >
+                                        {!member?.profileImage &&
+                                            `${member?.firstName?.[0] || ""}${member?.lastName?.[0] || ""}`}
+                                    </Avatar>
 
                                     <Box sx={{ flex: 1, minWidth: 0 }}>
                                         <Typography
@@ -227,7 +218,17 @@ const Discover = () => {
                                 {index !== topMembers.length - 1 && <Divider />}
                             </Box>
                         ))}
+
                     </Paper>
+
+                    <ProfileModal
+                        open={profileModalOpen}
+                        selectedProfile={selectedProfile}
+                        onClose={() => {
+                            setProfileModalOpen(false);
+                        }}
+                    />
+
                 </Grid>
             </Grid>
         </Box>

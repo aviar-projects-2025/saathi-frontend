@@ -375,7 +375,6 @@ const TopNav = ({ onMenuClick }) => {
               }}
             >
               Offer Ride
-
               <IconButton
                 aria-label="close"
                 onClick={() => setOpen(false)}
@@ -484,35 +483,41 @@ const TopNav = ({ onMenuClick }) => {
         <Dialog
           open={logoutDialogOpen}
           onClose={cancelLogout}
+          fullWidth
+          maxWidth="xs"
           PaperProps={{
             sx: {
-              borderRadius: 4,
+              borderRadius: { xs: 3, sm: 4 },
               mx: { xs: 2, sm: "auto" },
-              width: { xs: "calc(100% - 32px)", sm: "100%" },
-              maxWidth: "xs",
+              width: { xs: "calc(100% - 24px)", sm: "100%" },
+              maxWidth: { xs: 320, sm: 400 },
               overflow: "hidden",
               position: "relative",
               background: "linear-gradient(145deg, #ffffff, #faf5f0)",
               boxShadow: "0 20px 60px rgba(0,0,0,0.15)",
+              my: { xs: 2, sm: "auto" },
+              maxHeight: { xs: "90vh", sm: "auto" },
             },
           }}
         >
           {/* Decorative Top Bar */}
           <Box
             sx={{
-              height: 4,
+              height: { xs: 3, sm: 4 },
               background: "linear-gradient(90deg, #f97316, #dc2626)",
               width: "100%",
+              flexShrink: 0,
             }}
           />
 
+          {/* Close Button */}
           <IconButton
             onClick={cancelLogout}
             aria-label="Close"
             sx={{
               position: "absolute",
-              right: 12,
-              top: 12,
+              right: { xs: 8, sm: 12 },
+              top: { xs: 8, sm: 12 },
               color: "#E85D26",
               zIndex: 10,
               bgcolor: "#f3f4f6",
@@ -520,78 +525,78 @@ const TopNav = ({ onMenuClick }) => {
                 bgcolor: "#fee2e2",
                 color: "#E85D26",
               },
-              width: 36,
-              height: 36,
+              width: { xs: 28, sm: 36 },
+              height: { xs: 28, sm: 36 },
+              p: 0,
             }}
           >
-            <CloseIcon fontSize="small" />
+            <CloseIcon sx={{ fontSize: { xs: 14, sm: 20 } }} />
           </IconButton>
 
           <DialogTitle
             sx={{
               fontWeight: 800,
-              fontSize: { xs: "1.1rem", sm: "1.25rem" },
-              pt: 4,
+              fontSize: { xs: "0.95rem", sm: "1.25rem" },
+              pt: { xs: 2.5, sm: 4 },
               pb: 0,
               textAlign: "center",
               color: "#1F2430",
+              px: { xs: 2, sm: 3 },
+            }}
+          />
+
+          <DialogContent
+            sx={{
+              pt: { xs: 1.5, sm: 2.5 },
+              pb: { xs: 0.5, sm: 1.5 },
+              px: { xs: 2, sm: 3 },
             }}
           >
-          </DialogTitle>
-
-          <DialogContent sx={{ pt: 2, pb: 1 }}>
-            <Box sx={{ textAlign: "center", px: 1 }}>
+            <Box sx={{ textAlign: "center", px: { xs: 0.5, sm: 1 } }}>
               <Typography
                 sx={{
-                  fontSize: { xs: "0.95rem", sm: "1rem" },
-                  fontWeight: 500,
-                  color: "#374151",
-                  mb: 1,
+                  fontSize: { xs: "0.85rem", sm: "1rem" },
+                  fontWeight: 600,
+                  color: "#1F2430",
+                  mb: { xs: 0.5, sm: 1 },
                 }}
               >
                 Are you sure you want to logout?
-              </Typography>
-              <Typography
-                color="text.secondary"
-                sx={{
-                  fontSize: { xs: "0.8rem", sm: "0.85rem" },
-                  color: "#6b7280",
-                  lineHeight: 1.6,
-                }}
-              >
-                You'll need to login again to access your account.
               </Typography>
             </Box>
           </DialogContent>
 
           <DialogActions
             sx={{
-              px: 3,
-              pb: 3.5,
-              pt: 1.5,
-              gap: 1.5,
-              flexWrap: "wrap",
+              px: { xs: 1.5, sm: 3 },
+              pb: { xs: 2, sm: 3.5 },
+              pt: { xs: 1, sm: 2 },
+              gap: { xs: 0.75, sm: 1.5 },
               justifyContent: "center",
+              flexDirection: "row", // Always in row
             }}
           >
             <Button
               onClick={cancelLogout}
               variant="outlined"
               sx={{
-                borderRadius: 2.5,
+                borderRadius: 2,
                 textTransform: "none",
                 fontWeight: 600,
-                flex: { xs: "1 1 auto", sm: "0 0 auto" },
-                minWidth: 110,
-                minHeight: 46,
-                borderColor: "#E85D26",
-                color: "#e5e7eb",
-                bgcolor: "#E85D26",
+                flex: { xs: 1, sm: "0 0 auto" },
+                minWidth: { xs: "auto", sm: 110 },
+                minHeight: { xs: 32, sm: 46 },
+                height: { xs: 32, sm: 46 },
+                borderColor: "#6b7280",
+                color: "#ffffff",
+                bgcolor: "#6b7280",
                 "&:hover": {
-                  borderColor: "#E85D26",
-                  bgcolor: "#E85D26",
+                  borderColor: "#6b7280",
+                  bgcolor: "#6b7280",
                 },
-                px: 3,
+                px: { xs: 1.5, sm: 3 },
+                fontSize: { xs: "0.7rem", sm: "0.9rem" },
+                py: { xs: 0.5, sm: 1 },
               }}
             >
               Cancel
@@ -600,21 +605,24 @@ const TopNav = ({ onMenuClick }) => {
               onClick={confirmLogout}
               variant="contained"
               sx={{
-                borderRadius: 2.5,
+                borderRadius: 2,
                 textTransform: "none",
                 fontWeight: 700,
-                flex: { xs: "1 1 auto", sm: "0 0 auto" },
-                minWidth: 110,
-                minHeight: 46,
-                background: "linear-gradient(135deg, #dc2626, #b91c1c)",
+                flex: { xs: 1, sm: "0 0 auto" },
+                minWidth: { xs: "auto", sm: 110 },
+                minHeight: { xs: 32, sm: 46 },
+                height: { xs: 32, sm: 46 },
+                background: "linear-gradient(135deg, #E85D26, #E85D26)",
                 color: "#ffffff",
                 "&:hover": {
-                  background: "linear-gradient(135deg, #b91c1c, #991b1b)",
+                  background: "linear-gradient(135deg, #D65A00, #D65A00)",
                 },
-                boxShadow: "0 4px 15px rgba(220, 38, 38, 0.35)",
-                px: 3,
+                boxShadow: "0 4px 15px rgba(232, 93, 38, 0.3)",
+                px: { xs: 1.5, sm: 3 },
+                fontSize: { xs: "0.7rem", sm: "0.9rem" },
+                py: { xs: 0.5, sm: 1 },
               }}
-              startIcon={<LogoutIcon />}
+              startIcon={<LogoutIcon sx={{ fontSize: { xs: 14, sm: 20 } }} />}
             >
               Logout
             </Button>
