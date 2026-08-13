@@ -47,6 +47,12 @@ const TopNav = ({ onMenuClick }) => {
 
   // const unreadCount = tabNotification?.filter(n => !n.isRead).length;
   // console.log(tabNotification, 'tabNotification')
+  const uniqueNotifications = Object.values(
+    (tabNotification || []).reduce((acc, curr) => {
+      acc[curr._id] = curr; // handle both cases
+      return acc;
+    }, {})
+  );
 
   // const unreadCount = Object.values(
   //   (tabNotification || []).reduce((acc, curr) => {
@@ -269,6 +275,25 @@ const TopNav = ({ onMenuClick }) => {
                 handleCloseNotifications={handleCloseNotifications}
               />
             </Box>
+            {uniqueNotifications?.length > 4 && (
+              <Typography
+                onClick={() => {
+                  handleCloseNotifications()
+                  navigate("/notifications")
+                }}
+                sx={{
+                  textAlign: 'center',
+                  fontSize: '12px',
+                  color: '#1f49adff',
+                  cursor: 'pointer',
+                  '&:hover': {
+                    textDecoration: 'underline'
+                  }
+                }}
+              >
+                See more
+              </Typography>
+            )}
           </Menu>
 
           <Tooltip
@@ -379,7 +404,7 @@ const TopNav = ({ onMenuClick }) => {
                 },
               }}
             >
-              <OfferRide setOpen={setOpen}/>
+              <OfferRide setOpen={setOpen} />
             </DialogContent>
           </Dialog>
 
