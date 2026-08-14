@@ -220,6 +220,8 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
   const [resetForm, setResetForm] = useState(null);
   const [errors, setErrors] = useState({});
 
+  const [languageOpen, setLanguageOpen] = useState(false);
+
   const user = JSON.parse(localStorage.getItem("user"));
 
   const [form, setForm] = useState(INITIAL_FORM);
@@ -1086,7 +1088,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                   )}
                 </FormControl>
 
-                <FormControl fullWidth size={inputSize} error={showErrors && !!errors.language}>
+                {/* <FormControl fullWidth size={inputSize} error={showErrors && !!errors.language}>
                   <InputLabel sx={ilSx}>Language</InputLabel>
                   <Select
                     multiple
@@ -1117,6 +1119,119 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                   </Select>
                   {showErrors && errors.language && (
                     <FormHelperText sx={{ fontSize: { xs: "0.62rem", sm: "0.7rem" } }}>{errors.language}</FormHelperText>
+                  )}
+                </FormControl> */}
+
+                <FormControl
+                  fullWidth
+                  size={inputSize}
+                  error={showErrors && !!errors.language}
+                >
+                  <InputLabel sx={ilSx}>Language</InputLabel>
+
+                  <Select
+                    multiple
+                    open={languageOpen}
+                    onOpen={() => setLanguageOpen(true)}
+                    onClose={() => setLanguageOpen(false)}
+                    value={form.language || []}
+                    label="Language"
+                    onChange={(e) => update("language", e.target.value)}
+                    sx={selectSx}
+                    renderValue={(selected) => (
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexWrap: "wrap",
+                          gap: 0.5,
+                        }}
+                      >
+                        {selected.map((value) => (
+                          <Chip
+                            key={value}
+                            label={value}
+                            size="small"
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onDelete={() => {
+                              update(
+                                "language",
+                                form.language.filter((item) => item !== value)
+                              );
+                            }}
+                          />
+                        ))}
+                      </Box>
+                    )}
+                    MenuProps={{
+                      disablePortal: true,
+                      PaperProps: {
+                        sx: {
+                          maxHeight: 300,
+                        },
+                      },
+                      MenuListProps: {
+                        sx: {
+                          pb: 0,
+                        },
+                      },
+                    }}
+                  >
+                    {languages.map((lang) => (
+                      <MenuItem
+                        key={lang}
+                        value={lang}
+                        sx={menuItemSx}
+                      >
+                        {lang}
+                      </MenuItem>
+                    ))}
+
+                    {/* Select button at bottom */}
+                    <Box
+                      sx={{
+                        position: "sticky",
+                        bottom: 0,
+                        backgroundColor: "#fff",
+                        borderTop: "1px solid #e0e0e0",
+                        p: 1,
+                        display: "flex",
+                        justifyContent: "flex-end",
+                        zIndex: 2,
+                      }}
+                      onMouseDown={(e) => e.stopPropagation()}
+                    >
+                      <Button
+                        variant="contained"
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setLanguageOpen(false);
+                        }}
+                        sx={{
+                          textTransform: "none",
+                          borderRadius: 3,
+                          minWidth: 80,
+                          mt: 1,
+                          color: "#ffff",
+                          bgcolor: ACCENT
+                        }}
+                      >
+                        Select
+                      </Button>
+                    </Box>
+                  </Select>
+
+                  {showErrors && errors.language && (
+                    <FormHelperText
+                      sx={{
+                        fontSize: {
+                          xs: "0.62rem",
+                          sm: "0.7rem",
+                        },
+                      }}
+                    >
+                      {errors.language}
+                    </FormHelperText>
                   )}
                 </FormControl>
 

@@ -293,39 +293,48 @@ const MyReferrals = () => {
     );
 
     const ReferralCard = ({ user: u, showActions = false }) => {
-        const [userImage, setUserImage] = useState();
+        const [users, setUsers] = useState(null);
+
         const userData = {
             firstName: u?.data?.user?.firstName || u?.firstName || "",
             lastName: u?.data?.user?.lastName || u?.lastName || "",
             email: u?.data?.user?.email || u?.email || "",
-            id: u?.data?.userId || u?._id
+            id: u?.data?.userId || u?._id,
         };
-        const userId = u._id;
+
+        const userId = userData.id;
+
         const getUserData = async () => {
+            if (!userId) return;
+
             try {
                 const res = await axios.get(`${Api}/users/${userId}`);
-                setUserImage(res.data.data.profileImage || "");
+
+                setUsers(res?.data?.data || res?.data || null);
             } catch (err) {
-                console.log(err);
+                console.error("Failed to fetch user data:", err);
+                setUsers(null);
             }
         };
 
         useEffect(() => {
-            if (userId) {
-                getUserData();
-            }
+            getUserData();
         }, [userId]);
+
+        const profileImage = users?.profileImage || "";
 
         return (
             <Paper
-                key={userData.id}
                 elevation={0}
                 sx={{
                     p: { xs: 0.8, sm: 2 },
                     borderRadius: 2,
                     border: "1px solid",
                     borderColor: "divider",
-                    "&:hover": { borderColor: "primary.light", bgcolor: "action.hover" },
+                    "&:hover": {
+                        borderColor: "primary.light",
+                        bgcolor: "action.hover",
+                    },
                     transition: "all 0.15s ease",
                 }}
             >
@@ -340,43 +349,54 @@ const MyReferrals = () => {
                         direction="row"
                         spacing={1.5}
                         alignItems="center"
-                        sx={{ minWidth: 0, flex: 1 }}
+                        sx={{
+                            minWidth: 0,
+                            flex: 1,
+                        }}
                     >
-
                         <Avatar
-                            src={userImage || undefined}
-                            alt={`${userData?.firstName || ""} ${userData?.lastName || ""}`}
+                            src={profileImage}
+                            alt={`${userData.firstName} ${userData.lastName}`}
                             onClick={() => {
-                                setSelectedProfile({
-                                    ...userData,
-                                    profileImage: userImage,
-                                });
+                                if (!users) return;
+                                setSelectedProfile(users);
                                 setProfileModalOpen(true);
                             }}
                             sx={{
                                 bgcolor: "#f0ebe3",
                                 color: "#ff8400",
-                                width: 44,
-                                height: 44,
-                                cursor: "pointer",
+                                width: { xs: 40, sm: 44 },
+                                height: { xs: 40, sm: 44 },
+                                cursor: users ? "pointer" : "default",
                                 transition: "all 0.2s ease",
 
-                                "&:hover": {
-                                    transform: "scale(1.08)",
-                                    boxShadow: "0 0 0 3px rgba(255, 132, 0, 0.25)",
-                                },
+                                "&:hover": users
+                                    ? {
+                                        transform: "scale(1.08)",
+                                        boxShadow:
+                                            "0 0 0 3px rgba(255, 132, 0, 0.25)",
+                                    }
+                                    : {},
                             }}
                         >
-                            {!userImage &&
-                                getInitials(userData?.firstName, userData?.lastName)}
+                            {!profileImage &&
+                                getInitials(
+                                    userData.firstName,
+                                    userData.lastName
+                                )}
                         </Avatar>
-
 
                         <Box sx={{ minWidth: 0 }}>
                             <Typography
                                 fontWeight={600}
                                 noWrap
-                                sx={{ fontSize: { xs: 13, sm: 15 }, color: "text.primary" }}
+                                sx={{
+                                    fontSize: {
+                                        xs: 13,
+                                        sm: 15,
+                                    },
+                                    color: "text.primary",
+                                }}
                             >
                                 {userData.firstName} {userData.lastName}
                             </Typography>
@@ -385,7 +405,12 @@ const MyReferrals = () => {
                                 variant="body2"
                                 color="text.secondary"
                                 noWrap
-                                sx={{ fontSize: { xs: 11, sm: 13 } }}
+                                sx={{
+                                    fontSize: {
+                                        xs: 11,
+                                        sm: 13,
+                                    },
+                                }}
                             >
                                 {userData.email}
                             </Typography>
@@ -394,55 +419,120 @@ const MyReferrals = () => {
 
                     {/* Right: Actions */}
                     {showActions && (
-                        <Stack direction="row" spacing={0.75} alignItems="center" sx={{ flexShrink: 0 }}>
-                            {/* Mobile: icon-only buttons */}
-                            <Box sx={{ display: { xs: "flex", sm: "none" }, gap: 0.5 }}>
+                        <Stack
+                            direction="row"
+                            spacing={0.75}
+                            alignItems="center"
+                            sx={{
+                                flexShrink: 0,
+                            }}
+                        >
+                            {/* Mobile buttons */}
+                            <Box
+                                sx={{
+                                    display: {
+                                        xs: "flex",
+                                        sm: "none",
+                                    },
+                                    gap: 0.5,
+                                }}
+                            >
                                 <Tooltip title="Approve">
                                     <IconButton
                                         size="small"
-                                        onClick={() => approveUser(u._id)}
+                                        onClick={() =>
+                                            approveUser(userData.id)
+                                        }
+                                        disabled={
+                                            approveLoading || rejectLoading
+                                        }
                                         sx={{
                                             bgcolor: "#E6F4EA",
                                             color: "#1E8E3E",
                                             width: 34,
                                             height: 34,
-                                            "&:hover": { bgcolor: "#C8E6C9" },
+                                            "&:hover": {
+                                                bgcolor: "#C8E6C9",
+                                            },
                                         }}
                                     >
-                                        <CheckCircleIcon sx={{ fontSize: 18 }} />
+                                        {approveLoading ? (
+                                            <CircularProgress
+                                                size={18}
+                                                color="inherit"
+                                            />
+                                        ) : (
+                                            <CheckCircleIcon
+                                                sx={{ fontSize: 18 }}
+                                            />
+                                        )}
                                     </IconButton>
                                 </Tooltip>
+
                                 <Tooltip title="Decline">
                                     <IconButton
                                         size="small"
-                                        onClick={() => declineUser(u._id)}
+                                        onClick={() =>
+                                            declineUser(userData.id)
+                                        }
+                                        disabled={
+                                            approveLoading || rejectLoading
+                                        }
                                         sx={{
                                             bgcolor: "#FCE8E8",
                                             color: "#D93025",
                                             width: 34,
                                             height: 34,
-                                            "&:hover": { bgcolor: "#F5C6C6" },
+                                            "&:hover": {
+                                                bgcolor: "#F5C6C6",
+                                            },
                                         }}
                                     >
-                                        <CancelIcon sx={{ fontSize: 18 }} />
+                                        {rejectLoading ? (
+                                            <CircularProgress
+                                                size={18}
+                                                color="inherit"
+                                            />
+                                        ) : (
+                                            <CancelIcon
+                                                sx={{ fontSize: 18 }}
+                                            />
+                                        )}
                                     </IconButton>
                                 </Tooltip>
                             </Box>
 
-                            {/* Desktop: labeled buttons */}
-                            <Box sx={{ display: { xs: "none", sm: "flex" }, gap: 1 }}>
+                            {/* Desktop buttons */}
+                            <Box
+                                sx={{
+                                    display: {
+                                        xs: "none",
+                                        sm: "flex",
+                                    },
+                                    gap: 1,
+                                }}
+                            >
                                 <Button
                                     variant="contained"
                                     size="small"
                                     startIcon={
                                         approveLoading ? (
-                                            <CircularProgress size={16} color="inherit" />
+                                            <CircularProgress
+                                                size={16}
+                                                color="inherit"
+                                            />
                                         ) : (
-                                            <CheckCircleIcon sx={{ fontSize: 16 }} />
+                                            <CheckCircleIcon
+                                                sx={{ fontSize: 16 }}
+                                            />
                                         )
                                     }
-                                    onClick={() => approveUser(userData?.id)}
-                                    disabled={approveLoading}
+                                    onClick={() =>
+                                        approveUser(userData.id)
+                                    }
+                                    disabled={
+                                        approveLoading || rejectLoading
+                                    }
                                     disableElevation
                                     sx={{
                                         bgcolor: "#1E8E3E",
@@ -453,24 +543,37 @@ const MyReferrals = () => {
                                         borderRadius: 5,
                                         px: 2,
                                         height: 32,
-                                        "&:hover": { bgcolor: "#176D30" },
-                                        mt: 0.5
+                                        "&:hover": {
+                                            bgcolor: "#176D30",
+                                        },
                                     }}
                                 >
-                                    {approveLoading ? "Approving..." : " Approve "}
+                                    {approveLoading
+                                        ? "Approving..."
+                                        : "Approve"}
                                 </Button>
+
                                 <Button
                                     variant="outlined"
                                     size="small"
                                     startIcon={
                                         rejectLoading ? (
-                                            <CircularProgress size={16} color="inherit" />
+                                            <CircularProgress
+                                                size={16}
+                                                color="inherit"
+                                            />
                                         ) : (
-                                            <CancelIcon sx={{ fontSize: 16 }} />
+                                            <CancelIcon
+                                                sx={{ fontSize: 16 }}
+                                            />
                                         )
                                     }
-                                    onClick={() => declineUser(userData?.id)}
-                                    disabled={rejectLoading}
+                                    onClick={() =>
+                                        declineUser(userData.id)
+                                    }
+                                    disabled={
+                                        approveLoading || rejectLoading
+                                    }
                                     sx={{
                                         color: "#D93025",
                                         borderColor: "#D93025",
@@ -480,21 +583,28 @@ const MyReferrals = () => {
                                         borderRadius: 5,
                                         px: 2,
                                         height: 32,
-                                        "&:hover": { bgcolor: "#FCE8E8", borderColor: "#B3261E" },
-                                        mt: 0.5
+                                        "&:hover": {
+                                            bgcolor: "#FCE8E8",
+                                            borderColor: "#B3261E",
+                                        },
                                     }}
                                 >
-                                    {rejectLoading ? " Declining..." : " Decline "}
+                                    {rejectLoading
+                                        ? "Declining..."
+                                        : "Decline"}
                                 </Button>
                             </Box>
                         </Stack>
                     )}
 
-                    {/* Approved badge for tab 1 */}
+                    {/* Approved badge */}
                     {!showActions && (
                         <Box
                             sx={{
-                                display: { xs: "none", sm: "flex" },
+                                display: {
+                                    xs: "none",
+                                    sm: "flex",
+                                },
                                 alignItems: "center",
                                 gap: 0.5,
                                 bgcolor: "#E6F4EA",
@@ -502,7 +612,7 @@ const MyReferrals = () => {
                                 fontSize: 10,
                                 fontWeight: 600,
                                 px: 1,
-                                // py: 0.5,
+                                py: 0.5,
                                 borderRadius: 5,
                                 flexShrink: 0,
                             }}
@@ -518,10 +628,8 @@ const MyReferrals = () => {
                     selectedProfile={selectedProfile}
                     onClose={() => {
                         setProfileModalOpen(false);
-                        setSelectedProfile(null);
                     }}
                 />
-
             </Paper>
         );
     };

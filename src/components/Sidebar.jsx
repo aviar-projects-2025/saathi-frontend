@@ -467,7 +467,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
   />
 
   {/* Close Button */}
-  <IconButton
+  {/* <IconButton
     onClick={(e) => {
       e.stopPropagation(); // Prevent event bubbling
       cancelLogout();
@@ -490,7 +490,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
     }}
   >
     <CloseIcon sx={{ fontSize: { xs: 14, sm: 20 } }} />
-  </IconButton>
+  </IconButton> */}
 
   <DialogTitle
     sx={{
@@ -520,7 +520,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
           mb: { xs: 0.5, sm: 1 },
         }}
       >
-        Are you sure you want to logout?
+        Are you sure you want to logout ?
       </Typography>
     </Box>
   </DialogContent>
@@ -556,7 +556,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
           borderColor: "#6b7280",
           bgcolor: "#6b7280",
         },
-        px: { xs: 1.5, sm: 3 },
+        px: { xs: 1, sm: 3 },
         fontSize: { xs: "0.7rem", sm: "0.9rem" },
         py: { xs: 0.5, sm: 1 },
       }}
@@ -583,7 +583,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
           background: "linear-gradient(135deg, #D65A00, #D65A00)",
         },
         boxShadow: "0 4px 15px rgba(232, 93, 38, 0.3)",
-        px: { xs: 1.5, sm: 3 },
+        px: { xs: 1, sm: 3 },
         fontSize: { xs: "0.7rem", sm: "0.9rem" },
         py: { xs: 0.5, sm: 1 },
       }}
