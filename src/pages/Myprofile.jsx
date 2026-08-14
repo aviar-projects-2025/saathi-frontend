@@ -69,8 +69,17 @@ const pillBtn = {
   fontSize: { xs: "0.72rem", sm: "0.8rem", md: "0.875rem" },
   color: SAFFRON,
   fontWeight: 600,
-};
 
+  "&.Mui-disabled": {
+    opacity: 1,
+    cursor: "not-allowed",
+    border: "none"
+  },
+
+  "&.Mui-disabled .MuiSvgIcon-root": {
+    opacity: 1,
+  },
+};
 const SectionCard = ({ children, sx = {} }) => (
   <Paper
     elevation={0}
@@ -106,7 +115,7 @@ const SectionHeader = ({ icon, label }) => (
 const Myprofile = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const { currentUser, getuserData } = useUser();
+  const { currentUser, getuserData, completion } = useUser();
   const handleOpenShare = () => setOpenShare(true);
   const handleCloseShare = () => setOpenShare(false);
   const [openShare, setOpenShare] = useState(false);
@@ -137,6 +146,8 @@ const Myprofile = () => {
   const [passwordLoading, setPasswordLoading] = useState(false);
 
   const toasts = ToastConfig();
+
+  const isProfileComplete = completion !== 100;
 
   // const theme = useTheme();
   const isTab = useMediaQuery(theme.breakpoints.down("sm"));
@@ -365,7 +376,7 @@ const Myprofile = () => {
                 },
               }}
               onClick={() => {
-                setSelectedProfile(user);
+                setSelectedProfile(currentUser);
                 setProfileModalOpen(true);
               }}
             >
@@ -655,7 +666,7 @@ const Myprofile = () => {
 
                 {/* Buttons */}
                 <Stack
-                  direction={{ xs: "column", sm: "row" }}
+                  direction={{ xs: "row", sm: "row" }}
                   spacing={2}
                   sx={{
                     pt: 2,
@@ -702,7 +713,7 @@ const Myprofile = () => {
                     }}
                   >
                     {passwordLoading
-                      ? " Updating Password... "
+                      ? " Updating... "
                       : " Update "}
                   </Button>
                 </Stack>
@@ -789,6 +800,7 @@ const Myprofile = () => {
                   "&:hover": { bgcolor: "#da9a3a" },
                 }}
                 onClick={() => handleCopy(shareLink)}
+                disabled={isProfileComplete}
               >
                 Copy Link
               </Button>
@@ -802,7 +814,12 @@ const Myprofile = () => {
                   py: { xs: 0.5, sm: 0.75 },
                   textTransform: "none",
                   color: "#ffff",
-                  bgcolor: "#09710f"
+                  bgcolor: "#09710f",
+                  "&.Mui-disabled": {
+                    opacity: 0.5,
+                    border: "none",
+                    color: "#ffff"
+                  },
                 }}
                 onClick={() => {
                   if (navigator.share) {
@@ -815,6 +832,7 @@ const Myprofile = () => {
                     toast.info("Sharing not supported on this device", toasts);
                   }
                 }}
+                disabled={isProfileComplete}
               >
                 Share
               </Button>
@@ -884,7 +902,7 @@ const Myprofile = () => {
               Your referral code
             </Typography>
 
-            <Chip
+            {!isProfileComplete && (<Chip
               label={currentUser?.referralCode || "SAATHI-CODE"}
               sx={{
                 fontWeight: 700,
@@ -895,6 +913,7 @@ const Myprofile = () => {
                 bgcolor: SAFFRON_LIGHT,
               }}
             />
+            )}
           </Grid>
 
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
@@ -908,6 +927,7 @@ const Myprofile = () => {
                 ...pillBtn,
                 width: { xs: "100%", sm: "auto" },
               }}
+              disabled={isProfileComplete}
             >
               Copy code
             </Button>
@@ -919,6 +939,7 @@ const Myprofile = () => {
                 ...pillBtn,
                 width: { xs: "100%", sm: "auto" },
               }}
+              disabled={isProfileComplete}
             >
               Share invite
             </Button>
@@ -980,7 +1001,7 @@ const Myprofile = () => {
                 }}
               />
 
-              {/* Close Button */}
+              {/* Close Button
               <IconButton
                 onClick={cancelLogout}
                 aria-label="Close"
@@ -1001,7 +1022,7 @@ const Myprofile = () => {
                 }}
               >
                 <CloseIcon sx={{ fontSize: { xs: 14, sm: 20 } }} />
-              </IconButton>
+              </IconButton> */}
 
               <DialogTitle
                 sx={{
@@ -1031,7 +1052,7 @@ const Myprofile = () => {
                       mb: { xs: 0.5, sm: 1 },
                     }}
                   >
-                    Are you sure you want to logout?
+                    Are you sure you want to logout ?
                   </Typography>
                 </Box>
               </DialogContent>
@@ -1064,7 +1085,7 @@ const Myprofile = () => {
                       borderColor: "#6b7280",
                       bgcolor: "#6b7280",
                     },
-                    px: { xs: 1.5, sm: 3 },
+                    px: { xs: 1, sm: 3 },
                     fontSize: { xs: "0.7rem", sm: "0.9rem" },
                     py: { xs: 0.5, sm: 1 },
                   }}
@@ -1088,7 +1109,7 @@ const Myprofile = () => {
                       background: "linear-gradient(135deg, #D65A00, #D65A00)",
                     },
                     boxShadow: "0 4px 15px rgba(232, 93, 38, 0.3)",
-                    px: { xs: 1.5, sm: 3 },
+                    px: { xs: 1, sm: 3 },
                     fontSize: { xs: "0.7rem", sm: "0.9rem" },
                     py: { xs: 0.5, sm: 1 },
                   }}

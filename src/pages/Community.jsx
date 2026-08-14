@@ -1135,9 +1135,9 @@ export default function Community() {
                                     sx={{
                                       width: "100%",
                                       height: { xs: 160, sm: 220, md: 280 },
-                                      objectFit: "cover",
+                                      objectFit: "contain",
                                       borderRadius: 2,
-                                      border: "1px solid #eee",
+                                      // border: "1px solid #eee",
                                       mb: 1.5,
                                     }}
                                   />
