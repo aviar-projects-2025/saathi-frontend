@@ -65,6 +65,8 @@ const MyReferrals = () => {
     const theme = useTheme();
     const isTab = useMediaQuery(theme.breakpoints.down("sm"));
 
+    const isProfileComplete = completion !== 100;
+
     const handleCopy = (value) => {
         navigator.clipboard.writeText(value);
         toast.success("Copied to Clipboard!", toasts);
@@ -176,6 +178,7 @@ const MyReferrals = () => {
                     bgcolor: "#FF9933",
                     "&:hover": { bgcolor: "#da9a3a" },
                 }}
+                disabled={isProfileComplete}
             >
                 Refer Now
             </Button>
