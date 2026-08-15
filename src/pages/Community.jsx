@@ -1,86 +1,74 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from 'react';
 import {
-  Box,
-  Typography,
-  Grid,
-  Paper,
-  Chip,
-  Avatar,
-  Button,
-  Divider,
-  Stack,
-  LinearProgress,
+  Box, Typography, Grid, Paper, Chip, Avatar, Button,
+  Divider, Stack, LinearProgress,
   TextField,
   CircularProgress,
   Tooltip,
   useTheme,
   IconButton,
-  useMediaQuery,
-} from "@mui/material";
-import GroupsIcon from "@mui/icons-material/Groups";
-import StarIcon from "@mui/icons-material/Star";
-import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
-import FavoriteIcon from "@mui/icons-material/Favorite";
-import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
-import ThumbUpOffAltIcon from "@mui/icons-material/ThumbUpOffAlt";
-import ThumbUpIcon from "@mui/icons-material/ThumbUp";
-import UserAvatar from "../components/UserAvatar.jsx";
-import PageLayout from "../components/PageLayout.jsx";
-import ChatIcon from "@mui/icons-material/Chat";
-import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
-import ShareIcon from "@mui/icons-material/Share";
-import PermMediaIcon from "@mui/icons-material/PermMedia";
-import CloseIcon from "@mui/icons-material/Close";
-import Api from "../Api.jsx";
-import axios from "axios";
-import Discover from "./Discover.jsx";
+  useMediaQuery
+} from '@mui/material';
+import GroupsIcon from '@mui/icons-material/Groups';
+import StarIcon from '@mui/icons-material/Star';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+import ThumbUpOffAltIcon from '@mui/icons-material/ThumbUpOffAlt';
+import ThumbUpIcon from '@mui/icons-material/ThumbUp';
+import UserAvatar from '../components/UserAvatar.jsx';
+import PageLayout from '../components/PageLayout.jsx';
+import ChatIcon from '@mui/icons-material/Chat';
+import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder'
+import ShareIcon from '@mui/icons-material/Share';
+import PermMediaIcon from '@mui/icons-material/PermMedia';
+import CloseIcon from '@mui/icons-material/Close';
+import Api from '../Api.jsx';
+import axios from 'axios';
+import Discover from './Discover.jsx'
 
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import InboxOutlinedIcon from "@mui/icons-material/InboxOutlined";
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
+  Dialog, DialogTitle, DialogContent, DialogActions,
   Menu,
   MenuItem,
   ListItemIcon,
   ListItemText,
 } from "@mui/material";
-import { toast } from "react-toastify";
-import CommunityImage from "../components/CommunityImage.jsx";
-import CommunityComments from "./CommunityComments.jsx";
-import { useUser } from "../context/userConetext.jsx";
+import { toast } from 'react-toastify';
+import CommunityImage from '../components/CommunityImage.jsx';
+import CommunityComments from './CommunityComments.jsx';
+import { useUser } from '../context/userConetext.jsx';
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import FolderIcon from "@mui/icons-material/Folder";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
-import ToastConfig from "../components/ToastConfig.jsx";
-import ProfileModal from "./Avatar.jsx";
-import { useNavigate } from "react-router-dom";
+import ToastConfig from '../components/ToastConfig.jsx';
+import ProfileModal from './Avatar.jsx';
 
 const BREAKPOINTS = { xs: 0, sm: 600, md: 900, lg: 1200, xl: 1536 }; // MUI defaults
 
 function getTier(width) {
-  if (width < BREAKPOINTS.sm) return "xs";
-  if (width < BREAKPOINTS.md) return "sm";
-  if (width < BREAKPOINTS.lg) return "md";
-  if (width < BREAKPOINTS.xl) return "lg";
-  return "xl";
+  if (width < BREAKPOINTS.sm) return 'xs';
+  if (width < BREAKPOINTS.md) return 'sm';
+  if (width < BREAKPOINTS.lg) return 'md';
+  if (width < BREAKPOINTS.xl) return 'lg';
+  return 'xl';
 }
 
 function useResponsiveTier() {
   const [tier, setTier] = useState(
-    typeof window !== "undefined" ? getTier(window.innerWidth) : "md",
+    typeof window !== 'undefined' ? getTier(window.innerWidth) : 'md'
   );
   useEffect(() => {
     const handleResize = () => setTier(getTier(window.innerWidth));
     // Run once on mount in case the initial state above was computed
     // before layout/zoom settled.
     handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   return tier;
@@ -94,12 +82,12 @@ export default function Community() {
   const [postLoading, setPostLoading] = useState(false);
   const [communityPosts, setCommunityPosts] = useState([]);
   const [activeCommentPostId, setActiveCommentPostId] = useState(null);
-  const user = JSON.parse(localStorage.getItem("user"));
-  const [postId, setPostId] = useState([]);
+  const user = JSON.parse(localStorage.getItem('user'));
+  const [postId, setPostId] = useState([])
   const [editImage, setEditImage] = useState(null);
   const [previewImage, setPreviewImage] = useState("");
   const [openMediaDialog, setOpenMediaDialog] = useState(false);
-  const { currentUser } = useUser();
+  const { currentUser } = useUser()
   const [tooltipOpen, setTooltipOpen] = useState(false);
   const [tooltip2Open, setTooltip2Open] = useState(false);
   const [imagePostLoading, setImagePostLoading] = useState(false);
@@ -109,8 +97,6 @@ export default function Community() {
 
   const [commentCounts, setCommentCounts] = useState({});
   const toasts = ToastConfig();
-
-  const navigate = useNavigate();
 
   const theme = useTheme();
   const isTab = useMediaQuery(theme.breakpoints.down("sm"));
@@ -131,6 +117,7 @@ export default function Community() {
     }
   };
 
+
   const getCommmunityPost = async () => {
     try {
       setPostLoading(true);
@@ -150,16 +137,15 @@ export default function Community() {
       const countEntries = await Promise.all(
         updatedPosts.map(async (p) => {
           try {
-            const res = await axios.get(
-              Api + `/community/comments/${p._id}/${user.id}`,
-            );
+            const res = await axios.get(Api + `/community/comments/${p._id}/${user.id}`);
             return [p._id, res.data.data.comments.length];
           } catch {
             return [p._id, 0];
           }
-        }),
+        })
       );
       setCommentCounts(Object.fromEntries(countEntries));
+
     } catch (error) {
       console.error(error.message);
     } finally {
@@ -171,10 +157,7 @@ export default function Community() {
     try {
       // setLoading(true);
       const res = await axios.get(Api + `/community/comments/${postId}`);
-      setCommentCounts((prev) => ({
-        ...prev,
-        [postId]: res.data.data.comments.length,
-      }));
+      setCommentCounts((prev) => ({ ...prev, [postId]: res.data.data.comments.length }));
     } catch (error) {
       console.log(error.message);
     } finally {
@@ -185,7 +168,7 @@ export default function Community() {
   const savePost = async (post) => {
     try {
       const res = await axios.post(
-        `${Api}/save-post/${post._id}/${currentUser._id}`,
+        `${Api}/save-post/${post._id}/${currentUser._id}`
       );
 
       setSavedPost((prev) => [
@@ -196,13 +179,18 @@ export default function Community() {
           userId: currentUser._id,
         },
       ]);
+
     } catch (error) {
       console.log(error);
     }
   };
 
+
+
   const isPostSaved = (postId) => {
-    return savedPost?.some((item) => item.postId?._id === postId);
+    return savedPost?.some(
+      (item) => item.postId?._id === postId
+    );
   };
 
   // inside your component:
@@ -222,30 +210,25 @@ export default function Community() {
     e.target.value = null; // allow re-selecting same file next time
   };
 
+
   const tier = useResponsiveTier();
-  const isMobile = tier === "xs"; // phones
-  const isTablet = tier === "sm"; // tablets / small laptops
-  const isDesktop = tier === "md" || tier === "lg" || tier === "xl"; // laptops and up
+  const isMobile = tier === 'xs';                 // phones
+  const isTablet = tier === 'sm'; // tablets / small laptops
+  const isDesktop = tier === 'md' || tier === 'lg' || tier === 'xl'; // laptops and up
 
   const showSidebar = !isMobile;
 
   const SAFFRON = "#E8650A";
   const CARD_BORDER = "1px solid #F0E6DC";
 
-  const POST_BOX_WIDTH_SX = {
-    xs: "100%",
-    sm: "100%",
-    md: "600px",
-    lg: "640px",
-    xl: "640px",
-  };
+  const POST_BOX_WIDTH_SX = { xs: '100%', sm: '100%', md: '600px', lg: '640px', xl: '640px' };
 
   const avatarSize = isMobile ? 30 : isTablet ? 33 : 35;
-  const iconFontSize = isMobile ? "small" : "medium";
-  const btnFontSize = isMobile ? "0.5rem" : isTablet ? "0.65rem" : "0.7rem";
-  const bodyFontSize = isMobile ? "0.7rem" : isTablet ? "0.76rem" : "0.8rem";
-  const captionSize = isMobile ? "0.6rem" : "0.6rem";
-  const avatarFontSize = isMobile ? "0.6rem" : isTablet ? "0.9rem" : "1.1rem";
+  const iconFontSize = isMobile ? 'small' : 'medium';
+  const btnFontSize = isMobile ? '0.5rem' : isTablet ? '0.65rem' : '0.7rem';
+  const bodyFontSize = isMobile ? '0.7rem' : isTablet ? '0.76rem' : '0.8rem';
+  const captionSize = isMobile ? '0.6rem' : '0.6rem';
+  const avatarFontSize = isMobile ? '0.6rem' : isTablet ? '0.9rem' : '1.1rem';
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedPost, setSelectedPost] = useState(null);
 
@@ -276,27 +259,28 @@ export default function Community() {
   const { completion, savedPost, setSavedPost, removeSavedPost } = useUser();
 
   const isProfileComplete = completion === 100;
-  const SIDEBAR_SCROLL_HEIGHT = "calc(100vh - 120px)";
+  const SIDEBAR_SCROLL_HEIGHT = 'calc(100vh - 120px)';
 
   // ── Profile completion modal ──
   // Shows once per page-load whenever the user's profile is under 100%.
   const [profileGateOpen, setProfileGateOpen] = useState(false);
+  const hasCheckedProfileGateRef = useRef(false);
 
   useEffect(() => {
-    // `completion` starts undefined/0 while the user context loads, so wait
-    // until we actually have a value before deciding whether to show it.
-    if (typeof completion === "number") {
+    // Only decide ONCE, and only after currentUser has actually finished
+    // loading. `completion` is 0 (a valid number) for a brief moment while
+    // the user context is still fetching, so checking `typeof completion
+    // === "number"` alone fires too early and causes the modal to flash
+    // open and then immediately close once the real completion (100) comes in.
+    if (hasCheckedProfileGateRef.current) return;
+    if (currentUser && currentUser._id && typeof completion === "number") {
+      hasCheckedProfileGateRef.current = true;
       setProfileGateOpen(completion !== 100);
     }
-  }, [completion]);
+  }, [currentUser, completion]);
 
   const handleCloseProfileGate = () => {
     setProfileGateOpen(false);
-  };
-
-  const handleGoCompleteProfile = () => {
-    setProfileGateOpen(false);
-    navigate("/profile"); // adjust to your actual "complete profile" route
   };
 
   const handleEdit = (post) => {
@@ -331,19 +315,20 @@ export default function Community() {
           headers: {
             "Content-Type": "multipart/form-data",
           },
-        },
+        }
       );
 
       setCommunityPosts((prev) =>
+
         prev.map((post) =>
           post._id === selectedPost._id
             ? {
-                ...post,
-                description: res.data.data.description,
-                postImage: res.data.data.postImage,
-              }
-            : post,
-        ),
+              ...post,
+              description: res.data.data.description,
+              postImage: res.data.data.postImage,
+            }
+            : post
+        )
       );
 
       toast.success(res.data.message, toasts);
@@ -353,10 +338,7 @@ export default function Community() {
       setEditImage(null);
       setImagePostLoading(false);
     } catch (error) {
-      toast.error(
-        error.response?.data?.message || "Failed to update post",
-        toasts,
-      );
+      toast.error(error.response?.data?.message || "Failed to update post", toasts);
     } finally {
       setImagePostLoading(false);
     }
@@ -365,8 +347,8 @@ export default function Community() {
   const handleReset = () => {
     setEditDescription(originalDescription);
 
-    setEditImage(null); // remove selected File
-    setPreviewImage(originalImage); // restore original image URL
+    setEditImage(null);               // remove selected File
+    setPreviewImage(originalImage);   // restore original image URL
   };
 
   const handleCreatePost = async () => {
@@ -396,23 +378,24 @@ export default function Community() {
       //   position: isMobile ? "top-center" : "top-right",
       // });
       toast.error(error.message, toasts);
+
     } finally {
       setLoading(false);
       getCommmunityPost();
     }
   };
 
+
+
   useEffect(() => {
     getCommmunityPost();
   }, []);
 
+
   const formattedDateTime = (createdAt) =>
     new Date(createdAt).toLocaleString("en-IN", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
+      day: "numeric", month: "short", year: "numeric",
+      hour: "numeric", minute: "2-digit",
     });
 
   const addLike = async (id) => {
@@ -420,12 +403,12 @@ export default function Community() {
       prev.map((post) =>
         post._id === id
           ? {
-              ...post,
-              isLiked: true,
-              likes: (post.likes || 0) + 1,
-            }
-          : post,
-      ),
+            ...post,
+            isLiked: true,
+            likes: (post.likes || 0) + 1,
+          }
+          : post
+      )
     );
     try {
       const res = await axios.post(Api + `/likes/${id}/${user.id}`);
@@ -433,8 +416,8 @@ export default function Community() {
         prev.map((post) =>
           post._id === id
             ? { ...post, isLiked: res.data.isLiked, likes: res.data.likesCount }
-            : post,
-        ),
+            : post
+        )
       );
     } catch (error) {
       console.error(error);
@@ -442,17 +425,19 @@ export default function Community() {
         prev.map((post) =>
           post._id === id
             ? {
-                ...post,
-                isLiked: false,
-                likes: (post.likes || 1) - 1,
-              }
-            : post,
-        ),
+              ...post,
+              isLiked: false,
+              likes: (post.likes || 1) - 1,
+            }
+            : post
+        )
       );
     }
   };
   const handleDelete = async (postId) => {
+
     try {
+
       setImagePostLoading(true);
 
       const user = JSON.parse(localStorage.getItem("user"));
@@ -463,14 +448,16 @@ export default function Community() {
         },
       });
 
-      setCommunityPosts((prev) => prev.filter((post) => post._id !== postId));
+      setCommunityPosts((prev) =>
+        prev.filter((post) => post._id !== postId)
+      );
 
       toast.success(res.data.message, toasts);
+
+
     } catch (error) {
       toast.error(
-        error.response?.data?.message || "Failed to delete post",
-        toasts,
-      );
+        error.response?.data?.message || "Failed to delete post", toasts);
     } finally {
       setImagePostLoading(false);
     }
@@ -480,12 +467,12 @@ export default function Community() {
       prev.map((post) =>
         post._id === id
           ? {
-              ...post,
-              isLiked: false,
-              likes: Math.max((post.likes || 1) - 1, 0),
-            }
-          : post,
-      ),
+            ...post,
+            isLiked: false,
+            likes: Math.max((post.likes || 1) - 1, 0),
+          }
+          : post
+      )
     );
     try {
       const res = await axios.delete(Api + `/likes/${id}/${user.id}`);
@@ -493,8 +480,8 @@ export default function Community() {
         prev.map((post) =>
           post._id === id
             ? { ...post, isLiked: res.data.isLiked, likes: res.data.likesCount }
-            : post,
-        ),
+            : post
+        )
       );
     } catch (error) {
       console.error(error);
@@ -502,15 +489,16 @@ export default function Community() {
         prev.map((post) =>
           post._id === id
             ? {
-                ...post,
-                isLiked: true,
-                likes: (post.likes || 0) + 1,
-              }
-            : post,
-        ),
+              ...post,
+              isLiked: true,
+              likes: (post.likes || 0) + 1,
+            }
+            : post
+        )
       );
     }
   };
+
 
   return (
     <>
@@ -552,10 +540,9 @@ export default function Community() {
               color: "text.secondary",
             }}
           >
-            Your profile is only {Number.isFinite(completion) ? completion : 0}%
-            complete. Please complete your profile to 100% to unlock all
-            features, including posting, liking, commenting and saving in the
-            Community.
+            Your profile is only {Number.isFinite(completion) ? completion : 0}% complete.
+            Please complete your profile to 100% to unlock all features,
+            including posting, liking, commenting and saving in the Community.
           </Typography>
 
           <Box sx={{ mt: 2.5, px: { xs: 1, sm: 3 } }}>
@@ -603,50 +590,34 @@ export default function Community() {
 
       <PageLayout>
         {/* Page header */}
-        <Typography
-          variant="h5"
-          fontWeight={800}
-          sx={{
-            mb: { xs: 0.5, sm: 0.5 },
-            fontSize: { xs: "1rem", sm: "1.2rem", md: "1.35rem", lg: "1.5rem" },
-          }}
-        >
-          Saathi <span style={{ color: "#E8650A" }}>Community</span>
+        <Typography variant="h5" fontWeight={800} sx={{ mb: { xs: 0.5, sm: 0.5 }, fontSize: { xs: "1rem", sm: "1.2rem", md: "1.35rem", lg: "1.5rem" } }}>
+          Saathi <span style={{ color: '#E8650A' }}>Community</span>
         </Typography>
-        <Typography
-          color="text.secondary"
-          sx={{
-            mb: { xs: 1, sm: 2 },
-            fontSize: {
-              xs: "0.7rem",
-              sm: "0.9rem",
-              md: "1.05rem",
-              lg: "1.2rem",
-            },
-          }}
-        >
+        <Typography color="text.secondary" sx={{ mb: { xs: 1, sm: 2 }, fontSize: { xs: "0.7rem", sm: "0.9rem", md: "1.05rem", lg: "1.2rem" } }}>
           Built on trust, referrals, and shared roots
         </Typography>
 
         {/* Main layout: Community box + SidebarContent box, single flex row, gap 2, responsive */}
         <Box
           sx={{
-            display: "flex",
-            flexDirection: { xs: "column", sm: "row" },
+            display: 'flex',
+            flexDirection: { xs: 'column', sm: 'row' },
             // gap: 1,
-            alignItems: "flex-start",
-            width: "100%",
-            maxWidth: "1200px",
+            alignItems: 'flex-start',
+            width: '100%',
+            maxWidth: "1200px"
           }}
         >
+
           {/* ── Community feed box ── */}
           <Box
             sx={{
               flex: 1,
               minWidth: 0,
-              width: "100%",
+              width: '100%',
             }}
           >
+
             <Box
               sx={{
                 p: { xs: 1, sm: 1.5, md: 2 },
@@ -654,16 +625,10 @@ export default function Community() {
                 border: CARD_BORDER,
                 mb: 2,
                 width: POST_BOX_WIDTH_SX,
-                boxSizing: "border-box",
+                boxSizing: 'border-box',
               }}
             >
-              <Box
-                sx={{
-                  display: "flex",
-                  gap: isMobile ? 1 : 1.5,
-                  alignItems: "flex-start",
-                }}
-              >
+              <Box sx={{ display: 'flex', gap: isMobile ? 1 : 1.5, alignItems: 'flex-start' }}>
                 <UserAvatar
                   size={avatarSize}
                   verified
@@ -749,6 +714,7 @@ export default function Community() {
                     />
                   </span>
                 </Tooltip>
+
               </Box>
 
               {/* Image preview */}
@@ -756,10 +722,10 @@ export default function Community() {
                 <Box
                   sx={{
                     mt: 2,
-                    position: "relative",
+                    position: 'relative',
                     borderRadius: 3,
-                    overflow: "hidden",
-                    border: "1px solid #eee",
+                    overflow: 'hidden',
+                    border: '1px solid #eee',
                   }}
                 >
                   <Box
@@ -767,27 +733,19 @@ export default function Community() {
                     src={preview}
                     alt="preview"
                     sx={{
-                      width: "100%",
+                      width: '100%',
                       maxHeight: { xs: 200, sm: 240, md: 280, lg: 300 },
-                      objectFit: "cover",
-                      display: "block",
+                      objectFit: 'cover',
+                      display: 'block',
                     }}
                   />
                   <Button
                     size="small"
-                    onClick={() => {
-                      setMedia(null);
-                      setPreview("");
-                    }}
+                    onClick={() => { setMedia(null); setPreview(""); }}
                     sx={{
-                      position: "absolute",
-                      top: 8,
-                      right: 8,
-                      minWidth: 0,
-                      bgcolor: "#fff",
-                      borderRadius: "50%",
-                      width: isMobile ? 28 : 34,
-                      height: isMobile ? 28 : 34,
+                      position: 'absolute', top: 8, right: 8,
+                      minWidth: 0, bgcolor: '#fff', borderRadius: '50%',
+                      width: isMobile ? 28 : 34, height: isMobile ? 28 : 34,
                     }}
                   >
                     <CloseIcon fontSize={iconFontSize} />
@@ -797,11 +755,8 @@ export default function Community() {
 
               <Divider sx={{ my: 1.5 }} />
 
-              <Stack
-                direction="row"
-                alignItems="center"
-                justifyContent="space-between"
-              >
+              <Stack direction="row" alignItems="center" justifyContent="space-between">
+
                 <Box component="span">
                   <Tooltip
                     title="Complete your profile to 100% before creating a post."
@@ -897,8 +852,10 @@ export default function Community() {
                         accept="image/*"
                         onChange={handleMediaSelect}
                       />
+
                     </span>
                   </Tooltip>
+
 
                   {openMediaDialog && (
                     <>
@@ -916,7 +873,7 @@ export default function Community() {
                             color: "#fff",
 
                             "& .MuiButton-startIcon svg": {
-                              fontSize: { xs: "13px", sm: "14px" }, // 14px, 16px, 18px, etc.
+                              fontSize: { xs: "13px", sm: "14px" } // 14px, 16px, 18px, etc.
                             },
 
                             "&:hover": {
@@ -940,11 +897,12 @@ export default function Community() {
                             bgcolor: "#2e7d32",
                             color: "#fff",
                             "& .MuiButton-startIcon svg": {
-                              fontSize: { xs: "13px", sm: "14px" }, // 14px, 16px, 18px, etc.
+                              fontSize: { xs: "13px", sm: "14px" } // 14px, 16px, 18px, etc.
                             },
 
                             "&:hover": {
                               bgcolor: "#1b5e20",
+
                             },
                           }}
                         >
@@ -972,6 +930,7 @@ export default function Community() {
                       />
                     </>
                   )}
+
                 </Box>
 
                 <Tooltip
@@ -1017,14 +976,7 @@ export default function Community() {
 
             {/* Posts list */}
             {postLoading ? (
-              <Box
-                sx={{
-                  width: "100%",
-                  display: "flex",
-                  justifyContent: "center",
-                  py: 4,
-                }}
-              >
+              <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', py: 4 }}>
                 <CircularProgress size={isMobile ? 36 : 50} />
               </Box>
             ) : communityPosts.length == 0 ? (
@@ -1064,23 +1016,14 @@ export default function Community() {
                   key={index}
                   elevation={0}
                   sx={{
-                    borderRadius: 3,
-                    border: CARD_BORDER,
-                    mb: 2,
-                    overflow: "hidden",
+                    borderRadius: 3, border: CARD_BORDER, mb: 2, overflow: 'hidden',
                     width: POST_BOX_WIDTH_SX,
-                    boxSizing: "border-box",
+                    boxSizing: 'border-box',
                   }}
                 >
                   <Box sx={{ p: isMobile ? 1.5 : 2 }}>
                     {/* Post header */}
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "flex-start",
-                        gap: isMobile ? 1 : 1.5,
-                      }}
-                    >
+                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: isMobile ? 1 : 1.5 }}>
                       <Avatar
                         src={post?.authorId?.profileImage}
                         alt={`${post?.authorId?.firstName || ""} ${post?.authorId?.lastName || ""}`}
@@ -1092,33 +1035,26 @@ export default function Community() {
                           width: avatarSize,
                           height: avatarSize,
                           bgcolor: SAFFRON,
-                          color: "#fff",
+                          color: '#fff',
                           fontWeight: 800,
                           fontSize: avatarFontSize,
                           flexShrink: 0,
-                          mt: { xs: 0.4, sm: 0.5 },
+                          mt: { xs: 0.4, sm: 0.5 }
                         }}
                       >
                         {!post?.authorId?.profileImage &&
-                          `${post?.authorId?.firstName?.[0] || ""}${
-                            post?.authorId?.lastName?.[0] || ""
+                          `${post?.authorId?.firstName?.[0] || ""}${post?.authorId?.lastName?.[0] || ""
                           }`}
                       </Avatar>
 
                       <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Typography
-                          fontWeight={700}
+                        <Typography fontWeight={700}
                           sx={{ fontSize: { xs: "0.7rem", sm: "0.92rem" } }}
-                          noWrap
-                        >
+                          noWrap>
                           {post?.authorId?.firstName} {post?.authorId?.lastName}
                         </Typography>
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          fontSize={captionSize}
-                          sx={{ fontSize: { xs: "0.6rem", sm: "0.72rem" } }}
-                        >
+                        <Typography variant="caption" color="text.secondary" fontSize={captionSize}
+                          sx={{ fontSize: { xs: "0.6rem", sm: "0.72rem" } }}>
                           {formattedDateTime(post?.createdAt)}
                         </Typography>
                       </Box>
@@ -1214,6 +1150,7 @@ export default function Community() {
                                   fontWeight: 600,
                                   color: "#ffff",
                                   bgcolor: "grey.700",
+
                                 }}
                               >
                                 Cancel
@@ -1269,6 +1206,7 @@ export default function Community() {
                               }}
                             >
                               Edit Post
+
                               <IconButton
                                 onClick={() => setEditOpen(false)}
                                 size="small"
@@ -1282,10 +1220,7 @@ export default function Community() {
                             </DialogTitle>
 
                             {/* Dialog Content */}
-                            <DialogContent
-                              dividers
-                              sx={{ px: { xs: 1.5, sm: 3 }, py: 2 }}
-                            >
+                            <DialogContent dividers sx={{ px: { xs: 1.5, sm: 3 }, py: 2 }}>
                               <TextField
                                 fullWidth
                                 multiline
@@ -1294,20 +1229,15 @@ export default function Community() {
                                 size="small"
                                 label="Description"
                                 value={editDescription}
-                                onChange={(e) =>
-                                  setEditDescription(e.target.value)
-                                }
+                                onChange={(e) => setEditDescription(e.target.value)}
                               />
 
                               <Box sx={{ mt: 2 }}>
+
                                 {previewImage && (
                                   <Box
                                     component="img"
-                                    src={
-                                      editImage
-                                        ? URL.createObjectURL(editImage)
-                                        : previewImage
-                                    }
+                                    src={editImage ? URL.createObjectURL(editImage) : previewImage}
                                     alt="Preview"
                                     sx={{
                                       width: "100%",
@@ -1326,7 +1256,7 @@ export default function Community() {
                                   onClick={openImageMenu}
                                   sx={{
                                     width: "fit-content", // or "auto"
-                                    minWidth: "unset", // optional: removes MUI's default minimum width
+                                    minWidth: "unset",    // optional: removes MUI's default minimum width
                                     height: 36,
                                     bgcolor: "#FF9933",
                                     color: "#fff",
@@ -1343,32 +1273,20 @@ export default function Community() {
                                   {!previewImage ? "Add Image" : "Change Image"}
                                 </Button>
 
+
                                 {/* Image Menu */}
                                 <Menu
                                   anchorEl={imageMenuAnchor}
                                   open={isImageMenuOpen}
                                   onClose={closeImageMenu}
-                                  anchorOrigin={{
-                                    vertical: "top",
-                                    horizontal: "center",
-                                  }}
-                                  transformOrigin={{
-                                    vertical: "bottom",
-                                    horizontal: "center",
-                                  }}
+                                  anchorOrigin={{ vertical: "top", horizontal: "center" }}
+                                  transformOrigin={{ vertical: "bottom", horizontal: "center" }}
                                 >
-                                  <MenuItem component="label" dense>
+                                  <MenuItem component="label" dense >
                                     <ListItemIcon>
-                                      <CameraAltIcon
-                                        fontSize="small"
-                                        sx={{ color: "#FF9933" }}
-                                      />
+                                      <CameraAltIcon fontSize="small" sx={{ color: "#FF9933" }} />
                                     </ListItemIcon>
-                                    <ListItemText
-                                      primaryTypographyProps={{
-                                        fontSize: "0.85rem",
-                                      }}
-                                    >
+                                    <ListItemText primaryTypographyProps={{ fontSize: "0.85rem" }}>
                                       Camera
                                     </ListItemText>
                                     <input
@@ -1382,16 +1300,9 @@ export default function Community() {
 
                                   <MenuItem component="label" dense>
                                     <ListItemIcon>
-                                      <InsertDriveFileIcon
-                                        fontSize="small"
-                                        sx={{ color: "#FF9933" }}
-                                      />
+                                      <InsertDriveFileIcon fontSize="small" sx={{ color: "#FF9933" }} />
                                     </ListItemIcon>
-                                    <ListItemText
-                                      primaryTypographyProps={{
-                                        fontSize: "0.85rem",
-                                      }}
-                                    >
+                                    <ListItemText primaryTypographyProps={{ fontSize: "0.85rem" }}>
                                       Gallery
                                     </ListItemText>
                                     <input
@@ -1467,6 +1378,7 @@ export default function Community() {
                             </DialogActions>
                           </Dialog>
 
+
                           {editImage && (
                             <img
                               src={URL.createObjectURL(editImage)}
@@ -1477,12 +1389,11 @@ export default function Community() {
                           )}
                         </>
                       )}
+
                     </Box>
 
                     {/* Post body */}
-                    <Typography
-                      sx={{ mt: 1.5, fontSize: bodyFontSize, lineHeight: 1.6 }}
-                    >
+                    <Typography sx={{ mt: 1.5, fontSize: bodyFontSize, lineHeight: 1.6 }}>
                       {post.description}
                     </Typography>
                   </Box>
@@ -1490,68 +1401,48 @@ export default function Community() {
                   {/* Post image */}
                   {post.postImage && <CommunityImage src={post.postImage} />}
 
-                  <Divider />
+                  < Divider />
 
                   {/* Action buttons */}
-                  <Stack
+                  < Stack
                     direction="row"
                     sx={{
                       py: isMobile ? 0.25 : 0.5,
                       px: isMobile ? 0.5 : 2,
                       gap: isMobile ? 0 : 5,
                       // justifyContent: isMobile ? 'space-around' : 'flex-start',
-                      justifyContent: "space-around",
+                      justifyContent: 'space-around',
                     }}
                   >
                     <Button
-                      onClick={() =>
-                        post.isLiked ? removeLike(post._id) : addLike(post._id)
-                      }
+                      onClick={() => post.isLiked ? removeLike(post._id) : addLike(post._id)}
                       startIcon={
-                        post.isLiked ? (
-                          <ThumbUpIcon
-                            fontSize={iconFontSize}
-                            sx={{ color: "#0084ff" }}
-                          />
-                        ) : (
-                          <ThumbUpOffAltIcon fontSize={iconFontSize} />
-                        )
+                        post.isLiked
+                          ? <ThumbUpIcon fontSize={iconFontSize} sx={{ color: '#0084ff' }} />
+                          : <ThumbUpOffAltIcon fontSize={iconFontSize} />
                       }
-                      size={isMobile ? "small" : "medium"}
-                      sx={{
-                        textTransform: "none",
-                        color: "text.secondary",
-                        fontSize: btnFontSize,
-                      }}
+                      size={isMobile ? 'small' : 'medium'}
+                      sx={{ textTransform: 'none', color: 'text.secondary', fontSize: btnFontSize }}
                     >
                       {post?.likes || 0}
                     </Button>
 
                     <Button
                       startIcon={
-                        activeCommentPostId === post._id ? (
-                          <ChatIcon
-                            fontSize={iconFontSize}
-                            sx={{ color: "#0084ff" }}
-                          />
-                        ) : (
-                          <ChatIcon fontSize={iconFontSize} />
-                        )
+                        activeCommentPostId === post._id
+                          ? <ChatIcon fontSize={iconFontSize} sx={{ color: '#0084ff' }} />
+                          : <ChatIcon fontSize={iconFontSize} />
                       }
                       onClick={() => {
-                        const next =
-                          activeCommentPostId === post._id ? null : post._id;
+                        const next = activeCommentPostId === post._id ? null : post._id;
                         setActiveCommentPostId(next);
                         if (next) getComments(next);
                       }}
-                      size={isMobile ? "small" : "medium"}
-                      sx={{
-                        textTransform: "none",
-                        color: "text.secondary",
-                        fontSize: btnFontSize,
-                      }}
+                      size={isMobile ? 'small' : 'medium'}
+                      sx={{ textTransform: 'none', color: 'text.secondary', fontSize: btnFontSize }}
                     >
                       {commentCounts[post._id] ?? 0}
+
                     </Button>
 
                     <Button
@@ -1561,22 +1452,15 @@ export default function Community() {
                           : savePost(post);
                       }}
                       startIcon={
-                        isPostSaved(post._id) ? (
-                          <BookmarkBorderIcon
-                            sx={{ color: "#0084ff" }}
-                            fontSize={iconFontSize}
-                          />
-                        ) : (
-                          <BookmarkBorderIcon fontSize={iconFontSize} />
-                        )
+                        isPostSaved(post._id)
+                          ? <BookmarkBorderIcon sx={{ color: "#0084ff" }} fontSize={iconFontSize} />
+                          : <BookmarkBorderIcon fontSize={iconFontSize} />
                       }
-                      size={isMobile ? "small" : "medium"}
+                      size={isMobile ? 'small' : 'medium'}
                       sx={{
-                        textTransform: "none",
-                        color: isPostSaved(post._id)
-                          ? "#0084ff"
-                          : "text.secondary",
-                        fontSize: btnFontSize,
+                        textTransform: 'none',
+                        color: isPostSaved(post._id) ? '#0084ff' : 'text.secondary',
+                        fontSize: btnFontSize
                       }}
                     >
                       {isPostSaved(post._id) ? "Saved" : "Save"}
@@ -1591,10 +1475,7 @@ export default function Community() {
                         post={post}
                         user={user}
                         onCommentsChanged={(newCount) =>
-                          setCommentCounts((prev) => ({
-                            ...prev,
-                            [post._id]: newCount,
-                          }))
+                          setCommentCounts((prev) => ({ ...prev, [post._id]: newCount }))
                         }
                       />
                     </Box>
@@ -1661,8 +1542,10 @@ export default function Community() {
               <Discover />
             </Box>
           )}
-        </Box>
-      </PageLayout>
+        </Box >
+      </PageLayout >
     </>
+
+
   );
 }
