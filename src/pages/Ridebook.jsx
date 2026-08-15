@@ -59,6 +59,8 @@ export default function Ridebook({
   const [memberErrors, setMemberErrors] = useState([]);
   const [memberListError, setMemberListError] = useState("");
 
+  const isSubmittingRef = React.useRef(false);
+
   const calculateAge = (dob) => {
     if (!dob) return "";
 
@@ -105,10 +107,6 @@ export default function Ridebook({
     );
 
   const TOASTS = ToastConfig();
-
-
-
-
 
   const handleAddMember = () => {
 
@@ -362,7 +360,12 @@ export default function Ridebook({
 
   const handleRequestSubmit = async () => {
     if (!ride) return;
+    if (isSubmittingRef.current) return;
     if (!validate()) return;
+
+    isSubmittingRef.current = true;
+    setRequestLoading(true);
+
     const userMobile = currentUser?.mobile;
     const storedUser = JSON.parse(localStorage.getItem("user"));
     const membersToSubmit = isEditMode ? newMembers : requestData.members;
@@ -380,7 +383,7 @@ export default function Ridebook({
     };
 
     try {
-      setRequestLoading(true);
+      // setRequestLoading(true);
       const res = isEditMode
         ? await axios.put(`${Api}/bookride/edit/${requestToEdit._id}`, payload)
         : await axios.post(`${Api}/bookride/${ride._id}`, payload);
@@ -400,6 +403,7 @@ export default function Ridebook({
       toast.error(error.response?.data?.message || "Request failed", TOASTS);
     } finally {
       setRequestLoading(false);
+      isSubmittingRef.current = false;
     }
   };
 
@@ -452,7 +456,7 @@ export default function Ridebook({
   const editableMembersWithMeta = editableMembers.map((member, originalIndex) => ({
     ...member,
     originalIndex,
-   isSelf: !isEditMode && originalIndex === 0,
+    isSelf: !isEditMode && originalIndex === 0,
   }));
 
   const visibleMembers = editableMembersWithMeta.filter(
@@ -462,7 +466,7 @@ export default function Ridebook({
     <Dialog
       open={open}
       onClose={onClose}
-      fullScreen={isMobile}
+      // fullScreen={isMobile}
       fullWidth
       maxWidth="sm"
       PaperProps={{
@@ -899,7 +903,7 @@ export default function Ridebook({
           py: { xs: 1.5, sm: 2 },
           gap: 1,
           borderTop: `1px solid ${ORANGE_DIVIDER}`,
-          flexDirection: { xs: "column-reverse", sm: "row" },
+          flexDirection: { xs: "row", sm: "row" },
         }}
       >
         <Button
@@ -937,10 +941,15 @@ export default function Ridebook({
             px: 3,
           }}
         >
-          {
+          {/* {
             requestLoading
               ? (isEditMode ? "Updating..." : "Submitting...")
               : (isEditMode ? "Update Request" : "Submit Request")
+          } */}
+          {
+            requestLoading
+              ? (isEditMode ? "Updating..." : "Submitting...")
+              : (isEditMode ? "Update " : "Submit ")
           }
         </Button>
       </DialogActions>

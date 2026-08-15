@@ -227,13 +227,9 @@ function RidePaginationBar({ count, page, onChange, isMobile }) {
   );
 }
 
-
-
 function EditRideModal({ ride, onSave, onClose }) {
-
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
 
   return (
     <>
@@ -318,7 +314,6 @@ function EditRideModal({ ride, onSave, onClose }) {
           }}
         >
           Edit Ride
-
           <IconButton
             aria-label="close"
             onClick={onClose}
@@ -349,20 +344,12 @@ function EditRideModal({ ride, onSave, onClose }) {
             },
           }}
         >
-          {ride && (
-            <OfferRide
-              ride={ride}
-              onSave={onSave}
-              onClose={onClose}
-            />
-          )}
+          {ride && <OfferRide ride={ride} onSave={onSave} onClose={onClose} />}
         </DialogContent>
       </Dialog>
     </>
   );
 }
-
-
 
 // ── Delete Confirm Dialog ────────────────────────────────────────────────────
 function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
@@ -372,10 +359,10 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
   const startDate = new Date(ride.startTime);
   const dateLabel = !isNaN(startDate)
     ? startDate.toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    })
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
     : "—";
 
   const handleConfirm = async () => {
@@ -389,7 +376,7 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
     } catch (err) {
       setError(
         err?.response?.data?.message ||
-        "Failed to delete ride. Please try again.",
+          "Failed to delete ride. Please try again.",
       );
     } finally {
       setDeleting(false);
@@ -743,17 +730,17 @@ function RideCard({
   const startDate = new Date(ride.startTime);
   const date = !isNaN(startDate)
     ? startDate.toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    })
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
     : "—";
   const time = !isNaN(startDate)
     ? startDate.toLocaleTimeString("en-IN", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    })
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      })
     : "—";
 
   // const fuelLabel = ride.fuelSharing ? "Yes" : "No";
@@ -769,7 +756,6 @@ function RideCard({
   ).length;
 
   const handleApprove = async (requestId) => {
-
     try {
       setApproveLoading(requestId);
       const res = await axios.patch(
@@ -795,7 +781,6 @@ function RideCard({
   };
 
   const handleReject = async (requestId) => {
-
     try {
       setRejectLoading(requestId);
       await axios.patch(`${Api}/bookride/${requestId}/status?type=Reject`, {
@@ -1194,7 +1179,7 @@ function RideCard({
                     </Stack>
                   </Box>
 
-                  {ride.modeOfTravel !== "Flight" &&
+                  {ride.modeOfTravel !== "Flight" && (
                     <Box>
                       <Typography
                         sx={{
@@ -1231,7 +1216,7 @@ function RideCard({
                         </Typography>
                       </Stack>
                     </Box>
-                  }
+                  )}
 
                   <Box>
                     <Typography
@@ -1366,7 +1351,7 @@ function RideCard({
               minHeight: 40,
               bgcolor: "#757575",
               color: "#ffff",
-              textTransform: "none"
+              textTransform: "none",
             }}
           >
             Not yet
@@ -1381,7 +1366,7 @@ function RideCard({
               minHeight: 40,
               bgcolor: "#f89b04",
               color: "#ffff",
-              textTransform: "none"
+              textTransform: "none",
             }}
           >
             Started
@@ -1404,19 +1389,19 @@ const MyRides = () => {
   const [history, setHistory] = useState([]);
   const [editRide, setEditRide] = useState(null);
   const [deleteRide, setDeleteRide] = useState(null);
- const [currentRide, setCurrentRide] = useState([]);
-const [notificationRide, setNotificationRide] = useState(null);
-const [allRequests, setAllRequests] = useState([]);
-const [allMyRequests, setAllMyRequests] = useState([]);
-const { notifications } = useNotifications();
-const [confirmRide, setConfirmRide] = useState(null);
+  const [currentRide, setCurrentRide] = useState([]);
+  const [notificationRide, setNotificationRide] = useState(null);
+  const [allRequests, setAllRequests] = useState([]);
+  const [allMyRequests, setAllMyRequests] = useState([]);
+  const { notifications } = useNotifications();
+  const [confirmRide, setConfirmRide] = useState(null);
 
-const [ridesLoaded, setRidesLoaded] = useState(false);
-const [requestsLoaded, setRequestsLoaded] = useState(false);
-const loading = !(ridesLoaded && requestsLoaded);
+  const [ridesLoaded, setRidesLoaded] = useState(false);
+  const [requestsLoaded, setRequestsLoaded] = useState(false);
+  const loading = !(ridesLoaded && requestsLoaded);
 
-// set ridesLoaded(true) in fetchRides' finally
-// set requestsLoaded(true) in fetchAllSends' finally
+  // set ridesLoaded(true) in fetchRides' finally
+  // set requestsLoaded(true) in fetchAllSends' finally
   // Pagination state — one page counter per tab so each tab remembers its own position
   const [currentRidePage, setCurrentRidePage] = useState(1);
   const [upcomingPage, setUpcomingPage] = useState(1);
@@ -1519,74 +1504,69 @@ const loading = !(ridesLoaded && requestsLoaded);
 
   const { refreshRide } = useRide();
 
-  // Update the fetchRides function to include cancelled/rejected rides in history
-
   const fetchRides = async () => {
     const currentDateTime = new Date();
+
     try {
       const response = await axios.get(`${Api}/rides/get`);
+
       const all = (response.data.data || []).sort(
         (a, b) =>
           new Date(b.startTime).getTime() - new Date(a.startTime).getTime(),
       );
 
-      setMypost(all.filter((item) => item?.createdBy?._id === user.id));
+      const myRides = all.filter((ride) => ride?.createdBy?._id === user.id);
 
-      // setUpcoming(
-      //   all.filter((ride) => {
-      //     const rideStartTime = new Date(ride?.startTime);
-      //     return (
-      //       ride?.createdBy?._id === user.id &&
-      //       !isNaN(rideStartTime) &&
-      //       rideStartTime > currentDateTime && ride.travelStatus != "Cancelled"
-      //     );
-      //   }),
-      // );
+      setMypost(myRides);
 
-      // setHistory(
-      //   all.filter((ride) => {
-      //     const rideStartTime = new Date(ride?.startTime);
-      //     // const rideEndTime = new Date(rideStartTime.getTime() + 3 * 60 * 60 * 1000);
-      //     return (
-      //       ride?.createdBy?._id === user.id &&
-      //       !isNaN(rideStartTime) &&
-      //       (ride?.travelStatus === "Completed" || ride?.travelStatus === "Cancelled")
-      //     );
-      //   }),
-      // );
-// 
-      // setCurrentRide(
-      //   //   const currentDateTime = new Date();
-      //   //   const currReqRide = allMyRequests.filter((ride)=>{
+      setUpcoming(
+        myRides.filter((ride) => {
+          const rideStartTime = new Date(ride?.startTime);
 
-      //   //     const rideStartTime = new Date(ride?.rideId?.startTime);
-      //   //     return(
-      //   //       !isNaN(rideStartTime) &&
-      //   //       rideStartTime <= currentDateTime
-      //   //     )
-      //   //   })
+          return (
+            !isNaN(rideStartTime.getTime()) &&
+            rideStartTime > currentDateTime &&
+            ride?.travelStatus !== "Cancelled" &&
+            ride?.travelStatus !== "Completed"
+          );
+        }),
+      );
 
-      //   all.filter((ride) => {
-      //     const rideStartTime = new Date(ride?.startTime);
-      //     // const rideEndTime = new Date(rideStartTime.getTime() + 3 * 60 * 60 * 1000);
-      //     return (
-      //       ride?.createdBy?._id === user.id &&
-      //       rideStartTime >= currentDateTime &&
-      //       (ride?.travelStatus !== "Completed" || ride?.travelStatus !== "Cancelled")
-      //     );
-      //   }),
-      // );
+      setHistory(
+        myRides.filter((ride) => {
+          const rideStartTime = new Date(ride?.startTime);
+
+          return (
+            !isNaN(rideStartTime.getTime()) &&
+            (ride?.travelStatus === "Completed" ||
+              ride?.travelStatus === "Cancelled")
+          );
+        }),
+      );
+
+      const currReqRide = (allMyRequests || []).filter((request) => {
+        const rideStartTime = new Date(request?.rideId?.startTime);
+
+        return (
+          !isNaN(rideStartTime.getTime()) &&
+          rideStartTime <= currentDateTime &&
+          request?.rideId?.travelStatus !== "Completed" &&
+          request?.rideId?.travelStatus !== "Cancelled"
+        );
+      });
+
+      setCurrentRide(currReqRide);
     } catch (error) {
       console.error("Error fetching rides:", error.message);
     } finally {
-   setRidesLoaded(true);
+      setRidesLoaded(true);
     }
   };
+
   useEffect(() => {
     fetchRides();
   }, [refreshRide, notifications]);
 
-  // Upcoming Ride Condition for both req and post
   useEffect(() => {
     if (!allMyRequests?.length) return;
 
@@ -1612,7 +1592,6 @@ const loading = !(ridesLoaded && requestsLoaded);
     setUpcoming([...acceptedRides, ...myUpcoming]);
   }, [allMyRequests, mypost, notifications]);
 
-
   useEffect(() => {
     const currentDateTime = new Date();
 
@@ -1623,7 +1602,7 @@ const loading = !(ridesLoaded && requestsLoaded);
           !isNaN(rideStartTime) &&
           rideStartTime <= currentDateTime &&
           ride?.status === "ACCEPTED" &&
-          (ride?.rideId?.travelStatus !== "Completed")
+          ride?.rideId?.travelStatus !== "Completed"
         );
       })
       .map((ride) => ride.rideId);
@@ -1634,7 +1613,8 @@ const loading = !(ridesLoaded && requestsLoaded);
       return (
         ride?.createdBy?._id === user.id &&
         rideStartTime <= currentDateTime &&
-        (ride?.travelStatus !== "Completed" && ride?.travelStatus !== "Cancelled")
+        ride?.travelStatus !== "Completed" &&
+        ride?.travelStatus !== "Cancelled"
       );
     });
 
@@ -1643,8 +1623,9 @@ const loading = !(ridesLoaded && requestsLoaded);
     const historyRide = allMyRequests
       .filter((ride) => {
         return (
-          ride?.rideId?.travelStatus == "Completed" || ride.travelStatus === "Cancelled"
-        )
+          ride?.rideId?.travelStatus == "Completed" ||
+          ride.travelStatus === "Cancelled"
+        );
       })
       .map((ride) => ride.rideId);
 
@@ -1653,9 +1634,7 @@ const loading = !(ridesLoaded && requestsLoaded);
       return (
         ride?.createdBy?._id === user.id &&
         !isNaN(rideStartTime) &&
-        (
-          ride?.travelStatus == "Completed" || ride.travelStatus === "Cancelled"
-        )
+        (ride?.travelStatus == "Completed" || ride.travelStatus === "Cancelled")
       );
     });
 
@@ -1710,16 +1689,16 @@ const loading = !(ridesLoaded && requestsLoaded);
       console.error("Error fetching requests:", error);
     }
   };
-const fetchAllSends = async () => {
-  try {
-    const res = await axios.get(`${Api}/bookride/send/${user.id}`);
-    setAllMyRequests(res.data.data || []);
-  } catch (error) {
-    console.error("Error fetching requests:", error);
-  } finally {
-    setRequestsLoaded(true);
-  }
-};
+  const fetchAllSends = async () => {
+    try {
+      const res = await axios.get(`${Api}/bookride/send/${user.id}`);
+      setAllMyRequests(res.data.data || []);
+    } catch (error) {
+      console.error("Error fetching requests:", error);
+    } finally {
+      setRequestsLoaded(true);
+    }
+  };
 
   useEffect(() => {
     fetchAllSends();
