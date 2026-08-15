@@ -47,6 +47,7 @@ import FolderIcon from "@mui/icons-material/Folder";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import ToastConfig from '../components/ToastConfig.jsx';
 import ProfileModal from './Avatar.jsx';
+import { useNavigate } from 'react-router-dom';
 
 const BREAKPOINTS = { xs: 0, sm: 600, md: 900, lg: 1200, xl: 1536 }; // MUI defaults
 
@@ -98,6 +99,7 @@ export default function Community() {
   const [commentCounts, setCommentCounts] = useState({});
   const toasts = ToastConfig();
 
+  const navigate = useNavigate();
 
   const theme = useTheme();
   const isTab = useMediaQuery(theme.breakpoints.down("sm"));
@@ -261,6 +263,27 @@ export default function Community() {
 
   const isProfileComplete = completion === 100;
   const SIDEBAR_SCROLL_HEIGHT = 'calc(100vh - 120px)';
+
+  // ── Profile completion modal ──
+  // Shows once per page-load whenever the user's profile is under 100%.
+  const [profileGateOpen, setProfileGateOpen] = useState(false);
+
+  useEffect(() => {
+    // `completion` starts undefined/0 while the user context loads, so wait
+    // until we actually have a value before deciding whether to show it.
+    if (typeof completion === "number") {
+      setProfileGateOpen(completion !== 100);
+    }
+  }, [completion]);
+
+  const handleCloseProfileGate = () => {
+    setProfileGateOpen(false);
+  };
+
+  const handleGoCompleteProfile = () => {
+    setProfileGateOpen(false);
+    navigate("/profile"); // adjust to your actual "complete profile" route
+  };
 
   const handleEdit = (post) => {
     setSelectedPost(post);
@@ -481,6 +504,104 @@ export default function Community() {
 
   return (
     <>
+      {/* Profile-completion gate modal */}
+      <Dialog
+        open={profileGateOpen}
+        onClose={handleCloseProfileGate}
+        fullWidth
+        maxWidth="xs"
+        PaperProps={{
+          sx: {
+            borderRadius: { xs: 2, sm: 3 },
+            m: { xs: 1.5, sm: 2 },
+            width: { xs: "95%", sm: "100%" },
+            textAlign: "center",
+            p: { xs: 1, sm: 1.5 },
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 1,
+            fontWeight: 700,
+            fontSize: { xs: "1rem", sm: "1.15rem" },
+            pt: 3,
+          }}
+        >
+          <WarningAmberRoundedIcon sx={{ fontSize: 40, color: "#E8650A" }} />
+          Complete Your Profile
+        </DialogTitle>
+
+        <DialogContent>
+          <Typography
+            sx={{
+              fontSize: { xs: "0.85rem", sm: "0.95rem" },
+              color: "text.secondary",
+            }}
+          >
+            Your profile is only {Number.isFinite(completion) ? completion : 0}% complete.
+            Please complete your profile to 100% to unlock all features,
+            including posting, liking, commenting and saving in the Community.
+          </Typography>
+
+          <Box sx={{ mt: 2.5, px: { xs: 1, sm: 3 } }}>
+            <LinearProgress
+              variant="determinate"
+              value={Number.isFinite(completion) ? completion : 0}
+              sx={{
+                height: 8,
+                borderRadius: 5,
+                bgcolor: "#F0E6DC",
+                "& .MuiLinearProgress-bar": { bgcolor: "#E8650A" },
+              }}
+            />
+          </Box>
+        </DialogContent>
+
+        <DialogActions
+          sx={{
+            justifyContent: "center",
+            pb: 3,
+            pt: 1,
+            gap: 1.5,
+          }}
+        >
+          <Button
+            variant="contained"
+            onClick={handleGoCompleteProfile}
+            sx={{
+              textTransform: "none",
+              borderRadius: 999,
+              px: 3,
+              fontWeight: 600,
+              bgcolor: "#E8650A",
+              "&:hover": { bgcolor: "#c85608" },
+            }}
+          >
+            Complete Profile
+          </Button>
+
+          <Button
+            variant="outlined"
+            onClick={handleCloseProfileGate}
+            sx={{
+              textTransform: "none",
+              borderRadius: 999,
+              px: 3,
+              fontWeight: 600,
+              color: "#E8650A",
+              borderColor: "#E8650A",
+              "&:hover": { borderColor: "#c85608", bgcolor: "rgba(232,101,10,0.06)" },
+            }}
+          >
+            OK
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <PageLayout>
         {/* Page header */}
         <Typography variant="h5" fontWeight={800} sx={{ mb: { xs: 0.5, sm: 0.5 }, fontSize: { xs: "1rem", sm: "1.2rem", md: "1.35rem", lg: "1.5rem" } }}>
@@ -1442,4 +1563,3 @@ export default function Community() {
 
   );
 }
-
