@@ -569,20 +569,7 @@ export default function Community() {
             gap: 1.5,
           }}
         >
-          <Button
-            variant="contained"
-            onClick={handleGoCompleteProfile}
-            sx={{
-              textTransform: "none",
-              borderRadius: 999,
-              px: 3,
-              fontWeight: 600,
-              bgcolor: "#E8650A",
-              "&:hover": { bgcolor: "#c85608" },
-            }}
-          >
-            Complete Profile
-          </Button>
+       
 
           <Button
             variant="outlined"
@@ -592,9 +579,8 @@ export default function Community() {
               borderRadius: 999,
               px: 3,
               fontWeight: 600,
-              color: "#E8650A",
-              borderColor: "#E8650A",
-              "&:hover": { borderColor: "#c85608", bgcolor: "rgba(232,101,10,0.06)" },
+              bgcolor: "#E8650A",
+              "&:hover": { bgcolor: "#c85608" },
             }}
           >
             OK
