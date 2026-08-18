@@ -70,7 +70,7 @@ const Login = () => {
         data?.user.role === ROLES.ADMIN
           ? "/admin/dashboard"
           : data?.user.refApprove === "Approved"
-            ? "/community"
+            ? "/find-ride"
             : "/waiting-approval";
     } catch (error) {
       // toast.error(error.message, toasts);

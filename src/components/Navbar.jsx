@@ -390,7 +390,7 @@ const TopNav = ({ onMenuClick }) => {
                 size={44}
                 thickness={3}
                 sx={{
-                  color: completion === 100 ? "#a33916ff" : "#f97316",
+                  color: completion === 100 ? "#119200" : "#f74040",
                   position: "absolute",
                   top: 0,
                   left: 0,
