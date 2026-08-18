@@ -116,7 +116,25 @@ export default function Community() {
       fileInputRef.current?.click();
     }
   };
+  // Lower score = closer / higher priority
+  const getZipcodeProximityScore = (authorZip, currentZip) => {
+    if (!currentZip || !authorZip) return 3; // no data → lowest priority
+    const a = String(authorZip);
+    const b = String(currentZip);
 
+    if (a === b) return 0;               // exact same zipcode
+    if (a.slice(0, 3) === b.slice(0, 3)) return 1; // same local area
+    if (a.slice(0, 1) === b.slice(0, 1)) return 2; // same broad region
+    return 3;                             // everything else
+  };
+
+  const sortPostsByProximity = (posts, currentZip) => {
+    return [...posts].sort(
+      (a, b) =>
+        getZipcodeProximityScore(a?.authorId?.zipcode, currentZip) -
+        getZipcodeProximityScore(b?.authorId?.zipcode, currentZip)
+    );
+  };
 
   const getCommmunityPost = async () => {
     try {
@@ -129,13 +147,15 @@ export default function Community() {
         isLiked: likedPostIds.includes(post._id),
       }));
 
+      // 👇 sort so nearby users (by zipcode) appear first
+      const sortedPosts = sortPostsByProximity(updatedPosts, currentUser?.zipcode);
+
       const postIds = postsRes.data.data.map((item) => item._id);
-      setCommunityPosts(updatedPosts);
+      setCommunityPosts(sortedPosts);
       setPostId(postIds);
 
-      // fetch comment counts for all posts in parallel
       const countEntries = await Promise.all(
-        updatedPosts.map(async (p) => {
+        sortedPosts.map(async (p) => {
           try {
             const res = await axios.get(Api + `/community/comments/${p._id}/${user.id}`);
             return [p._id, res.data.data.comments.length];
@@ -145,7 +165,6 @@ export default function Community() {
         })
       );
       setCommentCounts(Object.fromEntries(countEntries));
-
     } catch (error) {
       console.error(error.message);
     } finally {
@@ -260,7 +279,7 @@ export default function Community() {
 
   const isProfileComplete = completion === 100;
   const SIDEBAR_SCROLL_HEIGHT = 'calc(100vh - 120px)';
-
+  const zipcode = currentUser?.zipcode
   // ── Profile completion modal ──
   // Shows once per page-load whenever the user's profile is under 100%.
   const [profileGateOpen, setProfileGateOpen] = useState(false);

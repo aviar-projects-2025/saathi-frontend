@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
@@ -190,6 +190,7 @@ export default function FindRides() {
     language: appliedLanguage,
   } = appliedFilters;
 
+
   // Chips reflect APPLIED filters (what's actually affecting results),
   // each chip's clear button removes that filter immediately and re-applies.
   const activeFilters = [
@@ -288,10 +289,36 @@ export default function FindRides() {
         languageMatch
       );
     });
+
   const visibleRides = filteredRides.filter(
     (ride) => ride.travelStatus !== "Cancelled"
   );
 
+  const getZipcodeProximityScore = (rideZip, currentZip) => {
+    if (!currentZip || !rideZip) return 3; // unknown → lowest priority
+    const a = String(rideZip);
+    const b = String(currentZip);
+
+    if (a === b) return 0;                          // exact match
+    if (a.slice(0, 3) === b.slice(0, 3)) return 1;   // same local area
+    if (a.slice(0, 1) === b.slice(0, 1)) return 2;   // same broad region
+    return 3;                                        // everything else
+  };
+
+  const sortRidesByProximity = (rides, currentZip) => {
+    return [...rides].sort((a, b) => {
+      const scoreA = getZipcodeProximityScore(a?.createdBy?.zipcode, currentZip);
+      const scoreB = getZipcodeProximityScore(b?.createdBy?.zipcode, currentZip);
+
+      if (scoreA !== scoreB) return scoreA - scoreB; // ascending: 0 (nearest) first
+      return new Date(a.startTime) - new Date(b.startTime);
+    });
+  };
+
+  const sortedVisibleRides = useMemo(
+    () => sortRidesByProximity(visibleRides, currentUser?.zipcode),
+    [visibleRides, currentUser?.zipcode]
+  );
 
   if (loading) {
     return (
@@ -823,11 +850,10 @@ export default function FindRides() {
 
 
           </Box>
-          {visibleRides.length > 0 ? (
+          {sortedVisibleRides.length > 0 ? (
             <Grid spacing={{ xs: 1, sm: 2 }}>
-              {visibleRides.map((ride) => {
+              {sortedVisibleRides.map((ride) => {
                 const isOwnRide = ride.createdBy?._id === currentUser?._id;
-
                 return (
                   <Grid item xs={12} sm={6} md={4} key={ride._id}>
                     <RideCard
