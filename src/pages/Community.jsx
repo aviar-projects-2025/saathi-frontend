@@ -98,7 +98,6 @@ export default function Community() {
   const [commentCounts, setCommentCounts] = useState({});
   const toasts = ToastConfig();
 
-
   const theme = useTheme();
   const isTab = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -261,6 +260,28 @@ export default function Community() {
 
   const isProfileComplete = completion === 100;
   const SIDEBAR_SCROLL_HEIGHT = 'calc(100vh - 120px)';
+
+  // ── Profile completion modal ──
+  // Shows once per page-load whenever the user's profile is under 100%.
+  const [profileGateOpen, setProfileGateOpen] = useState(false);
+  const hasCheckedProfileGateRef = useRef(false);
+
+  useEffect(() => {
+    // Only decide ONCE, and only after currentUser has actually finished
+    // loading. `completion` is 0 (a valid number) for a brief moment while
+    // the user context is still fetching, so checking `typeof completion
+    // === "number"` alone fires too early and causes the modal to flash
+    // open and then immediately close once the real completion (100) comes in.
+    if (hasCheckedProfileGateRef.current) return;
+    if (currentUser && currentUser._id && typeof completion === "number") {
+      hasCheckedProfileGateRef.current = true;
+      setProfileGateOpen(completion !== 100);
+    }
+  }, [currentUser, completion]);
+
+  const handleCloseProfileGate = () => {
+    setProfileGateOpen(false);
+  };
 
   const handleEdit = (post) => {
     setSelectedPost(post);
@@ -481,6 +502,92 @@ export default function Community() {
 
   return (
     <>
+      {/* Profile-completion gate modal */}
+      <Dialog
+        open={profileGateOpen}
+        onClose={handleCloseProfileGate}
+        fullWidth
+        maxWidth="xs"
+        PaperProps={{
+          sx: {
+            borderRadius: { xs: 2, sm: 3 },
+            m: { xs: 1.5, sm: 2 },
+            width: { xs: "95%", sm: "100%" },
+            textAlign: "center",
+            p: { xs: 1, sm: 1.5 },
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 1,
+            fontWeight: 700,
+            fontSize: { xs: "1rem", sm: "1.15rem" },
+            pt: 3,
+          }}
+        >
+          <WarningAmberRoundedIcon sx={{ fontSize: 40, color: "#E8650A" }} />
+          Complete Your Profile
+        </DialogTitle>
+
+        <DialogContent>
+          <Typography
+            sx={{
+              fontSize: { xs: "0.85rem", sm: "0.95rem" },
+              color: "text.secondary",
+            }}
+          >
+            Your profile is only {Number.isFinite(completion) ? completion : 0}% complete.
+            Please complete your profile to 100% to unlock all features,
+            including posting, liking, commenting and saving in the Community.
+          </Typography>
+
+          <Box sx={{ mt: 2.5, px: { xs: 1, sm: 3 } }}>
+            <LinearProgress
+              variant="determinate"
+              value={Number.isFinite(completion) ? completion : 0}
+              sx={{
+                height: 8,
+                borderRadius: 5,
+                bgcolor: "#F0E6DC",
+                "& .MuiLinearProgress-bar": { bgcolor: "#E8650A" },
+              }}
+            />
+          </Box>
+        </DialogContent>
+
+        <DialogActions
+          sx={{
+            justifyContent: "center",
+            pb: 3,
+            pt: 1,
+            gap: 1.5,
+          }}
+        >
+          <Button
+            variant="outlined"
+            onClick={handleCloseProfileGate}
+            sx={{
+              textTransform: "none",
+              borderRadius: 999,
+              px: 3,
+              fontWeight: 600,
+              bgcolor: "#E8650A",
+              color: "#fff",
+              "&:hover": {
+                bgcolor: "#c85608",
+                color: "#fff",
+              },
+            }}
+          >
+            OK
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <PageLayout>
         {/* Page header */}
         <Typography variant="h5" fontWeight={800} sx={{ mb: { xs: 0.5, sm: 0.5 }, fontSize: { xs: "1rem", sm: "1.2rem", md: "1.35rem", lg: "1.5rem" } }}>
@@ -1442,4 +1549,3 @@ export default function Community() {
 
   );
 }
-
