@@ -176,7 +176,12 @@ const UserProfile = () => {
   const [naturalSize, setNaturalSize] = useState({ w: 0, h: 0 });
   const [zoom, setZoom] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 }); // top-left of displayed image relative to box
-  const dragState = useRef({ dragging: false, startX: 0, startY: 0, startOffset: { x: 0, y: 0 } });
+  const dragState = useRef({
+    dragging: false,
+    startX: 0,
+    startY: 0,
+    startOffset: { x: 0, y: 0 },
+  });
   const cropImgRef = useRef(null);
 
   const getBaseScale = (w, h) => Math.max(CROP_BOX_SIZE / w, CROP_BOX_SIZE / h);
@@ -312,19 +317,33 @@ const UserProfile = () => {
     const sy = -offset.y / scale;
     const sSize = CROP_BOX_SIZE / scale;
 
-    ctx.drawImage(cropImgRef.current, sx, sy, sSize, sSize, 0, 0, OUTPUT_SIZE, OUTPUT_SIZE);
+    ctx.drawImage(
+      cropImgRef.current,
+      sx,
+      sy,
+      sSize,
+      sSize,
+      0,
+      0,
+      OUTPUT_SIZE,
+      OUTPUT_SIZE,
+    );
 
-    canvas.toBlob((blob) => {
-      if (!blob) return;
-      const file = new File([blob], "profile.jpg", { type: "image/jpeg" });
-      const previewUrl = URL.createObjectURL(blob);
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) return;
+        const file = new File([blob], "profile.jpg", { type: "image/jpeg" });
+        const previewUrl = URL.createObjectURL(blob);
 
-      setProfileFile(file);
-      setProfileImage(previewUrl);
+        setProfileFile(file);
+        setProfileImage(previewUrl);
 
-      setShowAdjustModal(false);
-      setRawImage("");
-    }, "image/jpeg", 0.92);
+        setShowAdjustModal(false);
+        setRawImage("");
+      },
+      "image/jpeg",
+      0.92,
+    );
   };
 
   const handlePasswordChange = (e) => {
@@ -381,9 +400,11 @@ const UserProfile = () => {
     if (!formData.email) {
       errors.email = "Email is required";
     } else {
-      const emailRegex = /^[A-Za-z0-9](?:[A-Za-z0-9._%+-]{0,62}[A-Za-z0-9])?@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z]{2,})+$/;
+      const emailRegex =
+        /^[A-Za-z0-9](?:[A-Za-z0-9._%+-]{0,62}[A-Za-z0-9])?@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z]{2,})+$/;
       if (!emailRegex.test(formData.email)) {
-        errors.email = "Please enter a valid email address (e.g., name@domain.com) || (e.g., avair123@aviartech.com) ";
+        errors.email =
+          "Please enter a valid email address (e.g., name@domain.com) || (e.g., avair123@aviartech.com) ";
       }
     }
 
@@ -392,8 +413,7 @@ const UserProfile = () => {
     if (!phone) {
       errors.mobile = "Mobile number is required";
     } else if (!/^\+?\d{10,15}$/.test(phone)) {
-      errors.mobile =
-        "Please enter a valid mobile number (10–15 digits)";
+      errors.mobile = "Please enter a valid mobile number (10–15 digits)";
     }
 
     // DOB (Age >= 18)
@@ -581,8 +601,9 @@ const UserProfile = () => {
               >
                 <Avatar
                   src={currentUser?.profileImage || ""}
-                  alt={`${currentUser?.firstName || ""} ${currentUser?.lastName || ""
-                    }`}
+                  alt={`${currentUser?.firstName || ""} ${
+                    currentUser?.lastName || ""
+                  }`}
                   onClick={() => {
                     setSelectedProfile(currentUser);
                     setProfileModalOpen(true);
@@ -605,7 +626,8 @@ const UserProfile = () => {
                   }}
                 >
                   {!currentUser?.profileImage &&
-                    `${currentUser?.firstName?.[0] || ""}${currentUser?.lastName?.[0] || ""
+                    `${currentUser?.firstName?.[0] || ""}${
+                      currentUser?.lastName?.[0] || ""
                     }`}
                 </Avatar>
 
@@ -736,6 +758,7 @@ const UserProfile = () => {
                       {post.postImage && (
                         <Box
                           onClick={() => {
+                            setSelectedPost(post);
                             setSelectedImage(
                               Array.isArray(post.postImage)
                                 ? post.postImage[0]
@@ -833,10 +856,11 @@ const UserProfile = () => {
                       {post.postId?.postImage && (
                         <Box
                           onClick={() => {
+                            setSelectedPost(post);
                             setSelectedImage(
                               Array.isArray(post.postId.postImage)
                                 ? post.postId.postImage[0]
-                                : post.postId.postImage
+                                : post.postId.postImage,
                             );
                             setOpenImage(true);
                           }}
@@ -881,7 +905,11 @@ const UserProfile = () => {
                               justifyContent: "center",
                             }}
                           >
-                            <Stack direction="row" spacing={2} sx={{ color: "#fff" }}>
+                            <Stack
+                              direction="row"
+                              spacing={2}
+                              sx={{ color: "#fff" }}
+                            >
                               <ThumbUpOffAltIcon fontSize="small" />
                               <ChatIcon fontSize="small" />
                             </Stack>
@@ -912,7 +940,22 @@ const UserProfile = () => {
             >
               <Box sx={{ position: "relative" }}>
                 <IconButton
-                  onClick={() => removeSavedPost(selectedPost._id)}
+                  onClick={async () => {
+                    if (!selectedPost?.postId?._id) {
+                      console.log("Saved post ID missing");
+                      return;
+                    }
+
+                    console.log(
+                      "Removing saved post:",
+                      selectedPost.postId._id,
+                    );
+
+                    await removeSavedPost(selectedPost.postId._id);
+
+                    setOpenImage(false);
+                    setSelectedPost(null);
+                  }}
                   sx={{
                     position: "absolute",
                     top: 8,
@@ -1096,8 +1139,12 @@ const UserProfile = () => {
                     fullWidth
                     value={formData?.firstName}
                     onChange={handleChange}
-                    InputProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
-                    InputLabelProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
+                    InputProps={{
+                      sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } },
+                    }}
+                    InputLabelProps={{
+                      sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } },
+                    }}
                     error={!!errors.firstName}
                     helperText={errors.firstName}
                   />
@@ -1111,8 +1158,12 @@ const UserProfile = () => {
                     error={!!errors.lastName}
                     helperText={errors.lastName}
                     onChange={handleChange}
-                    InputProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
-                    InputLabelProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
+                    InputProps={{
+                      sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } },
+                    }}
+                    InputLabelProps={{
+                      sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } },
+                    }}
                   />
                 </Stack>
 
@@ -1131,8 +1182,12 @@ const UserProfile = () => {
                     error={!!errors.email}
                     helperText={errors.email}
                     disabled
-                    InputProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
-                    InputLabelProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
+                    InputProps={{
+                      sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } },
+                    }}
+                    InputLabelProps={{
+                      sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } },
+                    }}
                   />
 
                   <TextField
@@ -1153,8 +1208,12 @@ const UserProfile = () => {
                     error={!!errors.mobile}
                     helperText={errors.mobile}
                     inputProps={{ maxLength: 16 }}
-                    InputProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
-                    InputLabelProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
+                    InputProps={{
+                      sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } },
+                    }}
+                    InputLabelProps={{
+                      sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } },
+                    }}
                   />
                 </Stack>
 
@@ -1177,8 +1236,12 @@ const UserProfile = () => {
                           error: !!errors.dob,
                           helperText: errors.dob,
                           fullWidth: true,
-                          InputProps: { sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } },
-                          InputLabelProps: { sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } },
+                          InputProps: {
+                            sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } },
+                          },
+                          InputLabelProps: {
+                            sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } },
+                          },
                         },
                       }}
                       sx={{ width: { xs: "100%", sm: "48%" } }}
@@ -1196,16 +1259,29 @@ const UserProfile = () => {
                     onChange={handleChange}
                     error={!!errors.gender}
                     helperText={errors.gender}
-                    InputProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
-                    InputLabelProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
+                    InputProps={{
+                      sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } },
+                    }}
+                    InputLabelProps={{
+                      sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } },
+                    }}
                   >
-                    <MenuItem value="Male" sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem" } }}>
+                    <MenuItem
+                      value="Male"
+                      sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem" } }}
+                    >
                       Male
                     </MenuItem>
-                    <MenuItem value="Female" sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem" } }}>
+                    <MenuItem
+                      value="Female"
+                      sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem" } }}
+                    >
                       Female
                     </MenuItem>
-                    <MenuItem value="Other" sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem" } }}>
+                    <MenuItem
+                      value="Other"
+                      sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem" } }}
+                    >
                       Other
                     </MenuItem>
                   </TextField>
@@ -1221,8 +1297,12 @@ const UserProfile = () => {
                   error={!!errors.bio}
                   helperText={errors.bio}
                   onChange={handleChange}
-                  InputProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
-                  InputLabelProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
+                  InputProps={{
+                    sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } },
+                  }}
+                  InputLabelProps={{
+                    sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } },
+                  }}
                 />
                 <TextField
                   label="ZipCode"
@@ -1330,12 +1410,14 @@ const UserProfile = () => {
             outline: "none",
           }}
         >
-          <Typography variant="h6"
+          <Typography
+            variant="h6"
             sx={{
               fontWeight: 700,
               mb: 3,
-              fontSize: "1.05rem"
-            }}>
+              fontSize: "1.05rem",
+            }}
+          >
             Adjust Photo
           </Typography>
 
@@ -1414,11 +1496,14 @@ const UserProfile = () => {
             />
           </Box>
 
-          <Stack direction="row" spacing={1.5}
+          <Stack
+            direction="row"
+            spacing={1.5}
             sx={{
               display: "flex",
-              justifyContent: { xs: "center", sm: "flex-end" }
-            }}>
+              justifyContent: { xs: "center", sm: "flex-end" },
+            }}
+          >
             <Button
               variant="contained"
               size="small"

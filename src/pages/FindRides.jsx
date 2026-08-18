@@ -17,8 +17,14 @@ import {
   InputAdornment,
   useMediaQuery,
   useTheme,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  LinearProgress,
+  DialogActions,
 } from "@mui/material";
 import { useUser } from "../context/userConetext";
+import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import SearchIcon from "@mui/icons-material/Search";
 import TuneIcon from "@mui/icons-material/Tune";
 import CloseIcon from "@mui/icons-material/Close";
@@ -116,10 +122,19 @@ export default function FindRides() {
   const [searchFrom, setSearchFrom] = useState("");
   const [searchDestination, setSearchDestination] = useState("");
   const [search, setSearch] = useState("");
+    const { completion, savedPost, setSavedPost, removeSavedPost } = useUser();
+  
   // Staged filter values: edited live inside the panel, but only
   // committed to `appliedFilters` (and therefore the results) on Apply.
   const [draftFilters, setDraftFilters] = useState(emptyFilters);
   const [appliedFilters, setAppliedFilters] = useState(emptyFilters);
+    const isProfileComplete = completion === 100;
+    const SIDEBAR_SCROLL_HEIGHT = 'calc(100vh - 120px)';
+  
+    // ── Profile completion modal ──
+    // Shows once per page-load whenever the user's profile is under 100%.
+    const [profileGateOpen, setProfileGateOpen] = useState(false);
+    const hasCheckedProfileGateRef = useRef(false);
 
   const resultsRef = useRef(null);
   const scrollStartRef = useRef(0);
@@ -139,7 +154,21 @@ export default function FindRides() {
     }
   };
 
-
+  useEffect(() => {
+    // Only decide ONCE, and only after currentUser has actually finished
+    // loading. `completion` is 0 (a valid number) for a brief moment while
+    // the user context is still fetching, so checking `typeof completion
+    // === "number"` alone fires too early and causes the modal to flash
+    // open and then immediately close once the real completion (100) comes in.
+    if (hasCheckedProfileGateRef.current) return;
+    if (currentUser && currentUser._id && typeof completion === "number") {
+      hasCheckedProfileGateRef.current = true;
+      setProfileGateOpen(completion !== 100);
+    }
+  }, [currentUser, completion]);
+  const handleCloseProfileGate = () => {
+    setProfileGateOpen(false);
+  };
 
   // ── Filter panel open/close + scroll-to-collapse ──────────────────────
   const openFilters = () => {
@@ -322,6 +351,7 @@ export default function FindRides() {
 
   if (loading) {
     return (
+      
       <Box
         sx={{
           minHeight: "100vh",
@@ -337,6 +367,93 @@ export default function FindRides() {
   }
 
   return (
+    <>
+
+        <Dialog
+            open={profileGateOpen}
+            onClose={handleCloseProfileGate}
+            fullWidth
+            maxWidth="xs"
+            PaperProps={{
+              sx: {
+                borderRadius: { xs: 2, sm: 3 },
+                m: { xs: 1.5, sm: 2 },
+                width: { xs: "95%", sm: "100%" },
+                textAlign: "center",
+                p: { xs: 1, sm: 1.5 },
+              },
+            }}
+          >
+            <DialogTitle
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 1,
+                fontWeight: 700,
+                fontSize: { xs: "1rem", sm: "1.15rem" },
+                pt: 3,
+              }}
+            >
+              <WarningAmberRoundedIcon sx={{ fontSize: 40, color: "#E8650A" }} />
+              Complete Your Profile
+            </DialogTitle>
+    
+            <DialogContent>
+              <Typography
+                sx={{
+                  fontSize: { xs: "0.85rem", sm: "0.95rem" },
+                  color: "text.secondary",
+                }}
+              >
+                Your profile is only {Number.isFinite(completion) ? completion : 0}% complete.
+                Please complete your profile to 100% to unlock all features,
+                including posting, liking, commenting and saving in the Community.
+              </Typography>
+    
+              <Box sx={{ mt: 2.5, px: { xs: 1, sm: 3 } }}>
+                <LinearProgress
+                  variant="determinate"
+                  value={Number.isFinite(completion) ? completion : 0}
+                  sx={{
+                    height: 8,
+                    borderRadius: 5,
+                    bgcolor: "#F0E6DC",
+                    "& .MuiLinearProgress-bar": { bgcolor: "#E8650A" },
+                  }}
+                />
+              </Box>
+            </DialogContent>
+    
+            <DialogActions
+              sx={{
+                justifyContent: "center",
+                pb: 3,
+                pt: 1,
+                gap: 1.5,
+              }}
+            >
+              <Button
+                variant="outlined"
+                onClick={handleCloseProfileGate}
+                sx={{
+                  textTransform: "none",
+                  borderRadius: 999,
+                  px: 3,
+                  fontWeight: 600,
+                  bgcolor: "#E8650A",
+                  color: "#fff",
+                  "&:hover": {
+                    bgcolor: "#c85608",
+                    color: "#fff",
+                  },
+                }}
+              >
+                OK
+              </Button>
+            </DialogActions>
+          </Dialog>
+          
 
     <Box
       sx={{
@@ -906,5 +1023,6 @@ export default function FindRides() {
         </Container>
       </Box >
     </Box >
+    </>
   );
 }
