@@ -346,6 +346,7 @@ const UserProfile = () => {
       gender: currentUser?.gender || "",
       bio: currentUser?.bio || "",
       profileImage: currentUser?.profileImage || "",
+      zipcode: currentUser?.zipcode || "",
     });
   };
 
@@ -358,6 +359,7 @@ const UserProfile = () => {
     gender: currentUser?.gender || "",
     bio: currentUser?.bio || "",
     profileImage: currentUser?.profileImage || "",
+    zipcode: currentUser?.zipcode || "",
   });
 
   const validateForm = (formData) => {
@@ -411,7 +413,14 @@ const UserProfile = () => {
         errors.dob = "You must be at least 18 years old";
       }
     }
+    // ZipCode / Postal Code
+    const zipcode = formData.zipcode?.trim();
 
+    if (!zipcode) {
+      errors.zipcode = "ZipCode is required";
+    } else if (!/^[A-Za-z0-9](?:[A-Za-z0-9\s-]{0,14}[A-Za-z0-9])?$/.test(zipcode)) {
+      errors.zipcode = "Please enter a valid ZipCode / Postal Code";
+    }
     return errors;
   };
 
@@ -426,6 +435,7 @@ const UserProfile = () => {
         gender: currentUser?.gender || "",
         bio: currentUser?.bio || "",
         profileImage: currentUser?.profileImage || "",
+        zipcode: currentUser?.zipcode || "",
       });
 
       setProfileImage(currentUser?.profileImage || "");
@@ -508,6 +518,7 @@ const UserProfile = () => {
       data.append("dob", formData.dob ? formData.dob.format("YYYY-MM-DD") : "");
       data.append("gender", formData.gender);
       data.append("bio", formData.bio);
+      data.append("zipcode", formData.zipcode);
 
       await axios.post(Api + `/users/update/${user?.id}`, data);
       getuserData();
@@ -1212,6 +1223,37 @@ const UserProfile = () => {
                   onChange={handleChange}
                   InputProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
                   InputLabelProps={{ sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } } }}
+                />
+                <TextField
+                  label="ZipCode"
+                  name="zipcode"
+                  fullWidth
+                  value={formData?.zipcode || ""}
+
+                  error={!!errors.zipcode}
+                  helperText={errors.zipcode}
+                  onChange={(e) => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      zipcode: e.target.value,
+                    }));
+
+                    setErrors((prev) => ({
+                      ...prev,
+                      zipcode: "",
+                    }));
+                  }}
+                  inputProps={{ maxLength: 16 }}
+                  InputProps={{
+                    sx: {
+                      fontSize: { xs: "0.8rem", sm: "0.9rem" },
+                    },
+                  }}
+                  InputLabelProps={{
+                    sx: {
+                      fontSize: { xs: "0.8rem", sm: "0.9rem" },
+                    },
+                  }}
                 />
 
                 <Stack
