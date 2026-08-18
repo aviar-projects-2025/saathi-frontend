@@ -93,18 +93,12 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
         },
       ],
     },
+    { id: "my-rides", label: "My Rides", icon: <RouteIcon />, link: "/myride" },
     {
       id: "community",
       label: "Community",
       icon: <DashboardIcon />,
       link: "/community",
-    },
-    { id: "my-rides", label: "My Rides", icon: <RouteIcon />, link: "/myride" },
-    {
-      id: "my-profile",
-      label: "My Profile",
-      icon: <PersonIcon />,
-      link: "/user-profile",
     },
     {
       id: "referrals",
@@ -123,6 +117,13 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
       icon: <HandshakeIcon />,
       link: "/my-referalls",
     },
+    {
+      id: "my-profile",
+      label: "My Profile",
+      icon: <PersonIcon />,
+      link: "/user-profile",
+    },
+
     {
       id: "settings",
       label: "Settings",
@@ -264,28 +265,6 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
             </Typography>
           </Box>
         </Stack>
-
-        <Button
-          fullWidth
-          size="small"
-          variant="contained"
-          onClick={() => {
-            navigate("/user-profile");
-            onItemClick?.();
-          }}
-          sx={{
-            mt: 1,
-            bgcolor: "#FF9933",
-            color: "#fff",
-            fontWeight: 600,
-            borderRadius: 10,
-            textTransform: "none",
-            boxShadow: "none",
-            "&:hover": { bgcolor: "#e68a00", boxShadow: "none" },
-          }}
-        >
-          Update Profile
-        </Button>
       </Box>
 
       {/* ---------- MENU (flexible, scrolls independently) ---------- */}
