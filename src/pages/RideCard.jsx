@@ -386,20 +386,6 @@ export default function RideCard({ ride }) {
         icon: <WcIcon sx={iconSx} />,
         value: ride.travellerType || "—",
       },
-      {
-        label: "Language",
-        icon: <LanguageIcon sx={iconSx} />,
-        value: ride.language || "—",
-      },
-      ...(ride.transitAirport
-        ? [
-          {
-            label: "Transit",
-            icon: <FlightTakeoffIcon sx={iconSx} />,
-            value: ride.transitAirport,
-          },
-        ]
-        : []),
     ]
     : [
       {
@@ -438,12 +424,15 @@ export default function RideCard({ ride }) {
         value: ride.fuelSharing || "0",
       },
 
-
-      {
-        label: "Duration",
-        icon: <AccessTimeIcon sx={iconSx} />,
-        value: ride.duration,
-      }
+      ...(ride?.duration != null
+        ? [
+          {
+            label: "Duration",
+            icon: <AccessTimeIcon sx={iconSx} />,
+            value: ride.duration,
+          },
+        ]
+        : []),
     ];
 
   return (
@@ -1017,7 +1006,6 @@ export default function RideCard({ ride }) {
                       </Box>
                     ))}
                   </Box>
-                  {console.log("Ride ===> ", ride)}
                   <Box>
                     <Typography
                       sx={{
