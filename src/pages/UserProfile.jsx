@@ -658,7 +658,7 @@ const UserProfile = () => {
               direction="row"
               spacing={{ xs: 1, sm: 1.5 }}
               sx={{
-                mt: { xs: 1.5, sm: 2 },
+                mt: { xs: 0.5, sm: 1 },
                 display: "flex",
                 justifyContent: "flex-end",
               }}
@@ -673,7 +673,9 @@ const UserProfile = () => {
             </Stack>
           </SectionCard>
 
-          <SectionCard>
+          {/* <SectionCard> */}
+          <Box>
+
             <Tabs
               value={tab}
               onChange={(e, value) => {
@@ -718,6 +720,50 @@ const UserProfile = () => {
                       thickness={5}
                       sx={{ color: "#FF9933" }}
                     />
+                  </Box>
+                ) : communityPosts.length == 0 ? (
+                  <Box
+                    sx={{
+                      width: "100%",
+                      maxWidth: { xs: "100%", sm: 440, md: 480 },
+                      textAlign: "center",
+                      flexDirection: "column",
+                      mx: "auto",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      mt: { xs: '35%', sm: '7%' }
+                    }}
+                  >
+                    <Typography
+                      variant="h6"
+                      fontWeight={600}
+                      color="text.primary"
+                      sx={{
+                        fontSize: {
+                          xs: "0.95rem",
+                          sm: "1.05rem",
+                          md: "1.15rem",
+                        },
+                      }}
+                    >
+                      No Community Posts Yet
+                    </Typography>
+
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{
+                        mt: 1,
+                        fontSize: {
+                          xs: "0.75rem",
+                          sm: "0.85rem",
+                          md: "0.95rem",
+                        },
+                      }}
+                    >
+                      Community posts will appear here when available.
+                    </Typography>
                   </Box>
                 ) : (
                   communityPosts.map((post) => (
@@ -815,6 +861,50 @@ const UserProfile = () => {
                       thickness={5}
                       sx={{ color: "#FF9933" }}
                     />
+                  </Box>
+                ) : savedPost?.length <= 3 ? (
+                  <Box
+                    sx={{
+                      width: "100%",
+                      maxWidth: { xs: "100%", sm: 440, md: 480 },
+                      textAlign: "center",
+                      flexDirection: "column",
+                      mx: "auto",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      mt: { xs: '35%', sm: '7%' }
+                    }}
+                  >
+                    <Typography
+                      variant="h6"
+                      fontWeight={600}
+                      color="text.primary"
+                      sx={{
+                        fontSize: {
+                          xs: "0.95rem",
+                          sm: "1.05rem",
+                          md: "1.15rem",
+                        },
+                      }}
+                    >
+                      No Saved Posts Yet
+                    </Typography>
+
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{
+                        mt: 1,
+                        fontSize: {
+                          xs: "0.75rem",
+                          sm: "0.85rem",
+                          md: "0.95rem",
+                        },
+                      }}
+                    >
+                      Saved posts will appear here when available.
+                    </Typography>
                   </Box>
                 ) : (
                   savedPost?.map((post) => (
@@ -961,7 +1051,8 @@ const UserProfile = () => {
                 </DialogContent>
               </Box>
             </Dialog>
-          </SectionCard>
+            {/* </SectionCard> */}
+          </Box>
         </Stack>
 
         <ProfileModal

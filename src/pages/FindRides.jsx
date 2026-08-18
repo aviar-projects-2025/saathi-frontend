@@ -841,23 +841,32 @@ export default function FindRides() {
           ) : (
             <Box
               sx={{
-                background: "#fff",
+                // background: "#fff",
                 borderRadius: { xs: 3, sm: 4 },
-                border: `1.5px dashed ${saffron[200]}`,
+                // border: `1.5px dashed ${saffron[200]}`,
                 textAlign: "center",
                 py: { xs: 3, sm: 5 },
                 px: { xs: 2, sm: 4 },
+                mt: { xs: '40%', sm: '10%' },
               }}
             >
-              <Typography fontSize={{ xs: "2rem", sm: "2.5rem" }} mb={0.75}>
+              {/* <Typography fontSize={{ xs: "2rem", sm: "2.5rem" }} mb={0.75}>
                 🔍
-              </Typography>
-              <Typography fontWeight={700} color={saffron[700]} mb={0.5} fontSize={{ xs: "0.9rem", sm: "1rem" }}>
+              </Typography> */}
+
+
+              <Typography variant="h6" fontWeight={600} color="text.primary">
                 No rides found
               </Typography>
-              <Typography color="text.secondary" fontSize={{ xs: "0.78rem", sm: "0.88rem" }}>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ mt: 1 }}
+              >
                 Try adjusting your filters or search terms
               </Typography>
+
+
               {/* <Button
                 onClick={clearFilters}
                 sx={{

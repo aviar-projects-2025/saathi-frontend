@@ -811,27 +811,28 @@ export default function RideDetailsModal({
           {ride.modeOfTravel !== 'Flight' && ride.modeOfTravel !== 'Bus' && ride.fuelSharing >= 0 && (<Field icon={LocalGasStationIcon} label="Fuel Cost" value={`${ride.fuelSharing === null ? '—' : `$ ${ride.fuelSharing}/Person`} ` || '—'} />)}
           <Field icon={TravellerTypeIcon} label="Traveller Type" value={ride.travellerType || '—'} />
 
-          {ride.description && (
-            <Field icon={DescriptionIcon} label="Description" value={ride.description || '—'} span />
-          )}
+
+          <Stack direction="column" alignItems="center">
+            <Field icon={TranslateIcon} label="Languages" />
+            <Typography
+              sx={{
+                fontFamily: TOKENS.monoFont,
+                fontWeight: 600,
+                fontSize: { xs: '0.85rem', sm: '0.95rem' },
+                color: TOKENS.ink,
+                // wordBreak: 'break-word',
+              }}
+            >
+              {ride.language?.join(", ") || '—'}
+            </Typography>
+          </Stack>
         </Box>
 
+        <br />
 
-        <Stack direction="column" alignItems="center" sx={{ mt: 1.8 }}>
-          <Field icon={TranslateIcon} label="Languages" />
-          <Typography
-            sx={{
-              fontFamily: TOKENS.monoFont,
-              fontWeight: 600,
-              fontSize: { xs: '0.85rem', sm: '0.95rem' },
-              color: TOKENS.ink,
-              // wordBreak: 'break-word',
-            }}
-          >
-            {ride.language?.join(", ") || '—'}
-          </Typography>
-        </Stack>
-
+        {ride.description && (
+          <Field icon={DescriptionIcon} label="Description" value={ride.description || '—'} span />
+        )}
 
         {requests.length > 0 && (
           <>
