@@ -51,13 +51,13 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
 
   const handleLogout = () => {
     setLogoutDialogOpen(true);
-    handleCloseProfileMenu();
+    // handleCloseProfileMenu();
     onItemClick?.();
   };
 
   const handleSelect = (option) => {
     setSelectedMenu(option.label);
-    handleCloseProfileMenu();
+    // handleCloseProfileMenu();
     if (option.label === "Log out") {
       handleLogout();
     } else if (option.link) {

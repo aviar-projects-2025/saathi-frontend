@@ -521,7 +521,7 @@ export default function Community() {
 
   return (
     <>
-    
+
       <PageLayout>
         {/* Page header */}
         <Typography variant="h5" fontWeight={800} sx={{ mb: { xs: 0.5, sm: 0.5 }, fontSize: { xs: "1rem", sm: "1.2rem", md: "1.35rem", lg: "1.5rem" } }}>
@@ -669,7 +669,7 @@ export default function Community() {
                     sx={{
                       width: '100%',
                       maxHeight: { xs: 200, sm: 240, md: 280, lg: 300 },
-                      objectFit: 'cover',
+                      objectFit: 'contain',
                       display: 'block',
                     }}
                   />

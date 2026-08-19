@@ -347,7 +347,7 @@ const MyReferrals = () => {
             getUserData();
         }, [userId]);
 
-        const profileImage = users?.profileImage || "";
+        const profileImage = users?.profileImage;
 
         return (
             <Paper
@@ -381,7 +381,7 @@ const MyReferrals = () => {
                         }}
                     >
                         <Avatar
-                            src={profileImage}
+                            src={profileImage || undefined}
                             alt={`${userData.firstName} ${userData.lastName}`}
                             onClick={() => {
                                 if (!users) return;
@@ -389,28 +389,12 @@ const MyReferrals = () => {
                                 setProfileModalOpen(true);
                             }}
                             sx={{
-                                bgcolor: "#f0ebe3",
-                                color: "#ff8400",
                                 width: { xs: 40, sm: 44 },
                                 height: { xs: 40, sm: 44 },
                                 cursor: users ? "pointer" : "default",
-                                transition: "all 0.2s ease",
-
-                                "&:hover": users
-                                    ? {
-                                        transform: "scale(1.08)",
-                                        boxShadow:
-                                            "0 0 0 3px rgba(255, 132, 0, 0.25)",
-                                    }
-                                    : {},
+                                bgcolor: "transparent",
                             }}
-                        >
-                            {!profileImage &&
-                                getInitials(
-                                    userData.firstName,
-                                    userData.lastName
-                                )}
-                        </Avatar>
+                        />
 
                         <Box sx={{ minWidth: 0 }}>
                             <Typography

@@ -1077,8 +1077,13 @@ function RideCard({
                     </Typography>
                     <Typography
                       fontWeight={700}
+                      noWrap
                       sx={{
-                        wordBreak: "break-word",
+                        flex: 1,
+                        minWidth: 0,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
                         fontSize: {
                           xs: "0.78rem",
                           sm: "0.88rem",
@@ -1087,15 +1092,16 @@ function RideCard({
                         lineHeight: 1.3,
                       }}
                     >
-                      📍 {formFrom(ride)}
+                      {/* 📍 */}
+                      {formFrom(ride)}
                     </Typography>
                   </Box>
-
                   <ArrowForwardIcon
                     sx={{
                       color: "#FF9933",
                       fontSize: { xs: 14, sm: 18, md: 20 },
                       flexShrink: 0,
+                      mx: { xs: 0.7, sm: 1.2, md: 1.5 },
                     }}
                   />
 
@@ -1117,8 +1123,13 @@ function RideCard({
                     </Typography>
                     <Typography
                       fontWeight={700}
+                      noWrap
                       sx={{
-                        wordBreak: "break-word",
+                        flex: 1,
+                        minWidth: 0,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
                         fontSize: {
                           xs: "0.78rem",
                           sm: "0.88rem",
@@ -1127,7 +1138,8 @@ function RideCard({
                         lineHeight: 1.3,
                       }}
                     >
-                      📍 {formTo(ride)}
+                      {/* 📍  */}
+                      {formTo(ride)}
                     </Typography>
                   </Box>
                 </Box>
@@ -1323,51 +1335,112 @@ function RideCard({
             borderRadius: { xs: 2, sm: 3 },
             mx: { xs: 2, sm: "auto" },
             width: { xs: "calc(100% - 32px)", sm: "100%" },
+            maxWidth: { xs: "calc(100% - 32px)", sm: 450 },
           },
         }}
       >
-        <DialogContent>
-          <Typography sx={{ fontSize: { xs: "0.9rem", sm: "1rem" } }}>
-            Looks like your ride is starting 🚗
+        <DialogContent
+          sx={{
+            pb: { xs: 1, sm: 1.5 },
+            px: { xs: 2, sm: 3 },
+          }}
+        >
+          <Typography
+            sx={{
+              fontSize: { xs: "0.9rem", sm: "1rem" },
+              fontWeight: 600,
+            }}
+          >
+            Looks like your ride is starting
           </Typography>
         </DialogContent>
-        <DialogContent sx={{ pt: 0 }}>
-          <Typography sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem" } }}>
-            From : {confirmRide?.from}
+
+        <DialogContent
+          sx={{
+            pt: 0,
+            px: { xs: 2, sm: 3 },
+          }}
+        >
+          <Typography
+            sx={{
+              fontSize: { xs: "0.8rem", sm: "0.9rem" },
+              mb: 0.5,
+            }}
+          >
+            From : {confirmRide?.from || "—"}
           </Typography>
-          <Typography sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem" } }}>
-            To : {confirmRide?.destination}
+
+          <Typography
+            sx={{
+              fontSize: { xs: "0.8rem", sm: "0.9rem" },
+              mb: 0.5,
+            }}
+          >
+            To : {confirmRide?.destination || "—"}
           </Typography>
-          <Typography sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem" } }}>
+
+          <Typography
+            sx={{
+              fontSize: { xs: "0.8rem", sm: "0.9rem" },
+            }}
+          >
             Time :{" "}
-            {moment(confirmRide?.startTime).format("DD MMM YYYY, hh:mm A")}
+            {confirmRide?.startTime
+              ? moment(confirmRide.startTime).format("DD MMM YYYY, hh:mm A")
+              : "—"}
           </Typography>
         </DialogContent>
-        <DialogActions sx={{ px: 2, pb: 2, gap: 1, flexWrap: "wrap" }}>
+
+        <DialogActions
+          sx={{
+            px: { xs: 2, sm: 3 },
+            pb: { xs: 2, sm: 2.5 },
+            pt: { xs: 0.5, sm: 1 },
+            gap: { xs: 1, sm: 1.5 },
+            flexWrap: "nowrap",
+            width: "100%",
+            boxSizing: "border-box",
+          }}
+        >
           <Button
             variant="contained"
             onClick={() => setConfirmRide(null)}
             sx={{
-              flex: { xs: "1 1 auto", sm: "0 0 auto" },
-              minHeight: 40,
+              flex: 1,
+              minWidth: 0,
+              minHeight: { xs: 36, sm: 40 },
+              px: { xs: 1.5, sm: 2.5 },
+              fontSize: { xs: "0.78rem", sm: "0.875rem" },
               bgcolor: "#757575",
-              color: "#ffff",
+              color: "#fff",
               textTransform: "none",
+              borderRadius: { xs: 1.5, sm: 2 },
+              "&:hover": {
+                bgcolor: "#616161",
+              },
             }}
           >
             Not yet
           </Button>
+
           <Button
             variant="contained"
             onClick={() =>
               handleEdit(confirmRide._id, confirmRide.travelStatus)
             }
             sx={{
-              flex: { xs: "1 1 auto", sm: "0 0 auto" },
-              minHeight: 40,
+              flex: 1,
+              minWidth: 0,
+              minHeight: { xs: 36, sm: 40 },
+              px: { xs: 1.5, sm: 2.5 },
+              fontSize: { xs: "0.78rem", sm: "0.875rem" },
               bgcolor: "#f89b04",
-              color: "#ffff",
+              color: "#fff",
               textTransform: "none",
+              borderRadius: { xs: 1.5, sm: 2 },
+              "&:hover": {
+                bgcolor: "#db8700",
+              },
             }}
           >
             Started
