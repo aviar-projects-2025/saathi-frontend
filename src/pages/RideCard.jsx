@@ -381,11 +381,11 @@ export default function RideCard({ ride }) {
         icon: <FlightTakeoffIcon sx={iconSx} />,
         value: ride.airlineName || "—",
       },
-      {
-        label: "Traveller type",
-        icon: <WcIcon sx={iconSx} />,
-        value: ride.travellerType || "—",
-      },
+      // {
+      //   label: "Traveller type",
+      //   icon: <WcIcon sx={iconSx} />,
+      //   value: ride.travellerType || "—",
+      // },
     ]
     : [
       {
@@ -605,14 +605,15 @@ export default function RideCard({ ride }) {
                       lineHeight: 1.3,
                     }}
                   >
-                    {"\u{1F4CD}"} {routeFrom || "—"}
+                    {/* {"\u{1F4CD}"} */}
+                     {routeFrom || "—"}
                   </Typography>
 
-                  {/* {isFlight && (
-                    <Typography sx={{ fontSize: { xs: "0.58rem", sm: "0.68rem" }, color: "text.secondary", mt: 0.25 }}>
+                  {isFlight && (
+                    <Typography sx={{ fontSize: { xs: "0.75rem", sm: "0.68rem" }, color: "text.secondary", mt: 0.25 }}>
                       {ride.fromCountry}
                     </Typography>
-                  )} */}
+                  )}
                 </Box>
 
                 <ArrowForwardIcon
@@ -643,14 +644,15 @@ export default function RideCard({ ride }) {
                       lineHeight: 1.3,
                     }}
                   >
-                    {"\u{1F4CD}"} {routeTo || "—"}
+                    {/* {"\u{1F4CD}"}  */}
+                    {routeTo || "—"}
                   </Typography>
 
-                  {/* {isFlight && (
-                    <Typography sx={{ fontSize: { xs: "0.58rem", sm: "0.68rem" }, color: "text.secondary", mt: 0.25 }}>
+                  {isFlight && (
+                    <Typography sx={{ fontSize: { xs: "0.75rem", sm: "0.68rem" }, color: "text.secondary", mt: 0.25 }}>
                       {ride.toCountry}
                     </Typography>
-                  )} */}
+                  )}
                 </Box>
               </Box>
 
@@ -1056,7 +1058,6 @@ export default function RideCard({ ride }) {
                       </Typography>
                     </Box>
                   )}
-
                   <Divider sx={{ my: 1.25, borderColor: ORANGE_DIVIDER }} />
 
                   <Stack
