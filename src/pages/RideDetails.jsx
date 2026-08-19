@@ -622,6 +622,11 @@ export default function RideDetailsModal({
               noWrap
               sx={{
                 mt: 0.5,
+                minWidth: 0,
+                maxWidth: "100%",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
                 fontFamily: TOKENS.bodyFont,
                 fontWeight: 600,
                 fontSize: { xs: "0.82rem", md: "0.9rem" },
@@ -632,8 +637,14 @@ export default function RideDetailsModal({
             </Typography>
 
             <Typography
+              noWrap
               sx={{
                 mt: 0.25,
+                minWidth: 0,
+                maxWidth: "100%",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
                 fontFamily: TOKENS.bodyFont,
                 fontSize: "0.72rem",
                 color: "rgba(255,255,255,.65)",
@@ -733,6 +744,13 @@ export default function RideDetailsModal({
                 fontWeight: 600,
                 fontSize: { xs: "0.82rem", md: "0.9rem" },
                 color: "#F5F5F5",
+
+                width: { xs: "120px", sm: "160px", md: "200px" },
+                maxWidth: "100%",
+                minWidth: 0,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
               }}
             >
               {formTo(ride)}
@@ -746,6 +764,11 @@ export default function RideDetailsModal({
                 color: "rgba(255,255,255,.65)",
                 textTransform: "uppercase",
                 letterSpacing: ".12em",
+
+                width: { xs: "120px", sm: "160px", md: "200px" },
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
               }}
             >
               {ride.toCountry}

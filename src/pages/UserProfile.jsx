@@ -601,9 +601,8 @@ const UserProfile = () => {
               >
                 <Avatar
                   src={currentUser?.profileImage || ""}
-                  alt={`${currentUser?.firstName || ""} ${
-                    currentUser?.lastName || ""
-                  }`}
+                  alt={`${currentUser?.firstName || ""} ${currentUser?.lastName || ""
+                    }`}
                   onClick={() => {
                     setSelectedProfile(currentUser);
                     setProfileModalOpen(true);
@@ -626,8 +625,7 @@ const UserProfile = () => {
                   }}
                 >
                   {!currentUser?.profileImage &&
-                    `${currentUser?.firstName?.[0] || ""}${
-                      currentUser?.lastName?.[0] || ""
+                    `${currentUser?.firstName?.[0] || ""}${currentUser?.lastName?.[0] || ""
                     }`}
                 </Avatar>
 
@@ -727,7 +725,8 @@ const UserProfile = () => {
               <Tab icon={<GridOnIcon fontSize="small" />} />
               <Tab icon={<BookmarkBorderIcon fontSize="small" />} />
             </Tabs>
-            {tab === 0 && !selectedPost && (
+
+            {tab === 0 && (
               <Grid
                 container
                 spacing={{ xs: "12px", sm: "15px", md: "20px" }}
@@ -869,7 +868,7 @@ const UserProfile = () => {
               </Grid>
             )}
 
-            {tab === 1 && !selectedPost && (
+            {tab === 1 && (
               <Grid
                 container
                 spacing={{ xs: "12px", sm: "15px", md: "20px" }}
@@ -1016,15 +1015,17 @@ const UserProfile = () => {
               open={openImage}
               onClose={() => setOpenImage(false)}
               maxWidth={false}
-              PaperProps={{
-                sx: {
-                  bgcolor: "transparent",
-                  boxShadow: "none",
-                  overflow: "hidden",
-                  width: "auto",
-                  maxWidth: "95vw",
-                  maxHeight: "95vh",
-                  m: 1,
+              slotProps={{
+                paper: {
+                  sx: {
+                    bgcolor: "transparent",
+                    boxShadow: "none",
+                    overflow: "hidden",
+                    width: "auto",
+                    maxWidth: "95vw",
+                    maxHeight: "95vh",
+                    m: 1,
+                  },
                 },
               }}
             >
