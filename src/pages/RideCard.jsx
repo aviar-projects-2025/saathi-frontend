@@ -1057,17 +1057,21 @@ export default function RideCard({ ride }) {
                     </Box>
                   )}
 
-
                   <Divider sx={{ my: 1.25, borderColor: ORANGE_DIVIDER }} />
-                  <Stack direction="row" flexWrap="wrap" sx={{ gap: 1.5 }}>
+
+                  <Stack
+                    direction={{ xs: "column", sm: "row" }}
+                    flexWrap="wrap"
+                    spacing={{ xs: 1, sm: 1.5 }}
+                    sx={{
+                      width: "100%",
+                      alignItems: { xs: "space-between", sm: "center" },
+                    }}
+                  >
                     {ride.medicalAssistance && (
                       <Chip
                         size="small"
-                        icon={
-                          <MedicalServicesIcon
-                            sx={{ fontSize: { xs: 11, sm: 13 } }}
-                          />
-                        }
+                        icon={<MedicalServicesIcon sx={{ fontSize: { xs: 11, sm: 13 } }} />}
                         label="Medical Help"
                         sx={{
                           fontSize: { xs: "0.58rem", sm: "0.7rem" },
@@ -1076,14 +1080,11 @@ export default function RideCard({ ride }) {
                         }}
                       />
                     )}
+
                     {ride.languageSupport && (
                       <Chip
                         size="small"
-                        icon={
-                          <LanguageIcon
-                            sx={{ fontSize: { xs: 11, sm: 13 } }}
-                          />
-                        }
+                        icon={<LanguageIcon sx={{ fontSize: { xs: 11, sm: 13 } }} />}
                         label="Language Support"
                         sx={{
                           fontSize: { xs: "0.58rem", sm: "0.7rem" },
@@ -1092,15 +1093,12 @@ export default function RideCard({ ride }) {
                         }}
                       />
                     )}
+
                     {ride.transitHelp && (
                       <Chip
                         size="small"
+                        icon={<InfoOutlinedIcon sx={{ fontSize: { xs: 12, sm: 14 } }} />}
                         label="Transit Help"
-                        icon={
-                          <InfoOutlinedIcon
-                            sx={{ fontSize: { xs: 12, sm: 14 } }}
-                          />
-                        }
                         sx={{
                           fontSize: { xs: "0.58rem", sm: "0.7rem" },
                           bgcolor: "#FFF0DD",
@@ -1108,14 +1106,11 @@ export default function RideCard({ ride }) {
                         }}
                       />
                     )}
+
                     {ride.baggageHelp && (
                       <Chip
                         size="small"
-                        icon={
-                          <LuggageIcon
-                            sx={{ fontSize: { xs: 11, sm: 13 } }}
-                          />
-                        }
+                        icon={<LuggageIcon sx={{ fontSize: { xs: 11, sm: 13 } }} />}
                         label="Baggage Help"
                         sx={{
                           fontSize: { xs: "0.58rem", sm: "0.7rem" },
@@ -1129,8 +1124,9 @@ export default function RideCard({ ride }) {
               </Collapse>
             </CardContent>
           </Card>
-        </Box>
-      )}
+        </Box >
+      )
+      }
 
       <ProfileModal
         open={profileModalOpen}
