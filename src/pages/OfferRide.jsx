@@ -881,11 +881,11 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                   onChange={(e) => update("modeOfTravel", e.target.value)}
                   sx={selectSx}
                 >
-                  <MenuItem value="Car" sx={menuItemSx}>🚗 Car</MenuItem>
-                  <MenuItem value="Bus" sx={menuItemSx}>🚌 Bus</MenuItem>
-                  <MenuItem value="Bike" sx={menuItemSx}>🏍️ Bike</MenuItem>
-                  <MenuItem value="Flight" sx={menuItemSx}>✈️ Flight</MenuItem>
-                  {/* <MenuItem value="Train" sx={menuItemSx}>🚆 Train</MenuItem> */}
+                  <MenuItem value="Car" sx={menuItemSx}>Car</MenuItem>
+                  <MenuItem value="Bus" sx={menuItemSx}>Bus</MenuItem>
+                  <MenuItem value="Bike" sx={menuItemSx}>Bike</MenuItem>
+                  <MenuItem value="Flight" sx={menuItemSx}>Flight</MenuItem>
+                  {/* <MenuItem value="Train" sx={menuItemSx} Train</MenuItem> */}
                 </Select>
                 <FormHelperText>{showErrors ? errors.modeOfTravel : ""}</FormHelperText>
               </FormControl>

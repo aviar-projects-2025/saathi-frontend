@@ -150,40 +150,41 @@ const noZoomInputSx = {
 const ITEMS_PER_PAGE = 10;
 
 // ── Empty State ──────────────────────────────────────────────────────────────
-function EmptyState({ emoji, message, actionLabel, actionHref }) {
+function EmptyState({ message1, message2 }) {
   return (
-    <Paper
+    <Box
       sx={{
-        p: { xs: 2.5, sm: 3.5, md: 4 },
-        textAlign: "center",
-
-        // border: '1px dashed #E0D5CC',
-        // bgcolor: '#FFF8F2',
-        borderRadius: 2,
-        mx: "auto",
+        width: "100%",
         maxWidth: { xs: "100%", sm: 440, md: 480 },
+        textAlign: "center",
+        // display: "flex",
+        flexDirection: "column",
+        // justifyContent: "center",
+        // alignItems: "center",
+        mx: "auto",
+        mt: { xs: '50%', sm: '15%' }
       }}
-      elevation={0}
     >
-      {/* <Typography sx={{ fontSize: { xs: '1.6rem', sm: '1.8rem', md: '2rem' } }}>{emoji}</Typography> */}
       <Typography
+        variant="h6"
         fontWeight={600}
-        color="text.secondary"
-        mt={1}
-        sx={{ fontSize: { xs: "0.85rem", sm: "0.95rem", md: "1rem" } }}
+        color="text.primary"
       >
-        {message}
+        {message1}
       </Typography>
-      {actionLabel && (
-        <Button
-          variant="contained"
-          href={actionHref}
-          sx={{ mt: 2, width: { xs: "100%", sm: "auto" }, minHeight: 44 }}
-        >
-          {actionLabel}
-        </Button>
-      )}
-    </Paper>
+
+      <Typography
+        fontWeight={400}
+        color="text.secondary"
+        sx={{
+          fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" },
+          mt: 1.2,
+        }}
+      >
+        {message2}
+      </Typography>
+    </Box>
+
   );
 }
 
@@ -279,7 +280,7 @@ function EditRideModal({ ride, onSave, onClose }) {
         open={Boolean(ride)}
         onClose={onClose}
         fullWidth
-        maxWidth="md"
+        maxWidth="sm"
         fullScreen={isMobile}
         PaperProps={{
           sx: {
@@ -359,10 +360,10 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
   const startDate = new Date(ride.startTime);
   const dateLabel = !isNaN(startDate)
     ? startDate.toLocaleDateString("en-IN", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    })
     : "—";
 
   const handleConfirm = async () => {
@@ -376,7 +377,7 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
     } catch (err) {
       setError(
         err?.response?.data?.message ||
-          "Failed to delete ride. Please try again.",
+        "Failed to delete ride. Please try again.",
       );
     } finally {
       setDeleting(false);
@@ -730,17 +731,17 @@ function RideCard({
   const startDate = new Date(ride.startTime);
   const date = !isNaN(startDate)
     ? startDate.toLocaleDateString("en-IN", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    })
     : "—";
   const time = !isNaN(startDate)
     ? startDate.toLocaleTimeString("en-IN", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      })
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    })
     : "—";
 
   // const fuelLabel = ride.fuelSharing ? "Yes" : "No";
@@ -2051,8 +2052,8 @@ const MyRides = () => {
                     </>
                   ) : (
                     <EmptyState
-                      emoji="🚗"
-                      message="You don't have any active rides at the moment"
+                      message1="No Rides in Progress"
+                      message2="You don't have any rides currently in progress."
                     />
                   )}
                 </Box>
@@ -2071,7 +2072,10 @@ const MyRides = () => {
                       />
                     </>
                   ) : (
-                    <EmptyState emoji="🗓️" message="No upcoming rides" />
+                    <EmptyState
+                      message1="No Upcoming Rides"
+                      message2="You don't have any upcoming rides scheduled."
+                    />
                   )}
                 </Box>
               )}
@@ -2090,8 +2094,8 @@ const MyRides = () => {
                     </>
                   ) : (
                     <EmptyState
-                      emoji="🚗"
-                      message="You haven't posted any rides yet"
+                      message1="No Posted Rides"
+                      message2="You haven't posted any rides yet."
                     />
                   )}
                 </Box>
@@ -2116,7 +2120,10 @@ const MyRides = () => {
                       />
                     </>
                   ) : (
-                    <EmptyState emoji="🕰️" message="No past rides yet" />
+                    <EmptyState
+                      message1="No Ride History"
+                      message2="No completed rides are available at the moment."
+                    />
                   )}
                 </Box>
               )}

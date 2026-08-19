@@ -507,7 +507,15 @@ export default function Ridebook({
       </DialogTitle>
 
       <DialogContent
-        sx={{ px: { xs: 2.5, sm: 3 }, pt: "20px !important", pb: 3 }}
+        sx={{
+          px: { xs: 2.5, sm: 3 },
+          pt: "20px !important",
+          pb: 3,
+          width: "100%",
+          maxWidth: "100%",
+          boxSizing: "border-box",
+          overflowX: "hidden",
+        }}
       >
         {/* Route */}
         <Box
@@ -520,6 +528,10 @@ export default function Ridebook({
             borderRadius: 2.5,
             bgcolor: "#FAFAFA",
             border: "1px solid #EEE",
+            width: "100%",
+            maxWidth: { xs: "100%", sm: 500, md: 600 },
+            boxSizing: "border-box",
+            overflow: "hidden",
           }}
         >
           <Typography
@@ -528,20 +540,40 @@ export default function Ridebook({
               fontWeight: 600,
               fontFamily: "'Inter', sans-serif",
               color: "#333",
+
+              minWidth: 0,
+              maxWidth: { xs: "40%", sm: 220, md: 280 },
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
             }}
           >
-            {ride?.from}
+            {ride?.from || "—"}
           </Typography>
-          <ArrowForwardIcon sx={{ fontSize: 16, color: ORANGE }} />
+
+          <ArrowForwardIcon
+            sx={{
+              fontSize: 16,
+              color: ORANGE,
+              flexShrink: 0,
+            }}
+          />
+
           <Typography
             sx={{
               fontSize: { xs: "0.85rem", sm: "0.95rem" },
               fontWeight: 600,
               fontFamily: "'Inter', sans-serif",
               color: "#333",
+
+              minWidth: 0,
+              maxWidth: { xs: "40%", sm: 220, md: 280 },
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
             }}
           >
-            {ride?.destination}
+            {ride?.destination || "—"}
           </Typography>
         </Box>
 

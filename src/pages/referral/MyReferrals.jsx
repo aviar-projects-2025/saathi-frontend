@@ -154,14 +154,37 @@ const MyReferrals = () => {
     const getInitials = (firstName = "", lastName = "") =>
         `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
 
-    const EmptyState = ({ message }) => (
+    const EmptyState = ({ message1, message2 }) => (
         <Box sx={{ py: { xs: 6, sm: 10 }, textAlign: "center" }}>
-            <PeopleAltOutlinedIcon sx={{ fontSize: 35, color: "text.disabled", mb: 1 }} />
-            <Typography fontWeight={600} color="text.secondary" sx={{ fontSize: { xs: 15, sm: 16 } }}>
-                No referrals found
+            {/* <PeopleAltOutlinedIcon sx={{ fontSize: 35, color: "text.disabled", mb: 1 }} /> */}
+            <Typography
+                variant="h6"
+                fontWeight={600}
+                color="text.primary"
+                sx={{
+                    fontSize: {
+                        xs: "0.95rem",
+                        sm: "1.05rem",
+                        md: "1.15rem",
+                    },
+                }}
+            >
+                {message1}
             </Typography>
-            <Typography variant="body2" color="text.disabled" sx={{ mt: 0.5, fontSize: { xs: 11, sm: 13 } }}>
-                {message}
+
+            <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{
+                    mt: 1,
+                    fontSize: {
+                        xs: "0.75rem",
+                        sm: "0.85rem",
+                        md: "0.95rem",
+                    },
+                }}
+            >
+                {message2}
             </Typography>
             <Button
                 variant="contained"
@@ -753,7 +776,10 @@ const MyReferrals = () => {
                 {tab === 0 && (
                     loading ? <LoadingSpinner /> :
                         referrals.length === 0
-                            ? <EmptyState message="You don't have any referral requests at the moment." />
+                            ? <EmptyState
+                                message1="No Pending Referrals "
+                                message2="You don't have any pending referrals at the moment."
+                            />
                             : (
                                 <Stack spacing={1.5}>
                                     {referrals.map((u) => (
@@ -767,7 +793,10 @@ const MyReferrals = () => {
                 {tab === 1 && (
                     loading ? <LoadingSpinner /> :
                         approvedReferrals.length === 0
-                            ? <EmptyState message="You don't have any approved referrals yet." />
+                            ? <EmptyState
+                                message1="No Approved Referrals"
+                                message2="You don't have any approved referrals at the moment."
+                            />
                             : (
                                 <Stack spacing={1.5}>
                                     {approvedReferrals.map((u) => (

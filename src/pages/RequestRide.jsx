@@ -299,17 +299,26 @@ const RequestRide = () => {
                 textAlign: 'center',
               }}
             >
-              <DirectionsCarFilledOutlinedIcon
+              {/* <DirectionsCarFilledOutlinedIcon
                 sx={{
                   fontSize: 55,
                   color: '#bdbdbd',
                   mb: 2,
                 }}
-              />
+              /> */}
 
-              <Typography color="text.secondary">
-                No active requests found
+              <Typography variant="h6" fontWeight={600} color="text.primary">
+                No Ride Requests Yet
               </Typography>
+
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ mt: 1 }}
+              >
+                You haven’t submitted any ride requests yet.
+              </Typography>
+
             </Box>
           ) : (
             <>
@@ -670,9 +679,8 @@ const RequestRide = () => {
           </DialogTitle>
 
           <DialogContent>
-            <Typography sx={{ mb: 2, color: "text.secondary" }}>
-              Are you sure you want to cancel this ride request? This action
-              cannot be undone.
+            <Typography sx={{ mb: 2, color: "text.secondary", fontWeight: 600 }}>
+              If you cancel your request before approval, you cannot request the same ride again at first time request.
             </Typography>
 
             {selectedRequest && (

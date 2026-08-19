@@ -924,13 +924,13 @@ export default function Community() {
                   textAlign: "center",
                 }}
               >
-                <InboxOutlinedIcon
+                {/* <InboxOutlinedIcon
                   sx={{
                     fontSize: { xs: 40, sm: 64 },
                     color: "text.disabled",
                     mb: 2,
                   }}
-                />
+                /> */}
 
                 <Typography variant="h6" fontWeight={600} color="text.primary">
                   No Posts Yet

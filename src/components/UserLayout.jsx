@@ -83,6 +83,8 @@ const UserLayout = () => {
             <Box
               sx={{
                 width: "100%",
+                maxWidth: { xs: "100%", lg: "1400px" }, // cap width so it can center
+                mx: "auto", // centers the grid itself within Box 2
                 height: "100%",
                 display: "grid",
                 gridTemplateColumns: {
