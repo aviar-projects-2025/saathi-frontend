@@ -34,6 +34,7 @@ import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
 import { toast } from "react-toastify"; // remove if you use a different toast lib
 import ToastConfig from "../components/ToastConfig";
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
+import ProfileModal from './Avatar'
 
 /* ── defined OUTSIDE so React never remounts it on re-render ── */
 const CommentInput = ({ value, onChange, onSend, placeholder }) => (
@@ -120,6 +121,9 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
   const CARD_BORDER = "1px solid #F0E6DC";
 
   const toasts = ToastConfig();
+
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState(null);
 
   const showSidebar = useMediaQuery(theme.breakpoints.up("sm"));
 
@@ -281,7 +285,9 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
       toast.success("Comment deleted", toasts);
 
       handleMenuClose();
-      getComments();
+      setReply("");
+      setIsReply(null);
+      await getComments();
     } catch (error) {
       toast.error(
         error.response?.data?.message || "Failed to delete comment",
@@ -295,8 +301,12 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
   const parentComments = commentsFetched.filter(
     (c) => c.parentCommentId === null,
   );
-  const getReplies = (parentId) =>
-    commentsFetched.filter((c) => c.parentCommentId === parentId);
+  const getReplies = (parentId, replyItem) =>
+    commentsFetched.filter((c) => c.parentCommentId === parentId && c.parentCommentId !== replyItem?._id);
+
+  console.log("parentComments", parentComments);
+  console.log("getReplies", getReplies);
+  console.log("commentsFetched", commentsFetched);
 
   /* ── reusable renderer for a comment/reply bubble, with menu + edit ── */
   const renderCommentBody = (item, isChild = false) => {
@@ -426,6 +436,10 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
                 >
                   <Avatar
                     src={item.userId?.profileImage}
+                    onClick={() => {
+                      setSelectedProfile(item.userId);
+                      setProfileModalOpen(true);
+                    }}
                     sx={{
                       width: avatarSize,
                       height: avatarSize,
@@ -615,6 +629,14 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
           })}
         </Box>
       )}
+
+      <ProfileModal
+        open={profileModalOpen}
+        selectedProfile={selectedProfile}
+        onClose={() => {
+          setProfileModalOpen(false);
+        }}
+      />
 
       {/* three-dot menu (shared across all comments/replies) */}
       <Menu

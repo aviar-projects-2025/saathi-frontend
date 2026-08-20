@@ -41,7 +41,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
 
   const [openDropdown, setOpenDropdown] = useState(null);
 
-  const SAFFRON = "#E8650A";
+  const SAFFRON = "#109210";
   const CARD_BORDER = "1px solid #F0E6DC";
 
   const goTo = (link) => {
@@ -51,13 +51,13 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
 
   const handleLogout = () => {
     setLogoutDialogOpen(true);
-    handleCloseProfileMenu();
+    // handleCloseProfileMenu();
     onItemClick?.();
   };
 
   const handleSelect = (option) => {
     setSelectedMenu(option.label);
-    handleCloseProfileMenu();
+    // handleCloseProfileMenu();
     if (option.label === "Log out") {
       handleLogout();
     } else if (option.link) {
@@ -81,12 +81,6 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
   // a valid/stable value for keys or state equality checks.
   const menuItems = [
     {
-      id: "community",
-      label: "Community",
-      icon: <DashboardIcon />,
-      link: "/community",
-    },
-    {
       id: "find-ride",
       label: "Find Ride",
       icon: <SearchIcon />,
@@ -101,10 +95,10 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
     },
     { id: "my-rides", label: "My Rides", icon: <RouteIcon />, link: "/myride" },
     {
-      id: "my-profile",
-      label: "My Profile",
-      icon: <PersonIcon />,
-      link: "/user-profile",
+      id: "community",
+      label: "Community",
+      icon: <DashboardIcon />,
+      link: "/community",
     },
     {
       id: "referrals",
@@ -123,6 +117,13 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
       icon: <HandshakeIcon />,
       link: "/my-referalls",
     },
+    {
+      id: "my-profile",
+      label: "My Profile",
+      icon: <PersonIcon />,
+      link: "/user-profile",
+    },
+
     {
       id: "settings",
       label: "Settings",
@@ -173,7 +174,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
               value={100}
               size={60}
               thickness={3}
-              sx={{ color: "#FFE0B2", position: "absolute" }}
+              sx={{ color: "#fffffe", position: "absolute" }}
             />
             <CircularProgress
               variant="determinate"
@@ -181,7 +182,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
               size={60}
               thickness={3}
               sx={{
-                color: completion === 100 ? "#f97316" : "#e9b691",
+                color: completion === 100 ? "#119200" : "#f74040c2",
                 position: "absolute",
                 transform: "rotate(-90deg)",
               }}
@@ -251,7 +252,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
                   sm: "0.75rem",
                 },
                 fontWeight: 700,
-                color: SAFFRON,
+                color: completion === 100 ? "#119200" : "#f74040",
                 display: "block",
                 mt: 0.5,
                 overflow: "hidden",
@@ -264,28 +265,6 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
             </Typography>
           </Box>
         </Stack>
-
-        <Button
-          fullWidth
-          size="small"
-          variant="contained"
-          onClick={() => {
-            navigate("/user-profile");
-            onItemClick?.();
-          }}
-          sx={{
-            mt: 1,
-            bgcolor: "#FF9933",
-            color: "#fff",
-            fontWeight: 600,
-            borderRadius: 10,
-            textTransform: "none",
-            boxShadow: "none",
-            "&:hover": { bgcolor: "#e68a00", boxShadow: "none" },
-          }}
-        >
-          Update Profile
-        </Button>
       </Box>
 
       {/* ---------- MENU (flexible, scrolls independently) ---------- */}
@@ -414,60 +393,60 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
       </Box>
 
       {/* ---------- FOOTER (fixed to bottom) ---------- */}
-   {/* ---------- FOOTER (fixed to bottom) ---------- */}
-<Box
-  onClick={handleLogout}
-  sx={{
-    flexShrink: 0,
-    display: "flex",
-    alignItems: "center",
-    gap: 1.5,
-    px: 2.5,
-    py: 1.5,
-    cursor: "pointer",
-    color: "#b42318",
-    borderTop: CARD_BORDER,
-    transition: "0.2s ease",
-    "&:hover": { bgcolor: "#fee4e2" },
-  }}
->
-  <LogoutIcon sx={{ fontSize: 21 }} />
-  <Typography sx={{ fontSize: 14, fontWeight: 700 }}>Logout</Typography>
-</Box>
+      {/* ---------- FOOTER (fixed to bottom) ---------- */}
+      <Box
+        onClick={handleLogout}
+        sx={{
+          flexShrink: 0,
+          display: "flex",
+          alignItems: "center",
+          gap: 1.5,
+          px: 2.5,
+          py: 1.5,
+          cursor: "pointer",
+          color: "#b42318",
+          borderTop: CARD_BORDER,
+          transition: "0.2s ease",
+          "&:hover": { bgcolor: "#fee4e2" },
+        }}
+      >
+        <LogoutIcon sx={{ fontSize: 21 }} />
+        <Typography sx={{ fontSize: 14, fontWeight: 700 }}>Logout</Typography>
+      </Box>
 
-{/* Dialog moved OUTSIDE the clickable footer */}
-<Dialog
-  open={logoutDialogOpen}
-  onClose={cancelLogout}
-  fullWidth
-  maxWidth="xs"
-  PaperProps={{
-    sx: {
-      borderRadius: { xs: 3, sm: 4 },
-      mx: { xs: 2, sm: "auto" },
-      width: { xs: "calc(100% - 24px)", sm: "100%" },
-      maxWidth: { xs: 320, sm: 400 },
-      overflow: "hidden",
-      position: "relative",
-      background: "linear-gradient(145deg, #ffffff, #faf5f0)",
-      boxShadow: "0 20px 60px rgba(0,0,0,0.15)",
-      my: { xs: 2, sm: "auto" },
-      maxHeight: { xs: "90vh", sm: "auto" },
-    },
-  }}
->
-  {/* Decorative Top Bar */}
-  <Box
-    sx={{
-      height: { xs: 3, sm: 4 },
-      background: "linear-gradient(90deg, #f97316, #dc2626)",
-      width: "100%",
-      flexShrink: 0,
-    }}
-  />
+      {/* Dialog moved OUTSIDE the clickable footer */}
+      <Dialog
+        open={logoutDialogOpen}
+        onClose={cancelLogout}
+        fullWidth
+        maxWidth="xs"
+        PaperProps={{
+          sx: {
+            borderRadius: { xs: 3, sm: 4 },
+            mx: { xs: 2, sm: "auto" },
+            width: { xs: "calc(100% - 24px)", sm: "100%" },
+            maxWidth: { xs: 320, sm: 400 },
+            overflow: "hidden",
+            position: "relative",
+            background: "linear-gradient(145deg, #ffffff, #faf5f0)",
+            boxShadow: "0 20px 60px rgba(0,0,0,0.15)",
+            my: { xs: 2, sm: "auto" },
+            maxHeight: { xs: "90vh", sm: "auto" },
+          },
+        }}
+      >
+        {/* Decorative Top Bar */}
+        <Box
+          sx={{
+            height: { xs: 3, sm: 4 },
+            background: "linear-gradient(90deg, #f97316, #dc2626)",
+            width: "100%",
+            flexShrink: 0,
+          }}
+        />
 
-  {/* Close Button */}
-  <IconButton
+        {/* Close Button */}
+        {/* <IconButton
     onClick={(e) => {
       e.stopPropagation(); // Prevent event bubbling
       cancelLogout();
@@ -490,120 +469,109 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
     }}
   >
     <CloseIcon sx={{ fontSize: { xs: 14, sm: 20 } }} />
-  </IconButton>
+  </IconButton> */}
 
-  <DialogTitle
-    sx={{
-      fontWeight: 800,
-      fontSize: { xs: "0.95rem", sm: "1.25rem" },
-      pt: { xs: 2.5, sm: 4 },
-      pb: 0,
-      textAlign: "center",
-      color: "#1F2430",
-      px: { xs: 2, sm: 3 },
-    }}
-  />
+        <DialogTitle
+          sx={{
+            fontWeight: 800,
+            fontSize: { xs: "0.95rem", sm: "1.25rem" },
+            pt: { xs: 2.5, sm: 4 },
+            pb: 0,
+            textAlign: "center",
+            color: "#1F2430",
+            px: { xs: 2, sm: 3 },
+          }}
+        />
 
-  <DialogContent
-    sx={{
-      pt: { xs: 1.5, sm: 2.5 },
-      pb: { xs: 0.5, sm: 1.5 },
-      px: { xs: 2, sm: 3 },
-    }}
-  >
-    <Box sx={{ textAlign: "center", px: { xs: 0.5, sm: 1 } }}>
-      <Typography
-        sx={{
-          fontSize: { xs: "0.85rem", sm: "1rem" },
-          fontWeight: 600,
-          color: "#1F2430",
-          mb: { xs: 0.5, sm: 1 },
-        }}
-      >
-        Are you sure you want to logout?
-      </Typography>
-      <Typography
-        color="text.secondary"
-        sx={{
-          fontSize: { xs: "0.7rem", sm: "0.85rem" },
-          color: "#6b7280",
-          lineHeight: 1.5,
-          px: { xs: 0.5, sm: 2 },
-        }}
-      >
-        You'll need to login again to access your account.
-      </Typography>
-    </Box>
-  </DialogContent>
+        <DialogContent
+          sx={{
+            pt: { xs: 1.5, sm: 2.5 },
+            pb: { xs: 0.5, sm: 1.5 },
+            px: { xs: 2, sm: 3 },
+          }}
+        >
+          <Box sx={{ textAlign: "center", px: { xs: 0.5, sm: 1 } }}>
+            <Typography
+              sx={{
+                fontSize: { xs: "0.85rem", sm: "1rem" },
+                fontWeight: 600,
+                color: "#1F2430",
+                mb: { xs: 0.5, sm: 1 },
+              }}
+            >
+              Are you sure you want to logout ?
+            </Typography>
+          </Box>
+        </DialogContent>
 
-  <DialogActions
-    sx={{
-      px: { xs: 1.5, sm: 3 },
-      pb: { xs: 2, sm: 3.5 },
-      pt: { xs: 1, sm: 2 },
-      gap: { xs: 0.75, sm: 1.5 },
-      justifyContent: "center",
-      flexDirection: "row",
-    }}
-  >
-    <Button
-      onClick={(e) => {
-        e.stopPropagation(); // Prevent event bubbling
-        cancelLogout();
-      }}
-      variant="outlined"
-      sx={{
-        borderRadius: 2,
-        textTransform: "none",
-        fontWeight: 600,
-        flex: { xs: 1, sm: "0 0 auto" },
-        minWidth: { xs: "auto", sm: 110 },
-        minHeight: { xs: 32, sm: 46 },
-        height: { xs: 32, sm: 46 },
-        borderColor: "#6b7280",
-        color: "#ffffff",
-        bgcolor: "#6b7280",
-        "&:hover": {
-          borderColor: "#6b7280",
-          bgcolor: "#6b7280",
-        },
-        px: { xs: 1.5, sm: 3 },
-        fontSize: { xs: "0.7rem", sm: "0.9rem" },
-        py: { xs: 0.5, sm: 1 },
-      }}
-    >
-      Cancel
-    </Button>
-    <Button
-      onClick={(e) => {
-        e.stopPropagation(); // Prevent event bubbling
-        confirmLogout();
-      }}
-      variant="contained"
-      sx={{
-        borderRadius: 2,
-        textTransform: "none",
-        fontWeight: 700,
-        flex: { xs: 1, sm: "0 0 auto" },
-        minWidth: { xs: "auto", sm: 110 },
-        minHeight: { xs: 32, sm: 46 },
-        height: { xs: 32, sm: 46 },
-        background: "linear-gradient(135deg, #E85D26, #E85D26)",
-        color: "#ffffff",
-        "&:hover": {
-          background: "linear-gradient(135deg, #D65A00, #D65A00)",
-        },
-        boxShadow: "0 4px 15px rgba(232, 93, 38, 0.3)",
-        px: { xs: 1.5, sm: 3 },
-        fontSize: { xs: "0.7rem", sm: "0.9rem" },
-        py: { xs: 0.5, sm: 1 },
-      }}
-      startIcon={<LogoutIcon sx={{ fontSize: { xs: 14, sm: 20 } }} />}
-    >
-      Logout
-    </Button>
-  </DialogActions>
-</Dialog>
+        <DialogActions
+          sx={{
+            px: { xs: 1.5, sm: 3 },
+            pb: { xs: 2, sm: 3.5 },
+            pt: { xs: 1, sm: 2 },
+            gap: { xs: 0.75, sm: 1.5 },
+            justifyContent: "center",
+            flexDirection: "row",
+          }}
+        >
+          <Button
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent event bubbling
+              cancelLogout();
+            }}
+            variant="outlined"
+            sx={{
+              borderRadius: 2,
+              textTransform: "none",
+              fontWeight: 600,
+              flex: { xs: 1, sm: "0 0 auto" },
+              minWidth: { xs: "auto", sm: 110 },
+              minHeight: { xs: 32, sm: 46 },
+              height: { xs: 32, sm: 46 },
+              borderColor: "#6b7280",
+              color: "#ffffff",
+              bgcolor: "#6b7280",
+              "&:hover": {
+                borderColor: "#6b7280",
+                bgcolor: "#6b7280",
+              },
+              px: { xs: 1, sm: 3 },
+              fontSize: { xs: "0.7rem", sm: "0.9rem" },
+              py: { xs: 0.5, sm: 1 },
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent event bubbling
+              confirmLogout();
+            }}
+            variant="contained"
+            sx={{
+              borderRadius: 2,
+              textTransform: "none",
+              fontWeight: 700,
+              flex: { xs: 1, sm: "0 0 auto" },
+              minWidth: { xs: "auto", sm: 110 },
+              minHeight: { xs: 32, sm: 46 },
+              height: { xs: 32, sm: 46 },
+              background: "linear-gradient(135deg, #E85D26, #E85D26)",
+              color: "#ffffff",
+              "&:hover": {
+                background: "linear-gradient(135deg, #D65A00, #D65A00)",
+              },
+              boxShadow: "0 4px 15px rgba(232, 93, 38, 0.3)",
+              px: { xs: 1, sm: 3 },
+              fontSize: { xs: "0.7rem", sm: "0.9rem" },
+              py: { xs: 0.5, sm: 1 },
+            }}
+            startIcon={<LogoutIcon sx={{ fontSize: { xs: 14, sm: 20 } }} />}
+          >
+            Logout
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Paper>
   );
 }

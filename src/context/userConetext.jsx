@@ -18,6 +18,7 @@ export const UserProvider = ({ children }) => {
         "mobile",
         "profileImage",
         "gender",
+        "zipcode",
     ];
 
     const calculateProfileCompletion = (user) => {
@@ -46,6 +47,7 @@ export const UserProvider = ({ children }) => {
     const getuserData = async () => {
         try {
             const res = await axios.get(`${Api}/users/${storedUser.id}`);
+
             setCurrentUser(res.data.data);
         } catch (error) {
             console.log(error);
@@ -54,14 +56,12 @@ export const UserProvider = ({ children }) => {
 
     const removeSavedPost = async (postId) => {
         try {
-            console.log(postId, 'postId');
-
             await axios.delete(
                 `${Api}/save-post/${postId}/${currentUser._id}`
             );
 
             setSavedPost((prev) =>
-                prev.filter((item) => item.postId._id !== postId)
+                prev.filter((item) => item?.postId?._id !== postId)
             );
 
         } catch (error) {

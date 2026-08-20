@@ -93,7 +93,6 @@ const INITIAL_FORM = {
   language: [],
   ageGroupPreference: "Any",
   price: 0,
-
   medicalAssistance: false,
   languageSupport: false,
   transitHelp: false,
@@ -219,6 +218,8 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [resetForm, setResetForm] = useState(null);
   const [errors, setErrors] = useState({});
+
+  const [languageOpen, setLanguageOpen] = useState(false);
 
   const user = JSON.parse(localStorage.getItem("user"));
 
@@ -561,32 +562,52 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
         },
       });
 
-      refreshRides();
-      setStep(0);
-      formReset();
-      setSubmitted(true);
-      setShowErrors(false);
-      setOpen(false)
+
+      // UI updates should not trigger the API error toast
+      try {
+        refreshRides();
+        setStep(0);
+        formReset();
+        setSubmitted(true);
+        setShowErrors(false);
+        setOpen(false);
+      } catch (uiError) {
+        console.error("UI cleanup error:", uiError);
+      }
+
+      // Navigate/close after success
+      setTimeout(() => {
+        if (onClose) {
+          onClose();
+        } else {
+          navigate("/myride");
+        }
+      }, 1000);
+
     } catch (error) {
-      toast.error(error.response?.data?.message || error.message, {
-        position: isTab ? "top-center" : "top-right",
-        autoClose: 3000,
-        hideProgressBar: true,
-        closeButton: false,
-        style: {
-          width: isTab ? "280px" : "360px",
-          fontSize: isTab ? "13px" : "15px",
-          padding: isTab ? "8px 12px" : "12px 16px",
-          borderRadius: isTab ? "8px" : "10px",
-          minHeight: isTab ? "42px" : "52px",
-        },
-      });
+      // ONLY API errors come here
+      console.error("Create ride error:", error);
+
+      toast.error(
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to create ride",
+        {
+          position: isTab ? "top-center" : "top-right",
+          autoClose: 3000,
+          hideProgressBar: true,
+          closeButton: false,
+          style: {
+            width: isTab ? "280px" : "360px",
+            fontSize: isTab ? "13px" : "15px",
+            padding: isTab ? "8px 12px" : "12px 16px",
+            borderRadius: isTab ? "8px" : "10px",
+            minHeight: isTab ? "42px" : "52px",
+          },
+        }
+      );
     } finally {
       setIsSubmitted(false);
-      setTimeout(() => {
-        if (onClose) onClose();
-        else navigate("/myride");
-      }, 1000);
     }
   };
 
@@ -860,11 +881,11 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                   onChange={(e) => update("modeOfTravel", e.target.value)}
                   sx={selectSx}
                 >
-                  <MenuItem value="Car" sx={menuItemSx}>🚗 Car</MenuItem>
-                  <MenuItem value="Bus" sx={menuItemSx}>🚌 Bus</MenuItem>
-                  <MenuItem value="Bike" sx={menuItemSx}>🏍️ Bike</MenuItem>
-                  <MenuItem value="Flight" sx={menuItemSx}>✈️ Flight</MenuItem>
-                  {/* <MenuItem value="Train" sx={menuItemSx}>🚆 Train</MenuItem> */}
+                  <MenuItem value="Car" sx={menuItemSx}>Car</MenuItem>
+                  <MenuItem value="Bus" sx={menuItemSx}>Bus</MenuItem>
+                  <MenuItem value="Bike" sx={menuItemSx}>Bike</MenuItem>
+                  <MenuItem value="Flight" sx={menuItemSx}>Flight</MenuItem>
+                  {/* <MenuItem value="Train" sx={menuItemSx} Train</MenuItem> */}
                 </Select>
                 <FormHelperText>{showErrors ? errors.modeOfTravel : ""}</FormHelperText>
               </FormControl>
@@ -1086,7 +1107,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                   )}
                 </FormControl>
 
-                <FormControl fullWidth size={inputSize} error={showErrors && !!errors.language}>
+                {/* <FormControl fullWidth size={inputSize} error={showErrors && !!errors.language}>
                   <InputLabel sx={ilSx}>Language</InputLabel>
                   <Select
                     multiple
@@ -1117,6 +1138,119 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                   </Select>
                   {showErrors && errors.language && (
                     <FormHelperText sx={{ fontSize: { xs: "0.62rem", sm: "0.7rem" } }}>{errors.language}</FormHelperText>
+                  )}
+                </FormControl> */}
+
+                <FormControl
+                  fullWidth
+                  size={inputSize}
+                  error={showErrors && !!errors.language}
+                >
+                  <InputLabel sx={ilSx}>Language</InputLabel>
+
+                  <Select
+                    multiple
+                    open={languageOpen}
+                    onOpen={() => setLanguageOpen(true)}
+                    onClose={() => setLanguageOpen(false)}
+                    value={form.language || []}
+                    label="Language"
+                    onChange={(e) => update("language", e.target.value)}
+                    sx={selectSx}
+                    renderValue={(selected) => (
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexWrap: "wrap",
+                          gap: 0.5,
+                        }}
+                      >
+                        {selected.map((value) => (
+                          <Chip
+                            key={value}
+                            label={value}
+                            size="small"
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onDelete={() => {
+                              update(
+                                "language",
+                                form.language.filter((item) => item !== value)
+                              );
+                            }}
+                          />
+                        ))}
+                      </Box>
+                    )}
+                    MenuProps={{
+                      disablePortal: true,
+                      PaperProps: {
+                        sx: {
+                          maxHeight: 300,
+                        },
+                      },
+                      MenuListProps: {
+                        sx: {
+                          pb: 0,
+                        },
+                      },
+                    }}
+                  >
+                    {languages.map((lang) => (
+                      <MenuItem
+                        key={lang}
+                        value={lang}
+                        sx={menuItemSx}
+                      >
+                        {lang}
+                      </MenuItem>
+                    ))}
+
+                    {/* Select button at bottom */}
+                    <Box
+                      sx={{
+                        position: "sticky",
+                        bottom: 0,
+                        backgroundColor: "#fff",
+                        borderTop: "1px solid #e0e0e0",
+                        p: 1,
+                        display: "flex",
+                        justifyContent: "flex-end",
+                        zIndex: 2,
+                      }}
+                      onMouseDown={(e) => e.stopPropagation()}
+                    >
+                      <Button
+                        variant="contained"
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setLanguageOpen(false);
+                        }}
+                        sx={{
+                          textTransform: "none",
+                          borderRadius: 3,
+                          minWidth: 80,
+                          mt: 1,
+                          color: "#ffff",
+                          bgcolor: ACCENT
+                        }}
+                      >
+                        Select
+                      </Button>
+                    </Box>
+                  </Select>
+
+                  {showErrors && errors.language && (
+                    <FormHelperText
+                      sx={{
+                        fontSize: {
+                          xs: "0.62rem",
+                          sm: "0.7rem",
+                        },
+                      }}
+                    >
+                      {errors.language}
+                    </FormHelperText>
                   )}
                 </FormControl>
 
@@ -1360,6 +1494,19 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
           )}
 
           {/* ── Navigation buttons ── */}
+          {showErrors && Object.keys(errors).length > 0 && (
+  <Alert
+    severity="error"
+    sx={{
+      mt: 2,
+      mb: 1,
+      borderRadius: 2,
+    }}
+  >
+    Please fill in the missing fields before continuing.
+  </Alert>
+)}
+
           <Stack
             direction="row"
             spacing={1.5}
@@ -1374,10 +1521,10 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
               <Button
                 variant="outlined"
                 onClick={() => setStep((s) => s - 1)}
-                startIcon={<ArrowLeft size={14} />}
+                startIcon={<ArrowLeft size={20} />}
                 sx={{
                   flex: 1,
-                  fontSize: { xs: "0.70rem", sm: "0.875rem" },
+                  fontSize: { xs: "0.85rem", sm: "0.875rem" },
                   // py: 1,
                   minHeight: 42,
                   borderRadius: 2.5,
@@ -1398,7 +1545,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                 onClick={(formReset)}
                 sx={{
                   flex: 1,
-                  fontSize: { xs: "0.70rem", sm: "0.875rem" },
+                  fontSize: { xs: "0.85rem", sm: "0.875rem" },
                   // py: 1,
                   minHeight: 42,
                   borderRadius: 2.5,
@@ -1423,10 +1570,10 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                     setStep((s) => s + 1);
                   }
                 }}
-                endIcon={<ArrowRight size={14} />}
+                endIcon={<ArrowRight size={20} />}
                 sx={{
                   flex: 1,
-                  fontSize: { xs: "0.65rem", sm: "0.875rem" },
+                  fontSize: { xs: "0.85rem", sm: "0.875rem" },
                   // py: 1,
                   minHeight: 42,
                   borderRadius: 2.5,
@@ -1451,7 +1598,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                 disabled={isSubmitted || saving}
                 sx={{
                   flex: 1,
-                  fontSize: { xs: "0.60rem", sm: "0.875rem" },
+                  fontSize: { xs: "0.85rem", sm: "0.875rem" },
                   // py: 1,
                   minHeight: 42,
                   borderRadius: 2.5,
@@ -1468,7 +1615,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
               >
                 {isEditMode
                   ? isSubmitted || saving
-                    ? "Saving Changes..."
+                    ? "Saving..."
                     : "Save Changes"
                   : isSubmitted
                     ? "Ride Posting..."

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   Box, Typography, Grid, Paper, Chip, Avatar, Button,
   Divider, Stack, LinearProgress,
@@ -46,6 +46,7 @@ import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import FolderIcon from "@mui/icons-material/Folder";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import ToastConfig from '../components/ToastConfig.jsx';
+import ProfileModal from './Avatar.jsx';
 
 const BREAKPOINTS = { xs: 0, sm: 600, md: 900, lg: 1200, xl: 1536 }; // MUI defaults
 
@@ -91,9 +92,15 @@ export default function Community() {
   const [tooltip2Open, setTooltip2Open] = useState(false);
   const [imagePostLoading, setImagePostLoading] = useState(false);
 
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState(null);
+
   const [commentCounts, setCommentCounts] = useState({});
   const toasts = ToastConfig();
 
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const theme = useTheme();
   const isTab = useMediaQuery(theme.breakpoints.down("sm"));
@@ -113,26 +120,116 @@ export default function Community() {
       fileInputRef.current?.click();
     }
   };
+  // Lower score = closer / higher priority
+  const getZipcodeProximityScore = (authorZip, currentZip) => {
+    if (!currentZip || !authorZip) return 3; // no data → lowest priority
+    const a = String(authorZip);
+    const b = String(currentZip);
 
+    if (a === b) return 0;               // exact same zipcode
+    if (a.slice(0, 3) === b.slice(0, 3)) return 1; // same local area
+    if (a.slice(0, 1) === b.slice(0, 1)) return 2; // same broad region
+    return 3;                             // everything else
+  };
+
+  const sortPostsByProximity = (posts, currentZip) => {
+    return [...posts].sort(
+      (a, b) =>
+        getZipcodeProximityScore(a?.authorId?.zipcode, currentZip) -
+        getZipcodeProximityScore(b?.authorId?.zipcode, currentZip)
+    );
+  };
+
+  // const getCommmunityPost = async () => {
+  //   try {
+  //     setPostLoading(true);
+  //     const postsRes = await axios.get(Api + "/community/");
+  //     const likesRes = await axios.get(Api + `/likes/liked-posts/${user.id}`);
+  //     const likedPostIds = likesRes?.data?.data || [];
+  //     const updatedPosts = postsRes?.data?.data?.map((post) => ({
+  //       ...post,
+  //       isLiked: likedPostIds.includes(post._id),
+  //     }));
+
+  //     const postIds = postsRes.data.data.map((item) => item._id);
+  //     setCommunityPosts(updatedPosts);
+  //     setPostId(postIds);
+
+  //     // fetch comment counts for all posts in parallel
+  //     const countEntries = await Promise.all(
+  //       updatedPosts.map(async (p) => {
+  //         try {
+  //           const res = await axios.get(Api + `/community/comments/${p._id}/${user.id}`);
+  //           return [p._id, res.data.data.comments.length];
+  //         } catch {
+  //           return [p._id, 0];
+  //         }
+  //       })
+  //     );
+  //     setCommentCounts(Object.fromEntries(countEntries));
+
+  //   } catch (error) {
+  //     console.error(error.message);
+  //   } finally {
+  //     setPostLoading(false);
+  //   }
+  // };
 
   const getCommmunityPost = async () => {
     try {
       setPostLoading(true);
-      const postsRes = await axios.get(Api + "/community/");
-      const likesRes = await axios.get(Api + `/likes/liked-posts/${user.id}`);
+
+      const [postsRes, likesRes] = await Promise.all([
+        axios.get(`${Api}/community?page=1&limit=10`),
+        axios.get(`${Api}/likes/liked-posts/${user.id}`),
+      ]);
+
+      const posts = postsRes?.data?.data || [];
       const likedPostIds = likesRes?.data?.data || [];
-      const updatedPosts = postsRes?.data?.data?.map((post) => ({
+
+      const updatedPosts = posts.map((post) => ({
         ...post,
+
         isLiked: likedPostIds.includes(post._id),
+
+        commentCount:
+          post.commentCount ??
+          post.comments?.length ??
+          0,
       }));
 
-      const postIds = postsRes.data.data.map((item) => item._id);
+      const postId = posts.map(
+        (post) => post._id
+      );
+
       setCommunityPosts(updatedPosts);
+      setPostId(postId);
+
+      setCommentCounts(
+        Object.fromEntries(
+          updatedPosts.map((post) => [
+            post._id,
+            post.commentCount,
+          ])
+        )
+      );
+
+      // ⭐ Pagination state
+      setPage(1);
+
+      setHasMore(
+        postsRes?.data?.pagination?.hasMore ?? false
+      );
+
+      // 👇 sort so nearby users (by zipcode) appear first
+      const sortedPosts = sortPostsByProximity(updatedPosts, currentUser?.zipcode);
+
+      const postIds = postsRes.data.data.map((item) => item._id);
+      setCommunityPosts(sortedPosts);
       setPostId(postIds);
 
-      // fetch comment counts for all posts in parallel
       const countEntries = await Promise.all(
-        updatedPosts.map(async (p) => {
+        sortedPosts.map(async (p) => {
           try {
             const res = await axios.get(Api + `/community/comments/${p._id}/${user.id}`);
             return [p._id, res.data.data.comments.length];
@@ -142,13 +239,118 @@ export default function Community() {
         })
       );
       setCommentCounts(Object.fromEntries(countEntries));
-
     } catch (error) {
-      console.error(error.message);
+      console.error("Community error:", error);
+      console.error("Status:", error.response?.status);
+      console.error("Response:", error.response?.data);
+
     } finally {
       setPostLoading(false);
     }
   };
+
+  const loadMorePosts = async () => {
+    if (loadingMore || !hasMore) return;
+
+    try {
+      setLoadingMore(true);
+
+      const nextPage = page + 1;
+
+      const [postsRes, likesRes] = await Promise.all([
+        axios.get(
+          `${Api}/community?page=${nextPage}&limit=10`
+        ),
+        axios.get(
+          `${Api}/likes/liked-posts/${user.id}`
+        ),
+      ]);
+
+      const posts = postsRes?.data?.data || [];
+      const likedPostIds = likesRes?.data?.data || [];
+
+      const updatedPosts = posts.map((post) => ({
+        ...post,
+
+        isLiked: likedPostIds.includes(post._id),
+
+        commentCount:
+          post.commentCount ??
+          post.comments?.length ??
+          0,
+      }));
+
+      setCommunityPosts((prev) => [
+        ...prev,
+        ...updatedPosts,
+      ]);
+
+      setPostId((prev) => [
+        ...prev,
+        ...posts.map((post) => post._id),
+      ]);
+
+      // ⭐ Add comment counts
+      setCommentCounts((prev) => ({
+        ...prev,
+
+        ...Object.fromEntries(
+          updatedPosts.map((post) => [
+            post._id,
+            post.commentCount,
+          ])
+        ),
+      }));
+
+      // ⭐ Update pagination
+      setPage(nextPage);
+
+      setHasMore(
+        postsRes?.data?.pagination?.hasMore ?? false
+      );
+
+    } catch (error) {
+      console.error(
+        "Error loading more posts:",
+        error
+      );
+
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  const observerRef = useRef(null);
+
+  const lastPostRef = useCallback(
+    (node) => {
+      if (loadingMore) return;
+
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+
+      observerRef.current = new IntersectionObserver(
+        (entries) => {
+          if (
+            entries[0].isIntersecting &&
+            hasMore &&
+            !loadingMore
+          ) {
+            loadMorePosts();
+          }
+        },
+        {
+          rootMargin: "300px",
+        }
+      );
+
+      if (node) {
+        observerRef.current.observe(node);
+      }
+    },
+    [loadingMore, hasMore, page]
+  );
 
   const getComments = async (postId) => {
     try {
@@ -257,6 +459,28 @@ export default function Community() {
 
   const isProfileComplete = completion === 100;
   const SIDEBAR_SCROLL_HEIGHT = 'calc(100vh - 120px)';
+  const zipcode = currentUser?.zipcode
+  // ── Profile completion modal ──
+  // Shows once per page-load whenever the user's profile is under 100%.
+  const [profileGateOpen, setProfileGateOpen] = useState(false);
+  const hasCheckedProfileGateRef = useRef(false);
+
+  useEffect(() => {
+    // Only decide ONCE, and only after currentUser has actually finished
+    // loading. `completion` is 0 (a valid number) for a brief moment while
+    // the user context is still fetching, so checking `typeof completion
+    // === "number"` alone fires too early and causes the modal to flash
+    // open and then immediately close once the real completion (100) comes in.
+    if (hasCheckedProfileGateRef.current) return;
+    if (currentUser && currentUser._id && typeof completion === "number") {
+      hasCheckedProfileGateRef.current = true;
+      setProfileGateOpen(completion !== 100);
+    }
+  }, [currentUser, completion]);
+
+  const handleCloseProfileGate = () => {
+    setProfileGateOpen(false);
+  };
 
   const handleEdit = (post) => {
     setSelectedPost(post);
@@ -477,6 +701,7 @@ export default function Community() {
 
   return (
     <>
+
       <PageLayout>
         {/* Page header */}
         <Typography variant="h5" fontWeight={800} sx={{ mb: { xs: 0.5, sm: 0.5 }, fontSize: { xs: "1rem", sm: "1.2rem", md: "1.35rem", lg: "1.5rem" } }}>
@@ -624,7 +849,7 @@ export default function Community() {
                     sx={{
                       width: '100%',
                       maxHeight: { xs: 200, sm: 240, md: 280, lg: 300 },
-                      objectFit: 'cover',
+                      objectFit: 'contain',
                       display: 'block',
                     }}
                   />
@@ -879,13 +1104,13 @@ export default function Community() {
                   textAlign: "center",
                 }}
               >
-                <InboxOutlinedIcon
+                {/* <InboxOutlinedIcon
                   sx={{
                     fontSize: { xs: 40, sm: 64 },
                     color: "text.disabled",
                     mb: 2,
                   }}
-                />
+                /> */}
 
                 <Typography variant="h6" fontWeight={600} color="text.primary">
                   No Posts Yet
@@ -902,12 +1127,16 @@ export default function Community() {
             ) : (
               communityPosts?.map((post, index) => (
                 <Paper
-                  key={index}
+                  key={post._id}
+                  ref={index === communityPosts.length - 1 ? lastPostRef : null}
                   elevation={0}
                   sx={{
-                    borderRadius: 3, border: CARD_BORDER, mb: 2, overflow: 'hidden',
+                    borderRadius: 3,
+                    border: CARD_BORDER,
+                    mb: 2,
+                    overflow: "hidden",
                     width: POST_BOX_WIDTH_SX,
-                    boxSizing: 'border-box',
+                    boxSizing: "border-box",
                   }}
                 >
                   <Box sx={{ p: isMobile ? 1.5 : 2 }}>
@@ -915,6 +1144,11 @@ export default function Community() {
                     <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: isMobile ? 1 : 1.5 }}>
                       <Avatar
                         src={post?.authorId?.profileImage}
+                        alt={`${post?.authorId?.firstName || ""} ${post?.authorId?.lastName || ""}`}
+                        onClick={() => {
+                          setSelectedProfile(post?.authorId);
+                          setProfileModalOpen(true);
+                        }}
                         sx={{
                           width: avatarSize,
                           height: avatarSize,
@@ -926,8 +1160,9 @@ export default function Community() {
                           mt: { xs: 0.4, sm: 0.5 }
                         }}
                       >
-                        {!currentUser?.profileImage &&
-                          `${currentUser?.firstName?.[0] || ''}${currentUser?.lastName?.[0] || ''}`}
+                        {!post?.authorId?.profileImage &&
+                          `${post?.authorId?.firstName?.[0] || ""}${post?.authorId?.lastName?.[0] || ""
+                          }`}
                       </Avatar>
 
                       <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -1033,7 +1268,7 @@ export default function Community() {
                                   fontWeight: 600,
                                   color: "#ffff",
                                   bgcolor: "grey.700",
-        
+
                                 }}
                               >
                                 Cancel
@@ -1125,9 +1360,9 @@ export default function Community() {
                                     sx={{
                                       width: "100%",
                                       height: { xs: 160, sm: 220, md: 280 },
-                                      objectFit: "cover",
+                                      objectFit: "contain",
                                       borderRadius: 2,
-                                      border: "1px solid #eee",
+                                      // border: "1px solid #eee",
                                       mb: 1.5,
                                     }}
                                   />
@@ -1284,10 +1519,10 @@ export default function Community() {
                   {/* Post image */}
                   {post.postImage && <CommunityImage src={post.postImage} />}
 
-                  <Divider />
+                  < Divider />
 
                   {/* Action buttons */}
-                  <Stack
+                  < Stack
                     direction="row"
                     sx={{
                       py: isMobile ? 0.25 : 0.5,
@@ -1366,7 +1601,29 @@ export default function Community() {
                 </Paper>
               ))
             )}
+
+            {loadingMore && (
+              <Box
+                sx={{
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  py: 3,
+                }}
+              >
+                <CircularProgress size={32} />
+              </Box>
+            )}
           </Box>
+
+          <ProfileModal
+            open={profileModalOpen}
+            selectedProfile={selectedProfile}
+            onClose={() => {
+              setProfileModalOpen(false);
+            }}
+          />
 
           {/* SidebarContent */}
           {showSidebar && (
@@ -1424,4 +1681,3 @@ export default function Community() {
 
   );
 }
-

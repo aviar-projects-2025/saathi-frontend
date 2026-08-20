@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import notificationSound from "../sounds/notifysound.wav";
 import { toast } from "react-toastify";
 import socket from "../socket";
@@ -9,12 +9,15 @@ import ToastConfig from "../components/ToastConfig";
 
 const NotificationContext = createContext();
 
+
 export const NotificationProvider = ({ children }) => {
     const [allRequests, setAllRequests] = useState([]);
     const [allMyRequests, setAllMyRequests] = useState([]);
     const [notifications, setNotifications] = useState([]);
     const user = JSON.parse(localStorage.getItem('user'))
     const [tabNotification, setTabNotification] = useState([]);
+
+    const toastedNotifications = useRef(new Set());
 
     const toasts = ToastConfig();
 
@@ -46,13 +49,20 @@ export const NotificationProvider = ({ children }) => {
         // console.log('joined ', user.id)
         const handleEvent = (payload) => {
             const { type, data, message, category } = payload;
+
             const audio = new Audio(notificationSound);
             audio.currentTime = 0;
             audio.play();
 
-            console.log(payload,'notification payliad')
+            // Sound only when app is visible
+            // if (document.visibilityState === "visible") {
+            //     const audio = new Audio(notificationSound);
+            //     audio.currentTime = 0;
+            //     audio.play().catch(() => { });
+            // }
 
-            // console.log(payload,'payload')
+            console.log(payload, 'payload')
+
             const newNotification = {
                 _id: data._id || Date.now(),
                 type,
@@ -63,11 +73,25 @@ export const NotificationProvider = ({ children }) => {
                 createdAt: new Date()
             };
 
+
+
             setNotifications((prev) => [newNotification, ...prev]);
             setTabNotification((prev) => [newNotification, ...prev]);
 
+            // toast.info(message || "New notification", toasts);
+
+            // Prevent duplicate toast
+            if (toastedNotifications.current.has(newNotification._id)) {
+                return;
+            }
+
+            toastedNotifications.current.add(newNotification._id);
+
+            // Show toast only once
             toast.info(message || "New notification", toasts);
+
         };
+        console.log(notifications, 'notifications')
         socket.on("notification", handleEvent);
         return () => {
             socket.off("notification", handleEvent);
