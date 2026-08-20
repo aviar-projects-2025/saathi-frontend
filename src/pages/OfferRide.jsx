@@ -1494,6 +1494,19 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
           )}
 
           {/* ── Navigation buttons ── */}
+          {showErrors && Object.keys(errors).length > 0 && (
+  <Alert
+    severity="error"
+    sx={{
+      mt: 2,
+      mb: 1,
+      borderRadius: 2,
+    }}
+  >
+    Please fill in the missing fields before continuing.
+  </Alert>
+)}
+
           <Stack
             direction="row"
             spacing={1.5}
