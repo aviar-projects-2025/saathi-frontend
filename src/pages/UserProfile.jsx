@@ -583,6 +583,7 @@ const UserProfile = () => {
         : "",
       gender: formData.gender,
       bio: formData.bio,
+      zipcode : formData.zipcode,
 
       ...(profileImage && {
         profileImage: profileImage?.url,
