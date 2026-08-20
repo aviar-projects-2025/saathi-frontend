@@ -74,7 +74,6 @@ const statusStyles = (status) => {
       return { bg: "#FDF1DE", fg: "#B5690D", dot: "#F5A623" };
   }
 };
-
 const RequestRide = () => {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [loadingRequests, setLoadingRequests] = useState(true);
@@ -269,9 +268,9 @@ const RequestRide = () => {
   const activeRequests = allMyRequests.filter(
     (req) =>
       req?.rideId &&
-      req.status !== "DELETED" &&
-      req.status !== "CANCELLED" &&
-      req.status !== "REJECTED",
+      req.status !== "DELETED" 
+      // req.status !== "CANCELLED" &&
+      // req.status !== "REJECTED",
   );
 
   return (
@@ -374,7 +373,7 @@ const RequestRide = () => {
                     maxWidth: "1200px",
                     minHeight: { xs: "auto", sm: "150px", md: "160px" },
                     mb: { xs: 1.5, sm: 2, md: 2.25 },
-                    borderRadius: { xs: "16px", sm: "20px" },
+                    borderRadius: { xs: "16px", sm: "20px"},
                     overflow: "hidden",
                     border: `1px solid ${CARD_BORDER}`,
                     boxShadow: "0 4px 16px rgba(20, 10, 40, 0.06)",
@@ -458,7 +457,7 @@ const RequestRide = () => {
                           "& .MuiChip-icon": { color: s.dot },
                         }}
                       />
-
+                
                       <IconButton
                         onClick={(event) => handleMenuOpen(event, request)}
                         sx={{
