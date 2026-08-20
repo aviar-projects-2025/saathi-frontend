@@ -46,7 +46,7 @@ export default function NotificationTab({ handleCloseNotifications }) {
                 navigate("/my-referalls");
                 break;
             case "ride_started":
-                navigate("/myride")
+                navigate("/myride", { state: { tab: 0}, })
                 break;
 
             default:

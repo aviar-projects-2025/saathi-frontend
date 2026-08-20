@@ -794,7 +794,7 @@ export default function RideDetailsModal({
               ) : (
                 <>
                   <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.6 }}>
-                    <Stack direction="row" spacing={0.8} alignItems="center">
+                      <Stack direction="row" spacing={0.8} alignItems="center">
                       <Typography
                         sx={{
                           fontFamily: TOKENS.displayFont,

@@ -46,6 +46,8 @@ const ForgotPassword = () => {
                 `${Api}/auth/forgot-password`,
                 { email: values.email }
             );
+
+            console.log(response,'response')
             toast.success(response.data.message || "OTP sent to your email!", toasts);
             sessionStorage.setItem("resetEmail", values.email);
             navigate("/verify-otp");
