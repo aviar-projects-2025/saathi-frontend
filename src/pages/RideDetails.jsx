@@ -797,6 +797,88 @@ export default function RideDetailsModal({
       </Box>
 
       <DialogContent sx={{ px: { xs: 2.5, sm: 4 }, py: { xs: 3, sm: 3.5 } }}>
+
+        {requests.length > 0 && (
+          <>
+            <Box>
+              {requests.length === 0 ? (
+                <Box
+                  sx={{
+                    textAlign: 'center',
+                    py: 3,
+                    border: `1px dashed ${TOKENS.line}`,
+                    borderRadius: 2,
+                  }}
+                >
+                  <Typography sx={{ fontFamily: TOKENS.bodyFont, fontSize: '0.85rem', color: TOKENS.inkSoft }}>
+                    No requests yet
+                  </Typography>
+                </Box>
+              ) : (
+                <>
+                  <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.6 }}>
+                      <Stack direction="row" spacing={0.8} alignItems="center">
+                      <Typography
+                        sx={{
+                          fontFamily: TOKENS.displayFont,
+                          fontWeight: 700,
+                          fontSize: { xs: '0.95rem', sm: '1.05rem' },
+                          color: TOKENS.ink,
+                        }}
+                      >
+                        Passenger Manifest
+                      </Typography>
+                      {pendingCount > 0 && (
+                        <Chip
+                          label={`${pendingCount} pending`}
+                          size="small"
+                          sx={{
+                            bgcolor: TOKENS.amberSoft,
+                            color: TOKENS.amber,
+                            fontFamily: TOKENS.bodyFont,
+                            fontWeight: 700,
+                            fontSize: '0.7rem',
+                          }}
+                        />
+                      )}
+                    </Stack>
+                    <Typography sx={{ fontFamily: TOKENS.monoFont, fontSize: '0.9rem', color: TOKENS.inkSoft, mx: 2, mt: 0.3 }}>
+                      {requests.length} Total
+                    </Typography>
+                  </Stack>
+
+                  <Box
+                    sx={{
+                      borderRadius: 1.5,
+                      maxHeight: { xs: 280, sm: 340 },
+                    }}
+                  >
+                    {requests.map((req, idx) => (
+                      <Box
+                        key={req._id}
+                        sx={{
+                          mt: 2
+                        }}
+                      >
+                        <PassengerStub
+                          request={req}
+                          onApprove={onApprove}
+                          onReject={onReject}
+                          approveLoading={approveLoading}
+                          rejectLoading={rejectLoading}
+                          dense={isXs}
+                        />
+                      </Box>
+                    ))}
+                  </Box>
+                </>
+              )}
+            </Box>
+          </>
+        )}
+
+        <Perforation /> 
+
         {/* ── Ticket data fields ── */}
         <Box
           sx={{
@@ -857,87 +939,7 @@ export default function RideDetailsModal({
           <Field icon={DescriptionIcon} label="Description" value={ride.description || '—'} span />
         )}
 
-        {requests.length > 0 && (
-          <>
 
-            <Perforation />
-
-            <Box>
-              {requests.length === 0 ? (
-                <Box
-                  sx={{
-                    textAlign: 'center',
-                    py: 3,
-                    border: `1px dashed ${TOKENS.line}`,
-                    borderRadius: 2,
-                  }}
-                >
-                  <Typography sx={{ fontFamily: TOKENS.bodyFont, fontSize: '0.85rem', color: TOKENS.inkSoft }}>
-                    No requests yet
-                  </Typography>
-                </Box>
-              ) : (
-                <>
-                  <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.6 }}>
-                    <Stack direction="row" spacing={0.8} alignItems="center">
-                      <Typography
-                        sx={{
-                          fontFamily: TOKENS.displayFont,
-                          fontWeight: 700,
-                          fontSize: { xs: '0.95rem', sm: '1.05rem' },
-                          color: TOKENS.ink,
-                        }}
-                      >
-                        Passenger Manifest
-                      </Typography>
-                      {pendingCount > 0 && (
-                        <Chip
-                          label={`${pendingCount} pending`}
-                          size="small"
-                          sx={{
-                            bgcolor: TOKENS.amberSoft,
-                            color: TOKENS.amber,
-                            fontFamily: TOKENS.bodyFont,
-                            fontWeight: 700,
-                            fontSize: '0.7rem',
-                          }}
-                        />
-                      )}
-                    </Stack>
-                    <Typography sx={{ fontFamily: TOKENS.monoFont, fontSize: '0.9rem', color: TOKENS.inkSoft, mx: 2, mt: 0.3 }}>
-                      {requests.length} Total
-                    </Typography>
-                  </Stack>
-
-                  <Box
-                    sx={{
-                      borderRadius: 1.5,
-                      maxHeight: { xs: 280, sm: 340 },
-                    }}
-                  >
-                    {requests.map((req, idx) => (
-                      <Box
-                        key={req._id}
-                        sx={{
-                          mt: 2
-                        }}
-                      >
-                        <PassengerStub
-                          request={req}
-                          onApprove={onApprove}
-                          onReject={onReject}
-                          approveLoading={approveLoading}
-                          rejectLoading={rejectLoading}
-                          dense={isXs}
-                        />
-                      </Box>
-                    ))}
-                  </Box>
-                </>
-              )}
-            </Box>
-          </>
-        )}
 
       </DialogContent>
       {/* ── Actions ── */}

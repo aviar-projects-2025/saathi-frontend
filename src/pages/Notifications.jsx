@@ -1,27 +1,19 @@
-import * as React from 'react';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import Divider from '@mui/material/Divider';
-import ListItemText from '@mui/material/ListItemText';
-import ListItemAvatar from '@mui/material/ListItemAvatar';
-import Avatar from '@mui/material/Avatar';
-import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
+import React from 'react'
+import PageLayout from '../components/PageLayout'
+import { Avatar, Box, Divider, List, ListItem, ListItemAvatar, Typography } from '@mui/material';
 import moment from 'moment';
 import { useNotifications } from '../context/NotificationContext';
-import { data, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import Api from '../Api';
-import { toast } from 'react-toastify';
 import { useReferral } from '../context/ReferralContext';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
-export default function NotificationTab({ handleCloseNotifications }) {
+const Notifications = () => {
     const { tabNotification, fetchNotifications } = useNotifications();
     const { getPendingReferralCount } = useReferral();
 
     const uniqueNotifications = Object.values(
         (tabNotification || []).reduce((acc, curr) => {
-            acc[curr._id] = curr; // handle both cases
+            acc[curr._id] = curr;
             return acc;
         }, {})
     );
@@ -29,7 +21,6 @@ export default function NotificationTab({ handleCloseNotifications }) {
     const navigate = useNavigate();
 
     const handleNavigation = (item) => {
-        console.log(item.type, 'item.type')
         switch (item.type) {
             case "new_request":
             case "request_rejected":
@@ -46,7 +37,7 @@ export default function NotificationTab({ handleCloseNotifications }) {
                 navigate("/my-referalls");
                 break;
             case "ride_started":
-                navigate("/myride", { state: { tab: 0}, })
+                navigate("/myride")
                 break;
 
             default:
@@ -67,29 +58,10 @@ export default function NotificationTab({ handleCloseNotifications }) {
             console.log(error.message)
         }
     }
-
-
     return (
-        <Box
-            sx={{
-                width: '100%',
-                maxWidth: 360,
-                maxHeight: 450,
-                bgcolor: 'background.paper',
-                borderRadius: 2,
-                overflow: 'hidden',
-                display: 'flex',
-                flexDirection: 'column',
-
-            }}
-        >
+        <PageLayout>
             <List
                 sx={{
-                    width: '100%',
-                    maxHeight: 420,
-                    overflowY: 'auto',
-                    overflowX: 'hidden',
-                    bgcolor: 'background.paper',
                     py: 0,
                     // nice thin scrollbar instead of the default chunky one
                     '&::-webkit-scrollbar': {
@@ -123,7 +95,7 @@ export default function NotificationTab({ handleCloseNotifications }) {
                                     sx={{
                                         borderRadius: 3,
                                         marginBottom: 1,
-                                        bgcolor: isUnread ? '#e3f2fd' : 'transparent',
+                                        bgcolor: isUnread ? '#e3f2fd' : '#f4f4f4ff',
                                         transition: '0.2s',
                                         cursor: 'pointer',
                                         '&:hover': {
@@ -209,6 +181,8 @@ export default function NotificationTab({ handleCloseNotifications }) {
                     })
                 )}
             </List>
-        </Box>
-    );
+        </PageLayout>
+    )
 }
+
+export default Notifications
