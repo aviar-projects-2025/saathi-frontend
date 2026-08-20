@@ -381,25 +381,11 @@ export default function RideCard({ ride }) {
         icon: <FlightTakeoffIcon sx={iconSx} />,
         value: ride.airlineName || "—",
       },
-      {
-        label: "Traveller type",
-        icon: <WcIcon sx={iconSx} />,
-        value: ride.travellerType || "—",
-      },
-      {
-        label: "Language",
-        icon: <LanguageIcon sx={iconSx} />,
-        value: ride.language || "—",
-      },
-      ...(ride.transitAirport
-        ? [
-          {
-            label: "Transit",
-            icon: <FlightTakeoffIcon sx={iconSx} />,
-            value: ride.transitAirport,
-          },
-        ]
-        : []),
+      // {
+      //   label: "Traveller type",
+      //   icon: <WcIcon sx={iconSx} />,
+      //   value: ride.travellerType || "—",
+      // },
     ]
     : [
       {
@@ -438,12 +424,15 @@ export default function RideCard({ ride }) {
         value: ride.fuelSharing || "0",
       },
 
-
-      {
-        label: "Duration",
-        icon: <AccessTimeIcon sx={iconSx} />,
-        value: ride.duration,
-      }
+      ...(ride?.duration != null
+        ? [
+          {
+            label: "Duration",
+            icon: <AccessTimeIcon sx={iconSx} />,
+            value: ride.duration,
+          },
+        ]
+        : []),
     ];
 
   return (
@@ -616,14 +605,15 @@ export default function RideCard({ ride }) {
                       lineHeight: 1.3,
                     }}
                   >
-                    {"\u{1F4CD}"} {routeFrom || "—"}
+                    {/* {"\u{1F4CD}"} */}
+                     {routeFrom || "—"}
                   </Typography>
 
-                  {/* {isFlight && (
-                    <Typography sx={{ fontSize: { xs: "0.58rem", sm: "0.68rem" }, color: "text.secondary", mt: 0.25 }}>
+                  {isFlight && (
+                    <Typography sx={{ fontSize: { xs: "0.75rem", sm: "0.68rem" }, color: "text.secondary", mt: 0.25 }}>
                       {ride.fromCountry}
                     </Typography>
-                  )} */}
+                  )}
                 </Box>
 
                 <ArrowForwardIcon
@@ -654,14 +644,15 @@ export default function RideCard({ ride }) {
                       lineHeight: 1.3,
                     }}
                   >
-                    {"\u{1F4CD}"} {routeTo || "—"}
+                    {/* {"\u{1F4CD}"}  */}
+                    {routeTo || "—"}
                   </Typography>
 
-                  {/* {isFlight && (
-                    <Typography sx={{ fontSize: { xs: "0.58rem", sm: "0.68rem" }, color: "text.secondary", mt: 0.25 }}>
+                  {isFlight && (
+                    <Typography sx={{ fontSize: { xs: "0.75rem", sm: "0.68rem" }, color: "text.secondary", mt: 0.25 }}>
                       {ride.toCountry}
                     </Typography>
-                  )} */}
+                  )}
                 </Box>
               </Box>
 
@@ -987,22 +978,14 @@ export default function RideCard({ ride }) {
                     {[
                       { label: "Status", value: ride.status },
                       {
-                        label: "Gender preference",
-                        value: ride.genderPreference,
+                        label: "Age group pref",
+                        value: ride.ageGroupPreference,
                       },
-                      { label: "Travel mode", value: ride.modeOfTravel },
-                      ...(isFlight
-                        ? [
-                          {
-                            label: "Age group pref",
-                            value: ride.ageGroupPreference,
-                          },
-                          {
-                            label: "Transit airport",
-                            value: ride.transitAirport || "None",
-                          },
-                        ]
-                        : []),
+                      {
+                        label: "Traveller Type",
+                        value: ride.travellerType || "None",
+                      },
+
                     ].map(({ label, value }) => (
                       <Box key={label}>
                         <Typography
@@ -1024,6 +1007,26 @@ export default function RideCard({ ride }) {
                         </Typography>
                       </Box>
                     ))}
+                  </Box>
+                  <Box>
+                    <Typography
+                      sx={{
+                        fontSize: { xs: "0.58rem", sm: "0.65rem" },
+                        color: "text.secondary",
+                        mt: 1.5,
+                        mb: 0.5
+                      }}
+                    >
+                      Language
+                    </Typography>
+                    <Typography
+                      sx={{
+                        fontSize: { xs: "0.72rem", sm: "0.82rem" },
+                        fontWeight: 600,
+                      }}
+                    >
+                      {` ${ride.language.join(", ")}  ` || "—"}
+                    </Typography>
                   </Box>
 
                   {/* Description */}
@@ -1055,84 +1058,76 @@ export default function RideCard({ ride }) {
                       </Typography>
                     </Box>
                   )}
+                  <Divider sx={{ my: 1.25, borderColor: ORANGE_DIVIDER }} />
 
-                  {isFlight && (
-                    <>
-                      <Divider sx={{ my: 1.25, borderColor: ORANGE_DIVIDER }} />
-                      <Stack direction="row" flexWrap="wrap" sx={{ gap: 1.5 }}>
-                        {ride.medicalAssistance && (
-                          <Chip
-                            size="small"
-                            icon={
-                              <MedicalServicesIcon
-                                sx={{ fontSize: { xs: 11, sm: 13 } }}
-                              />
-                            }
-                            label="Medical Help"
-                            sx={{
-                              fontSize: { xs: "0.58rem", sm: "0.7rem" },
-                              bgcolor: "#FFF0DD",
-                              color: "#7a4a00",
-                            }}
-                          />
-                        )}
-                        {ride.languageSupport && (
-                          <Chip
-                            size="small"
-                            icon={
-                              <LanguageIcon
-                                sx={{ fontSize: { xs: 11, sm: 13 } }}
-                              />
-                            }
-                            label="Language Support"
-                            sx={{
-                              fontSize: { xs: "0.58rem", sm: "0.7rem" },
-                              bgcolor: "#FFF0DD",
-                              color: "#7a4a00",
-                            }}
-                          />
-                        )}
-                        {ride.transitHelp && (
-                          <Chip
-                            size="small"
-                            label="Transit Help"
-                            icon={
-                              <InfoOutlinedIcon
-                                sx={{ fontSize: { xs: 12, sm: 14 } }}
-                              />
-                            }
-                            sx={{
-                              fontSize: { xs: "0.58rem", sm: "0.7rem" },
-                              bgcolor: "#FFF0DD",
-                              color: "#7a4a00",
-                            }}
-                          />
-                        )}
-                        {ride.baggageHelp && (
-                          <Chip
-                            size="small"
-                            icon={
-                              <LuggageIcon
-                                sx={{ fontSize: { xs: 11, sm: 13 } }}
-                              />
-                            }
-                            label="Baggage Help"
-                            sx={{
-                              fontSize: { xs: "0.58rem", sm: "0.7rem" },
-                              bgcolor: "#FFF0DD",
-                              color: "#7a4a00",
-                            }}
-                          />
-                        )}
-                      </Stack>
-                    </>
-                  )}
+                  <Stack
+                    direction={{ xs: "column", sm: "row" }}
+                    flexWrap="wrap"
+                    spacing={{ xs: 1, sm: 1.5 }}
+                    sx={{
+                      width: "100%",
+                      alignItems: { xs: "space-between", sm: "center" },
+                    }}
+                  >
+                    {ride.medicalAssistance && (
+                      <Chip
+                        size="small"
+                        icon={<MedicalServicesIcon sx={{ fontSize: { xs: 11, sm: 13 } }} />}
+                        label="Medical Help"
+                        sx={{
+                          fontSize: { xs: "0.58rem", sm: "0.7rem" },
+                          bgcolor: "#FFF0DD",
+                          color: "#7a4a00",
+                        }}
+                      />
+                    )}
+
+                    {ride.languageSupport && (
+                      <Chip
+                        size="small"
+                        icon={<LanguageIcon sx={{ fontSize: { xs: 11, sm: 13 } }} />}
+                        label="Language Support"
+                        sx={{
+                          fontSize: { xs: "0.58rem", sm: "0.7rem" },
+                          bgcolor: "#FFF0DD",
+                          color: "#7a4a00",
+                        }}
+                      />
+                    )}
+
+                    {ride.transitHelp && (
+                      <Chip
+                        size="small"
+                        icon={<InfoOutlinedIcon sx={{ fontSize: { xs: 12, sm: 14 } }} />}
+                        label="Transit Help"
+                        sx={{
+                          fontSize: { xs: "0.58rem", sm: "0.7rem" },
+                          bgcolor: "#FFF0DD",
+                          color: "#7a4a00",
+                        }}
+                      />
+                    )}
+
+                    {ride.baggageHelp && (
+                      <Chip
+                        size="small"
+                        icon={<LuggageIcon sx={{ fontSize: { xs: 11, sm: 13 } }} />}
+                        label="Baggage Help"
+                        sx={{
+                          fontSize: { xs: "0.58rem", sm: "0.7rem" },
+                          bgcolor: "#FFF0DD",
+                          color: "#7a4a00",
+                        }}
+                      />
+                    )}
+                  </Stack>
                 </Box>
               </Collapse>
             </CardContent>
           </Card>
-        </Box>
-      )}
+        </Box >
+      )
+      }
 
       <ProfileModal
         open={profileModalOpen}

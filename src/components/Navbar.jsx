@@ -415,7 +415,7 @@ const TopNav = ({ onMenuClick }) => {
                 size={44}
                 thickness={3}
                 sx={{
-                  color: completion === 100 ? "#a33916ff" : "#f97316",
+                  color: completion === 100 ? "#119200" : "#f74040",
                   position: "absolute",
                   top: 0,
                   left: 0,
@@ -511,7 +511,7 @@ const TopNav = ({ onMenuClick }) => {
           />
 
           {/* Close Button */}
-          <IconButton
+          {/* <IconButton
             onClick={cancelLogout}
             aria-label="Close"
             sx={{
@@ -531,7 +531,7 @@ const TopNav = ({ onMenuClick }) => {
             }}
           >
             <CloseIcon sx={{ fontSize: { xs: 14, sm: 20 } }} />
-          </IconButton>
+          </IconButton> */}
 
           <DialogTitle
             sx={{
@@ -561,7 +561,7 @@ const TopNav = ({ onMenuClick }) => {
                   mb: { xs: 0.5, sm: 1 },
                 }}
               >
-                Are you sure you want to logout?
+                Are you sure you want to logout ?
               </Typography>
             </Box>
           </DialogContent>
@@ -594,7 +594,7 @@ const TopNav = ({ onMenuClick }) => {
                   borderColor: "#6b7280",
                   bgcolor: "#6b7280",
                 },
-                px: { xs: 1.5, sm: 3 },
+                px: { xs: 1, sm: 3 },
                 fontSize: { xs: "0.7rem", sm: "0.9rem" },
                 py: { xs: 0.5, sm: 1 },
               }}
@@ -618,7 +618,7 @@ const TopNav = ({ onMenuClick }) => {
                   background: "linear-gradient(135deg, #D65A00, #D65A00)",
                 },
                 boxShadow: "0 4px 15px rgba(232, 93, 38, 0.3)",
-                px: { xs: 1.5, sm: 3 },
+                px: { xs: 1, sm: 3 },
                 fontSize: { xs: "0.7rem", sm: "0.9rem" },
                 py: { xs: 0.5, sm: 1 },
               }}

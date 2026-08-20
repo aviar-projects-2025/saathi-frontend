@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
@@ -17,8 +17,14 @@ import {
   InputAdornment,
   useMediaQuery,
   useTheme,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  LinearProgress,
+  DialogActions,
 } from "@mui/material";
 import { useUser } from "../context/userConetext";
+import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import SearchIcon from "@mui/icons-material/Search";
 import TuneIcon from "@mui/icons-material/Tune";
 import CloseIcon from "@mui/icons-material/Close";
@@ -116,10 +122,19 @@ export default function FindRides() {
   const [searchFrom, setSearchFrom] = useState("");
   const [searchDestination, setSearchDestination] = useState("");
   const [search, setSearch] = useState("");
+    const { completion, savedPost, setSavedPost, removeSavedPost } = useUser();
+  
   // Staged filter values: edited live inside the panel, but only
   // committed to `appliedFilters` (and therefore the results) on Apply.
   const [draftFilters, setDraftFilters] = useState(emptyFilters);
   const [appliedFilters, setAppliedFilters] = useState(emptyFilters);
+    const isProfileComplete = completion === 100;
+    const SIDEBAR_SCROLL_HEIGHT = 'calc(100vh - 120px)';
+  
+    // ── Profile completion modal ──
+    // Shows once per page-load whenever the user's profile is under 100%.
+    const [profileGateOpen, setProfileGateOpen] = useState(false);
+    const hasCheckedProfileGateRef = useRef(false);
 
   const resultsRef = useRef(null);
   const scrollStartRef = useRef(0);
@@ -139,7 +154,21 @@ export default function FindRides() {
     }
   };
 
-
+  useEffect(() => {
+    // Only decide ONCE, and only after currentUser has actually finished
+    // loading. `completion` is 0 (a valid number) for a brief moment while
+    // the user context is still fetching, so checking `typeof completion
+    // === "number"` alone fires too early and causes the modal to flash
+    // open and then immediately close once the real completion (100) comes in.
+    if (hasCheckedProfileGateRef.current) return;
+    if (currentUser && currentUser._id && typeof completion === "number") {
+      hasCheckedProfileGateRef.current = true;
+      setProfileGateOpen(completion !== 100);
+    }
+  }, [currentUser, completion]);
+  const handleCloseProfileGate = () => {
+    setProfileGateOpen(false);
+  };
 
   // ── Filter panel open/close + scroll-to-collapse ──────────────────────
   const openFilters = () => {
@@ -189,6 +218,7 @@ export default function FindRides() {
     fuelSharing: appliedFuelSharing,
     language: appliedLanguage,
   } = appliedFilters;
+
 
   // Chips reflect APPLIED filters (what's actually affecting results),
   // each chip's clear button removes that filter immediately and re-applies.
@@ -288,13 +318,40 @@ export default function FindRides() {
         languageMatch
       );
     });
+
   const visibleRides = filteredRides.filter(
     (ride) => ride.travelStatus !== "Cancelled"
   );
 
+  const getZipcodeProximityScore = (rideZip, currentZip) => {
+    if (!currentZip || !rideZip) return 3; // unknown → lowest priority
+    const a = String(rideZip);
+    const b = String(currentZip);
+
+    if (a === b) return 0;                          // exact match
+    if (a.slice(0, 3) === b.slice(0, 3)) return 1;   // same local area
+    if (a.slice(0, 1) === b.slice(0, 1)) return 2;   // same broad region
+    return 3;                                        // everything else
+  };
+
+  const sortRidesByProximity = (rides, currentZip) => {
+    return [...rides].sort((a, b) => {
+      const scoreA = getZipcodeProximityScore(a?.createdBy?.zipcode, currentZip);
+      const scoreB = getZipcodeProximityScore(b?.createdBy?.zipcode, currentZip);
+
+      if (scoreA !== scoreB) return scoreA - scoreB; // ascending: 0 (nearest) first
+      return new Date(a.startTime) - new Date(b.startTime);
+    });
+  };
+
+  const sortedVisibleRides = useMemo(
+    () => sortRidesByProximity(visibleRides, currentUser?.zipcode),
+    [visibleRides, currentUser?.zipcode]
+  );
 
   if (loading) {
     return (
+      
       <Box
         sx={{
           minHeight: "100vh",
@@ -310,6 +367,93 @@ export default function FindRides() {
   }
 
   return (
+    <>
+
+        <Dialog
+            open={profileGateOpen}
+            onClose={handleCloseProfileGate}
+            fullWidth
+            maxWidth="xs"
+            PaperProps={{
+              sx: {
+                borderRadius: { xs: 2, sm: 3 },
+                m: { xs: 1.5, sm: 2 },
+                width: { xs: "95%", sm: "100%" },
+                textAlign: "center",
+                p: { xs: 1, sm: 1.5 },
+              },
+            }}
+          >
+            <DialogTitle
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 1,
+                fontWeight: 700,
+                fontSize: { xs: "1rem", sm: "1.15rem" },
+                pt: 3,
+              }}
+            >
+              <WarningAmberRoundedIcon sx={{ fontSize: 40, color: "#E8650A" }} />
+              Complete Your Profile
+            </DialogTitle>
+    
+            <DialogContent>
+              <Typography
+                sx={{
+                  fontSize: { xs: "0.85rem", sm: "0.95rem" },
+                  color: "text.secondary",
+                }}
+              >
+                Your profile is only {Number.isFinite(completion) ? completion : 0}% complete.
+                Please complete your profile to 100% to unlock all features,
+                including posting, liking, commenting and saving in the Community.
+              </Typography>
+    
+              <Box sx={{ mt: 2.5, px: { xs: 1, sm: 3 } }}>
+                <LinearProgress
+                  variant="determinate"
+                  value={Number.isFinite(completion) ? completion : 0}
+                  sx={{
+                    height: 8,
+                    borderRadius: 5,
+                    bgcolor: "#F0E6DC",
+                    "& .MuiLinearProgress-bar": { bgcolor: "#E8650A" },
+                  }}
+                />
+              </Box>
+            </DialogContent>
+    
+            <DialogActions
+              sx={{
+                justifyContent: "center",
+                pb: 3,
+                pt: 1,
+                gap: 1.5,
+              }}
+            >
+              <Button
+                variant="outlined"
+                onClick={handleCloseProfileGate}
+                sx={{
+                  textTransform: "none",
+                  borderRadius: 999,
+                  px: 3,
+                  fontWeight: 600,
+                  bgcolor: "#E8650A",
+                  color: "#fff",
+                  "&:hover": {
+                    bgcolor: "#c85608",
+                    color: "#fff",
+                  },
+                }}
+              >
+                OK
+              </Button>
+            </DialogActions>
+          </Dialog>
+          
 
     <Box
       sx={{
@@ -823,11 +967,10 @@ export default function FindRides() {
 
 
           </Box>
-          {visibleRides.length > 0 ? (
+          {sortedVisibleRides.length > 0 ? (
             <Grid spacing={{ xs: 1, sm: 2 }}>
-              {visibleRides.map((ride) => {
+              {sortedVisibleRides.map((ride) => {
                 const isOwnRide = ride.createdBy?._id === currentUser?._id;
-
                 return (
                   <Grid item xs={12} sm={6} md={4} key={ride._id}>
                     <RideCard
@@ -841,23 +984,32 @@ export default function FindRides() {
           ) : (
             <Box
               sx={{
-                background: "#fff",
+                // background: "#fff",
                 borderRadius: { xs: 3, sm: 4 },
-                border: `1.5px dashed ${saffron[200]}`,
+                // border: `1.5px dashed ${saffron[200]}`,
                 textAlign: "center",
                 py: { xs: 3, sm: 5 },
                 px: { xs: 2, sm: 4 },
+                mt: { xs: '40%', sm: '10%' },
               }}
             >
-              <Typography fontSize={{ xs: "2rem", sm: "2.5rem" }} mb={0.75}>
+              {/* <Typography fontSize={{ xs: "2rem", sm: "2.5rem" }} mb={0.75}>
                 🔍
-              </Typography>
-              <Typography fontWeight={700} color={saffron[700]} mb={0.5} fontSize={{ xs: "0.9rem", sm: "1rem" }}>
+              </Typography> */}
+
+
+              <Typography variant="h6" fontWeight={600} color="text.primary">
                 No rides found
               </Typography>
-              <Typography color="text.secondary" fontSize={{ xs: "0.78rem", sm: "0.88rem" }}>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ mt: 1 }}
+              >
                 Try adjusting your filters or search terms
               </Typography>
+
+
               {/* <Button
                 onClick={clearFilters}
                 sx={{
@@ -880,5 +1032,6 @@ export default function FindRides() {
         </Container>
       </Box >
     </Box >
+    </>
   );
 }

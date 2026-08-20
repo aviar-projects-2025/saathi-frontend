@@ -219,6 +219,8 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
   const [resetForm, setResetForm] = useState(null);
   const [errors, setErrors] = useState({});
 
+  const [languageOpen, setLanguageOpen] = useState(false);
+
   const user = JSON.parse(localStorage.getItem("user"));
 
   const [form, setForm] = useState(INITIAL_FORM);
@@ -879,11 +881,11 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                   onChange={(e) => update("modeOfTravel", e.target.value)}
                   sx={selectSx}
                 >
-                  <MenuItem value="Car" sx={menuItemSx}>🚗 Car</MenuItem>
-                  <MenuItem value="Bus" sx={menuItemSx}>🚌 Bus</MenuItem>
-                  <MenuItem value="Bike" sx={menuItemSx}>🏍️ Bike</MenuItem>
-                  <MenuItem value="Flight" sx={menuItemSx}>✈️ Flight</MenuItem>
-                  {/* <MenuItem value="Train" sx={menuItemSx}>🚆 Train</MenuItem> */}
+                  <MenuItem value="Car" sx={menuItemSx}>Car</MenuItem>
+                  <MenuItem value="Bus" sx={menuItemSx}>Bus</MenuItem>
+                  <MenuItem value="Bike" sx={menuItemSx}>Bike</MenuItem>
+                  <MenuItem value="Flight" sx={menuItemSx}>Flight</MenuItem>
+                  {/* <MenuItem value="Train" sx={menuItemSx} Train</MenuItem> */}
                 </Select>
                 <FormHelperText>{showErrors ? errors.modeOfTravel : ""}</FormHelperText>
               </FormControl>
@@ -1105,7 +1107,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                   )}
                 </FormControl>
 
-                <FormControl fullWidth size={inputSize} error={showErrors && !!errors.language}>
+                {/* <FormControl fullWidth size={inputSize} error={showErrors && !!errors.language}>
                   <InputLabel sx={ilSx}>Language</InputLabel>
                   <Select
                     multiple
@@ -1136,6 +1138,119 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                   </Select>
                   {showErrors && errors.language && (
                     <FormHelperText sx={{ fontSize: { xs: "0.62rem", sm: "0.7rem" } }}>{errors.language}</FormHelperText>
+                  )}
+                </FormControl> */}
+
+                <FormControl
+                  fullWidth
+                  size={inputSize}
+                  error={showErrors && !!errors.language}
+                >
+                  <InputLabel sx={ilSx}>Language</InputLabel>
+
+                  <Select
+                    multiple
+                    open={languageOpen}
+                    onOpen={() => setLanguageOpen(true)}
+                    onClose={() => setLanguageOpen(false)}
+                    value={form.language || []}
+                    label="Language"
+                    onChange={(e) => update("language", e.target.value)}
+                    sx={selectSx}
+                    renderValue={(selected) => (
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexWrap: "wrap",
+                          gap: 0.5,
+                        }}
+                      >
+                        {selected.map((value) => (
+                          <Chip
+                            key={value}
+                            label={value}
+                            size="small"
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onDelete={() => {
+                              update(
+                                "language",
+                                form.language.filter((item) => item !== value)
+                              );
+                            }}
+                          />
+                        ))}
+                      </Box>
+                    )}
+                    MenuProps={{
+                      disablePortal: true,
+                      PaperProps: {
+                        sx: {
+                          maxHeight: 300,
+                        },
+                      },
+                      MenuListProps: {
+                        sx: {
+                          pb: 0,
+                        },
+                      },
+                    }}
+                  >
+                    {languages.map((lang) => (
+                      <MenuItem
+                        key={lang}
+                        value={lang}
+                        sx={menuItemSx}
+                      >
+                        {lang}
+                      </MenuItem>
+                    ))}
+
+                    {/* Select button at bottom */}
+                    <Box
+                      sx={{
+                        position: "sticky",
+                        bottom: 0,
+                        backgroundColor: "#fff",
+                        borderTop: "1px solid #e0e0e0",
+                        p: 1,
+                        display: "flex",
+                        justifyContent: "flex-end",
+                        zIndex: 2,
+                      }}
+                      onMouseDown={(e) => e.stopPropagation()}
+                    >
+                      <Button
+                        variant="contained"
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setLanguageOpen(false);
+                        }}
+                        sx={{
+                          textTransform: "none",
+                          borderRadius: 3,
+                          minWidth: 80,
+                          mt: 1,
+                          color: "#ffff",
+                          bgcolor: ACCENT
+                        }}
+                      >
+                        Select
+                      </Button>
+                    </Box>
+                  </Select>
+
+                  {showErrors && errors.language && (
+                    <FormHelperText
+                      sx={{
+                        fontSize: {
+                          xs: "0.62rem",
+                          sm: "0.7rem",
+                        },
+                      }}
+                    >
+                      {errors.language}
+                    </FormHelperText>
                   )}
                 </FormControl>
 
@@ -1393,10 +1508,10 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
               <Button
                 variant="outlined"
                 onClick={() => setStep((s) => s - 1)}
-                startIcon={<ArrowLeft size={14} />}
+                startIcon={<ArrowLeft size={20} />}
                 sx={{
                   flex: 1,
-                  fontSize: { xs: "0.70rem", sm: "0.875rem" },
+                  fontSize: { xs: "0.85rem", sm: "0.875rem" },
                   // py: 1,
                   minHeight: 42,
                   borderRadius: 2.5,
@@ -1417,7 +1532,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                 onClick={(formReset)}
                 sx={{
                   flex: 1,
-                  fontSize: { xs: "0.70rem", sm: "0.875rem" },
+                  fontSize: { xs: "0.85rem", sm: "0.875rem" },
                   // py: 1,
                   minHeight: 42,
                   borderRadius: 2.5,
@@ -1442,10 +1557,10 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                     setStep((s) => s + 1);
                   }
                 }}
-                endIcon={<ArrowRight size={14} />}
+                endIcon={<ArrowRight size={20} />}
                 sx={{
                   flex: 1,
-                  fontSize: { xs: "0.65rem", sm: "0.875rem" },
+                  fontSize: { xs: "0.85rem", sm: "0.875rem" },
                   // py: 1,
                   minHeight: 42,
                   borderRadius: 2.5,
@@ -1470,7 +1585,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                 disabled={isSubmitted || saving}
                 sx={{
                   flex: 1,
-                  fontSize: { xs: "0.60rem", sm: "0.875rem" },
+                  fontSize: { xs: "0.85rem", sm: "0.875rem" },
                   // py: 1,
                   minHeight: 42,
                   borderRadius: 2.5,
@@ -1487,7 +1602,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
               >
                 {isEditMode
                   ? isSubmitted || saving
-                    ? "Saving Changes..."
+                    ? "Saving..."
                     : "Save Changes"
                   : isSubmitted
                     ? "Ride Posting..."

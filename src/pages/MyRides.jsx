@@ -150,40 +150,41 @@ const noZoomInputSx = {
 const ITEMS_PER_PAGE = 10;
 
 // ── Empty State ──────────────────────────────────────────────────────────────
-function EmptyState({ emoji, message, actionLabel, actionHref }) {
+function EmptyState({ message1, message2 }) {
   return (
-    <Paper
+    <Box
       sx={{
-        p: { xs: 2.5, sm: 3.5, md: 4 },
-        textAlign: "center",
-
-        // border: '1px dashed #E0D5CC',
-        // bgcolor: '#FFF8F2',
-        borderRadius: 2,
-        mx: "auto",
+        width: "100%",
         maxWidth: { xs: "100%", sm: 440, md: 480 },
+        textAlign: "center",
+        // display: "flex",
+        flexDirection: "column",
+        // justifyContent: "center",
+        // alignItems: "center",
+        mx: "auto",
+        mt: { xs: '50%', sm: '15%' }
       }}
-      elevation={0}
     >
-      {/* <Typography sx={{ fontSize: { xs: '1.6rem', sm: '1.8rem', md: '2rem' } }}>{emoji}</Typography> */}
       <Typography
+        variant="h6"
         fontWeight={600}
-        color="text.secondary"
-        mt={1}
-        sx={{ fontSize: { xs: "0.85rem", sm: "0.95rem", md: "1rem" } }}
+        color="text.primary"
       >
-        {message}
+        {message1}
       </Typography>
-      {actionLabel && (
-        <Button
-          variant="contained"
-          href={actionHref}
-          sx={{ mt: 2, width: { xs: "100%", sm: "auto" }, minHeight: 44 }}
-        >
-          {actionLabel}
-        </Button>
-      )}
-    </Paper>
+
+      <Typography
+        fontWeight={400}
+        color="text.secondary"
+        sx={{
+          fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" },
+          mt: 1.2,
+        }}
+      >
+        {message2}
+      </Typography>
+    </Box>
+
   );
 }
 
@@ -279,7 +280,7 @@ function EditRideModal({ ride, onSave, onClose }) {
         open={Boolean(ride)}
         onClose={onClose}
         fullWidth
-        maxWidth="md"
+        maxWidth="sm"
         fullScreen={isMobile}
         PaperProps={{
           sx: {
@@ -359,10 +360,10 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
   const startDate = new Date(ride.startTime);
   const dateLabel = !isNaN(startDate)
     ? startDate.toLocaleDateString("en-IN", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    })
     : "—";
 
   const handleConfirm = async () => {
@@ -376,7 +377,7 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
     } catch (err) {
       setError(
         err?.response?.data?.message ||
-          "Failed to delete ride. Please try again.",
+        "Failed to delete ride. Please try again.",
       );
     } finally {
       setDeleting(false);
@@ -730,17 +731,17 @@ function RideCard({
   const startDate = new Date(ride.startTime);
   const date = !isNaN(startDate)
     ? startDate.toLocaleDateString("en-IN", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    })
     : "—";
   const time = !isNaN(startDate)
     ? startDate.toLocaleTimeString("en-IN", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      })
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    })
     : "—";
 
   // const fuelLabel = ride.fuelSharing ? "Yes" : "No";
@@ -1076,8 +1077,13 @@ function RideCard({
                     </Typography>
                     <Typography
                       fontWeight={700}
+                      noWrap
                       sx={{
-                        wordBreak: "break-word",
+                        flex: 1,
+                        minWidth: 0,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
                         fontSize: {
                           xs: "0.78rem",
                           sm: "0.88rem",
@@ -1086,15 +1092,16 @@ function RideCard({
                         lineHeight: 1.3,
                       }}
                     >
-                      📍 {formFrom(ride)}
+                      {/* 📍 */}
+                      {formFrom(ride)}
                     </Typography>
                   </Box>
-
                   <ArrowForwardIcon
                     sx={{
                       color: "#FF9933",
                       fontSize: { xs: 14, sm: 18, md: 20 },
                       flexShrink: 0,
+                      mx: { xs: 0.7, sm: 1.2, md: 1.5 },
                     }}
                   />
 
@@ -1116,8 +1123,13 @@ function RideCard({
                     </Typography>
                     <Typography
                       fontWeight={700}
+                      noWrap
                       sx={{
-                        wordBreak: "break-word",
+                        flex: 1,
+                        minWidth: 0,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
                         fontSize: {
                           xs: "0.78rem",
                           sm: "0.88rem",
@@ -1126,7 +1138,8 @@ function RideCard({
                         lineHeight: 1.3,
                       }}
                     >
-                      📍 {formTo(ride)}
+                      {/* 📍  */}
+                      {formTo(ride)}
                     </Typography>
                   </Box>
                 </Box>
@@ -1322,51 +1335,112 @@ function RideCard({
             borderRadius: { xs: 2, sm: 3 },
             mx: { xs: 2, sm: "auto" },
             width: { xs: "calc(100% - 32px)", sm: "100%" },
+            maxWidth: { xs: "calc(100% - 32px)", sm: 450 },
           },
         }}
       >
-        <DialogContent>
-          <Typography sx={{ fontSize: { xs: "0.9rem", sm: "1rem" } }}>
-            Looks like your ride is starting 🚗
+        <DialogContent
+          sx={{
+            pb: { xs: 1, sm: 1.5 },
+            px: { xs: 2, sm: 3 },
+          }}
+        >
+          <Typography
+            sx={{
+              fontSize: { xs: "0.9rem", sm: "1rem" },
+              fontWeight: 600,
+            }}
+          >
+            Looks like your ride is starting
           </Typography>
         </DialogContent>
-        <DialogContent sx={{ pt: 0 }}>
-          <Typography sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem" } }}>
-            From : {confirmRide?.from}
+
+        <DialogContent
+          sx={{
+            pt: 0,
+            px: { xs: 2, sm: 3 },
+          }}
+        >
+          <Typography
+            sx={{
+              fontSize: { xs: "0.8rem", sm: "0.9rem" },
+              mb: 0.5,
+            }}
+          >
+            From : {confirmRide?.from || "—"}
           </Typography>
-          <Typography sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem" } }}>
-            To : {confirmRide?.destination}
+
+          <Typography
+            sx={{
+              fontSize: { xs: "0.8rem", sm: "0.9rem" },
+              mb: 0.5,
+            }}
+          >
+            To : {confirmRide?.destination || "—"}
           </Typography>
-          <Typography sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem" } }}>
+
+          <Typography
+            sx={{
+              fontSize: { xs: "0.8rem", sm: "0.9rem" },
+            }}
+          >
             Time :{" "}
-            {moment(confirmRide?.startTime).format("DD MMM YYYY, hh:mm A")}
+            {confirmRide?.startTime
+              ? moment(confirmRide.startTime).format("DD MMM YYYY, hh:mm A")
+              : "—"}
           </Typography>
         </DialogContent>
-        <DialogActions sx={{ px: 2, pb: 2, gap: 1, flexWrap: "wrap" }}>
+
+        <DialogActions
+          sx={{
+            px: { xs: 2, sm: 3 },
+            pb: { xs: 2, sm: 2.5 },
+            pt: { xs: 0.5, sm: 1 },
+            gap: { xs: 1, sm: 1.5 },
+            flexWrap: "nowrap",
+            width: "100%",
+            boxSizing: "border-box",
+          }}
+        >
           <Button
             variant="contained"
             onClick={() => setConfirmRide(null)}
             sx={{
-              flex: { xs: "1 1 auto", sm: "0 0 auto" },
-              minHeight: 40,
+              flex: 1,
+              minWidth: 0,
+              minHeight: { xs: 36, sm: 40 },
+              px: { xs: 1.5, sm: 2.5 },
+              fontSize: { xs: "0.78rem", sm: "0.875rem" },
               bgcolor: "#757575",
-              color: "#ffff",
+              color: "#fff",
               textTransform: "none",
+              borderRadius: { xs: 1.5, sm: 2 },
+              "&:hover": {
+                bgcolor: "#616161",
+              },
             }}
           >
             Not yet
           </Button>
+
           <Button
             variant="contained"
             onClick={() =>
               handleEdit(confirmRide._id, confirmRide.travelStatus)
             }
             sx={{
-              flex: { xs: "1 1 auto", sm: "0 0 auto" },
-              minHeight: 40,
+              flex: 1,
+              minWidth: 0,
+              minHeight: { xs: 36, sm: 40 },
+              px: { xs: 1.5, sm: 2.5 },
+              fontSize: { xs: "0.78rem", sm: "0.875rem" },
               bgcolor: "#f89b04",
-              color: "#ffff",
+              color: "#fff",
               textTransform: "none",
+              borderRadius: { xs: 1.5, sm: 2 },
+              "&:hover": {
+                bgcolor: "#db8700",
+              },
             }}
           >
             Started
@@ -2051,8 +2125,8 @@ const MyRides = () => {
                     </>
                   ) : (
                     <EmptyState
-                      emoji="🚗"
-                      message="You don't have any active rides at the moment"
+                      message1="No Rides in Progress"
+                      message2="You don't have any rides currently in progress."
                     />
                   )}
                 </Box>
@@ -2071,7 +2145,10 @@ const MyRides = () => {
                       />
                     </>
                   ) : (
-                    <EmptyState emoji="🗓️" message="No upcoming rides" />
+                    <EmptyState
+                      message1="No Upcoming Rides"
+                      message2="You don't have any upcoming rides scheduled."
+                    />
                   )}
                 </Box>
               )}
@@ -2090,8 +2167,8 @@ const MyRides = () => {
                     </>
                   ) : (
                     <EmptyState
-                      emoji="🚗"
-                      message="You haven't posted any rides yet"
+                      message1="No Posted Rides"
+                      message2="You haven't posted any rides yet."
                     />
                   )}
                 </Box>
@@ -2116,7 +2193,10 @@ const MyRides = () => {
                       />
                     </>
                   ) : (
-                    <EmptyState emoji="🕰️" message="No past rides yet" />
+                    <EmptyState
+                      message1="No Ride History"
+                      message2="No completed rides are available at the moment."
+                    />
                   )}
                 </Box>
               )}

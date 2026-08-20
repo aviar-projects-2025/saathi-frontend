@@ -17,6 +17,7 @@ import {
   Dialog,
   DialogContent,
   Tooltip,
+  Slider,
 } from "@mui/material";
 
 import NotificationsIcon from "@mui/icons-material/Notifications";
@@ -50,7 +51,7 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import ToastConfig from "../components/ToastConfig.jsx";
 import CircularProgress from "@mui/material/CircularProgress";
 
-import ProfileModal from './Avatar.jsx'
+import ProfileModal from "./Avatar.jsx";
 
 const SAFFRON = "#E8650A";
 const SAFFRON_LIGHT = "#FDF0E8";
@@ -60,6 +61,11 @@ import CloseIcon from "@mui/icons-material/Close";
 
 import { useNavigate } from "react-router-dom";
 import uploadToCloudinary  from "../components/uploadToCloudinary.jsx";
+
+// Size (px) of the square adjust/crop box
+const CROP_BOX_SIZE = 260;
+// Output resolution of the final cropped image
+const OUTPUT_SIZE = 500;
 
 const pillBtn = {
   textTransform: "none",
@@ -163,6 +169,184 @@ const UserProfile = () => {
 
   const shareLink = `${window.location.origin}/register?ref=${user?.referralCode}`;
 
+  /* ---------------------------------------------------------------- */
+  /*  PHOTO ADJUST / CROP BOX STATE                                    */
+  /* ---------------------------------------------------------------- */
+  const [showAdjustModal, setShowAdjustModal] = useState(false);
+  const [rawImage, setRawImage] = useState(""); // dataURL of the freshly picked file
+  const [naturalSize, setNaturalSize] = useState({ w: 0, h: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [offset, setOffset] = useState({ x: 0, y: 0 }); // top-left of displayed image relative to box
+  const dragState = useRef({
+    dragging: false,
+    startX: 0,
+    startY: 0,
+    startOffset: { x: 0, y: 0 },
+  });
+  const cropImgRef = useRef(null);
+
+  const getBaseScale = (w, h) => Math.max(CROP_BOX_SIZE / w, CROP_BOX_SIZE / h);
+
+  const clampOffset = (nextOffset, displayedW, displayedH) => {
+    const minX = CROP_BOX_SIZE - displayedW;
+    const minY = CROP_BOX_SIZE - displayedH;
+    return {
+      x: Math.min(0, Math.max(minX, nextOffset.x)),
+      y: Math.min(0, Math.max(minY, nextOffset.y)),
+    };
+  };
+
+  const handlePickImage = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setRawImage(reader.result);
+      setZoom(1);
+      setOffset({ x: 0, y: 0 });
+      setShowAdjustModal(true);
+    };
+    reader.readAsDataURL(file);
+
+    // allow re-selecting the same file later
+    e.target.value = "";
+  };
+
+  const handleCropImageLoad = (e) => {
+    const w = e.target.naturalWidth;
+    const h = e.target.naturalHeight;
+    setNaturalSize({ w, h });
+
+    const baseScale = getBaseScale(w, h);
+    const displayedW = w * baseScale;
+    const displayedH = h * baseScale;
+
+    setOffset({
+      x: (CROP_BOX_SIZE - displayedW) / 2,
+      y: (CROP_BOX_SIZE - displayedH) / 2,
+    });
+  };
+
+  const getDisplayedSize = () => {
+    const baseScale = getBaseScale(naturalSize.w, naturalSize.h);
+    return {
+      displayedW: naturalSize.w * baseScale * zoom,
+      displayedH: naturalSize.h * baseScale * zoom,
+      scale: baseScale * zoom,
+    };
+  };
+
+  const handleZoomChange = (e, value) => {
+    const { displayedW: oldW, displayedH: oldH } = getDisplayedSize();
+
+    // find the point currently at box-center, in old displayed coords
+    const centerX = CROP_BOX_SIZE / 2 - offset.x;
+    const centerY = CROP_BOX_SIZE / 2 - offset.y;
+
+    setZoom(value);
+
+    const baseScale = getBaseScale(naturalSize.w, naturalSize.h);
+    const newW = naturalSize.w * baseScale * value;
+    const newH = naturalSize.h * baseScale * value;
+    const ratioX = newW / oldW;
+    const ratioY = newH / oldH;
+
+    const newOffset = {
+      x: CROP_BOX_SIZE / 2 - centerX * ratioX,
+      y: CROP_BOX_SIZE / 2 - centerY * ratioY,
+    };
+
+    setOffset(clampOffset(newOffset, newW, newH));
+  };
+
+  const startDrag = (clientX, clientY) => {
+    dragState.current = {
+      dragging: true,
+      startX: clientX,
+      startY: clientY,
+      startOffset: { ...offset },
+    };
+  };
+
+  const moveDrag = (clientX, clientY) => {
+    if (!dragState.current.dragging) return;
+    const { displayedW, displayedH } = getDisplayedSize();
+    const dx = clientX - dragState.current.startX;
+    const dy = clientY - dragState.current.startY;
+    const next = {
+      x: dragState.current.startOffset.x + dx,
+      y: dragState.current.startOffset.y + dy,
+    };
+    setOffset(clampOffset(next, displayedW, displayedH));
+  };
+
+  const endDrag = () => {
+    dragState.current.dragging = false;
+  };
+
+  const handleMouseDown = (e) => startDrag(e.clientX, e.clientY);
+  const handleMouseMove = (e) => moveDrag(e.clientX, e.clientY);
+  const handleMouseUp = () => endDrag();
+
+  const handleTouchStart = (e) => {
+    const t = e.touches[0];
+    startDrag(t.clientX, t.clientY);
+  };
+  const handleTouchMove = (e) => {
+    const t = e.touches[0];
+    moveDrag(t.clientX, t.clientY);
+  };
+  const handleTouchEnd = () => endDrag();
+
+  const handleAdjustCancel = () => {
+    setShowAdjustModal(false);
+    setRawImage("");
+    setZoom(1);
+    setOffset({ x: 0, y: 0 });
+  };
+
+  const handleAdjustSave = () => {
+    const { scale } = getDisplayedSize();
+
+    const canvas = document.createElement("canvas");
+    canvas.width = OUTPUT_SIZE;
+    canvas.height = OUTPUT_SIZE;
+    const ctx = canvas.getContext("2d");
+
+    const sx = -offset.x / scale;
+    const sy = -offset.y / scale;
+    const sSize = CROP_BOX_SIZE / scale;
+
+    ctx.drawImage(
+      cropImgRef.current,
+      sx,
+      sy,
+      sSize,
+      sSize,
+      0,
+      0,
+      OUTPUT_SIZE,
+      OUTPUT_SIZE,
+    );
+
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) return;
+        const file = new File([blob], "profile.jpg", { type: "image/jpeg" });
+        const previewUrl = URL.createObjectURL(blob);
+
+        setProfileFile(file);
+        setProfileImage(previewUrl);
+
+        setShowAdjustModal(false);
+        setRawImage("");
+      },
+      "image/jpeg",
+      0.92,
+    );
+  };
+
   const handlePasswordChange = (e) => {
     const { name, value } = e.target;
 
@@ -182,6 +366,7 @@ const UserProfile = () => {
       gender: currentUser?.gender || "",
       bio: currentUser?.bio || "",
       profileImage: currentUser?.profileImage || "",
+      zipcode: currentUser?.zipcode || "",
     });
   };
 
@@ -194,6 +379,7 @@ const UserProfile = () => {
     gender: currentUser?.gender || "",
     bio: currentUser?.bio || "",
     profileImage: currentUser?.profileImage || "",
+    zipcode: currentUser?.zipcode || "",
   });
 
   const validateForm = (formData) => {
@@ -215,34 +401,21 @@ const UserProfile = () => {
     if (!formData.email) {
       errors.email = "Email is required";
     } else {
-      // Proper email validation
-      // const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-      const emailRegex = /^[A-Za-z0-9](?:[A-Za-z0-9._%+-]{0,62}[A-Za-z0-9])?@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z]{2,})+$/;
+      const emailRegex =
+        /^[A-Za-z0-9](?:[A-Za-z0-9._%+-]{0,62}[A-Za-z0-9])?@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z]{2,})+$/;
       if (!emailRegex.test(formData.email)) {
-        errors.email = "Please enter a valid email address (e.g., name@domain.com) || (e.g., avair123@aviartech.com) ";
+        errors.email =
+          "Please enter a valid email address (e.g., name@domain.com) || (e.g., avair123@aviartech.com) ";
       }
     }
-
-
-    // Mobile
-    // if (!formData.mobile) {
-    //   errors.mobile = "Mobile number is required";
-    //   if (!/^[6-9]\d{9}$/.test(formData.mobile)) {
-    //     errors.mobile = "Invalid mobile number";
-    //   }
-    // }
 
     const phone = formData.mobile?.trim();
 
     if (!phone) {
       errors.mobile = "Mobile number is required";
-    } else if (
-      !/^(\+?[1-9]\d{1,14}|[6-9]\d{9})$/.test(phone)
-    ) {
-      errors.mobile =
-        "Please enter a valid International or Indian mobile number";
+    } else if (!/^\+?\d{10,15}$/.test(phone)) {
+      errors.mobile = "Please enter a valid mobile number (10–15 digits)";
     }
-
 
     // DOB (Age >= 18)
     if (!formData.dob) {
@@ -261,7 +434,14 @@ const UserProfile = () => {
         errors.dob = "You must be at least 18 years old";
       }
     }
+    // ZipCode / Postal Code
+    const zipcode = formData.zipcode?.trim();
 
+    if (!zipcode) {
+      errors.zipcode = "ZipCode is required";
+    } else if (!/^[A-Za-z0-9](?:[A-Za-z0-9\s-]{0,14}[A-Za-z0-9])?$/.test(zipcode)) {
+      errors.zipcode = "Please enter a valid ZipCode / Postal Code";
+    }
     return errors;
   };
 
@@ -276,6 +456,7 @@ const UserProfile = () => {
         gender: currentUser?.gender || "",
         bio: currentUser?.bio || "",
         profileImage: currentUser?.profileImage || "",
+        zipcode: currentUser?.zipcode || "",
       });
 
       setProfileImage(currentUser?.profileImage || "");
@@ -302,15 +483,6 @@ const UserProfile = () => {
     window.location.replace("/login");
   };
 
-  const handleProfileImage = (e) => {
-    const file = e.target.files[0];
-
-    if (!file) return;
-
-    setProfileFile(file);
-    setProfileImage(URL.createObjectURL(file));
-  };
-
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -332,12 +504,9 @@ const UserProfile = () => {
     }
   }, [currentUser]);
   const getCommunityPost = async () => {
-
-
     try {
       setCommunityLoading(true);
       const postsRes = await axios.get(Api + "/community/");
-      // Only current user's posts
       const myPosts = postsRes.data.data.filter(
         (item) => item.authorId?._id === currentUser?._id,
       );
@@ -462,10 +631,6 @@ const UserProfile = () => {
           >
             My Profile
           </Typography>
-
-          {/* <Typography variant="h5" sx={{ color: '#E8650A', fontWeight: 900, fontSize: { xs: "1.2rem", sm: "1.2rem", md: "1.35rem", lg: "1.5rem" } }}>
-                        My <span style={{ color: '#138808' }}>Profile</span>
-                    </Typography> */}
         </Box>
 
         <Typography
@@ -584,7 +749,7 @@ const UserProfile = () => {
               direction="row"
               spacing={{ xs: 1, sm: 1.5 }}
               sx={{
-                mt: { xs: 1.5, sm: 2 },
+                mt: { xs: 0.5, sm: 1 },
                 display: "flex",
                 justifyContent: "flex-end",
               }}
@@ -596,19 +761,12 @@ const UserProfile = () => {
               >
                 Edit Profile
               </Button>
-
-              {/* <Button
-                                fullWidth
-                                variant="outlined"
-                                onClick={handleOpenShare}
-                                sx={{ ...pillBtn, borderColor: "#EADFD3" }}
-                            >
-                                Share Profile
-                            </Button> */}
             </Stack>
           </SectionCard>
 
-          <SectionCard>
+          {/* <SectionCard> */}
+          <Box>
+
             <Tabs
               value={tab}
               onChange={(e, value) => {
@@ -627,7 +785,8 @@ const UserProfile = () => {
               <Tab icon={<GridOnIcon fontSize="small" />} />
               <Tab icon={<BookmarkBorderIcon fontSize="small" />} />
             </Tabs>
-            {tab === 0 && !selectedPost && (
+
+            {tab === 0 && (
               <Grid
                 container
                 spacing={{ xs: "12px", sm: "15px", md: "20px" }}
@@ -651,18 +810,60 @@ const UserProfile = () => {
                     <CircularProgress
                       size={30}
                       thickness={5}
-                      sx={{
-                        color: "#FF9933", // Saffron
-                      }}
+                      sx={{ color: "#FF9933" }}
                     />
+                  </Box>
+                ) : communityPosts.length == 0 ? (
+                  <Box
+                    sx={{
+                      width: "100%",
+                      maxWidth: { xs: "100%", sm: 440, md: 480 },
+                      textAlign: "center",
+                      flexDirection: "column",
+                      mx: "auto",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      mt: { xs: '35%', sm: '7%' }
+                    }}
+                  >
+                    <Typography
+                      variant="h6"
+                      fontWeight={600}
+                      color="text.primary"
+                      sx={{
+                        fontSize: {
+                          xs: "0.95rem",
+                          sm: "1.05rem",
+                          md: "1.15rem",
+                        },
+                      }}
+                    >
+                      No Community Posts Yet
+                    </Typography>
+
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{
+                        mt: 1,
+                        fontSize: {
+                          xs: "0.75rem",
+                          sm: "0.85rem",
+                          md: "0.95rem",
+                        },
+                      }}
+                    >
+                      Community posts will appear here when available.
+                    </Typography>
                   </Box>
                 ) : (
                   communityPosts.map((post) => (
                     <Grid item xs={4} key={post._id} sx={{ mt: 1 }}>
                       {post.postImage && (
                         <Box
-                          // onClick={() => setSelectedPost(post)}
                           onClick={() => {
+                            setSelectedPost(post);
                             setSelectedImage(
                               Array.isArray(post.postImage)
                                 ? post.postImage[0]
@@ -722,11 +923,12 @@ const UserProfile = () => {
                         </Box>
                       )}
                     </Grid>
-                  )))}
+                  ))
+                )}
               </Grid>
             )}
 
-            {tab === 1 && !selectedPost && (
+            {tab === 1 && (
               <Grid
                 container
                 spacing={{ xs: "12px", sm: "15px", md: "20px" }}
@@ -750,10 +952,52 @@ const UserProfile = () => {
                     <CircularProgress
                       size={30}
                       thickness={5}
-                      sx={{
-                        color: "#FF9933", // Saffron
-                      }}
+                      sx={{ color: "#FF9933" }}
                     />
+                  </Box>
+                ) : savedPost?.length <= 3 ? (
+                  <Box
+                    sx={{
+                      width: "100%",
+                      maxWidth: { xs: "100%", sm: 440, md: 480 },
+                      textAlign: "center",
+                      flexDirection: "column",
+                      mx: "auto",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      mt: { xs: '35%', sm: '7%' }
+                    }}
+                  >
+                    <Typography
+                      variant="h6"
+                      fontWeight={600}
+                      color="text.primary"
+                      sx={{
+                        fontSize: {
+                          xs: "0.95rem",
+                          sm: "1.05rem",
+                          md: "1.15rem",
+                        },
+                      }}
+                    >
+                      No Saved Posts Yet
+                    </Typography>
+
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{
+                        mt: 1,
+                        fontSize: {
+                          xs: "0.75rem",
+                          sm: "0.85rem",
+                          md: "0.95rem",
+                        },
+                      }}
+                    >
+                      Saved posts will appear here when available.
+                    </Typography>
                   </Box>
                 ) : (
                   savedPost?.map((post) => (
@@ -761,10 +1005,11 @@ const UserProfile = () => {
                       {post.postId?.postImage && (
                         <Box
                           onClick={() => {
+                            setSelectedPost(post);
                             setSelectedImage(
                               Array.isArray(post.postId.postImage)
                                 ? post.postId.postImage[0]
-                                : post.postId.postImage
+                                : post.postId.postImage,
                             );
                             setOpenImage(true);
                           }}
@@ -809,7 +1054,11 @@ const UserProfile = () => {
                               justifyContent: "center",
                             }}
                           >
-                            <Stack direction="row" spacing={2} sx={{ color: "#fff" }}>
+                            <Stack
+                              direction="row"
+                              spacing={2}
+                              sx={{ color: "#fff" }}
+                            >
                               <ThumbUpOffAltIcon fontSize="small" />
                               <ChatIcon fontSize="small" />
                             </Stack>
@@ -817,7 +1066,8 @@ const UserProfile = () => {
                         </Box>
                       )}
                     </Grid>
-                  )))}
+                  ))
+                )}
               </Grid>
             )}
 
@@ -825,34 +1075,45 @@ const UserProfile = () => {
               open={openImage}
               onClose={() => setOpenImage(false)}
               maxWidth={false}
-              PaperProps={{
-                sx: {
-                  bgcolor: "transparent",
-                  boxShadow: "none",
-                  overflow: "hidden",
-                  width: "auto",
-                  maxWidth: "95vw",
-                  maxHeight: "95vh",
-                  m: 1,
+              slotProps={{
+                paper: {
+                  sx: {
+                    bgcolor: "transparent",
+                    boxShadow: "none",
+                    overflow: "hidden",
+                    width: "auto",
+                    maxWidth: "95vw",
+                    maxHeight: "95vh",
+                    m: 1,
+                  },
                 },
               }}
             >
-              <Box
-                sx={{
-                  position: "relative",
-                }}
-              >
+              <Box sx={{ position: "relative" }}>
                 <IconButton
-                  onClick={() => removeSavedPost(selectedPost._id)}
+                  onClick={async () => {
+                    if (!selectedPost?.postId?._id) {
+                      console.log("Saved post ID missing");
+                      return;
+                    }
+
+                    console.log(
+                      "Removing saved post:",
+                      selectedPost.postId._id,
+                    );
+
+                    await removeSavedPost(selectedPost.postId._id);
+
+                    setOpenImage(false);
+                    setSelectedPost(null);
+                  }}
                   sx={{
                     position: "absolute",
                     top: 8,
                     left: 8,
                     color: "#fff",
                     bgcolor: "rgba(0,0,0,0.5)",
-                    "&:hover": {
-                      bgcolor: "rgba(0,0,0,0.7)",
-                    },
+                    "&:hover": { bgcolor: "rgba(0,0,0,0.7)" },
                     zIndex: 10,
                   }}
                 >
@@ -872,15 +1133,12 @@ const UserProfile = () => {
                     right: 8,
                     color: "#fff",
                     bgcolor: "rgba(0,0,0,0.5)",
-                    "&:hover": {
-                      bgcolor: "rgba(0,0,0,0.7)",
-                    },
+                    "&:hover": { bgcolor: "rgba(0,0,0,0.7)" },
                     zIndex: 10,
                   }}
                 >
                   <CloseIcon />
                 </IconButton>
-
 
                 <DialogContent
                   sx={{
@@ -908,7 +1166,8 @@ const UserProfile = () => {
                 </DialogContent>
               </Box>
             </Dialog>
-          </SectionCard>
+            {/* </SectionCard> */}
+          </Box>
         </Stack>
 
         <ProfileModal
@@ -918,7 +1177,6 @@ const UserProfile = () => {
             setProfileModalOpen(false);
           }}
         />
-
       </Box>
 
       {/* ── Edit Profile Modal ── */}
@@ -955,18 +1213,14 @@ const UserProfile = () => {
                   position: "relative",
                   display: "flex",
                   justifyContent: "space-between",
-                  mb: 3
+                  mb: 3,
                 }}
               >
                 <Typography
                   variant="h6"
                   sx={{
                     fontWeight: 700,
-                    fontSize: {
-                      xs: "1rem",
-                      sm: "1.15rem",
-                      md: "1.25rem",
-                    },
+                    fontSize: { xs: "1rem", sm: "1.15rem", md: "1.25rem" },
                   }}
                 >
                   Edit Profile
@@ -981,9 +1235,7 @@ const UserProfile = () => {
                     top: "50%",
                     transform: "translateY(-50%)",
                     color: "text.secondary",
-                    "&:hover": {
-                      bgcolor: "action.hover",
-                    },
+                    "&:hover": { bgcolor: "action.hover" },
                   }}
                 >
                   <CloseIcon />
@@ -991,18 +1243,7 @@ const UserProfile = () => {
               </Box>
 
               <Stack spacing={{ xs: 1.5, sm: 2.5 }} sx={{ width: "100%" }}>
-                {/* <Typography
-                  variant="h6"
-                  fontWeight={700}
-                  sx={{
-                    fontSize: { xs: "0.95rem", sm: "1.1rem", md: "1.25rem" },
-                    mb: { xs: 0.5, sm: 1 },
-                  }}
-                >
-                  Edit Profile
-                </Typography> */}
-
-                <Stack alignItems="center" spacing={1}>
+                <Stack alignItems="center" spacing={2}>
                   <Avatar
                     src={profileImage || formData.profileImage || ""}
                     sx={{
@@ -1018,14 +1259,14 @@ const UserProfile = () => {
                   </Avatar>
 
                   <Button
-                    variant="outlined"
+                    variant="contained"
                     component="label"
                     size="small"
                     sx={{
                       fontSize: { xs: "0.7rem", sm: "0.8125rem" },
                       textTransform: "none",
-                      color: "#FF9933",
-                      border: "1px solid rgb(218, 132, 2)"
+                      color: "#ffff",
+                      bgcolor: "#FF9933",
                     }}
                   >
                     Change Photo
@@ -1033,14 +1274,14 @@ const UserProfile = () => {
                       hidden
                       type="file"
                       accept="image/*"
-                      onChange={handleProfileImage}
+                      onChange={handlePickImage}
                     />
                   </Button>
                 </Stack>
 
                 <Stack
                   direction={{ xs: "column", sm: "row" }}
-                  spacing={{ xs: 1.5, sm: 2 }}
+                  spacing={{ xs: 2, sm: 3 }}
                   sx={{ width: "100%" }}
                 >
                   <TextField
@@ -1109,34 +1350,21 @@ const UserProfile = () => {
                     value={formData?.mobile || ""}
                     onChange={(e) => {
                       let value = e.target.value;
-
-                      // Allow only digits and one leading +
                       value = value
                         .replace(/[^\d+]/g, "")
-                        .replace(/(?!^)\+/g, "") // Remove any + except the first one
-                        .slice(0, 16); // Max length: + followed by 15 digits (E.164)
+                        .replace(/(?!^)\+/g, "")
+                        .slice(0, 16);
 
-                      handleChange({
-                        target: {
-                          name: "mobile",
-                          value,
-                        },
-                      });
+                      handleChange({ target: { name: "mobile", value } });
                     }}
                     error={!!errors.mobile}
                     helperText={errors.mobile}
-                    inputProps={{
-                      maxLength: 16,
-                    }}
+                    inputProps={{ maxLength: 16 }}
                     InputProps={{
-                      sx: {
-                        fontSize: { xs: "0.8rem", sm: "0.9rem" },
-                      },
+                      sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } },
                     }}
                     InputLabelProps={{
-                      sx: {
-                        fontSize: { xs: "0.8rem", sm: "0.9rem" },
-                      },
+                      sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } },
                     }}
                   />
                 </Stack>
@@ -1151,14 +1379,8 @@ const UserProfile = () => {
                       label="Date of Birth"
                       value={formData?.dob}
                       onChange={(newValue) => {
-                        setFormData((prev) => ({
-                          ...prev,
-                          dob: newValue,
-                        }));
-                        setErrors((prev) => ({
-                          ...prev,
-                          dob: "",
-                        }));
+                        setFormData((prev) => ({ ...prev, dob: newValue }));
+                        setErrors((prev) => ({ ...prev, dob: "" }));
                       }}
                       slotProps={{
                         textField: {
@@ -1234,12 +1456,41 @@ const UserProfile = () => {
                     sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } },
                   }}
                 />
+                <TextField
+                  label="ZipCode"
+                  name="zipcode"
+                  fullWidth
+                  value={formData?.zipcode || ""}
+
+                  error={!!errors.zipcode}
+                  helperText={errors.zipcode}
+                  onChange={(e) => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      zipcode: e.target.value,
+                    }));
+
+                    setErrors((prev) => ({
+                      ...prev,
+                      zipcode: "",
+                    }));
+                  }}
+                  inputProps={{ maxLength: 16 }}
+                  InputProps={{
+                    sx: {
+                      fontSize: { xs: "0.8rem", sm: "0.9rem" },
+                    },
+                  }}
+                  InputLabelProps={{
+                    sx: {
+                      fontSize: { xs: "0.8rem", sm: "0.9rem" },
+                    },
+                  }}
+                />
 
                 <Stack
                   direction={{ xs: "row", sm: "row" }}
                   spacing={{ xs: 1, sm: 1.5 }}
-                  // justifyContent="flex-end"
-                  // alignItems="center"
                   sx={{
                     width: "100%",
                     mt: { xs: 0.5, sm: 1 },
@@ -1257,7 +1508,6 @@ const UserProfile = () => {
                       px: { xs: 1.5, sm: 2.5 },
                       minWidth: { xs: "auto", sm: 90 },
                       bgcolor: "#757575",
-                      // border: "1px solid #E2D7C3",
                       color: "#ffff",
                       textTransform: "none",
                     }}
@@ -1265,7 +1515,6 @@ const UserProfile = () => {
                       setProfileImage("");
                       resetForm();
                       setErrors({});
-                      // setEditProfile(false);
                     }}
                   >
                     Cancel
@@ -1280,12 +1529,10 @@ const UserProfile = () => {
                       py: { xs: 0.5, sm: 0.75 },
                       px: { xs: 1.5, sm: 2.5 },
                       minWidth: { xs: "auto", sm: 110 },
-                      bgcolor: "#FF9933", // Saffron
+                      bgcolor: "#FF9933",
                       color: "#fff",
                       textTransform: "none",
-                      "&:hover": {
-                        bgcolor: "#ef9104",
-                      },
+                      "&:hover": { bgcolor: "#ef9104" },
                     }}
                     onClick={handleUpdateProfile}
                     disabled={submitLoading}
@@ -1298,6 +1545,141 @@ const UserProfile = () => {
           </Box>
         }
       />
+
+      {/* ── Adjust Photo Modal (shows selected image, drag + zoom, then submit) ── */}
+      <Modal open={showAdjustModal} onClose={handleAdjustCancel}>
+        <Box
+          sx={{
+            position: "fixed",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: { xs: "62%", sm: 340 },
+            bgcolor: "white",
+            borderRadius: 2,
+            boxShadow: 24,
+            p: 2,
+            outline: "none",
+          }}
+        >
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 700,
+              mb: 3,
+              fontSize: "1.05rem",
+            }}
+          >
+            Adjust Photo
+          </Typography>
+
+          <IconButton
+            onClick={handleAdjustCancel}
+            sx={{
+              position: "absolute",
+              top: 7,
+              right: 10,
+              zIndex: 2,
+              color: "rgba(0,0,0,0.8)",
+              bgcolor: "#fff",
+              "&:hover": {
+                bgcolor: "rgba(0,0,0,0.6)",
+                color: "#fff",
+              },
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+
+          {/* Draggable / zoomable preview box */}
+          <Box
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            sx={{
+              position: "relative",
+              width: { xs: 190, sm: CROP_BOX_SIZE },
+              height: { xs: 190, sm: CROP_BOX_SIZE },
+              mx: "auto",
+              borderRadius: "50%",
+              overflow: "hidden",
+              bgcolor: "#222",
+              cursor: "grab",
+              touchAction: "none",
+              border: "2px solid #FF9933",
+            }}
+          >
+            {rawImage && (
+              <img
+                ref={cropImgRef}
+                src={rawImage}
+                alt="Selected"
+                onLoad={handleCropImageLoad}
+                draggable={false}
+                style={{
+                  position: "absolute",
+                  left: offset.x,
+                  top: offset.y,
+                  width: getDisplayedSize().displayedW || "auto",
+                  height: getDisplayedSize().displayedH || "auto",
+                  userSelect: "none",
+                  pointerEvents: "none",
+                }}
+              />
+            )}
+          </Box>
+
+          {/* Zoom slider */}
+          <Box sx={{ px: 1, mt: 2 }}>
+            <Typography variant="caption" color="text.secondary">
+              Zoom
+            </Typography>
+            <Slider
+              value={zoom}
+              min={1}
+              max={3}
+              step={0.05}
+              onChange={handleZoomChange}
+              sx={{ color: "#FF9933" }}
+            />
+          </Box>
+
+          <Stack
+            direction="row"
+            spacing={1.5}
+            sx={{
+              display: "flex",
+              justifyContent: { xs: "center", sm: "flex-end" },
+            }}
+          >
+            <Button
+              variant="contained"
+              size="small"
+              sx={{ bgcolor: "#757575", color: "#fff", textTransform: "none" }}
+              onClick={handleAdjustCancel}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              size="small"
+              sx={{
+                bgcolor: "#FF9933",
+                color: "#fff",
+                textTransform: "none",
+                "&:hover": { bgcolor: "#ef9104" },
+              }}
+              onClick={handleAdjustSave}
+            >
+              Use Photo
+            </Button>
+          </Stack>
+        </Box>
+      </Modal>
     </PageLayout>
   );
 };

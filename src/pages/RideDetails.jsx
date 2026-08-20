@@ -622,6 +622,11 @@ export default function RideDetailsModal({
               noWrap
               sx={{
                 mt: 0.5,
+                minWidth: 0,
+                maxWidth: "100%",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
                 fontFamily: TOKENS.bodyFont,
                 fontWeight: 600,
                 fontSize: { xs: "0.82rem", md: "0.9rem" },
@@ -632,8 +637,14 @@ export default function RideDetailsModal({
             </Typography>
 
             <Typography
+              noWrap
               sx={{
                 mt: 0.25,
+                minWidth: 0,
+                maxWidth: "100%",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
                 fontFamily: TOKENS.bodyFont,
                 fontSize: "0.72rem",
                 color: "rgba(255,255,255,.65)",
@@ -733,6 +744,13 @@ export default function RideDetailsModal({
                 fontWeight: 600,
                 fontSize: { xs: "0.82rem", md: "0.9rem" },
                 color: "#F5F5F5",
+
+                width: { xs: "120px", sm: "160px", md: "200px" },
+                maxWidth: "100%",
+                minWidth: 0,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
               }}
             >
               {formTo(ride)}
@@ -746,6 +764,11 @@ export default function RideDetailsModal({
                 color: "rgba(255,255,255,.65)",
                 textTransform: "uppercase",
                 letterSpacing: ".12em",
+
+                width: { xs: "120px", sm: "160px", md: "200px" },
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
               }}
             >
               {ride.toCountry}
@@ -893,27 +916,28 @@ export default function RideDetailsModal({
           {ride.modeOfTravel !== 'Flight' && ride.modeOfTravel !== 'Bus' && ride.fuelSharing >= 0 && (<Field icon={LocalGasStationIcon} label="Fuel Cost" value={`${ride.fuelSharing === null ? '—' : `$ ${ride.fuelSharing}/Person`} ` || '—'} />)}
           <Field icon={TravellerTypeIcon} label="Traveller Type" value={ride.travellerType || '—'} />
 
-          {ride.description && (
-            <Field icon={DescriptionIcon} label="Description" value={ride.description || '—'} span />
-          )}
+
+          <Stack direction="column" alignItems="center">
+            <Field icon={TranslateIcon} label="Languages" />
+            <Typography
+              sx={{
+                fontFamily: TOKENS.monoFont,
+                fontWeight: 600,
+                fontSize: { xs: '0.85rem', sm: '0.95rem' },
+                color: TOKENS.ink,
+                // wordBreak: 'break-word',
+              }}
+            >
+              {ride.language?.join(", ") || '—'}
+            </Typography>
+          </Stack>
         </Box>
 
+        <br />
 
-        <Stack direction="column" alignItems="center" sx={{ mt: 1.8 }}>
-          <Field icon={TranslateIcon} label="Languages" />
-          <Typography
-            sx={{
-              fontFamily: TOKENS.monoFont,
-              fontWeight: 600,
-              fontSize: { xs: '0.85rem', sm: '0.95rem' },
-              color: TOKENS.ink,
-              // wordBreak: 'break-word',
-            }}
-          >
-            {ride.language?.join(", ") || '—'}
-          </Typography>
-        </Stack>
-
+        {ride.description && (
+          <Field icon={DescriptionIcon} label="Description" value={ride.description || '—'} span />
+        )}
 
 
 

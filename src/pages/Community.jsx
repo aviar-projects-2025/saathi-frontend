@@ -120,7 +120,25 @@ export default function Community() {
       fileInputRef.current?.click();
     }
   };
+  // Lower score = closer / higher priority
+  const getZipcodeProximityScore = (authorZip, currentZip) => {
+    if (!currentZip || !authorZip) return 3; // no data → lowest priority
+    const a = String(authorZip);
+    const b = String(currentZip);
 
+    if (a === b) return 0;               // exact same zipcode
+    if (a.slice(0, 3) === b.slice(0, 3)) return 1; // same local area
+    if (a.slice(0, 1) === b.slice(0, 1)) return 2; // same broad region
+    return 3;                             // everything else
+  };
+
+  const sortPostsByProximity = (posts, currentZip) => {
+    return [...posts].sort(
+      (a, b) =>
+        getZipcodeProximityScore(a?.authorId?.zipcode, currentZip) -
+        getZipcodeProximityScore(b?.authorId?.zipcode, currentZip)
+    );
+  };
 
   // const getCommmunityPost = async () => {
   //   try {
@@ -180,12 +198,12 @@ export default function Community() {
           0,
       }));
 
-      const postIds = posts.map(
+      const postId = posts.map(
         (post) => post._id
       );
 
       setCommunityPosts(updatedPosts);
-      setPostId(postIds);
+      setPostId(postId);
 
       setCommentCounts(
         Object.fromEntries(
@@ -203,6 +221,24 @@ export default function Community() {
         postsRes?.data?.pagination?.hasMore ?? false
       );
 
+      // 👇 sort so nearby users (by zipcode) appear first
+      const sortedPosts = sortPostsByProximity(updatedPosts, currentUser?.zipcode);
+
+      const postIds = postsRes.data.data.map((item) => item._id);
+      setCommunityPosts(sortedPosts);
+      setPostId(postIds);
+
+      const countEntries = await Promise.all(
+        sortedPosts.map(async (p) => {
+          try {
+            const res = await axios.get(Api + `/community/comments/${p._id}/${user.id}`);
+            return [p._id, res.data.data.comments.length];
+          } catch {
+            return [p._id, 0];
+          }
+        })
+      );
+      setCommentCounts(Object.fromEntries(countEntries));
     } catch (error) {
       console.error("Community error:", error);
       console.error("Status:", error.response?.status);
@@ -423,6 +459,28 @@ export default function Community() {
 
   const isProfileComplete = completion === 100;
   const SIDEBAR_SCROLL_HEIGHT = 'calc(100vh - 120px)';
+  const zipcode = currentUser?.zipcode
+  // ── Profile completion modal ──
+  // Shows once per page-load whenever the user's profile is under 100%.
+  const [profileGateOpen, setProfileGateOpen] = useState(false);
+  const hasCheckedProfileGateRef = useRef(false);
+
+  useEffect(() => {
+    // Only decide ONCE, and only after currentUser has actually finished
+    // loading. `completion` is 0 (a valid number) for a brief moment while
+    // the user context is still fetching, so checking `typeof completion
+    // === "number"` alone fires too early and causes the modal to flash
+    // open and then immediately close once the real completion (100) comes in.
+    if (hasCheckedProfileGateRef.current) return;
+    if (currentUser && currentUser._id && typeof completion === "number") {
+      hasCheckedProfileGateRef.current = true;
+      setProfileGateOpen(completion !== 100);
+    }
+  }, [currentUser, completion]);
+
+  const handleCloseProfileGate = () => {
+    setProfileGateOpen(false);
+  };
 
   const handleEdit = (post) => {
     setSelectedPost(post);
@@ -643,6 +701,7 @@ export default function Community() {
 
   return (
     <>
+
       <PageLayout>
         {/* Page header */}
         <Typography variant="h5" fontWeight={800} sx={{ mb: { xs: 0.5, sm: 0.5 }, fontSize: { xs: "1rem", sm: "1.2rem", md: "1.35rem", lg: "1.5rem" } }}>
@@ -790,7 +849,7 @@ export default function Community() {
                     sx={{
                       width: '100%',
                       maxHeight: { xs: 200, sm: 240, md: 280, lg: 300 },
-                      objectFit: 'cover',
+                      objectFit: 'contain',
                       display: 'block',
                     }}
                   />
@@ -1045,13 +1104,13 @@ export default function Community() {
                   textAlign: "center",
                 }}
               >
-                <InboxOutlinedIcon
+                {/* <InboxOutlinedIcon
                   sx={{
                     fontSize: { xs: 40, sm: 64 },
                     color: "text.disabled",
                     mb: 2,
                   }}
-                />
+                /> */}
 
                 <Typography variant="h6" fontWeight={600} color="text.primary">
                   No Posts Yet
@@ -1301,9 +1360,9 @@ export default function Community() {
                                     sx={{
                                       width: "100%",
                                       height: { xs: 160, sm: 220, md: 280 },
-                                      objectFit: "cover",
+                                      objectFit: "contain",
                                       borderRadius: 2,
-                                      border: "1px solid #eee",
+                                      // border: "1px solid #eee",
                                       mb: 1.5,
                                     }}
                                   />
@@ -1622,4 +1681,3 @@ export default function Community() {
 
   );
 }
-

@@ -70,7 +70,7 @@ const Login = () => {
         data?.user.role === ROLES.ADMIN
           ? "/admin/dashboard"
           : data?.user.refApprove === "Approved"
-            ? "/community"
+            ? "/find-ride"
             : "/waiting-approval";
     } catch (error) {
       // toast.error(error.message, toasts);
@@ -272,7 +272,7 @@ const Login = () => {
                       mt: 3,
                       py: 1.2,
                       background: "#FF9933",
-                      color: "#000",
+                      color: "#ffff",
                       textTransform: "none",
                       fontSize: "14px",
                       fontWeight: 700,
