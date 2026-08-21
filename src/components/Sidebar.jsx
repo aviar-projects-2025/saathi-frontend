@@ -527,7 +527,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
           }}
         />
 
-        <DialogTitle
+        {/* <DialogTitle
           sx={{
             fontWeight: 800,
             fontSize: {
@@ -543,7 +543,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
           }}
         >
           Logout
-        </DialogTitle>
+        </DialogTitle> */}
 
         <DialogContent
           sx={{
