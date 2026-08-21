@@ -92,6 +92,7 @@ export default function Community() {
   const [tooltipOpen, setTooltipOpen] = useState(false);
   const [tooltip2Open, setTooltip2Open] = useState(false);
   const [imagePostLoading, setImagePostLoading] = useState(false);
+  const [imageDeleteLoading, setImageDeleteLoading] = useState(false);
 
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null);
@@ -536,7 +537,6 @@ export default function Community() {
       setEditOpen(false);
       setSelectedPost(null);
       setEditImage(null);
-      setImagePostLoading(false);
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to update post", toasts);
     } finally {
@@ -638,7 +638,7 @@ export default function Community() {
 
     try {
 
-      setImagePostLoading(true);
+      setImageDeleteLoading(true);
 
       const user = JSON.parse(localStorage.getItem("user"));
 
@@ -654,12 +654,13 @@ export default function Community() {
 
       toast.success(res.data.message, toasts);
 
+      setDeleteOpen(false);
 
     } catch (error) {
       toast.error(
         error.response?.data?.message || "Failed to delete post", toasts);
     } finally {
-      setImagePostLoading(false);
+      setImageDeleteLoading(false);
     }
   };
   const removeLike = async (id) => {
@@ -1371,7 +1372,7 @@ export default function Community() {
                                   fontWeight: 600,
                                   color: "#ffff",
                                   bgcolor: "grey.700",
-
+                                  textTransform: "none"
                                 }}
                               >
                                 Cancel
@@ -1380,21 +1381,22 @@ export default function Community() {
                               <Button
                                 variant="contained"
                                 color="error"
-                                disabled={imagePostLoading}
+                                disabled={imageDeleteLoading}
                                 onClick={() => {
                                   const postId = selectedPost._id;
                                   handleMenuClose();
                                   handleDelete(postId);
-                                  setDeleteOpen(false);
+                                  // setDeleteOpen(false);
                                 }}
                                 sx={{
                                   flex: 1,
                                   py: 1,
                                   fontSize: { xs: "0.8rem", sm: "0.9rem" },
                                   fontWeight: 600,
+                                  textTransform: "none"
                                 }}
                               >
-                                {imagePostLoading ? "Deleting..." : "Delete"}
+                                {imageDeleteLoading ? "Deleting..." : "Delete"}
                               </Button>
                             </DialogActions>
                           </Dialog>
