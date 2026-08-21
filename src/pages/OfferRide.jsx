@@ -232,8 +232,16 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
   const isBusTrain = ["Bus", "Train"].includes(form.modeOfTravel);
   const update = (key, val) => {
     setForm((prev) => ({ ...prev, [key]: val }));
-    setErrors((prev) => ({ ...prev, [key]: "" }));
-  };
+    setErrors((prev) => {
+    const newErrors = { ...prev };
+
+    if (val && String(val).trim() !== "") {
+      delete newErrors[key];
+    }
+
+    return newErrors;
+  });
+};
 
   const isTab = useMediaQuery(theme.breakpoints.down("sm"));
 
