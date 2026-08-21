@@ -39,6 +39,7 @@ import {
   ListItemText,
 } from "@mui/material";
 import { toast } from 'react-toastify';
+import { useNavigate } from "react-router-dom";
 import CommunityImage from '../components/CommunityImage.jsx';
 import CommunityComments from './CommunityComments.jsx';
 import { useUser } from '../context/userConetext.jsx';
@@ -409,7 +410,7 @@ export default function Community() {
     e.target.value = null; // allow re-selecting same file next time
   };
 
-
+  const navigate = useNavigate();
   const tier = useResponsiveTier();
   const isMobile = tier === 'xs';                 // phones
   const isTablet = tier === 'sm'; // tablets / small laptops
@@ -699,9 +700,111 @@ export default function Community() {
   };
 
 
+
   return (
     <>
+      <Dialog
+        open={profileGateOpen}
+        onClose={handleCloseProfileGate}
+        fullWidth
+        maxWidth="xs"
+        PaperProps={{
+          sx: {
+            borderRadius: { xs: 2, sm: 3 },
+            m: { xs: 1.5, sm: 2 },
+            width: { xs: "95%", sm: "100%" },
+            textAlign: "center",
+            p: { xs: 1, sm: 1.5 },
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 1,
+            fontWeight: 700,
+            fontSize: { xs: "1rem", sm: "1.15rem" },
+            pt: 3,
+          }}
+        >
+          <WarningAmberRoundedIcon sx={{ fontSize: 40, color: "#E8650A" }} />
+          Complete Your Profile
+        </DialogTitle>
 
+        <DialogContent>
+          <Typography
+            sx={{
+              fontSize: { xs: "0.85rem", sm: "0.95rem" },
+              color: "text.secondary",
+            }}
+          >
+            Your profile is only {Number.isFinite(completion) ? completion : 0}% complete.
+            Please complete your profile to 100% to unlock all features,
+            including posting, liking, commenting and saving in the Community.
+          </Typography>
+
+          <Box sx={{ mt: 2.5, px: { xs: 1, sm: 3 } }}>
+            <LinearProgress
+              variant="determinate"
+              value={Number.isFinite(completion) ? completion : 0}
+              sx={{
+                height: 8,
+                borderRadius: 5,
+                bgcolor: "#F0E6DC",
+                "& .MuiLinearProgress-bar": { bgcolor: "#E8650A" },
+              }}
+            />
+          </Box>
+        </DialogContent>
+
+        <DialogActions
+          sx={{
+            justifyContent: "center",
+            pb: 3,
+            pt: 1,
+            gap: 1.5,
+          }}
+        >
+          <Button
+            variant="outlined"
+            onClick={handleCloseProfileGate}
+            sx={{
+              textTransform: "none",
+              borderRadius: 999,
+              px: 3,
+              fontWeight: 600,
+              bgcolor: "#E8650A",
+              color: "#fff",
+              "&:hover": {
+                bgcolor: "#c85608",
+                color: "#fff",
+              },
+            }}
+          >
+            OK
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={() => navigate("/user-profile")}
+            sx={{
+              textTransform: "none",
+              borderRadius: 999,
+              px: 3,
+              fontWeight: 600,
+              bgcolor: "#E8650A",
+              color: "#fff",
+              "&:hover": {
+                bgcolor: "#c85608",
+                color: "#fff",
+              },
+            }}
+          >
+            Update profile
+          </Button>
+        </DialogActions>
+      </Dialog>
       <PageLayout>
         {/* Page header */}
         <Typography variant="h5" fontWeight={800} sx={{ mb: { xs: 0.5, sm: 0.5 }, fontSize: { xs: "1rem", sm: "1.2rem", md: "1.35rem", lg: "1.5rem" } }}>

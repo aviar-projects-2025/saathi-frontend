@@ -1484,6 +1484,9 @@ const MyRides = () => {
 
   const toastss = ToastConfig();
 
+  const activeUpcoming = upcoming.filter(
+    (item) => item.travelStatus !== "Cancelled"
+  );
   const processedIds = useRef(new Set());
 
   // const theme = useTheme();
@@ -1614,7 +1617,7 @@ const MyRides = () => {
             !isNaN(rideStartTime.getTime()) &&
             (ride?.travelStatus === "Completed" ||
               ride?.travelStatus === "Cancelled")
-          );
+          )
         }),
       );
 
@@ -2134,9 +2137,13 @@ const MyRides = () => {
 
               {tab === 1 && (
                 <Box>
-                  {upcoming.length > 0 ? (
+                  {activeUpcoming.length > 0 ? (
                     <>
-                      {renderList(paginate(upcoming, upcomingPage), true, true)}
+                      {renderList(
+                        paginate(activeUpcoming, upcomingPage),
+                        true,
+                        true
+                      )}
                       <RidePaginationBar
                         count={Math.ceil(upcoming.length / ITEMS_PER_PAGE)}
                         page={upcomingPage}
@@ -2178,6 +2185,7 @@ const MyRides = () => {
                 <Box>
                   {history.length > 0 ? (
                     <>
+
                       {renderList(
                         paginate(history, historyPage),
                         false,
@@ -2198,6 +2206,7 @@ const MyRides = () => {
                       message2="No completed rides are available at the moment."
                     />
                   )}
+
                 </Box>
               )}
             </>
