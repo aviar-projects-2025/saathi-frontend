@@ -459,16 +459,18 @@ const RequestRide = () => {
                         }}
                       />
 
-                      <IconButton
-                        onClick={(event) => handleMenuOpen(event, request)}
-                        sx={{
-                          color: "#fff",
-                          p: { xs: 0.5, sm: 0.75, md: 1 },
-                          "&:hover": { bgcolor: "rgba(255,255,255,0.1)" },
-                        }}
-                      >
-                        <MoreVertIcon sx={{ fontSize: { xs: 18, sm: 20, md: 22 } }} />
-                      </IconButton>
+                      {request?.rideId?.travelStatus != "Cancelled" &&
+                        <IconButton
+                          onClick={(event) => handleMenuOpen(event, request)}
+                          sx={{
+                            color: "#fff",
+                            p: { xs: 0.5, sm: 0.75, md: 1 },
+                            "&:hover": { bgcolor: "rgba(255,255,255,0.1)" },
+                          }}
+                        >
+                          <MoreVertIcon sx={{ fontSize: { xs: 18, sm: 20, md: 22 } }} />
+                        </IconButton>
+                      }
                     </Box>
                   </Box>
 
@@ -815,7 +817,7 @@ const RequestRide = () => {
             <Stack direction="row" spacing={1.25} sx={{ mb: 2 }}>
               <WarningAmberRoundedIcon sx={{ color: "#E67E22", mt: "2px" }} fontSize="small" />
               <Typography sx={{ color: "text.secondary", fontWeight: 500, fontSize: "0.9rem" }}>
-                If you cancel before the request is approved, you won't be able to request the
+                If you cancel ride, you won't be able to request the
                 same ride again.
               </Typography>
             </Stack>

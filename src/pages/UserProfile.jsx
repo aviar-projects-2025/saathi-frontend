@@ -60,7 +60,7 @@ const CARD_BORDER = "1px solid #F0E6DC";
 import CloseIcon from "@mui/icons-material/Close";
 
 import { useNavigate } from "react-router-dom";
-import uploadToCloudinary  from "../components/uploadToCloudinary.jsx";
+import uploadToCloudinary from "../components/uploadToCloudinary.jsx";
 
 // Size (px) of the square adjust/crop box
 const CROP_BOX_SIZE = 260;
@@ -555,63 +555,63 @@ const UserProfile = () => {
   // };
 
   const handleUpdateProfile = async () => {
-  try {
-    setSubmitLoading(true);
+    try {
+      setSubmitLoading(true);
 
-    const validationErrors = validateForm(formData);
+      const validationErrors = validateForm(formData);
 
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
+      if (Object.keys(validationErrors).length > 0) {
+        setErrors(validationErrors);
+        return;
+      }
+
+      let profileImage = null;
+
+      // Upload directly to Cloudinary
+      if (profileFile) {
+        profileImage = await uploadToCloudinary(profileFile);
+
+        console.log(profileImage, 'profileImage ')
+      }
+
+      const data = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        mobile: formData.mobile,
+        dob: formData.dob
+          ? formData.dob.format("YYYY-MM-DD")
+          : "",
+        gender: formData.gender,
+        bio: formData.bio,
+        zipcode: formData.zipcode,
+
+        ...(profileImage && {
+          profileImage: profileImage?.url,
+          profileImagePublicId: profileImage?.publicId,
+        }),
+      };
+
+      await axios.post(
+        `${Api}/users/update/${user?.id}`,
+        data
+      );
+
+      getuserData();
+
+      toast.success("Profile Updated", toasts);
+      setEditProfile(false);
+
+    } catch (error) {
+      console.log(error.response);
+
+      toast.error(
+        error.response?.data?.message || "Something went wrong",
+        toasts
+      );
+    } finally {
+      setSubmitLoading(false);
     }
-
-    let profileImage = null;
-
-    // Upload directly to Cloudinary
-    if (profileFile) {
-      profileImage = await uploadToCloudinary(profileFile);
-
-      console.log(profileImage ,'profileImage ')
-    }
-
-    const data = {
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      mobile: formData.mobile,
-      dob: formData.dob
-        ? formData.dob.format("YYYY-MM-DD")
-        : "",
-      gender: formData.gender,
-      bio: formData.bio,
-      zipcode : formData.zipcode,
-
-      ...(profileImage && {
-        profileImage: profileImage?.url,
-        profileImagePublicId: profileImage?.publicId,
-      }),
-    };
-
-    await axios.post(
-      `${Api}/users/update/${user?.id}`,
-      data
-    );
-
-    getuserData();
-
-    toast.success("Profile Updated", toasts);
-    setEditProfile(false);
-
-  } catch (error) {
-    console.log(error.response);
-
-    toast.error(
-      error.response?.data?.message || "Something went wrong",
-      toasts
-    );
-  } finally {
-    setSubmitLoading(false);
-  }
-};
+  };
 
   const [tab, setTab] = useState(0);
 
@@ -956,7 +956,7 @@ const UserProfile = () => {
                       sx={{ color: "#FF9933" }}
                     />
                   </Box>
-                ) : savedPost?.length <= 3 ? (
+                ) : savedPost?.length == 0 ? (
                   <Box
                     sx={{
                       width: "100%",
