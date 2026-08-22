@@ -122,60 +122,65 @@ export default function Community() {
       fileInputRef.current?.click();
     }
   };
-  // Lower score = closer / higher priority
-  const getZipcodeProximityScore = (authorZip, currentZip) => {
-    if (!currentZip || !authorZip) return 3; // no data → lowest priority
-    const a = String(authorZip);
-    const b = String(currentZip);
+  const normalizePostal = (code) =>
+    String(code || "")
+      .trim()
+      .toUpperCase()
+      .replace(/\s+/g, "");
 
-    if (a === b) return 0;               // exact same zipcode
-    if (a.slice(0, 3) === b.slice(0, 3)) return 1; // same local area
-    if (a.slice(0, 1) === b.slice(0, 1)) return 2; // same broad region
-    return 3;                             // everything else
+  const longestCommonPrefixLength = (a, b) => {
+    let i = 0;
+    const len = Math.min(a.length, b.length);
+
+    while (i < len && a[i] === b[i]) {
+      i++;
+    }
+
+    return i;
   };
 
-  const sortPostsByProximity = (posts, currentZip) => {
-    return [...posts].sort(
-      (a, b) =>
-        getZipcodeProximityScore(a?.authorId?.zipcode, currentZip) -
-        getZipcodeProximityScore(b?.authorId?.zipcode, currentZip)
+  const getZipcodeProximityScore = (author, current) => {
+    const authorZip = normalizePostal(author?.zipcode);
+    const currentZip = normalizePostal(current?.zipcode);
+
+    if (!authorZip || !currentZip) {
+      return Infinity;
+    }
+
+    // Exact postal code = highest priority
+    if (authorZip === currentZip) {
+      return 0;
+    }
+
+    // Different length = lower priority
+    if (authorZip.length !== currentZip.length) {
+      return 100;
+    }
+
+    const commonLen = longestCommonPrefixLength(
+      authorZip,
+      currentZip
     );
+
+    // More matching starting digits = closer
+    return authorZip.length - commonLen;
   };
 
-  // const getCommmunityPost = async () => {
-  //   try {
-  //     setPostLoading(true);
-  //     const postsRes = await axios.get(Api + "/community/");
-  //     const likesRes = await axios.get(Api + `/likes/liked-posts/${user.id}`);
-  //     const likedPostIds = likesRes?.data?.data || [];
-  //     const updatedPosts = postsRes?.data?.data?.map((post) => ({
-  //       ...post,
-  //       isLiked: likedPostIds.includes(post._id),
-  //     }));
+  const sortPostsByProximity = (posts, currentUser) => {
+    return [...posts].sort((a, b) => {
+      const scoreA = getZipcodeProximityScore(
+        a?.authorId,
+        currentUser
+      );
 
-  //     const postIds = postsRes.data.data.map((item) => item._id);
-  //     setCommunityPosts(updatedPosts);
-  //     setPostId(postIds);
+      const scoreB = getZipcodeProximityScore(
+        b?.authorId,
+        currentUser
+      );
 
-  //     // fetch comment counts for all posts in parallel
-  //     const countEntries = await Promise.all(
-  //       updatedPosts.map(async (p) => {
-  //         try {
-  //           const res = await axios.get(Api + `/community/comments/${p._id}/${user.id}`);
-  //           return [p._id, res.data.data.comments.length];
-  //         } catch {
-  //           return [p._id, 0];
-  //         }
-  //       })
-  //     );
-  //     setCommentCounts(Object.fromEntries(countEntries));
-
-  //   } catch (error) {
-  //     console.error(error.message);
-  //   } finally {
-  //     setPostLoading(false);
-  //   }
-  // };
+      return scoreA - scoreB;
+    });
+  };
 
   const getCommmunityPost = async () => {
     try {
@@ -189,63 +194,75 @@ export default function Community() {
       const posts = postsRes?.data?.data || [];
       const likedPostIds = likesRes?.data?.data || [];
 
+      // Add like + comment information
       const updatedPosts = posts.map((post) => ({
         ...post,
-
         isLiked: likedPostIds.includes(post._id),
-
         commentCount:
           post.commentCount ??
           post.comments?.length ??
           0,
       }));
 
-      const postId = posts.map(
+
+      const sortedPosts = sortPostsByProximity(
+        updatedPosts,
+        currentUser
+      );
+
+
+      setCommunityPosts(sortedPosts);
+
+      // Set post IDs in sorted order
+      const postIds = sortedPosts.map(
         (post) => post._id
       );
 
-      setCommunityPosts(updatedPosts);
-      setPostId(postId);
+      setPostId(postIds);
 
-      setCommentCounts(
-        Object.fromEntries(
-          updatedPosts.map((post) => [
-            post._id,
-            post.commentCount,
-          ])
-        )
-      );
-
-      // ⭐ Pagination state
+      // Pagination
       setPage(1);
 
       setHasMore(
         postsRes?.data?.pagination?.hasMore ?? false
       );
 
-      // 👇 sort so nearby users (by zipcode) appear first
-      const sortedPosts = sortPostsByProximity(updatedPosts, currentUser?.zipcode);
+      // Initial comment counts
+      setCommentCounts(
+        Object.fromEntries(
+          sortedPosts.map((post) => [
+            post._id,
+            post.commentCount,
+          ])
+        )
+      );
 
-      const postIds = postsRes.data.data.map((item) => item._id);
-      setCommunityPosts(sortedPosts);
-      setPostId(postIds);
-
+      // Fetch latest comment counts
       const countEntries = await Promise.all(
-        sortedPosts.map(async (p) => {
+        sortedPosts.map(async (post) => {
           try {
-            const res = await axios.get(Api + `/community/comments/${p._id}/${user.id}`);
-            return [p._id, res.data.data.comments.length];
-          } catch {
-            return [p._id, 0];
+            const res = await axios.get(
+              `${Api}/community/comments/${post._id}/${user.id}`
+            );
+
+            return [
+              post._id,
+              res.data?.data?.comments?.length ?? 0,
+            ];
+          } catch (error) {
+            return [post._id, 0];
           }
         })
       );
-      setCommentCounts(Object.fromEntries(countEntries));
+
+      setCommentCounts(
+        Object.fromEntries(countEntries)
+      );
+
     } catch (error) {
       console.error("Community error:", error);
       console.error("Status:", error.response?.status);
       console.error("Response:", error.response?.data);
-
     } finally {
       setPostLoading(false);
     }
@@ -462,17 +479,12 @@ export default function Community() {
   const isProfileComplete = completion === 100;
   const SIDEBAR_SCROLL_HEIGHT = 'calc(100vh - 120px)';
   const zipcode = currentUser?.zipcode
-  // ── Profile completion modal ──
-  // Shows once per page-load whenever the user's profile is under 100%.
+
   const [profileGateOpen, setProfileGateOpen] = useState(false);
   const hasCheckedProfileGateRef = useRef(false);
 
   useEffect(() => {
-    // Only decide ONCE, and only after currentUser has actually finished
-    // loading. `completion` is 0 (a valid number) for a brief moment while
-    // the user context is still fetching, so checking `typeof completion
-    // === "number"` alone fires too early and causes the modal to flash
-    // open and then immediately close once the real completion (100) comes in.
+
     if (hasCheckedProfileGateRef.current) return;
     if (currentUser && currentUser._id && typeof completion === "number") {
       hasCheckedProfileGateRef.current = true;

@@ -148,6 +148,7 @@ const noZoomInputSx = {
 
 // Pagination config: how many ride cards to show per page on each tab
 const ITEMS_PER_PAGE = 10;
+const user = JSON.parse(localStorage.getItem("user"));
 
 // ── Empty State ──────────────────────────────────────────────────────────────
 function EmptyState({ message1, message2 }) {
@@ -1492,6 +1493,7 @@ const MyRides = () => {
   // const theme = useTheme();
   const isTab = useMediaQuery(theme.breakpoints.down("sm"));
 
+
   useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date();
@@ -1644,6 +1646,8 @@ const MyRides = () => {
     fetchRides();
   }, [refreshRide, notifications]);
 
+
+
   useEffect(() => {
     if (!allMyRequests?.length) return;
 
@@ -1769,7 +1773,9 @@ const MyRides = () => {
   const fetchAllSends = async () => {
     try {
       const res = await axios.get(`${Api}/bookride/send/${user.id}`);
+
       setAllMyRequests(res.data.data || []);
+      // console.log('hubhuhbh',res.data.data)
     } catch (error) {
       console.error("Error fetching requests:", error);
     } finally {
