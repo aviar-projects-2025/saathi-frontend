@@ -156,11 +156,6 @@ export default function FindRides() {
   };
 
   useEffect(() => {
-    // Only decide ONCE, and only after currentUser has actually finished
-    // loading. `completion` is 0 (a valid number) for a brief moment while
-    // the user context is still fetching, so checking `typeof completion
-    // === "number"` alone fires too early and causes the modal to flash
-    // open and then immediately close once the real completion (100) comes in.
     if (hasCheckedProfileGateRef.current) return;
     if (currentUser && currentUser._id && typeof completion === "number") {
       hasCheckedProfileGateRef.current = true;
@@ -220,9 +215,6 @@ export default function FindRides() {
     language: appliedLanguage,
   } = appliedFilters;
 
-
-  // Chips reflect APPLIED filters (what's actually affecting results),
-  // each chip's clear button removes that filter immediately and re-applies.
   const activeFilters = [
     appliedTransportMode && {
       key: "transport",
@@ -324,29 +316,78 @@ export default function FindRides() {
     (ride) => ride.travelStatus !== "Cancelled"
   );
 
-  const getZipcodeProximityScore = (rideZip, currentZip) => {
-    if (!currentZip || !rideZip) return 3; // unknown → lowest priority
-    const a = String(rideZip);
-    const b = String(currentZip);
+  const normalizePostal = (code) =>
+    String(code || "")
+      .trim()
+      .toUpperCase()
+      .replace(/\s+/g, "");
 
-    if (a === b) return 0;                          // exact match
-    if (a.slice(0, 3) === b.slice(0, 3)) return 1;   // same local area
-    if (a.slice(0, 1) === b.slice(0, 1)) return 2;   // same broad region
-    return 3;                                        // everything else
+  const longestCommonPrefixLength = (a, b) => {
+    let i = 0;
+    const len = Math.min(a.length, b.length);
+
+    while (i < len && a[i] === b[i]) {
+      i++;
+    }
+
+    return i;
+  };
+  const getZipcodeProximityScore = (author, current) => {
+    const authorZip = normalizePostal(author?.zipcode);
+    const currentZip = normalizePostal(current?.zipcode);
+
+    if (!authorZip || !currentZip) {
+      return Infinity;
+    }
+
+    // Exact postal code = highest priority
+    if (authorZip === currentZip) {
+      return 0;
+    }
+
+    // Different length = lower priority
+    if (authorZip.length !== currentZip.length) {
+      return 100;
+    }
+
+    const commonLen = longestCommonPrefixLength(
+      authorZip,
+      currentZip
+    );
+
+    // More matching starting digits = closer
+    return authorZip.length - commonLen;
   };
 
   const sortRidesByProximity = (rides, currentZip) => {
     return [...rides].sort((a, b) => {
-      const scoreA = getZipcodeProximityScore(a?.createdBy?.zipcode, currentZip);
-      const scoreB = getZipcodeProximityScore(b?.createdBy?.zipcode, currentZip);
+      const scoreA = getZipcodeProximityScore(
+        a?.createdBy?.zipcode,
+        currentZip
+      );
 
-      if (scoreA !== scoreB) return scoreA - scoreB; // ascending: 0 (nearest) first
+      const scoreB = getZipcodeProximityScore(
+        b?.createdBy?.zipcode,
+        currentZip
+      );
+
+      // Nearby ZIP rides first
+      if (scoreA !== scoreB) {
+        return scoreA - scoreB;
+      }
+
+      // Same proximity → earliest ride first
       return new Date(a.startTime) - new Date(b.startTime);
     });
   };
 
+
   const sortedVisibleRides = useMemo(
-    () => sortRidesByProximity(visibleRides, currentUser?.zipcode),
+    () =>
+      sortRidesByProximity(
+        visibleRides,
+        currentUser?.zipcode
+      ),
     [visibleRides, currentUser?.zipcode]
   );
 

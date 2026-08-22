@@ -509,7 +509,7 @@ export default function RideDetailsModal({
   const isXs = useMediaQuery(theme.breakpoints.down('sm'));
   const isMd = useMediaQuery(theme.breakpoints.up('md'));
   const pendingMember = requests.map((item) => item.pendingMembers);
-
+  const isStarted = ride?.travelStatus === "Started";
   const startDate = new Date(ride.startTime);
   const dateLabel = !isNaN(startDate)
     ? startDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
@@ -955,7 +955,7 @@ export default function RideDetailsModal({
           borderTop: `1px solid ${TOKENS.line}`,
         }}
       >
-        {(!pendingMember || pendingMember.length === 0) && showEdit && (
+        {(!pendingMember || pendingMember.length === 0) && showEdit && ride?.travelStatus !== "Started" && (
 
           (ride.createdBy?._id === user?.id ||
             typeof ride.createdBy === 'string' && ride.createdBy === user?.id) && (
@@ -982,7 +982,8 @@ export default function RideDetailsModal({
             </Button>
           )
         )}
-        {showDelete && (
+
+        {showDelete && ride?.travelStatus !== "Started" && (
           (ride.createdBy?._id === user?.id ||
             typeof ride.createdBy === 'string' && ride.createdBy === user?.id) && (
             <Button

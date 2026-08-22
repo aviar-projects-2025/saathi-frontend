@@ -833,7 +833,7 @@ function RideCard({
   useEffect(() => {
     if (!notificationRide) return;
 
-    if (ride?._id && ride._id.toString() === notificationRide.toString()) {
+    if (ride?._id && ride?._id.toString() === notificationRide.toString()) {
       setDetailsOpen(true);
 
       setNotificationRide(null);
@@ -842,8 +842,9 @@ function RideCard({
     }
   }, [notificationRide, ride]);
 
-  const isOwner = ride.createdBy._id === user?.id;
+  const isOwner = ride?.createdBy?._id === user?.id;
   const isStarted = ride?.travelStatus === "Started";
+  const isCancelled = ride?.travelStatus === "Cancelled";
   const isCompleted = ride?.travelStatus === "Completed";
 
   return (
@@ -1002,9 +1003,11 @@ function RideCard({
                   >
                     {isCompleted
                       ? "Completed"
-                      : isStarted
-                        ? "Ongoing"
-                        : "Not Started"}
+                      : isCancelled
+                        ? ""
+                        : isStarted
+                          ? "Ongoing"
+                          : "Not Started"}
                   </span>
                 )}
               </>
@@ -1775,7 +1778,7 @@ const MyRides = () => {
       const res = await axios.get(`${Api}/bookride/send/${user.id}`);
 
       setAllMyRequests(res.data.data || []);
-      // console.log('hubhuhbh',res.data.data)
+   
     } catch (error) {
       console.error("Error fetching requests:", error);
     } finally {
@@ -1971,7 +1974,7 @@ const MyRides = () => {
 
   const tabLabels = [
     { short: "Current", count: currentRide.length },
-    { short: "Upcoming", count: upcoming.length },
+    { short: "Upcoming", count: activeUpcoming.length },
     { short: "My Posts", count: mypost.length },
     { short: "History", count: history.length },
   ];
@@ -2149,7 +2152,8 @@ const MyRides = () => {
                         paginate(activeUpcoming, upcomingPage),
                         true,
                         true
-                      )}
+                      )} 
+                  
                       <RidePaginationBar
                         count={Math.ceil(upcoming.length / ITEMS_PER_PAGE)}
                         page={upcomingPage}
