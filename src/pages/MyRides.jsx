@@ -85,6 +85,7 @@ import { useNotifications } from "../context/NotificationContext";
 import RideDetailsModal from "./RideDetails";
 import moment from "moment";
 import ToastConfig from "../components/ToastConfig.jsx";
+import ProfileModal from './Avatar.jsx';
 
 const statusConfig = {
   FULL: { label: "Filled", color: "#2D6A4F", bg: "#E8F5E9", icon: "✅" },
@@ -725,6 +726,10 @@ function RideCard({
 
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState(null);
+  const ACCENT = "#FF9933";
+
   const navigate = useNavigate();
 
   const status = statusConfig[ride?.status];
@@ -876,18 +881,56 @@ function RideCard({
           }}
         >
           {/* Ride Owner */}
-          <Box sx={{ minWidth: 0, flex: 1 }}>
+          <Box
+            sx={{
+              minWidth: 0,
+              flex: 1,
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+            }}
+          >
+            <Avatar
+              src={ride?.createdBy?.profileImage || ""}
+              alt={
+                ride?.createdBy?.firstName
+                  ? `${ride?.createdBy?.firstName} ${ride?.createdBy?.lastName || ""
+                  }`
+                  : "Profile Image"
+              }
+              onClick={() => {
+                setSelectedProfile(ride?.createdBy);
+                setProfileModalOpen(true);
+              }}
+              sx={{
+                width: { xs: 26, sm: 35 },
+                height: { xs: 26, sm: 35 },
+                fontSize: { xs: 12, sm: 13 },
+                fontWeight: 700,
+                bgcolor: ACCENT,
+                color: "#1a1030",
+                cursor: "pointer",
+                flexShrink: 0,
+              }}
+            />
+
             <Typography
               fontWeight={700}
               sx={{
-                fontSize: { xs: "0.8rem", sm: "0.92rem", md: "1rem" },
+                minWidth: 0,
+                flex: 1,
+                fontSize: {
+                  xs: "0.8rem",
+                  sm: "0.92rem",
+                  md: "1rem",
+                },
                 lineHeight: 1.3,
                 whiteSpace: "nowrap",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
               }}
             >
-              {ride.createdBy?.firstName} {ride.createdBy?.lastName}
+              {ride?.createdBy?.firstName} {ride?.createdBy?.lastName}
             </Typography>
           </Box>
 
@@ -1293,28 +1336,15 @@ function RideCard({
         </Card>
       </Box>
 
-      {/* {detailsOpen && (
-        <RideDetailsModal
-          ride={ride}
-          showEdit={showEdit}
-          showDelete={showDelete}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          onClose={() => setDetailsOpen(false)}
-          request={[selectedRequest]}
-          onApprove={handleApprove}
-          onReject={handleReject}
-        />
-      )} */}
+      <ProfileModal
+        open={profileModalOpen}
+        selectedProfile={selectedProfile}
+        onClose={() => {
+          setProfileModalOpen(false);
+        }}
+      />
 
       {detailsOpen && (
-        // rideRequests.map((req) => (
-        // <RequestItem
-        //   key={req._id}
-        //   request={req}
-        //   onApprove={handleApprove}
-        //   onReject={handleReject}
-        // />
 
         <RideDetailsModal
           ride={ride}
@@ -1478,9 +1508,6 @@ const MyRides = () => {
   const [requestsLoaded, setRequestsLoaded] = useState(false);
   const loading = !(ridesLoaded && requestsLoaded);
 
-  // set ridesLoaded(true) in fetchRides' finally
-  // set requestsLoaded(true) in fetchAllSends' finally
-  // Pagination state — one page counter per tab so each tab remembers its own position
   const [currentRidePage, setCurrentRidePage] = useState(1);
   const [upcomingPage, setUpcomingPage] = useState(1);
   const [mypostPage, setMypostPage] = useState(1);
@@ -1778,7 +1805,7 @@ const MyRides = () => {
       const res = await axios.get(`${Api}/bookride/send/${user.id}`);
 
       setAllMyRequests(res.data.data || []);
-   
+
     } catch (error) {
       console.error("Error fetching requests:", error);
     } finally {
@@ -1987,19 +2014,21 @@ const MyRides = () => {
         alignItems: "flex-start",
         flexDirection: { xs: "column", lg: "row", md: "row" },
         width: "100%",
+        maxWidth: "100%",
+        overflowX: "hidden", 
       }}
     >
       <Box
         sx={{
           width: "100%",
-          // maxWidth: { xs: '100%', sm: '100%', md: 900, lg: 1200 },
+          minWidth: 0, 
+          maxWidth: "100%",
           mx: { md: "auto", lg: 0 },
-          // px: { xs: 0, sm: 2, md: 3 },
-          // py: { xs: 0, sm: 2, md: 3 },
           boxSizing: "border-box",
           display: "flex",
           flexDirection: "column",
           height: { xs: "100dvh", sm: "auto" },
+          overflowX: "hidden", 
         }}
       >
         <Box
@@ -2017,15 +2046,12 @@ const MyRides = () => {
           >
             My Rides
           </Typography>
-
-          {/* <Typography variant="h5" sx={{ color: '#E8650A', fontWeight: 900, fontSize: { xs: "1.2rem", sm: "1.2rem", md: "1.35rem", lg: "1.5rem" } }}>
-          My <span style={{ color: '#138808' }}>Rides</span>
-        </Typography> */}
         </Box>
 
         <Box
           sx={{
             width: "100%",
+            minWidth: 0,
             borderBottom: "1px solid",
             borderColor: "divider",
             mb: 0,
@@ -2041,9 +2067,14 @@ const MyRides = () => {
             onChange={(_, v) => setTab(v)}
             variant="fullWidth"
             sx={{
+              width: "100%",
               minHeight: { xs: 40, sm: 48, md: 50 },
+              "& .MuiTabs-flexContainer": {
+                width: "100%",
+              },
               "& .MuiTab-root": {
-                minWidth: 0,
+                minWidth: 0, 
+                flex: 1,     
                 padding: { xs: "4px 2px", sm: "8px 12px", md: "12px 16px" },
                 fontSize: { xs: "0.68rem", sm: "0.78rem", md: "0.82rem" },
                 fontWeight: 600,
@@ -2066,10 +2097,14 @@ const MyRides = () => {
                       flexDirection: "column",
                       alignItems: "center",
                       gap: "3px",
+                      width: "100%",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
                     }}
                   >
                     <Typography
                       component="span"
+                      noWrap 
                       sx={{
                         fontSize: {
                           xs: "0.62rem",
@@ -2079,6 +2114,9 @@ const MyRides = () => {
                         fontWeight: "bold",
                         lineHeight: 1.5,
                         whiteSpace: "nowrap",
+                        maxWidth: "100%",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
                       }}
                     >
                       {`${short} ( ${count} )`}
@@ -2093,7 +2131,9 @@ const MyRides = () => {
         <Box
           sx={{
             flex: 1,
+            minWidth: 0,
             overflowY: { xs: "auto", sm: "visible" },
+            overflowX: "hidden", 
             px: { xs: 0.5, sm: 0 },
             pt: 1.5,
             pb: { xs: 3, sm: 0 },
@@ -2119,7 +2159,7 @@ const MyRides = () => {
           ) : (
             <>
               {tab === 0 && (
-                <Box>
+                <Box sx={{ minWidth: 0, width: "100%" }}>
                   {currentRide.length > 0 ? (
                     <>
                       {renderList(
@@ -2145,15 +2185,10 @@ const MyRides = () => {
               )}
 
               {tab === 1 && (
-                <Box>
+                <Box sx={{ minWidth: 0, width: "100%" }}>
                   {activeUpcoming.length > 0 ? (
                     <>
-                      {renderList(
-                        paginate(activeUpcoming, upcomingPage),
-                        true,
-                        true
-                      )} 
-                  
+                      {renderList(paginate(activeUpcoming, upcomingPage), true, true)}
                       <RidePaginationBar
                         count={Math.ceil(upcoming.length / ITEMS_PER_PAGE)}
                         page={upcomingPage}
@@ -2171,7 +2206,7 @@ const MyRides = () => {
               )}
 
               {tab === 2 && (
-                <Box>
+                <Box sx={{ minWidth: 0, width: "100%" }}>
                   {mypost.length > 0 ? (
                     <>
                       {renderList(paginate(mypost, mypostPage), true, true)}
@@ -2192,10 +2227,9 @@ const MyRides = () => {
               )}
 
               {tab === 3 && (
-                <Box>
+                <Box sx={{ minWidth: 0, width: "100%" }}>
                   {history.length > 0 ? (
                     <>
-
                       {renderList(
                         paginate(history, historyPage),
                         false,
@@ -2216,7 +2250,6 @@ const MyRides = () => {
                       message2="No completed rides are available at the moment."
                     />
                   )}
-
                 </Box>
               )}
             </>

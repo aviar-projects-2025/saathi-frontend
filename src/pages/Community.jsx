@@ -766,7 +766,7 @@ export default function Community() {
                 height: 8,
                 borderRadius: 5,
                 bgcolor: "#F0E6DC",
-                "& .MuiLinearProgress-bar": { bgcolor: "#E8650A" },
+                "& .MuiLinearProgress-bar": { bgcolor: "#FF9933" },
               }}
             />
           </Box>
@@ -781,17 +781,17 @@ export default function Community() {
           }}
         >
           <Button
-            variant="outlined"
+            variant="contained"
             onClick={handleCloseProfileGate}
             sx={{
               textTransform: "none",
               borderRadius: 999,
               px: 3,
               fontWeight: 600,
-              bgcolor: "#E8650A",
+              bgcolor: "#FF9933",
               color: "#fff",
               "&:hover": {
-                bgcolor: "#c85608",
+                bgcolor: "#FF9933",
                 color: "#fff",
               },
             }}
@@ -799,17 +799,17 @@ export default function Community() {
             OK
           </Button>
           <Button
-            variant="outlined"
+            variant="contained"
             onClick={() => navigate("/user-profile")}
             sx={{
               textTransform: "none",
               borderRadius: 999,
               px: 3,
               fontWeight: 600,
-              bgcolor: "#E8650A",
+              bgcolor: "#FF9933",
               color: "#fff",
               "&:hover": {
-                bgcolor: "#c85608",
+                bgcolor: "#FF9933",
                 color: "#fff",
               },
             }}

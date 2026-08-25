@@ -58,10 +58,12 @@ import ToastConfig from "../components/ToastConfig.jsx";
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import RideDetailsModal from "./RideDetails.jsx";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import ProfileModal from './Avatar.jsx';
 
 const ACCENT = "#FF9933";
 const ACCENT_DARK = "#E67E22";
-const HEADER_BG = "#1a1030";
+const HEADER_BG = "#1a1030"
+// "#1a1030"
 const CARD_BORDER = "#F0E4D6";
 
 const statusStyles = (status) => {
@@ -74,6 +76,7 @@ const statusStyles = (status) => {
       return { bg: "#FDF1DE", fg: "#B5690D", dot: "#F5A623" };
   }
 };
+
 const RequestRide = () => {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [loadingRequests, setLoadingRequests] = useState(true);
@@ -89,6 +92,9 @@ const RequestRide = () => {
 
 
   const [selectedRideDetails, setSelectedRideDetails] = useState(null);
+
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState(null);
 
   const toasts = ToastConfig();
   const open = Boolean(anchorEl);
@@ -268,9 +274,9 @@ const RequestRide = () => {
   const activeRequests = allMyRequests.filter(
     (req) =>
       req?.rideId &&
-      req.status !== "DELETED" 
-      // req.status !== "CANCELLED" &&
-      // req.status !== "REJECTED",
+      req.status !== "DELETED"
+    // req.status !== "CANCELLED" &&
+    // req.status !== "REJECTED",
   );
 
   return (
@@ -355,14 +361,38 @@ const RequestRide = () => {
               color="text.secondary"
               sx={{ mt: 1, maxWidth: 320 }}
             >
-              Once you request a seat on someone's ride, it'll show up here
-              so you can track its status.
+          "Your requested rides will appear here."
             </Typography>
           </Box>
         ) : (
           <>
             {activeRequests.map((request) => {
               const s = statusStyles(request.status);
+
+              const pendingReqSeats = Number(request?.pendingReqSeats || 0);
+
+              const isRejected = request?.status === "REJECTED";
+              const isCancelled = request?.status === "Cancelled";
+              const isAccepted = request?.status === "ACCEPTED";
+
+              const requestedByMe = Number(request?.seatsRequested || 0);
+              const approvedSeats = Number(request?.approvedSeats || 0);
+
+              const mainText = isRejected
+                ? "Rejected"
+                : isCancelled
+                  ? "Cancelled"
+                  : isAccepted
+                    ? `You have ${approvedSeats} approved seat${approvedSeats > 1 ? "s" : ""
+                    }`
+                    : `You applied for ${requestedByMe} seat${requestedByMe > 1 ? "s" : ""
+                    }`;
+
+              const pendingText =
+                isAccepted && pendingReqSeats > 0
+                  ? `and ${pendingReqSeats} pending seat${pendingReqSeats > 1 ? "s" : ""
+                  }`
+                  : null;
 
               return (
                 <Card
@@ -373,7 +403,7 @@ const RequestRide = () => {
                     maxWidth: "1200px",
                     minHeight: { xs: "auto", sm: "150px", md: "160px" },
                     mb: { xs: 1.5, sm: 2, md: 2.25 },
-                    borderRadius: { xs: "16px", sm: "20px"},
+                    borderRadius: { xs: "16px", sm: "20px" },
                     overflow: "hidden",
                     border: `1px solid ${CARD_BORDER}`,
                     boxShadow: "0 4px 16px rgba(20, 10, 40, 0.06)",
@@ -384,14 +414,15 @@ const RequestRide = () => {
                       transform: { xs: "none", sm: "translateY(-3px)" },
                     },
                   }}
-                  onClick={() => setSelectedRideDetails(request)}
+
                 >
                   {/* Header bar */}
                   <Box
                     sx={{
+                      // bgcolor: HEADER_BG,
+                      // backgroundImage:
+                      //   "linear-gradient(135deg, #1a1030 0%, #241645 100%)",
                       bgcolor: HEADER_BG,
-                      backgroundImage:
-                        "linear-gradient(135deg, #1a1030 0%, #241645 100%)",
                       px: { xs: 1.75, sm: 2.5, md: 3 },
                       py: { xs: 1, sm: 1.1, md: 1.25 },
                       display: "flex",
@@ -400,39 +431,58 @@ const RequestRide = () => {
                       gap: 1,
                     }}
                   >
-                    <Stack direction="row" alignItems="center" spacing={1.25} sx={{ minWidth: 0 }}>
-                      {/* <Avatar
+                    <Stack
+                      direction="row"
+                      alignItems="center"
+                      spacing={1.25}
+                      sx={{ minWidth: 0 }}
+                    >
+                      <Avatar
+                        src={request?.rideId?.createdBy?.profileImage || ""}
+                        alt={
+                          request?.rideId?.createdBy?.firstName
+                            ? `${request.rideId.createdBy.firstName} ${request.rideId.createdBy.lastName || ""
+                            }`
+                            : "Profile Image"
+                        }
+                        onClick={() => {
+                          setSelectedProfile(request?.rideId?.createdBy);
+                          setProfileModalOpen(true);
+                        }}
                         sx={{
-                          width: { xs: 26, sm: 30 },
-                          height: { xs: 26, sm: 30 },
+                          width: { xs: 26, sm: 35 },
+                          height: { xs: 26, sm: 35 },
                           fontSize: { xs: 12, sm: 13 },
                           fontWeight: 700,
                           bgcolor: ACCENT,
                           color: "#1a1030",
+                          cursor: "pointer",
+                          flexShrink: 0,
                         }}
-                      >
-                        {(request.rideId?.createdBy?.firstName || "?")
+                      />
+                      {/* {(request?.rideId?.createdBy?.firstName || "?")
                           .charAt(0)
-                          .toUpperCase()}
-                      </Avatar> */}
+                          .toUpperCase()} */}
+                      {/* </Avatar> */}
 
                       <Typography
                         sx={{
                           color: "#fff",
                           fontWeight: 600,
-                          fontSize: { xs: 12.5, sm: 14, md: 15 },
+                          fontSize: { xs: 12.5, sm: 14, md: 15.2 },
                           whiteSpace: "nowrap",
                           overflow: "hidden",
                           textOverflow: "ellipsis",
+                          minWidth: 0,
                         }}
                       >
-                        {request.rideId?.createdBy?.firstName}{" "}
-                        {request.rideId?.createdBy?.lastName}
+                        {request?.rideId?.createdBy?.firstName || "Unknown"}{" "}
+                        {request?.rideId?.createdBy?.lastName || ""}
                       </Typography>
                     </Stack>
 
                     <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.5, sm: 1 } }}>
-                      <Chip
+                      {/* <Chip
                         label={request.status}
                         size="small"
                         // icon={
@@ -456,9 +506,47 @@ const RequestRide = () => {
                           color: s.fg,
                           "& .MuiChip-icon": { color: s.dot },
                         }}
+                      /> */}
+
+                      <Chip
+                        label={
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                            <Typography
+                              component="span"
+                              sx={{
+                                fontSize: { xs: "0.65rem", sm: "0.7rem" },
+                                fontWeight: 600,
+                                color: isAccepted ? "#2E7D32" : "#f30b0b",
+                              }}
+                            >
+                              {mainText}
+                            </Typography>
+
+                            {pendingText && (
+                              <Typography
+                                component="span"
+                                sx={{
+                                  fontSize: { xs: "0.65rem", sm: "0.7rem" },
+                                  fontWeight: 600,
+                                  color: "#F57C00",
+                                }}
+                              >
+                                {pendingText}
+                              </Typography>
+                            )}
+                          </Box>
+                        }
+                        color={isAccepted ? "success" : "info"}
+                        sx={{
+                          height: { xs: 18, sm: 25 },
+                          bgcolor: isAccepted ? "#E8F5E9" : "#f4f7f9",
+                          "& .MuiChip-label": {
+                            px: { xs: 0.5, sm: 1 },
+                          },
+                        }}
                       />
 
-                      {request?.rideId?.travelStatus != "Cancelled" &&
+                      {request?.status != "Cancelled" &&
                         <IconButton
                           onClick={(event) => handleMenuOpen(event, request)}
                           sx={{
@@ -482,6 +570,7 @@ const RequestRide = () => {
                       },
                       "&:last-child": { pb: { xs: "12px", sm: "14px", md: "15px" } },
                     }}
+                    onClick={() => setSelectedRideDetails(request)}
                   >
                     <Box sx={{ width: "100%" }}>
                       {/* ================= FROM / TO + DETAILS ================= */}
@@ -886,6 +975,14 @@ const RequestRide = () => {
             </Button>
           </DialogActions>
         </Dialog>
+
+        <ProfileModal
+          open={profileModalOpen}
+          selectedProfile={selectedProfile}
+          onClose={() => {
+            setProfileModalOpen(false);
+          }}
+        />
 
         <Ridebook
           open={openEditModal}
