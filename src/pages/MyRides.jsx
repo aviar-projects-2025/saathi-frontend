@@ -370,17 +370,23 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
 
   const handleConfirm = async () => {
     setDeleting(true);
+    onClose();
     setError("");
     try {
       await axios.patch(
         `${Api}/rides/cancelride/${ride._id || ride.id}?type=Cancel`,
       );
+
       onConfirm(ride);
+
     } catch (err) {
+
       setError(
         err?.response?.data?.message ||
         "Failed to delete ride. Please try again.",
       );
+
+
     } finally {
       setDeleting(false);
     }
@@ -1738,7 +1744,7 @@ const MyRides = () => {
 
     setCurrentRide(currentRides);
 
-    console.log("Current rides:", currentRides);
+
 
     // History - requested rides
     const historyRide = allMyRequests
