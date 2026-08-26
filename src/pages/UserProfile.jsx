@@ -553,6 +553,61 @@ const UserProfile = () => {
   //     setSubmitLoading(false);
   //   }
   // };
+  const handleZipCodeChange = async (e) => {
+    console.log("sdfghjkl;")
+    const zipcode = e.target.value;
+
+    setFormData((prev) => ({
+      ...prev,
+      zipcode,
+    }));
+  console.log("sdfghjkl;888888888888888888")
+    setErrors((prev) => ({
+      ...prev,
+      zipcode: "",
+    }));
+  console.log("sdfghjkl;8jjjjjjjjjjjjj")
+    // Don't call API for empty/very short ZIP
+    if (!zipcode || zipcode.trim().length < 3) {
+      return;
+    }
+  console.log("sdfghjkl;8jjjjjjjjjjjyyyyyyyyyyyyjj")
+    // Country is required for international postal codes
+    if (!formData?.country) {
+      return;
+    }
+  console.log("sdfghjkl;8jjjjjjjjhhhhhhhhhhhhhhhjjjjj")
+    try {
+      const countryCode = formData.country;
+  console.log("sdfghjkl;8jjjjjjjjjjjjj111111111111")
+      const response = await axios.get(
+        `https://api.zippopotam.us/${countryCode}/${encodeURIComponent(
+          zipcode.trim()
+        )}`
+      );
+
+      const place = response.data?.places?.[0];
+
+      if (place) {
+        setFormData((prev) => ({
+          ...prev,
+          zipcode,
+          state: place["state"] || "",
+          city: place["place name"] || "",
+          country: response.data?.country || prev.country,
+        }));
+      }
+      console.log("formData",formData)
+    } catch (error) {
+      console.error("Error fetching ZIP details:", error);
+
+      // ZIP not found
+      setErrors((prev) => ({
+        ...prev,
+        zipcode: "Invalid ZIP/Postal code",
+      }));
+    }
+  };
 
   const handleUpdateProfile = async () => {
     try {
@@ -1462,20 +1517,9 @@ const UserProfile = () => {
                   name="zipcode"
                   fullWidth
                   value={formData?.zipcode || ""}
-
                   error={!!errors.zipcode}
                   helperText={errors.zipcode}
-                  onChange={(e) => {
-                    setFormData((prev) => ({
-                      ...prev,
-                      zipcode: e.target.value,
-                    }));
-
-                    setErrors((prev) => ({
-                      ...prev,
-                      zipcode: "",
-                    }));
-                  }}
+                  onChange={handleZipCodeChange}
                   inputProps={{ maxLength: 16 }}
                   InputProps={{
                     sx: {
