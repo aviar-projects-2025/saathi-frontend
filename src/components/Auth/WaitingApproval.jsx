@@ -121,6 +121,7 @@ export default function WaitingApproval() {
               borderRadius: 999,
               textTransform: "none",
               fontWeight: 700,
+              color:"#ffff",
               "&:hover": { bgcolor: "#cf5708" },
             }}
           >

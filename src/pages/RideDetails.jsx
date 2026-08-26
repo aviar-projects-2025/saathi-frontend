@@ -509,7 +509,7 @@ export default function RideDetailsModal({
   const isXs = useMediaQuery(theme.breakpoints.down('sm'));
   const isMd = useMediaQuery(theme.breakpoints.up('md'));
   const pendingMember = requests.map((item) => item.pendingMembers);
-
+  const isStarted = ride?.travelStatus === "Started";
   const startDate = new Date(ride.startTime);
   const dateLabel = !isNaN(startDate)
     ? startDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
@@ -622,6 +622,11 @@ export default function RideDetailsModal({
               noWrap
               sx={{
                 mt: 0.5,
+                minWidth: 0,
+                maxWidth: "100%",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
                 fontFamily: TOKENS.bodyFont,
                 fontWeight: 600,
                 fontSize: { xs: "0.82rem", md: "0.9rem" },
@@ -632,8 +637,14 @@ export default function RideDetailsModal({
             </Typography>
 
             <Typography
+              noWrap
               sx={{
                 mt: 0.25,
+                minWidth: 0,
+                maxWidth: "100%",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
                 fontFamily: TOKENS.bodyFont,
                 fontSize: "0.72rem",
                 color: "rgba(255,255,255,.65)",
@@ -733,6 +744,13 @@ export default function RideDetailsModal({
                 fontWeight: 600,
                 fontSize: { xs: "0.82rem", md: "0.9rem" },
                 color: "#F5F5F5",
+
+                width: { xs: "120px", sm: "160px", md: "200px" },
+                maxWidth: "100%",
+                minWidth: 0,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
               }}
             >
               {formTo(ride)}
@@ -746,6 +764,11 @@ export default function RideDetailsModal({
                 color: "rgba(255,255,255,.65)",
                 textTransform: "uppercase",
                 letterSpacing: ".12em",
+
+                width: { xs: "120px", sm: "160px", md: "200px" },
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
               }}
             >
               {ride.toCountry}
@@ -774,70 +797,9 @@ export default function RideDetailsModal({
       </Box>
 
       <DialogContent sx={{ px: { xs: 2.5, sm: 4 }, py: { xs: 3, sm: 3.5 } }}>
-        {/* ── Ticket data fields ── */}
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr 1fr', sm: '1fr 1fr 1fr' },
-            gap: { xs: 2, sm: 2.5 },
-          }}
-        >
-          <Field icon={CalendarTodayIcon} label="Date" value={dateLabel || '—'} />
-          <Field icon={AccessTimeIcon} label="Time" value={timeLabel || '—'} />
-          <Field icon={TravelIcon} label="Mode" value={ride.modeOfTravel || '—'} />
-          {ride.duration && <Field icon={AccessTimeIcon} label="Travel Duration" value={ride.duration || '—'} />}
-          <Field icon={TravellerTypeIcon} label="Traveller Type" value={ride.travellerType || '—'} />
-          <Field icon={BadgeIcon} label="Age Group Pref." value={ride.ageGroupPreference || '—'} />
-          {ride.availableSeats !== null &&
-            ride.availableSeats !== undefined && (
-              <Field
-                icon={EventSeatIcon}
-                label="Seats avail."
-                value={Number(ride.availableSeats) === 0 ? "Seats Filled" : ride.availableSeats}
-              />
-            )}
-          <Field icon={GenderIcon} label="Gender Pref." value={ride.genderPreference || 'Any'} />
-          {ride.airlineName && (<Field icon={FlightIcon} label="Airline Name" value={ride.airlineName || '—'} />)}
-          {ride.flightNumber && (<Field icon={ConfirmationNumberIcon} label="Flight Number" value={ride.flightNumber || '—'} />)}
-
-          {ride.modeOfTravel !== 'Bike' ? (
-            <>
-              <Field icon={MedicalServicesIcon} label="Medical Assistance" value={ride.medicalAssistance ? "Yes" : "No"} />
-              <Field icon={LanguageIcon} label="Language Support" value={ride.languageSupport ? "Yes" : "No"} />
-              <Field icon={LuggageIcon} label="Baggage Help" value={ride.baggageHelp ? "Yes" : "No"} />
-              <Field icon={TransferWithinAStationIcon} label="Transit Help" value={ride.transitHelp ? "Yes" : "No"} />
-            </>
-          ) : null}
-
-          {ride.modeOfTravel !== 'Flight' && ride.modeOfTravel !== 'Bus' || ride.fuelSharing === 0 && (<Field icon={LocalGasStationIcon} label="Fuel Cost" value={`${ride.fuelSharing === null ? '—' : `$ ${ride.fuelSharing}/Person`} ` || '—'} />)}
-
-          {ride.description && (
-            <Field icon={DescriptionIcon} label="Description" value={ride.description || '—'} span />
-          )}
-        </Box>
-
-
-        <Stack direction="column" alignItems="center" sx={{ mt: 1.8 }}>
-          <Field icon={TranslateIcon} label="Languages" />
-          <Typography
-            sx={{
-              fontFamily: TOKENS.monoFont,
-              fontWeight: 600,
-              fontSize: { xs: '0.85rem', sm: '0.95rem' },
-              color: TOKENS.ink,
-              // wordBreak: 'break-word',
-            }}
-          >
-            {ride.language?.join(", ") || '—'}
-          </Typography>
-        </Stack>
-
 
         {requests.length > 0 && (
           <>
-
-            <Perforation />
-
             <Box>
               {requests.length === 0 ? (
                 <Box
@@ -912,8 +874,74 @@ export default function RideDetailsModal({
                 </>
               )}
             </Box>
+
+            <Perforation />
+
           </>
         )}
+
+
+        {/* ── Ticket data fields ── */}
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr 1fr', sm: '1fr 1fr 1fr' },
+            gap: { xs: 2, sm: 2.5 },
+          }}
+        >
+          <Field icon={CalendarTodayIcon} label="Date" value={dateLabel || '—'} />
+          <Field icon={AccessTimeIcon} label="Time" value={timeLabel || '—'} />
+          <Field icon={TravelIcon} label="Mode" value={ride.modeOfTravel || '—'} />
+          {ride.duration && <Field icon={AccessTimeIcon} label="Travel Duration" value={ride.duration || '—'} />}
+          <Field icon={BadgeIcon} label="Age Group Pref." value={ride.ageGroupPreference || '—'} />
+          {ride.availableSeats !== null &&
+            ride.availableSeats !== undefined && (
+              <Field
+                icon={EventSeatIcon}
+                label="Seats avail."
+                value={Number(ride.availableSeats) === 0 ? "Seats Filled" : ride.availableSeats}
+              />
+            )}
+          <Field icon={GenderIcon} label="Gender Pref." value={ride.genderPreference || 'Any'} />
+          {ride.airlineName && (<Field icon={FlightIcon} label="Airline Name" value={ride.airlineName || '—'} />)}
+          {ride.flightNumber && (<Field icon={ConfirmationNumberIcon} label="Flight Number" value={ride.flightNumber || '—'} />)}
+
+          {ride.modeOfTravel !== 'Bike' ? (
+            <>
+              <Field icon={MedicalServicesIcon} label="Medical Assistance" value={ride.medicalAssistance ? "Yes" : "No"} />
+              <Field icon={LanguageIcon} label="Language Support" value={ride.languageSupport ? "Yes" : "No"} />
+              <Field icon={LuggageIcon} label="Baggage Help" value={ride.baggageHelp ? "Yes" : "No"} />
+              <Field icon={TransferWithinAStationIcon} label="Transit Help" value={ride.transitHelp ? "Yes" : "No"} />
+            </>
+          ) : null}
+
+          {ride.modeOfTravel !== 'Flight' && ride.modeOfTravel !== 'Bus' && ride.fuelSharing >= 0 && (<Field icon={LocalGasStationIcon} label="Fuel Cost" value={`${ride.fuelSharing === null ? '—' : `$ ${ride.fuelSharing}/Person`} ` || '—'} />)}
+          <Field icon={TravellerTypeIcon} label="Traveller Type" value={ride.travellerType || '—'} />
+
+
+          <Stack direction="column" alignItems="center">
+            <Field icon={TranslateIcon} label="Languages" />
+            <Typography
+              sx={{
+                fontFamily: TOKENS.monoFont,
+                fontWeight: 600,
+                fontSize: { xs: '0.85rem', sm: '0.95rem' },
+                color: TOKENS.ink,
+                // wordBreak: 'break-word',
+              }}
+            >
+              {ride.language?.join(", ") || '—'}
+            </Typography>
+          </Stack>
+        </Box>
+
+        <br />
+
+        {ride.description && (
+          <Field icon={DescriptionIcon} label="Description" value={ride.description || '—'} span />
+        )}
+
+
 
       </DialogContent>
       {/* ── Actions ── */}
@@ -927,7 +955,7 @@ export default function RideDetailsModal({
           borderTop: `1px solid ${TOKENS.line}`,
         }}
       >
-        {(!pendingMember || pendingMember.length === 0) && showEdit && (
+        {(!pendingMember || pendingMember.length === 0) && showEdit && ride?.travelStatus !== "Started" && (
 
           (ride.createdBy?._id === user?.id ||
             typeof ride.createdBy === 'string' && ride.createdBy === user?.id) && (
@@ -954,7 +982,8 @@ export default function RideDetailsModal({
             </Button>
           )
         )}
-        {showDelete && (
+
+        {showDelete && ride?.travelStatus !== "Started" && (
           (ride.createdBy?._id === user?.id ||
             typeof ride.createdBy === 'string' && ride.createdBy === user?.id) && (
             <Button

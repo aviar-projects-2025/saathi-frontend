@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
@@ -17,8 +17,14 @@ import {
   InputAdornment,
   useMediaQuery,
   useTheme,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  LinearProgress,
+  DialogActions,
 } from "@mui/material";
 import { useUser } from "../context/userConetext";
+import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import SearchIcon from "@mui/icons-material/Search";
 import TuneIcon from "@mui/icons-material/Tune";
 import CloseIcon from "@mui/icons-material/Close";
@@ -30,6 +36,7 @@ import TrainIcon from "@mui/icons-material/Train";
 import FilterListOffIcon from "@mui/icons-material/FilterListOff";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import RideCard from "./RideCard.jsx";
+
 import Api from "../Api";
 
 // ── Saffron design tokens ──────────────────────────────────────────────────
@@ -116,10 +123,19 @@ export default function FindRides() {
   const [searchFrom, setSearchFrom] = useState("");
   const [searchDestination, setSearchDestination] = useState("");
   const [search, setSearch] = useState("");
+  const { completion, savedPost, setSavedPost, removeSavedPost } = useUser();
+
   // Staged filter values: edited live inside the panel, but only
   // committed to `appliedFilters` (and therefore the results) on Apply.
   const [draftFilters, setDraftFilters] = useState(emptyFilters);
   const [appliedFilters, setAppliedFilters] = useState(emptyFilters);
+  const isProfileComplete = completion === 100;
+  const SIDEBAR_SCROLL_HEIGHT = 'calc(100vh - 120px)';
+
+  // ── Profile completion modal ──
+  // Shows once per page-load whenever the user's profile is under 100%.
+  const [profileGateOpen, setProfileGateOpen] = useState(false);
+  const hasCheckedProfileGateRef = useRef(false);
 
   const resultsRef = useRef(null);
   const scrollStartRef = useRef(0);
@@ -139,7 +155,16 @@ export default function FindRides() {
     }
   };
 
-
+  useEffect(() => {
+    if (hasCheckedProfileGateRef.current) return;
+    if (currentUser && currentUser._id && typeof completion === "number") {
+      hasCheckedProfileGateRef.current = true;
+      setProfileGateOpen(completion !== 100);
+    }
+  }, [currentUser, completion]);
+  const handleCloseProfileGate = () => {
+    setProfileGateOpen(false);
+  };
 
   // ── Filter panel open/close + scroll-to-collapse ──────────────────────
   const openFilters = () => {
@@ -190,8 +215,6 @@ export default function FindRides() {
     language: appliedLanguage,
   } = appliedFilters;
 
-  // Chips reflect APPLIED filters (what's actually affecting results),
-  // each chip's clear button removes that filter immediately and re-applies.
   const activeFilters = [
     appliedTransportMode && {
       key: "transport",
@@ -288,13 +311,89 @@ export default function FindRides() {
         languageMatch
       );
     });
+
   const visibleRides = filteredRides.filter(
     (ride) => ride.travelStatus !== "Cancelled"
   );
 
+  const normalizePostal = (code) =>
+    String(code || "")
+      .trim()
+      .toUpperCase()
+      .replace(/\s+/g, "");
+
+  const longestCommonPrefixLength = (a, b) => {
+    let i = 0;
+    const len = Math.min(a.length, b.length);
+
+    while (i < len && a[i] === b[i]) {
+      i++;
+    }
+
+    return i;
+  };
+  const getZipcodeProximityScore = (author, current) => {
+    const authorZip = normalizePostal(author?.zipcode);
+    const currentZip = normalizePostal(current?.zipcode);
+
+    if (!authorZip || !currentZip) {
+      return Infinity;
+    }
+
+    // Exact postal code = highest priority
+    if (authorZip === currentZip) {
+      return 0;
+    }
+
+    // Different length = lower priority
+    if (authorZip.length !== currentZip.length) {
+      return 100;
+    }
+
+    const commonLen = longestCommonPrefixLength(
+      authorZip,
+      currentZip
+    );
+
+    // More matching starting digits = closer
+    return authorZip.length - commonLen;
+  };
+
+  const sortRidesByProximity = (rides, currentZip) => {
+    return [...rides].sort((a, b) => {
+      const scoreA = getZipcodeProximityScore(
+        a?.createdBy?.zipcode,
+        currentZip
+      );
+
+      const scoreB = getZipcodeProximityScore(
+        b?.createdBy?.zipcode,
+        currentZip
+      );
+
+      // Nearby ZIP rides first
+      if (scoreA !== scoreB) {
+        return scoreA - scoreB;
+      }
+
+      // Same proximity → earliest ride first
+      return new Date(a.startTime) - new Date(b.startTime);
+    });
+  };
+
+
+  const sortedVisibleRides = useMemo(
+    () =>
+      sortRidesByProximity(
+        visibleRides,
+        currentUser?.zipcode
+      ),
+    [visibleRides, currentUser?.zipcode]
+  );
 
   if (loading) {
     return (
+
       <Box
         sx={{
           minHeight: "100vh",
@@ -310,555 +409,668 @@ export default function FindRides() {
   }
 
   return (
+    <>
 
-    <Box
-      sx={{
-        height: `calc(100vh - ${NAVBAR_HEIGHT}px)`,
-        display: "flex",
-        flexDirection: "column",
-        width: "100%",
-        // maxWidth: { xs: "100%" },
-        boxSizing: "border-box",
-        overflowX: "hidden",
-        p: 1
-      }}
-    >
+      <Dialog
+        open={profileGateOpen}
+        onClose={handleCloseProfileGate}
+        fullWidth
+        maxWidth="xs"
+        PaperProps={{
+          sx: {
+            borderRadius: { xs: 2, sm: 3 },
+            m: { xs: 1.5, sm: 2 },
+            width: { xs: "95%", sm: "100%" },
+            textAlign: "center",
+            p: { xs: 1, sm: 1.5 },
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 1,
+            fontWeight: 700,
+            fontSize: { xs: "1rem", sm: "1.15rem" },
+            pt: 3,
+          }}
+        >
+          <WarningAmberRoundedIcon sx={{ fontSize: 40, color: "#E8650A" }} />
+          Complete Your Profile
+        </DialogTitle>
+
+        <DialogContent>
+          <Typography
+            sx={{
+              fontSize: { xs: "0.85rem", sm: "0.95rem" },
+              color: "text.secondary",
+            }}
+          >
+            Your profile is only {Number.isFinite(completion) ? completion : 0}% complete.
+            Please complete your profile to 100% to unlock all features,
+            including posting, liking, commenting and saving in the Community.
+          </Typography>
+
+          <Box sx={{ mt: 2.5, px: { xs: 1, sm: 3 } }}>
+            <LinearProgress
+              variant="determinate"
+              value={Number.isFinite(completion) ? completion : 0}
+              sx={{
+                height: 8,
+                borderRadius: 5,
+                bgcolor: "#F0E6DC",
+                "& .MuiLinearProgress-bar": { bgcolor: "#E8650A" },
+              }}
+            />
+          </Box>
+        </DialogContent>
+
+        <DialogActions
+          sx={{
+            justifyContent: "center",
+            pb: 3,
+            pt: 1,
+            gap: 1.5,
+          }}
+        >
+          <Button
+            variant="outlined"
+            onClick={handleCloseProfileGate}
+            sx={{
+              textTransform: "none",
+              borderRadius: 999,
+              px: 3,
+              fontWeight: 600,
+              bgcolor: "#E8650A",
+              color: "#fff",
+              "&:hover": {
+                bgcolor: "#c85608",
+                color: "#fff",
+              },
+            }}
+          >
+            OK
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={() => navigate("/user-profile")}
+            sx={{
+              textTransform: "none",
+              borderRadius: 999,
+              px: 3,
+              fontWeight: 600,
+              bgcolor: "#E8650A",
+              color: "#fff",
+              "&:hover": {
+                bgcolor: "#c85608",
+                color: "#fff",
+              },
+            }}
+          >
+            Update profile
+          </Button>
+        </DialogActions>
+      </Dialog>
+
 
       <Box
         sx={{
-          position: "sticky",
-          top: 0,
-          zIndex: 100,
-          flexShrink: 0,
-          // background: saffron[50],
+          height: `calc(100vh - ${NAVBAR_HEIGHT}px)`,
+          display: "flex",
+          flexDirection: "column",
+          width: "100%",
+          // maxWidth: { xs: "100%" },
+          boxSizing: "border-box",
+          overflowX: "hidden",
+          p: 1
         }}
       >
-        {/* ── Hero ───────────────────────────────────────────── */}
+
         <Box
           sx={{
-            color: "#000000",
-            pt: { xs: 1, sm: 2, md: 5 },
-            pb: { xs: 0, sm: 2, md: 3 },
-            // px: { xs: 0, sm: 2 },
-
+            position: "sticky",
+            top: 0,
+            zIndex: 100,
+            flexShrink: 0,
+            // background: saffron[50],
           }}
         >
-          <Container disableGutters >
-            {/* Title */}
-            <Typography
-              fontWeight={800}
-              sx={{
-                fontSize: { xs: "1rem", sm: "1.45rem", md: "1.8rem" },
-                letterSpacing: "0.3px",
-                lineHeight: 1.2,
-              }}
-            >
-              Find Rides & Flight Companions
-            </Typography>
+          {/* ── Hero ───────────────────────────────────────────── */}
+          <Box
+            sx={{
+              color: "#000000",
+              pt: { xs: 1, sm: 2, md: 5 },
+              pb: { xs: 0, sm: 2, md: 3 },
+              // px: { xs: 0, sm: 2 },
 
-            {/* <Typography variant="h5" sx={{ color: '#E8650A', fontWeight: 900, fontSize: { xs: "1.2rem", sm: "1.2rem", md: "1.35rem", lg: "1.5rem" } }}>
+            }}
+          >
+            <Container disableGutters >
+              {/* Title */}
+              <Typography
+                fontWeight={800}
+                sx={{
+                  fontSize: { xs: "1rem", sm: "1.45rem", md: "1.8rem" },
+                  letterSpacing: "0.3px",
+                  lineHeight: 1.2,
+                }}
+              >
+                Find Rides & Flight Companions
+              </Typography>
+
+              {/* <Typography variant="h5" sx={{ color: '#E8650A', fontWeight: 900, fontSize: { xs: "1.2rem", sm: "1.2rem", md: "1.35rem", lg: "1.5rem" } }}>
               Find Rides & <span style={{ color: '#138808' }}>Flight Companions</span>
             </Typography> */}
 
-            <Box
-              sx={{
-                display: "flex",
-                gap: { xs: 0.7, sm: 1.25 },
-                alignItems: "center",
-                flexDirection: "row",
-                mt: { xs: 2.3, sm: 1.5 },
-              }}
-            >
-              <TextField
-                size="small"
-                placeholder="Search by From / To / Airport / City..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon
-                        sx={{
-                          color: saffron[500],
-                          fontSize: 20,
-                        }}
-                      />
-                    </InputAdornment>
-                  ),
-                }}
+              <Box
                 sx={{
-                  flex: 1,
-                  minWidth: 0,
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: "12px",
-                    background: "rgba(255,255,255,0.96)",
-                    fontSize: { xs: "0.65rem", sm: "0.84rem" },
-                    height: { xs: 32, sm: 40 },
-                    "& fieldset": { border: "none" },
-                    "& input": { py: 0, px: { xs: 1, sm: 1 } },
-                    "& .MuiInputAdornment-root": { ml: { xs: 0.75, sm: 1 }, mr: { xs: 0.25, sm: 0.5 } },
-                  },
-                }}
-              />
-            </Box>
-            <Box
-              sx={{
-                display: "flex",
-                gap: { xs: 1, sm: 1.25 },
-                alignItems: "center",
-                flexDirection: "row",
-                mt: { xs: 2, sm: 1.5 },
-                mb: { xs: 1, sm: 1 }
-              }}
-            >
-              {/* From */}
-              <TextField
-                size="small"
-                placeholder={isMobile ? "From" : "From / City / Airport"}
-                value={searchFrom}
-                onChange={(e) => setSearchFrom(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon sx={{ color: saffron[500], fontSize: { xs: 14, sm: 17 } }} />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  flex: 1,
-                  minWidth: 0,
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: "12px",
-                    background: "rgba(255,255,255,0.96)",
-                    fontSize: { xs: "0.65rem", sm: "0.84rem" },
-                    height: { xs: 34, sm: 40 },
-                    "& fieldset": { border: "none" },
-                    "& input": { py: 0, px: { xs: 1, sm: 1 } },
-                    "& .MuiInputAdornment-root": { ml: { xs: 0.75, sm: 1 }, mr: { xs: 0.25, sm: 0.5 } },
-                  },
-                }}
-              />
-
-              {/* To */}
-              <TextField
-                size="small"
-                placeholder={isMobile ? "To" : "To / City / Airport"}
-                value={searchDestination}
-                onChange={(e) => setSearchDestination(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon sx={{ color: saffron[500], fontSize: { xs: 12, sm: 17 } }} />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  flex: 1,
-                  minWidth: 0,
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: "12px",
-                    background: "rgba(255,255,255,0.96)",
-                    fontSize: { xs: "0.65rem", sm: "0.84rem" },
-                    height: { xs: 34, sm: 40 },
-                    pr: 0.5,
-                    "& fieldset": { border: "none" },
-                    "& input": { py: 0, px: { xs: 1, sm: 1 } },
-                    "& .MuiInputAdornment-root": { ml: { xs: 0.75, sm: 1 }, mr: { xs: 0.25, sm: 0.5 } },
-                  },
-                }}
-              />
-
-              {/* Filter toggle button */}
-              <Button
-                onClick={toggleFilters}
-                sx={{
-                  flexShrink: 0,
-                  borderRadius: "50px",
-                  background: "#ffff",
-                  backdropFilter: "blur(6px)",
-                  border: "none",
-                  color: "#100f0f",
-                  fontWeight: 700,
-                  textTransform: "none",
-                  fontSize: { xs: "0.7rem", sm: "0.82rem" },
-                  height: { xs: 34, sm: 40 },
-                  minWidth: { xs: "auto", sm: 100 },
-                  px: { xs: 1.25, sm: 2 },
-                  gap: { xs: 0.4, sm: 0.75 },
-                  boxShadow: "none",
-                  whiteSpace: "nowrap",
                   display: "flex",
+                  gap: { xs: 0.7, sm: 1.25 },
                   alignItems: "center",
-                  "&:hover": { background: `${saffron[500]}`, boxShadow: "none", color: "#ffff" },
+                  flexDirection: "row",
+                  mt: { xs: 2.3, sm: 1.5 },
                 }}
               >
-                <TuneIcon sx={{ fontSize: { xs: 14, sm: 17 } }} />
-                <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
-                  Filters{activeFilters.length > 0 ? ` (${activeFilters.length})` : ""}
-                </Box>
-
-                {isMobile && activeFilters.length > 0 && (
-                  <Box
-                    sx={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: "50%",
-                      background: "#fff",
-                      flexShrink: 0,
-                    }}
-                  />
-                )}
-              </Button>
-              <Button
-                variant="contained"
-                size="small"
-                startIcon={<VisibilityIcon />}
-                onClick={() => navigate("/request-ride")}
-                sx={{
-                  bgcolor: ORANGE,
-                  color: "#ffffff",
-                  "&:hover": { bgcolor: "#e68a00" },
-                  "&.Mui-disabled": { bgcolor: "#e0e0e0" },
-                  fontWeight: 700,
-                  fontSize: { xs: "0.7rem", sm: "0.875rem" },
-                  px: { xs: 1.5, sm: 3 },
-                  py: { xs: 0.5, sm: 1 },
-                  borderRadius: 2,
-                  whiteSpace: "nowrap",
-                  boxShadow: "none",
-                  textTransform: "none",
-                }}
-              >
-                View Your Requests
-              </Button>
-            </Box>
-
-            {activeFilters.length > 0 && (
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: { xs: 0.5, sm: 0.75 }, mt: 1.25 }}>
-                {activeFilters.map((f) => (
-                  <Chip
-                    key={f.key}
-                    label={f.label}
-                    onDelete={f.clear}
-                    deleteIcon={<CloseIcon />}
-                    size="small"
-                    sx={{
-                      background: "rgba(255,255,255,0.9)",
-                      border: `1px solid ${saffron[300]}`,
-                      color: saffron[800],
-                      fontWeight: 600,
-                      fontSize: { xs: "0.65rem", sm: "0.75rem" },
-                      height: { xs: 22, sm: 26 },
-                      "& .MuiChip-deleteIcon": { color: saffron[500], fontSize: { xs: "0.8rem", sm: "0.95rem" } },
-                      "& .MuiChip-label": { px: { xs: 0.75, sm: 1 } },
-                    }}
-                  />
-                ))}
-              </Box>
-            )}
-          </Container>
-        </Box>
-      </Box>
-
-
-      <Box
-        ref={resultsRef}
-        onScroll={handleResultsScroll}
-        sx={{
-          flex: 1,
-          overflowY: "auto",
-          overflowX: "hidden",
-          pb: { xs: 4, sm: 6 },
-          "&::-webkit-scrollbar": { width: 5 },
-          "&::-webkit-scrollbar-track": { background: saffron[50] },
-          "&::-webkit-scrollbar-thumb": { background: saffron[300], borderRadius: 4 },
-        }}
-      >
-        <Container maxWidth="md" disableGutters sx={{ px: { xs: 0, sm: 3 } }}>
-          {/* ── Filter Panel (not sticky — scrolls/collapses away) ──── */}
-          <Collapse in={filtersOpen}>
-            <Box
-              sx={{
-                background: "#fff",
-                borderRadius: { xs: 3, md: 4 },
-                border: `1.5px solid ${saffron[100]}`,
-                // boxShadow: `0 4px 20px rgba(245,147,0,0.10)`,
-                p: { xs: 1.75, sm: 3 },
-                mt: { xs: 1.5, sm: 2 },
-                mb: { xs: 1.5, sm: 2 },
-              }}
-            >
-              {/* Transport chips */}
-              <Box mb={2}>
-                <Typography
-                  component="span"
+                <TextField
+                  size="small"
+                  placeholder="Search by From / To / Airport / City..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon
+                          sx={{
+                            color: saffron[500],
+                            fontSize: 20,
+                          }}
+                        />
+                      </InputAdornment>
+                    ),
+                  }}
                   sx={{
-                    fontSize: { xs: "0.65rem", sm: "0.7rem" },
+                    flex: 1,
+                    minWidth: 0,
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: "12px",
+                      background: "rgba(255,255,255,0.96)",
+                      fontSize: { xs: "0.65rem", sm: "0.84rem" },
+                      height: { xs: 32, sm: 40 },
+                      "& fieldset": { border: "none" },
+                      "& input": { py: 0, px: { xs: 1, sm: 1 } },
+                      "& .MuiInputAdornment-root": { ml: { xs: 0.75, sm: 1 }, mr: { xs: 0.25, sm: 0.5 } },
+                    },
+                  }}
+                />
+              </Box>
+              <Box
+                sx={{
+                  display: "flex",
+                  gap: { xs: 1, sm: 1.25 },
+                  alignItems: "center",
+                  flexDirection: "row",
+                  mt: { xs: 2, sm: 1.5 },
+                  mb: { xs: 1, sm: 1 }
+                }}
+              >
+                {/* From */}
+                <TextField
+                  size="small"
+                  placeholder={isMobile ? "From" : "From / City / Airport"}
+                  value={searchFrom}
+                  onChange={(e) => setSearchFrom(e.target.value)}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon sx={{ color: saffron[500], fontSize: { xs: 14, sm: 17 } }} />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    flex: 1,
+                    minWidth: 0,
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: "12px",
+                      background: "rgba(255,255,255,0.96)",
+                      fontSize: { xs: "0.65rem", sm: "0.84rem" },
+                      height: { xs: 34, sm: 40 },
+                      "& fieldset": { border: "none" },
+                      "& input": { py: 0, px: { xs: 1, sm: 1 } },
+                      "& .MuiInputAdornment-root": { ml: { xs: 0.75, sm: 1 }, mr: { xs: 0.25, sm: 0.5 } },
+                    },
+                  }}
+                />
+
+                {/* To */}
+                <TextField
+                  size="small"
+                  placeholder={isMobile ? "To" : "To / City / Airport"}
+                  value={searchDestination}
+                  onChange={(e) => setSearchDestination(e.target.value)}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon sx={{ color: saffron[500], fontSize: { xs: 12, sm: 17 } }} />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    flex: 1,
+                    minWidth: 0,
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: "12px",
+                      background: "rgba(255,255,255,0.96)",
+                      fontSize: { xs: "0.65rem", sm: "0.84rem" },
+                      height: { xs: 34, sm: 40 },
+                      pr: 0.5,
+                      "& fieldset": { border: "none" },
+                      "& input": { py: 0, px: { xs: 1, sm: 1 } },
+                      "& .MuiInputAdornment-root": { ml: { xs: 0.75, sm: 1 }, mr: { xs: 0.25, sm: 0.5 } },
+                    },
+                  }}
+                />
+
+                {/* Filter toggle button */}
+                <Button
+                  onClick={toggleFilters}
+                  sx={{
+                    flexShrink: 0,
+                    borderRadius: "50px",
+                    background: "#ffff",
+                    backdropFilter: "blur(6px)",
+                    border: "none",
+                    color: "#100f0f",
                     fontWeight: 700,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.08em",
-                    color: saffron[700],
-                    display: "block",
-                    mb: 1,
+                    textTransform: "none",
+                    fontSize: { xs: "0.7rem", sm: "0.82rem" },
+                    height: { xs: 34, sm: 40 },
+                    minWidth: { xs: "auto", sm: 100 },
+                    px: { xs: 1.25, sm: 2 },
+                    gap: { xs: 0.4, sm: 0.75 },
+                    boxShadow: "none",
+                    whiteSpace: "nowrap",
+                    display: "flex",
+                    alignItems: "center",
+                    "&:hover": { background: `${saffron[500]}`, boxShadow: "none", color: "#ffff" },
                   }}
                 >
-                  Mode of Travel
-                </Typography>
-                <Box sx={{ display: "flex", flexWrap: "wrap", gap: { xs: 0.6, sm: 1 } }}>
-                  {TRANSPORT_OPTIONS.map((opt) => {
-                    const selected = transportMode === opt.value;
-                    return (
-                      <Chip
-                        key={opt.value}
-                        label={opt.label}
-                        icon={opt.icon}
-                        onClick={() => updateDraft("transportMode", opt.value)}
-                        sx={{
-                          borderRadius: "20px",
-                          border: `1.5px solid ${selected ? saffron[500] : saffron[200]}`,
-                          background: selected ? saffron[500] : "#fff",
-                          color: selected ? "#fff" : saffron[700],
-                          fontWeight: 600,
-                          fontSize: { xs: "0.68rem", sm: "0.86rem" },
-                          height: { xs: 24, sm: 30 },
-                          cursor: "pointer",
-                          transition: "all 0.15s",
-                          "& .MuiChip-label": { px: { xs: 1, sm: 1.8 } },
-                          "&:hover": {
-                            background: selected ? saffron[600] : saffron[50],
-                            borderColor: saffron[400],
-                          },
-                          "& .MuiChip-icon": {
-                            color: selected ? "#fff" : saffron[500],
-                            ml: { xs: 0.5, sm: 0.75 },
-                            mr: { xs: "-4px", sm: "-2px" },
-                          },
-                        }}
-                      />
-                    );
-                  })}
-                </Box>
+                  <TuneIcon sx={{ fontSize: { xs: 14, sm: 17 } }} />
+                  <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+                    Filters{activeFilters.length > 0 ? ` (${activeFilters.length})` : ""}
+                  </Box>
+
+                  {isMobile && activeFilters.length > 0 && (
+                    <Box
+                      sx={{
+                        width: 6,
+                        height: 6,
+                        borderRadius: "50%",
+                        background: "#fff",
+                        flexShrink: 0,
+                      }}
+                    />
+                  )}
+                </Button>
+                <Button
+                  variant="contained"
+                  size="small"
+                  startIcon={<VisibilityIcon />}
+                  onClick={() => navigate("/request-ride")}
+                  sx={{
+                    bgcolor: ORANGE,
+                    color: "#ffffff",
+                    "&:hover": { bgcolor: "#e68a00" },
+                    "&.Mui-disabled": { bgcolor: "#e0e0e0" },
+                    fontWeight: 700,
+                    fontSize: { xs: "0.7rem", sm: "0.875rem" },
+                    px: { xs: 1.5, sm: 3 },
+                    py: { xs: 0.5, sm: 1 },
+                    borderRadius: 2,
+                    whiteSpace: "nowrap",
+                    boxShadow: "none",
+                    textTransform: "none",
+                  }}
+                >
+                  View Your Requests
+                </Button>
               </Box>
 
-              {/* Dropdowns row */}
-              <Grid container spacing={{ xs: 1, sm: 2 }} alignItems="flex-end">
-                {/* Gender */}
-                <Grid item xs={6} sm={4} md={3}>
+              {activeFilters.length > 0 && (
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: { xs: 0.5, sm: 0.75 }, mt: 1.25 }}>
+                  {activeFilters.map((f) => (
+                    <Chip
+                      key={f.key}
+                      label={f.label}
+                      onDelete={f.clear}
+                      deleteIcon={<CloseIcon />}
+                      size="small"
+                      sx={{
+                        background: "rgba(255,255,255,0.9)",
+                        border: `1px solid ${saffron[300]}`,
+                        color: saffron[800],
+                        fontWeight: 600,
+                        fontSize: { xs: "0.65rem", sm: "0.75rem" },
+                        height: { xs: 22, sm: 26 },
+                        "& .MuiChip-deleteIcon": { color: saffron[500], fontSize: { xs: "0.8rem", sm: "0.95rem" } },
+                        "& .MuiChip-label": { px: { xs: 0.75, sm: 1 } },
+                      }}
+                    />
+                  ))}
+                </Box>
+              )}
+            </Container>
+          </Box>
+        </Box>
+
+
+        <Box
+          ref={resultsRef}
+          onScroll={handleResultsScroll}
+          sx={{
+            flex: 1,
+            overflowY: "auto",
+            overflowX: "hidden",
+            pb: { xs: 4, sm: 6 },
+            "&::-webkit-scrollbar": { width: 5 },
+            "&::-webkit-scrollbar-track": { background: saffron[50] },
+            "&::-webkit-scrollbar-thumb": { background: saffron[300], borderRadius: 4 },
+          }}
+        >
+          <Container maxWidth="md" disableGutters sx={{ px: { xs: 0, sm: 3 } }}>
+            {/* ── Filter Panel (not sticky — scrolls/collapses away) ──── */}
+            <Collapse in={filtersOpen}>
+              <Box
+                sx={{
+                  background: "#fff",
+                  borderRadius: { xs: 3, md: 4 },
+                  border: `1.5px solid ${saffron[100]}`,
+                  // boxShadow: `0 4px 20px rgba(245,147,0,0.10)`,
+                  p: { xs: 1.75, sm: 3 },
+                  mt: { xs: 1.5, sm: 2 },
+                  mb: { xs: 1.5, sm: 2 },
+                }}
+              >
+                {/* Transport chips */}
+                <Box mb={2}>
                   <Typography
                     component="span"
                     sx={{
                       fontSize: { xs: "0.65rem", sm: "0.7rem" },
-                      fontWeight: 600,
+                      fontWeight: 700,
                       textTransform: "uppercase",
                       letterSpacing: "0.08em",
                       color: saffron[700],
                       display: "block",
-                      mt: 1,
                       mb: 1,
                     }}
                   >
-                    Gender
+                    Mode of Travel
                   </Typography>
-                  <FormControl fullWidth size="small">
-                    <Select
-                      value={gender}
-                      displayEmpty
-                      onChange={(e) => updateDraft("gender", e.target.value)}
-                      sx={{ ...selectSx, fontSize: { xs: "0.7rem", sm: "0.82rem" }, height: { xs: 30, sm: 36 } }}
-                    >
-                      {GENDER_OPTIONS.map((g) => (
-                        <MenuItem key={g.value} value={g.value} sx={{ fontSize: { xs: "0.7rem", sm: "0.85rem" } }}>
-                          {g.label}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: { xs: 0.6, sm: 1 } }}>
+                    {TRANSPORT_OPTIONS.map((opt) => {
+                      const selected = transportMode === opt.value;
+                      return (
+                        <Chip
+                          key={opt.value}
+                          label={opt.label}
+                          icon={opt.icon}
+                          onClick={() => updateDraft("transportMode", opt.value)}
+                          sx={{
+                            borderRadius: "20px",
+                            border: `1.5px solid ${selected ? saffron[500] : saffron[200]}`,
+                            background: selected ? saffron[500] : "#fff",
+                            color: selected ? "#fff" : saffron[700],
+                            fontWeight: 600,
+                            fontSize: { xs: "0.68rem", sm: "0.86rem" },
+                            height: { xs: 24, sm: 30 },
+                            cursor: "pointer",
+                            transition: "all 0.15s",
+                            "& .MuiChip-label": { px: { xs: 1, sm: 1.8 } },
+                            "&:hover": {
+                              background: selected ? saffron[600] : saffron[50],
+                              borderColor: saffron[400],
+                            },
+                            "& .MuiChip-icon": {
+                              color: selected ? "#fff" : saffron[500],
+                              ml: { xs: 0.5, sm: 0.75 },
+                              mr: { xs: "-4px", sm: "-2px" },
+                            },
+                          }}
+                        />
+                      );
+                    })}
+                  </Box>
+                </Box>
 
-                {/* Fuel Sharing */}
-                <Grid item xs={6} sm={4} md={3}>
-                  <Typography
-                    component="span"
-                    sx={{
-                      fontSize: { xs: "0.65rem", sm: "0.7rem" },
-                      fontWeight: 600,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.08em",
-                      color: saffron[700],
-                      display: "block",
-                      mt: 1,
-                      mb: 1,
-                    }}
-                  >
-                    Fuel Sharing
-                  </Typography>
-                  <FormControl fullWidth size="small">
-                    <Select
-                      value={fuelSharing}
-                      displayEmpty
-                      onChange={(e) => updateDraft("fuelSharing", e.target.value)}
-                      sx={{ ...selectSx, fontSize: { xs: "0.7rem", sm: "0.82rem" }, height: { xs: 30, sm: 36 } }}
-                    >
-                      {FUEL_OPTIONS.map((f) => (
-                        <MenuItem key={f.value} value={f.value} sx={{ fontSize: { xs: "0.7rem", sm: "0.85rem" } }}>
-                          {f.label}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-
-                {/* Language — Flight only */}
-                {transportMode === "Flight" && (
-                  <Grid item xs={12} sm={4} md={6}>
+                {/* Dropdowns row */}
+                <Grid container spacing={{ xs: 1, sm: 2 }} alignItems="flex-end">
+                  {/* Gender */}
+                  <Grid item xs={6} sm={4} md={3}>
                     <Typography
                       component="span"
                       sx={{
-                        fontSize: { xs: "0.6rem", sm: "0.7rem" },
+                        fontSize: { xs: "0.65rem", sm: "0.7rem" },
                         fontWeight: 600,
                         textTransform: "uppercase",
                         letterSpacing: "0.08em",
                         color: saffron[700],
                         display: "block",
                         mt: 1,
+                        mb: 1,
                       }}
                     >
-                      Language
+                      Gender
                     </Typography>
-                    <TextField
-                      fullWidth
-                      size="small"
-                      placeholder="Tamil, English, Hindi…"
-                      value={language}
-                      onChange={(e) => updateDraft("language", e.target.value)}
+                    <FormControl fullWidth size="small">
+                      <Select
+                        value={gender}
+                        displayEmpty
+                        onChange={(e) => updateDraft("gender", e.target.value)}
+                        sx={{ ...selectSx, fontSize: { xs: "0.7rem", sm: "0.82rem" }, height: { xs: 30, sm: 36 } }}
+                      >
+                        {GENDER_OPTIONS.map((g) => (
+                          <MenuItem key={g.value} value={g.value} sx={{ fontSize: { xs: "0.7rem", sm: "0.85rem" } }}>
+                            {g.label}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+
+                  {/* Fuel Sharing */}
+                  <Grid item xs={6} sm={4} md={3}>
+                    <Typography
+                      component="span"
                       sx={{
-                        ...inputFieldSx,
-                        "& .MuiOutlinedInput-root": {
-                          ...inputFieldSx["& .MuiOutlinedInput-root"],
-                          fontSize: { xs: "0.7rem", sm: "0.82rem" },
-                          height: { xs: 30, sm: 36 },
-                          mt: 1,
-                        },
+                        fontSize: { xs: "0.65rem", sm: "0.7rem" },
+                        fontWeight: 600,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.08em",
+                        color: saffron[700],
+                        display: "block",
+                        mt: 1,
+                        mb: 1,
                       }}
-                    />
+                    >
+                      Fuel Sharing
+                    </Typography>
+                    <FormControl fullWidth size="small">
+                      <Select
+                        value={fuelSharing}
+                        displayEmpty
+                        onChange={(e) => updateDraft("fuelSharing", e.target.value)}
+                        sx={{ ...selectSx, fontSize: { xs: "0.7rem", sm: "0.82rem" }, height: { xs: 30, sm: 36 } }}
+                      >
+                        {FUEL_OPTIONS.map((f) => (
+                          <MenuItem key={f.value} value={f.value} sx={{ fontSize: { xs: "0.7rem", sm: "0.85rem" } }}>
+                            {f.label}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
                   </Grid>
-                )}
-              </Grid>
 
-              {/* Filter actions */}
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: 1,
-                  mt: { xs: 1.5, sm: 2.5 },
-                }}
-              >
-                <Button
-                  startIon={<FilterListOffIcon sx={{ fontSize: { xs: 12, sm: 16 } }} />}
-                  onClick={clearFilters}
-                  variant="contained"
+                  {/* Language — Flight only */}
+                  {transportMode === "Flight" && (
+                    <Grid item xs={12} sm={4} md={6}>
+                      <Typography
+                        component="span"
+                        sx={{
+                          fontSize: { xs: "0.6rem", sm: "0.7rem" },
+                          fontWeight: 600,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.08em",
+                          color: saffron[700],
+                          display: "block",
+                          mt: 1,
+                        }}
+                      >
+                        Language
+                      </Typography>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        placeholder="Tamil, English, Hindi…"
+                        value={language}
+                        onChange={(e) => updateDraft("language", e.target.value)}
+                        sx={{
+                          ...inputFieldSx,
+                          "& .MuiOutlinedInput-root": {
+                            ...inputFieldSx["& .MuiOutlinedInput-root"],
+                            fontSize: { xs: "0.7rem", sm: "0.82rem" },
+                            height: { xs: 30, sm: 36 },
+                            mt: 1,
+                          },
+                        }}
+                      />
+                    </Grid>
+                  )}
+                </Grid>
+
+                {/* Filter actions */}
+                <Box
                   sx={{
-                    borderRadius: "50px",
-                    // border: `1.5px solid ${saffron[300]}`,
-                    color: "#ffff",
-                    bgcolor: "#757575",
-                    fontWeight: 600,
-                    fontSize: { xs: "0.7rem", sm: "0.82rem" },
-                    px: { xs: 1.5, sm: 2.5 },
-                    height: { xs: 30, sm: 36 },
-                    textTransform: "none",
-                    // "&:hover": { background: saffron[50], borderColor: saffron[300], color: saffron[500] },
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 1,
+                    mt: { xs: 1.5, sm: 2.5 },
                   }}
                 >
-                  Clear all
-                </Button>
+                  <Button
+                    startIon={<FilterListOffIcon sx={{ fontSize: { xs: 12, sm: 16 } }} />}
+                    onClick={clearFilters}
+                    variant="contained"
+                    sx={{
+                      borderRadius: "50px",
+                      // border: `1.5px solid ${saffron[300]}`,
+                      color: "#ffff",
+                      bgcolor: "#757575",
+                      fontWeight: 600,
+                      fontSize: { xs: "0.7rem", sm: "0.82rem" },
+                      px: { xs: 1.5, sm: 2.5 },
+                      height: { xs: 30, sm: 36 },
+                      textTransform: "none",
+                      // "&:hover": { background: saffron[50], borderColor: saffron[300], color: saffron[500] },
+                    }}
+                  >
+                    Clear all
+                  </Button>
 
-                <Button
-                  onClick={applyFilters}
-                  sx={{
-                    borderRadius: "50px",
-                    border: "none",
-                    background: saffron[500],
-                    color: "#fff",
-                    fontWeight: 700,
-                    fontSize: { xs: "0.72rem", sm: "0.85rem" },
-                    px: { xs: 2, sm: 3 },
-                    height: { xs: 32, sm: 38 },
-                    textTransform: "none",
-                    boxShadow: "none",
-                    "&:hover": { background: saffron[600] },
-                  }}
-                >
-                  Apply
-                  {/* {draftFilterCount > 0 ? ` (${draftFilterCount})` : ""} */}
-                </Button>
+                  <Button
+                    onClick={applyFilters}
+                    sx={{
+                      borderRadius: "50px",
+                      border: "none",
+                      background: saffron[500],
+                      color: "#fff",
+                      fontWeight: 700,
+                      fontSize: { xs: "0.72rem", sm: "0.85rem" },
+                      px: { xs: 2, sm: 3 },
+                      height: { xs: 32, sm: 38 },
+                      textTransform: "none",
+                      boxShadow: "none",
+                      "&:hover": { background: saffron[600] },
+                    }}
+                  >
+                    Apply
+                    {/* {draftFilterCount > 0 ? ` (${draftFilterCount})` : ""} */}
+                  </Button>
+                </Box>
               </Box>
-            </Box>
-          </Collapse>
+            </Collapse>
 
-          {/* ── Results bar ── */}
-          <Box
-            sx={{
-              display: "flex",
-              // alignItems: "center",
-              // justifyContent: "space-between",
-              // flexWrap: "wrap",
-              // gap: { xs: 0.75, sm: 1 },
-              mb: { xs: 1.5, sm: 2 },
-              mt: { xs: 2, sm: 1.5 },
-
-            }}
-          >
-            <Typography
-              fontWeight={700}
-              sx={{ color: saffron[800], fontSize: { xs: "0.83rem", sm: "1rem" } }}
-            >
-              {visibleRides.length}{" "}
-              <Typography component="span" fontWeight={400} color="text.secondary">
-                {visibleRides.length === 1 ? "result" : "results"} found
-              </Typography>
-            </Typography>
-
-
-          </Box>
-          {visibleRides.length > 0 ? (
-            <Grid spacing={{ xs: 1, sm: 2 }}>
-              {visibleRides.map((ride) => {
-                const isOwnRide = ride.createdBy?._id === currentUser?._id;
-
-                return (
-                  <Grid item xs={12} sm={6} md={4} key={ride._id}>
-                    <RideCard
-                      ride={ride}
-                      isOwnRide={isOwnRide}
-                    />
-                  </Grid>
-                );
-              })}
-            </Grid>
-          ) : (
+            {/* ── Results bar ── */}
             <Box
               sx={{
-                background: "#fff",
-                borderRadius: { xs: 3, sm: 4 },
-                border: `1.5px dashed ${saffron[200]}`,
-                textAlign: "center",
-                py: { xs: 3, sm: 5 },
-                px: { xs: 2, sm: 4 },
+                display: "flex",
+                // alignItems: "center",
+                // justifyContent: "space-between",
+                // flexWrap: "wrap",
+                // gap: { xs: 0.75, sm: 1 },
+                mb: { xs: 1.5, sm: 2 },
+                mt: { xs: 2, sm: 1.5 },
+
               }}
             >
-              <Typography fontSize={{ xs: "2rem", sm: "2.5rem" }} mb={0.75}>
+              <Typography
+                fontWeight={700}
+                sx={{ color: saffron[800], fontSize: { xs: "0.83rem", sm: "1rem" } }}
+              >
+                {visibleRides.length}{" "}
+                <Typography component="span" fontWeight={400} color="text.secondary">
+                  {visibleRides.length === 1 ? "result" : "results"} found
+                </Typography>
+              </Typography>
+
+
+            </Box>
+            {sortedVisibleRides.length > 0 ? (
+              <Grid spacing={{ xs: 1, sm: 2 }}>
+                {sortedVisibleRides.map((ride) => {
+                  const isOwnRide = ride.createdBy?._id === currentUser?._id;
+                  return (
+                    <Grid item xs={12} sm={6} md={4} key={ride._id}>
+                      <RideCard
+                        ride={ride}
+                        isOwnRide={isOwnRide}
+                      />
+                    </Grid>
+                  );
+                })}
+              </Grid>
+            ) : (
+              <Box
+                sx={{
+                  // background: "#fff",
+                  borderRadius: { xs: 3, sm: 4 },
+                  // border: `1.5px dashed ${saffron[200]}`,
+                  textAlign: "center",
+                  py: { xs: 3, sm: 5 },
+                  px: { xs: 2, sm: 4 },
+                  mt: { xs: '40%', sm: '10%' },
+                }}
+              >
+                {/* <Typography fontSize={{ xs: "2rem", sm: "2.5rem" }} mb={0.75}>
                 🔍
-              </Typography>
-              <Typography fontWeight={700} color={saffron[700]} mb={0.5} fontSize={{ xs: "0.9rem", sm: "1rem" }}>
-                No rides found
-              </Typography>
-              <Typography color="text.secondary" fontSize={{ xs: "0.78rem", sm: "0.88rem" }}>
-                Try adjusting your filters or search terms
-              </Typography>
-              {/* <Button
+              </Typography> */}
+
+
+                <Typography variant="h6" fontWeight={600} color="text.primary">
+                  No rides found
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mt: 1 }}
+                >
+                  Try adjusting your filters or search terms
+                </Typography>
+
+
+                {/* <Button
                 onClick={clearFilters}
                 sx={{
                   mt: 2,
@@ -875,10 +1087,11 @@ export default function FindRides() {
               >
                 Clear filters
               </Button> */}
-            </Box>
-          )}
-        </Container>
+              </Box>
+            )}
+          </Container>
+        </Box >
       </Box >
-    </Box >
+    </>
   );
 }

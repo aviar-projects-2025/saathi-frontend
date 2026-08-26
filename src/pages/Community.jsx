@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   Box, Typography, Grid, Paper, Chip, Avatar, Button,
   Divider, Stack, LinearProgress,
@@ -39,6 +39,7 @@ import {
   ListItemText,
 } from "@mui/material";
 import { toast } from 'react-toastify';
+import { useNavigate } from "react-router-dom";
 import CommunityImage from '../components/CommunityImage.jsx';
 import CommunityComments from './CommunityComments.jsx';
 import { useUser } from '../context/userConetext.jsx';
@@ -46,6 +47,7 @@ import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import FolderIcon from "@mui/icons-material/Folder";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import ToastConfig from '../components/ToastConfig.jsx';
+import ProfileModal from './Avatar.jsx';
 
 const BREAKPOINTS = { xs: 0, sm: 600, md: 900, lg: 1200, xl: 1536 }; // MUI defaults
 
@@ -90,10 +92,17 @@ export default function Community() {
   const [tooltipOpen, setTooltipOpen] = useState(false);
   const [tooltip2Open, setTooltip2Open] = useState(false);
   const [imagePostLoading, setImagePostLoading] = useState(false);
+  const [imageDeleteLoading, setImageDeleteLoading] = useState(false);
+
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState(null);
 
   const [commentCounts, setCommentCounts] = useState({});
   const toasts = ToastConfig();
 
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const theme = useTheme();
   const isTab = useMediaQuery(theme.breakpoints.down("sm"));
@@ -113,42 +122,254 @@ export default function Community() {
       fileInputRef.current?.click();
     }
   };
+  const normalizePostal = (code) =>
+    String(code || "")
+      .trim()
+      .toUpperCase()
+      .replace(/\s+/g, "");
 
+  const longestCommonPrefixLength = (a, b) => {
+    let i = 0;
+    const len = Math.min(a.length, b.length);
+
+    while (i < len && a[i] === b[i]) {
+      i++;
+    }
+
+    return i;
+  };
+
+  const getZipcodeProximityScore = (author, current) => {
+    const authorZip = normalizePostal(author?.zipcode);
+    const currentZip = normalizePostal(current?.zipcode);
+
+    if (!authorZip || !currentZip) {
+      return Infinity;
+    }
+
+    // Exact postal code = highest priority
+    if (authorZip === currentZip) {
+      return 0;
+    }
+
+    // Different length = lower priority
+    if (authorZip.length !== currentZip.length) {
+      return 100;
+    }
+
+    const commonLen = longestCommonPrefixLength(
+      authorZip,
+      currentZip
+    );
+
+    // More matching starting digits = closer
+    return authorZip.length - commonLen;
+  };
+
+  const sortPostsByProximity = (posts, currentUser) => {
+    return [...posts].sort((a, b) => {
+      const scoreA = getZipcodeProximityScore(
+        a?.authorId,
+        currentUser
+      );
+
+      const scoreB = getZipcodeProximityScore(
+        b?.authorId,
+        currentUser
+      );
+
+      return scoreA - scoreB;
+    });
+  };
 
   const getCommmunityPost = async () => {
     try {
       setPostLoading(true);
-      const postsRes = await axios.get(Api + "/community/");
-      const likesRes = await axios.get(Api + `/likes/liked-posts/${user.id}`);
+
+      const [postsRes, likesRes] = await Promise.all([
+        axios.get(`${Api}/community?page=1&limit=10`),
+        axios.get(`${Api}/likes/liked-posts/${user.id}`),
+      ]);
+
+      const posts = postsRes?.data?.data || [];
       const likedPostIds = likesRes?.data?.data || [];
-      const updatedPosts = postsRes?.data?.data?.map((post) => ({
+
+      // Add like + comment information
+      const updatedPosts = posts.map((post) => ({
         ...post,
         isLiked: likedPostIds.includes(post._id),
+        commentCount:
+          post.commentCount ??
+          post.comments?.length ??
+          0,
       }));
 
-      const postIds = postsRes.data.data.map((item) => item._id);
-      setCommunityPosts(updatedPosts);
+
+      const sortedPosts = sortPostsByProximity(
+        updatedPosts,
+        currentUser
+      );
+
+
+      setCommunityPosts(sortedPosts);
+
+      // Set post IDs in sorted order
+      const postIds = sortedPosts.map(
+        (post) => post._id
+      );
+
       setPostId(postIds);
 
-      // fetch comment counts for all posts in parallel
+      // Pagination
+      setPage(1);
+
+      setHasMore(
+        postsRes?.data?.pagination?.hasMore ?? false
+      );
+
+      // Initial comment counts
+      setCommentCounts(
+        Object.fromEntries(
+          sortedPosts.map((post) => [
+            post._id,
+            post.commentCount,
+          ])
+        )
+      );
+
+      // Fetch latest comment counts
       const countEntries = await Promise.all(
-        updatedPosts.map(async (p) => {
+        sortedPosts.map(async (post) => {
           try {
-            const res = await axios.get(Api + `/community/comments/${p._id}/${user.id}`);
-            return [p._id, res.data.data.comments.length];
-          } catch {
-            return [p._id, 0];
+            const res = await axios.get(
+              `${Api}/community/comments/${post._id}/${user.id}`
+            );
+
+            return [
+              post._id,
+              res.data?.data?.comments?.length ?? 0,
+            ];
+          } catch (error) {
+            return [post._id, 0];
           }
         })
       );
-      setCommentCounts(Object.fromEntries(countEntries));
+
+      setCommentCounts(
+        Object.fromEntries(countEntries)
+      );
 
     } catch (error) {
-      console.error(error.message);
+      console.error("Community error:", error);
+      console.error("Status:", error.response?.status);
+      console.error("Response:", error.response?.data);
     } finally {
       setPostLoading(false);
     }
   };
+
+  const loadMorePosts = async () => {
+    if (loadingMore || !hasMore) return;
+
+    try {
+      setLoadingMore(true);
+
+      const nextPage = page + 1;
+
+      const [postsRes, likesRes] = await Promise.all([
+        axios.get(
+          `${Api}/community?page=${nextPage}&limit=10`
+        ),
+        axios.get(
+          `${Api}/likes/liked-posts/${user.id}`
+        ),
+      ]);
+
+      const posts = postsRes?.data?.data || [];
+      const likedPostIds = likesRes?.data?.data || [];
+
+      const updatedPosts = posts.map((post) => ({
+        ...post,
+
+        isLiked: likedPostIds.includes(post._id),
+
+        commentCount:
+          post.commentCount ??
+          post.comments?.length ??
+          0,
+      }));
+
+      setCommunityPosts((prev) => [
+        ...prev,
+        ...updatedPosts,
+      ]);
+
+      setPostId((prev) => [
+        ...prev,
+        ...posts.map((post) => post._id),
+      ]);
+
+      // ⭐ Add comment counts
+      setCommentCounts((prev) => ({
+        ...prev,
+
+        ...Object.fromEntries(
+          updatedPosts.map((post) => [
+            post._id,
+            post.commentCount,
+          ])
+        ),
+      }));
+
+      // ⭐ Update pagination
+      setPage(nextPage);
+
+      setHasMore(
+        postsRes?.data?.pagination?.hasMore ?? false
+      );
+
+    } catch (error) {
+      console.error(
+        "Error loading more posts:",
+        error
+      );
+
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  const observerRef = useRef(null);
+
+  const lastPostRef = useCallback(
+    (node) => {
+      if (loadingMore) return;
+
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+
+      observerRef.current = new IntersectionObserver(
+        (entries) => {
+          if (
+            entries[0].isIntersecting &&
+            hasMore &&
+            !loadingMore
+          ) {
+            loadMorePosts();
+          }
+        },
+        {
+          rootMargin: "300px",
+        }
+      );
+
+      if (node) {
+        observerRef.current.observe(node);
+      }
+    },
+    [loadingMore, hasMore, page]
+  );
 
   const getComments = async (postId) => {
     try {
@@ -207,7 +428,7 @@ export default function Community() {
     e.target.value = null; // allow re-selecting same file next time
   };
 
-
+  const navigate = useNavigate();
   const tier = useResponsiveTier();
   const isMobile = tier === 'xs';                 // phones
   const isTablet = tier === 'sm'; // tablets / small laptops
@@ -257,6 +478,23 @@ export default function Community() {
 
   const isProfileComplete = completion === 100;
   const SIDEBAR_SCROLL_HEIGHT = 'calc(100vh - 120px)';
+  const zipcode = currentUser?.zipcode
+
+  const [profileGateOpen, setProfileGateOpen] = useState(false);
+  const hasCheckedProfileGateRef = useRef(false);
+
+  useEffect(() => {
+
+    if (hasCheckedProfileGateRef.current) return;
+    if (currentUser && currentUser._id && typeof completion === "number") {
+      hasCheckedProfileGateRef.current = true;
+      setProfileGateOpen(completion !== 100);
+    }
+  }, [currentUser, completion]);
+
+  const handleCloseProfileGate = () => {
+    setProfileGateOpen(false);
+  };
 
   const handleEdit = (post) => {
     setSelectedPost(post);
@@ -311,7 +549,6 @@ export default function Community() {
       setEditOpen(false);
       setSelectedPost(null);
       setEditImage(null);
-      setImagePostLoading(false);
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to update post", toasts);
     } finally {
@@ -413,7 +650,7 @@ export default function Community() {
 
     try {
 
-      setImagePostLoading(true);
+      setImageDeleteLoading(true);
 
       const user = JSON.parse(localStorage.getItem("user"));
 
@@ -429,12 +666,13 @@ export default function Community() {
 
       toast.success(res.data.message, toasts);
 
+      setDeleteOpen(false);
 
     } catch (error) {
       toast.error(
         error.response?.data?.message || "Failed to delete post", toasts);
     } finally {
-      setImagePostLoading(false);
+      setImageDeleteLoading(false);
     }
   };
   const removeLike = async (id) => {
@@ -475,8 +713,111 @@ export default function Community() {
   };
 
 
+
   return (
     <>
+      <Dialog
+        open={profileGateOpen}
+        onClose={handleCloseProfileGate}
+        fullWidth
+        maxWidth="xs"
+        PaperProps={{
+          sx: {
+            borderRadius: { xs: 2, sm: 3 },
+            m: { xs: 1.5, sm: 2 },
+            width: { xs: "95%", sm: "100%" },
+            textAlign: "center",
+            p: { xs: 1, sm: 1.5 },
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 1,
+            fontWeight: 700,
+            fontSize: { xs: "1rem", sm: "1.15rem" },
+            pt: 3,
+          }}
+        >
+          <WarningAmberRoundedIcon sx={{ fontSize: 40, color: "#E8650A" }} />
+          Complete Your Profile
+        </DialogTitle>
+
+        <DialogContent>
+          <Typography
+            sx={{
+              fontSize: { xs: "0.85rem", sm: "0.95rem" },
+              color: "text.secondary",
+            }}
+          >
+            Your profile is only {Number.isFinite(completion) ? completion : 0}% complete.
+            Please complete your profile to 100% to unlock all features,
+            including posting, liking, commenting and saving in the Community.
+          </Typography>
+
+          <Box sx={{ mt: 2.5, px: { xs: 1, sm: 3 } }}>
+            <LinearProgress
+              variant="determinate"
+              value={Number.isFinite(completion) ? completion : 0}
+              sx={{
+                height: 8,
+                borderRadius: 5,
+                bgcolor: "#F0E6DC",
+                "& .MuiLinearProgress-bar": { bgcolor: "#FF9933" },
+              }}
+            />
+          </Box>
+        </DialogContent>
+
+        <DialogActions
+          sx={{
+            justifyContent: "center",
+            pb: 3,
+            pt: 1,
+            gap: 1.5,
+          }}
+        >
+          <Button
+            variant="contained"
+            onClick={handleCloseProfileGate}
+            sx={{
+              textTransform: "none",
+              borderRadius: 999,
+              px: 3,
+              fontWeight: 600,
+              bgcolor: "#FF9933",
+              color: "#fff",
+              "&:hover": {
+                bgcolor: "#FF9933",
+                color: "#fff",
+              },
+            }}
+          >
+            OK
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => navigate("/user-profile")}
+            sx={{
+              textTransform: "none",
+              borderRadius: 999,
+              px: 3,
+              fontWeight: 600,
+              bgcolor: "#FF9933",
+              color: "#fff",
+              "&:hover": {
+                bgcolor: "#FF9933",
+                color: "#fff",
+              },
+            }}
+          >
+            Update profile
+          </Button>
+        </DialogActions>
+      </Dialog>
       <PageLayout>
         {/* Page header */}
         <Typography variant="h5" fontWeight={800} sx={{ mb: { xs: 0.5, sm: 0.5 }, fontSize: { xs: "1rem", sm: "1.2rem", md: "1.35rem", lg: "1.5rem" } }}>
@@ -624,7 +965,7 @@ export default function Community() {
                     sx={{
                       width: '100%',
                       maxHeight: { xs: 200, sm: 240, md: 280, lg: 300 },
-                      objectFit: 'cover',
+                      objectFit: 'contain',
                       display: 'block',
                     }}
                   />
@@ -879,13 +1220,13 @@ export default function Community() {
                   textAlign: "center",
                 }}
               >
-                <InboxOutlinedIcon
+                {/* <InboxOutlinedIcon
                   sx={{
                     fontSize: { xs: 40, sm: 64 },
                     color: "text.disabled",
                     mb: 2,
                   }}
-                />
+                /> */}
 
                 <Typography variant="h6" fontWeight={600} color="text.primary">
                   No Posts Yet
@@ -902,12 +1243,16 @@ export default function Community() {
             ) : (
               communityPosts?.map((post, index) => (
                 <Paper
-                  key={index}
+                  key={post._id}
+                  ref={index === communityPosts.length - 1 ? lastPostRef : null}
                   elevation={0}
                   sx={{
-                    borderRadius: 3, border: CARD_BORDER, mb: 2, overflow: 'hidden',
+                    borderRadius: 3,
+                    border: CARD_BORDER,
+                    mb: 2,
+                    overflow: "hidden",
                     width: POST_BOX_WIDTH_SX,
-                    boxSizing: 'border-box',
+                    boxSizing: "border-box",
                   }}
                 >
                   <Box sx={{ p: isMobile ? 1.5 : 2 }}>
@@ -915,6 +1260,11 @@ export default function Community() {
                     <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: isMobile ? 1 : 1.5 }}>
                       <Avatar
                         src={post?.authorId?.profileImage}
+                        alt={`${post?.authorId?.firstName || ""} ${post?.authorId?.lastName || ""}`}
+                        onClick={() => {
+                          setSelectedProfile(post?.authorId);
+                          setProfileModalOpen(true);
+                        }}
                         sx={{
                           width: avatarSize,
                           height: avatarSize,
@@ -926,8 +1276,9 @@ export default function Community() {
                           mt: { xs: 0.4, sm: 0.5 }
                         }}
                       >
-                        {!currentUser?.profileImage &&
-                          `${currentUser?.firstName?.[0] || ''}${currentUser?.lastName?.[0] || ''}`}
+                        {!post?.authorId?.profileImage &&
+                          `${post?.authorId?.firstName?.[0] || ""}${post?.authorId?.lastName?.[0] || ""
+                          }`}
                       </Avatar>
 
                       <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -1033,7 +1384,7 @@ export default function Community() {
                                   fontWeight: 600,
                                   color: "#ffff",
                                   bgcolor: "grey.700",
-        
+                                  textTransform: "none"
                                 }}
                               >
                                 Cancel
@@ -1042,21 +1393,22 @@ export default function Community() {
                               <Button
                                 variant="contained"
                                 color="error"
-                                disabled={imagePostLoading}
+                                disabled={imageDeleteLoading}
                                 onClick={() => {
                                   const postId = selectedPost._id;
                                   handleMenuClose();
                                   handleDelete(postId);
-                                  setDeleteOpen(false);
+                                  // setDeleteOpen(false);
                                 }}
                                 sx={{
                                   flex: 1,
                                   py: 1,
                                   fontSize: { xs: "0.8rem", sm: "0.9rem" },
                                   fontWeight: 600,
+                                  textTransform: "none"
                                 }}
                               >
-                                {imagePostLoading ? "Deleting..." : "Delete"}
+                                {imageDeleteLoading ? "Deleting..." : "Delete"}
                               </Button>
                             </DialogActions>
                           </Dialog>
@@ -1125,9 +1477,9 @@ export default function Community() {
                                     sx={{
                                       width: "100%",
                                       height: { xs: 160, sm: 220, md: 280 },
-                                      objectFit: "cover",
+                                      objectFit: "contain",
                                       borderRadius: 2,
-                                      border: "1px solid #eee",
+                                      // border: "1px solid #eee",
                                       mb: 1.5,
                                     }}
                                   />
@@ -1284,10 +1636,10 @@ export default function Community() {
                   {/* Post image */}
                   {post.postImage && <CommunityImage src={post.postImage} />}
 
-                  <Divider />
+                  < Divider />
 
                   {/* Action buttons */}
-                  <Stack
+                  < Stack
                     direction="row"
                     sx={{
                       py: isMobile ? 0.25 : 0.5,
@@ -1366,7 +1718,29 @@ export default function Community() {
                 </Paper>
               ))
             )}
+
+            {loadingMore && (
+              <Box
+                sx={{
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  py: 3,
+                }}
+              >
+                <CircularProgress size={32} />
+              </Box>
+            )}
           </Box>
+
+          <ProfileModal
+            open={profileModalOpen}
+            selectedProfile={selectedProfile}
+            onClose={() => {
+              setProfileModalOpen(false);
+            }}
+          />
 
           {/* SidebarContent */}
           {showSidebar && (
@@ -1424,4 +1798,3 @@ export default function Community() {
 
   );
 }
-

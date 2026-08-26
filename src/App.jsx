@@ -44,6 +44,7 @@ const MyRides = React.lazy(() => import("./pages/MyRides.jsx"));
 const MyReferrals = React.lazy(() =>
   import("./pages/referral/MyReferrals.jsx")
 );
+const Notifications = React.lazy(() => import("./pages/Notifications.jsx"))
 // const Settings = React.lazy(() => import("./pages/Settings.jsx"));
 const RequestRide = React.lazy(() => import("./pages/RequestRide.jsx"));
 
@@ -126,6 +127,7 @@ function App() {
               <Route path="/user-profile" element={<UserProfile />} />
               <Route path="/discover" element={<Discover />} />
               <Route path="/request-ride" element={<RequestRide />} />
+              <Route path="/notifications" element={<Notifications />} />
             </Route>
           </Route>
 
