@@ -1706,51 +1706,64 @@ const MyRides = () => {
   useEffect(() => {
     const currentDateTime = new Date();
 
+    // Accepted rides requested by me
     const currReqRide = allMyRequests
       .filter((ride) => {
         const rideStartTime = new Date(ride?.rideId?.startTime);
+
         return (
           !isNaN(rideStartTime) &&
           rideStartTime <= currentDateTime &&
           ride?.status === "ACCEPTED" &&
-          ride?.rideId?.travelStatus !== "Completed"
+          ride?.rideId?.travelStatus !== "Completed" &&
+          ride?.rideId?.travelStatus !== "Cancelled"
         );
       })
       .map((ride) => ride.rideId);
 
+    // Rides created by me
     const myrides = mypost.filter((ride) => {
       const rideStartTime = new Date(ride?.startTime);
-      // const rideEndTime = new Date(rideStartTime.getTime() + 3 * 60 * 60 * 1000);
+
       return (
         ride?.createdBy?._id === user.id &&
+        !isNaN(rideStartTime) &&
         rideStartTime <= currentDateTime &&
         ride?.travelStatus !== "Completed" &&
         ride?.travelStatus !== "Cancelled"
       );
     });
 
-    setCurrentRide([...currReqRide, ...myrides]);
+    const currentRides = [...currReqRide, ...myrides];
 
+    setCurrentRide(currentRides);
+
+    console.log("Current rides:", currentRides);
+
+    // History - requested rides
     const historyRide = allMyRequests
       .filter((ride) => {
         return (
-          ride?.rideId?.travelStatus == "Completed" ||
-          ride.travelStatus === "Cancelled"
+          ride?.rideId?.travelStatus === "Completed" ||
+          ride?.rideId?.travelStatus === "Cancelled"
         );
       })
       .map((ride) => ride.rideId);
 
+    // History - rides created by me
     const histMyPost = mypost.filter((ride) => {
       const rideStartTime = new Date(ride?.startTime);
+
       return (
         ride?.createdBy?._id === user.id &&
         !isNaN(rideStartTime) &&
-        (ride?.travelStatus == "Completed" || ride.travelStatus === "Cancelled")
+        (ride?.travelStatus === "Completed" ||
+          ride?.travelStatus === "Cancelled")
       );
     });
 
     setHistory([...historyRide, ...histMyPost]);
-  }, [allMyRequests, mypost, notifications]);
+  }, [allMyRequests, mypost, notifications, user?.id]);
 
   useEffect(() => {
     if (!notifications?.length) return;
@@ -2015,20 +2028,20 @@ const MyRides = () => {
         flexDirection: { xs: "column", lg: "row", md: "row" },
         width: "100%",
         maxWidth: "100%",
-        overflowX: "hidden", 
+        overflowX: "hidden",
       }}
     >
       <Box
         sx={{
           width: "100%",
-          minWidth: 0, 
+          minWidth: 0,
           maxWidth: "100%",
           mx: { md: "auto", lg: 0 },
           boxSizing: "border-box",
           display: "flex",
           flexDirection: "column",
           height: { xs: "100dvh", sm: "auto" },
-          overflowX: "hidden", 
+          overflowX: "hidden",
         }}
       >
         <Box
@@ -2073,8 +2086,8 @@ const MyRides = () => {
                 width: "100%",
               },
               "& .MuiTab-root": {
-                minWidth: 0, 
-                flex: 1,     
+                minWidth: 0,
+                flex: 1,
                 padding: { xs: "4px 2px", sm: "8px 12px", md: "12px 16px" },
                 fontSize: { xs: "0.68rem", sm: "0.78rem", md: "0.82rem" },
                 fontWeight: 600,
@@ -2104,7 +2117,7 @@ const MyRides = () => {
                   >
                     <Typography
                       component="span"
-                      noWrap 
+                      noWrap
                       sx={{
                         fontSize: {
                           xs: "0.62rem",
@@ -2133,7 +2146,7 @@ const MyRides = () => {
             flex: 1,
             minWidth: 0,
             overflowY: { xs: "auto", sm: "visible" },
-            overflowX: "hidden", 
+            overflowX: "hidden",
             px: { xs: 0.5, sm: 0 },
             pt: 1.5,
             pb: { xs: 3, sm: 0 },
