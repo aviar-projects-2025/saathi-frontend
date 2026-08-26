@@ -233,15 +233,15 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
   const update = (key, val) => {
     setForm((prev) => ({ ...prev, [key]: val }));
     setErrors((prev) => {
-    const newErrors = { ...prev };
+      const newErrors = { ...prev };
 
-    if (val && String(val).trim() !== "") {
-      delete newErrors[key];
-    }
+      if (val && String(val).trim() !== "") {
+        delete newErrors[key];
+      }
 
-    return newErrors;
-  });
-};
+      return newErrors;
+    });
+  };
 
   const isTab = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -1503,17 +1503,17 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
 
           {/* ── Navigation buttons ── */}
           {showErrors && Object.keys(errors).length > 0 && (
-  <Alert
-    severity="error"
-    sx={{
-      mt: 2,
-      mb: 1,
-      borderRadius: 2,
-    }}
-  >
-    Please fill in the missing fields before continuing.
-  </Alert>
-)}
+            <Alert
+              severity="error"
+              sx={{
+                mt: 2,
+                mb: 1,
+                borderRadius: 2,
+              }}
+            >
+              Please fill in the missing fields before continuing.
+            </Alert>
+          )}
 
           <Stack
             direction="row"
