@@ -36,6 +36,7 @@ export default function Ridebook({
   totalSeat,
   maxSeats = Infinity,
   requestToEdit = null,
+  remainingSeatsForUser,
   setAllMyRequests,
   allMyRequests,
   onRequestUpdated,
@@ -95,21 +96,20 @@ export default function Ridebook({
     ? existingMembers.length + newMembers.length
     : requestData.members.length;
 
-
-  const remainingAvailableSeats = isEditMode
+  const remainingSeats = isEditMode
     ? Math.max(
-      ride?.availableSeats - (existingMembers.length + newMembers.length),
-      0
-    )
-    : Math.max(
-      ride?.availableSeats - requestData?.members.length,
-      0
-    );
+        remainingSeatsForUser - (existingMembers.length + newMembers.length),
+        0,
+      )
+    : Math.max(remainingSeatsForUser - requestData?.members.length, 0);
 
+  //   const remainingSeats = Math.max(
+  //   remainingSeatsForUser - newMembers.length,
+  //   0
+  // );
   const TOASTS = ToastConfig();
 
   const handleAddMember = () => {
-
     setMemberListError("");
 
     if (isEditMode) {
@@ -123,7 +123,6 @@ export default function Ridebook({
     }
 
     setRequestData((prev) => {
-
       if (!isFlight && prev.members.length >= maxSeats) return prev;
 
       const updatedMembers = [...prev.members, { name: "", age: "" }];
@@ -134,7 +133,6 @@ export default function Ridebook({
       };
     });
   };
-
 
   const handleRemoveMember = (index) => {
     if (isEditMode) {
@@ -175,9 +173,7 @@ export default function Ridebook({
     });
   };
 
-
   const handleMemberChange = (index, field, value) => {
-
     setMemberErrors((prev) => {
       const updated = [...prev];
       updated[index] = {
@@ -206,9 +202,6 @@ export default function Ridebook({
   const [editingRequest, setEditingRequest] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-
-
-
   useEffect(() => {
     if (editingRequest) {
       setRequestData((prev) => ({
@@ -225,7 +218,7 @@ export default function Ridebook({
       setNewMembers(
         requestToEdit.pendingMembers?.length
           ? requestToEdit.pendingMembers
-          : []
+          : [],
       );
     } else {
       setExistingMembers([]);
@@ -357,7 +350,6 @@ export default function Ridebook({
     return true;
   };
 
-
   const handleRequestSubmit = async () => {
     if (!ride) return;
     if (isSubmittingRef.current) return;
@@ -444,23 +436,27 @@ export default function Ridebook({
   const editableMembers = isEditMode ? newMembers : requestData.members;
 
   // 2. Self-identity helpers
-  const selfFullName = `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`
-    .trim()
-    .toLowerCase();
+  const selfFullName =
+    `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`
+      .trim()
+      .toLowerCase();
 
-  const isSelfMember = (m) => (m?.name || "").trim().toLowerCase() === selfFullName;
+  const isSelfMember = (m) =>
+    (m?.name || "").trim().toLowerCase() === selfFullName;
 
   const isSelfAlreadyConfirmed = existingMembers?.some(isSelfMember);
 
   // 3. Tag + filter
-  const editableMembersWithMeta = editableMembers.map((member, originalIndex) => ({
-    ...member,
-    originalIndex,
-    isSelf: !isEditMode && originalIndex === 0,
-  }));
+  const editableMembersWithMeta = editableMembers.map(
+    (member, originalIndex) => ({
+      ...member,
+      originalIndex,
+      isSelf: !isEditMode && originalIndex === 0,
+    }),
+  );
 
   const visibleMembers = editableMembersWithMeta.filter(
-    (member) => !(member.isSelf && isSelfAlreadyConfirmed)
+    (member) => !(member.isSelf && isSelfAlreadyConfirmed),
   );
   return (
     <Dialog
@@ -602,7 +598,7 @@ export default function Ridebook({
               Available Seats
             </Typography>
             <Chip
-              label={`${remainingAvailableSeats}`}
+              label={`${remainingSeats}`}
               size="small"
               sx={{
                 bgcolor: ORANGE,
@@ -646,7 +642,6 @@ export default function Ridebook({
                     bgcolor: GREEN_BG,
                   }}
                 >
-
                   <Avatar
                     sx={{
                       width: 30,
@@ -712,7 +707,6 @@ export default function Ridebook({
           {isEditMode ? "Requested Members" : "Traveling Members"}
         </Typography>
 
-
         <Stack spacing={1.25}>
           {visibleMembers.map((member) => {
             const isLockedSelfSlot = member.isSelf;
@@ -761,7 +755,9 @@ export default function Ridebook({
                     error={!isLockedSelfSlot && !!memberErrors[index]?.name}
                     helperText={
                       !isLockedSelfSlot && memberErrors[index]?.name
-                        ? (isMobile ? "Required" : "Name is required")
+                        ? isMobile
+                          ? "Required"
+                          : "Name is required"
                         : ""
                     }
                     sx={{
@@ -803,7 +799,9 @@ export default function Ridebook({
                     error={!isLockedSelfSlot && !!memberErrors[index]?.age}
                     helperText={
                       !isLockedSelfSlot && memberErrors[index]?.age
-                        ? (isMobile ? "Required" : "Age required")
+                        ? isMobile
+                          ? "Required"
+                          : "Age required"
                         : ""
                     }
                     inputProps={{ min: 1, max: 120 }}
@@ -907,7 +905,6 @@ export default function Ridebook({
           Contact Details
         </Typography>
 
-
         <TextField
           fullWidth
           multiline
@@ -949,10 +946,8 @@ export default function Ridebook({
             fontWeight: 700,
             fontFamily: "'Inter', sans-serif",
             color: "#ffff",
-            bgcolor: "#757575"
-
+            bgcolor: "#757575",
           }}
-
         >
           Cancel
         </Button>
@@ -978,11 +973,13 @@ export default function Ridebook({
               ? (isEditMode ? "Updating..." : "Submitting...")
               : (isEditMode ? "Update Request" : "Submit Request")
           } */}
-          {
-            requestLoading
-              ? (isEditMode ? "Updating..." : "Submitting...")
-              : (isEditMode ? "Update " : "Submit ")
-          }
+          {requestLoading
+            ? isEditMode
+              ? "Updating..."
+              : "Submitting..."
+            : isEditMode
+              ? "Update "
+              : "Submit "}
         </Button>
       </DialogActions>
     </Dialog>
