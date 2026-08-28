@@ -97,10 +97,7 @@ export default function Ridebook({
     : requestData.members.length;
 
   const remainingSeats = isEditMode
-    ? Math.max(
-        remainingSeatsForUser - (existingMembers.length + newMembers.length),
-        0,
-      )
+    ? Math.max(remainingSeatsForUser - newMembers.length, 0)
     : Math.max(remainingSeatsForUser - requestData?.members.length, 0);
 
   //   const remainingSeats = Math.max(
@@ -875,14 +872,15 @@ export default function Ridebook({
         <TextField
           fullWidth
           label="Phone Number"
+          disabled
           size={isMobile ? "small" : "medium"}
           value={currentUser?.mobile}
           sx={{
             mb: 2,
             "& .MuiInputBase-input.Mui-disabled": {
               fontFamily: "'Inter', sans-serif",
-              fontWeight: 500,
-              WebkitTextFillColor: "#555",
+              fontWeight: 300,
+              WebkitTextFillColor: "#8e8d8d",
             },
           }}
           onChange={(e) =>

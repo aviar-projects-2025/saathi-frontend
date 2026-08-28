@@ -573,7 +573,7 @@ const RequestRide = () => {
                     onClick={() => setSelectedRideDetails(request)}
                   >
                     <Box sx={{ width: "100%" }}>
-                      {/* ================= FROM / TO + DETAILS ================= */}
+                    
                       <Box
                         sx={{
                           display: { xs: "block", md: "flex" },
