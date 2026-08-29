@@ -132,7 +132,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
 
   const handleLogout = () => {
     setLogoutDialogOpen(true);
-    onItemClick?.();
+    // onItemClick?.();
   };
 
   const confirmLogout = () => {

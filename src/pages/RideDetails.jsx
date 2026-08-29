@@ -214,7 +214,7 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
           bgcolor: 'background.default',
           border: `1px solid ${TOKENS.line}`,
           borderLeft: `4px solid ${v.color}`,
-          overflow: 'hidden',
+          // overflow: 'hidden',
         }}
       >
         <Box
@@ -239,7 +239,7 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
                 fontSize: { xs: '0.8rem', sm: '0.9rem' },
               }}
             >
-              {firstName[0]}
+              {firstName[0]} {lastName[0]}
             </Avatar>
             <Box sx={{ minWidth: 0 }}>
               <Typography
@@ -851,13 +851,25 @@ export default function RideDetailsModal({
                     sx={{
                       borderRadius: 1.5,
                       maxHeight: { xs: 280, sm: 340 },
+                      overflowY: "auto",
+                      overflowX: "hidden",
+                      pr: 0.5,
+
+                      // Optional scrollbar styling
+                      "&::-webkit-scrollbar": {
+                        width: "5px",
+                      },
+                      "&::-webkit-scrollbar-thumb": {
+                        borderRadius: "10px",
+                        backgroundColor: "rgba(0,0,0,0.2)",
+                      },
                     }}
                   >
-                    {requests.map((req, idx) => (
+                    {requests.map((req) => (
                       <Box
                         key={req._id}
                         sx={{
-                          mt: 2
+                          mt: 2,
                         }}
                       >
                         <PassengerStub

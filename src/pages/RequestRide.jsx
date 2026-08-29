@@ -284,8 +284,8 @@ const RequestRide = () => {
       <Box>
         <Typography
           sx={{
-            fontSize: { xs: "1.4rem", sm: "1.7rem" },
-            fontWeight: 700,
+            fontSize: { xs: "1.2rem", sm: "1.2rem", md: "1.35rem", lg: "1.5rem" },
+            fontWeight: 500,
             letterSpacing: "-0.01em",
             mb: 0.5,
           }}
@@ -361,7 +361,7 @@ const RequestRide = () => {
               color="text.secondary"
               sx={{ mt: 1, maxWidth: 320 }}
             >
-          "Your requested rides will appear here."
+              "Your requested rides will appear here."
             </Typography>
           </Box>
         ) : (
@@ -459,11 +459,10 @@ const RequestRide = () => {
                           cursor: "pointer",
                           flexShrink: 0,
                         }}
-                      />
-                      {/* {(request?.rideId?.createdBy?.firstName || "?")
-                          .charAt(0)
-                          .toUpperCase()} */}
-                      {/* </Avatar> */}
+                      >
+                        {`${request?.rideId?.createdBy?.firstName?.[0] || ""}${request?.rideId?.createdBy?.lastName?.[0] || ""
+                          }`.toUpperCase()}
+                      </Avatar>
 
                       <Typography
                         sx={{
@@ -573,7 +572,7 @@ const RequestRide = () => {
                     onClick={() => setSelectedRideDetails(request)}
                   >
                     <Box sx={{ width: "100%" }}>
-                    
+
                       <Box
                         sx={{
                           display: { xs: "block", md: "flex" },

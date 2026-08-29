@@ -1207,7 +1207,7 @@ export default function Community() {
             {/* Posts list */}
             {postLoading ? (
               <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', py: 4 }}>
-                <CircularProgress size={isMobile ? 36 : 50} />
+                <CircularProgress size={isMobile ? 36 : 50} sx={{ color: "#FF9933" }} />
               </Box>
             ) : communityPosts.length == 0 ? (
               <Box
@@ -1729,7 +1729,7 @@ export default function Community() {
                   py: 3,
                 }}
               >
-                <CircularProgress size={32} />
+                <CircularProgress size={32} sx={{ color: "#FF9933" }} />
               </Box>
             )}
           </Box>

@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import {
   Box,
@@ -13,37 +12,167 @@ const CommunityImage = ({ src }) => {
   const [loaded, setLoaded] = useState(false);
   const [open, setOpen] = useState(false);
 
-  // Zoom state for the preview image
   const [zoomed, setZoomed] = useState(false);
   const [origin, setOrigin] = useState("center center");
+
+  // Pan position
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+
   const lastTapRef = useRef(0);
 
-  const handleDoubleTapZoom = (e) => {
+  // Drag refs
+  const isDraggingRef = useRef(false);
+  const dragStartRef = useRef({ x: 0, y: 0 });
+  const startPositionRef = useRef({ x: 0, y: 0 });
+
+  // -----------------------------
+  // Zoom
+  // -----------------------------
+
+  const zoomAtPoint = (clientX, clientY, element) => {
+    const rect = element.getBoundingClientRect();
+
+    const x = ((clientX - rect.left) / rect.width) * 100;
+    const y = ((clientY - rect.top) / rect.height) * 100;
+
+    setOrigin(`${x}% ${y}%`);
+
+    setZoomed((prev) => {
+      if (prev) {
+        // Zoom out
+        setPosition({ x: 0, y: 0 });
+        return false;
+      }
+
+      return true;
+    });
+  };
+
+  // Desktop double click
+  const handleDoubleClick = (e) => {
+    zoomAtPoint(e.clientX, e.clientY, e.currentTarget);
+  };
+
+  // Mobile double tap
+  const handleTouchEnd = (e) => {
+    // Don't treat dragging as double tap
+    if (isDraggingRef.current) {
+      return;
+    }
+
     const now = Date.now();
     const timeSinceLastTap = now - lastTapRef.current;
 
-    // Detect double-tap (works for touch) — also handles onDoubleClick for desktop
-    if (e.type === "touchend") {
-      if (timeSinceLastTap > 300 || timeSinceLastTap === now) {
-        lastTapRef.current = now;
-        return; // first tap, wait for second
-      }
+    if (timeSinceLastTap < 300) {
+      const touch = e.changedTouches[0];
+
+      zoomAtPoint(
+        touch.clientX,
+        touch.clientY,
+        e.currentTarget
+      );
+
+      lastTapRef.current = 0;
+    } else {
+      lastTapRef.current = now;
+    }
+  };
+
+  // -----------------------------
+  // Mouse Drag
+  // -----------------------------
+
+  const handleMouseDown = (e) => {
+    if (!zoomed) return;
+
+    e.preventDefault();
+
+    isDraggingRef.current = true;
+
+    dragStartRef.current = {
+      x: e.clientX,
+      y: e.clientY,
+    };
+
+    startPositionRef.current = {
+      ...position,
+    };
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDraggingRef.current || !zoomed) return;
+
+    const deltaX = e.clientX - dragStartRef.current.x;
+    const deltaY = e.clientY - dragStartRef.current.y;
+
+    setPosition({
+      x: startPositionRef.current.x + deltaX,
+      y: startPositionRef.current.y + deltaY,
+    });
+  };
+
+  const handleMouseUp = () => {
+    isDraggingRef.current = false;
+  };
+
+  // -----------------------------
+  // Touch Drag
+  // -----------------------------
+
+  const handleTouchStart = (e) => {
+    if (!zoomed) return;
+
+    const touch = e.touches[0];
+
+    isDraggingRef.current = false;
+
+    dragStartRef.current = {
+      x: touch.clientX,
+      y: touch.clientY,
+    };
+
+    startPositionRef.current = {
+      ...position,
+    };
+  };
+
+  const handleTouchMove = (e) => {
+    if (!zoomed) return;
+
+    const touch = e.touches[0];
+
+    const deltaX = touch.clientX - dragStartRef.current.x;
+    const deltaY = touch.clientY - dragStartRef.current.y;
+
+    // Only consider it a drag after moving
+    if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
+      isDraggingRef.current = true;
     }
 
-    // Compute tap position relative to the image, so zoom centers on that point
-    const rect = e.currentTarget.getBoundingClientRect();
-    const touch = e.changedTouches ? e.changedTouches[0] : e;
-    const x = ((touch.clientX - rect.left) / rect.width) * 100;
-    const y = ((touch.clientY - rect.top) / rect.height) * 100;
+    if (!isDraggingRef.current) return;
 
-    setOrigin(`${x}% ${y}%`);
-    setZoomed((prev) => !prev);
-    lastTapRef.current = 0;
+    e.preventDefault();
+
+    setPosition({
+      x: startPositionRef.current.x + deltaX,
+      y: startPositionRef.current.y + deltaY,
+    });
   };
+
+  const handleTouchCancel = () => {
+    isDraggingRef.current = false;
+  };
+
+  // -----------------------------
+  // Close
+  // -----------------------------
 
   const handleClose = () => {
     setOpen(false);
-    setZoomed(false); // reset zoom when dialog closes
+    setZoomed(false);
+    setPosition({ x: 0, y: 0 });
+    setOrigin("center center");
+    lastTapRef.current = 0;
   };
 
   return (
@@ -82,8 +211,11 @@ const CommunityImage = ({ src }) => {
             height: "auto",
             display: "block",
             opacity: loaded ? 1 : 0,
-            filter: loaded ? "blur(0px)" : "blur(8px)",
-            transition: "opacity .3s ease, filter .3s ease",
+            filter: loaded
+              ? "blur(0px)"
+              : "blur(8px)",
+            transition:
+              "opacity .3s ease, filter .3s ease",
           }}
         />
       </Box>
@@ -93,87 +225,129 @@ const CommunityImage = ({ src }) => {
         open={open}
         onClose={handleClose}
         maxWidth={false}
-        PaperProps={{
-          sx: {
-            position: "relative",
-            bgcolor: "#111",
-            overflow: "hidden",
-            borderRadius: 2,
-
-            width: {
-              xs: "90vw",
-              sm: 500,
-              md: 700,
-              lg: 500,
+        slotProps={{
+          paper: {
+            sx: {
+              bgcolor: "transparent",
+              boxShadow: "none",
+              overflow: "hidden",
+              width: "auto",
+              maxWidth: "95vw",
+              maxHeight: "95vh",
+              m: 1,
             },
-
-            height: {
-              xs: "60vh",
-              sm: 400,
-              md: 500,
-              lg: 500,
-            },
-
-            m: 2,
           },
         }}
       >
-        {/* Close Button */}
-        <IconButton
-          onClick={handleClose}
+        <Box
           sx={{
-            position: "absolute",
-            top: 7,
-            right: 10,
-            zIndex: 2,
-            color: "rgba(0,0,0,0.8)",
-            bgcolor: "#fff",
-            "&:hover": {
-              bgcolor: "rgba(0,0,0,0.6)",
-              color: "#fff",
-            },
-          }}
-        >
-          <CloseIcon />
-        </IconButton>
-
-        {/* Image */}
-        <DialogContent
-          sx={{
-            p: 0,
-            width: "100%",
-            height: "100%",
+            position: "relative",
+            overflow: "hidden",
+            maxWidth: "95vw",
+            maxHeight: "95vh",
             bgcolor: "#000",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            touchAction: "manipulation",
-            overflow: zoomed ? "auto" : "hidden",
+            borderRadius: 2,
           }}
         >
-          <Box
-            component="img"
-            src={src}
-            alt="Preview"
-            onTouchEnd={handleDoubleTapZoom}
-            onDoubleClick={handleDoubleTapZoom}
+          {/* Close Button */}
+          <IconButton
+            onClick={handleClose}
             sx={{
-              width: "100%",
-              height: "100%",
-              objectFit: "contain",
-              display: "block",
-              cursor: zoomed ? "zoom-out" : "zoom-in",
-              transformOrigin: origin,
-              transform: zoomed ? "scale(2.5)" : "scale(1)",
-              transition: "transform 0.25s ease",
-              touchAction: "manipulation",
-              userSelect: "none",
+              position: "absolute",
+              top: 8,
+              right: 8,
+              color: "#fff",
+              bgcolor: "rgba(0,0,0,0.5)",
+              "&:hover": {
+                bgcolor: "rgba(0,0,0,0.7)",
+              },
+              zIndex: 10,
             }}
-          />
-        </DialogContent>
+          >
+            <CloseIcon />
+          </IconButton>
+
+          <DialogContent
+            sx={{
+              p: 0,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              bgcolor: "#000",
+              overflow: "hidden",
+              maxWidth: "95vw",
+              maxHeight: "95vh",
+            }}
+          >
+            <Box
+              component="img"
+              src={src}
+              alt="Post"
+
+              /* Zoom */
+              onDoubleClick={handleDoubleClick}
+              onTouchEnd={handleTouchEnd}
+
+              /* Mouse drag */
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+
+              /* Touch drag */
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchCancel={handleTouchCancel}
+
+              sx={{
+                display: "block",
+
+                maxWidth: zoomed
+                  ? "none"
+                  : "95vw",
+
+                maxHeight: zoomed
+                  ? "none"
+                  : "90vh",
+
+                width: "auto",
+                height: "auto",
+
+                objectFit: "contain",
+
+                borderRadius: 2,
+
+                cursor: zoomed
+                  ? isDraggingRef.current
+                    ? "grabbing"
+                    : "grab"
+                  : "zoom-in",
+
+                transform: zoomed
+                  ? `translate(${position.x}px, ${position.y}px) scale(2.5)`
+                  : "translate(0px, 0px) scale(1)",
+
+                transformOrigin: origin,
+
+                transition: isDraggingRef.current
+                  ? "none"
+                  : "transform 0.25s ease",
+
+                userSelect: "none",
+                WebkitUserSelect: "none",
+
+                // Important for touch dragging
+                touchAction: zoomed
+                  ? "none"
+                  : "manipulation",
+              }}
+            />
+          </DialogContent>
+        </Box>
       </Dialog>
     </>
   );
 };
 
 export default CommunityImage;
+

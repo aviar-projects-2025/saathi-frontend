@@ -119,16 +119,16 @@ export default function RideCard({ ride }) {
   const dateObj = ride.startTime ? new Date(ride.startTime) : null;
   const dateStr = dateObj
     ? dateObj.toLocaleDateString(undefined, {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    })
     : "No date";
   const timeStr = dateObj
     ? dateObj.toLocaleTimeString(undefined, {
-        hour: "2-digit",
-        minute: "2-digit",
-      })
+      hour: "2-digit",
+      minute: "2-digit",
+    })
     : "";
 
   const resetRequestData = () => {
@@ -364,74 +364,74 @@ export default function RideCard({ ride }) {
     ride.genderPreference !== currentUser?.gender;
   const detailItems = isFlight
     ? [
-        {
-          label: "Date & time",
-          icon: <CalendarTodayIcon sx={iconSx} />,
-          value: `${dateStr}${timeStr ? " · " + timeStr : ""}`,
-        },
-        {
-          label: "Flight no.",
-          icon: <FlightTakeoffIcon sx={iconSx} />,
-          value: ride.flightNumber || "—",
-        },
-        {
-          label: "Airline",
-          icon: <FlightTakeoffIcon sx={iconSx} />,
-          value: ride.airlineName || "—",
-        },
-        // {
-        //   label: "Traveller type",
-        //   icon: <WcIcon sx={iconSx} />,
-        //   value: ride.travellerType || "—",
-        // },
-      ]
+      {
+        label: "Date & time",
+        icon: <CalendarTodayIcon sx={iconSx} />,
+        value: `${dateStr}${timeStr ? " · " + timeStr : ""}`,
+      },
+      {
+        label: "Flight no.",
+        icon: <FlightTakeoffIcon sx={iconSx} />,
+        value: ride.flightNumber || "—",
+      },
+      {
+        label: "Airline",
+        icon: <FlightTakeoffIcon sx={iconSx} />,
+        value: ride.airlineName || "—",
+      },
+      // {
+      //   label: "Traveller type",
+      //   icon: <WcIcon sx={iconSx} />,
+      //   value: ride.travellerType || "—",
+      // },
+    ]
     : [
-        {
-          label: "Date & time",
-          icon: <CalendarTodayIcon sx={iconSx} />,
-          value: `${dateStr}${timeStr ? " · " + timeStr : ""}`,
-        },
-        {
-          label: "Seats available",
-          icon: <EventSeatIcon sx={iconSx} />,
-          value: isFlight
-            ? "—"
-            : (() => {
-                const occupiedSeats = Math.max(
-                  Number(totalSeat || 0) - Number(remainingSeatsForUser ?? 0),
-                  0,
-                );
-                return `${occupiedSeats}
+      {
+        label: "Date & time",
+        icon: <CalendarTodayIcon sx={iconSx} />,
+        value: `${dateStr}${timeStr ? " · " + timeStr : ""}`,
+      },
+      {
+        label: "Seats available",
+        icon: <EventSeatIcon sx={iconSx} />,
+        value: isFlight
+          ? "—"
+          : (() => {
+            const occupiedSeats = Math.max(
+              Number(totalSeat || 0) - Number(remainingSeatsForUser ?? 0),
+              0,
+            );
+            return `${occupiedSeats}
         / ${totalSeat}`;
-              })(),
-        },
+          })(),
+      },
 
-        {
-          label: "Travel mode",
-          icon: travelIcons[ride.modeOfTravel],
-          value: ride.modeOfTravel || "—",
-        },
-        {
-          label: "Gender pref",
-          icon: genderIcon[ride.genderPreference],
-          value: ride.genderPreference,
-        },
-        {
-          label: "Fuel sharing",
-          icon: <LocalGasStationIcon sx={iconSx} />,
-          value: ride.fuelSharing || "0",
-        },
+      {
+        label: "Travel mode",
+        icon: travelIcons[ride.modeOfTravel],
+        value: ride.modeOfTravel || "—",
+      },
+      {
+        label: "Gender pref",
+        icon: genderIcon[ride.genderPreference],
+        value: ride.genderPreference,
+      },
+      {
+        label: "Fuel sharing",
+        icon: <LocalGasStationIcon sx={iconSx} />,
+        value: ride.fuelSharing || "0",
+      },
 
-        ...(ride?.duration != null
-          ? [
-              {
-                label: "Duration",
-                icon: <AccessTimeIcon sx={iconSx} />,
-                value: ride.duration,
-              },
-            ]
-          : []),
-      ];
+      ...(ride?.duration != null
+        ? [
+          {
+            label: "Duration",
+            icon: <AccessTimeIcon sx={iconSx} />,
+            value: ride.duration,
+          },
+        ]
+        : []),
+    ];
 
   return (
     <>
@@ -481,8 +481,7 @@ export default function RideCard({ ride }) {
                   },
                 }}
               >
-                {!userProfile &&
-                  `${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`}
+                {`${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`}
               </Avatar>
 
               <Box sx={{ minWidth: 0 }}>

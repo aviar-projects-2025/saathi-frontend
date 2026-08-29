@@ -900,8 +900,7 @@ function RideCard({
               src={ride?.createdBy?.profileImage || ""}
               alt={
                 ride?.createdBy?.firstName
-                  ? `${ride?.createdBy?.firstName} ${ride?.createdBy?.lastName || ""
-                  }`
+                  ? `${ride?.createdBy?.firstName} ${ride?.createdBy?.lastName || ""}`
                   : "Profile Image"
               }
               onClick={() => {
@@ -914,11 +913,14 @@ function RideCard({
                 fontSize: { xs: 12, sm: 13 },
                 fontWeight: 700,
                 bgcolor: ACCENT,
-                color: "#1a1030",
+                color: "#fff",
                 cursor: "pointer",
                 flexShrink: 0,
               }}
-            />
+            >
+              {`${ride?.createdBy?.firstName?.[0]} ${ride?.createdBy?.lastName?.[0]}`.toUpperCase() ||
+                "U"}
+            </Avatar>
 
             <Typography
               fontWeight={700}
@@ -2173,7 +2175,7 @@ const MyRides = () => {
                 justifyContent: "center",
               }}
             >
-              <CircularProgress size={50} />
+              <CircularProgress size={50} sx={{ color: "#FF9933" }} />
             </Box>
           ) : (
             <>
