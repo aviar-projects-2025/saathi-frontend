@@ -527,175 +527,6 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
   );
 }
 
-// ── Request Item Component ──────────────────────────────────────────────────
-function RequestItem({ request, onApprove, onReject }) {
-  const [expanded, setExpanded] = useState(false);
-
-  const getStatusColor = (status) => {
-    switch (status?.toUpperCase()) {
-      case "ACCEPTED":
-        return "success";
-      case "APPROVED":
-        return "success";
-      case "REJECTED":
-        return "error";
-      case "PENDING":
-        return "warning";
-      default:
-        return "default";
-    }
-  };
-
-  const getStatusLabel = (status) => {
-    switch (status?.toUpperCase()) {
-      case "ACCEPTED":
-        return "Approved ✓";
-      case "APPROVED":
-        return "Approved ✓";
-      case "REJECTED":
-        return "Rejected ✗";
-      case "PENDING":
-        return "Pending ⏳";
-      default:
-        return status || "Pending";
-    }
-  };
-
-  return (
-    <Card sx={{ mb: 2, borderRadius: 2, border: "1px solid #f0e6dc" }}>
-      <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-            flexWrap: { xs: "wrap", sm: "nowrap" },
-            gap: 1,
-          }}
-        >
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Box
-              sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}
-            >
-              <Avatar
-                sx={{
-                  width: { xs: 28, sm: 32 },
-                  height: { xs: 28, sm: 32 },
-                  bgcolor: "#FF9933",
-                  fontSize: { xs: "0.8rem", sm: "0.9rem" },
-                }}
-              >
-                {request.requestedBy?.firstName?.[0] || "U"}
-              </Avatar>
-              <Typography
-                fontWeight={700}
-                sx={{ fontSize: { xs: "0.85rem", sm: "0.95rem" } }}
-              >
-                {request.requestedBy?.firstName}{" "}
-                {request.requestedBy?.lastName || ""}
-              </Typography>
-            </Box>
-            <Box
-              sx={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: 1,
-                ml: { xs: 4.5, sm: 5 },
-              }}
-            >
-              <Chip
-                size="small"
-                label={`${request?.seatsRequested || 1} seat${request?.seatsRequested > 1 ? "s" : ""}`}
-                icon={<EventSeatIcon sx={{ fontSize: 14 }} />}
-                sx={{ fontSize: { xs: "0.65rem", sm: "0.7rem" } }}
-              />
-              <Chip
-                size="small"
-                label={getStatusLabel(request?.status)}
-                color={getStatusColor(request?.status)}
-                sx={{ fontSize: { xs: "0.65rem", sm: "0.7rem" } }}
-              />
-            </Box>
-          </Box>
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 1,
-              flexWrap: "wrap",
-            }}
-          >
-            {request.status?.toUpperCase() === "PENDING" && (
-              <>
-                <Button
-                  variant="contained"
-                  color="success"
-                  size="small"
-                  startIcon={<CheckCircleIcon />}
-                  onClick={() => onApprove(request._id)}
-                  sx={{
-                    textTransform: "none",
-                    fontSize: { xs: "0.65rem", sm: "0.7rem" },
-                  }}
-                >
-                  Approve
-                </Button>
-                <Button
-                  variant="outlined"
-                  color="error"
-                  size="small"
-                  startIcon={<CancelIcon />}
-                  onClick={() => onReject(request._id)}
-                  sx={{
-                    textTransform: "none",
-                    fontSize: { xs: "0.65rem", sm: "0.7rem" },
-                  }}
-                >
-                  Reject
-                </Button>
-              </>
-            )}
-            <IconButton size="small" onClick={() => setExpanded(!expanded)}>
-              {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-            </IconButton>
-          </Box>
-        </Box>
-
-        <Collapse in={expanded}>
-          <Box sx={{ mt: 2, pt: 2, borderTop: "1px solid #f0e6dc" }}>
-            <Stack spacing={1}>
-              <Typography sx={{ fontSize: { xs: "0.78rem", sm: "0.85rem" } }}>
-                <strong>Message:</strong> {request.message || "No message"}
-              </Typography>
-              <Typography sx={{ fontSize: { xs: "0.78rem", sm: "0.85rem" } }}>
-                <strong>Phone:</strong> {request.phone || "Not provided"}
-              </Typography>
-              {request.members?.length > 0 && (
-                <>
-                  <Typography
-                    sx={{ fontSize: { xs: "0.78rem", sm: "0.85rem" } }}
-                    fontWeight={700}
-                  >
-                    Members:
-                  </Typography>
-                  {request.members.map((m, i) => (
-                    <Typography
-                      key={i}
-                      sx={{ fontSize: { xs: "0.75rem", sm: "0.82rem" }, ml: 2 }}
-                    >
-                      • {m.name} ({m.age} yrs)
-                    </Typography>
-                  ))}
-                </>
-              )}
-            </Stack>
-          </Box>
-        </Collapse>
-      </CardContent>
-    </Card>
-  );
-}
-
 // ── Ride Card ────────────────────────────────────────────────────────────────
 function RideCard({
   ride,
@@ -796,20 +627,32 @@ function RideCard({
   const handleReject = async (requestId) => {
     try {
       setRejectLoading(requestId);
-      await axios.patch(`${Api}/bookride/${requestId}/status?type=Reject`, {
-        status: "REJECTED",
-      });
+
+      await axios.patch(
+        `${Api}/bookride/${requestId}/status?type=Reject`,
+        { status: "REJECTED" }
+      );
+
       setAllRequests((prev) =>
         prev.map((req) =>
-          req._id === requestId ? { ...req, status: "REJECTED" } : req,
-        ),
+          req._id === requestId
+            ? { ...req, status: "REJECTED" }
+            : req
+        )
       );
+
+      toast.success("Request rejected", toasts);
+
+      // Refresh only if actually needed
       fetchRides();
       fetchAllRequests();
-      toast.success("Request rejected", toasts);
       fetchRides();
     } catch (error) {
-      toast.error("Failed to reject request", toasts);
+      console.error("Reject error:", error);
+      toast.error(
+        error?.response?.data?.message || "Failed to reject request",
+        toasts
+      );
     } finally {
       setRejectLoading(null);
     }
