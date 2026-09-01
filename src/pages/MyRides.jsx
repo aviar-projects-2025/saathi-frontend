@@ -627,22 +627,32 @@ function RideCard({
   const handleReject = async (requestId) => {
     try {
       setRejectLoading(requestId);
-     const rejected= await axios.patch(`${Api}/bookride/${requestId}/status?type=Reject`, {
-        status: "REJECTED",
-      });
-      
+
+      await axios.patch(
+        `${Api}/bookride/${requestId}/status?type=Reject`,
+        { status: "REJECTED" }
+      );
+
       setAllRequests((prev) =>
         prev.map((req) =>
-          req._id === requestId ? { ...req, status: "REJECTED" } : req,
-        ),
+          req._id === requestId
+            ? { ...req, status: "REJECTED" }
+            : req
+        )
       );
-      
+
+      toast.success("Request rejected", toasts);
+
+      // Refresh only if actually needed
       fetchRides();
       fetchAllRequests();
-      toast.success("Request rejected", toasts);
       fetchRides();
     } catch (error) {
-      toast.error("Failed to reject request", toasts);
+      console.error("Reject error:", error);
+      toast.error(
+        error?.response?.data?.message || "Failed to reject request",
+        toasts
+      );
     } finally {
       setRejectLoading(null);
     }

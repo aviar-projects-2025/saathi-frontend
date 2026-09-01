@@ -197,7 +197,7 @@ function Field({ icon: Icon, label, value, span }) {
 function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoading, dense }) {
   const [open, setOpen] = useState(false);
   const v = requestVisual(request?.status);
-  console.log("nubvybubj",request)
+
   const isPending = request?.status?.toUpperCase() === 'PENDING';
   const firstName = request.requestedBy?.firstName || request?.data?.requestBy?.requestedBy?.firstName || 'U';
   const lastName = request.requestedBy?.lastName || '';
@@ -266,7 +266,7 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
                   Pending Seat Req × {pendingReq}
                 </Typography>
               </Stack>
-                <Stack direction="row" spacing={0.6} alignItems="center" sx={{ mt: 0.3 }}>
+              <Stack direction="row" spacing={0.6} alignItems="center" sx={{ mt: 0.3 }}>
                 <EventSeatIcon sx={{ fontSize: 13, color: TOKENS.inkSoft }} />
                 <Typography sx={{ fontFamily: TOKENS.monoFont, fontSize: '0.7rem', color: TOKENS.inkSoft }}>
                   Rejected Seat Req × {rejectedReq}
@@ -455,7 +455,7 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
               {pendingReq > 1 ? "seats" : "seat"}
             </Typography>
           </Box>
-{console.log("reb bvgvgh",request)}
+
           <Box sx={{ display: "flex", gap: 0.5 }}>
             <IconButton
               sx={{
@@ -876,7 +876,7 @@ export default function RideDetailsModal({
                           rejectLoading={rejectLoading}
                           dense={isXs}
                         />
-                    
+
                       </Box>
                     ))}
                   </Box>
