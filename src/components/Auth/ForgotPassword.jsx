@@ -21,51 +21,62 @@ import ToastConfig from "../ToastConfig";
 const ForgotPassword = () => {
     const navigate = useNavigate();
     const toasts = ToastConfig();
+
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState(null);
 
     const validationSchema = Yup.object({
-        email: Yup.string()
-            .trim()
-            .lowercase()
-            .email("Please enter a valid email address")
-            .matches(
-                /^[A-Za-z0-9](?:[A-Za-z0-9._%+-]{0,62}[A-Za-z0-9])?@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z]{2,})+$/,
-                "Please enter a valid email address"
-            )
-            .required("Email is required"),
+        mobile_number: Yup.string()
+            .matches(/^[0-9]{10}$/, "Please enter a valid 10-digit mobile number")
+            .required("Mobile number is required"),
     });
 
-    const handleSubmit = async (values, { setFieldError, resetForm }) => {
+    const handleSubmit = async (values, { setFieldError }) => {
         setIsSubmitting(true);
         setError(null);
 
         try {
-
             const response = await axios.post(
                 `${Api}/auth/forgot-password`,
-                { email: values.email }
+                {
+                    mobile_number: values.mobile_number,
+                }
             );
 
-            console.log(response,'response')
-            toast.success(response.data.message || "OTP sent to your email!", toasts);
-            sessionStorage.setItem("resetEmail", values.email);
+            console.log(response.data);
+
+            toast.success(
+                response.data.message || "OTP sent successfully!",
+                toasts
+            );
+
+            // Store mobile number for OTP verification page
+            sessionStorage.setItem(
+                "resetMobile",
+                values.mobile_number
+            );
+
             navigate("/verify-otp");
 
         } catch (error) {
+            console.error("Forgot password error:", error);
+
             let errorMessage = "Failed to send OTP";
 
-            if (error.code === 'ERR_NETWORK') {
+            if (error.code === "ERR_NETWORK") {
                 errorMessage = "Please check your network connection.";
             } else if (error.response) {
-                errorMessage = error.response.data?.message || "Server error";
+                errorMessage =
+                    error.response.data?.message || "Server error";
             } else if (error.request) {
                 errorMessage = "Please check your network connection.";
             }
 
             toast.error(errorMessage, toasts);
-            setFieldError("email", errorMessage);
+
+            setFieldError("mobile_number", errorMessage);
             setError(errorMessage);
+
         } finally {
             setIsSubmitting(false);
         }
@@ -99,53 +110,90 @@ const ForgotPassword = () => {
                     >
                         Forgot Password
                     </Typography>
+
                     <Typography
                         variant="body2"
                         align="center"
                         color="text.secondary"
                         sx={{ mb: 3 }}
                     >
-                        Enter your email address and we'll send you an OTP to reset your password.
+                        Enter your mobile number and we'll send you an OTP
+                        to reset your password.
                     </Typography>
 
                     {error && (
-                        <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
+                        <Alert
+                            severity="error"
+                            sx={{ mb: 2, borderRadius: 2 }}
+                        >
                             {error}
                         </Alert>
                     )}
 
                     <Formik
-                        initialValues={{ email: "" }}
+                        initialValues={{
+                            mobile_number: "",
+                        }}
                         validationSchema={validationSchema}
                         onSubmit={handleSubmit}
                     >
-                        {({ errors, touched, handleChange, handleBlur, values, handleSubmit }) => (
+                        {({
+                            errors,
+                            touched,
+                            handleChange,
+                            handleBlur,
+                            values,
+                            handleSubmit,
+                        }) => (
                             <form onSubmit={handleSubmit}>
+
                                 <TextField
                                     fullWidth
-                                    label="Email Address"
-                                    name="email"
-                                    type="email"
-                                    value={values.email}
-                                    onChange={handleChange}
+                                    label="Mobile Number"
+                                    name="mobile_number"
+                                    type="text"
+                                    inputMode="numeric"
+                                    value={values.mobile_number}
+                                    onChange={(e) => {
+                                        const value = e.target.value
+                                            .replace(/\D/g, "")
+                                            .slice(0, 10);
+
+                                        handleChange({
+                                            target: {
+                                                name: "mobile_number",
+                                                value,
+                                            },
+                                        });
+                                    }}
                                     onBlur={handleBlur}
-                                    error={touched.email && Boolean(errors.email)}
-                                    helperText={touched.email && errors.email}
+                                    error={
+                                        touched.mobile_number &&
+                                        Boolean(errors.mobile_number)
+                                    }
+                                    helperText={
+                                        touched.mobile_number &&
+                                        errors.mobile_number
+                                    }
                                     margin="normal"
                                     size="small"
+                                    placeholder="Enter 10-digit mobile number"
                                     sx={{
-                                        '& .MuiOutlinedInput-root': {
-                                            backgroundColor: '#FFFFFF',
-                                            borderRadius: '12px',
-                                            '& .MuiOutlinedInput-notchedOutline': {
-                                                borderRadius: '12px',
+                                        "& .MuiOutlinedInput-root": {
+                                            backgroundColor: "#FFFFFF",
+                                            borderRadius: "12px",
+
+                                            "& .MuiOutlinedInput-notchedOutline": {
+                                                borderRadius: "12px",
                                             },
-                                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                borderColor: '#FF9933',
+
+                                            "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                                                borderColor: "#FF9933",
                                             },
                                         },
-                                        '& .MuiInputLabel-root.Mui-focused': {
-                                            color: '#FF9933',
+
+                                        "& .MuiInputLabel-root.Mui-focused": {
+                                            color: "#FF9933",
                                         },
                                     }}
                                 />
@@ -153,7 +201,10 @@ const ForgotPassword = () => {
                                 <Button
                                     type="submit"
                                     fullWidth
-                                    disabled={isSubmitting}
+                                    disabled={
+                                        isSubmitting ||
+                                        values.mobile_number.length !== 10
+                                    }
                                     sx={{
                                         mt: 3,
                                         py: 1.2,
@@ -163,16 +214,29 @@ const ForgotPassword = () => {
                                         fontSize: "14px",
                                         fontWeight: 700,
                                         borderRadius: "999px",
-                                        "&:hover": { background: "#e6862c" },
+
+                                        "&:hover": {
+                                            background: "#e6862c",
+                                        },
+
                                         "&:disabled": {
                                             background: "#ffcc80",
                                             color: "#666",
-                                        }
+                                        },
                                     }}
                                 >
                                     {isSubmitting ? (
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                            <CircularProgress size={20} color="inherit" />
+                                        <Box
+                                            sx={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 1,
+                                            }}
+                                        >
+                                            <CircularProgress
+                                                size={20}
+                                                color="inherit"
+                                            />
                                             Sending OTP...
                                         </Box>
                                     ) : (
@@ -180,16 +244,25 @@ const ForgotPassword = () => {
                                     )}
                                 </Button>
 
-                                <Box sx={{ textAlign: "center", mt: 2 }}>
+                                <Box
+                                    sx={{
+                                        textAlign: "center",
+                                        mt: 2,
+                                    }}
+                                >
                                     <MuiLink
                                         component={Link}
                                         to="/login"
                                         underline="hover"
-                                        sx={{ fontSize: "14px", color: "#FF9933" }}
+                                        sx={{
+                                            fontSize: "14px",
+                                            color: "#FF9933",
+                                        }}
                                     >
                                         Back to Login
                                     </MuiLink>
                                 </Box>
+
                             </form>
                         )}
                     </Formik>

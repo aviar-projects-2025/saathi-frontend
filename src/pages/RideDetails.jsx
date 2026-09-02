@@ -255,7 +255,7 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
   const firstName = request.requestedBy?.firstName || request?.data?.requestBy?.requestedBy?.firstName || 'U';
   const lastName = request.requestedBy?.lastName || '';
   const profilePic = request.requestedBy?.profileImage;
-  const seats = request?.approvedSeats || 1;
+  const rejectedReq = request?.rejectedSeats || 0;
   const pendingReq = request?.pendingReqSeats || 0;
   const approvedSeats = request?.approvedSeats || 0;
   const membersCount = request?.membersCount || 0;
@@ -317,6 +317,12 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
                 <EventSeatIcon sx={{ fontSize: 13, color: TOKENS.inkSoft }} />
                 <Typography sx={{ fontFamily: TOKENS.monoFont, fontSize: '0.7rem', color: TOKENS.inkSoft }}>
                   Pending Seat Req × {pendingReq}
+                </Typography>
+              </Stack>
+              <Stack direction="row" spacing={0.6} alignItems="center" sx={{ mt: 0.3 }}>
+                <EventSeatIcon sx={{ fontSize: 13, color: TOKENS.inkSoft }} />
+                <Typography sx={{ fontFamily: TOKENS.monoFont, fontSize: '0.7rem', color: TOKENS.inkSoft }}>
+                  Rejected Seat Req × {rejectedReq}
                 </Typography>
               </Stack>
             </Box>
@@ -563,6 +569,7 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
 export default function RideDetailsModal({
   ride,
   requests = [],
+  setPendingMembers,
   showEdit,
   user,
   showDelete,
@@ -574,6 +581,7 @@ export default function RideDetailsModal({
   approveLoading,
   rejectLoading,
 }) {
+
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down('sm'));
   const isMd = useMediaQuery(theme.breakpoints.up('md'));
@@ -949,6 +957,7 @@ export default function RideDetailsModal({
                           rejectLoading={rejectLoading}
                           dense={isXs}
                         />
+
                       </Box>
                     ))}
                   </Box>

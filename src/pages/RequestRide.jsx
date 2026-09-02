@@ -77,7 +77,7 @@ const statusStyles = (status) => {
   }
 };
 
-const RequestRide = () => {
+const RequestRide = ({ ride }) => {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [loadingRequests, setLoadingRequests] = useState(true);
   const [openEditModal, setOpenEditModal] = useState(false);
@@ -89,8 +89,9 @@ const RequestRide = () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [isCancelling, setIsCancelling] = useState(false);
   const user = JSON.parse(localStorage.getItem("user"));
-
-
+  const [rejectedSeats,setRejectedSeats] = useState();
+  const [remainingSeatsForUser, setRemainingSeatsForUser] = useState();
+  const totalSeats = ride?.totalSeats;
   const [selectedRideDetails, setSelectedRideDetails] = useState(null);
 
   const [profileModalOpen, setProfileModalOpen] = useState(false);
@@ -117,8 +118,15 @@ const RequestRide = () => {
 
       if (!user?.id) return;
       const res = await axios.get(`${Api}/bookride/send/${user.id}`);
+      console.log(res,'res')
       const requestUser = res.data.data.map((item) => item.members);
+      const rejectedreq = res.data.data.map((item)=>item.rejectedSeats);
+      setRejectedSeats(res.data.data.map((item)=>item.rejectedSeats))
       setUserData(requestUser);
+      const availableSeat = res.data.data.map(
+        (item) => item.rideId?.availableSeats
+      );
+      setRemainingSeatsForUser(availableSeat)
 
       setAllMyRequests(res.data?.data || []);
     } catch (error) {
@@ -128,7 +136,7 @@ const RequestRide = () => {
       setLoadingRequests(false);
     }
   }
-
+  console.log("juyyyvvyh", allMyRequests)
   const handleMenuOpen = (event, request) => {
     event.stopPropagation();
     setAnchorEl(event.currentTarget);
@@ -274,9 +282,9 @@ const RequestRide = () => {
   const activeRequests = allMyRequests.filter(
     (req) =>
       req?.rideId &&
-      req.status !== "DELETED"
-    // req.status !== "CANCELLED" &&
-    // req.status !== "REJECTED",
+      // req.status !== "DELETED" &&
+      req.status !== "CANCELLED" &&
+      req.status !== "REJECTED",
   );
 
   return (
@@ -379,19 +387,28 @@ const RequestRide = () => {
                     `Ride Cancelled` : request?.rideId?.travelStatus === "Completed" ? "Auto Rejected" : null;
 
               const isAccepted = request?.status === "ACCEPTED";
-
+              // const rejectedSeats = Number(request?.rejectedReq || 0);
               const requestedByMe = Number(request?.seatsRequested || 0);
               const approvedSeats = Number(request?.approvedSeats || 0);
-
+              console.log("hyyuininhbbuu",rejectedSeats)
               const mainText = isRejected
-                ? "Rejected"
+                ? rejectedSeats > 0 && approvedSeats > 0
+                  ? `You have ${approvedSeats} approved seat${approvedSeats > 1 ? "s" : ""
+                  } and ${rejectedSeats} rejected seat${rejectedSeats > 1 ? "s" : ""
+                  }`
+                  : "Rejected"
                 : isCancelled
                   ? isCancelled
                   : isAccepted
-                    ? `You have ${approvedSeats} approved seat${approvedSeats > 1 ? "s" : ""
-                    }`
+                    ? rejectedSeats > 0
+                      ? `You have ${approvedSeats} approved seat${approvedSeats > 1 ? "s" : ""
+                      } and ${rejectedSeats} rejected seat${rejectedSeats > 1 ? "s" : ""
+                      }`
+                      : `You have ${approvedSeats} approved seat${approvedSeats > 1 ? "s" : ""
+                      }`
                     : `You applied for ${requestedByMe} seat${requestedByMe > 1 ? "s" : ""
-                    }`;
+                    }`; 
+                    console.log("gvhbjnkml;'gfx viuyfg",rejectedSeats)
 
               const pendingText =
                 isAccepted && pendingReqSeats > 0
@@ -1026,7 +1043,9 @@ const RequestRide = () => {
           allMyRequests={allMyRequests}
           maxSeats={selectedRide?.availableSeats ?? Infinity}
           requestToEdit={selectedRequest}
+          remainingSeatsForUser={remainingSeatsForUser}
         />
+
       </Box>
     </PageLayout>
   );

@@ -194,6 +194,8 @@ export default function Community() {
       const posts = postsRes?.data?.data || [];
       const likedPostIds = likesRes?.data?.data || [];
 
+      console.log(posts,'posts')
+
       // Add like + comment information
       const updatedPosts = posts.map((post) => ({
         ...post,
@@ -241,6 +243,7 @@ export default function Community() {
       const countEntries = await Promise.all(
         sortedPosts.map(async (post) => {
           try {
+            console.log(post,'post')
             const res = await axios.get(
               `${Api}/community/comments/${post._id}/${user.id}`
             );
