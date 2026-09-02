@@ -253,6 +253,7 @@ export default function Ridebook({
 
       const res = await axios.get(`${Api}/bookride/send/${user.id}`);
 
+      console.log(res,'requested list')
       setRequests(res.data.data);
     } catch (error) {
       console.log(error);

@@ -1,3 +1,4 @@
+
 import { Formik } from "formik";
 import * as Yup from "yup";
 import {
@@ -13,63 +14,91 @@ import {
     Alert,
     CircularProgress,
 } from "@mui/material";
+
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
+
 import Visibility from "@mui/icons-material/Visibility";
-import Api from "../../Api.jsx";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
+
+import Api from "../../Api.jsx";
 import ToastConfig from "../ToastConfig";
 
 const ResetPassword = () => {
     const navigate = useNavigate();
     const toasts = ToastConfig();
+
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState(null);
 
-    const email = sessionStorage.getItem("resetEmail");
+    // Get mobile number and reset token
+    const mobileNumber = sessionStorage.getItem("resetMobile");
     const token = sessionStorage.getItem("resetToken");
 
-    if (!email || !token) {
-        navigate("/forgot-password");
-        return null;
-    }
+    useEffect(() => {
+        // User should not access this page directly
+        if (!mobileNumber || !token) {
+            navigate("/forgot-password");
+            return null;
+        }
+    },[]);
 
     const validationSchema = Yup.object({
         password: Yup.string()
             .min(6, "Password must be at least 6 characters")
             .required("Password is required"),
+
         confirmPassword: Yup.string()
-            .oneOf([Yup.ref("password"), null], "Passwords must match")
+            .oneOf(
+                [Yup.ref("password"), null],
+                "Passwords must match"
+            )
             .required("Confirm password is required"),
     });
 
     const handleSubmit = async (values) => {
         setIsSubmitting(true);
         setError(null);
-        
+
         try {
             const response = await axios.post(
-               `${Api}/auth/reset-password`,
+                `${Api}/auth/reset-password`,
                 {
-                    email: email,
+                    mobileNumber: mobileNumber,
                     token: token,
                     newPassword: values.password,
                 }
             );
-            
-            toast.success(response.data.message || "Password reset successfully!", toasts);
-            sessionStorage.removeItem("resetEmail");
+
+            console.log("Reset password response:", response.data);
+
+            toast.success(
+                response.data.message ||
+                "Password reset successfully!",
+                toasts
+            );
+
+            // Clear reset information
+            sessionStorage.removeItem("resetMobile");
             sessionStorage.removeItem("resetToken");
+
+            // Go back to login
             navigate("/login");
-            
+
         } catch (error) {
-            const errorMessage = error.response?.data?.message || "Failed to reset password";
+            console.error("Reset password error:", error);
+
+            const errorMessage =
+                error.response?.data?.message ||
+                "Failed to reset password";
+
             toast.error(errorMessage, toasts);
             setError(errorMessage);
+
         } finally {
             setIsSubmitting(false);
         }
@@ -107,6 +136,7 @@ const ResetPassword = () => {
                         p: 4,
                     }}
                 >
+                    {/* Title */}
                     <Typography
                         variant="h5"
                         align="center"
@@ -115,6 +145,8 @@ const ResetPassword = () => {
                     >
                         Reset Password
                     </Typography>
+
+                    {/* Description */}
                     <Typography
                         variant="body2"
                         align="center"
@@ -124,29 +156,58 @@ const ResetPassword = () => {
                         Create a new password for your account
                     </Typography>
 
+                    {/* Error */}
                     {error && (
-                        <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
+                        <Alert
+                            severity="error"
+                            sx={{
+                                mb: 2,
+                                borderRadius: 2,
+                            }}
+                        >
                             {error}
                         </Alert>
                     )}
 
                     <Formik
-                        initialValues={{ password: "", confirmPassword: "" }}
+                        initialValues={{
+                            password: "",
+                            confirmPassword: "",
+                        }}
                         validationSchema={validationSchema}
                         onSubmit={handleSubmit}
                     >
-                        {({ values, errors, touched, handleChange, handleBlur, handleSubmit }) => (
+                        {({
+                            values,
+                            errors,
+                            touched,
+                            handleChange,
+                            handleBlur,
+                            handleSubmit,
+                        }) => (
                             <form onSubmit={handleSubmit}>
+
+                                {/* New Password */}
                                 <TextField
                                     fullWidth
-                                    type={showPassword ? "text" : "password"}
+                                    type={
+                                        showPassword
+                                            ? "text"
+                                            : "password"
+                                    }
                                     label="New Password"
                                     name="password"
                                     value={values.password}
                                     onChange={handleChange}
                                     onBlur={handleBlur}
-                                    error={touched.password && Boolean(errors.password)}
-                                    helperText={touched.password && errors.password}
+                                    error={
+                                        touched.password &&
+                                        Boolean(errors.password)
+                                    }
+                                    helperText={
+                                        touched.password &&
+                                        errors.password
+                                    }
                                     margin="normal"
                                     size="small"
                                     slotProps={{
@@ -154,43 +215,74 @@ const ResetPassword = () => {
                                             endAdornment: (
                                                 <InputAdornment position="end">
                                                     <IconButton
-                                                        onClick={handleClickShowPassword}
-                                                        onMouseDown={handleMouseDownPassword}
+                                                        onClick={
+                                                            handleClickShowPassword
+                                                        }
+                                                        onMouseDown={
+                                                            handleMouseDownPassword
+                                                        }
                                                         edge="end"
                                                     >
-                                                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                                                        {showPassword ? (
+                                                            <VisibilityOff />
+                                                        ) : (
+                                                            <Visibility />
+                                                        )}
                                                     </IconButton>
                                                 </InputAdornment>
                                             ),
                                         },
                                     }}
                                     sx={{
-                                        '& .MuiOutlinedInput-root': {
-                                            backgroundColor: '#FFFFFF',
-                                            borderRadius: '12px',
-                                            '& .MuiOutlinedInput-notchedOutline': {
-                                                borderRadius: '12px',
+                                        "& .MuiOutlinedInput-root": {
+                                            backgroundColor: "#FFFFFF",
+                                            borderRadius: "12px",
+
+                                            "& .MuiOutlinedInput-notchedOutline":
+                                            {
+                                                borderRadius:
+                                                    "12px",
                                             },
-                                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                borderColor: '#FF9933',
+
+                                            "&.Mui-focused .MuiOutlinedInput-notchedOutline":
+                                            {
+                                                borderColor:
+                                                    "#FF9933",
                                             },
                                         },
-                                        '& .MuiInputLabel-root.Mui-focused': {
-                                            color: '#FF9933',
+
+                                        "& .MuiInputLabel-root.Mui-focused":
+                                        {
+                                            color: "#FF9933",
                                         },
                                     }}
                                 />
 
+                                {/* Confirm Password */}
                                 <TextField
                                     fullWidth
-                                    type={showConfirmPassword ? "text" : "password"}
+                                    type={
+                                        showConfirmPassword
+                                            ? "text"
+                                            : "password"
+                                    }
                                     label="Confirm Password"
                                     name="confirmPassword"
-                                    value={values.confirmPassword}
+                                    value={
+                                        values.confirmPassword
+                                    }
                                     onChange={handleChange}
                                     onBlur={handleBlur}
-                                    error={touched.confirmPassword && Boolean(errors.confirmPassword)}
-                                    helperText={touched.confirmPassword && errors.confirmPassword}
+                                    error={
+                                        touched.confirmPassword &&
+                                        Boolean(
+                                            errors.confirmPassword
+                                        )
+                                    }
+                                    helperText={
+                                        touched.confirmPassword &&
+                                        errors.confirmPassword
+                                    }
                                     margin="normal"
                                     size="small"
                                     slotProps={{
@@ -198,33 +290,50 @@ const ResetPassword = () => {
                                             endAdornment: (
                                                 <InputAdornment position="end">
                                                     <IconButton
-                                                        onClick={handleClickShowConfirmPassword}
-                                                        onMouseDown={handleMouseDownPassword}
+                                                        onClick={
+                                                            handleClickShowConfirmPassword
+                                                        }
+                                                        onMouseDown={
+                                                            handleMouseDownPassword
+                                                        }
                                                         edge="end"
                                                     >
-                                                        {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                                                        {showConfirmPassword ? (
+                                                            <VisibilityOff />
+                                                        ) : (
+                                                            <Visibility />
+                                                        )}
                                                     </IconButton>
                                                 </InputAdornment>
                                             ),
                                         },
                                     }}
                                     sx={{
-                                        '& .MuiOutlinedInput-root': {
-                                            backgroundColor: '#FFFFFF',
-                                            borderRadius: '12px',
-                                            '& .MuiOutlinedInput-notchedOutline': {
-                                                borderRadius: '12px',
+                                        "& .MuiOutlinedInput-root": {
+                                            backgroundColor: "#FFFFFF",
+                                            borderRadius: "12px",
+
+                                            "& .MuiOutlinedInput-notchedOutline":
+                                            {
+                                                borderRadius:
+                                                    "12px",
                                             },
-                                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                borderColor: '#FF9933',
+
+                                            "&.Mui-focused .MuiOutlinedInput-notchedOutline":
+                                            {
+                                                borderColor:
+                                                    "#FF9933",
                                             },
                                         },
-                                        '& .MuiInputLabel-root.Mui-focused': {
-                                            color: '#FF9933',
+
+                                        "& .MuiInputLabel-root.Mui-focused":
+                                        {
+                                            color: "#FF9933",
                                         },
                                     }}
                                 />
 
+                                {/* Submit */}
                                 <Button
                                     type="submit"
                                     fullWidth
@@ -238,16 +347,29 @@ const ResetPassword = () => {
                                         fontSize: "14px",
                                         fontWeight: 700,
                                         borderRadius: "999px",
-                                        "&:hover": { background: "#e6862c" },
+
+                                        "&:hover": {
+                                            background: "#e6862c",
+                                        },
+
                                         "&:disabled": {
                                             background: "#ffcc80",
                                             color: "#666",
-                                        }
+                                        },
                                     }}
                                 >
                                     {isSubmitting ? (
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                            <CircularProgress size={20} color="inherit" />
+                                        <Box
+                                            sx={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 1,
+                                            }}
+                                        >
+                                            <CircularProgress
+                                                size={20}
+                                                color="inherit"
+                                            />
                                             Resetting...
                                         </Box>
                                     ) : (
@@ -255,12 +377,21 @@ const ResetPassword = () => {
                                     )}
                                 </Button>
 
-                                <Box sx={{ textAlign: "center", mt: 2 }}>
+                                {/* Back to Login */}
+                                <Box
+                                    sx={{
+                                        textAlign: "center",
+                                        mt: 2,
+                                    }}
+                                >
                                     <MuiLink
                                         component={Link}
                                         to="/login"
                                         underline="hover"
-                                        sx={{ fontSize: "14px", color: "#FF9933" }}
+                                        sx={{
+                                            fontSize: "14px",
+                                            color: "#FF9933",
+                                        }}
                                     >
                                         Back to Login
                                     </MuiLink>
