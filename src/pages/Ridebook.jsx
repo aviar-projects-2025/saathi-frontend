@@ -252,8 +252,6 @@ export default function Ridebook({
       if (!user?.id) return;
 
       const res = await axios.get(`${Api}/bookride/send/${user.id}`);
-
-      console.log(res,'requested list')
       setRequests(res.data.data);
     } catch (error) {
       console.log(error);
@@ -450,8 +448,8 @@ export default function Ridebook({
     (member, originalIndex) => ({
       ...member,
       originalIndex,
-      isSelf: !isEditMode && originalIndex === 0,
-    }),
+      isSelf: originalIndex === 0,
+    })
   );
 
   const visibleMembers = editableMembersWithMeta.filter(
@@ -710,7 +708,6 @@ export default function Ridebook({
           {visibleMembers.map((member) => {
             const isLockedSelfSlot = member.isSelf;
             const index = member.originalIndex;
-
             return (
               <>
                 <Box
@@ -751,6 +748,7 @@ export default function Ridebook({
                         : member.name
                     }
                     disabled={isLockedSelfSlot}
+
                     error={!isLockedSelfSlot && !!memberErrors[index]?.name}
                     helperText={
                       !isLockedSelfSlot && memberErrors[index]?.name
