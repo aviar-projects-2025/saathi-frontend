@@ -112,6 +112,8 @@ function requestVisual(status) {
       return { label: 'Approved', color: TOKENS.green, bg: TOKENS.greenSoft };
     case 'REJECTED':
       return { label: 'Rejected', color: TOKENS.red, bg: TOKENS.redSoft };
+    case 'CANCELLED':
+      return { label: 'Cancelled', color: TOKENS.red, bg: TOKENS.redSoft };
     default:
       return { label: 'Pending', color: TOKENS.amber, bg: TOKENS.amberSoft };
   }
@@ -494,6 +496,7 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
 export default function RideDetailsModal({
   ride,
   requests = [],
+  setPendingMembers,
   showEdit,
   user,
   showDelete,
