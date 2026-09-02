@@ -117,6 +117,20 @@ const Register = () => {
     setOtpError("");
 
     try {
+
+      const res = await axios.post(`${Api}/referralInvite/check`,
+        {
+          mobile : mobileNumber
+        }
+      )
+
+      console.log(res)
+
+      if(res?.status === false){
+        toast.warning(res?.message)
+        return 
+      }
+
       const response = await axios.post(`${Api}/auth/send-otp`, {
         mobileNumber: mobileNumber,
       });

@@ -273,6 +273,17 @@ const MyReferrals = () => {
         }
 
         try {
+            const stored = await axios.post(
+                `${Api}/referralInvite/`,
+                {
+                    referredBy: user.id,
+                    mobile: mobile_number,
+                    status: 'Waiting',
+                }
+            )
+
+            console.log(stored,'stored')
+
             const response = await axios.post(
                 `${Api}/referrals/send`,
                 {
