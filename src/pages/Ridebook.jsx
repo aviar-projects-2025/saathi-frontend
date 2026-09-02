@@ -443,7 +443,7 @@ export default function Ridebook({
 
   const isSelfAlreadyConfirmed = existingMembers?.some(isSelfMember);
 
-  // 3. Tag + filter
+
   const editableMembersWithMeta = editableMembers.map(
     (member, originalIndex) => ({
       ...member,
@@ -452,13 +452,7 @@ export default function Ridebook({
     })
   );
 
-  //   const editableMembersWithMeta = editableMembers.map(
-  //   (member, originalIndex) => ({
-  //     ...member,
-  //     originalIndex,
-  //     isSelf: !isEditMode && originalIndex === 0,
-  //   }),
-  // );
+
   const visibleMembers = editableMembersWithMeta.filter(
     (member) => !(member.isSelf && isSelfAlreadyConfirmed),
   );
