@@ -321,7 +321,7 @@ const Myprofile = () => {
         sx={{
           // color: '#E8650A',
           color: "#000000",
-          fontWeight: 600,
+          fontWeight: 500,
           fontSize: { xs: "1.2rem", sm: "1.2rem", md: "1.35rem", lg: "1.5rem" },
           mb: { xs: "1.2rem", sm: "1.2rem", md: "1.35rem", lg: "1.5rem" },
         }}
@@ -380,9 +380,7 @@ const Myprofile = () => {
                 setProfileModalOpen(true);
               }}
             >
-              {!currentUser?.profileImage &&
-                `${currentUser?.firstName?.[0] || ""}${currentUser?.lastName?.[0] || ""
-                }`}
+              {`${currentUser?.firstName?.[0] || ""}${currentUser?.lastName?.[0] || ""}`}
             </Avatar>
 
             <Box sx={{ minWidth: 0, flex: 1 }}>

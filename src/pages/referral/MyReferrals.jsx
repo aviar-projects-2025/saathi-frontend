@@ -366,7 +366,7 @@ const MyReferrals = () => {
                     >
                         <Avatar
                             src={profileImage || undefined}
-                            alt={`${userData.firstName} ${userData.lastName}`}
+                            alt={`${userData?.firstName || ""} ${userData?.lastName || ""}`}
                             onClick={() => {
                                 if (!users) return;
                                 setSelectedProfile(users);
@@ -376,10 +376,20 @@ const MyReferrals = () => {
                                 width: { xs: 40, sm: 44 },
                                 height: { xs: 40, sm: 44 },
                                 cursor: users ? "pointer" : "default",
-                                bgcolor: users?.profileImage ? "transparent" : "primary.main",
+                                bgcolor: "#FFF3E0",
+                                fontWeight: 600,
                             }}
                         >
-                            {!users?.profileImage && getInitials(userData.firstName, userData.lastName)}
+                            {!profileImage && (
+                                <>
+                                    <Box component="span" sx={{ color: "#FF9933" }}>
+                                        {userData?.firstName?.[0] || ""}
+                                    </Box>
+                                    <Box component="span" sx={{ color: "#FF9933" }}>
+                                        {userData?.lastName?.[0] || ""}
+                                    </Box>
+                                </>
+                            )}
                         </Avatar>
 
                         <Box sx={{ minWidth: 0 }}>
@@ -586,7 +596,7 @@ const MyReferrals = () => {
 
     const LoadingSpinner = () => (
         <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
-            <CircularProgress size={36} thickness={4} />
+            <CircularProgress size={36} thickness={4} sx={{ color: "#FF9933" }} />
         </Box>
     );
 
@@ -647,21 +657,65 @@ const MyReferrals = () => {
                             minHeight: { xs: 40, sm: 48 },
                             color: "text.secondary",
                         },
+
                         "& .Mui-selected": {
-                            color: "primary.main",
+                            color: "#FF6B35 !important",
                         },
+
                         "& .MuiTabs-indicator": {
                             height: 2,
-                            bgcolor: "primary.main",
+                            bgcolor: "#FF6B35",
                             borderRadius: "2px 2px 0 0",
                         },
                     }}
                 >
                     <Tab
-                        label={`Pending Approvals (${referrals.length})`}
+                        label={
+                            <Stack direction="row" alignItems="center">
+                                <span style={{ color: "#FF6B35", fontWeight: 600 }} >{`Pending Approvals (${referrals.length})`} </span>
+                                {/* {referrals.length > 0 && (
+                                    <Box
+                                        component="span"
+                                        sx={{
+                                            bgcolor: tab === 0 ? "primary.main" : "action.selected",
+                                            color: tab === 0 ? "#fff" : "text.secondary",
+                                            fontSize: 11,
+                                            fontWeight: 700,
+                                            borderRadius: 10,
+                                            px: 0.75,
+                                            py: 0.1,
+                                            lineHeight: 1.6,
+                                        }}
+                                    >
+                                        {referrals.length}
+                                    </Box>
+                                )} */}
+                            </Stack>
+                        }
                     />
                     <Tab
-                        label={`Approved Referrals (${approvedReferrals.length})`}
+                        label={
+                            <Stack direction="row" alignItems="center">
+                                <span style={{ color: "#FF6B35", fontWeight: 600 }}>{`Approved Referrals (${approvedReferrals.length})`} </span>
+                                {/* {approvedReferrals.length > 0 && (
+                                    <Box
+                                        component="span"
+                                        sx={{
+                                            bgcolor: tab === 1 ? "primary.main" : "action.selected",
+                                            color: tab === 1 ? "#fff" : "text.secondary",
+                                            fontSize: 11,
+                                            fontWeight: 700,
+                                            borderRadius: 10,
+                                            px: 0.75,
+                                            py: 0.1,
+                                            lineHeight: 1.6,
+                                        }}
+                                    >
+                                        {approvedReferrals.length}
+                                    </Box>
+                                )} */}
+                            </Stack>
+                        }
                     />
                 </Tabs>
 

@@ -604,10 +604,18 @@ const UserProfile = () => {
     } catch (error) {
       console.log(error.response);
 
-      toast.error(
-        error.response?.data?.message || "Something went wrong",
-        toasts
-      );
+      const message =
+        error.response?.data?.message || "Something went wrong";
+
+      setErrors((prev) => ({
+        ...prev,
+        mobile: message,
+      }));
+
+      // toast.error(
+      //   error.response?.data?.message || "Something went wrong",
+      //   toasts
+      // );
     } finally {
       setSubmitLoading(false);
     }
