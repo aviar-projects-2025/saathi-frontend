@@ -42,6 +42,7 @@ export default function Ridebook({
 
   onRequestUpdated,
 }) {
+  
   const theme = useTheme();
   const { currentUser } = useUser();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -98,8 +99,8 @@ export default function Ridebook({
     : requestData.members.length;
 
   const remainingSeats = isEditMode
-    ? Math.max(remainingSeatsForUser - newMembers.length, 0)
-    : Math.max(remainingSeatsForUser - requestData?.members.length, 0);
+    ? Math.max(maxSeats - existingMembers.length - newMembers.length, 0)
+    : Math.max(maxSeats - requestData?.members.length, 0);
 
   //   const remainingSeats = Math.max(
   //   remainingSeatsForUser - newMembers.length,
@@ -444,14 +445,15 @@ export default function Ridebook({
   const isSelfAlreadyConfirmed = existingMembers?.some(isSelfMember);
 
 
+
   const editableMembersWithMeta = editableMembers.map(
     (member, originalIndex) => ({
       ...member,
       originalIndex,
-      isSelf: originalIndex === 0,
+
+      isSelf: isSelfMember(member) && !isSelfAlreadyConfirmed,
     })
   );
-
 
   const visibleMembers = editableMembersWithMeta.filter(
     (member) => !(member.isSelf && isSelfAlreadyConfirmed),
@@ -709,8 +711,12 @@ export default function Ridebook({
           {visibleMembers.map((member) => {
             const index = member.originalIndex;
 
-            // First member is always the current user
-            const isLockedSelfSlot = index === 0;
+
+            const isLockedSelfSlot = member.isSelf;
+            // const index = member.originalIndex;
+
+            // // First member is always the current user
+            // const isLockedSelfSlot = index === 0;
             return (
               <>
                 <Box

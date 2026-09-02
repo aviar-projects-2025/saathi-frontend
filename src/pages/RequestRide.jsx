@@ -89,7 +89,7 @@ const RequestRide = ({ ride }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [isCancelling, setIsCancelling] = useState(false);
   const user = JSON.parse(localStorage.getItem("user"));
-  const [rejectedSeats,setRejectedSeats] = useState();
+  const [rejectedSeats, setRejectedSeats] = useState();
   const [remainingSeatsForUser, setRemainingSeatsForUser] = useState();
   const totalSeats = ride?.totalSeats;
   const [selectedRideDetails, setSelectedRideDetails] = useState(null);
@@ -118,10 +118,10 @@ const RequestRide = ({ ride }) => {
 
       if (!user?.id) return;
       const res = await axios.get(`${Api}/bookride/send/${user.id}`);
-      console.log(res,'res')
+
       const requestUser = res.data.data.map((item) => item.members);
-      const rejectedreq = res.data.data.map((item)=>item.rejectedSeats);
-      setRejectedSeats(res.data.data.map((item)=>item.rejectedSeats))
+      const rejectedreq = res.data.data.map((item) => item.rejectedSeats);
+      setRejectedSeats(res.data.data.map((item) => item.rejectedSeats))
       setUserData(requestUser);
       const availableSeat = res.data.data.map(
         (item) => item.rideId?.availableSeats
@@ -136,7 +136,7 @@ const RequestRide = ({ ride }) => {
       setLoadingRequests(false);
     }
   }
-  console.log("juyyyvvyh", allMyRequests)
+
   const handleMenuOpen = (event, request) => {
     event.stopPropagation();
     setAnchorEl(event.currentTarget);
@@ -390,7 +390,7 @@ const RequestRide = ({ ride }) => {
               // const rejectedSeats = Number(request?.rejectedReq || 0);
               const requestedByMe = Number(request?.seatsRequested || 0);
               const approvedSeats = Number(request?.approvedSeats || 0);
-              console.log("hyyuininhbbuu",rejectedSeats)
+
               const mainText = isRejected
                 ? rejectedSeats > 0 && approvedSeats > 0
                   ? `You have ${approvedSeats} approved seat${approvedSeats > 1 ? "s" : ""
@@ -407,8 +407,8 @@ const RequestRide = ({ ride }) => {
                       : `You have ${approvedSeats} approved seat${approvedSeats > 1 ? "s" : ""
                       }`
                     : `You applied for ${requestedByMe} seat${requestedByMe > 1 ? "s" : ""
-                    }`; 
-                    console.log("gvhbjnkml;'gfx viuyfg",rejectedSeats)
+                    }`;
+
 
               const pendingText =
                 isAccepted && pendingReqSeats > 0
@@ -416,7 +416,6 @@ const RequestRide = ({ ride }) => {
                   }`
                   : null;
 
-              console.log("Request:", request);
 
               return (
                 <>
