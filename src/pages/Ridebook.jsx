@@ -452,6 +452,13 @@ export default function Ridebook({
     })
   );
 
+  //   const editableMembersWithMeta = editableMembers.map(
+  //   (member, originalIndex) => ({
+  //     ...member,
+  //     originalIndex,
+  //     isSelf: !isEditMode && originalIndex === 0,
+  //   }),
+  // );
   const visibleMembers = editableMembersWithMeta.filter(
     (member) => !(member.isSelf && isSelfAlreadyConfirmed),
   );
@@ -706,8 +713,10 @@ export default function Ridebook({
 
         <Stack spacing={1.25}>
           {visibleMembers.map((member) => {
-            const isLockedSelfSlot = member.isSelf;
             const index = member.originalIndex;
+
+            // First member is always the current user
+            const isLockedSelfSlot = index === 0;
             return (
               <>
                 <Box
