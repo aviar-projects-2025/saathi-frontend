@@ -898,11 +898,7 @@ function RideCard({
           >
             <Avatar
               src={ride?.createdBy?.profileImage || ""}
-              alt={
-                ride?.createdBy?.firstName
-                  ? `${ride?.createdBy?.firstName} ${ride?.createdBy?.lastName || ""}`
-                  : "Profile Image"
-              }
+              // alt={`${ride?.createdBy?.firstName[0]}${ride?.createdBy?.lastName[0]}`.toUpperCase()}
               onClick={() => {
                 setSelectedProfile(ride?.createdBy);
                 setProfileModalOpen(true);
@@ -910,7 +906,7 @@ function RideCard({
               sx={{
                 width: { xs: 26, sm: 35 },
                 height: { xs: 26, sm: 35 },
-                fontSize: { xs: 12, sm: 13 },
+                fontSize: { xs: 12, sm:15 },
                 fontWeight: 700,
                 bgcolor: ACCENT,
                 color: "#fff",
@@ -918,7 +914,7 @@ function RideCard({
                 flexShrink: 0,
               }}
             >
-              {`${ride?.createdBy?.firstName?.[0]} ${ride?.createdBy?.lastName?.[0]}`.toUpperCase() ||
+              {`${ride?.createdBy?.firstName?.[0]}${ride?.createdBy?.lastName?.[0]}`.toUpperCase() ||
                 "U"}
             </Avatar>
 

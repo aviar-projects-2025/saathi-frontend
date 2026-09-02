@@ -105,17 +105,70 @@ const statusStamp = {
   CLOSED: { label: 'VOID', color: TOKENS.red, bg: TOKENS.redSoft },
 };
 
-function requestVisual(status) {
-  switch (status?.toUpperCase()) {
-    case 'ACCEPTED':
-    case 'APPROVED':
-      return { label: 'Approved', color: TOKENS.green, bg: TOKENS.greenSoft };
-    case 'REJECTED':
-      return { label: 'Rejected', color: TOKENS.red, bg: TOKENS.redSoft };
-    default:
-      return { label: 'Pending', color: TOKENS.amber, bg: TOKENS.amberSoft };
+// function requestVisual(status) {
+//   switch (status?.toUpperCase()) {
+//     case 'ACCEPTED':
+//     case 'APPROVED':
+//       return { label: 'Approved', color: TOKENS.green, bg: TOKENS.greenSoft };
+//     case 'REJECTED':
+//       return { label: 'Rejected', color: TOKENS.red, bg: TOKENS.redSoft };
+//     default:
+//       return { label: 'Cancelled', color: TOKENS.red, bg: TOKENS.redSoft };
+
+//       // return { label: 'Pending', color: TOKENS.amber, bg: TOKENS.amberSoft };
+//   }
+// }
+
+const requestVisual = (request) => {
+  const status = request?.status?.toUpperCase();
+  const travelStatus = request?.rideId?.travelStatus?.toUpperCase();
+
+  if (status === "ACCEPTED" || status === "APPROVED") {
+    return {
+      label: "Approved",
+      color: TOKENS.green,
+      bg: TOKENS.greenSoft,
+    };
   }
-}
+
+  if (status === "REJECTED") {
+    return {
+      label: "Rejected",
+      color: TOKENS.red,
+      bg: TOKENS.redSoft,
+    };
+  }
+
+  if (status === "CANCELLED") {
+    return {
+      label: `${request?.requestedBy?.firstName} Cancelled`,
+      color: TOKENS.red,
+      bg: TOKENS.redSoft,
+    };
+  }
+
+  if (travelStatus === "CANCELLED") {
+    return {
+      label: "Rider Cancelled",
+      color: TOKENS.red,
+      bg: TOKENS.redSoft,
+    };
+  }
+
+  if (travelStatus === "COMPLETED") {
+    return {
+      label: "Auto Rejected",
+      color: TOKENS.red,
+      bg: TOKENS.redSoft,
+    };
+  }
+
+  return {
+    label: "",
+    color: "transparent",
+    bg: "transparent",
+  };
+};
 
 function stationCode(name = '') {
   const clean = name.trim();
@@ -196,7 +249,8 @@ function Field({ icon: Icon, label, value, span }) {
 // ── Passenger / request stub row ─────────────────────────────────────────
 function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoading, dense }) {
   const [open, setOpen] = useState(false);
-  const v = requestVisual(request?.status);
+  // const v = requestVisual(request?.status);
+  const v = requestVisual(request);
   const isPending = request?.status?.toUpperCase() === 'PENDING';
   const firstName = request.requestedBy?.firstName || request?.data?.requestBy?.requestedBy?.firstName || 'U';
   const lastName = request.requestedBy?.lastName || '';
@@ -366,17 +420,32 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
                 </>
               )
             ) : (
-              <Chip
-                label={v.label}
-                size="small"
-                sx={{
-                  bgcolor: v.bg,
-                  color: v.color,
-                  fontFamily: TOKENS.bodyFont,
-                  fontWeight: 700,
-                  fontSize: '0.68rem',
-                }}
-              />
+              // <Chip
+              //   label={v.label}
+              //   size="small"
+              //   sx={{
+              //     bgcolor: v.bg,
+              //     color: v.color,
+              //     fontFamily: TOKENS.bodyFont,
+              //     fontWeight: 700,
+              //     fontSize: '0.68rem',
+              //   }}
+              // />
+              <>
+                {v?.label && (
+                  <Chip
+                    label={v.label}
+                    size="small"
+                    sx={{
+                      bgcolor: v.bg,
+                      color: v.color,
+                      fontFamily: TOKENS.bodyFont,
+                      fontWeight: 700,
+                      fontSize: "0.68rem",
+                    }}
+                  />
+                )}
+              </>
             )}
             <IconButton size="small" onClick={() => setOpen((o) => !o)} aria-label="Toggle passenger details">
               {open ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
