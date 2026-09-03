@@ -749,7 +749,7 @@ function RideCard({
               sx={{
                 width: { xs: 26, sm: 35 },
                 height: { xs: 26, sm: 35 },
-                fontSize: { xs: 12, sm:15 },
+                fontSize: { xs: 12, sm: 15 },
                 fontWeight: 700,
                 bgcolor: ACCENT,
                 color: "#fff",
@@ -1168,17 +1168,6 @@ function RideCard({
 
               {/* Details grid */}
             </Box>
-
-            {/* Requests section */}
-            {/* {showRequests && rideRequests.length > 0 && (
-              <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid rgba(255,153,51,0.2)' }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                  <Typography fontWeight={700} sx={{ fontSize: '0.9rem' }}>
-                    Requests ({rideRequests.length})
-                  </Typography>
-                </Box>
-              </Box>
-            )} */}
           </CardContent>
         </Card>
       </Box>
@@ -1411,12 +1400,44 @@ const MyRides = () => {
       window.removeEventListener("rideDataChanged", handleRideDataChange);
     };
   }, []); // Empty dependency array - only run once
+  // useEffect(() => {
+  //   if (!notifications?.length) return;
+  //   fetchRides();
+  //   fetchAllSends();
+  // }, [notifications]);
+
   useEffect(() => {
     if (!notifications?.length) return;
-    fetchRides();
-    fetchAllSends();
-  }, [notifications]);
 
+    const newRequestsFromNotifications = notifications
+      .filter((noti) => noti.type === "new_request")
+      .map((noti) => {
+        const booking = noti.data.bookingData;
+
+        return {
+          ...booking,
+          _id: booking._id,
+          rideId: {
+            _id: booking.rideId,
+          },
+          requestedBy: {
+            _id: booking.requestedBy,
+            profileImage: noti.data.profileImage,
+            firstName: noti.data.requestBy.requestedBy.firstName,
+            lastName: noti.data.requestBy.requestedBy.lastName,
+          },
+        };
+      });
+
+    setAllRequests((prev) => {
+      const merged = [...newRequestsFromNotifications, ...prev];
+
+      return merged.filter(
+        (item, index, self) =>
+          index === self.findIndex((t) => t._id === item._id)
+      );
+    });
+  }, [notifications]);
   useEffect(() => {
     if (!notifications?.length) return;
 
@@ -1461,57 +1482,21 @@ const MyRides = () => {
   const { refreshRide } = useRide();
 
   const fetchRides = async () => {
-    const currentDateTime = new Date();
-
     try {
       const response = await axios.get(`${Api}/rides/get`);
 
       const all = (response.data.data || []).sort(
         (a, b) =>
-          new Date(b.startTime).getTime() - new Date(a.startTime).getTime(),
+          new Date(b.startTime).getTime() -
+          new Date(a.startTime).getTime()
       );
 
-      const myRides = all.filter((ride) => ride?.createdBy?._id === user.id);
+      const myRides = all.filter(
+        (ride) => ride?.createdBy?._id === user?.id
+      );
 
       setMypost(myRides);
 
-      setUpcoming(
-        myRides.filter((ride) => {
-          const rideStartTime = new Date(ride?.startTime);
-
-          return (
-            !isNaN(rideStartTime.getTime()) &&
-            rideStartTime > currentDateTime &&
-            ride?.travelStatus !== "Cancelled" &&
-            ride?.travelStatus !== "Completed"
-          );
-        }),
-      );
-
-      setHistory(
-        myRides.filter((ride) => {
-          const rideStartTime = new Date(ride?.startTime);
-
-          return (
-            !isNaN(rideStartTime.getTime()) &&
-            (ride?.travelStatus === "Completed" ||
-              ride?.travelStatus === "Cancelled")
-          )
-        }),
-      );
-
-      const currReqRide = (allMyRequests || []).filter((request) => {
-        const rideStartTime = new Date(request?.rideId?.startTime);
-
-        return (
-          !isNaN(rideStartTime.getTime()) &&
-          rideStartTime <= currentDateTime &&
-          request?.rideId?.travelStatus !== "Completed" &&
-          request?.rideId?.travelStatus !== "Cancelled"
-        );
-      });
-
-      setCurrentRide(currReqRide);
     } catch (error) {
       console.error("Error fetching rides:", error.message);
     } finally {
@@ -1520,8 +1505,12 @@ const MyRides = () => {
   };
 
   useEffect(() => {
+    if (!refreshRide) return;
+
     fetchRides();
-  }, [refreshRide, notifications]);
+    fetchAllSends();
+    fetchAllRequests();
+  }, [refreshRide]);
 
 
 
@@ -1550,67 +1539,7 @@ const MyRides = () => {
     setUpcoming([...acceptedRides, ...myUpcoming]);
   }, [allMyRequests, mypost, notifications]);
 
-  useEffect(() => {
-    const currentDateTime = new Date();
 
-    // Accepted rides requested by me
-    const currReqRide = allMyRequests
-      .filter((ride) => {
-        const rideStartTime = new Date(ride?.rideId?.startTime);
-
-        return (
-          !isNaN(rideStartTime) &&
-          rideStartTime <= currentDateTime &&
-          ride?.status === "ACCEPTED" &&
-          ride?.rideId?.travelStatus !== "Completed" &&
-          ride?.rideId?.travelStatus !== "Cancelled"
-        );
-      })
-      .map((ride) => ride.rideId);
-
-    // Rides created by me
-    const myrides = mypost.filter((ride) => {
-      const rideStartTime = new Date(ride?.startTime);
-
-      return (
-        ride?.createdBy?._id === user.id &&
-        !isNaN(rideStartTime) &&
-        rideStartTime <= currentDateTime &&
-        ride?.travelStatus !== "Completed" &&
-        ride?.travelStatus !== "Cancelled"
-      );
-    });
-
-    const currentRides = [...currReqRide, ...myrides];
-
-    setCurrentRide(currentRides);
-
-
-
-    // History - requested rides
-    const historyRide = allMyRequests
-      .filter((ride) => {
-        return (
-          ride?.rideId?.travelStatus === "Completed" ||
-          ride?.rideId?.travelStatus === "Cancelled"
-        );
-      })
-      .map((ride) => ride.rideId);
-
-    // History - rides created by me
-    const histMyPost = mypost.filter((ride) => {
-      const rideStartTime = new Date(ride?.startTime);
-
-      return (
-        ride?.createdBy?._id === user.id &&
-        !isNaN(rideStartTime) &&
-        (ride?.travelStatus === "Completed" ||
-          ride?.travelStatus === "Cancelled")
-      );
-    });
-
-    setHistory([...historyRide, ...histMyPost]);
-  }, [allMyRequests, mypost, notifications, user?.id]);
 
   useEffect(() => {
     if (!notifications?.length) return;
@@ -1651,7 +1580,81 @@ const MyRides = () => {
       return unique;
     });
   }, [notifications]);
+  useEffect(() => {
+    const now = new Date();
 
+    // Accepted rides requested by current user
+    const acceptedRides = (allMyRequests || [])
+      .filter((request) => {
+        const startTime = new Date(request?.rideId?.startTime);
+
+        return (
+          !isNaN(startTime.getTime()) &&
+          startTime > now &&
+          request?.status === "ACCEPTED"
+        );
+      })
+      .map((request) => request.rideId);
+
+    // My own upcoming rides
+    const myUpcoming = (mypost || []).filter((ride) => {
+      const startTime = new Date(ride?.startTime);
+
+      return (
+        !isNaN(startTime.getTime()) &&
+        startTime > now &&
+        ride?.travelStatus !== "Cancelled" &&
+        ride?.travelStatus !== "Completed"
+      );
+    });
+
+    setUpcoming([...acceptedRides, ...myUpcoming]);
+
+    // Current rides
+    const acceptedCurrent = (allMyRequests || [])
+      .filter((request) => {
+        const startTime = new Date(request?.rideId?.startTime);
+
+        return (
+          !isNaN(startTime.getTime()) &&
+          startTime <= now &&
+          request?.rideId?.travelStatus !== "Completed" &&
+          request?.rideId?.travelStatus !== "Cancelled"
+        );
+      })
+      .map((request) => request.rideId);
+
+    const myCurrent = (mypost || []).filter((ride) => {
+      const startTime = new Date(ride?.startTime);
+
+      return (
+        !isNaN(startTime.getTime()) &&
+        startTime <= now &&
+        ride?.travelStatus !== "Completed" &&
+        ride?.travelStatus !== "Cancelled"
+      );
+    });
+
+    setCurrentRide([...acceptedCurrent, ...myCurrent]);
+
+    // History
+    const acceptedHistory = (allMyRequests || [])
+      .filter(
+        (request) =>
+          request?.rideId?.travelStatus === "Completed" ||
+          request?.rideId?.travelStatus === "Cancelled"
+      )
+      .map((request) => request.rideId);
+
+    const myHistory = (mypost || []).filter(
+      (ride) =>
+        ride?.travelStatus === "Completed" ||
+        ride?.travelStatus === "Cancelled"
+    );
+
+    setHistory([...acceptedHistory, ...myHistory]);
+
+  }, [mypost, allMyRequests]);
   const fetchAllRequests = async () => {
     try {
       const res = await axios.get(`${Api}/bookride/${user.id}?type=received`);
@@ -1674,6 +1677,7 @@ const MyRides = () => {
   };
 
   useEffect(() => {
+    fetchRides();
     fetchAllSends();
     fetchAllRequests();
   }, []);
