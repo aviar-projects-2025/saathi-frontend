@@ -873,7 +873,14 @@ export default function RideDetailsModal({
         />
       </Box>
 
-      <DialogContent sx={{ px: { xs: 2.5, sm: 4 }, py: { xs: 3, sm: 3.5 } }}>
+      <DialogContent
+        sx={{
+          px: { xs: 2.5, sm: 4 },
+          py: { xs: 3, sm: 3.5 },
+          overflowX: "hidden",
+          boxSizing: "border-box",
+        }}
+      >
 
         {requests.length > 0 && (
           <>
@@ -1005,6 +1012,7 @@ export default function RideDetailsModal({
             </>
           ) : null}
 
+          {ride.totalSeats && (<Field icon={EventSeatIcon} label="Total Seats" value={ride.totalSeats || '—'} />)}
           {ride.modeOfTravel !== 'Flight' && ride.modeOfTravel !== 'Bus' && ride.fuelSharing >= 0 && (<Field icon={LocalGasStationIcon} label="Fuel Cost" value={`${ride.fuelSharing === null ? '—' : `$ ${ride.fuelSharing}/Person`} ` || '—'} />)}
           <Field icon={TravellerTypeIcon} label="Traveller Type" value={ride.travellerType || '—'} />
 

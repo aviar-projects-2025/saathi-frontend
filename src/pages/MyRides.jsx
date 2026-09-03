@@ -749,7 +749,7 @@ function RideCard({
               sx={{
                 width: { xs: 26, sm: 35 },
                 height: { xs: 26, sm: 35 },
-                fontSize: { xs: 12, sm:15 },
+                fontSize: { xs: 12, sm: 15 },
                 fontWeight: 700,
                 bgcolor: ACCENT,
                 color: "#fff",
@@ -1872,14 +1872,17 @@ const MyRides = () => {
         display: "flex",
         gap: { xs: 1, sm: 2.5, md: 3 },
         alignItems: "flex-start",
-        flexDirection: { xs: "column", lg: "row", md: "row" },
+        flexDirection: { xs: "column", md: "row" },
         width: "100%",
         maxWidth: "100%",
+        minWidth: 0,
+        boxSizing: "border-box",
         overflowX: "hidden",
       }}
     >
       <Box
         sx={{
+          flex: 1,
           width: "100%",
           minWidth: 0,
           maxWidth: "100%",
