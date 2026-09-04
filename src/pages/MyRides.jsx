@@ -601,6 +601,9 @@ function RideCard({
 
   const handleApprove = async (requestId) => {
     try {
+      if (!window.confirm("Are you sure you want to approve this request?")) {
+        return;
+      }
       setApproveLoading(requestId);
       const res = await axios.patch(
         `${Api}/bookride/${requestId}/status?type=Approve`,
@@ -626,6 +629,9 @@ function RideCard({
 
   const handleReject = async (requestId) => {
     try {
+      if (!window.confirm("Are you sure you want to reject this request?")) {
+        return;
+      }
       setRejectLoading(requestId);
 
       await axios.patch(

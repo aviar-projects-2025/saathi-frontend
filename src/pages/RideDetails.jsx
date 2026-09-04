@@ -120,8 +120,33 @@ const statusStamp = {
 // }
 
 const requestVisual = (request) => {
-  const status = request?.status?.toUpperCase();
-  const travelStatus = request?.rideId?.travelStatus?.toUpperCase();
+  const status = request?.status;
+  const travelStatus = request?.rideId?.travelStatus;
+  const pendingReqSeats = request?.pendingReqSeats;
+
+  if (status === "Cancelled") {
+    return {
+      label: `${request?.requestedBy?.firstName} Cancelled`,
+      color: TOKENS.red,
+      bg: TOKENS.redSoft,
+    };
+  }
+
+  if (travelStatus === "Cancelled") {
+    return {
+      label: "Rider Cancelled",
+      color: TOKENS.red,
+      bg: TOKENS.redSoft,
+    };
+  }
+
+  if (pendingReqSeats > 0 && request?.rideId?.travelStatus === "Completed") {
+    return {
+      label: "Auto Rejected",
+      color: TOKENS.red,
+      bg: TOKENS.redSoft,
+    };
+  }
 
   if (status === "ACCEPTED" || status === "APPROVED") {
     return {
@@ -134,30 +159,6 @@ const requestVisual = (request) => {
   if (status === "REJECTED") {
     return {
       label: "Rejected",
-      color: TOKENS.red,
-      bg: TOKENS.redSoft,
-    };
-  }
-
-  if (status === "CANCELLED") {
-    return {
-      label: `${request?.requestedBy?.firstName} Cancelled`,
-      color: TOKENS.red,
-      bg: TOKENS.redSoft,
-    };
-  }
-
-  if (travelStatus === "CANCELLED") {
-    return {
-      label: "Rider Cancelled",
-      color: TOKENS.red,
-      bg: TOKENS.redSoft,
-    };
-  }
-
-  if (travelStatus === "COMPLETED") {
-    return {
-      label: "Auto Rejected",
       color: TOKENS.red,
       bg: TOKENS.redSoft,
     };
@@ -259,6 +260,7 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
   const pendingReq = request?.pendingReqSeats || 0;
   const approvedSeats = request?.approvedSeats || 0;
   const membersCount = request?.membersCount || 0;
+
   return (
     <>
       <Box
@@ -268,7 +270,7 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
           bgcolor: 'background.default',
           border: `1px solid ${TOKENS.line}`,
           borderLeft: `4px solid ${v.color}`,
-          // overflow: 'hidden',
+          overflow: 'hidden',
         }}
       >
         <Box
@@ -279,6 +281,7 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
             gap: 1,
             p: { xs: 1.1, sm: 1.4 },
           }}
+          onClick={() => setOpen((o) => !o)}
         >
           <Stack direction="row" spacing={1.2} alignItems="center" sx={{ minWidth: 0 }}>
             <Avatar
@@ -307,21 +310,42 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
               >
                 {firstName} {lastName}
               </Typography>
+
               <Stack direction="row" spacing={0.6} alignItems="center" sx={{ mt: 0.3 }}>
-                <EventSeatIcon sx={{ fontSize: 13, color: TOKENS.inkSoft }} />
-                <Typography sx={{ fontFamily: TOKENS.monoFont, fontSize: '0.7rem', color: TOKENS.inkSoft }}>
+                <EventSeatIcon sx={{ fontSize: { xs: 12, sm: 13 }, color: TOKENS.inkSoft }} />
+                <Typography
+                  sx={{
+                    fontFamily: TOKENS.monoFont,
+                    fontSize: { xs: '0.64rem', sm: '0.7rem' },
+                    color: TOKENS.inkSoft,
+                  }}
+                >
                   Approved Seats × {approvedSeats}
                 </Typography>
               </Stack>
+
               <Stack direction="row" spacing={0.6} alignItems="center" sx={{ mt: 0.3 }}>
-                <EventSeatIcon sx={{ fontSize: 13, color: TOKENS.inkSoft }} />
-                <Typography sx={{ fontFamily: TOKENS.monoFont, fontSize: '0.7rem', color: TOKENS.inkSoft }}>
+                <EventSeatIcon sx={{ fontSize: { xs: 12, sm: 13 }, color: TOKENS.inkSoft }} />
+                <Typography
+                  sx={{
+                    fontFamily: TOKENS.monoFont,
+                    fontSize: { xs: '0.64rem', sm: '0.7rem' },
+                    color: TOKENS.inkSoft,
+                  }}
+                >
                   Pending Seat Req × {pendingReq}
                 </Typography>
               </Stack>
+
               <Stack direction="row" spacing={0.6} alignItems="center" sx={{ mt: 0.3 }}>
-                <EventSeatIcon sx={{ fontSize: 13, color: TOKENS.inkSoft }} />
-                <Typography sx={{ fontFamily: TOKENS.monoFont, fontSize: '0.7rem', color: TOKENS.inkSoft }}>
+                <EventSeatIcon sx={{ fontSize: { xs: 12, sm: 13 }, color: TOKENS.inkSoft }} />
+                <Typography
+                  sx={{
+                    fontFamily: TOKENS.monoFont,
+                    fontSize: { xs: '0.64rem', sm: '0.7rem' },
+                    color: TOKENS.inkSoft,
+                  }}
+                >
                   Rejected Seat Req × {rejectedReq}
                 </Typography>
               </Stack>
@@ -335,48 +359,38 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
                   <IconButton
                     aria-label="Approve request"
                     onClick={() => onApprove(request._id)}
-                    disabled={
-                      approveLoading === request._id ||
-                      rejectLoading === request._id
-                    }
+                    disabled={approveLoading === request._id || rejectLoading === request._id}
                     sx={{
-                      width: 32,
-                      height: 32,
+                      width: { xs: 28, sm: 32 },
+                      height: { xs: 28, sm: 32 },
                       bgcolor: TOKENS.greenSoft,
                       color: TOKENS.green,
                       '&:hover': { bgcolor: TOKENS.green, color: '#fff' },
                     }}
                   >
-                    {
-                      approveLoading === request._id ? (
-                        <CircularProgress size={16} color="inherit" />
-                      ) : (
-                        <CheckCircleIcon sx={{ fontSize: 16 }} />
-                      )
-                    }
+                    {approveLoading === request._id ? (
+                      <CircularProgress size={16} color="inherit" />
+                    ) : (
+                      <CheckCircleIcon sx={{ fontSize: { xs: 14, sm: 16 } }} />
+                    )}
                   </IconButton>
                   <IconButton
                     aria-label="Reject request"
                     onClick={() => onReject(request._id)}
-                    disabled={
-                      approveLoading === request._id ||
-                      rejectLoading === request._id
-                    }
+                    disabled={approveLoading === request._id || rejectLoading === request._id}
                     sx={{
-                      width: 32,
-                      height: 32,
+                      width: { xs: 28, sm: 32 },
+                      height: { xs: 28, sm: 32 },
                       bgcolor: TOKENS.redSoft,
                       color: TOKENS.red,
                       '&:hover': { bgcolor: TOKENS.red, color: '#fff' },
                     }}
                   >
-                    {
-                      rejectLoading === request._id ? (
-                        <CircularProgress size={16} color="inherit" />
-                      ) : (
-                        <CancelIcon sx={{ fontSize: 16 }} />
-                      )
-                    }
+                    {rejectLoading === request._id ? (
+                      <CircularProgress size={16} color="inherit" />
+                    ) : (
+                      <CancelIcon sx={{ fontSize: { xs: 14, sm: 16 } }} />
+                    )}
                   </IconButton>
                 </>
               ) : (
@@ -384,19 +398,16 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
                   <Button
                     size="small"
                     onClick={() => onApprove(request._id)}
-                    disabled={
-                      approveLoading === request._id ||
-                      rejectLoading === request._id
-                    }
+                    disabled={approveLoading === request._id || rejectLoading === request._id}
                     sx={{
                       fontFamily: TOKENS.bodyFont,
                       textTransform: 'none',
                       fontWeight: 700,
-                      fontSize: '0.75rem',
+                      fontSize: { xs: '0.68rem', sm: '0.75rem' },
                       color: TOKENS.green,
                       bgcolor: TOKENS.greenSoft,
                       borderRadius: 5,
-                      px: 1.4,
+                      px: { xs: 1, sm: 1.4 },
                       '&:hover': { bgcolor: TOKENS.green, color: '#fff' },
                     }}
                   >
@@ -405,19 +416,16 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
                   <Button
                     size="small"
                     onClick={() => onReject(request._id)}
-                    disabled={
-                      approveLoading === request._id ||
-                      rejectLoading === request._id
-                    }
+                    disabled={approveLoading === request._id || rejectLoading === request._id}
                     sx={{
                       fontFamily: TOKENS.bodyFont,
                       textTransform: 'none',
                       fontWeight: 700,
-                      fontSize: '0.75rem',
+                      fontSize: { xs: '0.68rem', sm: '0.75rem' },
                       color: TOKENS.red,
                       bgcolor: TOKENS.redSoft,
                       borderRadius: 5,
-                      px: 1.4,
+                      px: { xs: 1, sm: 1.4 },
                       '&:hover': { bgcolor: TOKENS.red, color: '#fff' },
                     }}
                   >
@@ -426,17 +434,6 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
                 </>
               )
             ) : (
-              // <Chip
-              //   label={v.label}
-              //   size="small"
-              //   sx={{
-              //     bgcolor: v.bg,
-              //     color: v.color,
-              //     fontFamily: TOKENS.bodyFont,
-              //     fontWeight: 700,
-              //     fontSize: '0.68rem',
-              //   }}
-              // />
               <>
                 {v?.label && (
                   <Chip
@@ -447,13 +444,31 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
                       color: v.color,
                       fontFamily: TOKENS.bodyFont,
                       fontWeight: 700,
-                      fontSize: "0.68rem",
+                      fontSize: {
+                        xs: "0.62rem",
+                        sm: "0.65rem",
+                        md: "0.68rem",
+                        lg: "0.7rem",
+                      },
+                      height: {
+                        xs: 20,
+                        sm: 22,
+                        md: 23,
+                        lg: 24,
+                      },
+                      "& .MuiChip-label": {
+                        px: {
+                          xs: 0.75,
+                          sm: 1,
+                          md: 1.25,
+                        },
+                      },
                     }}
                   />
                 )}
               </>
             )}
-            <IconButton size="small" onClick={() => setOpen((o) => !o)} aria-label="Toggle passenger details">
+            <IconButton size="small" aria-label="Toggle passenger details">
               {open ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
             </IconButton>
           </Stack>
@@ -587,7 +602,7 @@ export default function RideDetailsModal({
   const isMd = useMediaQuery(theme.breakpoints.up('md'));
   const pendingMember = requests.map((item) => item.pendingMembers);
   const isStarted = ride?.travelStatus === "Started";
-  const startDate = new Date(ride.startTime);
+  const startDate = new Date(ride?.startTime);
   const dateLabel = !isNaN(startDate)
     ? startDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
     : '—';
@@ -597,9 +612,9 @@ export default function RideDetailsModal({
 
   const stamp = statusStamp[ride?.status];
 
-  const TravelIcon = travelIcons[ride.modeOfTravel] || DirectionsCarIcon;
-  const GenderIcon = genderIcon[ride.genderPreference] || Diversity3Icon;
-  const TravellerTypeIcon = travellerTypeIcons[ride.travellerType] || ExploreIcon;
+  const TravelIcon = travelIcons[ride?.modeOfTravel] || DirectionsCarIcon;
+  const GenderIcon = genderIcon[ride?.genderPreference] || Diversity3Icon;
+  const TravellerTypeIcon = travellerTypeIcons[ride?.travellerType] || ExploreIcon;
 
   const pendingCount = requests.filter((r) => r?.status?.toUpperCase() === 'PENDING').length;
 
@@ -729,7 +744,7 @@ export default function RideDetailsModal({
                 letterSpacing: ".12em",
               }}
             >
-              {ride.fromCountry}
+              {ride?.fromCountry}
             </Typography>
           </Box>
 
@@ -848,25 +863,25 @@ export default function RideDetailsModal({
                 whiteSpace: "nowrap",
               }}
             >
-              {ride.toCountry}
+              {ride?.toCountry}
             </Typography>
           </Box>
         </Box>
 
         <Chip
-          label={stamp.label}
+          label={stamp?.label}
           size="small"
           sx={{
             position: 'absolute',
             right: { xs: 14, sm: 20 },
             bottom: { xs: -12, sm: -14 },
-            bgcolor: stamp.bg,
-            color: stamp.color,
+            bgcolor: stamp?.bg,
+            color: stamp?.color,
             fontFamily: TOKENS.monoFont,
             fontWeight: 700,
             fontSize: '0.68rem',
             letterSpacing: '0.05em',
-            border: `1.5px solid ${stamp.color}`,
+            border: `1.5px solid ${stamp?.color}`,
             transform: 'rotate(-4deg)',
             boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
           }}
@@ -988,33 +1003,33 @@ export default function RideDetailsModal({
         >
           <Field icon={CalendarTodayIcon} label="Date" value={dateLabel || '—'} />
           <Field icon={AccessTimeIcon} label="Time" value={timeLabel || '—'} />
-          <Field icon={TravelIcon} label="Mode" value={ride.modeOfTravel || '—'} />
-          {ride.duration && <Field icon={AccessTimeIcon} label="Travel Duration" value={ride.duration || '—'} />}
-          <Field icon={BadgeIcon} label="Age Group Pref." value={ride.ageGroupPreference || '—'} />
-          {ride.availableSeats !== null &&
-            ride.availableSeats !== undefined && (
+          <Field icon={TravelIcon} label="Mode" value={ride?.modeOfTravel || '—'} />
+          {ride?.duration && <Field icon={AccessTimeIcon} label="Travel Duration" value={ride?.duration || '—'} />}
+          <Field icon={BadgeIcon} label="Age Group Pref." value={ride?.ageGroupPreference || '—'} />
+          {ride?.availableSeats !== null &&
+            ride?.availableSeats !== undefined && (
               <Field
                 icon={EventSeatIcon}
                 label="Seats avail."
-                value={Number(ride.availableSeats) === 0 ? "Seats Filled" : ride.availableSeats}
+                value={Number(ride?.availableSeats) === 0 ? "Seats Filled" : ride?.availableSeats}
               />
             )}
-          <Field icon={GenderIcon} label="Gender Pref." value={ride.genderPreference || 'Any'} />
-          {ride.airlineName && (<Field icon={FlightIcon} label="Airline Name" value={ride.airlineName || '—'} />)}
-          {ride.flightNumber && (<Field icon={ConfirmationNumberIcon} label="Flight Number" value={ride.flightNumber || '—'} />)}
+          <Field icon={GenderIcon} label="Gender Pref." value={ride?.genderPreference || 'Any'} />
+          {ride?.airlineName && (<Field icon={FlightIcon} label="Airline Name" value={ride?.airlineName || '—'} />)}
+          {ride?.flightNumber && (<Field icon={ConfirmationNumberIcon} label="Flight Number" value={ride?.flightNumber || '—'} />)}
 
-          {ride.modeOfTravel !== 'Bike' ? (
+          {ride?.modeOfTravel !== 'Bike' ? (
             <>
-              <Field icon={MedicalServicesIcon} label="Medical Assistance" value={ride.medicalAssistance ? "Yes" : "No"} />
-              <Field icon={LanguageIcon} label="Language Support" value={ride.languageSupport ? "Yes" : "No"} />
-              <Field icon={LuggageIcon} label="Baggage Help" value={ride.baggageHelp ? "Yes" : "No"} />
-              <Field icon={TransferWithinAStationIcon} label="Transit Help" value={ride.transitHelp ? "Yes" : "No"} />
+              <Field icon={MedicalServicesIcon} label="Medical Assistance" value={ride?.medicalAssistance ? "Yes" : "No"} />
+              <Field icon={LanguageIcon} label="Language Support" value={ride?.languageSupport ? "Yes" : "No"} />
+              <Field icon={LuggageIcon} label="Baggage Help" value={ride?.baggageHelp ? "Yes" : "No"} />
+              <Field icon={TransferWithinAStationIcon} label="Transit Help" value={ride?.transitHelp ? "Yes" : "No"} />
             </>
           ) : null}
 
-          {ride.totalSeats && (<Field icon={EventSeatIcon} label="Total Seats" value={ride.totalSeats || '—'} />)}
-          {ride.modeOfTravel !== 'Flight' && ride.modeOfTravel !== 'Bus' && ride.fuelSharing >= 0 && (<Field icon={LocalGasStationIcon} label="Fuel Cost" value={`${ride.fuelSharing === null ? '—' : `$ ${ride.fuelSharing}/Person`} ` || '—'} />)}
-          <Field icon={TravellerTypeIcon} label="Traveller Type" value={ride.travellerType || '—'} />
+          {ride?.totalSeats && (<Field icon={EventSeatIcon} label="Total Seats" value={ride?.totalSeats || '—'} />)}
+          {ride?.modeOfTravel !== 'Flight' && ride?.modeOfTravel !== 'Bus' && ride?.fuelSharing >= 0 && (<Field icon={LocalGasStationIcon} label="Fuel Cost" value={`${ride?.fuelSharing === null ? '—' : `$ ${ride?.fuelSharing}/Person`} ` || '—'} />)}
+          <Field icon={TravellerTypeIcon} label="Traveller Type" value={ride?.travellerType || '—'} />
 
 
           <Stack direction="column" alignItems="center">
@@ -1028,15 +1043,15 @@ export default function RideDetailsModal({
                 // wordBreak: 'break-word',
               }}
             >
-              {ride.language?.join(", ") || '—'}
+              {ride?.language?.join(", ") || '—'}
             </Typography>
           </Stack>
         </Box>
 
         <br />
 
-        {ride.description && (
-          <Field icon={DescriptionIcon} label="Description" value={ride.description || '—'} span />
+        {ride?.description && (
+          <Field icon={DescriptionIcon} label="Description" value={ride?.description || '—'} span />
         )}
 
 
@@ -1055,8 +1070,8 @@ export default function RideDetailsModal({
       >
         {(!pendingMember || pendingMember.length === 0) && showEdit && ride?.travelStatus !== "Started" && (
 
-          (ride.createdBy?._id === user?.id ||
-            typeof ride.createdBy === 'string' && ride.createdBy === user?.id) && (
+          (ride?.createdBy?._id === user?.id ||
+            typeof ride?.createdBy === 'string' && ride?.createdBy === user?.id) && (
             <Button
               onClick={() => onEdit(ride)}
               startIcon={<EditIcon sx={{ fontSize: { xs: 16, sm: 18 } }} />}
