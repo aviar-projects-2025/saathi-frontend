@@ -46,7 +46,7 @@ const TopNav = ({ onMenuClick }) => {
   const [open, setOpen] = useState(false);
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
 
-  const { tabNotification, notifications } = useNotifications();
+  const { tabNotification, notifications, fetchNotifications } = useNotifications();
 
   const [moreAnchorEl, setMoreAnchorEl] = useState(null);
 
@@ -108,11 +108,14 @@ const TopNav = ({ onMenuClick }) => {
     // API call / notification context function here
     try {
       await axios.patch(`${Api}/notification/${currentUser?._id}`)
-      .then((res)=>{
-        console.log(res,'res')
-      })
+        .then((res) => {
+          console.log(res, 'res')
+          if (res?.data?.success === true) {
+            fetchNotifications()
+          }
+        })
     } catch (error) {
-        console.log(error)
+      console.log(error)
     } finally {
       handleCloseMoreMenu();
     }

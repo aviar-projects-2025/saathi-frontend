@@ -205,7 +205,7 @@ const RequestRide = ({ ride }) => {
       await axios.patch(
         `${Api}/bookride/${selectedRequest._id}/status?type=Cancel`,
         {
-          status: "DELETED",
+          status: "CANCELLED",
           cancelledBy: user?.id,
           cancelledAt: new Date().toISOString(),
         },
