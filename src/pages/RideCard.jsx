@@ -50,6 +50,7 @@ import TrainIcon from "@mui/icons-material/Train";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import ToastConfig from "../components/ToastConfig.jsx";
 import ProfileModal from "./Avatar.jsx";
+import RideDetailsModal from "./RideDetails.jsx";
 
 import Api from "../Api";
 import { toast } from "react-toastify";
@@ -63,6 +64,7 @@ export default function RideCard({ ride }) {
   const [expanded, setExpanded] = useState(false);
   const [openRequestModal, setOpenRequestModal] = useState(false);
   const [selectedRide, setSelectedRide] = useState(null);
+  const [selectedRideModal, setSelectedRideModal] = useState(null);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [myRequestedRides, setMyRequestedRides] = useState([]);
   const pendingRequest = myRequestedRides.find(
@@ -461,7 +463,7 @@ export default function RideCard({ ride }) {
   return (
     <>
       {ride.travelStatus !== "Cancelled" && (
-        <Box sx={{ mb: 3, maxWidth: 1000, width: "100%" }}>
+        <Box sx={{ mb: 3, maxWidth: 1000, width: "100%" }} onClick={() => setSelectedRideModal(ride)}>
           {/* ── Light orange-tinted header strip ── */}
           <Box
             sx={{
@@ -476,6 +478,7 @@ export default function RideCard({ ride }) {
               alignItems: "center",
               gap: 1,
             }}
+
           >
             {/* Avatar + name + verified */}
             <Box
@@ -787,7 +790,8 @@ export default function RideCard({ ride }) {
                                 !alreadyRequested &&
                                 remainingSeatsForUser <= 0)
                             }
-                            onClick={() => {
+                            onClick={(event) => {
+                              event.stopPropagation();
                               setSelectedRide(ride);
                               setSelectedRequest(
                                 alreadyRequested ? currentRequest : null,
@@ -812,6 +816,7 @@ export default function RideCard({ ride }) {
                               whiteSpace: "nowrap",
                               boxShadow: "none",
                               textTransform: "none",
+
                             }}
                           >
                             {genderMismatch
@@ -1194,6 +1199,13 @@ export default function RideCard({ ride }) {
         }}
       />
 
+      {selectedRideModal && (
+        <RideDetailsModal
+          onClose={() => setSelectedRideModal(null)}
+          ride={selectedRideModal}
+        />
+      )}
+
       <Ridebook
         open={openEditModal}
         onClose={() => setOpenEditModal(false)}
@@ -1206,6 +1218,7 @@ export default function RideCard({ ride }) {
         requestToEdit={selectedRequest}
         onRequestUpdated={myReqRides}
       />
+
     </>
   );
 }

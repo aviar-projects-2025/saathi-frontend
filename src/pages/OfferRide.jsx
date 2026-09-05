@@ -1565,7 +1565,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                   fontWeight: 600,
                 }}
               >
-                Cancel
+                Reset
               </Button>
             )}
 

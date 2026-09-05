@@ -42,6 +42,7 @@ export default function Ridebook({
 
   onRequestUpdated,
 }) {
+  
   const theme = useTheme();
   const { currentUser } = useUser();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -98,8 +99,8 @@ export default function Ridebook({
     : requestData.members.length;
 
   const remainingSeats = isEditMode
-    ? Math.max(remainingSeatsForUser - newMembers.length, 0)
-    : Math.max(remainingSeatsForUser - requestData?.members.length, 0);
+    ? Math.max(maxSeats - existingMembers.length - newMembers.length, 0)
+    : Math.max(maxSeats - requestData?.members.length, 0);
 
   //   const remainingSeats = Math.max(
   //   remainingSeatsForUser - newMembers.length,
@@ -252,8 +253,6 @@ export default function Ridebook({
       if (!user?.id) return;
 
       const res = await axios.get(`${Api}/bookride/send/${user.id}`);
-
-      console.log(res,'requested list')
       setRequests(res.data.data);
     } catch (error) {
       console.log(error);
@@ -445,13 +444,15 @@ export default function Ridebook({
 
   const isSelfAlreadyConfirmed = existingMembers?.some(isSelfMember);
 
-  // 3. Tag + filter
+
+
   const editableMembersWithMeta = editableMembers.map(
     (member, originalIndex) => ({
       ...member,
       originalIndex,
-      isSelf: !isEditMode && originalIndex === 0,
-    }),
+
+      isSelf: isSelfMember(member) && !isSelfAlreadyConfirmed,
+    })
   );
 
   const visibleMembers = editableMembersWithMeta.filter(
@@ -708,9 +709,14 @@ export default function Ridebook({
 
         <Stack spacing={1.25}>
           {visibleMembers.map((member) => {
-            const isLockedSelfSlot = member.isSelf;
             const index = member.originalIndex;
 
+
+            const isLockedSelfSlot = member.isSelf;
+            // const index = member.originalIndex;
+
+            // // First member is always the current user
+            // const isLockedSelfSlot = index === 0;
             return (
               <>
                 <Box
@@ -751,6 +757,7 @@ export default function Ridebook({
                         : member.name
                     }
                     disabled={isLockedSelfSlot}
+
                     error={!isLockedSelfSlot && !!memberErrors[index]?.name}
                     helperText={
                       !isLockedSelfSlot && memberErrors[index]?.name
@@ -949,7 +956,7 @@ export default function Ridebook({
             bgcolor: "#757575",
           }}
         >
-          Cancel
+          Reset
         </Button>
         <Button
           variant="contained"

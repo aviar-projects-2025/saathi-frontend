@@ -1252,12 +1252,12 @@ const UserProfile = () => {
               </Box>
 
               <Stack spacing={{ xs: 1.5, sm: 2.5 }} sx={{ width: "100%" }}>
-                <Stack alignItems="center" spacing={2}>
+                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }} spacing={1}>
                   <Avatar
                     src={profileImage || formData.profileImage || ""}
                     sx={{
-                      width: { xs: 60, sm: 75, md: 90 },
-                      height: { xs: 60, sm: 75, md: 90 },
+                      width: { xs: 60, sm: 85, md: 110 },
+                      height: { xs: 60, sm: 85, md: 110 },
                       fontSize: { xs: 18, sm: 24, md: 32 },
                       bgcolor: SAFFRON,
                     }}
@@ -1272,10 +1272,18 @@ const UserProfile = () => {
                     component="label"
                     size="small"
                     sx={{
-                      fontSize: { xs: "0.7rem", sm: "0.8125rem" },
+                      width: { xs: "100px", sm: "120px" },
+                      minWidth: 0,
+                      height: { xs: "30px", sm: "34px" },
+                      px: 1,
+                      py: 0,
+                      fontSize: { xs: "0.65rem", sm: "0.75rem" },
                       textTransform: "none",
-                      color: "#ffff",
+                      color: "#fff",
                       bgcolor: "#FF9933",
+                      "&:hover": {
+                        bgcolor: "#e68a2e",
+                      },
                     }}
                   >
                     Change Photo
@@ -1286,7 +1294,7 @@ const UserProfile = () => {
                       onChange={handlePickImage}
                     />
                   </Button>
-                </Stack>
+                </Box>
 
                 <Stack
                   direction={{ xs: "column", sm: "row" }}
@@ -1526,7 +1534,7 @@ const UserProfile = () => {
                       setErrors({});
                     }}
                   >
-                    Cancel
+                    Reset
                   </Button>
 
                   <Button

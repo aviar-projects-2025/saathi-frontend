@@ -331,18 +331,24 @@ const MyReferrals = () => {
 
             try {
                 const res = await axios.get(`${Api}/users/${userId}`);
-                setUsers(res?.data?.data || res?.data || null);
+                setUsers(res?.data?.data || null);
             } catch (err) {
                 console.error("Failed to fetch user data:", err);
                 setUsers(null);
             }
         };
 
+        // useEffect(() => {
+        //     getUserData();
+        // }, [userId]);
+
         useEffect(() => {
             getUserData();
-        }, [userId]);
+        }, []);
 
         const profileImage = users?.profileImage;
+
+        console.log("ReferralCard : ", users);
 
         return (
             <Paper
@@ -376,10 +382,10 @@ const MyReferrals = () => {
                         }}
                     >
                         <Avatar
-                            src={profileImage || undefined}
-                            alt={`${userData?.firstName || ""} ${userData?.lastName || ""}`}
+                            src={profileImage}
+                            alt={`${users?.firstName || ""} ${users?.lastName || ""}`}
                             onClick={() => {
-                                if (!users) return;
+                                // if (!users) return;
                                 setSelectedProfile(users);
                                 setProfileModalOpen(true);
                             }}
@@ -394,10 +400,10 @@ const MyReferrals = () => {
                             {!profileImage && (
                                 <>
                                     <Box component="span" sx={{ color: "#FF9933" }}>
-                                        {userData?.firstName?.[0] || ""}
+                                        {users?.firstName?.[0] || ""}
                                     </Box>
                                     <Box component="span" sx={{ color: "#FF9933" }}>
-                                        {userData?.lastName?.[0] || ""}
+                                        {users?.lastName?.[0] || ""}
                                     </Box>
                                 </>
                             )}
@@ -415,7 +421,7 @@ const MyReferrals = () => {
                                     color: "text.primary",
                                 }}
                             >
-                                {userData.firstName || "Unknown"} {userData.lastName || ""}
+                                {users?.firstName || ""} {users?.lastName || ""}
                             </Typography>
 
                             <Typography
@@ -429,7 +435,7 @@ const MyReferrals = () => {
                                     },
                                 }}
                             >
-                                {userData.email || "No email provided"}
+                                {users?.email || ""}
                             </Typography>
                         </Box>
                     </Stack>

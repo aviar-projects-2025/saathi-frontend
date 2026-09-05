@@ -89,7 +89,7 @@ const RequestRide = ({ ride }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [isCancelling, setIsCancelling] = useState(false);
   const user = JSON.parse(localStorage.getItem("user"));
-  const [rejectedSeats,setRejectedSeats] = useState();
+  const [rejectedSeats, setRejectedSeats] = useState();
   const [remainingSeatsForUser, setRemainingSeatsForUser] = useState();
   const totalSeats = ride?.totalSeats;
   const [selectedRideDetails, setSelectedRideDetails] = useState(null);
@@ -118,10 +118,10 @@ const RequestRide = ({ ride }) => {
 
       if (!user?.id) return;
       const res = await axios.get(`${Api}/bookride/send/${user.id}`);
-      console.log(res,'res')
+
       const requestUser = res.data.data.map((item) => item.members);
-      const rejectedreq = res.data.data.map((item)=>item.rejectedSeats);
-      setRejectedSeats(res.data.data.map((item)=>item.rejectedSeats))
+      const rejectedreq = res.data.data.map((item) => item.rejectedSeats);
+      setRejectedSeats(res.data.data.map((item) => item.rejectedSeats))
       setUserData(requestUser);
       const availableSeat = res.data.data.map(
         (item) => item.rideId?.availableSeats
@@ -136,7 +136,7 @@ const RequestRide = ({ ride }) => {
       setLoadingRequests(false);
     }
   }
-  console.log("juyyyvvyh", allMyRequests)
+
   const handleMenuOpen = (event, request) => {
     event.stopPropagation();
     setAnchorEl(event.currentTarget);
@@ -382,15 +382,15 @@ const RequestRide = ({ ride }) => {
               const isRejected = request?.status === "REJECTED";
 
               const isCancelled =
-                request?.status === "Cancelled" ?
-                  `${request?.requestedBy?.firstName} Cancelled` : request?.rideId?.travelStatus === "Cancelled" ?
-                    `Ride Cancelled` : request?.rideId?.travelStatus === "Completed" ? "Auto Rejected" : null;
+                request?.rideId?.travelStatus === "Cancelled" ?
+                  `Ride Cancelled` : request?.status === "Cancelled" ?
+                    `You Cancelled` : request?.pendingReqSeats > 0 && request?.rideId?.travelStatus === "Completed" ? "Auto Rejected" : null;
 
               const isAccepted = request?.status === "ACCEPTED";
               // const rejectedSeats = Number(request?.rejectedReq || 0);
               const requestedByMe = Number(request?.seatsRequested || 0);
               const approvedSeats = Number(request?.approvedSeats || 0);
-              console.log("hyyuininhbbuu",rejectedSeats)
+
               const mainText = isRejected
                 ? rejectedSeats > 0 && approvedSeats > 0
                   ? `You have ${approvedSeats} approved seat${approvedSeats > 1 ? "s" : ""
@@ -407,8 +407,8 @@ const RequestRide = ({ ride }) => {
                       : `You have ${approvedSeats} approved seat${approvedSeats > 1 ? "s" : ""
                       }`
                     : `You applied for ${requestedByMe} seat${requestedByMe > 1 ? "s" : ""
-                    }`; 
-                    console.log("gvhbjnkml;'gfx viuyfg",rejectedSeats)
+                    }`;
+
 
               const pendingText =
                 isAccepted && pendingReqSeats > 0
@@ -416,98 +416,99 @@ const RequestRide = ({ ride }) => {
                   }`
                   : null;
 
-              console.log("Request:", request);
 
               return (
                 <>
-                  {request?.rideId?.travelStatus != "Completed" && request?.rideId?.travelStatus != "Cancelled" && (
-                    <Card
-                      key={request._id}
-                      elevation={0}
-                      sx={{
-                        width: "100%",
-                        maxWidth: "1200px",
-                        minHeight: { xs: "auto", sm: "150px", md: "160px" },
-                        mb: { xs: 1.5, sm: 2, md: 2.25 },
-                        borderRadius: { xs: "16px", sm: "20px" },
-                        overflow: "hidden",
-                        border: `1px solid ${CARD_BORDER}`,
-                        boxShadow: "0 4px 16px rgba(20, 10, 40, 0.06)",
-                        cursor: "pointer",
-                        transition: "box-shadow .25s ease, transform .25s ease",
-                        "&:hover": {
-                          boxShadow: "0 12px 28px rgba(20, 10, 40, 0.12)",
-                          transform: { xs: "none", sm: "translateY(-3px)" },
-                        },
-                      }}
-
-                    >
-                      {/* Header bar */}
-                      <Box
+                  {
+                    request?.rideId?.travelStatus != "Completed" && request?.rideId?.travelStatus != "Cancelled" &&
+                    (
+                      <Card
+                        key={request._id}
+                        elevation={0}
                         sx={{
-                          // bgcolor: HEADER_BG,
-                          // backgroundImage:
-                          //   "linear-gradient(135deg, #1a1030 0%, #241645 100%)",
-                          bgcolor: HEADER_BG,
-                          px: { xs: 1.75, sm: 2.5, md: 3 },
-                          py: { xs: 1, sm: 1.1, md: 1.25 },
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          gap: 1,
+                          width: "100%",
+                          maxWidth: "1200px",
+                          minHeight: { xs: "auto", sm: "150px", md: "160px" },
+                          mb: { xs: 1.5, sm: 2, md: 2.25 },
+                          borderRadius: { xs: "16px", sm: "20px" },
+                          overflow: "hidden",
+                          border: `1px solid ${CARD_BORDER}`,
+                          boxShadow: "0 4px 16px rgba(20, 10, 40, 0.06)",
+                          cursor: "pointer",
+                          transition: "box-shadow .25s ease, transform .25s ease",
+                          "&:hover": {
+                            boxShadow: "0 12px 28px rgba(20, 10, 40, 0.12)",
+                            transform: { xs: "none", sm: "translateY(-3px)" },
+                          },
                         }}
+
                       >
-                        <Stack
-                          direction="row"
-                          alignItems="center"
-                          spacing={1.25}
-                          sx={{ minWidth: 0 }}
+                        {/* Header bar */}
+                        <Box
+                          sx={{
+                            // bgcolor: HEADER_BG,
+                            // backgroundImage:
+                            //   "linear-gradient(135deg, #1a1030 0%, #241645 100%)",
+                            bgcolor: HEADER_BG,
+                            px: { xs: 1.75, sm: 2.5, md: 3 },
+                            py: { xs: 1, sm: 1.1, md: 1.25 },
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            gap: 1,
+                          }}
                         >
-                          <Avatar
-                            src={request?.rideId?.createdBy?.profileImage || ""}
-                            alt={
-                              request?.rideId?.createdBy?.firstName
-                                ? `${request.rideId.createdBy.firstName} ${request.rideId.createdBy.lastName || ""
-                                }`
-                                : "Profile Image"
-                            }
-                            onClick={() => {
-                              setSelectedProfile(request?.rideId?.createdBy);
-                              setProfileModalOpen(true);
-                            }}
-                            sx={{
-                              width: { xs: 26, sm: 35 },
-                              height: { xs: 26, sm: 35 },
-                              fontSize: { xs: 12, sm: 13 },
-                              fontWeight: 700,
-                              bgcolor: ACCENT,
-                              color: "#1a1030",
-                              cursor: "pointer",
-                              flexShrink: 0,
-                            }}
+                          <Stack
+                            direction="row"
+                            alignItems="center"
+                            spacing={1.25}
+                            sx={{ minWidth: 0 }}
                           >
-                            {`${request?.rideId?.createdBy?.firstName?.[0] || ""}${request?.rideId?.createdBy?.lastName?.[0] || ""
-                              }`.toUpperCase()}
-                          </Avatar>
+                            <Avatar
+                              src={request?.rideId?.createdBy?.profileImage || ""}
+                              alt={
+                                request?.rideId?.createdBy?.firstName
+                                  ? `${request.rideId.createdBy.firstName} ${request.rideId.createdBy.lastName || ""
+                                  }`
+                                  : "Profile Image"
+                              }
+                              onClick={() => {
+                                setSelectedProfile(request?.rideId?.createdBy);
+                                setProfileModalOpen(true);
+                              }}
+                              sx={{
+                                width: { xs: 26, sm: 35 },
+                                height: { xs: 26, sm: 35 },
+                                fontSize: { xs: 12, sm: 13 },
+                                fontWeight: 700,
+                                bgcolor: ACCENT,
+                                color: "#1a1030",
+                                cursor: "pointer",
+                                flexShrink: 0,
+                              }}
+                            >
+                              {`${request?.rideId?.createdBy?.firstName?.[0] || ""}${request?.rideId?.createdBy?.lastName?.[0] || ""
+                                }`.toUpperCase()}
+                            </Avatar>
 
-                          <Typography
-                            sx={{
-                              color: "#fff",
-                              fontWeight: 600,
-                              fontSize: { xs: 12.5, sm: 14, md: 15.2 },
-                              whiteSpace: "nowrap",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              minWidth: 0,
-                            }}
-                          >
-                            {request?.rideId?.createdBy?.firstName || "Unknown"}{" "}
-                            {request?.rideId?.createdBy?.lastName || ""}
-                          </Typography>
-                        </Stack>
+                            <Typography
+                              sx={{
+                                color: "#fff",
+                                fontWeight: 600,
+                                fontSize: { xs: 12.5, sm: 14, md: 15.2 },
+                                whiteSpace: "nowrap",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                minWidth: 0,
+                              }}
+                            >
+                              {request?.rideId?.createdBy?.firstName || "Unknown"}{" "}
+                              {request?.rideId?.createdBy?.lastName || ""}
+                            </Typography>
+                          </Stack>
 
-                        <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.5, sm: 1 } }}>
-                          {/* <Chip
+                          <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.5, sm: 1 } }}>
+                            {/* <Chip
                         label={request.status}
                         size="small"
                         // icon={
@@ -533,300 +534,300 @@ const RequestRide = ({ ride }) => {
                         }}
                       /> */}
 
-                          <Chip
-                            label={
-                              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                                <Typography
-                                  component="span"
-                                  sx={{
-                                    fontSize: { xs: "0.65rem", sm: "0.7rem" },
-                                    fontWeight: 600,
-                                    color: isAccepted ? "#2E7D32" : "#f30b0b",
-                                  }}
-                                >
-                                  {mainText}
-                                </Typography>
-
-                                {pendingText && (
+                            <Chip
+                              label={
+                                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                                   <Typography
                                     component="span"
                                     sx={{
                                       fontSize: { xs: "0.65rem", sm: "0.7rem" },
                                       fontWeight: 600,
-                                      color: "#F57C00",
+                                      color: isAccepted ? "#2E7D32" : "#f30b0b",
                                     }}
                                   >
-                                    {pendingText}
+                                    {mainText}
                                   </Typography>
-                                )}
-                              </Box>
-                            }
-                            color={isAccepted ? "success" : "info"}
-                            sx={{
-                              height: { xs: 18, sm: 25 },
-                              bgcolor: isAccepted ? "#E8F5E9" : "#f4f7f9",
-                              "& .MuiChip-label": {
-                                px: { xs: 0.5, sm: 1 },
-                              },
-                            }}
-                          />
 
-                          {request?.status != "Cancelled" && request?.status != "REJECTED" &&
-                            <IconButton
-                              onClick={(event) => handleMenuOpen(event, request)}
-                              sx={{
-                                color: "#fff",
-                                p: { xs: 0.5, sm: 0.75, md: 1 },
-                                "&:hover": { bgcolor: "rgba(255,255,255,0.1)" },
-                              }}
-                            >
-                              <MoreVertIcon sx={{ fontSize: { xs: 18, sm: 20, md: 22 } }} />
-                            </IconButton>
-                          }
-                        </Box>
-                      </Box>
-
-                      <CardContent
-                        sx={{
-                          p: {
-                            xs: "12px !important",
-                            sm: "14px 20px !important",
-                            md: "15px 26px !important",
-                          },
-                          "&:last-child": { pb: { xs: "12px", sm: "14px", md: "15px" } },
-                        }}
-                        onClick={() => setSelectedRideDetails(request)}
-                      >
-                        <Box sx={{ width: "100%" }}>
-
-                          <Box
-                            sx={{
-                              display: { xs: "block", md: "flex" },
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                              width: "100%",
-                            }}
-                          >
-                            {/* ================= FROM / TO ================= */}
-                            <Box
-                              sx={{
-                                display: "flex",
-                                width: { xs: "100%", md: "38%" },
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                gap: { xs: 1, sm: 1.5 },
-                                pb: { xs: 1, sm: 0 },
-                                minWidth: 0,
-                                mt: { xs: 0.2, sm: 2.2 },
-                              }}
-                            >
-                              {/* FROM */}
-                              <Box sx={{ minWidth: 0, flex: 1 }}>
-                                <Typography
-                                  sx={{
-                                    color: ACCENT_DARK,
-                                    fontWeight: 700,
-                                    letterSpacing: 0.8,
-                                    fontSize: { xs: "0.58rem", sm: "0.65rem", md: "0.68rem" },
-                                  }}
-                                >
-                                  FROM
-                                </Typography>
-
-                                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, minWidth: 0, mt: 0.25 }}>
-                                  <LocationOnIcon
-                                    sx={{
-                                      color: "#e2483d",
-                                      fontSize: { xs: 14, sm: 16, md: 18 },
-                                      flexShrink: 0,
-                                    }}
-                                  />
-
-                                  <Typography
-                                    fontWeight={700}
-                                    sx={{
-                                      minWidth: 0,
-                                      overflow: "hidden",
-                                      textOverflow: "ellipsis",
-                                      whiteSpace: "nowrap",
-                                      fontSize: { xs: "0.78rem", sm: "0.88rem", md: "0.95rem" },
-                                      lineHeight: 1.3,
-                                    }}
-                                  >
-                                    {request?.rideId?.from || "—"}
-                                  </Typography>
+                                  {pendingText && (
+                                    <Typography
+                                      component="span"
+                                      sx={{
+                                        fontSize: { xs: "0.65rem", sm: "0.7rem" },
+                                        fontWeight: 600,
+                                        color: "#F57C00",
+                                      }}
+                                    >
+                                      {pendingText}
+                                    </Typography>
+                                  )}
                                 </Box>
-                              </Box>
-
-                              {/* ARROW */}
-                              <Box
-                                sx={{
-                                  width: { xs: 20, sm: 24, md: 26 },
-                                  height: { xs: 20, sm: 24, md: 26 },
-                                  borderRadius: "50%",
-                                  bgcolor: "#FFF3E4",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  flexShrink: 0,
-                                  mx: { xs: 0.5, sm: 1, md: 1.25 },
-                                }}
-                              >
-                                <ArrowForwardIcon
-                                  sx={{
-                                    color: ACCENT_DARK,
-                                    fontSize: { xs: 12, sm: 14, md: 15 },
-                                  }}
-                                />
-                              </Box>
-
-                              {/* TO */}
-                              <Box sx={{ minWidth: 0, flex: 1, textAlign: "right" }}>
-                                <Typography
-                                  sx={{
-                                    color: ACCENT_DARK,
-                                    fontWeight: 700,
-                                    letterSpacing: 0.8,
-                                    fontSize: { xs: "0.58rem", sm: "0.65rem", md: "0.68rem" },
-                                  }}
-                                >
-                                  TO
-                                </Typography>
-
-                                <Box
-                                  sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "flex-end",
-                                    gap: 0.5,
-                                    minWidth: 0,
-                                    mt: 0.25,
-                                  }}
-                                >
-                                  <LocationOnIcon
-                                    sx={{
-                                      color: "#e2483d",
-                                      fontSize: { xs: 14, sm: 16, md: 18 },
-                                      flexShrink: 0,
-                                    }}
-                                  />
-
-                                  <Typography
-                                    fontWeight={700}
-                                    sx={{
-                                      minWidth: 0,
-                                      overflow: "hidden",
-                                      textOverflow: "ellipsis",
-                                      whiteSpace: "nowrap",
-                                      fontSize: { xs: "0.78rem", sm: "0.88rem", md: "0.95rem" },
-                                      lineHeight: 1.3,
-                                    }}
-                                  >
-                                    {request?.rideId?.destination || "—"}
-                                  </Typography>
-                                </Box>
-                              </Box>
-                            </Box>
-
-                            <Divider
-                              orientation="vertical"
-                              flexItem
-                              sx={{ display: { xs: "none", md: "block" }, mx: 2.5, my: -1.7, mt: 1 }}
+                              }
+                              color={isAccepted ? "success" : "info"}
+                              sx={{
+                                height: { xs: 18, sm: 25 },
+                                bgcolor: isAccepted ? "#E8F5E9" : "#f4f7f9",
+                                "& .MuiChip-label": {
+                                  px: { xs: 0.5, sm: 1 },
+                                },
+                              }}
                             />
 
-                            {/* ================= DATE / TIME / OTHER DETAILS ================= */}
+                            {request?.status != "Cancelled" && request?.status != "REJECTED" && request?.rideId?.travelStatus != "Cancelled" && new Date() <= new Date(request.rideId.startTime) &&
+                              <IconButton
+                                onClick={(event) => handleMenuOpen(event, request)}
+                                sx={{
+                                  color: "#fff",
+                                  p: { xs: 0.5, sm: 0.75, md: 1 },
+                                  "&:hover": { bgcolor: "rgba(255,255,255,0.1)" },
+                                }}
+                              >
+                                <MoreVertIcon sx={{ fontSize: { xs: 18, sm: 20, md: 22 } }} />
+                              </IconButton>
+                            }
+                          </Box>
+                        </Box>
+
+                        <CardContent
+                          sx={{
+                            p: {
+                              xs: "12px !important",
+                              sm: "14px 20px !important",
+                              md: "15px 26px !important",
+                            },
+                            "&:last-child": { pb: { xs: "12px", sm: "14px", md: "15px" } },
+                          }}
+                          onClick={() => setSelectedRideDetails(request)}
+                        >
+                          <Box sx={{ width: "100%" }}>
+
                             <Box
                               sx={{
-                                display: "flex",
-                                width: { xs: "100%", md: "50%" },
-                                justifyContent: { xs: 'flex-start', sm: "flex-start", md: "space-around" },
+                                display: { xs: "block", md: "flex" },
+                                justifyContent: "space-between",
                                 alignItems: "center",
-                                flexWrap: { xs: "wrap", sm: "nowrap" },
-                                gap: { xs: 3, sm: 7, md: 2 },
-                                minWidth: 0,
-                                mt: { xs: 1, sm: 2.2 },
+                                width: "100%",
                               }}
                             >
-                              {/* DATE & TIME */}
-                              <Box sx={{ minWidth: 0 }}>
-                                <Typography
-                                  sx={{
-                                    fontSize: { xs: "0.62rem", sm: "0.68rem", md: "0.7rem" },
-                                    color: "text.secondary",
-                                    mb: 0.5,
-                                  }}
-                                >
-                                  Date
-                                </Typography>
-
-                                <Stack direction="row" spacing={0.75} alignItems="center" sx={{ minWidth: 0 }}>
-                                  <CalendarTodayIcon
-                                    sx={{
-                                      color: ACCENT,
-                                      fontSize: { xs: 14, sm: 16, md: 18 },
-                                      flexShrink: 0,
-                                    }}
-                                  />
-
+                              {/* ================= FROM / TO ================= */}
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  width: { xs: "100%", md: "38%" },
+                                  alignItems: "center",
+                                  justifyContent: "space-between",
+                                  gap: { xs: 1, sm: 1.5 },
+                                  pb: { xs: 1, sm: 0 },
+                                  minWidth: 0,
+                                  mt: { xs: 0.2, sm: 2.2 },
+                                }}
+                              >
+                                {/* FROM */}
+                                <Box sx={{ minWidth: 0, flex: 1 }}>
                                   <Typography
                                     sx={{
-                                      fontSize: { xs: "0.7rem", sm: "0.8rem", md: "0.875rem" },
-                                      fontWeight: 600,
-                                      whiteSpace: "nowrap",
+                                      color: ACCENT_DARK,
+                                      fontWeight: 700,
+                                      letterSpacing: 0.8,
+                                      fontSize: { xs: "0.58rem", sm: "0.65rem", md: "0.68rem" },
                                     }}
                                   >
-                                    {request?.rideId?.startTime
-                                      ? new Date(request.rideId.startTime).toLocaleDateString()
-                                      : "—"}{" "}
+                                    FROM
                                   </Typography>
-                                </Stack>
+
+                                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, minWidth: 0, mt: 0.25 }}>
+                                    <LocationOnIcon
+                                      sx={{
+                                        color: "#e2483d",
+                                        fontSize: { xs: 14, sm: 16, md: 18 },
+                                        flexShrink: 0,
+                                      }}
+                                    />
+
+                                    <Typography
+                                      fontWeight={700}
+                                      sx={{
+                                        minWidth: 0,
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        whiteSpace: "nowrap",
+                                        fontSize: { xs: "0.78rem", sm: "0.88rem", md: "0.95rem" },
+                                        lineHeight: 1.3,
+                                      }}
+                                    >
+                                      {request?.rideId?.from || "—"}
+                                    </Typography>
+                                  </Box>
+                                </Box>
+
+                                {/* ARROW */}
+                                <Box
+                                  sx={{
+                                    width: { xs: 20, sm: 24, md: 26 },
+                                    height: { xs: 20, sm: 24, md: 26 },
+                                    borderRadius: "50%",
+                                    bgcolor: "#FFF3E4",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    flexShrink: 0,
+                                    mx: { xs: 0.5, sm: 1, md: 1.25 },
+                                  }}
+                                >
+                                  <ArrowForwardIcon
+                                    sx={{
+                                      color: ACCENT_DARK,
+                                      fontSize: { xs: 12, sm: 14, md: 15 },
+                                    }}
+                                  />
+                                </Box>
+
+                                {/* TO */}
+                                <Box sx={{ minWidth: 0, flex: 1, textAlign: "right" }}>
+                                  <Typography
+                                    sx={{
+                                      color: ACCENT_DARK,
+                                      fontWeight: 700,
+                                      letterSpacing: 0.8,
+                                      fontSize: { xs: "0.58rem", sm: "0.65rem", md: "0.68rem" },
+                                    }}
+                                  >
+                                    TO
+                                  </Typography>
+
+                                  <Box
+                                    sx={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "flex-end",
+                                      gap: 0.5,
+                                      minWidth: 0,
+                                      mt: 0.25,
+                                    }}
+                                  >
+                                    <LocationOnIcon
+                                      sx={{
+                                        color: "#e2483d",
+                                        fontSize: { xs: 14, sm: 16, md: 18 },
+                                        flexShrink: 0,
+                                      }}
+                                    />
+
+                                    <Typography
+                                      fontWeight={700}
+                                      sx={{
+                                        minWidth: 0,
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        whiteSpace: "nowrap",
+                                        fontSize: { xs: "0.78rem", sm: "0.88rem", md: "0.95rem" },
+                                        lineHeight: 1.3,
+                                      }}
+                                    >
+                                      {request?.rideId?.destination || "—"}
+                                    </Typography>
+                                  </Box>
+                                </Box>
                               </Box>
-                              <Box sx={{ minWidth: 0 }}>
-                                <Typography
-                                  sx={{
-                                    fontSize: { xs: "0.62rem", sm: "0.68rem", md: "0.7rem" },
-                                    color: "text.secondary",
-                                    mb: 0.5,
-                                  }}
-                                >
-                                  Time
-                                </Typography>
 
-                                <Stack direction="row" spacing={0.75} alignItems="center" sx={{ minWidth: 0 }}>
-                                  <AccessTimeIcon
-                                    sx={{
-                                      color: ACCENT,
-                                      fontSize: { xs: 14, sm: 16, md: 18 },
-                                      flexShrink: 0,
-                                    }}
-                                  />
+                              <Divider
+                                orientation="vertical"
+                                flexItem
+                                sx={{ display: { xs: "none", md: "block" }, mx: 2.5, my: -1.7, mt: 1 }}
+                              />
 
+                              {/* ================= DATE / TIME / OTHER DETAILS ================= */}
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  width: { xs: "100%", md: "50%" },
+                                  justifyContent: { xs: 'flex-start', sm: "flex-start", md: "space-around" },
+                                  alignItems: "center",
+                                  flexWrap: { xs: "wrap", sm: "nowrap" },
+                                  gap: { xs: 3, sm: 7, md: 2 },
+                                  minWidth: 0,
+                                  mt: { xs: 1, sm: 2.2 },
+                                }}
+                              >
+                                {/* DATE & TIME */}
+                                <Box sx={{ minWidth: 0 }}>
                                   <Typography
                                     sx={{
-                                      fontSize: {
-                                        xs: "0.7rem",
-                                        sm: "0.8rem",
-                                        md: "0.875rem",
-                                      },
-                                      fontWeight: 600,
-                                      whiteSpace: "nowrap",
+                                      fontSize: { xs: "0.62rem", sm: "0.68rem", md: "0.7rem" },
+                                      color: "text.secondary",
+                                      mb: 0.5,
                                     }}
                                   >
-                                    {request?.rideId?.startTime
-                                      ? new Date(request.rideId.startTime).toLocaleTimeString([], {
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                      })
-                                      : "—"}
+                                    Date
                                   </Typography>
-                                </Stack>
+
+                                  <Stack direction="row" spacing={0.75} alignItems="center" sx={{ minWidth: 0 }}>
+                                    <CalendarTodayIcon
+                                      sx={{
+                                        color: ACCENT,
+                                        fontSize: { xs: 14, sm: 16, md: 18 },
+                                        flexShrink: 0,
+                                      }}
+                                    />
+
+                                    <Typography
+                                      sx={{
+                                        fontSize: { xs: "0.7rem", sm: "0.8rem", md: "0.875rem" },
+                                        fontWeight: 600,
+                                        whiteSpace: "nowrap",
+                                      }}
+                                    >
+                                      {request?.rideId?.startTime
+                                        ? new Date(request.rideId.startTime).toLocaleDateString()
+                                        : "—"}{" "}
+                                    </Typography>
+                                  </Stack>
+                                </Box>
+                                <Box sx={{ minWidth: 0 }}>
+                                  <Typography
+                                    sx={{
+                                      fontSize: { xs: "0.62rem", sm: "0.68rem", md: "0.7rem" },
+                                      color: "text.secondary",
+                                      mb: 0.5,
+                                    }}
+                                  >
+                                    Time
+                                  </Typography>
+
+                                  <Stack direction="row" spacing={0.75} alignItems="center" sx={{ minWidth: 0 }}>
+                                    <AccessTimeIcon
+                                      sx={{
+                                        color: ACCENT,
+                                        fontSize: { xs: 14, sm: 16, md: 18 },
+                                        flexShrink: 0,
+                                      }}
+                                    />
+
+                                    <Typography
+                                      sx={{
+                                        fontSize: {
+                                          xs: "0.7rem",
+                                          sm: "0.8rem",
+                                          md: "0.875rem",
+                                        },
+                                        fontWeight: 600,
+                                        whiteSpace: "nowrap",
+                                      }}
+                                    >
+                                      {request?.rideId?.startTime
+                                        ? new Date(request.rideId.startTime).toLocaleTimeString([], {
+                                          hour: "2-digit",
+                                          minute: "2-digit",
+                                        })
+                                        : "—"}
+                                    </Typography>
+                                  </Stack>
+                                </Box>
                               </Box>
                             </Box>
                           </Box>
-                        </Box>
-                      </CardContent>
-                    </Card>
-                  )}
+                        </CardContent>
+                      </Card>
+                    )}
                 </>
               );
             })}
