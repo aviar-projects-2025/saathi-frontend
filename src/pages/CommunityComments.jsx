@@ -110,6 +110,7 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
   const [comment, setComment] = useState("");
   const theme = useTheme();
   const [commentsFetched, setCommentsFetched] = useState([]);
+
   const [loading, setLoading] = useState(false);
   const [reply, setReply] = useState("");
   const [isReply, setIsReply] = useState(null);
@@ -154,12 +155,13 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
 
   const getComments = async () => {
     try {
-      // setLoading(true);
+      //  setLoading(true);
       const res = await axios.get(Api + `/community/comments/${post?._id}/${user.id}`);
       const list = res.data.data.comments;
 
 
       setCommentsFetched(res.data.data.comments);
+
       onCommentsChanged?.(list.length);
     } catch (error) {
       console.log(error.message);
@@ -304,9 +306,7 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
   const getReplies = (parentId, replyItem) =>
     commentsFetched.filter((c) => c.parentCommentId === parentId && c.parentCommentId !== replyItem?._id);
 
-  console.log("parentComments", parentComments);
-  console.log("getReplies", getReplies);
-  console.log("commentsFetched", commentsFetched);
+
 
   /* ── reusable renderer for a comment/reply bubble, with menu + edit ── */
   const renderCommentBody = (item, isChild = false) => {
@@ -398,7 +398,11 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
         color="text.secondary"
         sx={{ fontSize: { xs: "0.68rem", sm: "0.72rem" }, fontWeight: 600 }}
       >
-        Comments ({commentsFetched.length})
+        {commentsFetched.length > 0 && (
+          <>Comments ({commentsFetched.length})</>
+        )}
+
+
       </Typography>
 
       {loading ? (
