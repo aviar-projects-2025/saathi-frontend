@@ -601,6 +601,9 @@ function RideCard({
 
   const handleApprove = async (requestId) => {
     try {
+      if (!window.confirm("Are you sure you want to approve this request?")) {
+        return;
+      }
       setApproveLoading(requestId);
       const res = await axios.patch(
         `${Api}/bookride/${requestId}/status?type=Approve`,
@@ -626,6 +629,9 @@ function RideCard({
 
   const handleReject = async (requestId) => {
     try {
+      if (!window.confirm("Are you sure you want to reject this request?")) {
+        return;
+      }
       setRejectLoading(requestId);
 
       await axios.patch(
@@ -1876,14 +1882,17 @@ const MyRides = () => {
         display: "flex",
         gap: { xs: 1, sm: 2.5, md: 3 },
         alignItems: "flex-start",
-        flexDirection: { xs: "column", lg: "row", md: "row" },
+        flexDirection: { xs: "column", md: "row" },
         width: "100%",
         maxWidth: "100%",
+        minWidth: 0,
+        boxSizing: "border-box",
         overflowX: "hidden",
       }}
     >
       <Box
         sx={{
+          flex: 1,
           width: "100%",
           minWidth: 0,
           maxWidth: "100%",

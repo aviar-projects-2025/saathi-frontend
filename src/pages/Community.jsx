@@ -97,6 +97,8 @@ export default function Community() {
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null);
 
+  const [expandedPosts, setExpandedPosts] = useState({});
+
   const [commentCounts, setCommentCounts] = useState({});
   const toasts = ToastConfig();
 
@@ -194,7 +196,7 @@ export default function Community() {
       const posts = postsRes?.data?.data || [];
       const likedPostIds = likesRes?.data?.data || [];
 
-      console.log(posts,'posts')
+      console.log(posts, 'posts')
 
       // Add like + comment information
       const updatedPosts = posts.map((post) => ({
@@ -243,7 +245,7 @@ export default function Community() {
       const countEntries = await Promise.all(
         sortedPosts.map(async (post) => {
           try {
-            console.log(post,'post')
+            console.log(post, 'post')
             const res = await axios.get(
               `${Api}/community/comments/${post._id}/${user.id}`
             );
@@ -715,7 +717,12 @@ export default function Community() {
     }
   };
 
-
+  const toggleDescription = (postId) => {
+    setExpandedPosts((prev) => ({
+      ...prev,
+      [postId]: !prev[postId],
+    }));
+  };
 
   return (
     <>
@@ -1586,7 +1593,7 @@ export default function Community() {
                                     borderRadius: 2,
                                   }}
                                 >
-                                  Cancel
+                                  Reset
                                 </Button>
 
                                 <Button
@@ -1631,9 +1638,44 @@ export default function Community() {
                     </Box>
 
                     {/* Post body */}
-                    <Typography sx={{ mt: 1.5, fontSize: bodyFontSize, lineHeight: 1.6 }}>
+                    {/* <Typography sx={{ mt: 1.5, fontSize: bodyFontSize, lineHeight: 1.6 }}>
                       {post.description}
-                    </Typography>
+                    </Typography> */}
+
+                    <Box>
+                      <Typography
+                        sx={{
+                          mt: 1.5,
+                          fontSize: bodyFontSize,
+                          lineHeight: 1.6,
+                          overflow: "hidden",
+                          display: "-webkit-box",
+                          WebkitLineClamp: expandedPosts[post._id] ? "unset" : 3,
+                          WebkitBoxOrient: "vertical",
+                        }}
+                      >
+                        {post.description}
+                      </Typography>
+
+                      {post.description?.length > 120 && (
+                        <Button
+                          size="small"
+                          onClick={() => toggleDescription(post._id)}
+                          sx={{
+                            mt: 0.5,
+                            p: 0,
+                            minWidth: "auto",
+                            textTransform: "none",
+                            fontSize: {xs: "0.7rem", sm: "0.75rem"},
+                            fontWeight: 600,
+                            fontStyle: "italic",
+                          }}
+                        >
+                          {expandedPosts[post._id] ? "See Less" : "See More"}
+                        </Button>
+                      )}
+                    </Box>
+
                   </Box>
 
                   {/* Post image */}

@@ -692,7 +692,7 @@ const Myprofile = () => {
 
                     }}
                   >
-                    Cancel
+                    Reset
                   </Button>
 
                   <Button

@@ -956,7 +956,7 @@ export default function Ridebook({
             bgcolor: "#757575",
           }}
         >
-          Cancel
+          Reset
         </Button>
         <Button
           variant="contained"
