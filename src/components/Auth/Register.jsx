@@ -117,6 +117,20 @@ const Register = () => {
     setOtpError("");
 
     try {
+
+      const res = await axios.post(`${Api}/referralInvite/check`,
+        {
+          mobile : mobileNumber
+        }
+      )
+
+      console.log(res)
+
+      if(res?.status === false){
+        toast.warning(res?.message)
+        return 
+      }
+
       const response = await axios.post(`${Api}/auth/send-otp`, {
         mobileNumber: mobileNumber,
       });
@@ -237,10 +251,12 @@ const Register = () => {
 
       const res = await axios.post(`${Api}/users/`, payload);
 
-      toast.success("Registration Success - Waiting for approval!", toasts);
+      toast.success("Registration Success!", toasts);
 
-      if (res?.data?.data?.refApprove === "Waiting") {
-        navigate("/waiting-approval");
+      console.log(res,'res')
+
+      if (res?.data?.data?.refApprove === "Approved") {
+        navigate("/login");
       }
     } catch (error) {
       const message = error.response?.data?.message || "Registration failed";
@@ -460,6 +476,7 @@ const Register = () => {
         lastName: "",
         email: "",
         password: "",
+        mobile : mobileNumber,
         role: "USER",
         referralCode: referralFromUrl,
       }}
@@ -558,6 +575,21 @@ const Register = () => {
                   ),
                 },
               }}
+              sx={inputSx}
+            />
+
+            <TextField
+              fullWidth
+              type={"text"}
+              label="Mobile Number"
+              name="mobile"
+              disabled
+              value={mobileNumber}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              error={touched.mobile && Boolean(errors.mobile)}
+              helperText={touched.mobile && errors.mobile}
+              size="small"
               sx={inputSx}
             />
 

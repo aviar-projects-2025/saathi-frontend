@@ -244,7 +244,7 @@ const MyReferrals = () => {
                 {message2}
             </Typography>
 
-            <Button
+            {/* <Button
                 variant="contained"
                 size="small"
                 onClick={handleOpenShare}
@@ -262,7 +262,7 @@ const MyReferrals = () => {
                 disabled={isProfileComplete}
             >
                 Refer Now
-            </Button>
+            </Button> */}
         </Box>
     );
 
@@ -273,6 +273,17 @@ const MyReferrals = () => {
         }
 
         try {
+            const stored = await axios.post(
+                `${Api}/referralInvite/`,
+                {
+                    referredBy: user.id,
+                    mobile: mobile_number,
+                    status: 'Waiting',
+                }
+            )
+
+            console.log(stored, 'stored')
+
             const response = await axios.post(
                 `${Api}/referrals/send`,
                 {
@@ -648,6 +659,26 @@ const MyReferrals = () => {
                     </Typography>
                 </Box>
 
+                <Button
+                    variant="contained"
+                    size="small"
+                    onClick={handleOpenShare}
+                    sx={{
+                        mt: 2.5,
+                        textTransform: "none",
+                        borderRadius: 5,
+                        fontWeight: 600,
+                        fontSize: 12,
+                        px: 3,
+                        color: "#fff",
+                        bgcolor: "#FF9933",
+                        "&:hover": { bgcolor: "#da9a3a" },
+                    }}
+                    disabled={isProfileComplete}
+                >
+                    Refer Now
+                </Button>
+
                 {/* Tabs */}
                 <Tabs
                     value={tab}
@@ -675,30 +706,14 @@ const MyReferrals = () => {
                         },
                     }}
                 >
-                    <Tab
+                    {/* <Tab
                         label={
                             <Stack direction="row" alignItems="center">
                                 <span style={{ color: "#FF6B35", fontWeight: 600 }} >{`Pending Approvals (${referrals.length})`} </span>
-                                {/* {referrals.length > 0 && (
-                                    <Box
-                                        component="span"
-                                        sx={{
-                                            bgcolor: tab === 0 ? "primary.main" : "action.selected",
-                                            color: tab === 0 ? "#fff" : "text.secondary",
-                                            fontSize: 11,
-                                            fontWeight: 700,
-                                            borderRadius: 10,
-                                            px: 0.75,
-                                            py: 0.1,
-                                            lineHeight: 1.6,
-                                        }}
-                                    >
-                                        {referrals.length}
-                                    </Box>
-                                )} */}
+                                
                             </Stack>
                         }
-                    />
+                    /> */}
                     <Tab
                         label={
                             <Stack direction="row" alignItems="center">
@@ -726,7 +741,7 @@ const MyReferrals = () => {
                 </Tabs>
 
                 {/* Tab: Pending */}
-                {tab === 0 && (
+                {/* {tab === 0 && (
                     loading ? <LoadingSpinner /> :
                         referrals.length === 0 ? (
                             <EmptyState
@@ -740,10 +755,10 @@ const MyReferrals = () => {
                                 ))}
                             </Stack>
                         )
-                )}
+                )} */}
 
                 {/* Tab: Approved */}
-                {tab === 1 && (
+                {tab === 0 && (
                     loading ? <LoadingSpinner /> :
                         approvedReferrals.length === 0 ? (
                             <EmptyState

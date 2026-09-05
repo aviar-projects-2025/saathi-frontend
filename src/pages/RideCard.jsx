@@ -71,6 +71,7 @@ export default function RideCard({ ride }) {
     (item) => item.rideId === ride._id,
   );
 
+
   const pendingReqSeats = pendingRequest?.pendingReqSeats;
   const { completion } = useUser();
   const theme = useTheme();
@@ -316,12 +317,28 @@ export default function RideCard({ ride }) {
 
   //   return rideId === ride._id;
   // });
-  const myRequest = myRequestedRides.find((item) => item.rideId === ride._id);
+
+  const cancelledRequestCount = myRequestedRides.filter(
+    (item) =>
+      item.rideId?.toString() === ride._id?.toString() &&
+      item.requestedBy?.toString() === currentUser._id?.toString() &&
+      item.status === "CANCELLED"
+  ).length;
+
+  const isBlocked = cancelledRequestCount >= 3;
+  const myRequest = myRequestedRides.find(
+    (item) =>
+      item.rideId === ride._id &&
+      item.status !== "CANCELLED"
+  );
+
 
   const isRejected = myRequest?.status === "REJECTED";
   const isAccepted = myRequest?.status === "ACCEPTED";
   const requestedByMe = Number(myRequest?.seatsRequested || 0);
   const approvedSeats = myRequest?.approvedSeats || 0;
+  // console.log(requestedByMe, 'requestedByMe')
+  // console.log(myRequest, 'myRequest')
 
   const pendingSeatsByMe = isAccepted ? 0 : requestedByMe;
 
@@ -394,18 +411,26 @@ export default function RideCard({ ride }) {
         value: `${dateStr}${timeStr ? " · " + timeStr : ""}`,
       },
       {
-        label: "Seats available",
+        label: "Total Seats",
         icon: <EventSeatIcon sx={iconSx} />,
         value: isFlight
           ? "—"
-          : (() => {
-            const occupiedSeats = Math.max(
-              Number(totalSeat || 0) - Number(remainingSeatsForUser ?? 0),
-              0,
-            );
-            return `${occupiedSeats}
-        / ${totalSeat}`;
-          })(),
+          : `${totalSeat}`
+      },
+      {
+        label: "Seats available",
+        icon: <EventSeatIcon sx={iconSx} />,
+        // value: isFlight
+        //   ? "—"
+        //   : (() => {
+        //     const occupiedSeats = Math.max(
+        //       Number(totalSeat || 0) - Number(remainingSeatsForUser ?? 0),
+        //       0,
+        //     );
+        //     return `${occupiedSeats}
+        // / ${totalSeat}`;
+        //   })(),
+        value: totalSeat - pendingSeatsByMe
       },
 
       {
@@ -758,6 +783,7 @@ export default function RideCard({ ride }) {
                             disabled={
                               genderMismatch ||
                               isRejected ||
+                              isBlocked ||
                               !isProfileComplete ||
                               isFlightBookingClosed ||
                               (!isFlight &&
@@ -773,13 +799,13 @@ export default function RideCard({ ride }) {
                               setOpenEditModal(true);
                             }}
                             sx={{
-                              bgcolor: isRejected ? "#D32F2F" : ORANGE,
+                              bgcolor: isRejected || isBlocked ? "#D32F2F" : ORANGE,
                               color: "#ffffff",
                               "&:hover": {
-                                bgcolor: isRejected ? "#D32F2F" : "#e68a00",
+                                bgcolor: isRejected || isBlocked ? "#D32F2F" : "#e68a00",
                               },
                               "&.Mui-disabled": {
-                                bgcolor: isRejected ? "#EF9A9A" : "#e0e0e0",
+                                bgcolor: isRejected || isBlocked ? "#EF9A9A" : "#e0e0e0",
                                 color: "#ffffff",
                               },
                               fontWeight: 700,
@@ -797,17 +823,19 @@ export default function RideCard({ ride }) {
                               ? `Only ${ride.genderPreference} Allowed`
                               : isRejected
                                 ? "Rejected"
-                                : isFlightBookingClosed
-                                  ? "Companion Booking Closed"
-                                  : alreadyRequested
-                                    ? remainingSeatsForUser > 0
-                                      ? `Edit Request (${remainingSeatsForUser} left)`
-                                      : "View Request"
-                                    : isFlight
-                                      ? "Request Companion"
-                                      : remainingSeatsForUser > 0
-                                        ? `Request Seat (${remainingSeatsForUser} left)`
-                                        : "No Seats Available"}
+                                : isBlocked ?
+                                  "You Cancelled More Time"
+                                  : isFlightBookingClosed
+                                    ? "Companion Booking Closed"
+                                    : alreadyRequested
+                                      ? remainingSeatsForUser > 0
+                                        ? `Edit Request (${remainingSeatsForUser} left)`
+                                        : "View Request"
+                                      : isFlight
+                                        ? "Request Companion"
+                                        : remainingSeatsForUser > 0
+                                          ? `Request Seat (${remainingSeatsForUser} left)`
+                                          : "No Seats Available"}
                           </Button>
                           {/* <Button
                     variant="contained"
