@@ -59,7 +59,7 @@ const CARD_BORDER = "1px solid #F0E6DC";
 
 import CloseIcon from "@mui/icons-material/Close";
 
-import { useNavigate } from "react-router-dom";
+import { useNavigate,useLocation } from "react-router-dom";
 import uploadToCloudinary from "../components/uploadToCloudinary.jsx";
 
 // Size (px) of the square adjust/crop box
@@ -122,7 +122,7 @@ const StatBlock = ({ value, label }) => (
 
 const UserProfile = () => {
   const theme = useTheme();
-
+  
   const toasts = ToastConfig();
 
   const [openComments, setOpenComments] = useState({});
@@ -135,7 +135,11 @@ const UserProfile = () => {
   const { currentUser, getuserData, savedPost, removeSavedPost } = useUser();
 
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const [editProfile, setEditProfile] = useState(false);
+    const location = useLocation();
+
+  const [editProfile, setEditProfile] = useState(
+    location.state?.openEditProfile || false
+  );
   const [profileImage, setProfileImage] = useState(
     currentUser?.profileImage || "",
   );

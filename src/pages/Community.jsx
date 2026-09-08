@@ -810,7 +810,13 @@ export default function Community() {
           </Button>
           <Button
             variant="contained"
-            onClick={() => navigate("/user-profile")}
+             onClick={() => {
+              navigate("/user-profile", {
+                state: {
+                  openEditProfile: true,
+                },
+              });
+            }}
             sx={{
               textTransform: "none",
               borderRadius: 999,

@@ -36,7 +36,7 @@ import TrainIcon from "@mui/icons-material/Train";
 import FilterListOffIcon from "@mui/icons-material/FilterListOff";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import RideCard from "./RideCard.jsx";
-
+import UserProfile from "./UserProfile.jsx"
 import Api from "../Api";
 
 // ── Saffron design tokens ──────────────────────────────────────────────────
@@ -124,7 +124,7 @@ export default function FindRides() {
   const [searchDestination, setSearchDestination] = useState("");
   const [search, setSearch] = useState("");
   const { completion, savedPost, setSavedPost, removeSavedPost } = useUser();
-
+  const [editProfileModal, setEditProfileModal] = useState(false);
   // Staged filter values: edited live inside the panel, but only
   // committed to `appliedFilters` (and therefore the results) on Apply.
   const [draftFilters, setDraftFilters] = useState(emptyFilters);
@@ -495,7 +495,13 @@ export default function FindRides() {
           </Button>
           <Button
             variant="outlined"
-            onClick={() => navigate("/user-profile")}
+            onClick={() => {
+              navigate("/user-profile", {
+                state: {
+                  openEditProfile: true,
+                },
+              });
+            }}
             sx={{
               textTransform: "none",
               borderRadius: 999,
@@ -513,7 +519,12 @@ export default function FindRides() {
           </Button>
         </DialogActions>
       </Dialog>
-
+      {/* {editProfileModal &&(
+   <UserProfile
+      editProfile={editProfileModal}
+      onClose={() => setEditProfileModal(false)}
+    />
+)} */}
 
       <Box
         sx={{
