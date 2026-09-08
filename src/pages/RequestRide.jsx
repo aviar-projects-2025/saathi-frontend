@@ -928,10 +928,20 @@ const RequestRide = ({ ride }) => {
 
         <Dialog
           open={openCancelDialog}
-          onClose={() => setOpenCancelDialog(false)}
+          onClose={(event, reason) => {
+            if (reason === "backdropClick") {
+              return;
+            }
+
+            setOpenCancelDialog(false);
+          }}
           maxWidth="xs"
           fullWidth
-          PaperProps={{ sx: { borderRadius: 4 } }}
+          PaperProps={{
+            sx: {
+              borderRadius: 4,
+            },
+          }}
         >
           <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>
             Cancel ride request

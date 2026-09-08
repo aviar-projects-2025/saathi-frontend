@@ -67,6 +67,7 @@ const TRAVELLER_TYPES = [
   "Student travel companion",
   "Women-only companion",
   "Family companion",
+  "Regular"
 ];
 
 const AGE_GROUPS = ["Any", "18-25", "26-40", "41-60", "60+"];
