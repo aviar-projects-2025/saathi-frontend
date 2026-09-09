@@ -34,7 +34,7 @@ import FlightTakeoffIcon from '@mui/icons-material/FlightTakeoff';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import CircularProgress from "@mui/material/CircularProgress";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
-
+import MoreVerIcon from '@mui/icons-material/MoreVert';
 import PersonIcon from "@mui/icons-material/Person";
 import WomanIcon from "@mui/icons-material/Woman";
 import GroupsIcon from "@mui/icons-material/Groups";
@@ -52,12 +52,12 @@ import SchoolIcon from "@mui/icons-material/School";
 import FamilyRestroomIcon from "@mui/icons-material/FamilyRestroom";
 import TranslateIcon from "@mui/icons-material/Translate";
 import BadgeIcon from "@mui/icons-material/Badge";
-
+import axios from "axios";
 import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
 import LanguageIcon from "@mui/icons-material/Language";
 import LuggageIcon from "@mui/icons-material/Luggage";
 import TransferWithinAStationIcon from "@mui/icons-material/TransferWithinAStation";
-
+import Api from "../Api";
 
 // ── Design tokens ────────────────────────────────────────────────────────
 const TOKENS = {
@@ -254,6 +254,8 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
   const [open, setOpen] = useState(false);
   const v = requestVisual(request);
   const isPending = request?.status?.toUpperCase() === 'PENDING';
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [selectedPost, setSelectedPost] = useState(null);
   const firstName = request.requestedBy?.firstName || request?.data?.requestBy?.requestedBy?.firstName || 'U';
   const lastName = request.requestedBy?.lastName || '';
   const profilePic = request.requestedBy?.profileImage;
@@ -261,21 +263,61 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
   const pendingReq = request?.pendingReqSeats || 0;
   const approvedSeats = request?.approvedSeats || 0;
   const membersCount = request?.membersCount || 0;
-
-  // ── Confirmation modal state ────────────────────────────────────────
+  const [requests,setRequests] = useState([]);
+  const [editApproval, setEditApproval] = useState(false)
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const [confirmState, setConfirmState] = useState({ open: false, action: null });
-
+  const [selectedRequest, setSelectedRequest] = useState(null);
   const isApproveBusy = approveLoading === request._id;
   const isRejectBusy = rejectLoading === request._id;
   const isBusy = isApproveBusy || isRejectBusy;
+  const [approvalRejectionLoading, setApprovalRejectionLoading] = useState(false);
 
+  const handleMenuOpen = (event, request) => {
+    event.stopPropagation();
+    setAnchorEl(event.currentTarget);
+    setSelectedRequest(request);
+  };
   const askConfirm = (action, e) => {
     e?.stopPropagation?.();
     setConfirmState({ open: true, action });
   };
+  console.log("selectedRequest....", selectedRequest)
+  const handleRejectApproved = async () => {
+    try {
+      console.log("selectedRequest....555", selectedRequest._id)
+      setApprovalRejectionLoading(selectedRequest);
 
+     const res = await axios.patch(
+        `${Api}/bookride/${selectedRequest._id}/status?type=Reject`
+      );
+console.log("rcvbn",res)
+      // Update local UI
+setRequests((prev) =>
+  prev.map((request) =>
+    request._id === selectedRequest._id
+      ? {
+          ...request,
+          status: "REJECTED",
+
+          approvedSeats: Math.max(
+            Number(request.approvedSeats || 0) - 1,
+            0
+          ),
+
+          rejectedSeats:
+            Number(request.rejectedSeats || 0) + 1,
+        }
+      : request
+  )
+);
+
+      closeConfirm();
+    } catch (error) {
+    console.error("Reject error:", error);
+    }
+  };
   const closeConfirm = () => {
     if (isBusy) return;
     setConfirmState({ open: false, action: null });
@@ -284,6 +326,7 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
   const handleConfirm = () => {
     if (confirmState.action === 'approve') {
       onApprove(request._id);
+      console.log("hdg", onApprove)
     } else if (confirmState.action === 'reject') {
       onReject(request._id);
     }
@@ -474,35 +517,39 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
             ) : (
               <>
                 {v?.label && (
-                  <Chip
-                    label={v.label}
-                    size="small"
-                    sx={{
-                      bgcolor: v.bg,
-                      color: v.color,
-                      fontFamily: TOKENS.bodyFont,
-                      fontWeight: 700,
-                      fontSize: {
-                        xs: "0.62rem",
-                        sm: "0.65rem",
-                        md: "0.68rem",
-                        lg: "0.7rem",
-                      },
-                      height: {
-                        xs: 20,
-                        sm: 22,
-                        md: 23,
-                        lg: 24,
-                      },
-                      "& .MuiChip-label": {
-                        px: {
-                          xs: 0.75,
-                          sm: 1,
-                          md: 1.25,
+                  <>
+                    <Chip
+                      label={v.label}
+                      size="small"
+                      sx={{
+                        bgcolor: v.bg,
+                        color: v.color,
+                        fontFamily: TOKENS.bodyFont,
+                        fontWeight: 700,
+                        fontSize: {
+                          xs: "0.62rem",
+                          sm: "0.65rem",
+                          md: "0.68rem",
+                          lg: "0.7rem",
                         },
-                      },
-                    }}
-                  />
+                        height: {
+                          xs: 20,
+                          sm: 22,
+                          md: 23,
+                          lg: 24,
+                        },
+                        "& .MuiChip-label": {
+                          px: {
+                            xs: 0.75,
+                            sm: 1,
+                            md: 1.25,
+                          },
+                        },
+                      }}
+                    />
+
+                  </>
+
                 )}
               </>
             )}
@@ -510,7 +557,73 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
               {open ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
             </IconButton>
           </Stack>
+          {v.label === "Approved" && (
+            <IconButton
+              onClick={(event) => {handleMenuOpen(event, request)
+                setEditApproval (true)
+              }}
+              sx={{
+                color: "#fff",
+                p: { xs: 0.5, sm: 0.75, md: 1 },
+                "&:hover": { bgcolor: "rgba(255,255,255,0.1)" },
+              }}
+            >
+              <MoreVerIcon
+                // fontSize={iconFontSize}
+                sx={{ color: "text.secondary" }}
+              />
+            </IconButton>
+          )}
+
         </Box>
+        <Dialog open={editApproval}>
+          <DialogTitle>
+            Approved Seat Rejection
+          </DialogTitle>
+          <DialogContent>
+            Do you want to reject the appoved seat?
+          </DialogContent>
+          <DialogActions sx={{ px: { xs: 2, sm: 3 }, pb: { xs: 2, sm: 2.5 }, gap: 1 }}>
+            <Button
+              onClick={closeConfirm}
+              disabled={isBusy}
+              sx={{
+                fontFamily: TOKENS.bodyFont,
+                textTransform: 'none',
+                fontWeight: 700,
+                color: TOKENS.inkSoft,
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleRejectApproved}
+              disabled={isBusy}
+              variant="contained"
+              sx={{
+                fontFamily: TOKENS.bodyFont,
+                textTransform: 'none',
+                fontWeight: 700,
+                minWidth: 96,
+                bgcolor: confirmState.action === 'approve' ? TOKENS.green : TOKENS.red,
+                '&:hover': {
+                  bgcolor: confirmState.action === 'approve' ? TOKENS.green : TOKENS.red,
+                  opacity: 0.9,
+                },
+              }}
+            >
+              {isBusy ? (
+                confirmState.action === "approve"
+                  ? "Approving..."
+                  : "Rejecting..."
+              ) : (
+                confirmState.action === "approve"
+                  ? "Approve"
+                  : "Reject"
+              )}
+            </Button>
+          </DialogActions>
+        </Dialog>
         <Collapse in={open}>
           <Box sx={{ px: { xs: 1.4, sm: 1.8 }, pb: 1.4, pt: 0, borderTop: `1px dashed ${TOKENS.line}` }}>
             <Stack spacing={0.6} sx={{ mt: 1.2 }}>
