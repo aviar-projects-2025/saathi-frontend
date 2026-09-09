@@ -42,7 +42,7 @@ export default function Ridebook({
 
   onRequestUpdated,
 }) {
-  
+
   const theme = useTheme();
   const { currentUser } = useUser();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -461,8 +461,12 @@ export default function Ridebook({
   return (
     <Dialog
       open={open}
-      onClose={onClose}
-      // fullScreen={isMobile}
+      onClose={(event, reason) => {
+        if (reason === "backdropClick") {
+          return; // Prevent closing on outside click
+        }
+        onClose(); // Allow other close actions, like Escape
+      }}
       fullWidth
       maxWidth="sm"
       PaperProps={{

@@ -728,7 +728,13 @@ export default function Community() {
     <>
       <Dialog
         open={profileGateOpen}
-        onClose={handleCloseProfileGate}
+        onClose={(event, reason) => {
+          if (reason === "backdropClick") {
+            return;
+          }
+
+          handleCloseProfileGate();
+        }}
         fullWidth
         maxWidth="xs"
         PaperProps={{
@@ -1347,9 +1353,16 @@ export default function Community() {
                               <ListItemText>Delete</ListItemText>
                             </MenuItem>
                           </Menu>
+
                           <Dialog
                             open={deleteOpen}
-                            onClose={() => setDeleteOpen(false)}
+                            onClose={(event, reason) => {
+                              if (reason === "backdropClick") {
+                                return;
+                              }
+
+                              setDeleteOpen(false);
+                            }}
                             fullWidth
                             maxWidth="xs"
                             PaperProps={{
@@ -1433,10 +1446,15 @@ export default function Community() {
 
                           <Dialog
                             open={editOpen}
-                            onClose={() => setEditOpen(false)}
+                            onClose={(event, reason) => {
+                              if (reason === "backdropClick") {
+                                return;
+                              }
+
+                              setEditOpen(false);
+                            }}
                             fullWidth
                             maxWidth="sm"
-                            // fullScreen// pass in `useMediaQuery(theme.breakpoints.down('sm'))`
                             PaperProps={{
                               sx: {
                                 borderRadius: { xs: 0, sm: 3 },
@@ -1672,7 +1690,7 @@ export default function Community() {
                             p: 0,
                             minWidth: "auto",
                             textTransform: "none",
-                            fontSize: {xs: "0.7rem", sm: "0.75rem"},
+                            fontSize: { xs: "0.7rem", sm: "0.75rem" },
                             fontWeight: 600,
                             fontStyle: "italic",
                           }}

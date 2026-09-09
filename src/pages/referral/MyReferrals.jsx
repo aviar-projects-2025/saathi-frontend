@@ -664,11 +664,11 @@ const MyReferrals = () => {
                     size="small"
                     onClick={handleOpenShare}
                     sx={{
-                        mt: 2.5,
+                        mt: { xs: 0.5, sm: 1.5 },
                         textTransform: "none",
                         borderRadius: 5,
                         fontWeight: 600,
-                        fontSize: 12,
+                        fontSize: { xs: 10.2, sm: 11.5 },
                         px: 3,
                         color: "#fff",
                         bgcolor: "#FF9933",
@@ -775,7 +775,16 @@ const MyReferrals = () => {
                 )}
 
                 {/* Share Modal */}
-                <Modal open={openShare} onClose={handleCloseShare}>
+                <Modal
+                    open={openShare}
+                    onClose={(event, reason) => {
+                        if (reason === "backdropClick") {
+                            return;
+                        }
+
+                        handleCloseShare();
+                    }}
+                >
                     <Box
                         sx={{
                             position: "fixed",

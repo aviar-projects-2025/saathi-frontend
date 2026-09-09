@@ -911,7 +911,7 @@ const UserProfile = () => {
                               display: "block",
                             }}
                           />
-                          <Box
+                          {/* <Box
                             className="postOverlay"
                             sx={{
                               position: "absolute",
@@ -932,7 +932,7 @@ const UserProfile = () => {
                               <ThumbUpOffAltIcon fontSize="small" />
                               <ChatIcon fontSize="small" />
                             </Stack>
-                          </Box>
+                          </Box> */}
                         </Box>
                       )}
                     </Grid>
@@ -1054,7 +1054,7 @@ const UserProfile = () => {
                             }}
                           />
 
-                          <Box
+                          {/* <Box
                             className="postOverlay"
                             sx={{
                               position: "absolute",
@@ -1075,7 +1075,7 @@ const UserProfile = () => {
                               <ThumbUpOffAltIcon fontSize="small" />
                               <ChatIcon fontSize="small" />
                             </Stack>
-                          </Box>
+                          </Box> */}
                         </Box>
                       )}
                     </Grid>
@@ -1083,10 +1083,15 @@ const UserProfile = () => {
                 )}
               </Grid>
             )}
-
             <Dialog
               open={openImage}
-              onClose={() => setOpenImage(false)}
+              onClose={(event, reason) => {
+                if (reason === "backdropClick") {
+                  return;
+                }
+
+                setOpenImage(false);
+              }}
               maxWidth={false}
               slotProps={{
                 paper: {
@@ -1103,40 +1108,42 @@ const UserProfile = () => {
               }}
             >
               <Box sx={{ position: "relative" }}>
-                <IconButton
-                  onClick={async () => {
-                    if (!selectedPost?.postId?._id) {
-                      console.log("Saved post ID missing");
-                      return;
-                    }
+                {tab === 1 && (
+                  <IconButton
+                    onClick={async () => {
+                      if (!selectedPost?.postId?._id) {
+                        console.log("Saved post ID missing");
+                        return;
+                      }
 
-                    console.log(
-                      "Removing saved post:",
-                      selectedPost.postId._id,
-                    );
+                      console.log(
+                        "Removing saved post:",
+                        selectedPost.postId._id,
+                      );
 
-                    await removeSavedPost(selectedPost.postId._id);
+                      await removeSavedPost(selectedPost.postId._id);
 
-                    setOpenImage(false);
-                    setSelectedPost(null);
-                  }}
-                  sx={{
-                    position: "absolute",
-                    top: 8,
-                    left: 8,
-                    color: "#fff",
-                    bgcolor: "rgba(0,0,0,0.5)",
-                    "&:hover": { bgcolor: "rgba(0,0,0,0.7)" },
-                    zIndex: 10,
-                  }}
-                >
-                  <Tooltip title="Remove from saved">
-                    <BookmarkBorderIcon
-                      fontSize="small"
-                      sx={{ color: "#ff5e00ff" }}
-                    />
-                  </Tooltip>
-                </IconButton>
+                      setOpenImage(false);
+                      setSelectedPost(null);
+                    }}
+                    sx={{
+                      position: "absolute",
+                      top: 8,
+                      left: 8,
+                      color: "#fff",
+                      bgcolor: "rgba(0,0,0,0.5)",
+                      "&:hover": { bgcolor: "rgba(0,0,0,0.7)" },
+                      zIndex: 10,
+                    }}
+                  >
+                    <Tooltip title="Remove from saved">
+                      <BookmarkBorderIcon
+                        fontSize="small"
+                        sx={{ color: "#ff5e00ff" }}
+                      />
+                    </Tooltip>
+                  </IconButton>
+                )}
 
                 <IconButton
                   onClick={() => setOpenImage(false)}

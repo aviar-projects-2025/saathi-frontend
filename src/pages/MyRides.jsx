@@ -280,7 +280,13 @@ function EditRideModal({ ride, onSave, onClose }) {
 
       <Dialog
         open={Boolean(ride)}
-        onClose={onClose}
+        onClose={(event, reason) => {
+          if (reason === "backdropClick") {
+            return;
+          }
+
+          onClose();
+        }}
         fullWidth
         maxWidth="sm"
         fullScreen={isMobile}
@@ -395,7 +401,13 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
   return (
     <Dialog
       open
-      onClose={onClose}
+      onClose={(event, reason) => {
+        if (reason === "backdropClick") {
+          return;
+        }
+
+        onClose();
+      }}
       maxWidth="xs"
       fullWidth
       PaperProps={{
@@ -601,9 +613,9 @@ function RideCard({
 
   const handleApprove = async (requestId) => {
     try {
-      if (!window.confirm("Are you sure you want to approve this request?")) {
-        return;
-      }
+      // if (!window.confirm("Are you sure you want to approve this request?")) {
+      //   return;
+      // }
       setApproveLoading(requestId);
       const res = await axios.patch(
         `${Api}/bookride/${requestId}/status?type=Approve`,
@@ -629,9 +641,9 @@ function RideCard({
 
   const handleReject = async (requestId) => {
     try {
-      if (!window.confirm("Are you sure you want to reject this request?")) {
-        return;
-      }
+      // if (!window.confirm("Are you sure you want to reject this request?")) {
+      //   return;
+      // }
       setRejectLoading(requestId);
 
       await axios.patch(
@@ -1206,6 +1218,13 @@ function RideCard({
 
       <Dialog
         open={!!confirmRide}
+        onClose={(event, reason) => {
+          if (reason === "backdropClick") {
+            return;
+          }
+
+          setConfirmRide(null);
+        }}
         PaperProps={{
           sx: {
             borderRadius: { xs: 2, sm: 3 },
@@ -1942,21 +1961,42 @@ const MyRides = () => {
             sx={{
               width: "100%",
               minHeight: { xs: 40, sm: 48, md: 50 },
+
               "& .MuiTabs-flexContainer": {
                 width: "100%",
               },
+
               "& .MuiTab-root": {
                 minWidth: 0,
                 flex: 1,
-                padding: { xs: "4px 2px", sm: "8px 12px", md: "12px 16px" },
-                fontSize: { xs: "0.68rem", sm: "0.78rem", md: "0.82rem" },
+                padding: {
+                  xs: "4px 2px",
+                  sm: "8px 12px",
+                  md: "12px 16px",
+                },
+                fontSize: {
+                  xs: "0.68rem",
+                  sm: "0.78rem",
+                  md: "0.82rem",
+                },
                 fontWeight: 600,
                 textTransform: "none",
-                minHeight: { xs: 36, sm: 44, md: 48 },
+                minHeight: {
+                  xs: 36,
+                  sm: 44,
+                  md: 48,
+                },
                 lineHeight: 1.1,
+                color: "#666",
+
+                "&.Mui-selected": {
+                  color: "#FF9933",
+                },
               },
+
               "& .MuiTabs-indicator": {
                 height: 3,
+                backgroundColor: "#FF9933",
               },
             }}
           >
