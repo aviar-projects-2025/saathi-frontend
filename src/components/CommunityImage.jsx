@@ -223,7 +223,13 @@ const CommunityImage = ({ src }) => {
       {/* Preview Dialog */}
       <Dialog
         open={open}
-        onClose={handleClose}
+        onClose={(event, reason) => {
+          if (reason === "backdropClick") {
+            return;
+          }
+
+          handleClose();
+        }}
         maxWidth={false}
         slotProps={{
           paper: {

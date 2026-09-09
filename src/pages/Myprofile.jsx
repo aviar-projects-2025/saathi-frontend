@@ -721,7 +721,16 @@ const Myprofile = () => {
         </Box>
       </Modal>
 
-      <Modal open={openShare} onClose={handleCloseShare}>
+      <Modal
+        open={openShare}
+        onClose={(event, reason) => {
+          if (reason === "backdropClick") {
+            return;
+          }
+
+          handleCloseShare();
+        }}
+      >
         <Box
           sx={{
             position: "fixed",
@@ -971,7 +980,13 @@ const Myprofile = () => {
             </Button>
             <Dialog
               open={logoutDialogOpen}
-              onClose={cancelLogout}
+              onClose={(event, reason) => {
+                if (reason === "backdropClick") {
+                  return;
+                }
+
+                cancelLogout();
+              }}
               fullWidth
               maxWidth="xs"
               PaperProps={{

@@ -408,7 +408,13 @@ export default function FindRides() {
 
       <Dialog
         open={profileGateOpen}
-        onClose={handleCloseProfileGate}
+        onClose={(event, reason) => {
+          if (reason === "backdropClick") {
+            return;
+          }
+
+          handleCloseProfileGate();
+        }}
         fullWidth
         maxWidth="xs"
         PaperProps={{

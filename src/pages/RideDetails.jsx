@@ -1,7 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
+  DialogTitle,
+  DialogContentText,
+  DialogActions,
   Box,
   Typography,
   Chip,
@@ -247,10 +250,8 @@ function Field({ icon: Icon, label, value, span }) {
   );
 }
 
-// ── Passenger / request stub row ─────────────────────────────────────────
 function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoading, dense }) {
   const [open, setOpen] = useState(false);
-  // const v = requestVisual(request?.status);
   const v = requestVisual(request);
   const isPending = request?.status?.toUpperCase() === 'PENDING';
   const firstName = request.requestedBy?.firstName || request?.data?.requestBy?.requestedBy?.firstName || 'U';
@@ -261,6 +262,44 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
   const approvedSeats = request?.approvedSeats || 0;
   const membersCount = request?.membersCount || 0;
 
+  // ── Confirmation modal state ────────────────────────────────────────
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
+  const [confirmState, setConfirmState] = useState({ open: false, action: null });
+
+  const isApproveBusy = approveLoading === request._id;
+  const isRejectBusy = rejectLoading === request._id;
+  const isBusy = isApproveBusy || isRejectBusy;
+
+  const askConfirm = (action, e) => {
+    e?.stopPropagation?.();
+    setConfirmState({ open: true, action });
+  };
+
+  const closeConfirm = () => {
+    if (isBusy) return;
+    setConfirmState({ open: false, action: null });
+  };
+
+  const handleConfirm = () => {
+    if (confirmState.action === 'approve') {
+      onApprove(request._id);
+    } else if (confirmState.action === 'reject') {
+      onReject(request._id);
+    }
+  };
+
+  useEffect(() => {
+    if (!confirmState.open) return;
+    if (confirmState.action === 'approve' && !isApproveBusy) {
+      setConfirmState({ open: false, action: null });
+    }
+    if (confirmState.action === 'reject' && !isRejectBusy) {
+      setConfirmState({ open: false, action: null });
+    }
+
+  }, [isApproveBusy, isRejectBusy]);
+
   return (
     <>
       <Box
@@ -269,7 +308,6 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
           borderRadius: 1.5,
           bgcolor: 'background.default',
           border: `1px solid ${TOKENS.line}`,
-          borderLeft: `4px solid ${v.color}`,
           overflow: 'hidden',
         }}
       >
@@ -358,8 +396,8 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
                 <>
                   <IconButton
                     aria-label="Approve request"
-                    onClick={() => onApprove(request._id)}
-                    disabled={approveLoading === request._id || rejectLoading === request._id}
+                    onClick={(e) => askConfirm('approve', e)}
+                    disabled={isBusy}
                     sx={{
                       width: { xs: 28, sm: 32 },
                       height: { xs: 28, sm: 32 },
@@ -368,7 +406,7 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
                       '&:hover': { bgcolor: TOKENS.green, color: '#fff' },
                     }}
                   >
-                    {approveLoading === request._id ? (
+                    {isApproveBusy ? (
                       <CircularProgress size={16} color="inherit" />
                     ) : (
                       <CheckCircleIcon sx={{ fontSize: { xs: 14, sm: 16 } }} />
@@ -376,8 +414,8 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
                   </IconButton>
                   <IconButton
                     aria-label="Reject request"
-                    onClick={() => onReject(request._id)}
-                    disabled={approveLoading === request._id || rejectLoading === request._id}
+                    onClick={(e) => askConfirm('reject', e)}
+                    disabled={isBusy}
                     sx={{
                       width: { xs: 28, sm: 32 },
                       height: { xs: 28, sm: 32 },
@@ -386,7 +424,7 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
                       '&:hover': { bgcolor: TOKENS.red, color: '#fff' },
                     }}
                   >
-                    {rejectLoading === request._id ? (
+                    {isRejectBusy ? (
                       <CircularProgress size={16} color="inherit" />
                     ) : (
                       <CancelIcon sx={{ fontSize: { xs: 14, sm: 16 } }} />
@@ -397,8 +435,8 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
                 <>
                   <Button
                     size="small"
-                    onClick={() => onApprove(request._id)}
-                    disabled={approveLoading === request._id || rejectLoading === request._id}
+                    onClick={(e) => askConfirm('approve', e)}
+                    disabled={isBusy}
                     sx={{
                       fontFamily: TOKENS.bodyFont,
                       textTransform: 'none',
@@ -411,12 +449,12 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
                       '&:hover': { bgcolor: TOKENS.green, color: '#fff' },
                     }}
                   >
-                    {approveLoading === request._id ? "Approving..." : "Approve"}
+                    {isApproveBusy ? "Approving..." : "Approve"}
                   </Button>
                   <Button
                     size="small"
-                    onClick={() => onReject(request._id)}
-                    disabled={approveLoading === request._id || rejectLoading === request._id}
+                    onClick={(e) => askConfirm('reject', e)}
+                    disabled={isBusy}
                     sx={{
                       fontFamily: TOKENS.bodyFont,
                       textTransform: 'none',
@@ -429,7 +467,7 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
                       '&:hover': { bgcolor: TOKENS.red, color: '#fff' },
                     }}
                   >
-                    {rejectLoading === request._id ? "Rejecting..." : "Reject"}
+                    {isRejectBusy ? "Rejecting..." : "Reject"}
                   </Button>
                 </>
               )
@@ -546,15 +584,14 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
                 bgcolor: "rgba(0,200,0,0.1)",
                 "&:hover": { bgcolor: "rgba(0,200,0,0.2)" },
               }}
-              onClick={() => onApprove(request._id)}
+              onClick={(e) => askConfirm('approve', e)}
+              disabled={isBusy}
             >
-              {
-                approveLoading === request._id ? (
-                  <CircularProgress size={16} color="inherit" />
-                ) : (
-                  <CheckCircleIcon sx={{ fontSize: 16 }} />
-                )
-              }
+              {isApproveBusy ? (
+                <CircularProgress size={16} color="inherit" />
+              ) : (
+                <CheckCircleIcon sx={{ fontSize: 16 }} />
+              )}
             </IconButton>
 
             <IconButton
@@ -563,19 +600,98 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
                 bgcolor: "rgba(255,0,0,0.1)",
                 "&:hover": { bgcolor: "rgba(255,0,0,0.2)" },
               }}
-              onClick={() => onReject(request._id)}
+              onClick={(e) => askConfirm('reject', e)}
+              disabled={isBusy}
             >
-              {
-                rejectLoading === request._id ? (
-                  <CircularProgress size={16} color="inherit" />
-                ) : (
-                  <CancelIcon sx={{ fontSize: 16 }} />
-                )
-              }
+              {isRejectBusy ? (
+                <CircularProgress size={16} color="inherit" />
+              ) : (
+                <CancelIcon sx={{ fontSize: 16 }} />
+              )}
             </IconButton>
           </Box>
         </Box>
       )}
+
+      {/* ── Confirmation Modal ─────────────────────────────────────────── */}
+      <Dialog
+        open={confirmState.open}
+        onClose={(event, reason) => {
+          if (reason === "backdropClick") {
+            return;
+          }
+
+          closeConfirm();
+        }}
+        // fullScreen={fullScreen}
+        fullWidth
+        maxWidth="xs"
+        PaperProps={{
+          sx: {
+            borderRadius: fullScreen ? 0 : 2.5,
+            m: { xs: 0, sm: 2 },
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            fontFamily: TOKENS.bodyFont,
+            fontWeight: 700,
+            fontSize: { xs: '1rem', sm: '1.1rem' },
+          }}
+        >
+          {confirmState.action === 'approve' ? 'Approve request?' : 'Reject request?'}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText
+            sx={{ fontFamily: TOKENS.bodyFont, fontSize: { xs: '0.85rem', sm: '0.9rem' } }}
+          >
+            Are you sure you want to {confirmState.action === 'approve' ? 'approve' : 'reject'} the
+            request from <strong>{firstName} {lastName}</strong>
+            {pendingReq > 0 ? ` for +${pendingReq} ${pendingReq > 1 ? 'seats' : 'seat'}` : ''}?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: { xs: 2, sm: 3 }, pb: { xs: 2, sm: 2.5 }, gap: 1 }}>
+          <Button
+            onClick={closeConfirm}
+            disabled={isBusy}
+            sx={{
+              fontFamily: TOKENS.bodyFont,
+              textTransform: 'none',
+              fontWeight: 700,
+              color: TOKENS.inkSoft,
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirm}
+            disabled={isBusy}
+            variant="contained"
+            sx={{
+              fontFamily: TOKENS.bodyFont,
+              textTransform: 'none',
+              fontWeight: 700,
+              minWidth: 96,
+              bgcolor: confirmState.action === 'approve' ? TOKENS.green : TOKENS.red,
+              '&:hover': {
+                bgcolor: confirmState.action === 'approve' ? TOKENS.green : TOKENS.red,
+                opacity: 0.9,
+              },
+            }}
+          >
+            {isBusy ? (
+              confirmState.action === "approve"
+                ? "Approving..."
+                : "Rejecting..."
+            ) : (
+              confirmState.action === "approve"
+                ? "Approve"
+                : "Reject"
+            )}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 }
@@ -621,7 +737,13 @@ export default function RideDetailsModal({
   return (
     <Dialog
       open
-      onClose={onClose}
+      onClose={(event, reason) => {
+        if (reason === "backdropClick") {
+          return;
+        }
+
+        onClose();
+      }}
       fullWidth
       maxWidth="sm"
       fullScreen={isXs}
@@ -629,7 +751,7 @@ export default function RideDetailsModal({
         sx: {
           borderRadius: { xs: 3, sm: 4 },
           bgcolor: TOKENS.paper,
-          backgroundImage: 'none',
+          backgroundImage: "none",
         },
       }}
       sx={{ p: 1.5 }}

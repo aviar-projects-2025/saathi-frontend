@@ -271,11 +271,20 @@ const TopNav = ({ onMenuClick }) => {
               color="error"
               badgeContent={unreadCount}
               invisible={unreadCount === 0}
+              sx={{
+                "& .MuiBadge-badge": {
+                  fontSize: "clamp(0.55rem, 1.5vw, 0.75rem)",
+                  minWidth: "clamp(14px, 3vw, 20px)",
+                  height: "clamp(14px, 3vw, 20px)",
+                  padding: "0 5px",
+                },
+              }}
             >
               <NotificationsNoneIcon
                 sx={{
                   color: openNotifications ? "#f97316" : "#5f4632",
                   transition: "0.2s",
+                  fontSize: "clamp(26px, 5vw, 28px)",
                 }}
               />
             </Badge>
@@ -554,7 +563,13 @@ const TopNav = ({ onMenuClick }) => {
         </Box>
         <Dialog
           open={logoutDialogOpen}
-          onClose={cancelLogout}
+          onClose={(event, reason) => {
+            if (reason === "backdropClick") {
+              return;
+            }
+
+            cancelLogout();
+          }}
           fullWidth
           maxWidth="xs"
           PaperProps={{

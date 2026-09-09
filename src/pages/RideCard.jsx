@@ -430,7 +430,10 @@ export default function RideCard({ ride }) {
         //     return `${occupiedSeats}
         // / ${totalSeat}`;
         //   })(),
-        value: totalSeat - pendingSeatsByMe
+        value: Math.max(
+          Number(totalSeat || 0) - Number(requestedCount || 0),
+          0
+        ),
       },
 
       {
@@ -490,7 +493,8 @@ export default function RideCard({ ride }) {
               <Avatar
                 src={userProfile || ""}
                 alt={userName}
-                onClick={() => {
+                onClick={(event) => {
+                  event.stopPropagation();
                   setSelectedProfile(user);
                   setProfileModalOpen(true);
                 }}
@@ -734,12 +738,12 @@ export default function RideCard({ ride }) {
               <Box
                 sx={{
                   display: "flex",
-                  justifyContent: "space-between",
+                  justifyContent: "flex-end",
                   // alignItems:"center",
                   // gap:1,
                 }}
               >
-                <IconButton
+                {/* <IconButton
                   onClick={() => setExpanded(!expanded)}
                   size={isMobile ? "small" : "medium"}
                   sx={{
@@ -758,7 +762,7 @@ export default function RideCard({ ride }) {
                       sx={{ fontSize: { xs: 18, sm: 22 } }}
                     />
                   )}
-                </IconButton>
+                </IconButton> */}
 
                 <Tooltip
                   title={
