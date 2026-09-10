@@ -838,6 +838,8 @@ const RequestRide = ({ ride }) => {
           <RideDetailsModal
             onClose={() => setSelectedRideDetails(null)}
             ride={selectedRideDetails.rideId}
+            
+            
           />
         )}
 

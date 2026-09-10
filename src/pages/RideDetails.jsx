@@ -58,6 +58,7 @@ import LanguageIcon from "@mui/icons-material/Language";
 import LuggageIcon from "@mui/icons-material/Luggage";
 import TransferWithinAStationIcon from "@mui/icons-material/TransferWithinAStation";
 import Api from "../Api";
+import { toast } from 'react-toastify';
 
 // ── Design tokens ────────────────────────────────────────────────────────
 const TOKENS = {
@@ -250,7 +251,7 @@ function Field({ icon: Icon, label, value, span }) {
   );
 }
 
-function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoading, dense }) {
+function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approveLoading, rejectLoading, dense }) {
   const [open, setOpen] = useState(false);
   const v = requestVisual(request);
   const isPending = request?.status?.toUpperCase() === 'PENDING';
@@ -263,7 +264,7 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
   const pendingReq = request?.pendingReqSeats || 0;
   const approvedSeats = request?.approvedSeats || 0;
   const membersCount = request?.membersCount || 0;
-  const [requests,setRequests] = useState([]);
+  const [requests, setRequests] = useState([]);
   const [editApproval, setEditApproval] = useState(false)
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
@@ -283,39 +284,40 @@ function PassengerStub({ request, onApprove, onReject, approveLoading, rejectLoa
     e?.stopPropagation?.();
     setConfirmState({ open: true, action });
   };
-  console.log("selectedRequest....", selectedRequest)
   const handleRejectApproved = async () => {
     try {
-      console.log("selectedRequest....555", selectedRequest._id)
       setApprovalRejectionLoading(selectedRequest);
 
-     const res = await axios.patch(
+      const res = await axios.patch(
         `${Api}/bookride/${selectedRequest._id}/status?type=Reject`
       );
-console.log("rcvbn",res)
-      // Update local UI
-setRequests((prev) =>
-  prev.map((request) =>
-    request._id === selectedRequest._id
-      ? {
-          ...request,
-          status: "REJECTED",
 
-          approvedSeats: Math.max(
-            Number(request.approvedSeats || 0) - 1,
-            0
-          ),
+      const updatedRequest = res.data?.data?.request;
+      const rejectedSeatsCount = updatedRequest.rejectedSeats;
+      console.log("updatedRequest", updatedRequest.rejectedSeats)
+      setEditApproval(false);
 
-          rejectedSeats:
-            Number(request.rejectedSeats || 0) + 1,
-        }
-      : request
-  )
-);
+      // onRequestUpdated?.(selectedRequest._id, updatedRequest);
+      setRequests((prev) =>
+        prev.map((request) =>
+          request._id === selectedRequest._id
+            ? {
+              ...request,
+              ...updatedRequest,
+            }
+            : request
+        )
+      );
 
       closeConfirm();
+      toast.success(res.data.message || "Ride request rejected successfully");
     } catch (error) {
-    console.error("Reject error:", error);
+      console.error("Reject error:", error);
+      toast.error(
+        error?.response?.data?.message || "Failed to reject ride request"
+      );
+    } finally {
+      setApprovalRejectionLoading(null);
     }
   };
   const closeConfirm = () => {
@@ -559,8 +561,9 @@ setRequests((prev) =>
           </Stack>
           {v.label === "Approved" && (
             <IconButton
-              onClick={(event) => {handleMenuOpen(event, request)
-                setEditApproval (true)
+              onClick={(event) => {
+                handleMenuOpen(event, request)
+                setEditApproval(true)
               }}
               sx={{
                 color: "#fff",
@@ -1210,6 +1213,7 @@ export default function RideDetailsModal({
                           request={req}
                           onApprove={onApprove}
                           onReject={onReject}
+                          //  onRequestUpdated={onRequestUpdated}
                           approveLoading={approveLoading}
                           rejectLoading={rejectLoading}
                           dense={isXs}
