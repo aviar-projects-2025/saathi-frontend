@@ -115,7 +115,7 @@ export default function FindRides() {
   const { currentUser } = useUser();
   const [rides, setRides] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filtersOpen, setFiltersOpen] = useState(false); // collapsed by default
+  const [filtersOpen, setFiltersOpen] = useState(false); 
   const navigate = useNavigate();
   const [searchFrom, setSearchFrom] = useState("");
   const [searchDestination, setSearchDestination] = useState("");
