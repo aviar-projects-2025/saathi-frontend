@@ -325,6 +325,9 @@ export default function RideCard({ ride }) {
       item.status === "CANCELLED"
   ).length;
 
+  console.log(myRequestedRides,'myRequestedRides')
+  console.log(cancelledRequestCount,'cancelledRequestCount')
+
   const isBlocked = cancelledRequestCount >= 3;
   const myRequest = myRequestedRides.find(
     (item) =>
