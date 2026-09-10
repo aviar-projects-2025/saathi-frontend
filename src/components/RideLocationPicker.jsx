@@ -29,14 +29,67 @@ export default function RideLocationPicker({
   const [routePath, setRoutePath] = useState([]);
   const [routeInfo, setRouteInfo] = useState(null);
 
-  const fromRef = useRef(null);
-  const destinationRef = useRef(null);
+  const [fromCountryCode, setFromCountryCode] = useState(null);
+
+  const [mapSelectionMode, setMapSelectionMode] =
+    useState("from");
+
+  // ---------------------------------------------
+  // DOM refs
+  // ---------------------------------------------
+
+  const fromContainerRef = useRef(null);
+  const destinationContainerRef = useRef(null);
+
+  const fromAutocompleteRef = useRef(null);
+  const destinationAutocompleteRef = useRef(null);
+
+  const mapRef = useRef(null);
+  const geocoderRef = useRef(null);
+
+  // ---------------------------------------------
+  // Callback refs
+  // ---------------------------------------------
+
+  const onFromChangeRef = useRef(onFromChange);
+  const onDestinationChangeRef =
+    useRef(onDestinationChange);
+  const onRouteCalculatedRef =
+    useRef(onRouteCalculated);
+
+  const fromCountryCodeRef = useRef(null);
+
+  // ---------------------------------------------
+  // Keep callbacks updated
+  // ---------------------------------------------
+
+  useEffect(() => {
+    onFromChangeRef.current = onFromChange;
+  }, [onFromChange]);
+
+  useEffect(() => {
+    onDestinationChangeRef.current =
+      onDestinationChange;
+  }, [onDestinationChange]);
+
+  useEffect(() => {
+    onRouteCalculatedRef.current =
+      onRouteCalculated;
+  }, [onRouteCalculated]);
+
+  // ---------------------------------------------
+  // Google Maps loader
+  // ---------------------------------------------
 
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey:
       import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
     libraries,
   });
+
+  // ---------------------------------------------
+  // Check locations
+  // ---------------------------------------------
 
   const hasFrom =
     fromLocation?.latitude != null &&
@@ -46,27 +99,333 @@ export default function RideLocationPicker({
     destinationLocation?.latitude != null &&
     destinationLocation?.longitude != null;
 
-  /*
-   * Create NEW Google autocomplete elements
-   */
+  // ---------------------------------------------
+  // Set autocomplete input value
+  // ---------------------------------------------
+
+  const setAutocompleteValue = (
+    autocompleteRef,
+    value
+  ) => {
+    if (!autocompleteRef.current) return;
+
+    autocompleteRef.current.value =
+      value || "";
+  };
+
+  // ---------------------------------------------
+  // Get country from new Places API Place
+  // ---------------------------------------------
+
+  const getCountryFromPlace = (place) => {
+    const country =
+      place?.addressComponents?.find(
+        (component) =>
+          component.types?.includes("country")
+      );
+
+    return (
+      country?.shortText?.toLowerCase() ||
+      null
+    );
+  };
+
+  // ---------------------------------------------
+  // Get country from Geocoder
+  // ---------------------------------------------
+
+  const getCountryFromGeocoder = (result) => {
+    const country =
+      result?.address_components?.find(
+        (component) =>
+          component.types?.includes("country")
+      );
+
+    return (
+      country?.short_name?.toLowerCase() ||
+      null
+    );
+  };
+
+  // ---------------------------------------------
+  // Reverse geocode
+  // ---------------------------------------------
+
+  const reverseGeocode = (
+    latitude,
+    longitude
+  ) => {
+    return new Promise((resolve) => {
+      if (!geocoderRef.current) {
+        geocoderRef.current =
+          new window.google.maps.Geocoder();
+      }
+
+      geocoderRef.current.geocode(
+        {
+          location: {
+            lat: latitude,
+            lng: longitude,
+          },
+        },
+        (results, status) => {
+          if (
+            status !== "OK" ||
+            !results ||
+            results.length === 0
+          ) {
+            console.error(
+              "Reverse geocode failed:",
+              status
+            );
+
+            resolve(null);
+            return;
+          }
+
+          const result = results[0];
+
+          resolve({
+            address:
+              result.formatted_address || "",
+            countryCode:
+              getCountryFromGeocoder(result),
+          });
+        }
+      );
+    });
+  };
+
+  // ---------------------------------------------
+  // UPDATE FROM LOCATION
+  // ---------------------------------------------
+
+  const updateFromLocation = async (
+    latitude,
+    longitude
+  ) => {
+    try {
+      const result = await reverseGeocode(
+        latitude,
+        longitude
+      );
+
+      if (!result) return;
+
+      const newCountryCode =
+        result.countryCode;
+
+      const oldCountryCode =
+        fromCountryCodeRef.current;
+
+      console.log(
+        "FROM moved:",
+        result.address,
+        latitude,
+        longitude
+      );
+
+      console.log(
+        "Country:",
+        oldCountryCode,
+        "→",
+        newCountryCode
+      );
+
+      // -----------------------------------------
+      // If From country changed,
+      // clear destination
+      // -----------------------------------------
+
+      if (
+        oldCountryCode &&
+        newCountryCode &&
+        oldCountryCode !== newCountryCode
+      ) {
+        console.log(
+          "From country changed. Clearing destination."
+        );
+
+        const emptyDestination = {
+          address: "",
+          latitude: null,
+          longitude: null,
+        };
+
+        onDestinationChangeRef.current?.(
+          emptyDestination
+        );
+
+        setAutocompleteValue(
+          destinationAutocompleteRef,
+          ""
+        );
+
+        setRoutePath([]);
+        setRouteInfo(null);
+
+        onRouteCalculatedRef.current?.(
+          null
+        );
+      }
+
+      // -----------------------------------------
+      // Save country
+      // -----------------------------------------
+
+      fromCountryCodeRef.current =
+        newCountryCode;
+
+      setFromCountryCode(
+        newCountryCode
+      );
+
+      // -----------------------------------------
+      // Create location
+      // -----------------------------------------
+
+      const location = {
+        address: result.address,
+        latitude,
+        longitude,
+      };
+
+      // -----------------------------------------
+      // IMPORTANT:
+      // Update Google From field
+      // -----------------------------------------
+
+      setAutocompleteValue(
+        fromAutocompleteRef,
+        result.address
+      );
+
+      // -----------------------------------------
+      // Update parent React state
+      // -----------------------------------------
+
+      onFromChangeRef.current?.(
+        location
+      );
+
+      // -----------------------------------------
+      // Automatically switch to destination
+      // -----------------------------------------
+
+      setMapSelectionMode(
+        "destination"
+      );
+    } catch (error) {
+      console.error(
+        "Failed to update From location:",
+        error
+      );
+    }
+  };
+
+  // ---------------------------------------------
+  // UPDATE DESTINATION LOCATION
+  // ---------------------------------------------
+
+  const updateDestinationLocation = async (
+    latitude,
+    longitude
+  ) => {
+    try {
+      const result = await reverseGeocode(
+        latitude,
+        longitude
+      );
+
+      if (!result) return;
+
+      const selectedCountry =
+        result.countryCode;
+
+      const currentFromCountry =
+        fromCountryCodeRef.current;
+
+      // -----------------------------------------
+      // Country validation
+      // -----------------------------------------
+
+      if (
+        currentFromCountry &&
+        selectedCountry &&
+        currentFromCountry !== selectedCountry
+      ) {
+        alert(
+          "Destination must be in the same country as the From location."
+        );
+
+        return;
+      }
+
+      const location = {
+        address: result.address,
+        latitude,
+        longitude,
+      };
+
+      console.log(
+        "DESTINATION moved:",
+        location
+      );
+
+      // -----------------------------------------
+      // IMPORTANT:
+      // Update Google Destination field
+      // -----------------------------------------
+
+      setAutocompleteValue(
+        destinationAutocompleteRef,
+        result.address
+      );
+
+      // -----------------------------------------
+      // Update React parent state
+      // -----------------------------------------
+
+      onDestinationChangeRef.current?.(
+        location
+      );
+
+      setMapSelectionMode(
+        "destination"
+      );
+    } catch (error) {
+      console.error(
+        "Failed to update Destination location:",
+        error
+      );
+    }
+  };
+
+  // ---------------------------------------------
+  // CREATE GOOGLE AUTOCOMPLETE
+  // ---------------------------------------------
+
   useEffect(() => {
     if (!isLoaded) return;
 
-    let fromAutocomplete;
-    let destinationAutocomplete;
+    let cancelled = false;
 
     const setupAutocomplete = async () => {
       try {
-        const { PlaceAutocompleteElement } =
+        const {
+          PlaceAutocompleteElement,
+        } =
           await window.google.maps.importLibrary(
             "places"
           );
 
-        // -----------------------------
-        // FROM
-        // -----------------------------
+        if (cancelled) return;
 
-        fromAutocomplete =
+        // =========================================
+        // FROM
+        // =========================================
+
+        const fromAutocomplete =
           new PlaceAutocompleteElement();
 
         fromAutocomplete.placeholder =
@@ -77,12 +436,17 @@ export default function RideLocationPicker({
           "in",
         ];
 
-        fromAutocomplete.style.width = "100%";
+        fromAutocomplete.style.width =
+          "100%";
 
-        if (fromRef.current) {
-          fromRef.current.innerHTML = "";
+        fromAutocompleteRef.current =
+          fromAutocomplete;
 
-          fromRef.current.appendChild(
+        if (fromContainerRef.current) {
+          fromContainerRef.current.innerHTML =
+            "";
+
+          fromContainerRef.current.appendChild(
             fromAutocomplete
           );
         }
@@ -99,70 +463,149 @@ export default function RideLocationPicker({
                   "displayName",
                   "formattedAddress",
                   "location",
+                  "addressComponents",
                 ],
               });
 
-              if (!place.location) return;
+              if (!place.location) {
+                return;
+              }
 
-              const location = {
-                address:
-                  place.formattedAddress ||
-                  place.displayName ||
-                  "",
+              const address =
+                place.formattedAddress ||
+                place.displayName ||
+                "";
 
-                latitude:
-                  place.location.lat(),
+              const latitude =
+                place.location.lat();
 
-                longitude:
-                  place.location.lng(),
-              };
+              const longitude =
+                place.location.lng();
+
+              const countryCode =
+                getCountryFromPlace(place);
 
               console.log(
-                "From selected:",
-                location
+                "FROM selected:",
+                address,
+                latitude,
+                longitude,
+                countryCode
               );
 
-              onFromChange(location);
+              // -----------------------------------
+              // Check country change
+              // -----------------------------------
 
-              if (map) {
-                map.panTo({
-                  lat: location.latitude,
-                  lng: location.longitude,
+              const oldCountry =
+                fromCountryCodeRef.current;
+
+              if (
+                oldCountry &&
+                countryCode &&
+                oldCountry !== countryCode
+              ) {
+                console.log(
+                  "From country changed. Clearing destination."
+                );
+
+                onDestinationChangeRef.current?.(
+                  {
+                    address: "",
+                    latitude: null,
+                    longitude: null,
+                  }
+                );
+
+                setAutocompleteValue(
+                  destinationAutocompleteRef,
+                  ""
+                );
+
+                setRoutePath([]);
+                setRouteInfo(null);
+
+                onRouteCalculatedRef.current?.(
+                  null
+                );
+              }
+
+              // -----------------------------------
+              // Save country
+              // -----------------------------------
+
+              fromCountryCodeRef.current =
+                countryCode;
+
+              setFromCountryCode(
+                countryCode
+              );
+
+              // -----------------------------------
+              // Parent state
+              // -----------------------------------
+
+              onFromChangeRef.current?.({
+                address,
+                latitude,
+                longitude,
+              });
+
+              // -----------------------------------
+              // Move map
+              // -----------------------------------
+
+              if (mapRef.current) {
+                mapRef.current.panTo({
+                  lat: latitude,
+                  lng: longitude,
                 });
 
-                map.setZoom(12);
+                mapRef.current.setZoom(10);
               }
+
+              // -----------------------------------
+              // Next map mode = destination
+              // -----------------------------------
+
+              setMapSelectionMode(
+                "destination"
+              );
             } catch (error) {
               console.error(
-                "From location error:",
+                "From selection error:",
                 error
               );
             }
           }
         );
 
-        // -----------------------------
+        // =========================================
         // DESTINATION
-        // -----------------------------
+        // =========================================
 
-        destinationAutocomplete =
+        const destinationAutocomplete =
           new PlaceAutocompleteElement();
 
         destinationAutocomplete.placeholder =
           "Search destination";
 
-        destinationAutocomplete.includedRegionCodes = [
-          "us",
-          "in",
-        ];
+        destinationAutocomplete.includedRegionCodes =
+          ["us", "in"];
 
         destinationAutocomplete.style.width =
           "100%";
 
-        if (destinationRef.current) {
-          destinationRef.current.innerHTML = "";
+        destinationAutocompleteRef.current =
+          destinationAutocomplete;
 
-          destinationRef.current.appendChild(
+        if (
+          destinationContainerRef.current
+        ) {
+          destinationContainerRef.current.innerHTML =
+            "";
+
+          destinationContainerRef.current.appendChild(
             destinationAutocomplete
           );
         }
@@ -179,42 +622,97 @@ export default function RideLocationPicker({
                   "displayName",
                   "formattedAddress",
                   "location",
+                  "addressComponents",
                 ],
               });
 
-              if (!place.location) return;
+              if (!place.location) {
+                return;
+              }
 
-              const location = {
-                address:
-                  place.formattedAddress ||
-                  place.displayName ||
-                  "",
+              const address =
+                place.formattedAddress ||
+                place.displayName ||
+                "";
 
-                latitude:
-                  place.location.lat(),
+              const latitude =
+                place.location.lat();
 
-                longitude:
-                  place.location.lng(),
-              };
+              const longitude =
+                place.location.lng();
+
+              const countryCode =
+                getCountryFromPlace(place);
+
+              // -----------------------------------
+              // Read latest country from REF
+              // -----------------------------------
+
+              const currentFromCountry =
+                fromCountryCodeRef.current;
 
               console.log(
-                "Destination selected:",
-                location
+                "DESTINATION selected:",
+                address,
+                latitude,
+                longitude,
+                countryCode
               );
 
-              onDestinationChange(location);
+              console.log(
+                "From country:",
+                currentFromCountry
+              );
 
-              if (map) {
-                map.panTo({
-                  lat: location.latitude,
-                  lng: location.longitude,
+              // -----------------------------------
+              // Country validation
+              // -----------------------------------
+
+              if (
+                currentFromCountry &&
+                countryCode &&
+                currentFromCountry !==
+                  countryCode
+              ) {
+                alert(
+                  "Destination must be in the same country as the From location."
+                );
+
+                destinationAutocomplete.value =
+                  "";
+
+                return;
+              }
+
+              // -----------------------------------
+              // Update parent
+              // -----------------------------------
+
+              onDestinationChangeRef.current?.({
+                address,
+                latitude,
+                longitude,
+              });
+
+              // -----------------------------------
+              // Map
+              // -----------------------------------
+
+              if (mapRef.current) {
+                mapRef.current.panTo({
+                  lat: latitude,
+                  lng: longitude,
                 });
 
-                map.setZoom(7);
+                mapRef.current.setZoom(7);
               }
+
+              setMapSelectionMode(
+                "destination"
+              );
             } catch (error) {
               console.error(
-                "Destination location error:",
+                "Destination selection error:",
                 error
               );
             }
@@ -222,7 +720,7 @@ export default function RideLocationPicker({
         );
       } catch (error) {
         console.error(
-          "Autocomplete setup error:",
+          "Autocomplete setup failed:",
           error
         );
       }
@@ -231,19 +729,156 @@ export default function RideLocationPicker({
     setupAutocomplete();
 
     return () => {
-      if (fromRef.current) {
-        fromRef.current.innerHTML = "";
+      cancelled = true;
+
+      if (fromContainerRef.current) {
+        fromContainerRef.current.innerHTML =
+          "";
       }
 
-      if (destinationRef.current) {
-        destinationRef.current.innerHTML = "";
+      if (
+        destinationContainerRef.current
+      ) {
+        destinationContainerRef.current.innerHTML =
+          "";
       }
+
+      fromAutocompleteRef.current = null;
+      destinationAutocompleteRef.current =
+        null;
     };
   }, [isLoaded]);
 
-  /*
-   * Calculate road route
-   */
+  // ---------------------------------------------
+  // RESTRICT DESTINATION COUNTRY
+  // ---------------------------------------------
+
+  useEffect(() => {
+    const autocomplete =
+      destinationAutocompleteRef.current;
+
+    if (!autocomplete) return;
+
+    if (fromCountryCode) {
+      autocomplete.includedRegionCodes = [
+        fromCountryCode,
+      ];
+
+      autocomplete.placeholder =
+        `Search destination`;
+    } else {
+      autocomplete.includedRegionCodes = [
+        "us",
+        "in",
+      ];
+
+      autocomplete.placeholder =
+        "Search destination";
+    }
+  }, [fromCountryCode]);
+
+  // ---------------------------------------------
+  // EXISTING RIDE / EDIT MODE
+  // Detect From country
+  // ---------------------------------------------
+
+  useEffect(() => {
+    if (
+      !isLoaded ||
+      !hasFrom ||
+      fromCountryCodeRef.current
+    ) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const detectCountry = async () => {
+      const result =
+        await reverseGeocode(
+          fromLocation.latitude,
+          fromLocation.longitude
+        );
+
+      if (
+        cancelled ||
+        !result?.countryCode
+      ) {
+        return;
+      }
+
+      fromCountryCodeRef.current =
+        result.countryCode;
+
+      setFromCountryCode(
+        result.countryCode
+      );
+
+      // Also synchronize the existing From
+      // address into Google autocomplete.
+      if (fromLocation.address) {
+        setAutocompleteValue(
+          fromAutocompleteRef,
+          fromLocation.address
+        );
+      }
+
+      if (destinationLocation?.address) {
+        setAutocompleteValue(
+          destinationAutocompleteRef,
+          destinationLocation.address
+        );
+      }
+    };
+
+    detectCountry();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    isLoaded,
+    hasFrom,
+    fromLocation?.latitude,
+    fromLocation?.longitude,
+  ]);
+
+  // ---------------------------------------------
+  // Synchronize fields when parent form changes
+  // ---------------------------------------------
+
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    if (fromLocation?.address) {
+      setAutocompleteValue(
+        fromAutocompleteRef,
+        fromLocation.address
+      );
+    }
+  }, [
+    isLoaded,
+    fromLocation?.address,
+  ]);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    if (destinationLocation?.address) {
+      setAutocompleteValue(
+        destinationAutocompleteRef,
+        destinationLocation.address
+      );
+    }
+  }, [
+    isLoaded,
+    destinationLocation?.address,
+  ]);
+
+  // ---------------------------------------------
+  // CALCULATE ROUTE
+  // ---------------------------------------------
+
   useEffect(() => {
     if (!isLoaded) return;
 
@@ -251,7 +886,9 @@ export default function RideLocationPicker({
       setRoutePath([]);
       setRouteInfo(null);
 
-      onRouteCalculated?.(null);
+      onRouteCalculatedRef.current?.(
+        null
+      );
 
       return;
     }
@@ -277,8 +914,10 @@ export default function RideLocationPicker({
             },
 
             destination: {
-              lat: destinationLocation.latitude,
-              lng: destinationLocation.longitude,
+              lat:
+                destinationLocation.latitude,
+              lng:
+                destinationLocation.longitude,
             },
 
             travelMode: "DRIVING",
@@ -300,7 +939,13 @@ export default function RideLocationPicker({
           !result.routes ||
           result.routes.length === 0
         ) {
-          console.log("No route found");
+          setRoutePath([]);
+          setRouteInfo(null);
+
+          onRouteCalculatedRef.current?.(
+            null
+          );
+
           return;
         }
 
@@ -312,11 +957,13 @@ export default function RideLocationPicker({
         const durationMinutes =
           route.durationMillis / 60000;
 
-        const hours =
-          Math.floor(durationMinutes / 60);
+        const hours = Math.floor(
+          durationMinutes / 60
+        );
 
-        const minutes =
-          Math.round(durationMinutes % 60);
+        const minutes = Math.round(
+          durationMinutes % 60
+        );
 
         const formattedDuration =
           hours > 0
@@ -328,10 +975,11 @@ export default function RideLocationPicker({
             distanceKm.toFixed(1)
           ),
 
-          durationMinutes: Math.round(
-            durationMinutes
-          ),
+          // DATABASE VALUE
+          durationMinutes:
+            Math.round(durationMinutes),
 
+          // DISPLAY VALUE
           formattedDuration,
         };
 
@@ -342,14 +990,19 @@ export default function RideLocationPicker({
 
         setRouteInfo(info);
 
-        onRouteCalculated?.(info);
+        onRouteCalculatedRef.current?.(
+          info
+        );
 
         if (route.path) {
           setRoutePath(route.path);
         }
 
-        if (map && route.viewport) {
-          map.fitBounds(
+        if (
+          mapRef.current &&
+          route.viewport
+        ) {
+          mapRef.current.fitBounds(
             route.viewport,
             50
           );
@@ -360,10 +1013,12 @@ export default function RideLocationPicker({
           error
         );
 
-        setRouteInfo(null);
         setRoutePath([]);
+        setRouteInfo(null);
 
-        onRouteCalculated?.(null);
+        onRouteCalculatedRef.current?.(
+          null
+        );
       }
     };
 
@@ -380,15 +1035,122 @@ export default function RideLocationPicker({
     destinationLocation?.longitude,
   ]);
 
-  /*
-   * Initial map center
-   */
+  // ---------------------------------------------
+  // MAP CLICK
+  // ---------------------------------------------
+
+  const handleMapClick = async (event) => {
+    if (!event.latLng) return;
+
+    const latitude =
+      event.latLng.lat();
+
+    const longitude =
+      event.latLng.lng();
+
+    console.log(
+      "Map clicked:",
+      latitude,
+      longitude,
+      "Mode:",
+      mapSelectionMode
+    );
+
+    if (mapSelectionMode === "from") {
+      await updateFromLocation(
+        latitude,
+        longitude
+      );
+    } else {
+      await updateDestinationLocation(
+        latitude,
+        longitude
+      );
+    }
+  };
+
+  // ---------------------------------------------
+  // FROM MARKER DRAG
+  // ---------------------------------------------
+
+  const handleFromMarkerDragEnd =
+    async (event) => {
+      if (!event.latLng) return;
+
+      const latitude =
+        event.latLng.lat();
+
+      const longitude =
+        event.latLng.lng();
+
+      console.log(
+        "From marker dragged:",
+        latitude,
+        longitude
+      );
+
+      await updateFromLocation(
+        latitude,
+        longitude
+      );
+    };
+
+  // ---------------------------------------------
+  // DESTINATION MARKER DRAG
+  // ---------------------------------------------
+
+  const handleDestinationMarkerDragEnd =
+    async (event) => {
+      if (!event.latLng) return;
+
+      const latitude =
+        event.latLng.lat();
+
+      const longitude =
+        event.latLng.lng();
+
+      console.log(
+        "Destination marker dragged:",
+        latitude,
+        longitude
+      );
+
+      await updateDestinationLocation(
+        latitude,
+        longitude
+      );
+    };
+
+  // ---------------------------------------------
+  // MAP LOAD
+  // ---------------------------------------------
+
+  const handleMapLoad = (mapInstance) => {
+    console.log("Map loaded");
+
+    setMap(mapInstance);
+    mapRef.current = mapInstance;
+  };
+
+  const handleMapUnmount = () => {
+    setMap(null);
+    mapRef.current = null;
+  };
+
+  // ---------------------------------------------
+  // CENTER
+  // ---------------------------------------------
+
   const center = hasFrom
     ? {
         lat: fromLocation.latitude,
         lng: fromLocation.longitude,
       }
     : defaultCenter;
+
+  // ---------------------------------------------
+  // LOADING
+  // ---------------------------------------------
 
   if (loadError) {
     return (
@@ -402,11 +1164,15 @@ export default function RideLocationPicker({
     return <div>Loading map...</div>;
   }
 
+  // ---------------------------------------------
+  // RENDER
+  // ---------------------------------------------
+
   return (
     <div>
-      {/* ========================= */}
-      {/* LOCATION SEARCH FIELDS */}
-      {/* ========================= */}
+      {/* =========================================
+          SEARCH FIELDS
+      ========================================= */}
 
       <div
         style={{
@@ -417,6 +1183,8 @@ export default function RideLocationPicker({
           marginBottom: "16px",
         }}
       >
+        {/* FROM */}
+
         <div>
           <label
             style={{
@@ -429,8 +1197,10 @@ export default function RideLocationPicker({
             From
           </label>
 
-          <div ref={fromRef} />
+          <div ref={fromContainerRef} />
         </div>
+
+        {/* DESTINATION */}
 
         <div>
           <label
@@ -444,25 +1214,109 @@ export default function RideLocationPicker({
             Destination
           </label>
 
-          <div ref={destinationRef} />
+          <div
+            ref={destinationContainerRef}
+          />
         </div>
       </div>
 
-      {/* ========================= */}
-      {/* MAP */}
-      {/* ========================= */}
+      {/* =========================================
+          MAP SELECTION
+      ========================================= */}
+
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+          flexWrap: "wrap",
+          marginBottom: "10px",
+        }}
+      >
+        <strong
+          style={{ fontSize: "14px" }}
+        >
+          Select on map:
+        </strong>
+
+        <button
+          type="button"
+          onClick={() =>
+            setMapSelectionMode("from")
+          }
+          style={{
+            padding: "7px 14px",
+            borderRadius: "8px",
+            border:
+              mapSelectionMode === "from"
+                ? "2px solid #E8650A"
+                : "1px solid #ccc",
+            background:
+              mapSelectionMode === "from"
+                ? "#fff3eb"
+                : "#fff",
+            cursor: "pointer",
+            fontWeight: 600,
+          }}
+        >
+          📍 From
+        </button>
+
+        <button
+          type="button"
+          onClick={() =>
+            setMapSelectionMode(
+              "destination"
+            )
+          }
+          style={{
+            padding: "7px 14px",
+            borderRadius: "8px",
+            border:
+              mapSelectionMode ===
+              "destination"
+                ? "2px solid #E8650A"
+                : "1px solid #ccc",
+            background:
+              mapSelectionMode ===
+              "destination"
+                ? "#fff3eb"
+                : "#fff",
+            cursor: "pointer",
+            fontWeight: 600,
+          }}
+        >
+          📍 Destination
+        </button>
+      </div>
+
+      <div
+        style={{
+          marginBottom: "10px",
+          fontSize: "13px",
+          color: "#666",
+        }}
+      >
+        Click the map to select{" "}
+        <strong>
+          {mapSelectionMode === "from"
+            ? "From"
+            : "Destination"}
+        </strong>
+        . You can also drag either marker.
+      </div>
+
+      {/* =========================================
+          MAP
+      ========================================= */}
 
       <GoogleMap
         mapContainerStyle={containerStyle}
         center={center}
         zoom={hasFrom ? 10 : 6}
-        onLoad={(mapInstance) => {
-          console.log("Map loaded");
-          setMap(mapInstance);
-        }}
-        onUnmount={() => {
-          setMap(null);
-        }}
+        onLoad={handleMapLoad}
+        onUnmount={handleMapUnmount}
+        onClick={handleMapClick}
         options={{
           streetViewControl: false,
           mapTypeControl: false,
@@ -477,6 +1331,15 @@ export default function RideLocationPicker({
               lat: fromLocation.latitude,
               lng: fromLocation.longitude,
             }}
+            draggable={true}
+            onDragEnd={
+              handleFromMarkerDragEnd
+            }
+            onClick={() =>
+              setMapSelectionMode(
+                "from"
+              )
+            }
           />
         )}
 
@@ -485,13 +1348,24 @@ export default function RideLocationPicker({
         {hasDestination && (
           <Marker
             position={{
-              lat: destinationLocation.latitude,
-              lng: destinationLocation.longitude,
+              lat:
+                destinationLocation.latitude,
+              lng:
+                destinationLocation.longitude,
             }}
+            draggable={true}
+            onDragEnd={
+              handleDestinationMarkerDragEnd
+            }
+            onClick={() =>
+              setMapSelectionMode(
+                "destination"
+              )
+            }
           />
         )}
 
-        {/* ROAD ROUTE */}
+        {/* ROUTE */}
 
         {routePath.length > 0 && (
           <Polyline
@@ -503,9 +1377,9 @@ export default function RideLocationPicker({
         )}
       </GoogleMap>
 
-      {/* ========================= */}
-      {/* DISTANCE + ETA */}
-      {/* ========================= */}
+      {/* =========================================
+          ROUTE INFORMATION
+      ========================================= */}
 
       {routeInfo && (
         <div
@@ -520,14 +1394,22 @@ export default function RideLocationPicker({
           }}
         >
           <div>
-            <strong>Distance</strong>
+            <strong>
+              Distance
+            </strong>
+
             <br />
+
             {routeInfo.distanceKm} km
           </div>
 
           <div>
-            <strong>Estimated time</strong>
+            <strong>
+              Estimated time
+            </strong>
+
             <br />
+
             {routeInfo.formattedDuration}
           </div>
         </div>

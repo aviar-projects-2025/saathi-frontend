@@ -1049,8 +1049,14 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                     onRouteCalculated={(route) => {
                       setForm((prev) => ({
                         ...prev,
-                        distanceKm: route?.distanceKm ?? null,
-                        duration: route?.durationMinutes ?? null,
+
+                        distanceKm:
+                          route?.distanceKm ?? null,
+
+                        // IMPORTANT:
+                        // numeric value only
+                        duration:
+                          route?.durationMinutes ?? null,
                       }));
                     }}
                   />
