@@ -32,11 +32,6 @@ export default function MobileBottomNav() {
 
   const bottomNavItems = [
     {
-      label: "Community",
-      icon: <GroupsIcon />,
-      link: "/community",
-    },
-    {
       label: "Find Ride",
       icon: <TravelExploreIcon />,
       link: "/find-ride",
@@ -51,6 +46,11 @@ export default function MobileBottomNav() {
           link: "/request-ride",
         },
       ],
+    },
+    {
+      label: "Community",
+      icon: <GroupsIcon />,
+      link: "/community",
     },
     {
       label: "Post Ride",

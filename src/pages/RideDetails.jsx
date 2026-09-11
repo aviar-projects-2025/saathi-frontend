@@ -336,6 +336,10 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
     }
   };
 
+  const handleExited = () => {
+    setConfirmState({ open: false, action: null });
+  };
+
   useEffect(() => {
     if (!confirmState.open) return;
     if (confirmState.action === 'approve' && !isApproveBusy) {
@@ -575,6 +579,7 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
           )}
 
         </Box>
+
         <Menu
           anchorEl={anchorEl}
           open={Boolean(anchorEl)}
@@ -755,13 +760,12 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
       <Dialog
         open={confirmState.open}
         onClose={(event, reason) => {
-          if (reason === "backdropClick") {
-            return;
-          }
-
+          if (reason === 'backdropClick') return;
           closeConfirm();
         }}
-        // fullScreen={fullScreen}
+        TransitionProps={{
+          onExited: handleExited,
+        }}
         fullWidth
         maxWidth="xs"
         PaperProps={{
@@ -780,15 +784,16 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
         >
           {confirmState.action === 'approve' ? 'Approve request?' : 'Reject request?'}
         </DialogTitle>
+
         <DialogContent>
           <DialogContentText
-            sx={{ fontFamily: TOKENS.bodyFont, fontSize: { xs: '0.85rem', sm: '0.9rem' } }}
+            sx={{ fontFamily: TOKENS.bodyFont, fontSize: { xs: '0.85rem', sm: '1rem' } }}
           >
             Are you sure you want to {confirmState.action === 'approve' ? 'approve' : 'reject'} the
-            request from <strong>{firstName} {lastName}</strong>
-            {pendingReq > 0 ? ` for +${pendingReq} ${pendingReq > 1 ? 'seats' : 'seat'}` : ''}?
+            request from <strong>{firstName} {lastName}</strong> ?
           </DialogContentText>
         </DialogContent>
+
         <DialogActions sx={{ px: { xs: 2, sm: 3 }, pb: { xs: 2, sm: 2.5 }, gap: 1 }}>
           <Button
             onClick={closeConfirm}
@@ -802,6 +807,7 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
           >
             Cancel
           </Button>
+
           <Button
             onClick={handleConfirm}
             disabled={isBusy}
@@ -818,15 +824,9 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
               },
             }}
           >
-            {isBusy ? (
-              confirmState.action === "approve"
-                ? "Approving..."
-                : "Rejecting..."
-            ) : (
-              confirmState.action === "approve"
-                ? "Approve"
-                : "Reject"
-            )}
+            {confirmState.action === 'approve'
+              ? isBusy ? 'Approving...' : 'Approve'
+              : isBusy ? 'Rejecting...' : 'Reject'}
           </Button>
         </DialogActions>
       </Dialog>
@@ -977,13 +977,14 @@ export default function RideDetailsModal({
                 mt: 0.5,
                 minWidth: 0,
                 maxWidth: "100%",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
+                textAlign: "left",
                 fontFamily: TOKENS.bodyFont,
                 fontWeight: 600,
                 fontSize: { xs: "0.82rem", md: "0.9rem" },
                 color: "#F5F5F5",
+                whiteSpace: "normal",
+                overflowWrap: "break-word",
+                wordBreak: "break-word",
               }}
             >
               {formFrom(ride)}
@@ -1093,17 +1094,16 @@ export default function RideDetailsModal({
               noWrap
               sx={{
                 mt: 0.5,
+                minWidth: 0,
+                maxWidth: "100%",
+                textAlign: "right",
                 fontFamily: TOKENS.bodyFont,
                 fontWeight: 600,
                 fontSize: { xs: "0.82rem", md: "0.9rem" },
                 color: "#F5F5F5",
-
-                width: { xs: "120px", sm: "160px", md: "200px" },
-                maxWidth: "100%",
-                minWidth: 0,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
+                whiteSpace: "normal",
+                overflowWrap: "break-word",
+                wordBreak: "break-word",
               }}
             >
               {formTo(ride)}
@@ -1266,7 +1266,13 @@ export default function RideDetailsModal({
           <Field icon={CalendarTodayIcon} label="Date" value={dateLabel || '—'} />
           <Field icon={AccessTimeIcon} label="Time" value={timeLabel || '—'} />
           <Field icon={TravelIcon} label="Mode" value={ride?.modeOfTravel || '—'} />
-          {ride?.duration && <Field icon={AccessTimeIcon} label="Travel Duration" value={ride?.duration || '—'} />}
+          {ride?.duration !== null && ride?.duration !== undefined && (
+            <Field
+              icon={AccessTimeIcon}
+              label="Travel Duration"
+              value={ride?.duration}
+            />
+          )}
           <Field icon={BadgeIcon} label="Age Group Pref." value={ride?.ageGroupPreference || '—'} />
           {ride?.availableSeats !== null &&
             ride?.availableSeats !== undefined && (

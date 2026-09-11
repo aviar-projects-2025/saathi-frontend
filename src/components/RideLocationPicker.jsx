@@ -672,7 +672,7 @@ export default function RideLocationPicker({
                 currentFromCountry &&
                 countryCode &&
                 currentFromCountry !==
-                  countryCode
+                countryCode
               ) {
                 alert(
                   "Destination must be in the same country as the From location."
@@ -1143,9 +1143,9 @@ export default function RideLocationPicker({
 
   const center = hasFrom
     ? {
-        lat: fromLocation.latitude,
-        lng: fromLocation.longitude,
-      }
+      lat: fromLocation.latitude,
+      lng: fromLocation.longitude,
+    }
     : defaultCenter;
 
   // ---------------------------------------------
@@ -1177,21 +1177,20 @@ export default function RideLocationPicker({
       <div
         style={{
           display: "grid",
-          gridTemplateColumns:
-            "repeat(auto-fit, minmax(250px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
           gap: "16px",
           marginBottom: "16px",
         }}
       >
         {/* FROM */}
-
         <div>
           <label
             style={{
               display: "block",
-              marginBottom: "6px",
-              fontSize: "14px",
-              fontWeight: 600,
+              marginBottom: "4px", // mb: 0.5
+              fontSize: "0.82rem",
+              color: "rgba(0, 0, 0, 0.5)", // text.secondary
+              fontWeight: 400,
             }}
           >
             From
@@ -1201,22 +1200,20 @@ export default function RideLocationPicker({
         </div>
 
         {/* DESTINATION */}
-
         <div>
           <label
             style={{
               display: "block",
-              marginBottom: "6px",
-              fontSize: "14px",
-              fontWeight: 600,
+              marginBottom: "4px",
+              fontSize: "0.82rem",
+              color: "rgba(0, 0, 0, 0.5)",
+              fontWeight: 400,
             }}
           >
             Destination
           </label>
 
-          <div
-            ref={destinationContainerRef}
-          />
+          <div ref={destinationContainerRef} />
         </div>
       </div>
 
@@ -1228,28 +1225,29 @@ export default function RideLocationPicker({
         style={{
           display: "flex",
           alignItems: "center",
-          gap: "10px",
+          gap: "8px",
           flexWrap: "wrap",
-          marginBottom: "10px",
+          marginBottom: "6px",
         }}
       >
         <strong
-          style={{ fontSize: "14px" }}
+          style={{
+            fontSize: "12px",
+            fontWeight: 600,
+          }}
         >
           Select on map:
         </strong>
 
         <button
           type="button"
-          onClick={() =>
-            setMapSelectionMode("from")
-          }
+          onClick={() => setMapSelectionMode("from")}
           style={{
-            padding: "7px 14px",
-            borderRadius: "8px",
+            padding: "5px 9px",
+            borderRadius: "6px",
             border:
               mapSelectionMode === "from"
-                ? "2px solid #E8650A"
+                ? "1.5px solid #E8650A"
                 : "1px solid #ccc",
             background:
               mapSelectionMode === "from"
@@ -1257,44 +1255,43 @@ export default function RideLocationPicker({
                 : "#fff",
             cursor: "pointer",
             fontWeight: 600,
+            fontSize: "13px",
+            lineHeight: 1.2,
           }}
         >
-          📍 From
+          From
         </button>
 
         <button
           type="button"
-          onClick={() =>
-            setMapSelectionMode(
-              "destination"
-            )
-          }
+          onClick={() => setMapSelectionMode("destination")}
           style={{
-            padding: "7px 14px",
-            borderRadius: "8px",
+            padding: "5px 9px",
+            borderRadius: "6px",
             border:
-              mapSelectionMode ===
-              "destination"
-                ? "2px solid #E8650A"
+              mapSelectionMode === "destination"
+                ? "1.5px solid #E8650A"
                 : "1px solid #ccc",
             background:
-              mapSelectionMode ===
-              "destination"
+              mapSelectionMode === "destination"
                 ? "#fff3eb"
                 : "#fff",
             cursor: "pointer",
             fontWeight: 600,
+            fontSize: "13px",
+            lineHeight: 1.2,
           }}
         >
-          📍 Destination
+          Destination
         </button>
       </div>
 
       <div
         style={{
-          marginBottom: "10px",
-          fontSize: "13px",
+          marginBottom: "6px",
+          fontSize: "13.5px",
           color: "#666",
+          lineHeight: 1.4,
         }}
       >
         Click the map to select{" "}

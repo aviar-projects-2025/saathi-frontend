@@ -116,9 +116,11 @@ const Myprofile = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const { currentUser, getuserData, completion } = useUser();
+
+  const [openShare, setOpenShare] = useState(false);
   const handleOpenShare = () => setOpenShare(true);
   const handleCloseShare = () => setOpenShare(false);
-  const [openShare, setOpenShare] = useState(false);
+
   const feedRef = useRef(null);
 
   const [profileModalOpen, setProfileModalOpen] = useState(false);

@@ -1458,12 +1458,12 @@ const UserProfile = () => {
                     >
                       Female
                     </MenuItem>
-                    <MenuItem
+                    {/* <MenuItem
                       value="Other"
                       sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem" } }}
                     >
                       Other
-                    </MenuItem>
+                    </MenuItem> */}
                   </TextField>
                 </Stack>
 

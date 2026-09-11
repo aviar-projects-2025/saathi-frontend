@@ -288,7 +288,7 @@ const RequestRide = ({ ride }) => {
   );
 
   return (
-    <PageLayout>
+    <PageLayout >
       <Box>
         <Typography
           sx={{

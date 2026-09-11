@@ -64,12 +64,12 @@ const ACCENT_TINT = "rgba(255,153,51,0.12)";
 const steps = ["Trip Details", "Preferences", "Review"];
 
 const TRAVELLER_TYPES = [
+  "Regular",
   "First-time traveller",
   "Senior citizen support",
   "Student travel companion",
   "Women-only companion",
   "Family companion",
-  "Regular"
 ];
 
 const AGE_GROUPS = ["Any", "18-25", "26-40", "41-60", "60+"];
