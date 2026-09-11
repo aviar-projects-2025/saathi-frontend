@@ -51,7 +51,7 @@ export default function Ridebook({
   const isEditMode = Boolean(requestToEdit);
   const [requests, setRequests] = useState();
   const [requestLoading, setRequestLoading] = useState(false);
-
+   console.log("existingMembers.123.444", requestToEdit)
   // existingMembers = already CONFIRMED/APPROVED members on this request.
   // Read-only, shown for context, never sent back to the backend.
   const [existingMembers, setExistingMembers] = useState([]);
@@ -101,7 +101,7 @@ export default function Ridebook({
   const remainingSeats = isEditMode
     ? Math.max(maxSeats - existingMembers.length - newMembers.length, 0)
     : Math.max(maxSeats - requestData?.members.length, 0);
-
+    console.log("remainingSeats.........0000",remainingSeats)
   //   const remainingSeats = Math.max(
   //   remainingSeatsForUser - newMembers.length,
   //   0
@@ -408,6 +408,7 @@ export default function Ridebook({
         message: requestToEdit.message || "",
         phone: requestToEdit.phone || "",
       }));
+   
     } else {
       // Restore new request defaults
       setExistingMembers([]);
