@@ -51,7 +51,8 @@ export default function Ridebook({
   const isEditMode = Boolean(requestToEdit);
   const [requests, setRequests] = useState();
   const [requestLoading, setRequestLoading] = useState(false);
-   console.log("existingMembers.123.444", requestToEdit)
+   console.log("existingMembers.123.444", requestToEdit?.pendingReqSeats)
+  
   // existingMembers = already CONFIRMED/APPROVED members on this request.
   // Read-only, shown for context, never sent back to the backend.
   const [existingMembers, setExistingMembers] = useState([]);
@@ -108,30 +109,44 @@ export default function Ridebook({
   // );
   const TOASTS = ToastConfig();
 
-  const handleAddMember = () => {
-    setMemberListError("");
+const handleAddMember = () => {
+  setMemberListError("");
 
-    if (isEditMode) {
-      setNewMembers((prev) => {
-        const totalSeats = existingMembers.length + prev.length;
-        if (!isFlight && totalSeats >= maxSeats) return prev;
-        return [...prev, { name: "", age: "" }];
-      });
+  if (isEditMode) {
+    setNewMembers((prev) => {
+      const usedSeats =
+        existingMembers.length -
+        requestToEdit.pendingReqSeats 
+  console.log("usedSeats..............", usedSeats)
+      if (!isFlight && usedSeats >= maxSeats) {
+        setMemberListError(`Maximum ${maxSeats} seats allowed.`);
+        return prev;
+      }
 
-      return;
+      return [...prev, { name: "", age: "" }];
+    });
+
+    return;
+  }
+
+  setRequestData((prev) => {
+    if (!isFlight && prev.members.length >= maxSeats) {
+      setMemberListError(`Maximum ${maxSeats} seats allowed.`);
+      return prev;
     }
 
-    setRequestData((prev) => {
-      if (!isFlight && prev.members.length >= maxSeats) return prev;
+    const updatedMembers = [
+      ...prev.members,
+      { name: "", age: "" },
+    ];
 
-      const updatedMembers = [...prev.members, { name: "", age: "" }];
-      return {
-        ...prev,
-        members: updatedMembers,
-        seatsRequested: updatedMembers.length,
-      };
-    });
-  };
+    return {
+      ...prev,
+      members: updatedMembers,
+      seatsRequested: updatedMembers.length,
+    };
+  });
+};
 
   const handleRemoveMember = (index) => {
     if (isEditMode) {
@@ -603,7 +618,7 @@ export default function Ridebook({
               Available Seats
             </Typography>
             <Chip
-              label={`${remainingSeats}`}
+              label={`${remainingSeats -requestToEdit?.pendingReqSeats}`}
               size="small"
               sx={{
                 bgcolor: ORANGE,

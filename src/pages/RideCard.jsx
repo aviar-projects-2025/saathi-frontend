@@ -72,7 +72,7 @@ export default function RideCard({ ride }) {
   );
 
   const pendingReqSeats = pendingRequest?.pendingReqSeats ?? 0;
-
+   console.log("pendingReqSeats..............", pendingReqSeats)
   const { completion } = useUser();
   const theme = useTheme();
   const { currentUser } = useUser();
