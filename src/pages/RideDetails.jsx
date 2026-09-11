@@ -262,7 +262,7 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
   const lastName = request.requestedBy?.lastName || '';
   const profilePic = request.requestedBy?.profileImage;
   const rejectedReq = Number(request?.rejectedSeats ?? 0);
-  console.log("rejectReq.....", request)
+
   const pendingReq = Number(request?.pendingReqSeats ?? 0);
   const approvedSeats = Number(request?.approvedSeats ?? 0);
   const membersCount = request?.membersCount || 0;
@@ -330,7 +330,7 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
   const handleConfirm = () => {
     if (confirmState.action === 'approve') {
       onApprove(request._id);
-      console.log("hdg", onApprove)
+
     } else if (confirmState.action === 'reject') {
       onReject(request._id);
     }
