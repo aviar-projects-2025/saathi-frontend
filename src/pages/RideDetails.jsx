@@ -38,7 +38,8 @@ import MoreVerIcon from '@mui/icons-material/MoreVert';
 import PersonIcon from "@mui/icons-material/Person";
 import WomanIcon from "@mui/icons-material/Woman";
 import GroupsIcon from "@mui/icons-material/Groups";
-
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
@@ -260,9 +261,10 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
   const firstName = request.requestedBy?.firstName || request?.data?.requestBy?.requestedBy?.firstName || 'U';
   const lastName = request.requestedBy?.lastName || '';
   const profilePic = request.requestedBy?.profileImage;
-  const rejectedReq = request?.rejectedSeats || 0;
-  const pendingReq = request?.pendingReqSeats || 0;
-  const approvedSeats = request?.approvedSeats || 0;
+  const rejectedReq = Number(request?.rejectedSeats ?? 0);
+  console.log("rejectReq.....", request)
+  const pendingReq = Number(request?.pendingReqSeats ?? 0);
+  const approvedSeats = Number(request?.approvedSeats ?? 0);
   const membersCount = request?.membersCount || 0;
   const [requests, setRequests] = useState([]);
   const [editApproval, setEditApproval] = useState(false)
@@ -273,6 +275,7 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
   const isApproveBusy = approveLoading === request._id;
   const isRejectBusy = rejectLoading === request._id;
   const isBusy = isApproveBusy || isRejectBusy;
+  const [someState, setSomeState] = useState([]);
   const [approvalRejectionLoading, setApprovalRejectionLoading] = useState(false);
 
   const handleMenuOpen = (event, request) => {
@@ -284,42 +287,41 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
     e?.stopPropagation?.();
     setConfirmState({ open: true, action });
   };
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleRejectClick = () => {
+    setEditApproval(true);
+    handleMenuClose();
+  };
   const handleRejectApproved = async () => {
+    const prevSnapshot = { ...selectedRequest };
+
+    onRequestUpdated?.(selectedRequest._id, {
+      status: "REJECTED",
+      approvedSeats: 0,
+      rejectedSeats: (selectedRequest.approvedSeats || 0) + (selectedRequest.rejectedSeats || 0),
+      pendingReqSeats: 0,
+    });
+    setEditApproval(false);
+    closeConfirm();
+
     try {
-      setApprovalRejectionLoading(selectedRequest);
-
-      const res = await axios.patch(
-        `${Api}/bookride/${selectedRequest._id}/status?type=Reject`
-      );
-
+      const res = await axios.patch(`${Api}/bookride/${selectedRequest._id}/status?type=Reject`);
       const updatedRequest = res.data?.data?.request;
-      const rejectedSeatsCount = updatedRequest.rejectedSeats;
-      console.log("updatedRequest", updatedRequest.rejectedSeats)
-      setEditApproval(false);
 
-      // onRequestUpdated?.(selectedRequest._id, updatedRequest);
-      setRequests((prev) =>
-        prev.map((request) =>
-          request._id === selectedRequest._id
-            ? {
-              ...request,
-              ...updatedRequest,
-            }
-            : request
-        )
-      );
+      if (updatedRequest) {
+        onRequestUpdated?.(selectedRequest._id, updatedRequest);
+      }
 
-      closeConfirm();
       toast.success(res.data.message || "Ride request rejected successfully");
     } catch (error) {
-      console.error("Reject error:", error);
-      toast.error(
-        error?.response?.data?.message || "Failed to reject ride request"
-      );
-    } finally {
-      setApprovalRejectionLoading(null);
+      onRequestUpdated?.(prevSnapshot._id, prevSnapshot);
+      toast.error(error?.response?.data?.message || "Failed to reject ride request");
     }
   };
+
   const closeConfirm = () => {
     if (isBusy) return;
     setConfirmState({ open: false, action: null });
@@ -561,24 +563,44 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
           </Stack>
           {v.label === "Approved" && (
             <IconButton
-              onClick={(event) => {
-                handleMenuOpen(event, request)
-                setEditApproval(true)
-              }}
+              onClick={(event) => handleMenuOpen(event, request)}
               sx={{
                 color: "#fff",
                 p: { xs: 0.5, sm: 0.75, md: 1 },
                 "&:hover": { bgcolor: "rgba(255,255,255,0.1)" },
               }}
             >
-              <MoreVerIcon
-                // fontSize={iconFontSize}
-                sx={{ color: "text.secondary" }}
-              />
+              <MoreVerIcon sx={{ color: "text.secondary" }} />
             </IconButton>
           )}
 
         </Box>
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={handleMenuClose}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+          transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+          PaperProps={{
+            sx: {
+              borderRadius: 2,
+              minWidth: 140,
+              boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+            },
+          }}
+        >
+          <MenuItem
+            onClick={handleRejectClick}
+            sx={{
+              fontFamily: TOKENS.bodyFont,
+              fontSize: '0.85rem',
+              color: TOKENS.red,
+              fontWeight: 600,
+            }}
+          >
+            Reject
+          </MenuItem>
+        </Menu>
         <Dialog open={editApproval}>
           <DialogTitle>
             Approved Seat Rejection
@@ -588,7 +610,7 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
           </DialogContent>
           <DialogActions sx={{ px: { xs: 2, sm: 3 }, pb: { xs: 2, sm: 2.5 }, gap: 1 }}>
             <Button
-              onClick={closeConfirm}
+              onClick={() => setEditApproval(false)}
               disabled={isBusy}
               sx={{
                 fontFamily: TOKENS.bodyFont,
@@ -823,6 +845,7 @@ export default function RideDetailsModal({
   onEdit,
   onDelete,
   onClose,
+  onRequestUpdated,
   onApprove = () => { },
   onReject = () => { },
   approveLoading,
@@ -1213,7 +1236,7 @@ export default function RideDetailsModal({
                           request={req}
                           onApprove={onApprove}
                           onReject={onReject}
-                          //  onRequestUpdated={onRequestUpdated}
+                          onRequestUpdated={onRequestUpdated}
                           approveLoading={approveLoading}
                           rejectLoading={rejectLoading}
                           dense={isXs}
