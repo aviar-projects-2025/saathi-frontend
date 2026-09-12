@@ -14,6 +14,7 @@ const Web = React.lazy(() => import("./pages/Web.jsx"));
 const Login = React.lazy(() => import("./components/Auth/Login.jsx"));
 const Register = React.lazy(() => import("./components/Auth/Register.jsx"));
 const Unauthorized = React.lazy(() => import("./pages/Unauthorized.jsx"));
+const SmsNotifications = React.lazy(() => import("./pages/SmsNotifications.jsx"));
 const WaitingApproval = React.lazy(() =>
   import("./components/Auth/WaitingApproval.jsx")
 );
@@ -128,6 +129,7 @@ function App() {
               <Route path="/discover" element={<Discover />} />
               <Route path="/request-ride" element={<RequestRide />} />
               <Route path="/notifications" element={<Notifications />} />
+              <Route path="/optin" element={<SmsNotifications />} />
             </Route>
           </Route>
 
