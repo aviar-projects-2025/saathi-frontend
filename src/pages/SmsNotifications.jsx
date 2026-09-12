@@ -58,7 +58,7 @@ const SmsNotifications = () => {
             const res = await axios.patch(
                 `${Api}/notification/optin/${user.id}`,
                 {
-                    mobileisMessageApproved: true,
+                    isMessageApproved: true,
                     messageNumber: `${countryCode}${phone}`,
                 }
             );
@@ -631,7 +631,7 @@ const SmsNotifications = () => {
                             </Typography>
 
                             <Button
-                                href="https://saathirides.net/find-ride"
+                                href="http://localhost:5173/find-ride"
                                 startIcon={<ArrowBack />}
                                 sx={{
                                     mt: 3,
