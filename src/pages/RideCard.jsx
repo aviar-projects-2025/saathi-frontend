@@ -71,8 +71,8 @@ export default function RideCard({ ride }) {
     (item) => item.rideId === ride._id,
   );
 
+  const pendingReqSeats = pendingRequest?.pendingReqSeats ?? 0;
 
-  const pendingReqSeats = pendingRequest?.pendingReqSeats;
   const { completion } = useUser();
   const theme = useTheme();
   const { currentUser } = useUser();
@@ -98,6 +98,7 @@ export default function RideCard({ ride }) {
   const totalSeats = ride?.totalSeats;
 
   const [totalSeat, setTotalSeat] = useState(totalSeats);
+
   const [seatAvailable, setSeatAvailable] = useState(avaialableSeats);
 
   const isFlight = ride.modeOfTravel === "Flight";
@@ -295,6 +296,7 @@ export default function RideCard({ ride }) {
 
       if (res.data.success) {
         setMyRequestedRides(res.data.data || []);
+
       }
     } catch (error) {
       console.log(error.message);
@@ -309,6 +311,7 @@ export default function RideCard({ ride }) {
   });
 
   const requestedCount = currentRequest?.seatsRequested || 0;
+
   const alreadyRequested = !!currentRequest;
 
   //   const myRequest = myRequestedRides.find((req) => {
@@ -334,7 +337,6 @@ export default function RideCard({ ride }) {
       item.status !== "CANCELLED"
   );
 
-
   const isRejected = myRequest?.status === "REJECTED";
   const isAccepted = myRequest?.status === "ACCEPTED";
   const requestedByMe = Number(myRequest?.seatsRequested || 0);
@@ -343,6 +345,7 @@ export default function RideCard({ ride }) {
   // console.log(myRequest, 'myRequest')
 
   const pendingSeatsByMe = isAccepted ? 0 : requestedByMe;
+
 
   const remainingSeatsForUser = isFlight
     ? null
@@ -433,7 +436,25 @@ export default function RideCard({ ride }) {
         // / ${totalSeat}`;
         //   })(),
         value: Math.max(
-          Number(totalSeat || 0) - Number(requestedCount || 0),
+          Number(remainingSeatsForUser),
+          0
+        ),
+      },
+      {
+        label: "Requested Seats",
+        icon: <EventSeatIcon sx={iconSx} />,
+        // value: isFlight
+        //   ? "—"
+        //   : (() => {
+        //     const occupiedSeats = Math.max(
+        //       Number(totalSeat || 0) - Number(remainingSeatsForUser ?? 0),
+        //       0,
+        //     );
+        //     return `${occupiedSeats}
+        // / ${totalSeat}`;
+        //   })(),
+        value: Math.max(
+          Number(pendingReqSeats),
           0
         ),
       },

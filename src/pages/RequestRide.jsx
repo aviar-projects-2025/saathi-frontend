@@ -287,6 +287,26 @@ const RequestRide = ({ ride }) => {
       req.status !== "REJECTED",
   );
 
+  // ── Derive the same `maxSeats` / `remainingSeatsForUser` semantics that
+  // RideCard.jsx uses, so opening Ridebook from here shows identical numbers.
+  const isFlightForEdit = selectedRide?.modeOfTravel === "Flight";
+  const isAcceptedForEdit = selectedRequest?.status === "ACCEPTED";
+  const requestedByMeForEdit = Number(selectedRequest?.seatsRequested || 0);
+  const pendingSeatsByMeForEdit = isAcceptedForEdit ? 0 : requestedByMeForEdit;
+
+  const remainingSeatsForUserEdit = isFlightForEdit
+    ? null
+    : Math.max(
+        Number(selectedRide?.availableSeats || 0) - pendingSeatsByMeForEdit,
+        0
+      );
+
+  // RequestRide always opens Ridebook in edit mode (requestToEdit is always
+  // set here), so this mirrors RideCard's `alreadyRequested` branch.
+  const maxSeatsForEditDialog = isFlightForEdit
+    ? Infinity
+    : remainingSeatsForUserEdit + requestedByMeForEdit;
+
   return (
     <PageLayout>
       <Box>
@@ -343,23 +363,6 @@ const RequestRide = ({ ride }) => {
               px: 2,
             }}
           >
-            {/* <Box
-              sx={{
-                width: 76,
-                height: 76,
-                borderRadius: "50%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                bgcolor: "#FFF3E4",
-                mb: 2.5,
-              }}
-            >
-              <DirectionsCarFilledOutlinedIcon
-                sx={{ fontSize: 36, color: ACCENT_DARK }}
-              />
-            </Box> */}
-
             <Typography variant="h6" fontWeight={700} color="text.primary">
               No ride requests yet
             </Typography>
@@ -387,7 +390,6 @@ const RequestRide = ({ ride }) => {
                     `You Cancelled` : request?.pendingReqSeats > 0 && request?.rideId?.travelStatus === "Completed" ? "Auto Rejected" : null;
 
               const isAccepted = request?.status === "ACCEPTED";
-              // const rejectedSeats = Number(request?.rejectedReq || 0);
               const requestedByMe = Number(request?.seatsRequested || 0);
               const approvedSeats = Number(request?.approvedSeats || 0);
 
@@ -446,9 +448,6 @@ const RequestRide = ({ ride }) => {
                         {/* Header bar */}
                         <Box
                           sx={{
-                            // bgcolor: HEADER_BG,
-                            // backgroundImage:
-                            //   "linear-gradient(135deg, #1a1030 0%, #241645 100%)",
                             bgcolor: HEADER_BG,
                             px: { xs: 1.75, sm: 2.5, md: 3 },
                             py: { xs: 1, sm: 1.1, md: 1.25 },
@@ -508,32 +507,6 @@ const RequestRide = ({ ride }) => {
                           </Stack>
 
                           <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.5, sm: 1 } }}>
-                            {/* <Chip
-                        label={request.status}
-                        size="small"
-                        // icon={
-                        //   <Box
-                        //     component="span"
-                        //     sx={{
-                        //       width: 6,
-                        //       height: 6,
-                        //       borderRadius: "50%",
-                        //       bgcolor: s.dot,
-                        //       ml: "8px !important",
-                        //     }}
-                        //   />
-                        // }
-                        sx={{
-                          fontWeight: 700,
-                          borderRadius: "20px",
-                          fontSize: { xs: 9, sm: 10.5, md: 12.5 },
-                          height: { xs: 22, sm: 26, md: 28 },
-                          bgcolor: s.bg,
-                          color: s.fg,
-                          "& .MuiChip-icon": { color: s.dot },
-                        }}
-                      /> */}
-
                             <Chip
                               label={
                                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
@@ -838,8 +811,6 @@ const RequestRide = ({ ride }) => {
           <RideDetailsModal
             onClose={() => setSelectedRideDetails(null)}
             ride={selectedRideDetails.rideId}
-            
-            
           />
         )}
 
@@ -966,42 +937,13 @@ const RequestRide = ({ ride }) => {
                 sx={{
                   color: "text.secondary",
                   fontWeight: 500,
-                  fontSize: { xs: "0.95rem", sm: "1.05rem" }, // Responsive text size
+                  fontSize: { xs: "0.95rem", sm: "1.05rem" },
                   lineHeight: 1.5,
                 }}
               >
                 If you cancel this ride, you won't be able to request the same ride again.
               </Typography>
             </Stack>
-
-            {/* {selectedRequest && (
-              <Paper
-                sx={{
-                  p: 2,
-                  bgcolor: "#FFF8F2",
-                  border: `1px solid ${CARD_BORDER}`,
-                  borderRadius: 3,
-                }}
-                elevation={0}
-              >
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <LocationOnIcon sx={{ color: "#e2483d", fontSize: 18 }} />
-                  <Typography fontWeight={700} fontSize={14}>
-                    {selectedRequest.rideId?.from} → {selectedRequest.rideId?.destination}
-                  </Typography>
-                </Stack>
-                <Stack direction="row" alignItems="center" spacing={1} sx={{ mt: 0.75 }}>
-                  <CalendarTodayIcon sx={{ color: ACCENT, fontSize: 15 }} />
-                  <Typography variant="caption" color="text.secondary">
-                    {new Date(selectedRequest.createdAt).toLocaleDateString()} at{" "}
-                    {new Date(selectedRequest.createdAt).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </Typography>
-                </Stack>
-              </Paper>
-            )} */}
           </DialogContent>
 
           <DialogActions sx={{ px: 3, pb: 3, gap: 1 }}>
@@ -1054,9 +996,9 @@ const RequestRide = ({ ride }) => {
           ride={selectedRide}
           setAllMyRequests={setAllMyRequests}
           allMyRequests={allMyRequests}
-          maxSeats={selectedRide?.availableSeats ?? Infinity}
+          maxSeats={maxSeatsForEditDialog}
           requestToEdit={selectedRequest}
-          remainingSeatsForUser={remainingSeatsForUser}
+          remainingSeatsForUser={remainingSeatsForUserEdit}
         />
 
       </Box>
