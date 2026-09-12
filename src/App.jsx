@@ -14,6 +14,8 @@ const Web = React.lazy(() => import("./pages/Web.jsx"));
 const Login = React.lazy(() => import("./components/Auth/Login.jsx"));
 const Register = React.lazy(() => import("./components/Auth/Register.jsx"));
 const Unauthorized = React.lazy(() => import("./pages/Unauthorized.jsx"));
+const SmsNotifications = React.lazy(() => import("./pages/SmsNotifications.jsx"));
+
 const WaitingApproval = React.lazy(() =>
   import("./components/Auth/WaitingApproval.jsx")
 );
@@ -105,6 +107,7 @@ function App() {
             <Route path="/forget-password" element={<ForgotPassword />} />
             <Route path="/verify-otp" element={<VerifyOTP />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/optin" element={<SmsNotifications />} />
           </Route>
 
           {/* ADMIN only routes */}
@@ -139,6 +142,7 @@ function App() {
               <Route path="/invite" element={<Invite />} />
               <Route path="/community" element={<Community />} />
               <Route path="/my-referalls" element={<MyReferrals />} />
+              
               {/* <Route path="/settings" element={<Settings />} /> */}
             </Route>
           </Route>
