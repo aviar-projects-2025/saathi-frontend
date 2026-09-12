@@ -853,7 +853,7 @@ export default function RideDetailsModal({
   approveLoading,
   rejectLoading,
 }) {
-
+ 
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down('sm'));
   const isMd = useMediaQuery(theme.breakpoints.up('md'));

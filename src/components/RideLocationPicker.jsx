@@ -22,6 +22,7 @@ export default function RideLocationPicker({
   fromLocation,
   destinationLocation,
   onFromChange,
+  ride,
   onDestinationChange,
   onRouteCalculated,
 }) {
@@ -31,8 +32,7 @@ export default function RideLocationPicker({
 
   const [fromCountryCode, setFromCountryCode] = useState(null);
 
-  const [mapSelectionMode, setMapSelectionMode] =
-    useState("from");
+  const [mapSelectionMode, setMapSelectionMode] = useState("from");
 
   // ---------------------------------------------
   // DOM refs
@@ -52,12 +52,59 @@ export default function RideLocationPicker({
   // ---------------------------------------------
 
   const onFromChangeRef = useRef(onFromChange);
-  const onDestinationChangeRef =
-    useRef(onDestinationChange);
-  const onRouteCalculatedRef =
-    useRef(onRouteCalculated);
+  const onDestinationChangeRef = useRef(onDestinationChange);
+  const onRouteCalculatedRef = useRef(onRouteCalculated);
 
   const fromCountryCodeRef = useRef(null);
+
+  // Tracks whether we've already applied/skipped the
+  // very first route calculation. Used so that opening
+  // an existing ride for editing (which already has a
+  // saved distance/duration) doesn't immediately call
+  // Google's routing API and silently overwrite those
+  // saved values before the user has changed anything.
+  const initialRouteHandledRef = useRef(false);
+
+  // ---------------------------------------------
+  // Resolved initial addresses
+  //
+  // In edit mode, `fromLocation`/`destinationLocation`
+  // (the structured objects with lat/lng) may not be
+  // fully seeded yet, but the raw `ride.from` /
+  // `ride.destination` address strings usually are.
+  // We prefer the structured location's address when
+  // it exists, and fall back to the ride's raw string
+  // otherwise, so the visible field is never blank
+  // when we actually have something to show.
+  // ---------------------------------------------
+
+  const resolvedFromAddress =
+    fromLocation?.address || ride?.from || "";
+
+  const resolvedDestinationAddress =
+    destinationLocation?.address || ride?.destination || "";
+
+  // Kept in refs so the (one-time) autocomplete setup
+  // effect can read the *latest* resolved value even
+  // though it only runs once, on `isLoaded`.
+
+  const fromAddressRef = useRef(resolvedFromAddress);
+  const destinationAddressRef = useRef(resolvedDestinationAddress);
+
+  useEffect(() => {
+    fromAddressRef.current = resolvedFromAddress;
+    console.log("ride.from ->", ride?.from, "| resolved:", resolvedFromAddress);
+  }, [resolvedFromAddress, ride?.from]);
+
+  useEffect(() => {
+    destinationAddressRef.current = resolvedDestinationAddress;
+    console.log(
+      "ride.destination ->",
+      ride?.destination,
+      "| resolved:",
+      resolvedDestinationAddress
+    );
+  }, [resolvedDestinationAddress, ride?.destination]);
 
   // ---------------------------------------------
   // Keep callbacks updated
@@ -68,13 +115,11 @@ export default function RideLocationPicker({
   }, [onFromChange]);
 
   useEffect(() => {
-    onDestinationChangeRef.current =
-      onDestinationChange;
+    onDestinationChangeRef.current = onDestinationChange;
   }, [onDestinationChange]);
 
   useEffect(() => {
-    onRouteCalculatedRef.current =
-      onRouteCalculated;
+    onRouteCalculatedRef.current = onRouteCalculated;
   }, [onRouteCalculated]);
 
   // ---------------------------------------------
@@ -82,8 +127,7 @@ export default function RideLocationPicker({
   // ---------------------------------------------
 
   const { isLoaded, loadError } = useJsApiLoader({
-    googleMapsApiKey:
-      import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
     libraries,
   });
 
@@ -92,8 +136,7 @@ export default function RideLocationPicker({
   // ---------------------------------------------
 
   const hasFrom =
-    fromLocation?.latitude != null &&
-    fromLocation?.longitude != null;
+    fromLocation?.latitude != null && fromLocation?.longitude != null;
 
   const hasDestination =
     destinationLocation?.latitude != null &&
@@ -101,16 +144,35 @@ export default function RideLocationPicker({
 
   // ---------------------------------------------
   // Set autocomplete input value
+  //
+  // PlaceAutocompleteElement renders its actual
+  // <input> inside an open shadow root. Setting
+  // `.value` on the element itself does not
+  // reliably update what's visually shown, so we
+  // reach into the shadow DOM and set the real
+  // input's value directly. Falls back to `.value`
+  // on the element if the shadow DOM isn't
+  // available for some reason.
   // ---------------------------------------------
 
-  const setAutocompleteValue = (
-    autocompleteRef,
-    value
-  ) => {
+  const formatDuration = (durationMinutes) => {
+    const hours = Math.floor(durationMinutes / 60);
+    const minutes = Math.round(durationMinutes % 60);
+
+    return hours > 0 ? `${hours} hr ${minutes} min` : `${minutes} min`;
+  };
+
+  const setAutocompleteValue = (autocompleteRef, value) => {
     if (!autocompleteRef.current) return;
 
-    autocompleteRef.current.value =
-      value || "";
+    const el = autocompleteRef.current;
+    const innerInput = el.shadowRoot?.querySelector("input");
+
+    if (innerInput) {
+      innerInput.value = value || "";
+    } else {
+      el.value = value || "";
+    }
   };
 
   // ---------------------------------------------
@@ -118,16 +180,11 @@ export default function RideLocationPicker({
   // ---------------------------------------------
 
   const getCountryFromPlace = (place) => {
-    const country =
-      place?.addressComponents?.find(
-        (component) =>
-          component.types?.includes("country")
-      );
-
-    return (
-      country?.shortText?.toLowerCase() ||
-      null
+    const country = place?.addressComponents?.find((component) =>
+      component.types?.includes("country")
     );
+
+    return country?.shortText?.toLowerCase() || null;
   };
 
   // ---------------------------------------------
@@ -135,30 +192,21 @@ export default function RideLocationPicker({
   // ---------------------------------------------
 
   const getCountryFromGeocoder = (result) => {
-    const country =
-      result?.address_components?.find(
-        (component) =>
-          component.types?.includes("country")
-      );
-
-    return (
-      country?.short_name?.toLowerCase() ||
-      null
+    const country = result?.address_components?.find((component) =>
+      component.types?.includes("country")
     );
+
+    return country?.short_name?.toLowerCase() || null;
   };
 
   // ---------------------------------------------
   // Reverse geocode
   // ---------------------------------------------
 
-  const reverseGeocode = (
-    latitude,
-    longitude
-  ) => {
+  const reverseGeocode = (latitude, longitude) => {
     return new Promise((resolve) => {
       if (!geocoderRef.current) {
-        geocoderRef.current =
-          new window.google.maps.Geocoder();
+        geocoderRef.current = new window.google.maps.Geocoder();
       }
 
       geocoderRef.current.geocode(
@@ -169,15 +217,8 @@ export default function RideLocationPicker({
           },
         },
         (results, status) => {
-          if (
-            status !== "OK" ||
-            !results ||
-            results.length === 0
-          ) {
-            console.error(
-              "Reverse geocode failed:",
-              status
-            );
+          if (status !== "OK" || !results || results.length === 0) {
+            console.error("Reverse geocode failed:", status);
 
             resolve(null);
             return;
@@ -186,10 +227,8 @@ export default function RideLocationPicker({
           const result = results[0];
 
           resolve({
-            address:
-              result.formatted_address || "",
-            countryCode:
-              getCountryFromGeocoder(result),
+            address: result.formatted_address || "",
+            countryCode: getCountryFromGeocoder(result),
           });
         }
       );
@@ -200,37 +239,19 @@ export default function RideLocationPicker({
   // UPDATE FROM LOCATION
   // ---------------------------------------------
 
-  const updateFromLocation = async (
-    latitude,
-    longitude
-  ) => {
+  const updateFromLocation = async (latitude, longitude) => {
     try {
-      const result = await reverseGeocode(
-        latitude,
-        longitude
-      );
+      const result = await reverseGeocode(latitude, longitude);
 
       if (!result) return;
 
-      const newCountryCode =
-        result.countryCode;
+      const newCountryCode = result.countryCode;
 
-      const oldCountryCode =
-        fromCountryCodeRef.current;
+      const oldCountryCode = fromCountryCodeRef.current;
 
-      console.log(
-        "FROM moved:",
-        result.address,
-        latitude,
-        longitude
-      );
+      console.log("FROM moved:", result.address, latitude, longitude);
 
-      console.log(
-        "Country:",
-        oldCountryCode,
-        "→",
-        newCountryCode
-      );
+      console.log("Country:", oldCountryCode, "→", newCountryCode);
 
       // -----------------------------------------
       // If From country changed,
@@ -242,9 +263,7 @@ export default function RideLocationPicker({
         newCountryCode &&
         oldCountryCode !== newCountryCode
       ) {
-        console.log(
-          "From country changed. Clearing destination."
-        );
+        console.log("From country changed. Clearing destination.");
 
         const emptyDestination = {
           address: "",
@@ -252,33 +271,23 @@ export default function RideLocationPicker({
           longitude: null,
         };
 
-        onDestinationChangeRef.current?.(
-          emptyDestination
-        );
+        onDestinationChangeRef.current?.(emptyDestination);
 
-        setAutocompleteValue(
-          destinationAutocompleteRef,
-          ""
-        );
+        setAutocompleteValue(destinationAutocompleteRef, "");
 
         setRoutePath([]);
         setRouteInfo(null);
 
-        onRouteCalculatedRef.current?.(
-          null
-        );
+        onRouteCalculatedRef.current?.(null);
       }
 
       // -----------------------------------------
       // Save country
       // -----------------------------------------
 
-      fromCountryCodeRef.current =
-        newCountryCode;
+      fromCountryCodeRef.current = newCountryCode;
 
-      setFromCountryCode(
-        newCountryCode
-      );
+      setFromCountryCode(newCountryCode);
 
       // -----------------------------------------
       // Create location
@@ -295,31 +304,21 @@ export default function RideLocationPicker({
       // Update Google From field
       // -----------------------------------------
 
-      setAutocompleteValue(
-        fromAutocompleteRef,
-        result.address
-      );
+      setAutocompleteValue(fromAutocompleteRef, result.address);
 
       // -----------------------------------------
       // Update parent React state
       // -----------------------------------------
 
-      onFromChangeRef.current?.(
-        location
-      );
+      onFromChangeRef.current?.(location);
 
       // -----------------------------------------
       // Automatically switch to destination
       // -----------------------------------------
 
-      setMapSelectionMode(
-        "destination"
-      );
+      setMapSelectionMode("destination");
     } catch (error) {
-      console.error(
-        "Failed to update From location:",
-        error
-      );
+      console.error("Failed to update From location:", error);
     }
   };
 
@@ -327,23 +326,15 @@ export default function RideLocationPicker({
   // UPDATE DESTINATION LOCATION
   // ---------------------------------------------
 
-  const updateDestinationLocation = async (
-    latitude,
-    longitude
-  ) => {
+  const updateDestinationLocation = async (latitude, longitude) => {
     try {
-      const result = await reverseGeocode(
-        latitude,
-        longitude
-      );
+      const result = await reverseGeocode(latitude, longitude);
 
       if (!result) return;
 
-      const selectedCountry =
-        result.countryCode;
+      const selectedCountry = result.countryCode;
 
-      const currentFromCountry =
-        fromCountryCodeRef.current;
+      const currentFromCountry = fromCountryCodeRef.current;
 
       // -----------------------------------------
       // Country validation
@@ -367,37 +358,24 @@ export default function RideLocationPicker({
         longitude,
       };
 
-      console.log(
-        "DESTINATION moved:",
-        location
-      );
+      console.log("DESTINATION moved:", location);
 
       // -----------------------------------------
       // IMPORTANT:
       // Update Google Destination field
       // -----------------------------------------
 
-      setAutocompleteValue(
-        destinationAutocompleteRef,
-        result.address
-      );
+      setAutocompleteValue(destinationAutocompleteRef, result.address);
 
       // -----------------------------------------
       // Update React parent state
       // -----------------------------------------
 
-      onDestinationChangeRef.current?.(
-        location
-      );
+      onDestinationChangeRef.current?.(location);
 
-      setMapSelectionMode(
-        "destination"
-      );
+      setMapSelectionMode("destination");
     } catch (error) {
-      console.error(
-        "Failed to update Destination location:",
-        error
-      );
+      console.error("Failed to update Destination location:", error);
     }
   };
 
@@ -412,12 +390,8 @@ export default function RideLocationPicker({
 
     const setupAutocomplete = async () => {
       try {
-        const {
-          PlaceAutocompleteElement,
-        } =
-          await window.google.maps.importLibrary(
-            "places"
-          );
+        const { PlaceAutocompleteElement } =
+          await window.google.maps.importLibrary("places");
 
         if (cancelled) return;
 
@@ -425,38 +399,36 @@ export default function RideLocationPicker({
         // FROM
         // =========================================
 
-        const fromAutocomplete =
-          new PlaceAutocompleteElement();
+        const fromAutocomplete = new PlaceAutocompleteElement();
 
-        fromAutocomplete.placeholder =
-          "Search pickup location";
+        fromAutocomplete.placeholder = "Search pickup location";
 
-        fromAutocomplete.includedRegionCodes = [
-          "us",
-          "in",
-        ];
+        fromAutocomplete.includedRegionCodes = ["us", "in"];
 
-        fromAutocomplete.style.width =
-          "100%";
+        fromAutocomplete.style.width = "100%";
 
-        fromAutocompleteRef.current =
-          fromAutocomplete;
+        fromAutocompleteRef.current = fromAutocomplete;
 
         if (fromContainerRef.current) {
-          fromContainerRef.current.innerHTML =
-            "";
+          fromContainerRef.current.innerHTML = "";
 
-          fromContainerRef.current.appendChild(
-            fromAutocomplete
-          );
+          fromContainerRef.current.appendChild(fromAutocomplete);
         }
+
+        // -----------------------------------------
+        // Populate immediately with whatever the
+        // latest known From address is (falls back
+        // to ride.from when fromLocation.address
+        // isn't seeded yet — e.g. edit mode).
+        // -----------------------------------------
+
+        setAutocompleteValue(fromAutocompleteRef, fromAddressRef.current);
 
         fromAutocomplete.addEventListener(
           "gmp-select",
           async (event) => {
             try {
-              const place =
-                event.placePrediction.toPlace();
+              const place = event.placePrediction.toPlace();
 
               await place.fetchFields({
                 fields: [
@@ -472,18 +444,13 @@ export default function RideLocationPicker({
               }
 
               const address =
-                place.formattedAddress ||
-                place.displayName ||
-                "";
+                place.formattedAddress || place.displayName || "";
 
-              const latitude =
-                place.location.lat();
+              const latitude = place.location.lat();
 
-              const longitude =
-                place.location.lng();
+              const longitude = place.location.lng();
 
-              const countryCode =
-                getCountryFromPlace(place);
+              const countryCode = getCountryFromPlace(place);
 
               console.log(
                 "FROM selected:",
@@ -497,49 +464,32 @@ export default function RideLocationPicker({
               // Check country change
               // -----------------------------------
 
-              const oldCountry =
-                fromCountryCodeRef.current;
+              const oldCountry = fromCountryCodeRef.current;
 
-              if (
-                oldCountry &&
-                countryCode &&
-                oldCountry !== countryCode
-              ) {
-                console.log(
-                  "From country changed. Clearing destination."
-                );
+              if (oldCountry && countryCode && oldCountry !== countryCode) {
+                console.log("From country changed. Clearing destination.");
 
-                onDestinationChangeRef.current?.(
-                  {
-                    address: "",
-                    latitude: null,
-                    longitude: null,
-                  }
-                );
+                onDestinationChangeRef.current?.({
+                  address: "",
+                  latitude: null,
+                  longitude: null,
+                });
 
-                setAutocompleteValue(
-                  destinationAutocompleteRef,
-                  ""
-                );
+                setAutocompleteValue(destinationAutocompleteRef, "");
 
                 setRoutePath([]);
                 setRouteInfo(null);
 
-                onRouteCalculatedRef.current?.(
-                  null
-                );
+                onRouteCalculatedRef.current?.(null);
               }
 
               // -----------------------------------
               // Save country
               // -----------------------------------
 
-              fromCountryCodeRef.current =
-                countryCode;
+              fromCountryCodeRef.current = countryCode;
 
-              setFromCountryCode(
-                countryCode
-              );
+              setFromCountryCode(countryCode);
 
               // -----------------------------------
               // Parent state
@@ -568,14 +518,9 @@ export default function RideLocationPicker({
               // Next map mode = destination
               // -----------------------------------
 
-              setMapSelectionMode(
-                "destination"
-              );
+              setMapSelectionMode("destination");
             } catch (error) {
-              console.error(
-                "From selection error:",
-                error
-              );
+              console.error("From selection error:", error);
             }
           }
         );
@@ -584,38 +529,42 @@ export default function RideLocationPicker({
         // DESTINATION
         // =========================================
 
-        const destinationAutocomplete =
-          new PlaceAutocompleteElement();
+        const destinationAutocomplete = new PlaceAutocompleteElement();
 
-        destinationAutocomplete.placeholder =
-          "Search destination";
+        destinationAutocomplete.placeholder = "Search destination";
 
-        destinationAutocomplete.includedRegionCodes =
-          ["us", "in"];
+        destinationAutocomplete.includedRegionCodes = ["us", "in"];
 
-        destinationAutocomplete.style.width =
-          "100%";
+        destinationAutocomplete.style.width = "100%";
 
-        destinationAutocompleteRef.current =
-          destinationAutocomplete;
+        destinationAutocompleteRef.current = destinationAutocomplete;
 
-        if (
-          destinationContainerRef.current
-        ) {
-          destinationContainerRef.current.innerHTML =
-            "";
+        if (destinationContainerRef.current) {
+          destinationContainerRef.current.innerHTML = "";
 
           destinationContainerRef.current.appendChild(
             destinationAutocomplete
           );
         }
 
+        // -----------------------------------------
+        // Populate immediately with whatever the
+        // latest known Destination address is (falls
+        // back to ride.destination when
+        // destinationLocation.address isn't seeded
+        // yet — e.g. edit mode).
+        // -----------------------------------------
+
+        setAutocompleteValue(
+          destinationAutocompleteRef,
+          destinationAddressRef.current
+        );
+
         destinationAutocomplete.addEventListener(
           "gmp-select",
           async (event) => {
             try {
-              const place =
-                event.placePrediction.toPlace();
+              const place = event.placePrediction.toPlace();
 
               await place.fetchFields({
                 fields: [
@@ -631,25 +580,19 @@ export default function RideLocationPicker({
               }
 
               const address =
-                place.formattedAddress ||
-                place.displayName ||
-                "";
+                place.formattedAddress || place.displayName || "";
 
-              const latitude =
-                place.location.lat();
+              const latitude = place.location.lat();
 
-              const longitude =
-                place.location.lng();
+              const longitude = place.location.lng();
 
-              const countryCode =
-                getCountryFromPlace(place);
+              const countryCode = getCountryFromPlace(place);
 
               // -----------------------------------
               // Read latest country from REF
               // -----------------------------------
 
-              const currentFromCountry =
-                fromCountryCodeRef.current;
+              const currentFromCountry = fromCountryCodeRef.current;
 
               console.log(
                 "DESTINATION selected:",
@@ -659,10 +602,7 @@ export default function RideLocationPicker({
                 countryCode
               );
 
-              console.log(
-                "From country:",
-                currentFromCountry
-              );
+              console.log("From country:", currentFromCountry);
 
               // -----------------------------------
               // Country validation
@@ -671,15 +611,13 @@ export default function RideLocationPicker({
               if (
                 currentFromCountry &&
                 countryCode &&
-                currentFromCountry !==
-                  countryCode
+                currentFromCountry !== countryCode
               ) {
                 alert(
                   "Destination must be in the same country as the From location."
                 );
 
-                destinationAutocomplete.value =
-                  "";
+                destinationAutocomplete.value = "";
 
                 return;
               }
@@ -707,22 +645,14 @@ export default function RideLocationPicker({
                 mapRef.current.setZoom(7);
               }
 
-              setMapSelectionMode(
-                "destination"
-              );
+              setMapSelectionMode("destination");
             } catch (error) {
-              console.error(
-                "Destination selection error:",
-                error
-              );
+              console.error("Destination selection error:", error);
             }
           }
         );
       } catch (error) {
-        console.error(
-          "Autocomplete setup failed:",
-          error
-        );
+        console.error("Autocomplete setup failed:", error);
       }
     };
 
@@ -732,20 +662,15 @@ export default function RideLocationPicker({
       cancelled = true;
 
       if (fromContainerRef.current) {
-        fromContainerRef.current.innerHTML =
-          "";
+        fromContainerRef.current.innerHTML = "";
       }
 
-      if (
-        destinationContainerRef.current
-      ) {
-        destinationContainerRef.current.innerHTML =
-          "";
+      if (destinationContainerRef.current) {
+        destinationContainerRef.current.innerHTML = "";
       }
 
       fromAutocompleteRef.current = null;
-      destinationAutocompleteRef.current =
-        null;
+      destinationAutocompleteRef.current = null;
     };
   }, [isLoaded]);
 
@@ -754,26 +679,18 @@ export default function RideLocationPicker({
   // ---------------------------------------------
 
   useEffect(() => {
-    const autocomplete =
-      destinationAutocompleteRef.current;
+    const autocomplete = destinationAutocompleteRef.current;
 
     if (!autocomplete) return;
 
     if (fromCountryCode) {
-      autocomplete.includedRegionCodes = [
-        fromCountryCode,
-      ];
+      autocomplete.includedRegionCodes = [fromCountryCode];
 
-      autocomplete.placeholder =
-        `Search destination`;
+      autocomplete.placeholder = `Search destination`;
     } else {
-      autocomplete.includedRegionCodes = [
-        "us",
-        "in",
-      ];
+      autocomplete.includedRegionCodes = ["us", "in"];
 
-      autocomplete.placeholder =
-        "Search destination";
+      autocomplete.placeholder = "Search destination";
     }
   }, [fromCountryCode]);
 
@@ -783,52 +700,39 @@ export default function RideLocationPicker({
   // ---------------------------------------------
 
   useEffect(() => {
-    if (
-      !isLoaded ||
-      !hasFrom ||
-      fromCountryCodeRef.current
-    ) {
+    if (!isLoaded || !hasFrom || fromCountryCodeRef.current) {
       return;
     }
 
     let cancelled = false;
 
     const detectCountry = async () => {
-      const result =
-        await reverseGeocode(
-          fromLocation.latitude,
-          fromLocation.longitude
-        );
+      const result = await reverseGeocode(
+        fromLocation.latitude,
+        fromLocation.longitude
+      );
 
-      if (
-        cancelled ||
-        !result?.countryCode
-      ) {
+      if (cancelled || !result?.countryCode) {
         return;
       }
 
-      fromCountryCodeRef.current =
-        result.countryCode;
+      fromCountryCodeRef.current = result.countryCode;
 
-      setFromCountryCode(
-        result.countryCode
+      setFromCountryCode(result.countryCode);
+
+      // Also synchronize the existing From / Destination
+      // address into the Google autocomplete fields,
+      // preferring the structured address and falling
+      // back to the raw ride fields.
+      setAutocompleteValue(
+        fromAutocompleteRef,
+        fromLocation.address || ride?.from
       );
 
-      // Also synchronize the existing From
-      // address into Google autocomplete.
-      if (fromLocation.address) {
-        setAutocompleteValue(
-          fromAutocompleteRef,
-          fromLocation.address
-        );
-      }
-
-      if (destinationLocation?.address) {
-        setAutocompleteValue(
-          destinationAutocompleteRef,
-          destinationLocation.address
-        );
-      }
+      setAutocompleteValue(
+        destinationAutocompleteRef,
+        destinationLocation?.address || ride?.destination
+      );
     };
 
     detectCountry();
@@ -836,44 +740,33 @@ export default function RideLocationPicker({
     return () => {
       cancelled = true;
     };
-  }, [
-    isLoaded,
-    hasFrom,
-    fromLocation?.latitude,
-    fromLocation?.longitude,
-  ]);
+  }, [isLoaded, hasFrom, fromLocation?.latitude, fromLocation?.longitude]);
 
   // ---------------------------------------------
   // Synchronize fields when parent form changes
+  // (also covers edit mode, where fromLocation /
+  // destinationLocation.address may lag behind the
+  // raw ride.from / ride.destination strings)
   // ---------------------------------------------
 
   useEffect(() => {
     if (!isLoaded) return;
 
-    if (fromLocation?.address) {
-      setAutocompleteValue(
-        fromAutocompleteRef,
-        fromLocation.address
-      );
+    if (resolvedFromAddress) {
+      setAutocompleteValue(fromAutocompleteRef, resolvedFromAddress);
     }
-  }, [
-    isLoaded,
-    fromLocation?.address,
-  ]);
+  }, [isLoaded, resolvedFromAddress]);
 
   useEffect(() => {
     if (!isLoaded) return;
 
-    if (destinationLocation?.address) {
+    if (resolvedDestinationAddress) {
       setAutocompleteValue(
         destinationAutocompleteRef,
-        destinationLocation.address
+        resolvedDestinationAddress
       );
     }
-  }, [
-    isLoaded,
-    destinationLocation?.address,
-  ]);
+  }, [isLoaded, resolvedDestinationAddress]);
 
   // ---------------------------------------------
   // CALCULATE ROUTE
@@ -886,139 +779,154 @@ export default function RideLocationPicker({
       setRoutePath([]);
       setRouteInfo(null);
 
-      onRouteCalculatedRef.current?.(
-        null
-      );
+      onRouteCalculatedRef.current?.(null);
 
       return;
     }
 
     let cancelled = false;
 
+    // -----------------------------------------------
+    // EDIT MODE: use the saved distance/duration on
+    // the very first pass instead of recalculating.
+    //
+    // We still fetch the route from Google so the
+    // polyline draws on the map, but we deliberately
+    // do NOT overwrite routeInfo / call
+    // onRouteCalculatedRef with freshly computed
+    // numbers — the saved values stay authoritative
+    // until the user actually changes From or
+    // Destination.
+    // -----------------------------------------------
+
+    const isInitialEditLoad =
+      !initialRouteHandledRef.current &&
+      ride?.distanceKm != null &&
+      ride?.duration != null;
+
     const calculateRoute = async () => {
       try {
-        console.log(
-          "Calculating road route..."
-        );
+        console.log("Calculating road route...");
 
-        const { Route } =
-          await window.google.maps.importLibrary(
-            "routes"
-          );
+        const { Route } = await window.google.maps.importLibrary("routes");
 
-        const result =
-          await Route.computeRoutes({
-            origin: {
-              lat: fromLocation.latitude,
-              lng: fromLocation.longitude,
-            },
+        const result = await Route.computeRoutes({
+          origin: {
+            lat: fromLocation.latitude,
+            lng: fromLocation.longitude,
+          },
 
-            destination: {
-              lat:
-                destinationLocation.latitude,
-              lng:
-                destinationLocation.longitude,
-            },
+          destination: {
+            lat: destinationLocation.latitude,
+            lng: destinationLocation.longitude,
+          },
 
-            travelMode: "DRIVING",
+          travelMode: "DRIVING",
 
-            fields: [
-              "distanceMeters",
-              "durationMillis",
-              "path",
-              "viewport",
-            ],
+          fields: ["distanceMeters", "durationMillis", "path", "viewport"],
 
-            units:
-              window.google.maps.UnitSystem.METRIC,
-          });
+          units: window.google.maps.UnitSystem.METRIC,
+        });
 
         if (cancelled) return;
 
-        if (
-          !result.routes ||
-          result.routes.length === 0
-        ) {
+        if (isInitialEditLoad) {
+          // -----------------------------------------
+          // Keep the saved values. Only use the fresh
+          // API result to draw the polyline / fit the
+          // map — not to overwrite duration/distance.
+          // -----------------------------------------
+
+          const savedInfo = {
+            distanceKm: ride.distanceKm,
+            durationMinutes: ride.duration,
+            formattedDuration: formatDuration(ride.duration),
+          };
+
+          console.log(
+            "Edit mode: keeping saved route info, skipping recalculation:",
+            savedInfo
+          );
+
+          setRouteInfo(savedInfo);
+          onRouteCalculatedRef.current?.(savedInfo);
+
+          const route = result.routes?.[0];
+
+          if (route?.path) {
+            setRoutePath(route.path);
+          }
+
+          if (mapRef.current && route?.viewport) {
+            mapRef.current.fitBounds(route.viewport, 50);
+          }
+
+          initialRouteHandledRef.current = true;
+          return;
+        }
+
+        initialRouteHandledRef.current = true;
+
+        if (!result.routes || result.routes.length === 0) {
           setRoutePath([]);
           setRouteInfo(null);
 
-          onRouteCalculatedRef.current?.(
-            null
-          );
+          onRouteCalculatedRef.current?.(null);
 
           return;
         }
 
         const route = result.routes[0];
 
-        const distanceKm =
-          route.distanceMeters / 1000;
+        const distanceKm = route.distanceMeters / 1000;
 
-        const durationMinutes =
-          route.durationMillis / 60000;
-
-        const hours = Math.floor(
-          durationMinutes / 60
-        );
-
-        const minutes = Math.round(
-          durationMinutes % 60
-        );
-
-        const formattedDuration =
-          hours > 0
-            ? `${hours} hr ${minutes} min`
-            : `${minutes} min`;
+        const durationMinutes = route.durationMillis / 60000;
 
         const info = {
-          distanceKm: Number(
-            distanceKm.toFixed(1)
-          ),
+          distanceKm: Number(distanceKm.toFixed(1)),
 
           // DATABASE VALUE
-          durationMinutes:
-            Math.round(durationMinutes),
+          durationMinutes: Math.round(durationMinutes),
 
           // DISPLAY VALUE
-          formattedDuration,
+          formattedDuration: formatDuration(durationMinutes),
         };
 
-        console.log(
-          "Route calculated:",
-          info
-        );
+        console.log("Route calculated:", info);
 
         setRouteInfo(info);
 
-        onRouteCalculatedRef.current?.(
-          info
-        );
+        onRouteCalculatedRef.current?.(info);
 
         if (route.path) {
           setRoutePath(route.path);
         }
 
-        if (
-          mapRef.current &&
-          route.viewport
-        ) {
-          mapRef.current.fitBounds(
-            route.viewport,
-            50
-          );
+        if (mapRef.current && route.viewport) {
+          mapRef.current.fitBounds(route.viewport, 50);
         }
       } catch (error) {
-        console.error(
-          "Route calculation failed:",
-          error
-        );
+        console.error("Route calculation failed:", error);
+
+        if (isInitialEditLoad) {
+          // Even if the fresh fetch failed, still show
+          // the saved values rather than clearing them.
+          const savedInfo = {
+            distanceKm: ride.distanceKm,
+            durationMinutes: ride.duration,
+            formattedDuration: formatDuration(ride.duration),
+          };
+
+          setRouteInfo(savedInfo);
+          onRouteCalculatedRef.current?.(savedInfo);
+          initialRouteHandledRef.current = true;
+          return;
+        }
 
         setRoutePath([]);
         setRouteInfo(null);
 
-        onRouteCalculatedRef.current?.(
-          null
-        );
+        onRouteCalculatedRef.current?.(null);
       }
     };
 
@@ -1042,30 +950,16 @@ export default function RideLocationPicker({
   const handleMapClick = async (event) => {
     if (!event.latLng) return;
 
-    const latitude =
-      event.latLng.lat();
+    const latitude = event.latLng.lat();
 
-    const longitude =
-      event.latLng.lng();
+    const longitude = event.latLng.lng();
 
-    console.log(
-      "Map clicked:",
-      latitude,
-      longitude,
-      "Mode:",
-      mapSelectionMode
-    );
+    console.log("Map clicked:", latitude, longitude, "Mode:", mapSelectionMode);
 
     if (mapSelectionMode === "from") {
-      await updateFromLocation(
-        latitude,
-        longitude
-      );
+      await updateFromLocation(latitude, longitude);
     } else {
-      await updateDestinationLocation(
-        latitude,
-        longitude
-      );
+      await updateDestinationLocation(latitude, longitude);
     }
   };
 
@@ -1073,53 +967,33 @@ export default function RideLocationPicker({
   // FROM MARKER DRAG
   // ---------------------------------------------
 
-  const handleFromMarkerDragEnd =
-    async (event) => {
-      if (!event.latLng) return;
+  const handleFromMarkerDragEnd = async (event) => {
+    if (!event.latLng) return;
 
-      const latitude =
-        event.latLng.lat();
+    const latitude = event.latLng.lat();
 
-      const longitude =
-        event.latLng.lng();
+    const longitude = event.latLng.lng();
 
-      console.log(
-        "From marker dragged:",
-        latitude,
-        longitude
-      );
+    console.log("From marker dragged:", latitude, longitude);
 
-      await updateFromLocation(
-        latitude,
-        longitude
-      );
-    };
+    await updateFromLocation(latitude, longitude);
+  };
 
   // ---------------------------------------------
   // DESTINATION MARKER DRAG
   // ---------------------------------------------
 
-  const handleDestinationMarkerDragEnd =
-    async (event) => {
-      if (!event.latLng) return;
+  const handleDestinationMarkerDragEnd = async (event) => {
+    if (!event.latLng) return;
 
-      const latitude =
-        event.latLng.lat();
+    const latitude = event.latLng.lat();
 
-      const longitude =
-        event.latLng.lng();
+    const longitude = event.latLng.lng();
 
-      console.log(
-        "Destination marker dragged:",
-        latitude,
-        longitude
-      );
+    console.log("Destination marker dragged:", latitude, longitude);
 
-      await updateDestinationLocation(
-        latitude,
-        longitude
-      );
-    };
+    await updateDestinationLocation(latitude, longitude);
+  };
 
   // ---------------------------------------------
   // MAP LOAD
@@ -1143,9 +1017,9 @@ export default function RideLocationPicker({
 
   const center = hasFrom
     ? {
-        lat: fromLocation.latitude,
-        lng: fromLocation.longitude,
-      }
+      lat: fromLocation.latitude,
+      lng: fromLocation.longitude,
+    }
     : defaultCenter;
 
   // ---------------------------------------------
@@ -1153,11 +1027,7 @@ export default function RideLocationPicker({
   // ---------------------------------------------
 
   if (loadError) {
-    return (
-      <div style={{ color: "red" }}>
-        Google Maps failed to load.
-      </div>
-    );
+    return <div style={{ color: "red" }}>Google Maps failed to load.</div>;
   }
 
   if (!isLoaded) {
@@ -1177,8 +1047,7 @@ export default function RideLocationPicker({
       <div
         style={{
           display: "grid",
-          gridTemplateColumns:
-            "repeat(auto-fit, minmax(250px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
           gap: "16px",
           marginBottom: "16px",
         }}
@@ -1214,9 +1083,7 @@ export default function RideLocationPicker({
             Destination
           </label>
 
-          <div
-            ref={destinationContainerRef}
-          />
+          <div ref={destinationContainerRef} />
         </div>
       </div>
 
@@ -1233,17 +1100,11 @@ export default function RideLocationPicker({
           marginBottom: "10px",
         }}
       >
-        <strong
-          style={{ fontSize: "14px" }}
-        >
-          Select on map:
-        </strong>
+        <strong style={{ fontSize: "14px" }}>Select on map:</strong>
 
         <button
           type="button"
-          onClick={() =>
-            setMapSelectionMode("from")
-          }
+          onClick={() => setMapSelectionMode("from")}
           style={{
             padding: "7px 14px",
             borderRadius: "8px",
@@ -1251,10 +1112,7 @@ export default function RideLocationPicker({
               mapSelectionMode === "from"
                 ? "2px solid #E8650A"
                 : "1px solid #ccc",
-            background:
-              mapSelectionMode === "from"
-                ? "#fff3eb"
-                : "#fff",
+            background: mapSelectionMode === "from" ? "#fff3eb" : "#fff",
             cursor: "pointer",
             fontWeight: 600,
           }}
@@ -1264,24 +1122,16 @@ export default function RideLocationPicker({
 
         <button
           type="button"
-          onClick={() =>
-            setMapSelectionMode(
-              "destination"
-            )
-          }
+          onClick={() => setMapSelectionMode("destination")}
           style={{
             padding: "7px 14px",
             borderRadius: "8px",
             border:
-              mapSelectionMode ===
-              "destination"
+              mapSelectionMode === "destination"
                 ? "2px solid #E8650A"
                 : "1px solid #ccc",
             background:
-              mapSelectionMode ===
-              "destination"
-                ? "#fff3eb"
-                : "#fff",
+              mapSelectionMode === "destination" ? "#fff3eb" : "#fff",
             cursor: "pointer",
             fontWeight: 600,
           }}
@@ -1299,9 +1149,7 @@ export default function RideLocationPicker({
       >
         Click the map to select{" "}
         <strong>
-          {mapSelectionMode === "from"
-            ? "From"
-            : "Destination"}
+          {mapSelectionMode === "from" ? "From" : "Destination"}
         </strong>
         . You can also drag either marker.
       </div>
@@ -1332,14 +1180,8 @@ export default function RideLocationPicker({
               lng: fromLocation.longitude,
             }}
             draggable={true}
-            onDragEnd={
-              handleFromMarkerDragEnd
-            }
-            onClick={() =>
-              setMapSelectionMode(
-                "from"
-              )
-            }
+            onDragEnd={handleFromMarkerDragEnd}
+            onClick={() => setMapSelectionMode("from")}
           />
         )}
 
@@ -1348,20 +1190,12 @@ export default function RideLocationPicker({
         {hasDestination && (
           <Marker
             position={{
-              lat:
-                destinationLocation.latitude,
-              lng:
-                destinationLocation.longitude,
+              lat: destinationLocation.latitude,
+              lng: destinationLocation.longitude,
             }}
             draggable={true}
-            onDragEnd={
-              handleDestinationMarkerDragEnd
-            }
-            onClick={() =>
-              setMapSelectionMode(
-                "destination"
-              )
-            }
+            onDragEnd={handleDestinationMarkerDragEnd}
+            onClick={() => setMapSelectionMode("destination")}
           />
         )}
 
@@ -1394,9 +1228,7 @@ export default function RideLocationPicker({
           }}
         >
           <div>
-            <strong>
-              Distance
-            </strong>
+            <strong>Distance</strong>
 
             <br />
 
@@ -1404,9 +1236,7 @@ export default function RideLocationPicker({
           </div>
 
           <div>
-            <strong>
-              Estimated time
-            </strong>
+            <strong>Estimated time</strong>
 
             <br />
 

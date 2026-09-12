@@ -279,6 +279,8 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
       ...ride,
       date,
       time,
+      form: ride.form,
+      destination: ride.destination,
       availableSeats: ride.availableSeats ?? ride.totalSeats ?? 1,
       price: ride.fuelSharing || ride.price || 0,
       fuelSharing: Boolean(ride.fuelSharing || ride.price),
@@ -1068,6 +1070,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                           route?.durationMinutes ?? null,
                       }));
                     }}
+                    ride={ride}
                   />
                 </Stack>
               )}
