@@ -480,7 +480,12 @@ export default function RideCard({ ride }) {
           {
             label: "Duration",
             icon: <AccessTimeIcon sx={iconSx} />,
-            value: ride.duration,
+            value:ride.duration != null
+                      ? ride.duration >= 60
+                        ? `${Math.floor(ride.duration / 60)} hr ${ride.duration % 60
+                        } min`
+                        : `${ride.duration} min`
+                      : "",
           },
         ]
         : []),

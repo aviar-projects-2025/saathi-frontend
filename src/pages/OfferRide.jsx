@@ -314,7 +314,16 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
       [MapPin, "From → Destination", `${form.from || "—"} → ${form.destination || "—"}`],
       [Calendar, "Date & Time", `${form.date || "—"} at ${form.time || "—"}`],
 
-      (isCar || isBike) && [Clock, "Journey Duration", form.duration || "—"],
+      (isCar || isBike) && [
+        Clock,
+        "Journey Duration",
+        form.duration != null
+          ? form.duration >= 60
+            ? `${Math.floor(form.duration / 60)} hr ${form.duration % 60
+            } min`
+            : `${form.duration} min`
+          : "—",
+      ],
 
       [isBus ? Bus : isBike ? Bike : Car, "Mode of Travel", form.modeOfTravel],
 
@@ -1111,7 +1120,10 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                   size={inputSize}
                   value={
                     form.duration != null
-                      ? `${form.duration} min`
+                      ? form.duration >= 60
+                        ? `${Math.floor(form.duration / 60)} hr ${form.duration % 60
+                        } min`
+                        : `${form.duration} min`
                       : ""
                   }
                   InputProps={{

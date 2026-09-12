@@ -310,7 +310,7 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
       const res = await axios.patch(`${Api}/bookride/${selectedRequest._id}/status?type=Reject`);
       const updatedRequest = res.data?.data?.request;
 
-      console.log(updatedRequest,'updatedRequest')
+      console.log(updatedRequest, 'updatedRequest')
 
       if (updatedRequest) {
         onRequestUpdated?.(selectedRequest._id, updatedRequest);
@@ -1268,7 +1268,12 @@ export default function RideDetailsModal({
           <Field icon={CalendarTodayIcon} label="Date" value={dateLabel || '—'} />
           <Field icon={AccessTimeIcon} label="Time" value={timeLabel || '—'} />
           <Field icon={TravelIcon} label="Mode" value={ride?.modeOfTravel || '—'} />
-          {ride?.duration && <Field icon={AccessTimeIcon} label="Travel Duration" value={ride?.duration || '—'} />}
+          {ride?.duration && <Field icon={AccessTimeIcon} label="Travel Duration" value={ride.duration != null
+            ? ride.duration >= 60
+              ? `${Math.floor(ride.duration / 60)} hr ${ride.duration % 60
+              } min`
+              : `${ride.duration} min`
+            : "" || '—'} />}
           <Field icon={BadgeIcon} label="Age Group Pref." value={ride?.ageGroupPreference || '—'} />
           {ride?.availableSeats !== null &&
             ride?.availableSeats !== undefined && (
