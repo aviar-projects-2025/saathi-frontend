@@ -137,7 +137,7 @@ const SmsNotifications = () => {
                 {/* Back */}
 
                 <Link
-                    href="https://saathirides.net"
+                    href="https://saathirides.net/find-ride"
                     underline="none"
                     sx={{
                         display: "flex",

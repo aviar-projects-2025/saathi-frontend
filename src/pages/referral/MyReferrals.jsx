@@ -84,7 +84,7 @@ const MyReferrals = () => {
     useEffect(() => {
         if (user?.referralCode) {
             // setShareLink(`${window.location.origin}/register?ref=${user.referralCode}`);
-            setShareLink(`https://saathirides.net/register?ref=${user.referralCode}}`)
+            setShareLink(`https://saathirides.net/register?ref=${user.referralCode}`)
         }
     }, [user]);
 
