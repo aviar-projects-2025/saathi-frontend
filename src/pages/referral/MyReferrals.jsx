@@ -283,7 +283,9 @@ const MyReferrals = () => {
                 }
             )
 
-            // console.log(stored, 'stored')
+            console.log(stored, 'stored')
+
+            if(stored.data.status == true){
 
             const response = await axios.post(
                 `${Api}/referrals/send`,
@@ -300,6 +302,7 @@ const MyReferrals = () => {
             console.log(response.data);
 
             alert("Referral link sent successfully!");
+            }
 
         } catch (error) {
             console.error(

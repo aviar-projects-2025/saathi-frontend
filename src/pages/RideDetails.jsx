@@ -262,7 +262,6 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
   const lastName = request.requestedBy?.lastName || '';
   const profilePic = request.requestedBy?.profileImage;
   const rejectedReq = Number(request?.rejectedSeats ?? 0);
-  console.log("rejectReq.....", request)
   const pendingReq = Number(request?.pendingReqSeats ?? 0);
   const approvedSeats = Number(request?.approvedSeats ?? 0);
   const membersCount = request?.membersCount || 0;
@@ -310,6 +309,8 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
     try {
       const res = await axios.patch(`${Api}/bookride/${selectedRequest._id}/status?type=Reject`);
       const updatedRequest = res.data?.data?.request;
+
+      console.log(updatedRequest,'updatedRequest')
 
       if (updatedRequest) {
         onRequestUpdated?.(selectedRequest._id, updatedRequest);
@@ -557,7 +558,8 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
                 )}
               </>
             )}
-            <IconButton size="small" aria-label="Toggle passenger details">
+            <IconButton
+              size="small" aria-label="Toggle passenger details">
               {open ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
             </IconButton>
           </Stack>
