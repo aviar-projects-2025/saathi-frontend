@@ -58,7 +58,7 @@ const SmsNotifications = () => {
 
         try {
             const res = await axios.patch(
-                `${Api}/notification/optin/${user.id}`,
+                `${Api}/notification/optin`,
                 {
                     isMessageApproved: true,
                     messageNumber: `${countryCode}${phone}`,
