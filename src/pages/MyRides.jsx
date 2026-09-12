@@ -639,6 +639,16 @@ function RideCard({
     }
   };
 
+  const handleRequestUpdated = (requestId, updatedRequest) => {
+    setAllRequests((prev) =>
+      prev.map((req) =>
+        req._id === requestId
+          ? { ...req, ...updatedRequest }
+          : req
+      )
+    );
+  };
+
   const handleReject = async (requestId) => {
     try {
       // if (!window.confirm("Are you sure you want to reject this request?")) {
@@ -1201,19 +1211,20 @@ function RideCard({
       {detailsOpen && (
 
         <RideDetailsModal
-          ride={ride}
-          user={user}
-          showEdit={showEdit}
-          showDelete={showDelete}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          onClose={() => setDetailsOpen(false)}
-          requests={rideRequests}
-          onApprove={handleApprove}
-          onReject={handleReject}
-          approveLoading={approveLoading}
-          rejectLoading={rejectLoading}
-        />
+  ride={ride}
+  user={user}
+  showEdit={showEdit}
+  showDelete={showDelete}
+  onEdit={onEdit}
+  onDelete={onDelete}
+  onClose={() => setDetailsOpen(false)}
+  requests={rideRequests}
+  onApprove={handleApprove}
+  onReject={handleReject}
+  onRequestUpdated={handleRequestUpdated}
+  approveLoading={approveLoading}
+  rejectLoading={rejectLoading}
+/>
       )}
 
       <Dialog
@@ -1475,7 +1486,7 @@ const MyRides = () => {
     newNotifs.forEach((n) => processedIds.current.add(n.id));
 
     const shouldRefetch = newNotifs.some((n) =>
-      ["request_update", "request_accepted", "request_rejected"].includes(
+      ["request_update","request_accepted","ride_request_update","request_rejected"].includes(
         n.type,
       ),
     );
@@ -1570,25 +1581,25 @@ const MyRides = () => {
     if (!notifications?.length) return;
 
     const newRequestsFromNotifications = notifications
-      .filter((noti) => noti.type === "new_request")
+      .filter((noti) => noti?.type === "new_request" || "ride_request_update")
       .map((noti) => {
-        const booking = noti.data.bookingData;
+        const booking = noti?.data?.bookingData;
 
         return {
           ...booking,
-          _id: booking._id,
+          _id: booking?._id,
 
           // normalize rideId (VERY IMPORTANT)
           rideId: {
-            _id: booking.rideId,
+            _id: booking?.rideId,
           },
 
           // attach profile image
           requestedBy: {
-            _id: booking.requestedBy,
-            profileImage: noti.data.profileImage,
-            firstName: noti.data.requestBy.requestedBy.firstName,
-            lastName: noti.data.requestBy.requestedBy.lastName,
+            _id: booking?.requestedBy,
+            profileImage: noti?.data?.profileImage,
+            firstName: noti?.data?.requestBy?.requestedBy?.firstName,
+            lastName: noti?.data?.requestBy?.requestedBy?.lastName,
           },
         };
       });
