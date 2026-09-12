@@ -35,6 +35,9 @@ import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import LogoutIcon from "@mui/icons-material/Logout";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import { useTheme, useMediaQuery } from "@mui/material";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import axios from "axios";
+import Api from "../Api.jsx";
 
 const TopNav = ({ onMenuClick }) => {
   const theme = useTheme();
@@ -43,7 +46,11 @@ const TopNav = ({ onMenuClick }) => {
   const [open, setOpen] = useState(false);
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
 
-  const { tabNotification, notifications } = useNotifications();
+  const { tabNotification, notifications, fetchNotifications } = useNotifications();
+
+  const [moreAnchorEl, setMoreAnchorEl] = useState(null);
+
+  const openMoreMenu = Boolean(moreAnchorEl);
 
   // const unreadCount = tabNotification?.filter(n => !n.isRead).length;
   // console.log(tabNotification, 'tabNotification')
@@ -86,6 +93,34 @@ const TopNav = ({ onMenuClick }) => {
 
   const openNotifications = Boolean(notifAnchorEl);
   const openProfileMenu = Boolean(profileAnchorEl);
+
+
+  const handleOpenMoreMenu = (event) => {
+    setMoreAnchorEl(event.currentTarget);
+  };
+
+  const handleCloseMoreMenu = () => {
+    setMoreAnchorEl(null);
+  };
+
+
+  const handleMarkAllAsRead = async () => {
+    // API call / notification context function here
+    try {
+      await axios.patch(`${Api}/notification/${currentUser?._id}`)
+        .then((res) => {
+          console.log(res, 'res')
+          if (res?.data?.success === true) {
+            fetchNotifications()
+          }
+        })
+    } catch (error) {
+      console.log(error)
+    } finally {
+      handleCloseMoreMenu();
+    }
+  };
+
 
   const handleOpenNotifications = (event) => {
     setNotifAnchorEl(event.currentTarget);
@@ -236,11 +271,20 @@ const TopNav = ({ onMenuClick }) => {
               color="error"
               badgeContent={unreadCount}
               invisible={unreadCount === 0}
+              sx={{
+                "& .MuiBadge-badge": {
+                  fontSize: "clamp(0.55rem, 1.5vw, 0.75rem)",
+                  minWidth: "clamp(14px, 3vw, 20px)",
+                  height: "clamp(14px, 3vw, 20px)",
+                  padding: "0 5px",
+                },
+              }}
             >
               <NotificationsNoneIcon
                 sx={{
                   color: openNotifications ? "#f97316" : "#5f4632",
                   transition: "0.2s",
+                  fontSize: "clamp(26px, 5vw, 28px)",
                 }}
               />
             </Badge>
@@ -258,7 +302,44 @@ const TopNav = ({ onMenuClick }) => {
               horizontal: "right",
             }}
           >
-            <Typography sx={{ pl: 2, fontSize: 14 }}>Notifications</Typography>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                width: "100%",
+              }}
+            >
+              <Typography sx={{ pl: 2, fontSize: 14 }}>
+                Notifications
+              </Typography>
+
+              <IconButton
+                onClick={handleOpenMoreMenu}
+                size="small"
+              >
+                <MoreVertIcon />
+              </IconButton>
+            </Box>
+
+            <Menu
+              anchorEl={moreAnchorEl}
+              open={openMoreMenu}
+              onClose={handleCloseMoreMenu}
+              anchorOrigin={{
+                vertical: "bottom",
+                horizontal: "right",
+              }}
+              transformOrigin={{
+                vertical: "top",
+                horizontal: "right",
+              }}
+            >
+              <MenuItem onClick={handleMarkAllAsRead}>
+                Mark all as read
+              </MenuItem>
+            </Menu>
             <Box
               sx={{
                 display: "flex",
@@ -482,7 +563,13 @@ const TopNav = ({ onMenuClick }) => {
         </Box>
         <Dialog
           open={logoutDialogOpen}
-          onClose={cancelLogout}
+          onClose={(event, reason) => {
+            if (reason === "backdropClick") {
+              return;
+            }
+
+            cancelLogout();
+          }}
           fullWidth
           maxWidth="xs"
           PaperProps={{
@@ -512,26 +599,26 @@ const TopNav = ({ onMenuClick }) => {
 
           {/* Close Button */}
           {/* <IconButton
-            onClick={cancelLogout}
-            aria-label="Close"
-            sx={{
-              position: "absolute",
-              right: { xs: 8, sm: 12 },
-              top: { xs: 8, sm: 12 },
-              color: "#E85D26",
-              zIndex: 10,
-              bgcolor: "#f3f4f6",
-              "&:hover": {
-                bgcolor: "#fee2e2",
+              onClick={cancelLogout}
+              aria-label="Close"
+              sx={{
+                position: "absolute",
+                right: { xs: 8, sm: 12 },
+                top: { xs: 8, sm: 12 },
                 color: "#E85D26",
-              },
-              width: { xs: 28, sm: 36 },
-              height: { xs: 28, sm: 36 },
-              p: 0,
-            }}
-          >
-            <CloseIcon sx={{ fontSize: { xs: 14, sm: 20 } }} />
-          </IconButton> */}
+                zIndex: 10,
+                bgcolor: "#f3f4f6",
+                "&:hover": {
+                  bgcolor: "#fee2e2",
+                  color: "#E85D26",
+                },
+                width: { xs: 28, sm: 36 },
+                height: { xs: 28, sm: 36 },
+                p: 0,
+              }}
+            >
+              <CloseIcon sx={{ fontSize: { xs: 14, sm: 20 } }} />
+            </IconButton> */}
 
           <DialogTitle
             sx={{

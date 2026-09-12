@@ -53,6 +53,8 @@ import axios from "axios";
 import Api from "../Api";
 import { toast } from "react-toastify";
 import ToastConfig from "../components/ToastConfig";
+import LocationPicker from "../components/LocationPicker";
+import RideLocationPicker from "../components/RideLocationPicker";
 
 /* ──────────────── THEME TOKENS ──────────────── */
 const ACCENT = "#FF9933";
@@ -67,6 +69,7 @@ const TRAVELLER_TYPES = [
   "Student travel companion",
   "Women-only companion",
   "Family companion",
+  "Regular"
 ];
 
 const AGE_GROUPS = ["Any", "18-25", "26-40", "41-60", "60+"];
@@ -75,9 +78,21 @@ const GENDER_OPTIONS = ["Any", "Male", "Female"];
 const INITIAL_FORM = {
   from: "",
   destination: "",
+  fromLocation: {
+    address: "",
+    latitude: null,
+    longitude: null,
+  },
+
+  destinationLocation: {
+    address: "",
+    latitude: null,
+    longitude: null,
+  },
+  distanceKm: null,
   date: "",
   time: "",
-  duration: "",
+  duration: null,
   modeOfTravel: "Car",
   availableSeats: 1,
   fuelSharing: false,
@@ -438,9 +453,10 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
       if (!form.description.trim())
         newErrors.description = "Please enter Description";
 
-      if ((isCar || isBike) && !String(form.duration ?? "").trim()) {
-        newErrors.duration = "Please enter Journey Duration";
-      }
+      // if ((isCar || isBike) && !String(form.duration ?? "").trim()) {
+      //   newErrors.duration = "Please enter Journey Duration";
+      // }
+
     }
 
     if (step === 1) {
@@ -510,8 +526,12 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
     createdBy: user?.id,
     modeOfTravel: form.modeOfTravel,
     startTime: new Date(`${form.date}T${form.time}`).toISOString(),
+
     description: form.description,
+
+    // Google calculated duration in minutes
     duration: form.duration,
+
     genderPreference: form.genderPreference,
     travellerType: form.travellerType,
     language: form.language,
@@ -521,6 +541,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
     baggageHelp: form.baggageHelp,
     languageSupport: form.languageSupport,
     status: form.status || "OPEN",
+
     ...(isFlight
       ? {
         fromCountry: form.fromCountry,
@@ -531,19 +552,27 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
         destination: form.toAirport,
         flightNumber: form.flightNumber,
         airlineName: form.airlineName,
-        travellerType: form.travellerType,
-        language: form.language,
-        ageGroupPreference: form.ageGroupPreference,
-        medicalAssistance: form.medicalAssistance,
-        languageSupport: form.languageSupport,
-        baggageHelp: form.baggageHelp,
       }
       : {
         from: form.from,
         destination: form.destination,
+
+        fromLocation: {
+          latitude: form.fromLocation?.latitude,
+          longitude: form.fromLocation?.longitude,
+        },
+
+        destinationLocation: {
+          latitude: form.destinationLocation?.latitude,
+          longitude: form.destinationLocation?.longitude,
+        },
+
         availableSeats: form.availableSeats,
         totalSeats: form.availableSeats,
         fuelSharing: form.price,
+
+        // Add this if you want to store route distance
+        distanceKm: form.distanceKm,
       }),
   });
 
@@ -981,29 +1010,55 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                   </CardContent>
                 </Card>
               ) : (
-                <Stack direction={{ xs: "column", sm: "row" }} spacing={{ xs: 2, sm: 2 }}>
-                  <TextField
-                    label="From"
-                    fullWidth
-                    size={inputSize}
-                    value={form.from}
-                    onChange={(e) => update("from", e.target.value)}
-                    placeholder=""
-                    error={showErrors && !!errors.from}
-                    helperText={showErrors ? errors.from : ""}
-                    sx={tfSx}
-                  />
+                <Stack
+                  // direction={{ xs: "column", sm: "row" }}
+                  spacing={{ xs: 2, sm: 2 }}
+                >
+                  <RideLocationPicker
+                    fromLocation={form.fromLocation}
+                    destinationLocation={form.destinationLocation}
 
-                  <TextField
-                    label="Destination"
-                    fullWidth
-                    size={inputSize}
-                    value={form.destination}
-                    onChange={(e) => update("destination", e.target.value)}
-                    placeholder=""
-                    error={showErrors && !!errors.destination}
-                    helperText={showErrors ? errors.destination : ""}
-                    sx={tfSx}
+                    onFromChange={(location) => {
+                      setForm((prev) => ({
+                        ...prev,
+                        from: location.address,
+                        fromLocation: location,
+                      }));
+
+                      setErrors((prev) => {
+                        const next = { ...prev };
+                        delete next.from;
+                        return next;
+                      });
+                    }}
+
+                    onDestinationChange={(location) => {
+                      setForm((prev) => ({
+                        ...prev,
+                        destination: location.address,
+                        destinationLocation: location,
+                      }));
+
+                      setErrors((prev) => {
+                        const next = { ...prev };
+                        delete next.destination;
+                        return next;
+                      });
+                    }}
+
+                    onRouteCalculated={(route) => {
+                      setForm((prev) => ({
+                        ...prev,
+
+                        distanceKm:
+                          route?.distanceKm ?? null,
+
+                        // IMPORTANT:
+                        // numeric value only
+                        duration:
+                          route?.durationMinutes ?? null,
+                      }));
+                    }}
                   />
                 </Stack>
               )}
@@ -1051,20 +1106,23 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
 
               {(!isFlight && !isBusTrain && !isBus) && (
                 <TextField
-                  label="Journey Duration (Approximate)"
+                  label="Journey Duration"
                   fullWidth
-                  type="number"
                   size={inputSize}
-                  value={form.duration}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    if (value === "" || /^\d{0,2}$/.test(value)) {
-                      update("duration", value);
-                    }
+                  value={
+                    form.duration != null
+                      ? `${form.duration} min`
+                      : ""
+                  }
+                  InputProps={{
+                    readOnly: true,
                   }}
-                  inputProps={{ min: 0, max: 99 }}
-                  error={showErrors && !!errors.duration}
-                  helperText={showErrors ? errors.duration : ""}
+                  placeholder="Select From and Destination"
+                  helperText={
+                    form.duration != null
+                      ? "Calculated automatically from the selected route"
+                      : "Select From and Destination to calculate"
+                  }
                   sx={tfSx}
                 />
               )}
@@ -1565,7 +1623,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                   fontWeight: 600,
                 }}
               >
-                Cancel
+                Reset
               </Button>
             )}
 

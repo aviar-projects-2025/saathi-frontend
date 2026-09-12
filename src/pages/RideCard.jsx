@@ -49,7 +49,8 @@ import DirectionsBoatIcon from "@mui/icons-material/DirectionsBoat";
 import TrainIcon from "@mui/icons-material/Train";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import ToastConfig from "../components/ToastConfig.jsx";
-import ProfileModal from './Avatar.jsx';
+import ProfileModal from "./Avatar.jsx";
+import RideDetailsModal from "./RideDetails.jsx";
 
 import Api from "../Api";
 import { toast } from "react-toastify";
@@ -63,13 +64,15 @@ export default function RideCard({ ride }) {
   const [expanded, setExpanded] = useState(false);
   const [openRequestModal, setOpenRequestModal] = useState(false);
   const [selectedRide, setSelectedRide] = useState(null);
+  const [selectedRideModal, setSelectedRideModal] = useState(null);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [myRequestedRides, setMyRequestedRides] = useState([]);
   const pendingRequest = myRequestedRides.find(
     (item) => item.rideId === ride._id,
   );
 
-  const pendingReqSeats = pendingRequest?.pendingReqSeats;
+  const pendingReqSeats = pendingRequest?.pendingReqSeats ?? 0;
+
   const { completion } = useUser();
   const theme = useTheme();
   const { currentUser } = useUser();
@@ -95,17 +98,17 @@ export default function RideCard({ ride }) {
   const totalSeats = ride?.totalSeats;
 
   const [totalSeat, setTotalSeat] = useState(totalSeats);
+
   const [seatAvailable, setSeatAvailable] = useState(avaialableSeats);
 
   const isFlight = ride.modeOfTravel === "Flight";
 
   const flightStartTime = new Date(ride.startTime);
   const twoHoursBeforeFlight = new Date(
-    flightStartTime.getTime() - 2 * 60 * 60 * 1000
+    flightStartTime.getTime() - 2 * 60 * 60 * 1000,
   );
 
-  const isFlightBookingClosed =
-    isFlight && new Date() >= twoHoursBeforeFlight;
+  const isFlightBookingClosed = isFlight && new Date() >= twoHoursBeforeFlight;
 
   const userName =
     `${user.firstName || ""} ${user.lastName || ""}`.trim() || "Saathi User";
@@ -162,7 +165,6 @@ export default function RideCard({ ride }) {
 
   const { refreshRide } = useRide();
 
-
   const handleSeatsChange = (value) => {
     let seats = Number(value);
     if (!seats || seats < 1) seats = 1;
@@ -200,13 +202,13 @@ export default function RideCard({ ride }) {
     if (isFlight) {
       const flightStartTime = new Date(selectedRide.startTime);
       const twoHoursBeforeFlight = new Date(
-        flightStartTime.getTime() - 2 * 60 * 60 * 1000
+        flightStartTime.getTime() - 2 * 60 * 60 * 1000,
       );
 
       if (new Date() >= twoHoursBeforeFlight) {
         toast.error(
           "Flight companion booking is closed 2 hours before departure.",
-          TOASTS
+          TOASTS,
         );
         return;
       }
@@ -294,6 +296,7 @@ export default function RideCard({ ride }) {
 
       if (res.data.success) {
         setMyRequestedRides(res.data.data || []);
+
       }
     } catch (error) {
       console.log(error.message);
@@ -308,6 +311,7 @@ export default function RideCard({ ride }) {
   });
 
   const requestedCount = currentRequest?.seatsRequested || 0;
+
   const alreadyRequested = !!currentRequest;
 
   //   const myRequest = myRequestedRides.find((req) => {
@@ -316,14 +320,32 @@ export default function RideCard({ ride }) {
 
   //   return rideId === ride._id;
   // });
-  const myRequest = myRequestedRides.find((item) => item.rideId === ride._id);
+
+  const cancelledRequestCount = myRequestedRides.filter(
+    (item) =>
+      item.rideId?.toString() === ride._id?.toString() &&
+      item.requestedBy?.toString() === currentUser._id?.toString() &&
+      item.status === "CANCELLED"
+  ).length;
+
+
+
+  const isBlocked = cancelledRequestCount >= 3;
+  const myRequest = myRequestedRides.find(
+    (item) =>
+      item.rideId === ride._id &&
+      item.status !== "CANCELLED"
+  );
 
   const isRejected = myRequest?.status === "REJECTED";
   const isAccepted = myRequest?.status === "ACCEPTED";
   const requestedByMe = Number(myRequest?.seatsRequested || 0);
   const approvedSeats = myRequest?.approvedSeats || 0;
+  // console.log(requestedByMe, 'requestedByMe')
+  // console.log(myRequest, 'myRequest')
 
   const pendingSeatsByMe = isAccepted ? 0 : requestedByMe;
+
 
   const remainingSeatsForUser = isFlight
     ? null
@@ -394,18 +416,47 @@ export default function RideCard({ ride }) {
         value: `${dateStr}${timeStr ? " · " + timeStr : ""}`,
       },
       {
-        label: "Seats available",
+        label: "Total Seats",
         icon: <EventSeatIcon sx={iconSx} />,
         value: isFlight
           ? "—"
-          : (() => {
-            const occupiedSeats = Math.max(
-              Number(totalSeat || 0) - Number(remainingSeatsForUser ?? 0),
-              0,
-            );
-            return `${occupiedSeats}
-        / ${totalSeat}`;
-          })(),
+          : `${totalSeat}`
+      },
+      {
+        label: "Seats available",
+        icon: <EventSeatIcon sx={iconSx} />,
+        // value: isFlight
+        //   ? "—"
+        //   : (() => {
+        //     const occupiedSeats = Math.max(
+        //       Number(totalSeat || 0) - Number(remainingSeatsForUser ?? 0),
+        //       0,
+        //     );
+        //     return `${occupiedSeats}
+        // / ${totalSeat}`;
+        //   })(),
+        value: Math.max(
+          Number(remainingSeatsForUser),
+          0
+        ),
+      },
+      {
+        label: "Requested Seats",
+        icon: <EventSeatIcon sx={iconSx} />,
+        // value: isFlight
+        //   ? "—"
+        //   : (() => {
+        //     const occupiedSeats = Math.max(
+        //       Number(totalSeat || 0) - Number(remainingSeatsForUser ?? 0),
+        //       0,
+        //     );
+        //     return `${occupiedSeats}
+        // / ${totalSeat}`;
+        //   })(),
+        value: Math.max(
+          Number(pendingReqSeats),
+          0
+        ),
       },
 
       {
@@ -437,9 +488,8 @@ export default function RideCard({ ride }) {
 
   return (
     <>
-
       {ride.travelStatus !== "Cancelled" && (
-        <Box sx={{ mb: 3, maxWidth: 1000, width: "100%" }}>
+        <Box sx={{ mb: 3, maxWidth: 1000, width: "100%" }} onClick={() => setSelectedRideModal(ride)}>
           {/* ── Light orange-tinted header strip ── */}
           <Box
             sx={{
@@ -454,6 +504,7 @@ export default function RideCard({ ride }) {
               alignItems: "center",
               gap: 1,
             }}
+
           >
             {/* Avatar + name + verified */}
             <Box
@@ -465,7 +516,8 @@ export default function RideCard({ ride }) {
               <Avatar
                 src={userProfile || ""}
                 alt={userName}
-                onClick={() => {
+                onClick={(event) => {
+                  event.stopPropagation();
                   setSelectedProfile(user);
                   setProfileModalOpen(true);
                 }}
@@ -484,8 +536,7 @@ export default function RideCard({ ride }) {
                   },
                 }}
               >
-                {!userProfile &&
-                  `${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`}
+                {`${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`}
               </Avatar>
 
               <Box sx={{ minWidth: 0 }}>
@@ -606,11 +657,17 @@ export default function RideCard({ ride }) {
                     }}
                   >
                     {/* {"\u{1F4CD}"} */}
-                     {routeFrom || "—"}
+                    {routeFrom || "—"}
                   </Typography>
 
                   {isFlight && (
-                    <Typography sx={{ fontSize: { xs: "0.75rem", sm: "0.68rem" }, color: "text.secondary", mt: 0.25 }}>
+                    <Typography
+                      sx={{
+                        fontSize: { xs: "0.75rem", sm: "0.68rem" },
+                        color: "text.secondary",
+                        mt: 0.25,
+                      }}
+                    >
                       {ride.fromCountry}
                     </Typography>
                   )}
@@ -649,7 +706,13 @@ export default function RideCard({ ride }) {
                   </Typography>
 
                   {isFlight && (
-                    <Typography sx={{ fontSize: { xs: "0.75rem", sm: "0.68rem" }, color: "text.secondary", mt: 0.25 }}>
+                    <Typography
+                      sx={{
+                        fontSize: { xs: "0.75rem", sm: "0.68rem" },
+                        color: "text.secondary",
+                        mt: 0.25,
+                      }}
+                    >
                       {ride.toCountry}
                     </Typography>
                   )}
@@ -698,12 +761,12 @@ export default function RideCard({ ride }) {
               <Box
                 sx={{
                   display: "flex",
-                  justifyContent: "space-between",
+                  justifyContent: "flex-end",
                   // alignItems:"center",
                   // gap:1,
                 }}
               >
-                <IconButton
+                {/* <IconButton
                   onClick={() => setExpanded(!expanded)}
                   size={isMobile ? "small" : "medium"}
                   sx={{
@@ -714,13 +777,15 @@ export default function RideCard({ ride }) {
                   }}
                 >
                   {expanded ? (
-                    <KeyboardArrowUpIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />
+                    <KeyboardArrowUpIcon
+                      sx={{ fontSize: { xs: 18, sm: 22 } }}
+                    />
                   ) : (
                     <KeyboardArrowDownIcon
                       sx={{ fontSize: { xs: 18, sm: 22 } }}
                     />
                   )}
-                </IconButton>
+                </IconButton> */}
 
                 <Tooltip
                   title={
@@ -745,27 +810,29 @@ export default function RideCard({ ride }) {
                             disabled={
                               genderMismatch ||
                               isRejected ||
+                              isBlocked ||
                               !isProfileComplete ||
                               isFlightBookingClosed ||
                               (!isFlight &&
                                 !alreadyRequested &&
                                 remainingSeatsForUser <= 0)
                             }
-                            onClick={() => {
+                            onClick={(event) => {
+                              event.stopPropagation();
                               setSelectedRide(ride);
                               setSelectedRequest(
-                                alreadyRequested ? currentRequest : null
+                                alreadyRequested ? currentRequest : null,
                               );
                               setOpenEditModal(true);
                             }}
                             sx={{
-                              bgcolor: isRejected ? "#D32F2F" : ORANGE,
+                              bgcolor: isRejected || isBlocked ? "#D32F2F" : ORANGE,
                               color: "#ffffff",
                               "&:hover": {
-                                bgcolor: isRejected ? "#D32F2F" : "#e68a00",
+                                bgcolor: isRejected || isBlocked ? "#D32F2F" : "#e68a00",
                               },
                               "&.Mui-disabled": {
-                                bgcolor: isRejected ? "#EF9A9A" : "#e0e0e0",
+                                bgcolor: isRejected || isBlocked ? "#EF9A9A" : "#e0e0e0",
                                 color: "#ffffff",
                               },
                               fontWeight: 700,
@@ -776,23 +843,26 @@ export default function RideCard({ ride }) {
                               whiteSpace: "nowrap",
                               boxShadow: "none",
                               textTransform: "none",
+
                             }}
                           >
                             {genderMismatch
                               ? `Only ${ride.genderPreference} Allowed`
                               : isRejected
                                 ? "Rejected"
-                                : isFlightBookingClosed
-                                  ? "Companion Booking Closed"
-                                  : alreadyRequested
-                                    ? remainingSeatsForUser > 0
-                                      ? `Edit Request (${remainingSeatsForUser} left)`
-                                      : "View Request"
-                                    : isFlight
-                                      ? "Request Companion"
-                                      : remainingSeatsForUser > 0
-                                        ? `Request Seat (${remainingSeatsForUser} left)`
-                                        : "No Seats Available"}
+                                : isBlocked ?
+                                  "You Cancelled More Time"
+                                  : isFlightBookingClosed
+                                    ? "Companion Booking Closed"
+                                    : alreadyRequested
+                                      ? remainingSeatsForUser > 0
+                                        ? `Edit Request (${remainingSeatsForUser} left)`
+                                        : "View Request"
+                                      : isFlight
+                                        ? "Request Companion"
+                                        : remainingSeatsForUser > 0
+                                          ? `Request Seat (${remainingSeatsForUser} left)`
+                                          : "No Seats Available"}
                           </Button>
                           {/* <Button
                     variant="contained"
@@ -831,11 +901,13 @@ export default function RideCard({ ride }) {
                   </Box>
                 </Tooltip>
               </Box>
-              <Box sx={{
-                mt: 1.5,
-                display: "flex",
-                justifyContent: "flex-start"
-              }}>
+              <Box
+                sx={{
+                  mt: 1.5,
+                  display: "flex",
+                  justifyContent: "flex-start",
+                }}
+              >
                 {/* {myRequest && (
                   <Chip
                     label={
@@ -886,62 +958,69 @@ export default function RideCard({ ride }) {
                     }}
                   />
                 )} */}
-                {myRequest && (() => {
-                  const isFlight = ride?.modeOfTravel === "Flight";
+                {myRequest &&
+                  (() => {
+                    const isFlight = ride?.modeOfTravel === "Flight";
 
-                  const mainText = isFlight
-                    ? isAccepted
-                      ? "You've been accepted for a companion"
-                      : "You requested for a companion"
-                    : isAccepted
-                      ? `You have ${approvedSeats} approved seat${approvedSeats > 1 ? "s" : ""}`
-                      : `You applied for ${requestedByMe} seat${requestedByMe > 1 ? "s" : ""}`;
+                    const mainText = isFlight
+                      ? isAccepted
+                        ? "You've been accepted for a companion"
+                        : "You requested for a companion"
+                      : isAccepted
+                        ? `You have ${approvedSeats} approved seat${approvedSeats > 1 ? "s" : ""}`
+                        : `You applied for ${requestedByMe} seat${requestedByMe > 1 ? "s" : ""}`;
 
-                  const pendingText =
-                    !isFlight && isAccepted && pendingReqSeats > 0
-                      ? `and ${pendingReqSeats} pending seat${pendingReqSeats > 1 ? "s" : ""}`
-                      : null;
+                    const pendingText =
+                      !isFlight && isAccepted && pendingReqSeats > 0
+                        ? `and ${pendingReqSeats} pending seat${pendingReqSeats > 1 ? "s" : ""}`
+                        : null;
 
-                  return (
-                    <Chip
-                      label={
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                          <Typography
-                            component="span"
+                    return (
+                      <Chip
+                        label={
+                          <Box
                             sx={{
-                              fontSize: { xs: "0.65rem", sm: "0.7rem" },
-                              fontWeight: 600,
-                              color: isAccepted ? "#2E7D32" : "#1565C0",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 0.5,
                             }}
                           >
-                            {mainText}
-                          </Typography>
-
-                          {pendingText && (
                             <Typography
                               component="span"
                               sx={{
                                 fontSize: { xs: "0.65rem", sm: "0.7rem" },
                                 fontWeight: 600,
-                                color: "#F57C00",
+                                color: isAccepted ? "#2E7D32" : "#1565C0",
                               }}
                             >
-                              {pendingText}
+                              {mainText}
                             </Typography>
-                          )}
-                        </Box>
-                      }
-                      color={isAccepted ? "success" : "info"}
-                      sx={{
-                        height: { xs: 18, sm: 25 },
-                        bgcolor: isAccepted ? "#E8F5E9" : "#E3F2FD",
-                        "& .MuiChip-label": {
-                          px: { xs: 0.5, sm: 1 },
-                        },
-                      }}
-                    />
-                  );
-                })()}
+
+                            {pendingText && (
+                              <Typography
+                                component="span"
+                                sx={{
+                                  fontSize: { xs: "0.65rem", sm: "0.7rem" },
+                                  fontWeight: 600,
+                                  color: "#F57C00",
+                                }}
+                              >
+                                {pendingText}
+                              </Typography>
+                            )}
+                          </Box>
+                        }
+                        color={isAccepted ? "success" : "info"}
+                        sx={{
+                          height: { xs: 18, sm: 25 },
+                          bgcolor: isAccepted ? "#E8F5E9" : "#E3F2FD",
+                          "& .MuiChip-label": {
+                            px: { xs: 0.5, sm: 1 },
+                          },
+                        }}
+                      />
+                    );
+                  })()}
               </Box>
               {/* Expanded details */}
               <Collapse in={expanded}>
@@ -985,7 +1064,6 @@ export default function RideCard({ ride }) {
                         label: "Traveller Type",
                         value: ride.travellerType || "None",
                       },
-
                     ].map(({ label, value }) => (
                       <Box key={label}>
                         <Typography
@@ -1014,7 +1092,7 @@ export default function RideCard({ ride }) {
                         fontSize: { xs: "0.58rem", sm: "0.65rem" },
                         color: "text.secondary",
                         mt: 1.5,
-                        mb: 0.5
+                        mb: 0.5,
                       }}
                     >
                       Language
@@ -1072,7 +1150,11 @@ export default function RideCard({ ride }) {
                     {ride.medicalAssistance && (
                       <Chip
                         size="small"
-                        icon={<MedicalServicesIcon sx={{ fontSize: { xs: 11, sm: 13 } }} />}
+                        icon={
+                          <MedicalServicesIcon
+                            sx={{ fontSize: { xs: 11, sm: 13 } }}
+                          />
+                        }
                         label="Medical Help"
                         sx={{
                           fontSize: { xs: "0.58rem", sm: "0.7rem" },
@@ -1085,7 +1167,9 @@ export default function RideCard({ ride }) {
                     {ride.languageSupport && (
                       <Chip
                         size="small"
-                        icon={<LanguageIcon sx={{ fontSize: { xs: 11, sm: 13 } }} />}
+                        icon={
+                          <LanguageIcon sx={{ fontSize: { xs: 11, sm: 13 } }} />
+                        }
                         label="Language Support"
                         sx={{
                           fontSize: { xs: "0.58rem", sm: "0.7rem" },
@@ -1098,7 +1182,11 @@ export default function RideCard({ ride }) {
                     {ride.transitHelp && (
                       <Chip
                         size="small"
-                        icon={<InfoOutlinedIcon sx={{ fontSize: { xs: 12, sm: 14 } }} />}
+                        icon={
+                          <InfoOutlinedIcon
+                            sx={{ fontSize: { xs: 12, sm: 14 } }}
+                          />
+                        }
                         label="Transit Help"
                         sx={{
                           fontSize: { xs: "0.58rem", sm: "0.7rem" },
@@ -1111,7 +1199,9 @@ export default function RideCard({ ride }) {
                     {ride.baggageHelp && (
                       <Chip
                         size="small"
-                        icon={<LuggageIcon sx={{ fontSize: { xs: 11, sm: 13 } }} />}
+                        icon={
+                          <LuggageIcon sx={{ fontSize: { xs: 11, sm: 13 } }} />
+                        }
                         label="Baggage Help"
                         sx={{
                           fontSize: { xs: "0.58rem", sm: "0.7rem" },
@@ -1125,9 +1215,8 @@ export default function RideCard({ ride }) {
               </Collapse>
             </CardContent>
           </Card>
-        </Box >
-      )
-      }
+        </Box>
+      )}
 
       <ProfileModal
         open={profileModalOpen}
@@ -1137,6 +1226,13 @@ export default function RideCard({ ride }) {
         }}
       />
 
+      {selectedRideModal && (
+        <RideDetailsModal
+          onClose={() => setSelectedRideModal(null)}
+          ride={selectedRideModal}
+        />
+      )}
+
       <Ridebook
         open={openEditModal}
         onClose={() => setOpenEditModal(false)}
@@ -1144,10 +1240,12 @@ export default function RideCard({ ride }) {
         allMyRequests={myRequestedRides}
         setAllMyRequests={setMyRequestedRides}
         maxSeats={maxSeatsForDialog}
+        remainingSeatsForUser={remainingSeatsForUser}
         totalSeat={totalSeat}
         requestToEdit={selectedRequest}
         onRequestUpdated={myReqRides}
       />
+
     </>
   );
 }

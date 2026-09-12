@@ -36,10 +36,13 @@ export default function Ridebook({
   totalSeat,
   maxSeats = Infinity,
   requestToEdit = null,
+  remainingSeatsForUser,
   setAllMyRequests,
   allMyRequests,
+
   onRequestUpdated,
 }) {
+
   const theme = useTheme();
   const { currentUser } = useUser();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -48,6 +51,7 @@ export default function Ridebook({
   const isEditMode = Boolean(requestToEdit);
   const [requests, setRequests] = useState();
   const [requestLoading, setRequestLoading] = useState(false);
+
 
   // existingMembers = already CONFIRMED/APPROVED members on this request.
   // Read-only, shown for context, never sent back to the backend.
@@ -79,7 +83,7 @@ export default function Ridebook({
 
     return age;
   };
-  const availableSeat = ride?.availableSeats || 0;
+
   const defaultSelfMember = () => ({
     name: `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`.trim(),
     age: calculateAge(currentUser?.dob),
@@ -95,27 +99,30 @@ export default function Ridebook({
     ? existingMembers.length + newMembers.length
     : requestData.members.length;
 
+  const remainingSeats = isEditMode
+    ? Math.max(maxSeats - existingMembers.length - newMembers.length, 0)
+    : Math.max(maxSeats - requestData?.members.length, 0);
 
-  const remainingAvailableSeats = isEditMode
-    ? Math.max(
-      ride?.availableSeats - (existingMembers.length + newMembers.length),
-      0
-    )
-    : Math.max(
-      ride?.availableSeats - requestData?.members.length,
-      0
-    );
-
+  //   const remainingSeats = Math.max(
+  //   remainingSeatsForUser - newMembers.length,
+  //   0
+  // );
   const TOASTS = ToastConfig();
 
   const handleAddMember = () => {
-
     setMemberListError("");
 
     if (isEditMode) {
       setNewMembers((prev) => {
-        const totalSeats = existingMembers.length + prev.length;
-        if (!isFlight && totalSeats >= maxSeats) return prev;
+        const usedSeats =
+          existingMembers.length -
+          requestToEdit.pendingReqSeats
+
+        if (!isFlight && usedSeats >= maxSeats) {
+          setMemberListError(`Maximum ${maxSeats} seats allowed.`);
+          return prev;
+        }
+
         return [...prev, { name: "", age: "" }];
       });
 
@@ -123,10 +130,16 @@ export default function Ridebook({
     }
 
     setRequestData((prev) => {
+      if (!isFlight && prev.members.length >= maxSeats) {
+        setMemberListError(`Maximum ${maxSeats} seats allowed.`);
+        return prev;
+      }
 
-      if (!isFlight && prev.members.length >= maxSeats) return prev;
+      const updatedMembers = [
+        ...prev.members,
+        { name: "", age: "" },
+      ];
 
-      const updatedMembers = [...prev.members, { name: "", age: "" }];
       return {
         ...prev,
         members: updatedMembers,
@@ -134,7 +147,6 @@ export default function Ridebook({
       };
     });
   };
-
 
   const handleRemoveMember = (index) => {
     if (isEditMode) {
@@ -175,9 +187,7 @@ export default function Ridebook({
     });
   };
 
-
   const handleMemberChange = (index, field, value) => {
-
     setMemberErrors((prev) => {
       const updated = [...prev];
       updated[index] = {
@@ -206,9 +216,6 @@ export default function Ridebook({
   const [editingRequest, setEditingRequest] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-
-
-
   useEffect(() => {
     if (editingRequest) {
       setRequestData((prev) => ({
@@ -225,7 +232,7 @@ export default function Ridebook({
       setNewMembers(
         requestToEdit.pendingMembers?.length
           ? requestToEdit.pendingMembers
-          : []
+          : [],
       );
     } else {
       setExistingMembers([]);
@@ -261,7 +268,6 @@ export default function Ridebook({
       if (!user?.id) return;
 
       const res = await axios.get(`${Api}/bookride/send/${user.id}`);
-
       setRequests(res.data.data);
     } catch (error) {
       console.log(error);
@@ -357,7 +363,6 @@ export default function Ridebook({
     return true;
   };
 
-
   const handleRequestSubmit = async () => {
     if (!ride) return;
     if (isSubmittingRef.current) return;
@@ -418,6 +423,7 @@ export default function Ridebook({
         message: requestToEdit.message || "",
         phone: requestToEdit.phone || "",
       }));
+
     } else {
       // Restore new request defaults
       setExistingMembers([]);
@@ -444,29 +450,42 @@ export default function Ridebook({
   const editableMembers = isEditMode ? newMembers : requestData.members;
 
   // 2. Self-identity helpers
-  const selfFullName = `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`
-    .trim()
-    .toLowerCase();
+  const selfFullName =
+    `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`
+      .trim()
+      .toLowerCase();
 
-  const isSelfMember = (m) => (m?.name || "").trim().toLowerCase() === selfFullName;
+  const isSelfMember = (m) =>
+    (m?.name || "").trim().toLowerCase() === selfFullName;
 
   const isSelfAlreadyConfirmed = existingMembers?.some(isSelfMember);
 
-  // 3. Tag + filter
-  const editableMembersWithMeta = editableMembers.map((member, originalIndex) => ({
-    ...member,
-    originalIndex,
-    isSelf: !isEditMode && originalIndex === 0,
-  }));
+  const availableSeatsForAdd = Math.max(
+    remainingSeats - (requestToEdit?.pendingReqSeats || 0),
+    0
+  );
+
+  const editableMembersWithMeta = editableMembers.map(
+    (member, originalIndex) => ({
+      ...member,
+      originalIndex,
+
+      isSelf: isSelfMember(member) && !isSelfAlreadyConfirmed,
+    })
+  );
 
   const visibleMembers = editableMembersWithMeta.filter(
-    (member) => !(member.isSelf && isSelfAlreadyConfirmed)
+    (member) => !(member.isSelf && isSelfAlreadyConfirmed),
   );
   return (
     <Dialog
       open={open}
-      onClose={onClose}
-      // fullScreen={isMobile}
+      onClose={(event, reason) => {
+        if (reason === "backdropClick") {
+          return; // Prevent closing on outside click
+        }
+        onClose(); // Allow other close actions, like Escape
+      }}
       fullWidth
       maxWidth="sm"
       PaperProps={{
@@ -602,7 +621,7 @@ export default function Ridebook({
               Available Seats
             </Typography>
             <Chip
-              label={`${remainingAvailableSeats}`}
+              label={`${Math.max(remainingSeats - (requestToEdit?.pendingReqSeats || 0), 0)}`}
               size="small"
               sx={{
                 bgcolor: ORANGE,
@@ -646,7 +665,6 @@ export default function Ridebook({
                     bgcolor: GREEN_BG,
                   }}
                 >
-
                   <Avatar
                     sx={{
                       width: 30,
@@ -712,12 +730,16 @@ export default function Ridebook({
           {isEditMode ? "Requested Members" : "Traveling Members"}
         </Typography>
 
-
         <Stack spacing={1.25}>
           {visibleMembers.map((member) => {
-            const isLockedSelfSlot = member.isSelf;
             const index = member.originalIndex;
 
+
+            const isLockedSelfSlot = member.isSelf;
+            // const index = member.originalIndex;
+
+            // // First member is always the current user
+            // const isLockedSelfSlot = index === 0;
             return (
               <>
                 <Box
@@ -758,10 +780,13 @@ export default function Ridebook({
                         : member.name
                     }
                     disabled={isLockedSelfSlot}
+
                     error={!isLockedSelfSlot && !!memberErrors[index]?.name}
                     helperText={
                       !isLockedSelfSlot && memberErrors[index]?.name
-                        ? (isMobile ? "Required" : "Name is required")
+                        ? isMobile
+                          ? "Required"
+                          : "Name is required"
                         : ""
                     }
                     sx={{
@@ -803,7 +828,9 @@ export default function Ridebook({
                     error={!isLockedSelfSlot && !!memberErrors[index]?.age}
                     helperText={
                       !isLockedSelfSlot && memberErrors[index]?.age
-                        ? (isMobile ? "Required" : "Age required")
+                        ? isMobile
+                          ? "Required"
+                          : "Age required"
                         : ""
                     }
                     inputProps={{ min: 1, max: 120 }}
@@ -834,7 +861,7 @@ export default function Ridebook({
         <Button
           startIcon={<AddCircleOutlineIcon />}
           onClick={handleAddMember}
-          disabled={!isFlight && totalOccupied >= maxSeats}
+          disabled={!isFlight && availableSeatsForAdd <= 0}
           sx={{
             mt: { xs: 1.5, sm: 1.5 },
             mb: { xs: 2.5, sm: 2.5 },
@@ -877,14 +904,15 @@ export default function Ridebook({
         <TextField
           fullWidth
           label="Phone Number"
+          disabled
           size={isMobile ? "small" : "medium"}
           value={currentUser?.mobile}
           sx={{
             mb: 2,
             "& .MuiInputBase-input.Mui-disabled": {
               fontFamily: "'Inter', sans-serif",
-              fontWeight: 500,
-              WebkitTextFillColor: "#555",
+              fontWeight: 300,
+              WebkitTextFillColor: "#8e8d8d",
             },
           }}
           onChange={(e) =>
@@ -906,7 +934,6 @@ export default function Ridebook({
         >
           Contact Details
         </Typography>
-
 
         <TextField
           fullWidth
@@ -949,12 +976,10 @@ export default function Ridebook({
             fontWeight: 700,
             fontFamily: "'Inter', sans-serif",
             color: "#ffff",
-            bgcolor: "#757575"
-
+            bgcolor: "#757575",
           }}
-
         >
-          Cancel
+          Reset
         </Button>
         <Button
           variant="contained"
@@ -978,11 +1003,13 @@ export default function Ridebook({
               ? (isEditMode ? "Updating..." : "Submitting...")
               : (isEditMode ? "Update Request" : "Submit Request")
           } */}
-          {
-            requestLoading
-              ? (isEditMode ? "Updating..." : "Submitting...")
-              : (isEditMode ? "Update " : "Submit ")
-          }
+          {requestLoading
+            ? isEditMode
+              ? "Updating..."
+              : "Submitting..."
+            : isEditMode
+              ? "Update "
+              : "Submit "}
         </Button>
       </DialogActions>
     </Dialog>
