@@ -59,7 +59,7 @@ const CARD_BORDER = "1px solid #F0E6DC";
 
 import CloseIcon from "@mui/icons-material/Close";
 
-import { useNavigate } from "react-router-dom";
+import { useNavigate,useLocation } from "react-router-dom";
 import uploadToCloudinary from "../components/uploadToCloudinary.jsx";
 
 // Size (px) of the square adjust/crop box
@@ -122,7 +122,7 @@ const StatBlock = ({ value, label }) => (
 
 const UserProfile = () => {
   const theme = useTheme();
-
+  
   const toasts = ToastConfig();
 
   const [openComments, setOpenComments] = useState({});
@@ -135,7 +135,11 @@ const UserProfile = () => {
   const { currentUser, getuserData, savedPost, removeSavedPost } = useUser();
 
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const [editProfile, setEditProfile] = useState(false);
+    const location = useLocation();
+
+  const [editProfile, setEditProfile] = useState(
+    location.state?.openEditProfile || false
+  );
   const [profileImage, setProfileImage] = useState(
     currentUser?.profileImage || "",
   );
@@ -604,10 +608,18 @@ const UserProfile = () => {
     } catch (error) {
       console.log(error.response);
 
-      toast.error(
-        error.response?.data?.message || "Something went wrong",
-        toasts
-      );
+      const message =
+        error.response?.data?.message || "Something went wrong";
+
+      setErrors((prev) => ({
+        ...prev,
+        mobile: message,
+      }));
+
+      // toast.error(
+      //   error.response?.data?.message || "Something went wrong",
+      //   toasts
+      // );
     } finally {
       setSubmitLoading(false);
     }
@@ -899,7 +911,7 @@ const UserProfile = () => {
                               display: "block",
                             }}
                           />
-                          <Box
+                          {/* <Box
                             className="postOverlay"
                             sx={{
                               position: "absolute",
@@ -920,7 +932,7 @@ const UserProfile = () => {
                               <ThumbUpOffAltIcon fontSize="small" />
                               <ChatIcon fontSize="small" />
                             </Stack>
-                          </Box>
+                          </Box> */}
                         </Box>
                       )}
                     </Grid>
@@ -1042,7 +1054,7 @@ const UserProfile = () => {
                             }}
                           />
 
-                          <Box
+                          {/* <Box
                             className="postOverlay"
                             sx={{
                               position: "absolute",
@@ -1063,7 +1075,7 @@ const UserProfile = () => {
                               <ThumbUpOffAltIcon fontSize="small" />
                               <ChatIcon fontSize="small" />
                             </Stack>
-                          </Box>
+                          </Box> */}
                         </Box>
                       )}
                     </Grid>
@@ -1071,10 +1083,15 @@ const UserProfile = () => {
                 )}
               </Grid>
             )}
-
             <Dialog
               open={openImage}
-              onClose={() => setOpenImage(false)}
+              onClose={(event, reason) => {
+                if (reason === "backdropClick") {
+                  return;
+                }
+
+                setOpenImage(false);
+              }}
               maxWidth={false}
               slotProps={{
                 paper: {
@@ -1091,40 +1108,42 @@ const UserProfile = () => {
               }}
             >
               <Box sx={{ position: "relative" }}>
-                <IconButton
-                  onClick={async () => {
-                    if (!selectedPost?.postId?._id) {
-                      console.log("Saved post ID missing");
-                      return;
-                    }
+                {tab === 1 && (
+                  <IconButton
+                    onClick={async () => {
+                      if (!selectedPost?.postId?._id) {
+                        console.log("Saved post ID missing");
+                        return;
+                      }
 
-                    console.log(
-                      "Removing saved post:",
-                      selectedPost.postId._id,
-                    );
+                      console.log(
+                        "Removing saved post:",
+                        selectedPost.postId._id,
+                      );
 
-                    await removeSavedPost(selectedPost.postId._id);
+                      await removeSavedPost(selectedPost.postId._id);
 
-                    setOpenImage(false);
-                    setSelectedPost(null);
-                  }}
-                  sx={{
-                    position: "absolute",
-                    top: 8,
-                    left: 8,
-                    color: "#fff",
-                    bgcolor: "rgba(0,0,0,0.5)",
-                    "&:hover": { bgcolor: "rgba(0,0,0,0.7)" },
-                    zIndex: 10,
-                  }}
-                >
-                  <Tooltip title="Remove from saved">
-                    <BookmarkBorderIcon
-                      fontSize="small"
-                      sx={{ color: "#ff5e00ff" }}
-                    />
-                  </Tooltip>
-                </IconButton>
+                      setOpenImage(false);
+                      setSelectedPost(null);
+                    }}
+                    sx={{
+                      position: "absolute",
+                      top: 8,
+                      left: 8,
+                      color: "#fff",
+                      bgcolor: "rgba(0,0,0,0.5)",
+                      "&:hover": { bgcolor: "rgba(0,0,0,0.7)" },
+                      zIndex: 10,
+                    }}
+                  >
+                    <Tooltip title="Remove from saved">
+                      <BookmarkBorderIcon
+                        fontSize="small"
+                        sx={{ color: "#ff5e00ff" }}
+                      />
+                    </Tooltip>
+                  </IconButton>
+                )}
 
                 <IconButton
                   onClick={() => setOpenImage(false)}
@@ -1244,12 +1263,12 @@ const UserProfile = () => {
               </Box>
 
               <Stack spacing={{ xs: 1.5, sm: 2.5 }} sx={{ width: "100%" }}>
-                <Stack alignItems="center" spacing={2}>
+                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }} spacing={1}>
                   <Avatar
                     src={profileImage || formData.profileImage || ""}
                     sx={{
-                      width: { xs: 60, sm: 75, md: 90 },
-                      height: { xs: 60, sm: 75, md: 90 },
+                      width: { xs: 60, sm: 85, md: 110 },
+                      height: { xs: 60, sm: 85, md: 110 },
                       fontSize: { xs: 18, sm: 24, md: 32 },
                       bgcolor: SAFFRON,
                     }}
@@ -1264,10 +1283,18 @@ const UserProfile = () => {
                     component="label"
                     size="small"
                     sx={{
-                      fontSize: { xs: "0.7rem", sm: "0.8125rem" },
+                      width: { xs: "100px", sm: "120px" },
+                      minWidth: 0,
+                      height: { xs: "30px", sm: "34px" },
+                      px: 1,
+                      py: 0,
+                      fontSize: { xs: "0.65rem", sm: "0.75rem" },
                       textTransform: "none",
-                      color: "#ffff",
+                      color: "#fff",
                       bgcolor: "#FF9933",
+                      "&:hover": {
+                        bgcolor: "#e68a2e",
+                      },
                     }}
                   >
                     Change Photo
@@ -1278,7 +1305,7 @@ const UserProfile = () => {
                       onChange={handlePickImage}
                     />
                   </Button>
-                </Stack>
+                </Box>
 
                 <Stack
                   direction={{ xs: "column", sm: "row" }}
@@ -1518,7 +1545,7 @@ const UserProfile = () => {
                       setErrors({});
                     }}
                   >
-                    Cancel
+                    Reset
                   </Button>
 
                   <Button

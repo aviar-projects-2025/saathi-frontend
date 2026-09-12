@@ -152,13 +152,14 @@ const Discover = () => {
 
                                     <Avatar
                                         src={member?.profileImage || ""}
-                                        alt={`${member?.firstName || ""} ${member?.lastName || ""}`}
+                                        alt={`${member?.name || ""}`}
                                         onClick={() => {
                                             setSelectedProfile(member);
                                             setProfileModalOpen(true);
                                         }}
                                         sx={{
-                                            color: "#fff",
+                                            color: "#FF9933",
+                                            bgcolor: "#FFF3E0",
                                             fontWeight: 800,
                                             flexShrink: 0,
                                             mt: { xs: 0.4, sm: 0.5 },
@@ -167,12 +168,12 @@ const Discover = () => {
 
                                             "&:hover": {
                                                 transform: "scale(1.08)",
-                                                boxShadow: "0 0 0 3px rgba(255,255,255,0.3)",
+                                                boxShadow: "0 0 0 3px rgba(255, 153, 51, 0.3)",
                                             },
                                         }}
                                     >
-                                        {!member?.profileImage &&
-                                            `${member?.firstName?.[0] || ""}${member?.lastName?.[0] || ""}`}
+
+                                        {`${member?.name?.[0]}`}
                                     </Avatar>
 
                                     <Box sx={{ flex: 1, minWidth: 0 }}>

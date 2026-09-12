@@ -36,7 +36,7 @@ import TrainIcon from "@mui/icons-material/Train";
 import FilterListOffIcon from "@mui/icons-material/FilterListOff";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import RideCard from "./RideCard.jsx";
-
+import UserProfile from "./UserProfile.jsx"
 import Api from "../Api";
 
 // ── Saffron design tokens ──────────────────────────────────────────────────
@@ -97,12 +97,9 @@ const FUEL_OPTIONS = [
   { label: "No", value: "false" },
 ];
 
-// ── How tall is your navbar? Adjust this value to match. ──────────────────
+
 const NAVBAR_HEIGHT = 64; // px
 
-// Pixels the results area must scroll before the open filter panel
-// auto-collapses. Small enough to feel responsive, large enough to
-// ignore accidental micro-scrolls/bounce.
 const SCROLL_COLLAPSE_THRESHOLD = 24;
 
 const emptyFilters = {
@@ -118,22 +115,20 @@ export default function FindRides() {
   const { currentUser } = useUser();
   const [rides, setRides] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filtersOpen, setFiltersOpen] = useState(false); // collapsed by default
+  const [filtersOpen, setFiltersOpen] = useState(false); 
   const navigate = useNavigate();
   const [searchFrom, setSearchFrom] = useState("");
   const [searchDestination, setSearchDestination] = useState("");
   const [search, setSearch] = useState("");
   const { completion, savedPost, setSavedPost, removeSavedPost } = useUser();
+  const [editProfileModal, setEditProfileModal] = useState(false);
 
-  // Staged filter values: edited live inside the panel, but only
-  // committed to `appliedFilters` (and therefore the results) on Apply.
   const [draftFilters, setDraftFilters] = useState(emptyFilters);
   const [appliedFilters, setAppliedFilters] = useState(emptyFilters);
   const isProfileComplete = completion === 100;
   const SIDEBAR_SCROLL_HEIGHT = 'calc(100vh - 120px)';
 
-  // ── Profile completion modal ──
-  // Shows once per page-load whenever the user's profile is under 100%.
+
   const [profileGateOpen, setProfileGateOpen] = useState(false);
   const hasCheckedProfileGateRef = useRef(false);
 
@@ -413,7 +408,13 @@ export default function FindRides() {
 
       <Dialog
         open={profileGateOpen}
-        onClose={handleCloseProfileGate}
+        onClose={(event, reason) => {
+          if (reason === "backdropClick") {
+            return;
+          }
+
+          handleCloseProfileGate();
+        }}
         fullWidth
         maxWidth="xs"
         PaperProps={{
@@ -495,7 +496,13 @@ export default function FindRides() {
           </Button>
           <Button
             variant="outlined"
-            onClick={() => navigate("/user-profile")}
+            onClick={() => {
+              navigate("/user-profile", {
+                state: {
+                  openEditProfile: true,
+                },
+              });
+            }}
             sx={{
               textTransform: "none",
               borderRadius: 999,
@@ -513,7 +520,12 @@ export default function FindRides() {
           </Button>
         </DialogActions>
       </Dialog>
-
+      {/* {editProfileModal &&(
+   <UserProfile
+      editProfile={editProfileModal}
+      onClose={() => setEditProfileModal(false)}
+    />
+)} */}
 
       <Box
         sx={{

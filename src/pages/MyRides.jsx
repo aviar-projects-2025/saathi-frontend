@@ -280,7 +280,13 @@ function EditRideModal({ ride, onSave, onClose }) {
 
       <Dialog
         open={Boolean(ride)}
-        onClose={onClose}
+        onClose={(event, reason) => {
+          if (reason === "backdropClick") {
+            return;
+          }
+
+          onClose();
+        }}
         fullWidth
         maxWidth="sm"
         fullScreen={isMobile}
@@ -395,7 +401,13 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
   return (
     <Dialog
       open
-      onClose={onClose}
+      onClose={(event, reason) => {
+        if (reason === "backdropClick") {
+          return;
+        }
+
+        onClose();
+      }}
       maxWidth="xs"
       fullWidth
       PaperProps={{
@@ -527,175 +539,6 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
   );
 }
 
-// ── Request Item Component ──────────────────────────────────────────────────
-function RequestItem({ request, onApprove, onReject }) {
-  const [expanded, setExpanded] = useState(false);
-
-  const getStatusColor = (status) => {
-    switch (status?.toUpperCase()) {
-      case "ACCEPTED":
-        return "success";
-      case "APPROVED":
-        return "success";
-      case "REJECTED":
-        return "error";
-      case "PENDING":
-        return "warning";
-      default:
-        return "default";
-    }
-  };
-
-  const getStatusLabel = (status) => {
-    switch (status?.toUpperCase()) {
-      case "ACCEPTED":
-        return "Approved ✓";
-      case "APPROVED":
-        return "Approved ✓";
-      case "REJECTED":
-        return "Rejected ✗";
-      case "PENDING":
-        return "Pending ⏳";
-      default:
-        return status || "Pending";
-    }
-  };
-
-  return (
-    <Card sx={{ mb: 2, borderRadius: 2, border: "1px solid #f0e6dc" }}>
-      <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-            flexWrap: { xs: "wrap", sm: "nowrap" },
-            gap: 1,
-          }}
-        >
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Box
-              sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}
-            >
-              <Avatar
-                sx={{
-                  width: { xs: 28, sm: 32 },
-                  height: { xs: 28, sm: 32 },
-                  bgcolor: "#FF9933",
-                  fontSize: { xs: "0.8rem", sm: "0.9rem" },
-                }}
-              >
-                {request.requestedBy?.firstName?.[0] || "U"}
-              </Avatar>
-              <Typography
-                fontWeight={700}
-                sx={{ fontSize: { xs: "0.85rem", sm: "0.95rem" } }}
-              >
-                {request.requestedBy?.firstName}{" "}
-                {request.requestedBy?.lastName || ""}
-              </Typography>
-            </Box>
-            <Box
-              sx={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: 1,
-                ml: { xs: 4.5, sm: 5 },
-              }}
-            >
-              <Chip
-                size="small"
-                label={`${request?.seatsRequested || 1} seat${request?.seatsRequested > 1 ? "s" : ""}`}
-                icon={<EventSeatIcon sx={{ fontSize: 14 }} />}
-                sx={{ fontSize: { xs: "0.65rem", sm: "0.7rem" } }}
-              />
-              <Chip
-                size="small"
-                label={getStatusLabel(request?.status)}
-                color={getStatusColor(request?.status)}
-                sx={{ fontSize: { xs: "0.65rem", sm: "0.7rem" } }}
-              />
-            </Box>
-          </Box>
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 1,
-              flexWrap: "wrap",
-            }}
-          >
-            {request.status?.toUpperCase() === "PENDING" && (
-              <>
-                <Button
-                  variant="contained"
-                  color="success"
-                  size="small"
-                  startIcon={<CheckCircleIcon />}
-                  onClick={() => onApprove(request._id)}
-                  sx={{
-                    textTransform: "none",
-                    fontSize: { xs: "0.65rem", sm: "0.7rem" },
-                  }}
-                >
-                  Approve
-                </Button>
-                <Button
-                  variant="outlined"
-                  color="error"
-                  size="small"
-                  startIcon={<CancelIcon />}
-                  onClick={() => onReject(request._id)}
-                  sx={{
-                    textTransform: "none",
-                    fontSize: { xs: "0.65rem", sm: "0.7rem" },
-                  }}
-                >
-                  Reject
-                </Button>
-              </>
-            )}
-            <IconButton size="small" onClick={() => setExpanded(!expanded)}>
-              {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-            </IconButton>
-          </Box>
-        </Box>
-
-        <Collapse in={expanded}>
-          <Box sx={{ mt: 2, pt: 2, borderTop: "1px solid #f0e6dc" }}>
-            <Stack spacing={1}>
-              <Typography sx={{ fontSize: { xs: "0.78rem", sm: "0.85rem" } }}>
-                <strong>Message:</strong> {request.message || "No message"}
-              </Typography>
-              <Typography sx={{ fontSize: { xs: "0.78rem", sm: "0.85rem" } }}>
-                <strong>Phone:</strong> {request.phone || "Not provided"}
-              </Typography>
-              {request.members?.length > 0 && (
-                <>
-                  <Typography
-                    sx={{ fontSize: { xs: "0.78rem", sm: "0.85rem" } }}
-                    fontWeight={700}
-                  >
-                    Members:
-                  </Typography>
-                  {request.members.map((m, i) => (
-                    <Typography
-                      key={i}
-                      sx={{ fontSize: { xs: "0.75rem", sm: "0.82rem" }, ml: 2 }}
-                    >
-                      • {m.name} ({m.age} yrs)
-                    </Typography>
-                  ))}
-                </>
-              )}
-            </Stack>
-          </Box>
-        </Collapse>
-      </CardContent>
-    </Card>
-  );
-}
-
 // ── Ride Card ────────────────────────────────────────────────────────────────
 function RideCard({
   ride,
@@ -770,6 +613,9 @@ function RideCard({
 
   const handleApprove = async (requestId) => {
     try {
+      // if (!window.confirm("Are you sure you want to approve this request?")) {
+      //   return;
+      // }
       setApproveLoading(requestId);
       const res = await axios.patch(
         `${Api}/bookride/${requestId}/status?type=Approve`,
@@ -793,23 +639,48 @@ function RideCard({
     }
   };
 
+  const handleRequestUpdated = (requestId, updatedRequest) => {
+    setAllRequests((prev) =>
+      prev.map((req) =>
+        req._id === requestId
+          ? { ...req, ...updatedRequest }
+          : req
+      )
+    );
+  };
+
   const handleReject = async (requestId) => {
     try {
+      // if (!window.confirm("Are you sure you want to reject this request?")) {
+      //   return;
+      // }
       setRejectLoading(requestId);
-      await axios.patch(`${Api}/bookride/${requestId}/status?type=Reject`, {
-        status: "REJECTED",
-      });
+
+      await axios.patch(
+        `${Api}/bookride/${requestId}/status?type=Reject`,
+        { status: "REJECTED" }
+      );
+
       setAllRequests((prev) =>
         prev.map((req) =>
-          req._id === requestId ? { ...req, status: "REJECTED" } : req,
-        ),
+          req._id === requestId
+            ? { ...req, status: "REJECTED" }
+            : req
+        )
       );
+
+      toast.success("Request rejected", toasts);
+
+      // Refresh only if actually needed
       fetchRides();
       fetchAllRequests();
-      toast.success("Request rejected", toasts);
       fetchRides();
     } catch (error) {
-      toast.error("Failed to reject request", toasts);
+      console.error("Reject error:", error);
+      toast.error(
+        error?.response?.data?.message || "Failed to reject request",
+        toasts
+      );
     } finally {
       setRejectLoading(null);
     }
@@ -898,12 +769,7 @@ function RideCard({
           >
             <Avatar
               src={ride?.createdBy?.profileImage || ""}
-              alt={
-                ride?.createdBy?.firstName
-                  ? `${ride?.createdBy?.firstName} ${ride?.createdBy?.lastName || ""
-                  }`
-                  : "Profile Image"
-              }
+              // alt={`${ride?.createdBy?.firstName[0]}${ride?.createdBy?.lastName[0]}`.toUpperCase()}
               onClick={() => {
                 setSelectedProfile(ride?.createdBy);
                 setProfileModalOpen(true);
@@ -911,14 +777,17 @@ function RideCard({
               sx={{
                 width: { xs: 26, sm: 35 },
                 height: { xs: 26, sm: 35 },
-                fontSize: { xs: 12, sm: 13 },
+                fontSize: { xs: 12, sm: 15 },
                 fontWeight: 700,
                 bgcolor: ACCENT,
-                color: "#1a1030",
+                color: "#fff",
                 cursor: "pointer",
                 flexShrink: 0,
               }}
-            />
+            >
+              {`${ride?.createdBy?.firstName?.[0]}${ride?.createdBy?.lastName?.[0]}`.toUpperCase() ||
+                "U"}
+            </Avatar>
 
             <Typography
               fontWeight={700}
@@ -1327,17 +1196,6 @@ function RideCard({
 
               {/* Details grid */}
             </Box>
-
-            {/* Requests section */}
-            {/* {showRequests && rideRequests.length > 0 && (
-              <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid rgba(255,153,51,0.2)' }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                  <Typography fontWeight={700} sx={{ fontSize: '0.9rem' }}>
-                    Requests ({rideRequests.length})
-                  </Typography>
-                </Box>
-              </Box>
-            )} */}
           </CardContent>
         </Card>
       </Box>
@@ -1353,23 +1211,31 @@ function RideCard({
       {detailsOpen && (
 
         <RideDetailsModal
-          ride={ride}
-          user={user}
-          showEdit={showEdit}
-          showDelete={showDelete}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          onClose={() => setDetailsOpen(false)}
-          requests={rideRequests}
-          onApprove={handleApprove}
-          onReject={handleReject}
-          approveLoading={approveLoading}
-          rejectLoading={rejectLoading}
-        />
+  ride={ride}
+  user={user}
+  showEdit={showEdit}
+  showDelete={showDelete}
+  onEdit={onEdit}
+  onDelete={onDelete}
+  onClose={() => setDetailsOpen(false)}
+  requests={rideRequests}
+  onApprove={handleApprove}
+  onReject={handleReject}
+  onRequestUpdated={handleRequestUpdated}
+  approveLoading={approveLoading}
+  rejectLoading={rejectLoading}
+/>
       )}
 
       <Dialog
         open={!!confirmRide}
+        onClose={(event, reason) => {
+          if (reason === "backdropClick") {
+            return;
+          }
+
+          setConfirmRide(null);
+        }}
         PaperProps={{
           sx: {
             borderRadius: { xs: 2, sm: 3 },
@@ -1570,12 +1436,44 @@ const MyRides = () => {
       window.removeEventListener("rideDataChanged", handleRideDataChange);
     };
   }, []); // Empty dependency array - only run once
+  // useEffect(() => {
+  //   if (!notifications?.length) return;
+  //   fetchRides();
+  //   fetchAllSends();
+  // }, [notifications]);
+
   useEffect(() => {
     if (!notifications?.length) return;
-    fetchRides();
-    fetchAllSends();
-  }, [notifications]);
 
+    const newRequestsFromNotifications = notifications
+      .filter((noti) => noti.type === "new_request")
+      .map((noti) => {
+        const booking = noti.data.bookingData;
+
+        return {
+          ...booking,
+          _id: booking._id,
+          rideId: {
+            _id: booking.rideId,
+          },
+          requestedBy: {
+            _id: booking.requestedBy,
+            profileImage: noti.data.profileImage,
+            firstName: noti.data.requestBy.requestedBy.firstName,
+            lastName: noti.data.requestBy.requestedBy.lastName,
+          },
+        };
+      });
+
+    setAllRequests((prev) => {
+      const merged = [...newRequestsFromNotifications, ...prev];
+
+      return merged.filter(
+        (item, index, self) =>
+          index === self.findIndex((t) => t._id === item._id)
+      );
+    });
+  }, [notifications]);
   useEffect(() => {
     if (!notifications?.length) return;
 
@@ -1588,7 +1486,7 @@ const MyRides = () => {
     newNotifs.forEach((n) => processedIds.current.add(n.id));
 
     const shouldRefetch = newNotifs.some((n) =>
-      ["request_update", "request_accepted", "request_rejected"].includes(
+      ["request_update","request_accepted","ride_request_update","request_rejected"].includes(
         n.type,
       ),
     );
@@ -1620,57 +1518,21 @@ const MyRides = () => {
   const { refreshRide } = useRide();
 
   const fetchRides = async () => {
-    const currentDateTime = new Date();
-
     try {
       const response = await axios.get(`${Api}/rides/get`);
 
       const all = (response.data.data || []).sort(
         (a, b) =>
-          new Date(b.startTime).getTime() - new Date(a.startTime).getTime(),
+          new Date(b.startTime).getTime() -
+          new Date(a.startTime).getTime()
       );
 
-      const myRides = all.filter((ride) => ride?.createdBy?._id === user.id);
+      const myRides = all.filter(
+        (ride) => ride?.createdBy?._id === user?.id
+      );
 
       setMypost(myRides);
 
-      setUpcoming(
-        myRides.filter((ride) => {
-          const rideStartTime = new Date(ride?.startTime);
-
-          return (
-            !isNaN(rideStartTime.getTime()) &&
-            rideStartTime > currentDateTime &&
-            ride?.travelStatus !== "Cancelled" &&
-            ride?.travelStatus !== "Completed"
-          );
-        }),
-      );
-
-      setHistory(
-        myRides.filter((ride) => {
-          const rideStartTime = new Date(ride?.startTime);
-
-          return (
-            !isNaN(rideStartTime.getTime()) &&
-            (ride?.travelStatus === "Completed" ||
-              ride?.travelStatus === "Cancelled")
-          )
-        }),
-      );
-
-      const currReqRide = (allMyRequests || []).filter((request) => {
-        const rideStartTime = new Date(request?.rideId?.startTime);
-
-        return (
-          !isNaN(rideStartTime.getTime()) &&
-          rideStartTime <= currentDateTime &&
-          request?.rideId?.travelStatus !== "Completed" &&
-          request?.rideId?.travelStatus !== "Cancelled"
-        );
-      });
-
-      setCurrentRide(currReqRide);
     } catch (error) {
       console.error("Error fetching rides:", error.message);
     } finally {
@@ -1679,8 +1541,12 @@ const MyRides = () => {
   };
 
   useEffect(() => {
+    if (!refreshRide) return;
+
     fetchRides();
-  }, [refreshRide, notifications]);
+    fetchAllSends();
+    fetchAllRequests();
+  }, [refreshRide]);
 
 
 
@@ -1709,91 +1575,31 @@ const MyRides = () => {
     setUpcoming([...acceptedRides, ...myUpcoming]);
   }, [allMyRequests, mypost, notifications]);
 
-  useEffect(() => {
-    const currentDateTime = new Date();
 
-    // Accepted rides requested by me
-    const currReqRide = allMyRequests
-      .filter((ride) => {
-        const rideStartTime = new Date(ride?.rideId?.startTime);
-
-        return (
-          !isNaN(rideStartTime) &&
-          rideStartTime <= currentDateTime &&
-          ride?.status === "ACCEPTED" &&
-          ride?.rideId?.travelStatus !== "Completed" &&
-          ride?.rideId?.travelStatus !== "Cancelled"
-        );
-      })
-      .map((ride) => ride.rideId);
-
-    // Rides created by me
-    const myrides = mypost.filter((ride) => {
-      const rideStartTime = new Date(ride?.startTime);
-
-      return (
-        ride?.createdBy?._id === user.id &&
-        !isNaN(rideStartTime) &&
-        rideStartTime <= currentDateTime &&
-        ride?.travelStatus !== "Completed" &&
-        ride?.travelStatus !== "Cancelled"
-      );
-    });
-
-    const currentRides = [...currReqRide, ...myrides];
-
-    setCurrentRide(currentRides);
-
-
-
-    // History - requested rides
-    const historyRide = allMyRequests
-      .filter((ride) => {
-        return (
-          ride?.rideId?.travelStatus === "Completed" ||
-          ride?.rideId?.travelStatus === "Cancelled"
-        );
-      })
-      .map((ride) => ride.rideId);
-
-    // History - rides created by me
-    const histMyPost = mypost.filter((ride) => {
-      const rideStartTime = new Date(ride?.startTime);
-
-      return (
-        ride?.createdBy?._id === user.id &&
-        !isNaN(rideStartTime) &&
-        (ride?.travelStatus === "Completed" ||
-          ride?.travelStatus === "Cancelled")
-      );
-    });
-
-    setHistory([...historyRide, ...histMyPost]);
-  }, [allMyRequests, mypost, notifications, user?.id]);
 
   useEffect(() => {
     if (!notifications?.length) return;
 
     const newRequestsFromNotifications = notifications
-      .filter((noti) => noti.type === "new_request")
+      .filter((noti) => noti?.type === "new_request" || "ride_request_update")
       .map((noti) => {
-        const booking = noti.data.bookingData;
+        const booking = noti?.data?.bookingData;
 
         return {
           ...booking,
-          _id: booking._id,
+          _id: booking?._id,
 
           // normalize rideId (VERY IMPORTANT)
           rideId: {
-            _id: booking.rideId,
+            _id: booking?.rideId,
           },
 
           // attach profile image
           requestedBy: {
-            _id: booking.requestedBy,
-            profileImage: noti.data.profileImage,
-            firstName: noti.data.requestBy.requestedBy.firstName,
-            lastName: noti.data.requestBy.requestedBy.lastName,
+            _id: booking?.requestedBy,
+            profileImage: noti?.data?.profileImage,
+            firstName: noti?.data?.requestBy?.requestedBy?.firstName,
+            lastName: noti?.data?.requestBy?.requestedBy?.lastName,
           },
         };
       });
@@ -1810,7 +1616,81 @@ const MyRides = () => {
       return unique;
     });
   }, [notifications]);
+  useEffect(() => {
+    const now = new Date();
 
+    // Accepted rides requested by current user
+    const acceptedRides = (allMyRequests || [])
+      .filter((request) => {
+        const startTime = new Date(request?.rideId?.startTime);
+
+        return (
+          !isNaN(startTime.getTime()) &&
+          startTime > now &&
+          request?.status === "ACCEPTED"
+        );
+      })
+      .map((request) => request.rideId);
+
+    // My own upcoming rides
+    const myUpcoming = (mypost || []).filter((ride) => {
+      const startTime = new Date(ride?.startTime);
+
+      return (
+        !isNaN(startTime.getTime()) &&
+        startTime > now &&
+        ride?.travelStatus !== "Cancelled" &&
+        ride?.travelStatus !== "Completed"
+      );
+    });
+
+    setUpcoming([...acceptedRides, ...myUpcoming]);
+
+    // Current rides
+    const acceptedCurrent = (allMyRequests || [])
+      .filter((request) => {
+        const startTime = new Date(request?.rideId?.startTime);
+
+        return (
+          !isNaN(startTime.getTime()) &&
+          startTime <= now &&
+          request?.rideId?.travelStatus !== "Completed" &&
+          request?.rideId?.travelStatus !== "Cancelled"
+        );
+      })
+      .map((request) => request.rideId);
+
+    const myCurrent = (mypost || []).filter((ride) => {
+      const startTime = new Date(ride?.startTime);
+
+      return (
+        !isNaN(startTime.getTime()) &&
+        startTime <= now &&
+        ride?.travelStatus !== "Completed" &&
+        ride?.travelStatus !== "Cancelled"
+      );
+    });
+
+    setCurrentRide([...acceptedCurrent, ...myCurrent]);
+
+    // History
+    const acceptedHistory = (allMyRequests || [])
+      .filter(
+        (request) =>
+          request?.rideId?.travelStatus === "Completed" ||
+          request?.rideId?.travelStatus === "Cancelled"
+      )
+      .map((request) => request.rideId);
+
+    const myHistory = (mypost || []).filter(
+      (ride) =>
+        ride?.travelStatus === "Completed" ||
+        ride?.travelStatus === "Cancelled"
+    );
+
+    setHistory([...acceptedHistory, ...myHistory]);
+
+  }, [mypost, allMyRequests]);
   const fetchAllRequests = async () => {
     try {
       const res = await axios.get(`${Api}/bookride/${user.id}?type=received`);
@@ -1833,6 +1713,7 @@ const MyRides = () => {
   };
 
   useEffect(() => {
+    fetchRides();
     fetchAllSends();
     fetchAllRequests();
   }, []);
@@ -2031,14 +1912,17 @@ const MyRides = () => {
         display: "flex",
         gap: { xs: 1, sm: 2.5, md: 3 },
         alignItems: "flex-start",
-        flexDirection: { xs: "column", lg: "row", md: "row" },
+        flexDirection: { xs: "column", md: "row" },
         width: "100%",
         maxWidth: "100%",
+        minWidth: 0,
+        boxSizing: "border-box",
         overflowX: "hidden",
       }}
     >
       <Box
         sx={{
+          flex: 1,
           width: "100%",
           minWidth: 0,
           maxWidth: "100%",
@@ -2088,21 +1972,42 @@ const MyRides = () => {
             sx={{
               width: "100%",
               minHeight: { xs: 40, sm: 48, md: 50 },
+
               "& .MuiTabs-flexContainer": {
                 width: "100%",
               },
+
               "& .MuiTab-root": {
                 minWidth: 0,
                 flex: 1,
-                padding: { xs: "4px 2px", sm: "8px 12px", md: "12px 16px" },
-                fontSize: { xs: "0.68rem", sm: "0.78rem", md: "0.82rem" },
+                padding: {
+                  xs: "4px 2px",
+                  sm: "8px 12px",
+                  md: "12px 16px",
+                },
+                fontSize: {
+                  xs: "0.68rem",
+                  sm: "0.78rem",
+                  md: "0.82rem",
+                },
                 fontWeight: 600,
                 textTransform: "none",
-                minHeight: { xs: 36, sm: 44, md: 48 },
+                minHeight: {
+                  xs: 36,
+                  sm: 44,
+                  md: 48,
+                },
                 lineHeight: 1.1,
+                color: "#666",
+
+                "&.Mui-selected": {
+                  color: "#FF9933",
+                },
               },
+
               "& .MuiTabs-indicator": {
                 height: 3,
+                backgroundColor: "#FF9933",
               },
             }}
           >
@@ -2173,7 +2078,7 @@ const MyRides = () => {
                 justifyContent: "center",
               }}
             >
-              <CircularProgress size={50} />
+              <CircularProgress size={50} sx={{ color: "#FF9933" }} />
             </Box>
           ) : (
             <>

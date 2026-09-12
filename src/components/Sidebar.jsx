@@ -132,7 +132,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
 
   const handleLogout = () => {
     setLogoutDialogOpen(true);
-    onItemClick?.();
+    // onItemClick?.();
   };
 
   const confirmLogout = () => {
@@ -217,8 +217,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
               }}
             >
               {!currentUser?.profileImage &&
-                `${currentUser?.firstName?.[0] || ""}${
-                  currentUser?.lastName?.[0] || ""
+                `${currentUser?.firstName?.[0] || ""}${currentUser?.lastName?.[0] || ""
                 }`}
             </Avatar>
           </Box>
@@ -489,7 +488,13 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
       {/* ---------- LOGOUT DIALOG ---------- */}
       <Dialog
         open={logoutDialogOpen}
-        onClose={cancelLogout}
+        onClose={(event, reason) => {
+          if (reason === "backdropClick") {
+            return;
+          }
+
+          cancelLogout();
+        }}
         fullWidth
         maxWidth="xs"
         PaperProps={{
@@ -511,8 +516,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
               sm: 400,
             },
             overflow: "hidden",
-            background:
-              "linear-gradient(145deg, #ffffff, #faf5f0)",
+            background: "linear-gradient(145deg, #ffffff, #faf5f0)",
           },
         }}
       >

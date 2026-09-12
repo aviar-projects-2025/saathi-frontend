@@ -97,6 +97,8 @@ export default function Community() {
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null);
 
+  const [expandedPosts, setExpandedPosts] = useState({});
+
   const [commentCounts, setCommentCounts] = useState({});
   const toasts = ToastConfig();
 
@@ -194,6 +196,8 @@ export default function Community() {
       const posts = postsRes?.data?.data || [];
       const likedPostIds = likesRes?.data?.data || [];
 
+      console.log(posts, 'posts')
+
       // Add like + comment information
       const updatedPosts = posts.map((post) => ({
         ...post,
@@ -241,6 +245,7 @@ export default function Community() {
       const countEntries = await Promise.all(
         sortedPosts.map(async (post) => {
           try {
+            console.log(post, 'post')
             const res = await axios.get(
               `${Api}/community/comments/${post._id}/${user.id}`
             );
@@ -712,13 +717,24 @@ export default function Community() {
     }
   };
 
-
+  const toggleDescription = (postId) => {
+    setExpandedPosts((prev) => ({
+      ...prev,
+      [postId]: !prev[postId],
+    }));
+  };
 
   return (
     <>
       <Dialog
         open={profileGateOpen}
-        onClose={handleCloseProfileGate}
+        onClose={(event, reason) => {
+          if (reason === "backdropClick") {
+            return;
+          }
+
+          handleCloseProfileGate();
+        }}
         fullWidth
         maxWidth="xs"
         PaperProps={{
@@ -800,7 +816,13 @@ export default function Community() {
           </Button>
           <Button
             variant="contained"
-            onClick={() => navigate("/user-profile")}
+             onClick={() => {
+              navigate("/user-profile", {
+                state: {
+                  openEditProfile: true,
+                },
+              });
+            }}
             sx={{
               textTransform: "none",
               borderRadius: 999,
@@ -1207,7 +1229,7 @@ export default function Community() {
             {/* Posts list */}
             {postLoading ? (
               <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', py: 4 }}>
-                <CircularProgress size={isMobile ? 36 : 50} />
+                <CircularProgress size={isMobile ? 36 : 50} sx={{ color: "#FF9933" }} />
               </Box>
             ) : communityPosts.length == 0 ? (
               <Box
@@ -1331,9 +1353,16 @@ export default function Community() {
                               <ListItemText>Delete</ListItemText>
                             </MenuItem>
                           </Menu>
+
                           <Dialog
                             open={deleteOpen}
-                            onClose={() => setDeleteOpen(false)}
+                            onClose={(event, reason) => {
+                              if (reason === "backdropClick") {
+                                return;
+                              }
+
+                              setDeleteOpen(false);
+                            }}
                             fullWidth
                             maxWidth="xs"
                             PaperProps={{
@@ -1417,10 +1446,15 @@ export default function Community() {
 
                           <Dialog
                             open={editOpen}
-                            onClose={() => setEditOpen(false)}
+                            onClose={(event, reason) => {
+                              if (reason === "backdropClick") {
+                                return;
+                              }
+
+                              setEditOpen(false);
+                            }}
                             fullWidth
                             maxWidth="sm"
-                            // fullScreen// pass in `useMediaQuery(theme.breakpoints.down('sm'))`
                             PaperProps={{
                               sx: {
                                 borderRadius: { xs: 0, sm: 3 },
@@ -1583,7 +1617,7 @@ export default function Community() {
                                     borderRadius: 2,
                                   }}
                                 >
-                                  Cancel
+                                  Reset
                                 </Button>
 
                                 <Button
@@ -1628,9 +1662,44 @@ export default function Community() {
                     </Box>
 
                     {/* Post body */}
-                    <Typography sx={{ mt: 1.5, fontSize: bodyFontSize, lineHeight: 1.6 }}>
+                    {/* <Typography sx={{ mt: 1.5, fontSize: bodyFontSize, lineHeight: 1.6 }}>
                       {post.description}
-                    </Typography>
+                    </Typography> */}
+
+                    <Box>
+                      <Typography
+                        sx={{
+                          mt: 1.5,
+                          fontSize: bodyFontSize,
+                          lineHeight: 1.6,
+                          overflow: "hidden",
+                          display: "-webkit-box",
+                          WebkitLineClamp: expandedPosts[post._id] ? "unset" : 3,
+                          WebkitBoxOrient: "vertical",
+                        }}
+                      >
+                        {post.description}
+                      </Typography>
+
+                      {post.description?.length > 120 && (
+                        <Button
+                          size="small"
+                          onClick={() => toggleDescription(post._id)}
+                          sx={{
+                            mt: 0.5,
+                            p: 0,
+                            minWidth: "auto",
+                            textTransform: "none",
+                            fontSize: { xs: "0.7rem", sm: "0.75rem" },
+                            fontWeight: 600,
+                            fontStyle: "italic",
+                          }}
+                        >
+                          {expandedPosts[post._id] ? "See Less" : "See More"}
+                        </Button>
+                      )}
+                    </Box>
+
                   </Box>
 
                   {/* Post image */}
@@ -1729,7 +1798,7 @@ export default function Community() {
                   py: 3,
                 }}
               >
-                <CircularProgress size={32} />
+                <CircularProgress size={32} sx={{ color: "#FF9933" }} />
               </Box>
             )}
           </Box>

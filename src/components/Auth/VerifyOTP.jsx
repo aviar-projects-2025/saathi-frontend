@@ -21,23 +21,32 @@ import ToastConfig from "../ToastConfig";
 const VerifyOTP = () => {
     const navigate = useNavigate();
     const toasts = ToastConfig();
+
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isResending, setIsResending] = useState(false);
-    const [email, setEmail] = useState(null);
+    const [mobile_number, setMobile_number] = useState(null);
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        const storedEmail = sessionStorage.getItem("resetEmail");
-        if (!storedEmail) {
+        const storedMobile = sessionStorage.getItem("resetMobile");
+
+        if (!storedMobile) {
             navigate("/forgot-password");
         } else {
-            setEmail(storedEmail);
+            setMobile_number(storedMobile);
         }
     }, [navigate]);
 
-    if (email === null) {
+    if (mobile_number === null) {
         return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+            <Box
+                sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    minHeight: "100vh",
+                }}
+            >
                 <Typography>Loading...</Typography>
             </Box>
         );
@@ -53,24 +62,51 @@ const VerifyOTP = () => {
     const handleSubmit = async (values) => {
         setIsSubmitting(true);
         setError(null);
-        
+
         try {
             const response = await axios.post(
-                `${Api}/auth/verify-otp`,
+                `${Api}/auth/forgot-password/verify-otp`,
                 {
-                    email: email,
+                    mobile_number,
                     otp: values.otp,
                 }
             );
-            
-            toast.success(response.data.message || "OTP verified successfully!", toasts);
-            sessionStorage.setItem("resetToken", response.data.token);
+
+            console.log("OTP verification:", response.data);
+
+            toast.success(
+                response.data.message || "OTP verified successfully!",
+                toasts
+            );
+
+            sessionStorage.setItem(
+                "resetToken",
+                response.data.token
+            );
+
+            sessionStorage.setItem(
+                "resetMobile",
+                mobile_number
+            );
+
+            // Store temporary reset token
+            sessionStorage.setItem(
+                "resetToken",
+                response.data.token
+            );
+
             navigate("/reset-password");
-            
+
         } catch (error) {
-            const errorMessage = error.response?.data?.message || "Invalid OTP";
+            console.error("OTP verification error:", error);
+
+            const errorMessage =
+                error.response?.data?.message ||
+                "Invalid or expired OTP";
+
             toast.error(errorMessage, toasts);
             setError(errorMessage);
+
         } finally {
             setIsSubmitting(false);
         }
@@ -79,19 +115,28 @@ const VerifyOTP = () => {
     const handleResendOTP = async () => {
         setIsResending(true);
         setError(null);
-        
+
         try {
             const response = await axios.post(
-                `${Api}/auth/resend-otp`,
-                { email: email }
+                `${Api}/auth/forgot-password`,
+                {
+                    mobile_number,
+                }
             );
-            
-            toast.success(response.data.message || "New OTP sent to your email!", toasts);
-            
+
+            toast.success(
+                response.data.message || "New OTP sent!",
+                toasts
+            );
+
         } catch (error) {
-            const errorMessage = error.response?.data?.message || "Failed to resend OTP";
+            const errorMessage =
+                error.response?.data?.message ||
+                "Failed to resend OTP";
+
             toast.error(errorMessage, toasts);
             setError(errorMessage);
+
         } finally {
             setIsResending(false);
         }
@@ -125,17 +170,23 @@ const VerifyOTP = () => {
                     >
                         Verify OTP
                     </Typography>
+
                     <Typography
                         variant="body2"
                         align="center"
                         color="text.secondary"
                         sx={{ mb: 3 }}
                     >
-                        Enter the 6-digit OTP sent to your email
+                        Enter the 6-digit OTP sent to your mobile number
+                        <br />
+                        <strong>+91 {mobile_number}</strong>
                     </Typography>
 
                     {error && (
-                        <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
+                        <Alert
+                            severity="error"
+                            sx={{ mb: 2, borderRadius: 2 }}
+                        >
                             {error}
                         </Alert>
                     )}
@@ -145,60 +196,85 @@ const VerifyOTP = () => {
                         validationSchema={validationSchema}
                         onSubmit={handleSubmit}
                     >
-                        {({ values, errors, touched, handleChange, handleBlur, handleSubmit }) => (
+                        {({
+                            values,
+                            errors,
+                            touched,
+                            handleChange,
+                            handleBlur,
+                            handleSubmit,
+                        }) => (
                             <form onSubmit={handleSubmit}>
                                 <TextField
                                     fullWidth
                                     label="OTP Code"
                                     name="otp"
                                     value={values.otp}
-                                    onChange={handleChange}
+                                    onChange={(e) => {
+                                        const value = e.target.value
+                                            .replace(/\D/g, "")
+                                            .slice(0, 6);
+
+                                        handleChange({
+                                            target: {
+                                                name: "otp",
+                                                value,
+                                            },
+                                        });
+                                    }}
                                     onBlur={handleBlur}
-                                    error={touched.otp && Boolean(errors.otp)}
-                                    helperText={touched.otp && errors.otp}
+                                    error={
+                                        touched.otp &&
+                                        Boolean(errors.otp)
+                                    }
+                                    helperText={
+                                        touched.otp &&
+                                        errors.otp
+                                    }
                                     margin="normal"
                                     size="small"
-                                    inputProps={{ maxLength: 6 }}
-                                    sx={{
-                                        '& .MuiOutlinedInput-root': {
-                                            backgroundColor: '#FFFFFF',
-                                            borderRadius: '12px',
-                                            '& .MuiOutlinedInput-notchedOutline': {
-                                                borderRadius: '12px',
-                                            },
-                                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                borderColor: '#FF9933',
-                                            },
-                                        },
-                                        '& .MuiInputLabel-root.Mui-focused': {
-                                            color: '#FF9933',
-                                        },
-                                    }}
+                                    inputMode="numeric"
                                 />
 
                                 <Button
                                     type="submit"
                                     fullWidth
-                                    disabled={isSubmitting}
+                                    disabled={
+                                        isSubmitting ||
+                                        values.otp.length !== 6
+                                    }
                                     sx={{
                                         mt: 3,
                                         py: 1.2,
                                         background: "#FF9933",
-                                        color: "#ffff",
+                                        color: "#fff",
                                         textTransform: "none",
                                         fontSize: "14px",
                                         fontWeight: 700,
                                         borderRadius: "999px",
-                                        "&:hover": { background: "#e6862c" },
+
+                                        "&:hover": {
+                                            background: "#e6862c",
+                                        },
+
                                         "&:disabled": {
                                             background: "#ffcc80",
                                             color: "#666",
-                                        }
+                                        },
                                     }}
                                 >
                                     {isSubmitting ? (
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                            <CircularProgress size={20} color="inherit" />
+                                        <Box
+                                            sx={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 1,
+                                            }}
+                                        >
+                                            <CircularProgress
+                                                size={20}
+                                                color="inherit"
+                                            />
                                             Verifying...
                                         </Box>
                                     ) : (
@@ -206,31 +282,50 @@ const VerifyOTP = () => {
                                     )}
                                 </Button>
 
-                                <Box sx={{ textAlign: "center", mt: 2 }}>
-                                    <Typography variant="body2" color="text.secondary">
+                                <Box
+                                    sx={{
+                                        textAlign: "center",
+                                        mt: 2,
+                                    }}
+                                >
+                                    <Typography
+                                        variant="body2"
+                                        color="text.secondary"
+                                    >
                                         Didn't receive OTP?{" "}
+
                                         <MuiLink
                                             component="button"
+                                            type="button"
                                             onClick={handleResendOTP}
                                             disabled={isResending}
                                             underline="hover"
-                                            sx={{ 
-                                                color: "#FF9933", 
+                                            sx={{
+                                                color: "#FF9933",
                                                 fontWeight: 600,
-                                                cursor: isResending ? "not-allowed" : "pointer"
                                             }}
                                         >
-                                            {isResending ? "Resending..." : "Resend"}
+                                            {isResending
+                                                ? "Resending..."
+                                                : "Resend"}
                                         </MuiLink>
                                     </Typography>
                                 </Box>
 
-                                <Box sx={{ textAlign: "center", mt: 1 }}>
+                                <Box
+                                    sx={{
+                                        textAlign: "center",
+                                        mt: 1,
+                                    }}
+                                >
                                     <MuiLink
                                         component={Link}
                                         to="/login"
                                         underline="hover"
-                                        sx={{ fontSize: "14px", color: "#FF9933" }}
+                                        sx={{
+                                            fontSize: "14px",
+                                            color: "#FF9933",
+                                        }}
                                     >
                                         Back to Login
                                     </MuiLink>
