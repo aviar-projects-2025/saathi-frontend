@@ -331,7 +331,7 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
   const handleConfirm = () => {
     if (confirmState.action === 'approve') {
       onApprove(request._id);
-      console.log("hdg", onApprove)
+
     } else if (confirmState.action === 'reject') {
       onReject(request._id);
     }
