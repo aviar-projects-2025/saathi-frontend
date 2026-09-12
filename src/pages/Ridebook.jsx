@@ -51,8 +51,8 @@ export default function Ridebook({
   const isEditMode = Boolean(requestToEdit);
   const [requests, setRequests] = useState();
   const [requestLoading, setRequestLoading] = useState(false);
-   console.log("existingMembers.123.444", requestToEdit?.pendingReqSeats)
-  
+
+
   // existingMembers = already CONFIRMED/APPROVED members on this request.
   // Read-only, shown for context, never sent back to the backend.
   const [existingMembers, setExistingMembers] = useState([]);
@@ -83,7 +83,7 @@ export default function Ridebook({
 
     return age;
   };
-  const availableSeat = ride?.availableSeats || 0;
+
   const defaultSelfMember = () => ({
     name: `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`.trim(),
     age: calculateAge(currentUser?.dob),
@@ -102,51 +102,51 @@ export default function Ridebook({
   const remainingSeats = isEditMode
     ? Math.max(maxSeats - existingMembers.length - newMembers.length, 0)
     : Math.max(maxSeats - requestData?.members.length, 0);
-    console.log("remainingSeats.........0000",remainingSeats)
+
   //   const remainingSeats = Math.max(
   //   remainingSeatsForUser - newMembers.length,
   //   0
   // );
   const TOASTS = ToastConfig();
 
-const handleAddMember = () => {
-  setMemberListError("");
+  const handleAddMember = () => {
+    setMemberListError("");
 
-  if (isEditMode) {
-    setNewMembers((prev) => {
-      const usedSeats =
-        existingMembers.length -
-        requestToEdit.pendingReqSeats 
-  console.log("usedSeats..............", usedSeats)
-      if (!isFlight && usedSeats >= maxSeats) {
+    if (isEditMode) {
+      setNewMembers((prev) => {
+        const usedSeats =
+          existingMembers.length -
+          requestToEdit.pendingReqSeats
+
+        if (!isFlight && usedSeats >= maxSeats) {
+          setMemberListError(`Maximum ${maxSeats} seats allowed.`);
+          return prev;
+        }
+
+        return [...prev, { name: "", age: "" }];
+      });
+
+      return;
+    }
+
+    setRequestData((prev) => {
+      if (!isFlight && prev.members.length >= maxSeats) {
         setMemberListError(`Maximum ${maxSeats} seats allowed.`);
         return prev;
       }
 
-      return [...prev, { name: "", age: "" }];
+      const updatedMembers = [
+        ...prev.members,
+        { name: "", age: "" },
+      ];
+
+      return {
+        ...prev,
+        members: updatedMembers,
+        seatsRequested: updatedMembers.length,
+      };
     });
-
-    return;
-  }
-
-  setRequestData((prev) => {
-    if (!isFlight && prev.members.length >= maxSeats) {
-      setMemberListError(`Maximum ${maxSeats} seats allowed.`);
-      return prev;
-    }
-
-    const updatedMembers = [
-      ...prev.members,
-      { name: "", age: "" },
-    ];
-
-    return {
-      ...prev,
-      members: updatedMembers,
-      seatsRequested: updatedMembers.length,
-    };
-  });
-};
+  };
 
   const handleRemoveMember = (index) => {
     if (isEditMode) {
@@ -423,7 +423,7 @@ const handleAddMember = () => {
         message: requestToEdit.message || "",
         phone: requestToEdit.phone || "",
       }));
-   
+
     } else {
       // Restore new request defaults
       setExistingMembers([]);
@@ -460,7 +460,10 @@ const handleAddMember = () => {
 
   const isSelfAlreadyConfirmed = existingMembers?.some(isSelfMember);
 
-
+  const availableSeatsForAdd = Math.max(
+    remainingSeats - (requestToEdit?.pendingReqSeats || 0),
+    0
+  );
 
   const editableMembersWithMeta = editableMembers.map(
     (member, originalIndex) => ({
@@ -618,7 +621,7 @@ const handleAddMember = () => {
               Available Seats
             </Typography>
             <Chip
-              label={`${remainingSeats -requestToEdit?.pendingReqSeats}`}
+              label={`${Math.max(remainingSeats - (requestToEdit?.pendingReqSeats || 0), 0)}`}
               size="small"
               sx={{
                 bgcolor: ORANGE,
@@ -858,7 +861,7 @@ const handleAddMember = () => {
         <Button
           startIcon={<AddCircleOutlineIcon />}
           onClick={handleAddMember}
-          disabled={!isFlight && totalOccupied >= maxSeats}
+          disabled={!isFlight && availableSeatsForAdd <= 0}
           sx={{
             mt: { xs: 1.5, sm: 1.5 },
             mb: { xs: 2.5, sm: 2.5 },

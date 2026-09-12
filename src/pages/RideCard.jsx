@@ -72,7 +72,7 @@ export default function RideCard({ ride }) {
   );
 
   const pendingReqSeats = pendingRequest?.pendingReqSeats ?? 0;
-   console.log("pendingReqSeats..............", pendingReqSeats)
+
   const { completion } = useUser();
   const theme = useTheme();
   const { currentUser } = useUser();
@@ -98,7 +98,7 @@ export default function RideCard({ ride }) {
   const totalSeats = ride?.totalSeats;
 
   const [totalSeat, setTotalSeat] = useState(totalSeats);
-  console.log("Tota4..", totalSeat)
+
   const [seatAvailable, setSeatAvailable] = useState(avaialableSeats);
 
   const isFlight = ride.modeOfTravel === "Flight";
@@ -296,7 +296,7 @@ export default function RideCard({ ride }) {
 
       if (res.data.success) {
         setMyRequestedRides(res.data.data || []);
-        console.log("mmmmmmmmmmmmmm",myRequestedRides)
+
       }
     } catch (error) {
       console.log(error.message);
@@ -311,7 +311,7 @@ export default function RideCard({ ride }) {
   });
 
   const requestedCount = currentRequest?.seatsRequested || 0;
-  console.log("rewgjjjjjjjjjjjjj", requestedCount)
+
   const alreadyRequested = !!currentRequest;
 
   //   const myRequest = myRequestedRides.find((req) => {
@@ -336,8 +336,7 @@ export default function RideCard({ ride }) {
       item.rideId === ride._id &&
       item.status !== "CANCELLED"
   );
-console.log("...myRequestedRides",myRequestedRides)
-console.log("MyRequest.,,mmn",myRequest)
+
   const isRejected = myRequest?.status === "REJECTED";
   const isAccepted = myRequest?.status === "ACCEPTED";
   const requestedByMe = Number(myRequest?.seatsRequested || 0);
@@ -346,15 +345,12 @@ console.log("MyRequest.,,mmn",myRequest)
   // console.log(myRequest, 'myRequest')
 
   const pendingSeatsByMe = isAccepted ? 0 : requestedByMe;
-  console.log("pppppppppppppppppp", pendingSeatsByMe)
+
 
   const remainingSeatsForUser = isFlight
     ? null
     : Math.max(Number(ride.availableSeats || 0) - pendingSeatsByMe, 0);
-  console.log("availableSeeeeeeeee", ride?.availableSeats)
-  console.log("pendingggggg", pendingSeatsByMe)
-  console.log("pendingReqSeats..............", pendingReqSeats)
-  console.log("remainnnnnnnnnnn", remainingSeatsForUser)
+
   const noSeats = !isFlight && remainingSeatsForUser <= 0;
 
   const maxSeatsForDialog = isFlight
