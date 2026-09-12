@@ -47,8 +47,10 @@ const SmsNotifications = () => {
     const [consent, setConsent] = useState(false);
     const [submitted, setSubmitted] = useState(false);
 
-    const user = JSON.parse(localStorage.getItem('user'))
-    console.log(user)
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    const isSmsApproved = user?.isMessageApproved === true;
+
     const isValid = consent && phone.trim().length >= 10;
 
     const handleSubmit = async () => {
@@ -65,13 +67,22 @@ const SmsNotifications = () => {
 
             console.log("Opt-in updated:", res.data);
 
+            // Update localStorage
+            const updatedUser = {
+                ...user,
+                isMessageApproved: true,
+                messageNumber: `${countryCode}${phone}`,
+            };
+
+            localStorage.setItem("user", JSON.stringify(updatedUser));
+
             setSubmitted(true);
         } catch (error) {
             console.error("Opt-in update failed:", error);
 
-            // Optional
-            toast.error(
-                error?.response?.data?.message || "Failed to subscribe"
+            console.error(
+                error?.response?.data?.message ||
+                "Failed to subscribe"
             );
         }
     };
@@ -342,7 +353,113 @@ const SmsNotifications = () => {
                         mb: 4,
                     }}
                 >
-                    {!submitted ? (
+                    {/* =====================================================
+        ALREADY SUBSCRIBED
+    ====================================================== */}
+
+                    {user?.isMessageApproved === true ? (
+                        <Box
+                            sx={{
+                                textAlign: "center",
+                                py: 4,
+                            }}
+                        >
+                            <Box
+                                sx={{
+                                    width: 64,
+                                    height: 64,
+                                    backgroundColor: greenLight,
+                                    border: `2px solid ${green}`,
+                                    borderRadius: "50%",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    mx: "auto",
+                                    mb: 2,
+                                }}
+                            >
+                                <CheckCircle
+                                    sx={{
+                                        fontSize: 32,
+                                        color: green,
+                                    }}
+                                />
+                            </Box>
+
+                            <Typography
+                                sx={{
+                                    fontFamily: "Georgia, serif",
+                                    fontSize: 22,
+                                    fontWeight: 700,
+                                    mb: 1,
+                                    color: navy,
+                                }}
+                            >
+                                SMS notifications are already enabled 🙏
+                            </Typography>
+
+                            <Typography
+                                sx={{
+                                    fontSize: 14,
+                                    color: textSecondary,
+                                    lineHeight: 1.7,
+                                    maxWidth: 450,
+                                    mx: "auto",
+                                }}
+                            >
+                                You're already subscribed to Saathi Rides SMS notifications.
+                                <br />
+                                We'll send you ride confirmations, match alerts, and important
+                                community updates.
+                            </Typography>
+
+                            <Box
+                                sx={{
+                                    mt: 2.5,
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: 1,
+                                    backgroundColor: greenLight,
+                                    color: green,
+                                    px: 2,
+                                    py: 1,
+                                    borderRadius: 2,
+                                    fontSize: 13,
+                                    fontWeight: 600,
+                                }}
+                            >
+                                <Sms sx={{ fontSize: 18 }} />
+                                SMS alerts enabled
+                            </Box>
+
+                            <Typography
+                                sx={{
+                                    mt: 2,
+                                    fontSize: 12,
+                                    color: textMuted,
+                                }}
+                            >
+                                Reply STOP to any message if you want to unsubscribe.
+                            </Typography>
+
+                            <Button
+                                href="https://saathirides.net/find-ride"
+                                startIcon={<ArrowBack />}
+                                sx={{
+                                    mt: 3,
+                                    color: saffron,
+                                    textTransform: "none",
+                                    fontWeight: 600,
+                                }}
+                            >
+                                Back to Saathi Rides
+                            </Button>
+                        </Box>
+                    ) : !submitted ? (
+                        /* =====================================================
+                           OPT-IN FORM
+                        ====================================================== */
+
                         <>
                             <Typography
                                 sx={{
@@ -397,12 +514,15 @@ const SmsNotifications = () => {
                                         minWidth: 100,
                                         backgroundColor: cream,
                                         borderRadius: 1.5,
+
                                         "& .MuiOutlinedInput-notchedOutline": {
                                             borderColor: border,
                                         },
+
                                         "&:hover .MuiOutlinedInput-notchedOutline": {
                                             borderColor: saffron,
                                         },
+
                                         "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
                                             borderColor: saffron,
                                         },
@@ -475,7 +595,9 @@ const SmsNotifications = () => {
                                     control={
                                         <Checkbox
                                             checked={consent}
-                                            onChange={(e) => setConsent(e.target.checked)}
+                                            onChange={(e) =>
+                                                setConsent(e.target.checked)
+                                            }
                                             sx={{
                                                 color: saffron,
                                                 p: 0.3,
@@ -496,21 +618,28 @@ const SmsNotifications = () => {
                                                 lineHeight: 1.7,
                                             }}
                                         >
-                                            By checking this box and clicking the button below, I
-                                            provide my express written consent to receive recurring
-                                            automated SMS text messages from{" "}
+                                            By checking this box and clicking the button below,
+                                            I provide my express written consent to receive
+                                            recurring automated SMS text messages from{" "}
                                             <strong>Saathi Rides</strong> at the mobile number
-                                            provided above. Messages may include ride confirmations,
-                                            match alerts, community updates, and service
-                                            notifications. Message frequency varies. Message & data
-                                            rates may apply. Consent is not a condition of joining
-                                            Saathi. Reply <strong>STOP</strong> to unsubscribe at any
-                                            time. Reply <strong>HELP</strong> for help. View our{" "}
-                                            <Link href="/privacy" sx={{ color: saffron }}>
+                                            provided above. Messages may include ride
+                                            confirmations, match alerts, community updates,
+                                            and service notifications. Message frequency
+                                            varies. Message & data rates may apply. Consent is
+                                            not a condition of joining Saathi. Reply{" "}
+                                            <strong>STOP</strong> to unsubscribe at any time.
+                                            Reply <strong>HELP</strong> for help. View our{" "}
+                                            <Link
+                                                href="/privacy"
+                                                sx={{ color: saffron }}
+                                            >
                                                 Privacy Policy
                                             </Link>{" "}
                                             and{" "}
-                                            <Link href="/terms" sx={{ color: saffron }}>
+                                            <Link
+                                                href="/terms"
+                                                sx={{ color: saffron }}
+                                            >
                                                 Terms of Service
                                             </Link>
                                             .
@@ -560,11 +689,17 @@ const SmsNotifications = () => {
                                 }}
                             >
                                 By subscribing you agree to our{" "}
-                                <Link href="/terms" sx={{ color: saffron }}>
+                                <Link
+                                    href="/terms"
+                                    sx={{ color: saffron }}
+                                >
                                     Terms
                                 </Link>{" "}
                                 and{" "}
-                                <Link href="/privacy" sx={{ color: saffron }}>
+                                <Link
+                                    href="/privacy"
+                                    sx={{ color: saffron }}
+                                >
                                     Privacy Policy
                                 </Link>
                                 .
@@ -577,7 +712,9 @@ const SmsNotifications = () => {
                             </Typography>
                         </>
                     ) : (
-                        /* ================= SUCCESS ================= */
+                        /* =====================================================
+                           SUCCESS AFTER SUBMIT
+                        ====================================================== */
 
                         <Box
                             sx={{
@@ -631,7 +768,7 @@ const SmsNotifications = () => {
                             </Typography>
 
                             <Button
-                                href="http://localhost:5173/find-ride"
+                                href="https://saathirides.net/find-ride"
                                 startIcon={<ArrowBack />}
                                 sx={{
                                     mt: 3,
