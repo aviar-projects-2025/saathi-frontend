@@ -308,7 +308,7 @@ const RequestRide = ({ ride }) => {
     : remainingSeatsForUserEdit + requestedByMeForEdit;
 
   return (
-    <PageLayout>
+    <PageLayout >
       <Box>
         <Typography
           sx={{

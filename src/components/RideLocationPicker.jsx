@@ -1053,14 +1053,14 @@ export default function RideLocationPicker({
         }}
       >
         {/* FROM */}
-
         <div>
           <label
             style={{
               display: "block",
-              marginBottom: "6px",
-              fontSize: "14px",
-              fontWeight: 600,
+              marginBottom: "4px", // mb: 0.5
+              fontSize: "0.82rem",
+              color: "rgba(0, 0, 0, 0.5)", // text.secondary
+              fontWeight: 400,
             }}
           >
             From
@@ -1070,14 +1070,14 @@ export default function RideLocationPicker({
         </div>
 
         {/* DESTINATION */}
-
         <div>
           <label
             style={{
               display: "block",
-              marginBottom: "6px",
-              fontSize: "14px",
-              fontWeight: 600,
+              marginBottom: "4px",
+              fontSize: "0.82rem",
+              color: "rgba(0, 0, 0, 0.5)",
+              fontWeight: 400,
             }}
           >
             Destination
@@ -1095,9 +1095,9 @@ export default function RideLocationPicker({
         style={{
           display: "flex",
           alignItems: "center",
-          gap: "10px",
+          gap: "8px",
           flexWrap: "wrap",
-          marginBottom: "10px",
+          marginBottom: "6px",
         }}
       >
         <strong style={{ fontSize: "14px" }}>Select on map:</strong>
@@ -1106,26 +1106,28 @@ export default function RideLocationPicker({
           type="button"
           onClick={() => setMapSelectionMode("from")}
           style={{
-            padding: "7px 14px",
-            borderRadius: "8px",
+            padding: "5px 9px",
+            borderRadius: "6px",
             border:
               mapSelectionMode === "from"
-                ? "2px solid #E8650A"
+                ? "1.5px solid #E8650A"
                 : "1px solid #ccc",
             background: mapSelectionMode === "from" ? "#fff3eb" : "#fff",
             cursor: "pointer",
             fontWeight: 600,
+            fontSize: "13px",
+            lineHeight: 1.2,
           }}
         >
-          📍 From
+          From
         </button>
 
         <button
           type="button"
           onClick={() => setMapSelectionMode("destination")}
           style={{
-            padding: "7px 14px",
-            borderRadius: "8px",
+            padding: "5px 9px",
+            borderRadius: "6px",
             border:
               mapSelectionMode === "destination"
                 ? "2px solid #E8650A"
@@ -1134,17 +1136,20 @@ export default function RideLocationPicker({
               mapSelectionMode === "destination" ? "#fff3eb" : "#fff",
             cursor: "pointer",
             fontWeight: 600,
+            fontSize: "13px",
+            lineHeight: 1.2,
           }}
         >
-          📍 Destination
+          Destination
         </button>
       </div>
 
       <div
         style={{
-          marginBottom: "10px",
-          fontSize: "13px",
+          marginBottom: "6px",
+          fontSize: "13.5px",
           color: "#666",
+          lineHeight: 1.4,
         }}
       >
         Click the map to select{" "}

@@ -54,6 +54,7 @@ const MyReferrals = () => {
     const [selectedProfile, setSelectedProfile] = useState(null);
     const [mobile_number, setMobile_number] = useState("");
     const [shareLink, setShareLink] = useState("");
+    const [inviteLoading, setInviteLoading] = useState(false);
 
     const { notifications } = useNotifications();
     const { getPendingReferralCount } = useReferral();
@@ -272,8 +273,9 @@ const MyReferrals = () => {
             alert("Enter a valid 10-digit mobile number");
             return;
         }
-
+        setInviteLoading(true);
         try {
+
             const stored = await axios.post(
                 `${Api}/referralInvite/`,
                 {
@@ -300,7 +302,9 @@ const MyReferrals = () => {
             );
 
             console.log(response.data);
-
+            setInviteLoading(false);
+            setMobile_number('');
+            handleCloseShare();
             alert("Referral link sent successfully!");
             }
 
@@ -925,7 +929,7 @@ const MyReferrals = () => {
                                     }}
                                     onClick={() => handlelink(mobile_number)}
                                 >
-                                    Invite
+                                   {inviteLoading ? "Inviting..." : "Invite"}
                                 </Button>
                             </Stack>
                         </Box>
