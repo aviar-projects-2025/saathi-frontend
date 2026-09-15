@@ -644,15 +644,13 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
                 },
               }}
             >
-              {isBusy ? (
-                confirmState.action === "approve"
-                  ? "Approving..."
-                  : "Rejecting..."
-              ) : (
-                confirmState.action === "approve"
-                  ? "Approve"
-                  : "Reject"
-              )}
+              {isApproveBusy
+                ? "Approving..."
+                : isRejectBusy
+                  ? "Rejecting..."
+                  : confirmState.action === "approve"
+                    ? "Approve"
+                    : "Reject"}
             </Button>
           </DialogActions>
         </Dialog>
@@ -826,9 +824,15 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
               },
             }}
           >
-            {confirmState.action === 'approve'
-              ? isBusy ? 'Approving...' : 'Approve'
-              : isBusy ? 'Rejecting...' : 'Reject'}
+
+            {confirmState.action === "approve"
+              ? isApproveBusy
+                ? "Approving..."
+                : "Approve"
+              : isRejectBusy
+                ? "Rejecting..."
+                : "Reject"}
+
           </Button>
         </DialogActions>
       </Dialog>
@@ -853,7 +857,7 @@ export default function RideDetailsModal({
   approveLoading,
   rejectLoading,
 }) {
- 
+
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down('sm'));
   const isMd = useMediaQuery(theme.breakpoints.up('md'));

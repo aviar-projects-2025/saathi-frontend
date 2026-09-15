@@ -15,6 +15,7 @@ import {
   Modal,
   TextField,
   Chip,
+  Tooltip,
   useTheme,
   Grid,
   CircularProgress,
@@ -116,11 +117,11 @@ const Myprofile = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const { currentUser, getuserData, completion } = useUser();
-
+  const [mobile_number, setMobile_number] = useState("");
   const [openShare, setOpenShare] = useState(false);
   const handleOpenShare = () => setOpenShare(true);
   const handleCloseShare = () => setOpenShare(false);
-
+ const [inviteLoading, setInviteLoading] = useState(false);
   const feedRef = useRef(null);
 
   const [profileModalOpen, setProfileModalOpen] = useState(false);
@@ -274,6 +275,58 @@ const Myprofile = () => {
       setPasswordLoading(false);
     }
   };
+    const handlelink = async () => {
+        if (!mobile_number || mobile_number.length !== 10) {
+            alert("Enter a valid 10-digit mobile number");
+            return;
+        }
+        setInviteLoading(true);
+        try {
+
+            const stored = await axios.post(
+                `${Api}/referralInvite/`,
+                {
+                    referredBy: user.id,
+                    mobile: mobile_number,
+                    status: 'Waiting',
+                }
+            )
+
+            console.log(stored, 'stored')
+
+            if(stored.data.status == true){
+
+            const response = await axios.post(
+                `${Api}/referrals/send`,
+                {
+                    mobile_number,
+                    shareLink,
+                    referrerId: user?.referralCode,
+                },
+                {
+                    withCredentials: true,
+                }
+            );
+
+            console.log(response.data);
+            setInviteLoading(false);
+            setMobile_number('');
+            handleCloseShare();
+            alert("Referral link sent successfully!");
+            }
+
+        } catch (error) {
+            console.error(
+                "Referral SMS error:",
+                error.response?.data || error.message
+            );
+
+            alert(
+                error.response?.data?.message ||
+                "Failed to send referral SMS"
+            );
+        }
+    };
 
   const getCommunityPost = async () => {
     try {
@@ -723,133 +776,159 @@ const Myprofile = () => {
         </Box>
       </Modal>
 
-      <Modal
-        open={openShare}
-        onClose={(event, reason) => {
-          if (reason === "backdropClick") {
-            return;
-          }
+    
+  <Modal
+                    open={openShare}
+                    onClose={(event, reason) => {
+                        if (reason === "backdropClick") {
+                            return;
+                        }
 
-          handleCloseShare();
-        }}
-      >
-        <Box
-          sx={{
-            position: "fixed",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: { xs: "92%", sm: "100%" },
-            px: { xs: 2, sm: 0 },
-          }}
-        >
-          <Box
-            sx={{
-              position: "relative",
-              bgcolor: "white",
-              width: { xs: "100%", sm: 320 },
-              maxWidth: 320,
-              borderRadius: { xs: 2, sm: 2 },
-              p: { xs: 2, sm: 3 },
-              boxShadow: 24,
-            }}
-          >
-            <IconButton
-              onClick={handleCloseShare}
-              size="small"
-              sx={{
-                position: "absolute",
-                top: 8,
-                right: 8,
-                color: "grey.500",
-              }}
-            >
-              <CloseIcon fontSize="small" />
-            </IconButton>
+                        handleCloseShare();
+                    }}
+                >
+                    <Box
+                        sx={{
+                            position: "fixed",
+                            top: "50%",
+                            left: "50%",
+                            transform: "translate(-50%, -50%)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            width: { xs: "92%", sm: "100%" },
+                            px: { xs: 2, sm: 0 },
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                position: "relative",
+                                bgcolor: "white",
+                                width: { xs: "100%", sm: 380 },
+                                maxWidth: 380,
+                                borderRadius: { xs: 2, sm: 2 },
+                                p: { xs: 2, sm: 3 },
+                                boxShadow: 24,
+                            }}
+                        >
+                            <IconButton
+                                onClick={handleCloseShare}
+                                size="small"
+                                sx={{
+                                    position: "absolute",
+                                    top: 8,
+                                    right: 8,
+                                    color: "grey.500",
+                                }}
+                            >
+                                <CloseIcon fontSize="small" />
+                            </IconButton>
 
-            <Typography
-              fontWeight={600}
-              sx={{
-                fontSize: { xs: "0.9rem", sm: "1rem" },
-                mb: { xs: 1.5, sm: 2 },
-                pr: 3,
-              }}
-            >
-              Share your referral link
-            </Typography>
+                            <Typography
+                                fontWeight={600}
+                                sx={{
+                                    fontSize: { xs: "0.9rem", sm: "1rem" },
+                                    mb: { xs: 1.5, sm: 2 },
+                                    pr: 3,
+                                }}
+                            >
+                                Invite your friends
+                            </Typography>
 
-            <TextField
-              fullWidth
-              value={shareLink}
-              size="small"
-              InputProps={{
-                readOnly: true,
-                sx: { fontSize: { xs: "0.75rem", sm: "0.85rem" } },
-              }}
-            />
+                            {/* Referral Link - Copyable */}
+                            <Paper
+                                variant="outlined"
+                                sx={{
+                                    p: 1.5,
+                                    mb: 2,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "space-between",
+                                    bgcolor: "#f5f5f5",
+                                    borderRadius: 1,
+                                }}
+                            >
+                                <Typography
+                                    sx={{
+                                        fontSize: { xs: "0.7rem", sm: "0.8rem" },
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        whiteSpace: "nowrap",
+                                        flex: 1,
+                                        mr: 1,
+                                    }}
+                                >
+                                    {shareLink}
+                                </Typography>
+                                <Tooltip title="Copy link">
+                                    <IconButton
+                                        size="small"
+                                        onClick={() => handleCopy(shareLink)}
+                                        sx={{ flexShrink: 0 }}
+                                    >
+                                        <ContentCopyIcon fontSize="small" />
+                                    </IconButton>
+                                </Tooltip>
+                            </Paper>
 
-            <Stack
-              direction="row"
-              spacing={{ xs: 1, sm: 1 }}
-              sx={{ mt: { xs: 1.5, sm: 2 } }}
-            >
-              <Button
-                fullWidth
-                variant="contained"
-                size="small"
-                sx={{
-                  fontSize: { xs: "0.75rem", sm: "0.85rem" },
-                  py: { xs: 0.5, sm: 0.75 },
-                  textTransform: "none",
-                  color: "#ffff",
-                  bgcolor: "#FF9933",
-                  "&:hover": { bgcolor: "#da9a3a" },
-                }}
-                onClick={() => handleCopy(shareLink)}
-                disabled={isProfileComplete}
-              >
-                Copy Link
-              </Button>
+                            <TextField
+                                fullWidth
+                                value={mobile_number}
+                                type="text"
+                                inputMode="numeric"
+                                onChange={(e) => {
+                                    const value = e.target.value.replace(/\D/g, "").slice(0, 10);
+                                    setMobile_number(value);
+                                }}
+                                size="small"
+                                placeholder="Enter mobile number"
+                                InputProps={{
+                                    sx: {
+                                        fontSize: { xs: "0.75rem", sm: "0.85rem" },
+                                    },
+                                }}
+                            />
 
-              <Button
-                fullWidth
-                variant="outlined"
-                size="small"
-                sx={{
-                  fontSize: { xs: "0.75rem", sm: "0.85rem" },
-                  py: { xs: 0.5, sm: 0.75 },
-                  textTransform: "none",
-                  color: "#ffff",
-                  bgcolor: "#09710f",
-                  "&.Mui-disabled": {
-                    opacity: 0.5,
-                    border: "none",
-                    color: "#ffff"
-                  },
-                }}
-                onClick={() => {
-                  if (navigator.share) {
-                    navigator.share({
-                      title: "Join using my referral",
-                      text: "Use my referral link",
-                      url: shareLink,
-                    });
-                  } else {
-                    toast.info("Sharing not supported on this device", toasts);
-                  }
-                }}
-                disabled={isProfileComplete}
-              >
-                Share
-              </Button>
-            </Stack>
-          </Box>
-        </Box>
-      </Modal>
+                            <Stack
+                                direction="row"
+                                spacing={{ xs: 1, sm: 1 }}
+                                sx={{ mt: { xs: 1.5, sm: 2 } }}
+                            >
+                                <Button
+                                    fullWidth
+                                    variant="contained"
+                                    size="small"
+                                    sx={{
+                                        fontSize: { xs: "0.75rem", sm: "0.85rem" },
+                                        py: { xs: 0.5, sm: 0.75 },
+                                        textTransform: "none",
+                                        bgcolor: "#FF9933",
+                                        "&:hover": { bgcolor: "#da9a3a" },
+                                    }}
+                                    onClick={() => setMobile_number('')}
+                                >
+                                    Clear
+                                </Button>
 
+                                <Button
+                                    fullWidth
+                                    variant="contained"
+                                    size="small"
+                                    sx={{
+                                        fontSize: { xs: "0.75rem", sm: "0.85rem" },
+                                        py: { xs: 0.5, sm: 0.75 },
+                                        textTransform: "none",
+                                        bgcolor: "#09710f",
+                                        "&:hover": { bgcolor: "#065a0b" },
+                                    }}
+                                    onClick={() => handlelink(mobile_number)}
+                                >
+                                   {inviteLoading ? "Inviting..." : "Invite"}
+                                </Button>
+                            </Stack>
+                        </Box>
+                    </Box>
+                </Modal>
       {/* ── Notifications ── */}
       {/* <SectionCard sx={{ mt: 3 }}>
         <SectionHeader icon={<NotificationsIcon />} label="Notifications" />
