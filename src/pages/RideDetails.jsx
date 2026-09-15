@@ -262,7 +262,6 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
   const lastName = request.requestedBy?.lastName || '';
   const profilePic = request.requestedBy?.profileImage;
   const rejectedReq = Number(request?.rejectedSeats ?? 0);
-
   const pendingReq = Number(request?.pendingReqSeats ?? 0);
   const approvedSeats = Number(request?.approvedSeats ?? 0);
   const membersCount = request?.membersCount || 0;
@@ -310,6 +309,8 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
     try {
       const res = await axios.patch(`${Api}/bookride/${selectedRequest._id}/status?type=Reject`);
       const updatedRequest = res.data?.data?.request;
+
+      console.log(updatedRequest, 'updatedRequest')
 
       if (updatedRequest) {
         onRequestUpdated?.(selectedRequest._id, updatedRequest);
@@ -561,7 +562,8 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
                 )}
               </>
             )}
-            <IconButton size="small" aria-label="Toggle passenger details">
+            <IconButton
+              size="small" aria-label="Toggle passenger details">
               {open ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
             </IconButton>
           </Stack>
@@ -851,7 +853,7 @@ export default function RideDetailsModal({
   approveLoading,
   rejectLoading,
 }) {
-
+ 
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down('sm'));
   const isMd = useMediaQuery(theme.breakpoints.up('md'));
@@ -1266,13 +1268,12 @@ export default function RideDetailsModal({
           <Field icon={CalendarTodayIcon} label="Date" value={dateLabel || '—'} />
           <Field icon={AccessTimeIcon} label="Time" value={timeLabel || '—'} />
           <Field icon={TravelIcon} label="Mode" value={ride?.modeOfTravel || '—'} />
-          {ride?.duration !== null && ride?.duration !== undefined && (
-            <Field
-              icon={AccessTimeIcon}
-              label="Travel Duration"
-              value={ride?.duration}
-            />
-          )}
+          {ride?.duration && <Field icon={AccessTimeIcon} label="Travel Duration" value={ride.duration != null
+            ? ride.duration >= 60
+              ? `${Math.floor(ride.duration / 60)} hr ${ride.duration % 60
+              } min`
+              : `${ride.duration} min`
+            : "" || '—'} />}
           <Field icon={BadgeIcon} label="Age Group Pref." value={ride?.ageGroupPreference || '—'} />
           {ride?.availableSeats !== null &&
             ride?.availableSeats !== undefined && (

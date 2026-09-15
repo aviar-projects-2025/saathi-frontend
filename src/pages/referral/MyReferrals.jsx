@@ -85,7 +85,7 @@ const MyReferrals = () => {
     useEffect(() => {
         if (user?.referralCode) {
             // setShareLink(`${window.location.origin}/register?ref=${user.referralCode}`);
-            setShareLink(`https://saathirides.net/register?ref=${user.referralCode}}`)
+            setShareLink(`https://saathirides.net/register?ref=${user.referralCode}`)
         }
     }, [user]);
 
@@ -285,7 +285,9 @@ const MyReferrals = () => {
                 }
             )
 
-            // console.log(stored, 'stored')
+            console.log(stored, 'stored')
+
+            if(stored.data.status == true){
 
             const response = await axios.post(
                 `${Api}/referrals/send`,
@@ -304,7 +306,7 @@ const MyReferrals = () => {
             setMobile_number('');
             handleCloseShare();
             alert("Referral link sent successfully!");
-            //  toast.success("Referral link sent successfully!", toasts);
+            }
 
         } catch (error) {
             console.error(

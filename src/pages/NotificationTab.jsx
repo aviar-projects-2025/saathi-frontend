@@ -32,6 +32,9 @@ export default function NotificationTab({ handleCloseNotifications }) {
         console.log(item.type, 'item.type')
         switch (item.type) {
             case "new_request":
+            case "ride_request_update" :
+                navigate("/myride", { state: { tab: 2, rideId: item.data?.rideId }, });
+                break;
             case "request_rejected":
                 navigate("/myride", { state: { tab: 2, rideId: item.data?.rideId }, });
                 break;
@@ -55,13 +58,14 @@ export default function NotificationTab({ handleCloseNotifications }) {
     }
 
     const handleIsRead = (id, item) => {
-
+        console.log(id, item)
         if (item?.isRead) return;
         try {
-            axios.patch(Api + `/notification/${id}`)
+            axios.patch(Api + `/notification/single/${id}`)
                 .then((res) => {
                     fetchNotifications();
                     getPendingReferralCount();
+                    console.log(res,'res')
                 })
         } catch (error) {
             console.log(error.message)
