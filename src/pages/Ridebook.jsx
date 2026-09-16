@@ -478,7 +478,6 @@ export default function Ridebook({
   const isAddMemberDisabled =
     !isFlight && newMembers.length >= availableSeatsForAdd;
 
-  console.log("Available//////////", availableSeatsForAdd)
   const editableMembersWithMeta = editableMembers.map(
     (member, originalIndex) => ({
       ...member,

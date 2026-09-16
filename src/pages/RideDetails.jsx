@@ -310,8 +310,6 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
       const res = await axios.patch(`${Api}/bookride/${selectedRequest._id}/status?type=Reject`);
       const updatedRequest = res.data?.data?.request;
 
-      console.log(updatedRequest, 'updatedRequest')
-
       if (updatedRequest) {
         onRequestUpdated?.(selectedRequest._id, updatedRequest);
       }
@@ -331,26 +329,28 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
   const handleConfirm = () => {
     if (confirmState.action === 'approve') {
       onApprove(request._id);
-
+      setConfirmState({ open: false, action: null });
     } else if (confirmState.action === 'reject') {
       onReject(request._id);
+      setConfirmState({ open: false, action: null });
     }
+
   };
 
   const handleExited = () => {
     setConfirmState({ open: false, action: null });
   };
 
-  useEffect(() => {
-    if (!confirmState.open) return;
-    if (confirmState.action === 'approve' && !isApproveBusy) {
-      setConfirmState({ open: false, action: null });
-    }
-    if (confirmState.action === 'reject' && !isRejectBusy) {
-      setConfirmState({ open: false, action: null });
-    }
+  // useEffect(() => {
+  //   if (!confirmState.open) return;
+  //   if (confirmState.action === 'approve' && !isApproveBusy) {
+  //     setConfirmState({ open: false, action: null });
+  //   }
+  //   if (confirmState.action === 'reject' && !isRejectBusy) {
+  //     setConfirmState({ open: false, action: null });
+  //   }
 
-  }, [isApproveBusy, isRejectBusy]);
+  // }, [isApproveBusy, isRejectBusy]);
 
   return (
     <>
@@ -825,13 +825,13 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
             }}
           >
 
-            {confirmState.action === "approve"
-              ? isApproveBusy
-                ? "Approving..."
-                : "Approve"
+            {isApproveBusy
+              ? "Approving..."
               : isRejectBusy
                 ? "Rejecting..."
-                : "Reject"}
+                : confirmState.action === "approve"
+                  ? "Approve"
+                  : "Reject"}
 
           </Button>
         </DialogActions>
