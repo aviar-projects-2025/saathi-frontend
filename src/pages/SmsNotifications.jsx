@@ -11,7 +11,6 @@ import {
     FormControlLabel,
     Paper,
     Grid,
-    Divider,
     Link,
     Alert,
     InputAdornment,
@@ -27,6 +26,7 @@ import {
     ArrowForward,
     Phone,
 } from "@mui/icons-material";
+
 import axios from "axios";
 import Api from "../Api";
 
@@ -46,44 +46,81 @@ const SmsNotifications = () => {
     const [phone, setPhone] = useState("");
     const [consent, setConsent] = useState(false);
     const [submitted, setSubmitted] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
     const user = JSON.parse(localStorage.getItem("user"));
 
     const isSmsApproved = user?.isMessageApproved === true;
 
-    const isValid = consent && phone.trim().length >= 10;
+    const cleanPhone = phone.replace(/\D/g, "");
+
+    /*
+     * Saathi Rides currently accepts US and India numbers.
+     *
+     * US:
+     * +1 + 10 digit number
+     *
+     * India:
+     * +91 + 10 digit number
+     */
+    const isValidPhone =
+        cleanPhone.length === 10 &&
+        (countryCode === "+1" || countryCode === "+91");
+
+    /*
+     * Consent must be explicitly checked.
+     *
+     * The phone number alone does NOT constitute consent.
+     */
+    const isValid = consent && isValidPhone;
 
     const handleSubmit = async () => {
-        if (!isValid) return;
+        if (!isValid || loading) return;
+
+        setError("");
+        setLoading(true);
+
+        const fullPhoneNumber = `${countryCode}${cleanPhone}`;
 
         try {
             const res = await axios.patch(
                 `${Api}/notification/optin`,
                 {
                     isMessageApproved: true,
-                    messageNumber: `${countryCode}${phone}`,
+                    messageNumber: fullPhoneNumber,
                 }
             );
 
-            console.log("Opt-in updated:", res.data);
+            console.log(
+                "Saathi Rides SMS opt-in updated:",
+                res.data
+            );
 
-            // Update localStorage
             const updatedUser = {
                 ...user,
                 isMessageApproved: true,
-                messageNumber: `${countryCode}${phone}`,
+                messageNumber: fullPhoneNumber,
             };
 
-            localStorage.setItem("user", JSON.stringify(updatedUser));
+            localStorage.setItem(
+                "user",
+                JSON.stringify(updatedUser)
+            );
 
             setSubmitted(true);
         } catch (error) {
-            console.error("Opt-in update failed:", error);
-
             console.error(
-                error?.response?.data?.message ||
-                "Failed to subscribe"
+                "Saathi Rides SMS opt-in update failed:",
+                error
             );
+
+            setError(
+                error?.response?.data?.message ||
+                    "We couldn't complete your Saathi Rides SMS subscription. Please try again."
+            );
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -97,7 +134,9 @@ const SmsNotifications = () => {
                 flexDirection: "column",
             }}
         >
-            {/* ================= NAVBAR ================= */}
+            {/* =========================================================
+                NAVBAR
+            ========================================================= */}
 
             <Box
                 component="nav"
@@ -111,7 +150,7 @@ const SmsNotifications = () => {
                     justifyContent: "space-between",
                 }}
             >
-                {/* Logo */}
+                {/* Saathi Rides branding */}
 
                 <Typography
                     sx={{
@@ -134,8 +173,6 @@ const SmsNotifications = () => {
                     Rides
                 </Typography>
 
-                {/* Back */}
-
                 <Link
                     href="https://saathirides.net/find-ride"
                     underline="none"
@@ -151,12 +188,13 @@ const SmsNotifications = () => {
                     }}
                 >
                     <ArrowBack sx={{ fontSize: 17 }} />
-
-                    Back to app
+                    Back to Saathi Rides
                 </Link>
             </Box>
 
-            {/* ================= HERO ================= */}
+            {/* =========================================================
+                HERO
+            ========================================================= */}
 
             <Box
                 sx={{
@@ -178,8 +216,6 @@ const SmsNotifications = () => {
                     },
                 }}
             >
-                {/* Eyebrow */}
-
                 <Box
                     sx={{
                         display: "inline-flex",
@@ -208,11 +244,9 @@ const SmsNotifications = () => {
                             letterSpacing: "0.5px",
                         }}
                     >
-                        SMS Notifications
+                        Saathi Rides SMS Notifications
                     </Typography>
                 </Box>
-
-                {/* Heading */}
 
                 <Typography
                     component="h1"
@@ -227,12 +261,12 @@ const SmsNotifications = () => {
                         color: "#fff",
                         lineHeight: 1.1,
                         letterSpacing: "-1px",
-                        maxWidth: 600,
+                        maxWidth: 700,
                         mx: "auto",
                         mb: 2,
                     }}
                 >
-                    Stay connected to your{" "}
+                    Stay connected with{" "}
                     <Box
                         component="span"
                         sx={{
@@ -240,25 +274,29 @@ const SmsNotifications = () => {
                             fontStyle: "italic",
                         }}
                     >
-                        community
+                        Saathi Rides
                     </Box>
                 </Typography>
 
                 <Typography
                     sx={{
                         fontSize: 16,
-                        color: "rgba(255,255,255,0.55)",
-                        maxWidth: 480,
+                        color: "rgba(255,255,255,0.65)",
+                        maxWidth: 600,
                         mx: "auto",
                         lineHeight: 1.7,
                     }}
                 >
-                    Get instant SMS alerts for ride matches, confirmations, and
-                    community updates — no app download needed.
+                    Saathi Rides may send you SMS messages about your
+                    Saathi Rides account, phone verification, rides,
+                    bookings, ride requests, ride matches, and important
+                    service notifications.
                 </Typography>
             </Box>
 
-            {/* ================= MAIN ================= */}
+            {/* =========================================================
+                MAIN CONTENT
+            ========================================================= */}
 
             <Container
                 maxWidth="sm"
@@ -267,7 +305,70 @@ const SmsNotifications = () => {
                     flex: 1,
                 }}
             >
-                {/* ================= SMS EXAMPLES ================= */}
+                {/* =====================================================
+                    DIRECT BUSINESS RELATIONSHIP
+                ===================================================== */}
+
+                <Paper
+                    elevation={0}
+                    sx={{
+                        backgroundColor: greenLight,
+                        border: `1px solid rgba(10,92,51,0.15)`,
+                        borderRadius: 2,
+                        p: { xs: 2.5, sm: 3 },
+                        mb: 4,
+                    }}
+                >
+                    <Box
+                        sx={{
+                            display: "flex",
+                            gap: 1.5,
+                            alignItems: "flex-start",
+                        }}
+                    >
+                        <CheckCircle
+                            sx={{
+                                color: green,
+                                fontSize: 23,
+                                mt: 0.2,
+                            }}
+                        />
+
+                        <Box>
+                            <Typography
+                                sx={{
+                                    fontSize: 14,
+                                    fontWeight: 700,
+                                    color: navy,
+                                    mb: 0.6,
+                                }}
+                            >
+                                You are communicating directly with
+                                Saathi Rides
+                            </Typography>
+
+                            <Typography
+                                sx={{
+                                    fontSize: 13,
+                                    color: textSecondary,
+                                    lineHeight: 1.7,
+                                }}
+                            >
+                                Saathi Rides is the business providing
+                                your ridesharing account and related
+                                services. If you choose SMS notifications,
+                                you are giving your consent directly to
+                                <strong> Saathi Rides</strong> to send
+                                service-related text messages to the
+                                mobile number you provide.
+                            </Typography>
+                        </Box>
+                    </Box>
+                </Paper>
+
+                {/* =====================================================
+                    SMS EXAMPLES
+                ===================================================== */}
 
                 <Typography
                     sx={{
@@ -278,7 +379,7 @@ const SmsNotifications = () => {
                         mb: 2.5,
                     }}
                 >
-                    Messages you'll receive
+                    Examples of Saathi Rides SMS messages
                 </Typography>
 
                 <Box
@@ -292,22 +393,21 @@ const SmsNotifications = () => {
                     <SmsMessage
                         text={
                             <>
-                                🙏 Welcome to Saathi, Priya! You've joined the community
-                                through Meena R.'s invite. Your profile is live:{" "}
-                                <Link href="#" sx={{ color: saffron }}>
-                                    saathirides.net/join
-                                </Link>
+                                Saathi Rides: Your verification code is
+                                123456. Use this code to verify your
+                                phone number. Reply HELP for help.
                             </>
                         }
-                        label="Welcome message"
+                        label="Phone verification"
                     />
 
                     <SmsMessage
                         text={
                             <>
-                                ✅ Ride confirmed! Rahul S. will pick you up from Plano at
-                                6:00 AM on Dec 18 for DFW Airport. Reply HELP for support or
-                                STOP to cancel.
+                                Saathi Rides: Your ride is confirmed.
+                                Rahul will pick you up from Plano at
+                                6:00 AM on Dec 18 for DFW Airport.
+                                Reply STOP to unsubscribe.
                             </>
                         }
                         label="Ride confirmation"
@@ -316,32 +416,44 @@ const SmsNotifications = () => {
                     <SmsMessage
                         text={
                             <>
-                                🚗 New match near you! Ananya K. is offering a ride from
-                                Chicago to Dallas on Dec 20 — 3 seats available. View:{" "}
-                                <Link href="#" sx={{ color: saffron }}>
-                                    saathirides.net/rides
-                                </Link>
+                                Saathi Rides: New ride match! Ananya
+                                is offering a ride from Chicago to
+                                Dallas on Dec 20. View your ride at
+                                saathirides.net/rides. Reply STOP to
+                                unsubscribe.
                             </>
                         }
-                        label="Ride match alert"
+                        label="Ride match"
                     />
 
                     <SmsMessage
                         text={
                             <>
-                                🔔 Neel K. has requested your ride to DFW on Dec 18. Accept or
-                                decline:{" "}
-                                <Link href="#" sx={{ color: saffron }}>
-                                    saathirides.net/requests
-                                </Link>{" "}
-                                — Reply STOP to unsubscribe.
+                                Saathi Rides: Neel has requested your
+                                ride to DFW on Dec 18. Review the
+                                request at saathirides.net/requests.
+                                Reply STOP to unsubscribe.
                             </>
                         }
                         label="Ride request"
                     />
+
+                    <SmsMessage
+                        text={
+                            <>
+                                Saathi Rides: Your booking status has
+                                been updated. Please open the Saathi
+                                Rides app to view the latest details.
+                                Reply STOP to unsubscribe.
+                            </>
+                        }
+                        label="Account/service notification"
+                    />
                 </Box>
 
-                {/* ================= OPT-IN CARD ================= */}
+                {/* =====================================================
+                    OPT-IN CARD
+                ===================================================== */}
 
                 <Paper
                     elevation={0}
@@ -353,11 +465,11 @@ const SmsNotifications = () => {
                         mb: 4,
                     }}
                 >
-                    {/* =====================================================
-        ALREADY SUBSCRIBED
-    ====================================================== */}
+                    {/* =================================================
+                        ALREADY SUBSCRIBED
+                    ================================================= */}
 
-                    {user?.isMessageApproved === true ? (
+                    {isSmsApproved ? (
                         <Box
                             sx={{
                                 textAlign: "center",
@@ -395,7 +507,7 @@ const SmsNotifications = () => {
                                     color: navy,
                                 }}
                             >
-                                SMS notifications are already enabled 🙏
+                                Saathi Rides SMS notifications are enabled
                             </Typography>
 
                             <Typography
@@ -407,10 +519,17 @@ const SmsNotifications = () => {
                                     mx: "auto",
                                 }}
                             >
-                                You're already subscribed to Saathi Rides SMS notifications.
+                                You have voluntarily opted in to receive
+                                service-related SMS messages directly from
+                                Saathi Rides.
+
                                 <br />
-                                We'll send you ride confirmations, match alerts, and important
-                                community updates.
+
+                                Messages may include phone verification
+                                codes, ride confirmations, booking updates,
+                                ride matches, ride requests, and important
+                                service notifications related to your
+                                Saathi Rides account and activity.
                             </Typography>
 
                             <Box
@@ -429,7 +548,7 @@ const SmsNotifications = () => {
                                 }}
                             >
                                 <Sms sx={{ fontSize: 18 }} />
-                                SMS alerts enabled
+                                Saathi Rides SMS subscription active
                             </Box>
 
                             <Typography
@@ -439,7 +558,8 @@ const SmsNotifications = () => {
                                     color: textMuted,
                                 }}
                             >
-                                Reply STOP to any message if you want to unsubscribe.
+                                Reply STOP to any Saathi Rides SMS to
+                                unsubscribe.
                             </Typography>
 
                             <Button
@@ -456,20 +576,20 @@ const SmsNotifications = () => {
                             </Button>
                         </Box>
                     ) : !submitted ? (
-                        /* =====================================================
-                           OPT-IN FORM
-                        ====================================================== */
-
                         <>
+                            {/* =========================================
+                                OPT-IN FORM
+                            ========================================= */}
+
                             <Typography
                                 sx={{
                                     fontFamily: "Georgia, serif",
-                                    fontSize: 20,
+                                    fontSize: 22,
                                     fontWeight: 700,
                                     mb: 0.7,
                                 }}
                             >
-                                Sign up for SMS notifications
+                                Get SMS notifications from Saathi Rides
                             </Typography>
 
                             <Typography
@@ -477,14 +597,27 @@ const SmsNotifications = () => {
                                     fontSize: 14,
                                     color: textSecondary,
                                     mb: 3,
-                                    lineHeight: 1.6,
+                                    lineHeight: 1.7,
                                 }}
                             >
-                                Enter your number below to receive ride alerts and community
-                                updates from Saathi Rides. Standard message rates apply.
+                                You are an existing or prospective user of
+                                Saathi Rides. If you would like Saathi Rides
+                                to contact you by SMS about your account and
+                                Saathi Rides service activity, enter your
+                                mobile number and provide your consent below.
+
+                                <br />
+
+                                <strong>
+                                    SMS consent is completely optional.
+                                </strong>{" "}
+                                You can use Saathi Rides without agreeing to
+                                receive these SMS messages.
                             </Typography>
 
-                            {/* Phone */}
+                            {/* =========================================
+                                MOBILE NUMBER
+                            ========================================= */}
 
                             <Typography
                                 sx={{
@@ -496,40 +629,51 @@ const SmsNotifications = () => {
                                     mb: 1,
                                 }}
                             >
-                                Your mobile number
+                                Mobile number
                             </Typography>
 
                             <Box
                                 sx={{
                                     display: "flex",
                                     gap: 1,
-                                    mb: 2,
+                                    mb: 2.5,
                                 }}
                             >
                                 <Select
                                     value={countryCode}
-                                    onChange={(e) => setCountryCode(e.target.value)}
+                                    onChange={(e) => {
+                                        setCountryCode(e.target.value);
+                                        setPhone("");
+                                    }}
                                     size="small"
                                     sx={{
                                         minWidth: 100,
                                         backgroundColor: cream,
                                         borderRadius: 1.5,
 
-                                        "& .MuiOutlinedInput-notchedOutline": {
-                                            borderColor: border,
-                                        },
+                                        "& .MuiOutlinedInput-notchedOutline":
+                                            {
+                                                borderColor: border,
+                                            },
 
-                                        "&:hover .MuiOutlinedInput-notchedOutline": {
-                                            borderColor: saffron,
-                                        },
+                                        "&:hover .MuiOutlinedInput-notchedOutline":
+                                            {
+                                                borderColor: saffron,
+                                            },
 
-                                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                                            borderColor: saffron,
-                                        },
+                                        "&.Mui-focused .MuiOutlinedInput-notchedOutline":
+                                            {
+                                                borderColor: saffron,
+                                            },
                                     }}
                                 >
-                                    <MenuItem value="+1">🇺🇸 +1</MenuItem>
-                                    <MenuItem value="+91">🇮🇳 +91</MenuItem>
+                                    <MenuItem value="+1">
+                                        🇺🇸 +1
+                                    </MenuItem>
+
+                                    <MenuItem value="+91">
+                                        🇮🇳 +91
+                                    </MenuItem>
                                 </Select>
 
                                 <TextField
@@ -537,12 +681,25 @@ const SmsNotifications = () => {
                                     size="small"
                                     type="tel"
                                     value={phone}
-                                    onChange={(e) => setPhone(e.target.value)}
+                                    onChange={(e) => {
+                                        const value =
+                                            e.target.value.replace(
+                                                /\D/g,
+                                                ""
+                                            );
+
+                                        setPhone(value);
+                                        setError("");
+                                    }}
                                     placeholder={
                                         countryCode === "+1"
                                             ? "(972) 555-0142"
                                             : "9876543210"
                                     }
+                                    inputProps={{
+                                        maxLength: 10,
+                                        inputMode: "numeric",
+                                    }}
                                     InputProps={{
                                         startAdornment: (
                                             <InputAdornment position="start">
@@ -576,17 +733,30 @@ const SmsNotifications = () => {
                                 />
                             </Box>
 
-                            {/* Consent */}
+                            {/* =========================================
+                                CONSENT
+                            ========================================= */}
 
                             <Box
                                 sx={{
                                     backgroundColor: saffronLight,
-                                    border: "1px solid rgba(232,113,26,0.2)",
+                                    border: "1px solid rgba(232,113,26,0.25)",
                                     borderRadius: 1.5,
                                     p: 2,
-                                    mb: 2.5,
+                                    mb: 2,
                                 }}
                             >
+                                <Typography
+                                    sx={{
+                                        fontSize: 12,
+                                        fontWeight: 700,
+                                        color: navy,
+                                        mb: 1,
+                                    }}
+                                >
+                                    Saathi Rides SMS consent — optional
+                                </Typography>
+
                                 <FormControlLabel
                                     sx={{
                                         alignItems: "flex-start",
@@ -596,7 +766,9 @@ const SmsNotifications = () => {
                                         <Checkbox
                                             checked={consent}
                                             onChange={(e) =>
-                                                setConsent(e.target.checked)
+                                                setConsent(
+                                                    e.target.checked
+                                                )
                                             }
                                             sx={{
                                                 color: saffron,
@@ -618,44 +790,161 @@ const SmsNotifications = () => {
                                                 lineHeight: 1.7,
                                             }}
                                         >
-                                            By checking this box and clicking the button below,
-                                            I provide my express written consent to receive
-                                            recurring automated SMS text messages from{" "}
-                                            <strong>Saathi Rides</strong> at the mobile number
-                                            provided above. Messages may include ride
-                                            confirmations, match alerts, community updates,
-                                            and service notifications. Message frequency
-                                            varies. Message & data rates may apply. Consent is
-                                            not a condition of joining Saathi. Reply{" "}
-                                            <strong>STOP</strong> to unsubscribe at any time.
-                                            Reply <strong>HELP</strong> for help. View our{" "}
-                                            <Link
-                                                href="/privacy"
-                                                sx={{ color: saffron }}
-                                            >
-                                                Privacy Policy
-                                            </Link>{" "}
-                                            and{" "}
-                                            <Link
-                                                href="/terms"
-                                                sx={{ color: saffron }}
-                                            >
-                                                Terms of Service
-                                            </Link>
-                                            .
+                                            By checking this box, I
+                                            voluntarily agree to receive
+                                            recurring automated SMS text
+                                            messages{" "}
+                                            <strong>
+                                                directly from Saathi Rides
+                                            </strong>{" "}
+                                            at the mobile number I provided.
+
+                                            <br />
+                                            <br />
+
+                                            I understand that these messages
+                                            are from Saathi Rides and relate
+                                            to my Saathi Rides account and
+                                            activity, including phone
+                                            verification, account updates,
+                                            ride confirmations, booking
+                                            updates, ride matches, ride
+                                            requests, and other important
+                                            Saathi Rides service
+                                            notifications.
+
+                                            <br />
+                                            <br />
+
+                                            Message frequency varies.
+                                            Message and data rates may apply.
+
+                                            <br />
+                                            <br />
+
+                                            <strong>
+                                                This consent is optional and
+                                                is not required to create,
+                                                access, or use my Saathi Rides
+                                                account or services.
+                                            </strong>
+
+                                            <br />
+                                            <br />
+
+                                            I understand that I can withdraw
+                                            my SMS consent at any time by
+                                            replying{" "}
+                                            <strong>STOP</strong> to a
+                                            Saathi Rides SMS. I may reply{" "}
+                                            <strong>HELP</strong> for
+                                            assistance.
                                         </Typography>
                                     }
                                 />
                             </Box>
 
-                            {/* Submit */}
+                            {/* =========================================
+                                IMPORTANT RELATIONSHIP DISCLOSURE
+                            ========================================= */}
+
+                            <Box
+                                sx={{
+                                    backgroundColor: "#F7F9FC",
+                                    border: `1px solid ${border}`,
+                                    borderRadius: 1.5,
+                                    p: 2,
+                                    mb: 2.5,
+                                }}
+                            >
+                                <Typography
+                                    sx={{
+                                        fontSize: 12,
+                                        fontWeight: 700,
+                                        color: navy,
+                                        mb: 0.7,
+                                    }}
+                                >
+                                    Who will send these messages?
+                                </Typography>
+
+                                <Typography
+                                    sx={{
+                                        fontSize: 12,
+                                        color: textSecondary,
+                                        lineHeight: 1.7,
+                                    }}
+                                >
+                                    <strong>Saathi Rides</strong> will send
+                                    the SMS messages described above.
+                                    Saathi Rides is the business providing
+                                    the ridesharing service and managing your
+                                    Saathi Rides account. Your consent on this
+                                    page is specifically for messages from
+                                    Saathi Rides.
+                                </Typography>
+                            </Box>
+
+                            {/* =========================================
+                                LEGAL LINKS
+                            ========================================= */}
+
+                            <Typography
+                                sx={{
+                                    fontSize: 12,
+                                    color: textMuted,
+                                    lineHeight: 1.7,
+                                    mb: 2.5,
+                                }}
+                            >
+                                Your SMS consent is collected separately from
+                                acceptance of the{" "}
+                                <Link
+                                    href="/terms"
+                                    underline="hover"
+                                    sx={{ color: saffron }}
+                                >
+                                    Saathi Rides Terms of Service
+                                </Link>{" "}
+                                and{" "}
+                                <Link
+                                    href="/privacy"
+                                    underline="hover"
+                                    sx={{ color: saffron }}
+                                >
+                                    Saathi Rides Privacy Policy
+                                </Link>
+                                .
+                            </Typography>
+
+                            {/* =========================================
+                                ERROR
+                            ========================================= */}
+
+                            {error && (
+                                <Alert
+                                    severity="error"
+                                    sx={{
+                                        mb: 2,
+                                        fontSize: 13,
+                                    }}
+                                >
+                                    {error}
+                                </Alert>
+                            )}
+
+                            {/* =========================================
+                                SUBMIT
+                            ========================================= */}
 
                             <Button
                                 fullWidth
-                                disabled={!isValid}
+                                disabled={!isValid || loading}
                                 onClick={handleSubmit}
                                 variant="contained"
-                                endIcon={<ArrowForward />}
+                                endIcon={
+                                    !loading && <ArrowForward />
+                                }
                                 sx={{
                                     py: 1.5,
                                     backgroundColor: saffron,
@@ -674,10 +963,14 @@ const SmsNotifications = () => {
                                     },
                                 }}
                             >
-                                Yes, send me SMS notifications
+                                {loading
+                                    ? "Saving your Saathi Rides SMS consent..."
+                                    : "I Agree to Receive Saathi Rides SMS"}
                             </Button>
 
-                            {/* Fine print */}
+                            {/* =========================================
+                                DISCLOSURE
+                            ========================================= */}
 
                             <Typography
                                 sx={{
@@ -685,36 +978,24 @@ const SmsNotifications = () => {
                                     fontSize: 12,
                                     color: textMuted,
                                     textAlign: "center",
-                                    lineHeight: 1.6,
+                                    lineHeight: 1.7,
                                 }}
                             >
-                                By subscribing you agree to our{" "}
-                                <Link
-                                    href="/terms"
-                                    sx={{ color: saffron }}
-                                >
-                                    Terms
-                                </Link>{" "}
-                                and{" "}
-                                <Link
-                                    href="/privacy"
-                                    sx={{ color: saffron }}
-                                >
-                                    Privacy Policy
-                                </Link>
-                                .
+                                Saathi Rides SMS Notifications
                                 <br />
-                                Msg & data rates may apply. Text STOP to cancel anytime. Text
-                                HELP for help.
+                                Message frequency varies.
                                 <br />
-                                Supported carriers: AT&T, Verizon, T-Mobile, Sprint, and most
-                                US carriers.
+                                Msg & data rates may apply.
+                                <br />
+                                Reply STOP to unsubscribe.
+                                <br />
+                                Reply HELP for help.
                             </Typography>
                         </>
                     ) : (
-                        /* =====================================================
-                           SUCCESS AFTER SUBMIT
-                        ====================================================== */
+                        /* =============================================
+                           SUCCESS
+                        ============================================= */
 
                         <Box
                             sx={{
@@ -752,7 +1033,7 @@ const SmsNotifications = () => {
                                     mb: 1,
                                 }}
                             >
-                                You're subscribed 🙏
+                                Saathi Rides SMS consent confirmed
                             </Typography>
 
                             <Typography
@@ -762,9 +1043,24 @@ const SmsNotifications = () => {
                                     lineHeight: 1.7,
                                 }}
                             >
-                                You'll receive a confirmation text shortly.
+                                You have successfully opted in to receive
+                                SMS messages directly from{" "}
+                                <strong>Saathi Rides</strong>.
+
                                 <br />
-                                Reply STOP at any time to unsubscribe.
+
+                                These messages may include phone
+                                verification codes, ride confirmations,
+                                booking updates, ride matches, ride
+                                requests, and important Saathi Rides
+                                service notifications.
+
+                                <br />
+
+                                Reply <strong>STOP</strong> at any time to
+                                unsubscribe.
+                                <br />
+                                Reply <strong>HELP</strong> for assistance.
                             </Typography>
 
                             <Button
@@ -783,7 +1079,9 @@ const SmsNotifications = () => {
                     )}
                 </Paper>
 
-                {/* ================= HOW IT WORKS ================= */}
+                {/* =====================================================
+                    HOW IT WORKS
+                ===================================================== */}
 
                 <Paper
                     elevation={0}
@@ -803,37 +1101,39 @@ const SmsNotifications = () => {
                             mb: 2.5,
                         }}
                     >
-                        How our SMS works
+                        How Saathi Rides SMS notifications work
                     </Typography>
 
                     <Grid container spacing={2.5}>
                         <ComplianceItem
                             icon={<Lock />}
                             title="Your number stays private"
-                            text="We never share or sell your phone number to anyone, ever."
+                            text="Saathi Rides does not sell or share your mobile number or SMS consent with third parties for their own marketing."
                         />
 
                         <ComplianceItem
                             icon={<Block />}
                             title="Cancel anytime"
-                            text="Reply STOP to any message and you're immediately unsubscribed."
+                            text="Reply STOP to any Saathi Rides SMS to withdraw your SMS consent and stop future recurring messages."
                         />
 
                         <ComplianceItem
                             icon={<Sms />}
-                            title="Only relevant messages"
-                            text="We only send messages about your rides, requests, and community activity."
+                            title="Messages from Saathi Rides"
+                            text="SMS messages are sent by Saathi Rides and relate to your Saathi Rides account, rides, bookings, requests, matches, verification, and service activity."
                         />
 
                         <ComplianceItem
                             icon={<Help />}
                             title="Need help?"
-                            text="Reply HELP to any message or email us at support@saathirides.net"
+                            text="Reply HELP to any Saathi Rides SMS or contact support@saathirides.net."
                         />
                     </Grid>
                 </Paper>
 
-                {/* ================= LEGAL ================= */}
+                {/* =====================================================
+                    LEGAL INFORMATION
+                ===================================================== */}
 
                 <Box
                     sx={{
@@ -850,50 +1150,68 @@ const SmsNotifications = () => {
                     />
 
                     <LegalText
+                        title="Business sending messages:"
+                        text="Saathi Rides"
+                    />
+
+                    <LegalText
+                        title="Business relationship:"
+                        text="The recipient is a Saathi Rides user or prospective user interacting directly with Saathi Rides and its ridesharing services."
+                    />
+
+                    <LegalText
                         title="Program description:"
-                        text="Saathi Rides sends SMS text messages to users who have opted in to receive ride confirmations, match alerts, community event notifications, and service updates related to their use of the Saathi Rides community ridesharing platform at saathirides.net."
+                        text="Saathi Rides sends SMS text messages to users who voluntarily opt in to receive phone verification codes, account notifications, ride confirmations, booking updates, ride match notifications, ride request notifications, and other service notifications related to their use of Saathi Rides."
                     />
 
                     <LegalText
                         title="Message frequency:"
-                        text="Message frequency varies based on your activity on the platform. You may receive between 1–10 messages per week depending on your ride activity and community engagement."
+                        text="Message frequency varies based on the user's activity on Saathi Rides. Users may receive multiple messages depending on phone verification, account activity, rides, requests, matches, bookings, and service events."
                     />
 
                     <LegalText
                         title="Message & data rates:"
-                        text="Standard message and data rates may apply depending on your carrier and plan. Saathi Rides does not charge for SMS messages; however, your carrier may charge for receiving texts."
+                        text="Message and data rates may apply depending on the user's mobile carrier and plan. Saathi Rides does not charge users for receiving SMS messages."
                     />
 
                     <LegalText
                         title="To stop receiving messages:"
-                        text="Reply STOP to any Saathi Rides text message at any time. You will receive one final confirmation message and then no further messages will be sent."
+                        text="Reply STOP to any Saathi Rides SMS at any time. After opting out, the user will not receive further recurring messages unless they provide new consent."
                     />
 
                     <LegalText
                         title="For help:"
-                        text="Reply HELP to any message or contact us at support@saathirides.net"
+                        text="Reply HELP to any Saathi Rides SMS or contact support@saathirides.net."
                     />
 
                     <LegalText
-                        title="Supported carriers:"
-                        text="AT&T, Verizon Wireless, T-Mobile, Sprint, Boost Mobile, Cricket, MetroPCS, U.S. Cellular, and most major US carriers. Carrier is not liable for delayed or undelivered messages."
+                        title="SMS consent:"
+                        text="SMS consent is voluntary, is collected through this Saathi Rides web form, and is specifically given to Saathi Rides. The user must actively check the consent checkbox before submitting their SMS subscription."
                     />
 
                     <Typography sx={{ fontSize: 12 }}>
-                        For full details see our{" "}
-                        <Link href="/privacy" sx={{ color: saffron }}>
-                            Privacy Policy
+                        For full details see the{" "}
+                        <Link
+                            href="/privacy"
+                            sx={{ color: saffron }}
+                        >
+                            Saathi Rides Privacy Policy
                         </Link>{" "}
                         and{" "}
-                        <Link href="/terms" sx={{ color: saffron }}>
-                            Terms of Service
+                        <Link
+                            href="/terms"
+                            sx={{ color: saffron }}
+                        >
+                            Saathi Rides Terms of Service
                         </Link>
                         .
                     </Typography>
                 </Box>
             </Container>
 
-            {/* ================= FOOTER ================= */}
+            {/* =========================================================
+                FOOTER
+            ========================================================= */}
 
             <Box
                 component="footer"
@@ -932,7 +1250,8 @@ const SmsNotifications = () => {
                         lineHeight: 1.7,
                     }}
                 >
-                    Community ridesharing built on trust · saathirides.net
+                    Community ridesharing built on trust ·
+                    saathirides.net
                     <br />
                     © 2026 Saathi Rides. All rights reserved.
                 </Typography>
