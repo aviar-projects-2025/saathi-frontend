@@ -106,6 +106,7 @@ function App() {
             <Route path="/forget-password" element={<ForgotPassword />} />
             <Route path="/verify-otp" element={<VerifyOTP />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/optin" element={<SmsNotifications />} />
           </Route>
 
           {/* ADMIN only routes */}
@@ -141,6 +142,7 @@ function App() {
               <Route path="/invite" element={<Invite />} />
               <Route path="/community" element={<Community />} />
               <Route path="/my-referalls" element={<MyReferrals />} />
+              
               {/* <Route path="/settings" element={<Settings />} /> */}
             </Route>
           </Route>
