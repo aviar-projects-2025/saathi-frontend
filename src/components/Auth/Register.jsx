@@ -44,10 +44,10 @@ const Register = () => {
   const [searchParams] = useSearchParams();
   const referralFromUrl = searchParams.get("ref") || "";
   const [countryCode, setCountryCode] =
-    useState("+91");
+    useState("+1");
   // State for OTP flow
   const [activeStep, setActiveStep] = useState(0);
-  
+
   const [otp, setOtp] = useState("");
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [isOtpVerified, setIsOtpVerified] = useState(false);
@@ -60,11 +60,11 @@ const Register = () => {
     email: "",
     referralCode: "",
   });
-const [showPassword, setShowPassword] = useState(false);
-const [mobileNumber, setMobileNumber] = useState();
-       const fullMobileNumber =
-            `${countryCode}${mobileNumber}`;
-  
+  const [showPassword, setShowPassword] = useState(false);
+  const [mobileNumber, setMobileNumber] = useState();
+  const fullMobileNumber =
+    `${countryCode}${mobileNumber}`;
+
   const otpInputRefs = useRef([]);
 
   // OTP timer
@@ -309,45 +309,20 @@ const [mobileNumber, setMobileNumber] = useState();
         }}
       >
         <TextField
-          select
           size="small"
-          value={
-            countryCode
-          }
-          onChange={(
-            e
-          ) => {
-            setCountryCode(
-              e
-                .target
-                .value
-            );
-
-            /*
-             * Clear the
-             * previous number
-             * when country
-             * changes.
-             */
-            setMobile_number(
-              ""
-            );
-          }}
+          value="US +1"
+          disabled
           sx={{
             width: {
               xs: 105,
               sm: 115,
             },
+            "& .MuiInputBase-input.Mui-disabled": {
+              color: "#555",
+              WebkitTextFillColor: "#555",
+            },
           }}
-        >
-          <MenuItem value="+91">
-            🇮🇳 +91
-          </MenuItem>
-
-          <MenuItem value="+1">
-            🇺🇸 +1
-          </MenuItem>
-        </TextField>
+        />
         <TextField
           fullWidth
           label="Enter Mobile Number"
