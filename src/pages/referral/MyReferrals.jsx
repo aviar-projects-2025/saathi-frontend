@@ -599,17 +599,6 @@ const MyReferrals = () => {
                     await axios.post(
                         `${Api}/referrals/send`,
                         {
-                            /*
-                             * IMPORTANT
-                             *
-                             * Send:
-                             *
-                             * +919600698331
-                             *
-                             * OR
-                             *
-                             * +12145551234
-                             */
                             mobile_number:
                                 fullMobileNumber,
 
