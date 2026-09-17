@@ -120,10 +120,11 @@ const Myprofile = () => {
   const handleCloseShare = () => setOpenShare(false);
   const [openShare, setOpenShare] = useState(false);
   const feedRef = useRef(null);
-
+  const [mobile_number, setMobile_number] = useState("");
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null);
-
+  const [countryCode, setCountryCode] =
+    useState("+1");
   const navigate = useNavigate();
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const [passwordModel, setPasswordModel] = useState("");
@@ -272,7 +273,154 @@ const Myprofile = () => {
       setPasswordLoading(false);
     }
   };
+  const handlelink = async () => {
+    if (
+      !mobile_number ||
+      mobile_number.length !== 10
+    ) {
+      alert(
+        "Enter a valid 10-digit mobile number"
+      );
 
+      return;
+    }
+
+    if (!user?.id) {
+      alert("User not found");
+      return;
+    }
+
+    /*
+     * Build international number.
+     *
+     * India:
+     * +919600698331
+     *
+     * USA:
+     * +12145551234
+     */
+    const fullMobileNumber =
+      `${countryCode}${mobile_number}`;
+
+    console.log(
+      "Country Code:",
+      countryCode
+    );
+
+    console.log(
+      "Mobile Number:",
+      mobile_number
+    );
+
+    console.log(
+      "Full Mobile Number:",
+      fullMobileNumber
+    );
+
+    try {
+      // ==================================
+      // STORE REFERRAL INVITATION
+      // ==================================
+
+      const stored =
+        await axios.post(
+          `${Api}/referralInvite/`,
+          {
+            referredBy: user.id,
+
+            /*
+             * Store international number
+             */
+            mobile:
+              fullMobileNumber,
+
+            status: "Waiting",
+          }
+        );
+
+      console.log(
+        "Referral invite stored:",
+        stored.data
+      );
+
+      /*
+       * Check backend response.
+       *
+       * Your existing backend appears
+       * to return:
+       *
+       * { status: true }
+       */
+      if (
+        stored.data.status === true
+      ) {
+        // ==================================
+        // SEND SMS THROUGH TWILIO
+        // ==================================
+
+        const response =
+          await axios.post(
+            `${Api}/referrals/send`,
+            {
+              /*
+               * IMPORTANT
+               *
+               * Send:
+               *
+               * +919600698331
+               *
+               * OR
+               *
+               * +12145551234
+               */
+              mobile_number:
+                fullMobileNumber,
+
+              shareLink,
+
+              referrerId:
+                user?.referralCode,
+            },
+            {
+              withCredentials:
+                true,
+            }
+          );
+
+        console.log(
+          "Referral SMS response:",
+          response.data
+        );
+
+        alert(
+          `Referral link sent successfully to ${fullMobileNumber}`
+        );
+
+        /*
+         * Clear mobile after
+         * successful SMS
+         */
+        setMobile_number("");
+      } else {
+        alert(
+          stored.data?.message ||
+          "Unable to create referral invitation"
+        );
+      }
+    } catch (error) {
+      console.error(
+        "Referral SMS error:",
+        error.response?.data ||
+        error.message
+      );
+
+      alert(
+        error.response?.data
+          ?.message ||
+        "Failed to send referral SMS"
+      );
+    }
+  };
   const getCommunityPost = async () => {
     try {
       const postsRes = await axios.get(Api + "/community/");
@@ -778,70 +926,170 @@ const Myprofile = () => {
             >
               Share your referral link
             </Typography>
-
-            <TextField
-              fullWidth
-              value={shareLink}
-              size="small"
-              InputProps={{
-                readOnly: true,
-                sx: { fontSize: { xs: "0.75rem", sm: "0.85rem" } },
-              }}
-            />
-
             <Stack
               direction="row"
-              spacing={{ xs: 1, sm: 1 }}
-              sx={{ mt: { xs: 1.5, sm: 2 } }}
+              spacing={1}
+              sx={{
+                width: "100%",
+              }}
+            >
+              {/* COUNTRY CODE */}
+
+              <TextField
+                size="small"
+                value="US +1"
+                disabled
+                sx={{
+                  width: {
+                    xs: 105,
+                    sm: 115,
+                  },
+                  "& .MuiInputBase-input.Mui-disabled": {
+                    color: "#555",
+                    WebkitTextFillColor: "#555",
+                  },
+                }}
+              />
+
+              {/* MOBILE */}
+              <TextField
+                fullWidth
+                value={
+                  mobile_number
+                }
+                type="text"
+                inputMode="numeric"
+                onChange={(
+                  e
+                ) => {
+                  const value =
+                    e.target.value
+                      .replace(
+                        /\D/g,
+                        ""
+                      )
+                      .slice(
+                        0,
+                        10
+                      );
+
+                  setMobile_number(
+                    value
+                  );
+                }}
+                size="small"
+                placeholder="Enter 10-digit mobile number"
+              />
+            </Stack>
+
+            {/* NUMBER PREVIEW */}
+            {mobile_number.length >
+              0 && (
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{
+                    display:
+                      "block",
+
+                    mt: 0.75,
+                  }}
+                >
+                  SMS will be
+                  sent to:{" "}
+                  <strong>
+                    {
+                      countryCode
+                    }
+                    {
+                      mobile_number
+                    }
+                  </strong>
+                </Typography>
+              )}
+
+            {/* BUTTONS */}
+            <Stack
+              direction="row"
+              spacing={{
+                xs: 1,
+                sm: 1,
+              }}
+              sx={{
+                mt: {
+                  xs: 1.5,
+                  sm: 2,
+                },
+              }}
             >
               <Button
                 fullWidth
                 variant="contained"
                 size="small"
                 sx={{
-                  fontSize: { xs: "0.75rem", sm: "0.85rem" },
-                  py: { xs: 0.5, sm: 0.75 },
-                  textTransform: "none",
-                  color: "#ffff",
-                  bgcolor: "#FF9933",
-                  "&:hover": { bgcolor: "#da9a3a" },
+                  fontSize: {
+                    xs: "0.75rem",
+                    sm: "0.85rem",
+                  },
+
+                  py: {
+                    xs: 0.5,
+                    sm: 0.75,
+                  },
+
+                  textTransform:
+                    "none",
+
+                  bgcolor:
+                    "#FF9933",
+
+                  "&:hover":
+                  {
+                    bgcolor:
+                      "#da9a3a",
+                  },
                 }}
-                onClick={() => handleCopy(shareLink)}
-                disabled={isProfileComplete}
+                onClick={() =>
+                  setMobile_number(
+                    ""
+                  )
+                }
               >
-                Copy Link
+                Clear
               </Button>
 
               <Button
                 fullWidth
-                variant="outlined"
+                variant="contained"
                 size="small"
                 sx={{
-                  fontSize: { xs: "0.75rem", sm: "0.85rem" },
-                  py: { xs: 0.5, sm: 0.75 },
-                  textTransform: "none",
-                  color: "#ffff",
-                  bgcolor: "#09710f",
-                  "&.Mui-disabled": {
-                    opacity: 0.5,
-                    border: "none",
-                    color: "#ffff"
+                  fontSize: {
+                    xs: "0.75rem",
+                    sm: "0.85rem",
+                  },
+
+                  py: {
+                    xs: 0.5,
+                    sm: 0.75,
+                  },
+
+                  textTransform:
+                    "none",
+
+                  bgcolor:
+                    "#09710f",
+
+                  "&:hover":
+                  {
+                    bgcolor:
+                      "#065a0b",
                   },
                 }}
-                onClick={() => {
-                  if (navigator.share) {
-                    navigator.share({
-                      title: "Join using my referral",
-                      text: "Use my referral link",
-                      url: shareLink,
-                    });
-                  } else {
-                    toast.info("Sharing not supported on this device", toasts);
-                  }
-                }}
-                disabled={isProfileComplete}
+                onClick={
+                  handlelink
+                }
               >
-                Share
+                Invite
               </Button>
             </Stack>
           </Box>
