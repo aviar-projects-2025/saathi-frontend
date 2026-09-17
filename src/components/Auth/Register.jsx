@@ -13,6 +13,7 @@ import {
   Stack,
   Alert,
   useTheme,
+  MenuItem,
   useMediaQuery,
   Stepper,
   Step,
@@ -42,10 +43,11 @@ const Register = () => {
 
   const [searchParams] = useSearchParams();
   const referralFromUrl = searchParams.get("ref") || "";
-
+  const [countryCode, setCountryCode] =
+    useState("+1");
   // State for OTP flow
   const [activeStep, setActiveStep] = useState(0);
-  const [mobileNumber, setMobileNumber] = useState("");
+
   const [otp, setOtp] = useState("");
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [isOtpVerified, setIsOtpVerified] = useState(false);
@@ -58,8 +60,11 @@ const Register = () => {
     email: "",
     referralCode: "",
   });
-
   const [showPassword, setShowPassword] = useState(false);
+  const [mobileNumber, setMobileNumber] = useState();
+  const fullMobileNumber =
+    `${countryCode}${mobileNumber}`;
+
   const otpInputRefs = useRef([]);
 
   // OTP timer
@@ -120,19 +125,19 @@ const Register = () => {
 
       const res = await axios.post(`${Api}/referralInvite/check`,
         {
-          mobile : mobileNumber
+          mobile: fullMobileNumber
         }
       )
 
       console.log(res)
 
-      if(res?.status === false){
+      if (res?.status === false) {
         toast.warning(res?.message)
-        return 
+        return
       }
 
       const response = await axios.post(`${Api}/auth/send-otp`, {
-        mobileNumber: mobileNumber,
+        mobileNumber: fullMobileNumber,
       });
 
       if (response.data.success) {
@@ -168,7 +173,7 @@ const Register = () => {
 
     try {
       const response = await axios.post(`${Api}/auth/verify-otp`, {
-        mobileNumber: mobileNumber,
+        mobileNumber: fullMobileNumber,
         otp: otp,
       });
 
@@ -245,7 +250,7 @@ const Register = () => {
       // Add mobile number to values
       const payload = {
         ...values,
-        mobileNumber: mobileNumber,
+        mobileNumber: fullMobileNumber,
         isMobileVerified: true,
       };
 
@@ -253,7 +258,7 @@ const Register = () => {
 
       toast.success("Registration Success!", toasts);
 
-      console.log(res,'res')
+      console.log(res, 'res')
 
       if (res?.data?.data?.refApprove === "Approved") {
         navigate("/login");
@@ -296,46 +301,67 @@ const Register = () => {
   // Render OTP verification section
   const renderOtpSection = () => (
     <Box sx={{ mt: 2 }}>
-      {/* Mobile Number Input */}
-      <TextField
-        fullWidth
-        label="Enter Mobile Number"
-        placeholder="Enter 10-digit mobile number"
-        value={mobileNumber}
-        onChange={(e) => {
-          const value = e.target.value.replace(/\D/g, "").slice(0, 10);
-          setMobileNumber(value);
-          if (isOtpSent) {
-            setIsOtpSent(false);
-            setOtp("");
-          }
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          width: "100%",
         }}
-        disabled={isOtpSent}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <PhoneIcon sx={{ color: "#666" }} />
-            </InputAdornment>
-          ),
-          endAdornment: (
-            <InputAdornment position="end">
-              {isOtpSent && (
-                <CheckCircleIcon sx={{ color: "#4CAF50", fontSize: 20 }} />
-              )}
-            </InputAdornment>
-          ),
-        }}
-        sx={inputSx}
-        size="small"
-      />
-
+      >
+        <TextField
+          size="small"
+          value="US +1"
+          disabled
+          sx={{
+            width: {
+              xs: 105,
+              sm: 115,
+            },
+            "& .MuiInputBase-input.Mui-disabled": {
+              color: "#555",
+              WebkitTextFillColor: "#555",
+            },
+          }}
+        />
+        <TextField
+          fullWidth
+          label="Enter Mobile Number"
+          placeholder="Enter 10-digit mobile number"
+          value={mobileNumber}
+          onChange={(e) => {
+            const value = e.target.value.replace(/\D/g, "").slice(0, 10);
+            setMobileNumber(value);
+            if (isOtpSent) {
+              setIsOtpSent(false);
+              setOtp("");
+            }
+          }}
+          disabled={isOtpSent}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <PhoneIcon sx={{ color: "#666" }} />
+              </InputAdornment>
+            ),
+            endAdornment: (
+              <InputAdornment position="end">
+                {isOtpSent && (
+                  <CheckCircleIcon sx={{ color: "#4CAF50", fontSize: 20 }} />
+                )}
+              </InputAdornment>
+            ),
+          }}
+          sx={inputSx}
+          size="small"
+        />
+      </Stack>
       {/* Send OTP Button */}
       {!isOtpSent && (
         <Button
           fullWidth
           variant="contained"
           onClick={handleSendOtp}
-          disabled={isLoading || mobileNumber.length < 10}
+          disabled={isLoading || mobileNumber?.length < 10}
           sx={{
             mt: 2,
             py: 1.2,
@@ -476,7 +502,7 @@ const Register = () => {
         lastName: "",
         email: "",
         password: "",
-        mobile : mobileNumber,
+        mobile: mobileNumber,
         role: "USER",
         referralCode: referralFromUrl,
       }}

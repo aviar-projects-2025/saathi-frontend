@@ -222,7 +222,7 @@ export default function InviteFlow() {
                 <div className="mb-3 flex gap-2">
                   <select className="rounded-xl border border-[#F0E6DC] bg-[#FFF8F2] px-3 py-3 text-sm outline-none">
                     <option>🇺🇸 +1</option>
-                    <option>🇮🇳 +91</option>
+                    {/* <option>🇮🇳 +91</option> */}
                   </select>
 
                   <input

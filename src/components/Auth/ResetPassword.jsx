@@ -45,7 +45,7 @@ const ResetPassword = () => {
             navigate("/forgot-password");
             return null;
         }
-    },[]);
+    }, []);
 
     const validationSchema = Yup.object({
         password: Yup.string()

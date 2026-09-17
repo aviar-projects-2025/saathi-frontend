@@ -82,7 +82,7 @@ const MyReferrals = () => {
      * Default = India
      */
     const [countryCode, setCountryCode] =
-        useState("+91");
+        useState("+1");
 
     const [shareLink, setShareLink] =
         useState("");
@@ -230,7 +230,7 @@ const MyReferrals = () => {
 
             const res = await axios.get(
                 Api +
-                    `/referrals/${user.id}`
+                `/referrals/${user.id}`
             );
 
             const data =
@@ -299,11 +299,11 @@ const MyReferrals = () => {
                 notifications.filter(
                     (n) =>
                         n.type ===
-                            "referral_pending" ||
+                        "referral_pending" ||
                         n.type ===
-                            "referral_approved" ||
+                        "referral_approved" ||
                         n.type ===
-                            "referral_rejected"
+                        "referral_rejected"
                 );
 
             if (filtered.length) {
@@ -340,7 +340,7 @@ const MyReferrals = () => {
         try {
             await axios.patch(
                 Api +
-                    `/referrals/${id}`,
+                `/referrals/${id}`,
                 {
                     refApprove:
                         "Approved",
@@ -401,7 +401,7 @@ const MyReferrals = () => {
         try {
             await axios.delete(
                 Api +
-                    `/referrals/${id}`
+                `/referrals/${id}`
             );
 
             toast.success(
@@ -440,9 +440,8 @@ const MyReferrals = () => {
         firstName = "",
         lastName = ""
     ) =>
-        `${firstName?.charAt(0) || ""}${
-            lastName?.charAt(0) || ""
-        }`
+        `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""
+            }`
             .toUpperCase() || "?";
 
     // ==========================================
@@ -642,20 +641,20 @@ const MyReferrals = () => {
             } else {
                 alert(
                     stored.data?.message ||
-                        "Unable to create referral invitation"
+                    "Unable to create referral invitation"
                 );
             }
         } catch (error) {
             console.error(
                 "Referral SMS error:",
                 error.response?.data ||
-                    error.message
+                error.message
             );
 
             alert(
                 error.response?.data
                     ?.message ||
-                    "Failed to send referral SMS"
+                "Failed to send referral SMS"
             );
         }
     };
@@ -709,7 +708,7 @@ const MyReferrals = () => {
 
                     setUsers(
                         res?.data?.data ||
-                            null
+                        null
                     );
                 } catch (err) {
                     console.error(
@@ -775,10 +774,9 @@ const MyReferrals = () => {
                             src={
                                 profileImage
                             }
-                            alt={`${users?.firstName || ""} ${
-                                users?.lastName ||
+                            alt={`${users?.firstName || ""} ${users?.lastName ||
                                 ""
-                            }`}
+                                }`}
                             onClick={() => {
                                 setSelectedProfile(
                                     users
@@ -928,10 +926,10 @@ const MyReferrals = () => {
                                             height: 34,
 
                                             "&:hover":
-                                                {
-                                                    bgcolor:
-                                                        "#C8E6C9",
-                                                },
+                                            {
+                                                bgcolor:
+                                                    "#C8E6C9",
+                                            },
                                         }}
                                     >
                                         {approveLoading ? (
@@ -975,10 +973,10 @@ const MyReferrals = () => {
                                             height: 34,
 
                                             "&:hover":
-                                                {
-                                                    bgcolor:
-                                                        "#F5C6C6",
-                                                },
+                                            {
+                                                bgcolor:
+                                                    "#F5C6C6",
+                                            },
                                         }}
                                     >
                                         {rejectLoading ? (
@@ -1061,10 +1059,10 @@ const MyReferrals = () => {
                                         height: 32,
 
                                         "&:hover":
-                                            {
-                                                bgcolor:
-                                                    "#176D30",
-                                            },
+                                        {
+                                            bgcolor:
+                                                "#176D30",
+                                        },
                                     }}
                                 >
                                     {approveLoading
@@ -1122,13 +1120,13 @@ const MyReferrals = () => {
                                         height: 32,
 
                                         "&:hover":
-                                            {
-                                                bgcolor:
-                                                    "#FCE8E8",
+                                        {
+                                            bgcolor:
+                                                "#FCE8E8",
 
-                                                borderColor:
-                                                    "#B3261E",
-                                            },
+                                            borderColor:
+                                                "#B3261E",
+                                        },
                                     }}
                                 >
                                     {rejectLoading
@@ -1365,42 +1363,42 @@ const MyReferrals = () => {
                         mb: 2,
 
                         "& .MuiTab-root":
-                            {
-                                textTransform:
-                                    "none",
+                        {
+                            textTransform:
+                                "none",
 
-                                fontWeight: 600,
+                            fontWeight: 600,
 
-                                fontSize: {
-                                    xs: 10.2,
-                                    sm: 12,
-                                },
-
-                                minHeight: {
-                                    xs: 40,
-                                    sm: 48,
-                                },
-
-                                color:
-                                    "text.secondary",
+                            fontSize: {
+                                xs: 10.2,
+                                sm: 12,
                             },
+
+                            minHeight: {
+                                xs: 40,
+                                sm: 48,
+                            },
+
+                            color:
+                                "text.secondary",
+                        },
 
                         "& .Mui-selected":
-                            {
-                                color:
-                                    "#FF6B35 !important",
-                            },
+                        {
+                            color:
+                                "#FF6B35 !important",
+                        },
 
                         "& .MuiTabs-indicator":
-                            {
-                                height: 2,
+                        {
+                            height: 2,
 
-                                bgcolor:
-                                    "#FF6B35",
+                            bgcolor:
+                                "#FF6B35",
 
-                                borderRadius:
-                                    "2px 2px 0 0",
-                            },
+                            borderRadius:
+                                "2px 2px 0 0",
+                        },
                     }}
                 >
                     <Tab
@@ -1430,7 +1428,7 @@ const MyReferrals = () => {
                     (loading ? (
                         <LoadingSpinner />
                     ) : approvedReferrals.length ===
-                      0 ? (
+                        0 ? (
                         <EmptyState
                             message1="No Approved Referrals"
                             message2="You don't have any approved referrals at the moment."
@@ -1597,10 +1595,10 @@ const MyReferrals = () => {
                                 <Typography
                                     sx={{
                                         fontSize:
-                                            {
-                                                xs: "0.7rem",
-                                                sm: "0.8rem",
-                                            },
+                                        {
+                                            xs: "0.7rem",
+                                            sm: "0.8rem",
+                                        },
 
                                         overflow:
                                             "hidden",
@@ -1651,46 +1649,22 @@ const MyReferrals = () => {
                                 }}
                             >
                                 {/* COUNTRY CODE */}
-                                <TextField
-                                    select
-                                    size="small"
-                                    value={
-                                        countryCode
-                                    }
-                                    onChange={(
-                                        e
-                                    ) => {
-                                        setCountryCode(
-                                            e
-                                                .target
-                                                .value
-                                        );
 
-                                        /*
-                                         * Clear the
-                                         * previous number
-                                         * when country
-                                         * changes.
-                                         */
-                                        setMobile_number(
-                                            ""
-                                        );
-                                    }}
+                                <TextField
+                                    size="small"
+                                    value="US +1"
+                                    disabled
                                     sx={{
                                         width: {
                                             xs: 105,
                                             sm: 115,
                                         },
+                                        "& .MuiInputBase-input.Mui-disabled": {
+                                            color: "#555",
+                                            WebkitTextFillColor: "#555",
+                                        },
                                     }}
-                                >
-                                    <MenuItem value="+91">
-                                        🇮🇳 +91
-                                    </MenuItem>
-
-                                    <MenuItem value="+1">
-                                        🇺🇸 +1
-                                    </MenuItem>
-                                </TextField>
+                                />
 
                                 {/* MOBILE */}
                                 <TextField
@@ -1726,28 +1700,28 @@ const MyReferrals = () => {
                             {/* NUMBER PREVIEW */}
                             {mobile_number.length >
                                 0 && (
-                                <Typography
-                                    variant="caption"
-                                    color="text.secondary"
-                                    sx={{
-                                        display:
-                                            "block",
+                                    <Typography
+                                        variant="caption"
+                                        color="text.secondary"
+                                        sx={{
+                                            display:
+                                                "block",
 
-                                        mt: 0.75,
-                                    }}
-                                >
-                                    SMS will be
-                                    sent to:{" "}
-                                    <strong>
-                                        {
-                                            countryCode
-                                        }
-                                        {
-                                            mobile_number
-                                        }
-                                    </strong>
-                                </Typography>
-                            )}
+                                            mt: 0.75,
+                                        }}
+                                    >
+                                        SMS will be
+                                        sent to:{" "}
+                                        <strong>
+                                            {
+                                                countryCode
+                                            }
+                                            {
+                                                mobile_number
+                                            }
+                                        </strong>
+                                    </Typography>
+                                )}
 
                             {/* BUTTONS */}
                             <Stack
@@ -1785,10 +1759,10 @@ const MyReferrals = () => {
                                             "#FF9933",
 
                                         "&:hover":
-                                            {
-                                                bgcolor:
-                                                    "#da9a3a",
-                                            },
+                                        {
+                                            bgcolor:
+                                                "#da9a3a",
+                                        },
                                     }}
                                     onClick={() =>
                                         setMobile_number(
@@ -1821,10 +1795,10 @@ const MyReferrals = () => {
                                             "#09710f",
 
                                         "&:hover":
-                                            {
-                                                bgcolor:
-                                                    "#065a0b",
-                                            },
+                                        {
+                                            bgcolor:
+                                                "#065a0b",
+                                        },
                                     }}
                                     onClick={
                                         handlelink

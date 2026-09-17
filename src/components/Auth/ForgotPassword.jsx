@@ -5,7 +5,9 @@ import {
     Button,
     Container,
     Paper,
+    Stack,
     TextField,
+    MenuItem,
     Typography,
     Link as MuiLink,
     Alert,
@@ -24,7 +26,7 @@ const ForgotPassword = () => {
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState(null);
-
+    const [countryCode, setCountryCode] = useState("+1");
     const validationSchema = Yup.object({
         mobile_number: Yup.string()
             .matches(/^[0-9]{10}$/, "Please enter a valid 10-digit mobile number")
@@ -36,10 +38,12 @@ const ForgotPassword = () => {
         setError(null);
 
         try {
+            const fullMobileNumber = `${countryCode}${values.mobile_number}`;
+
             const response = await axios.post(
                 `${Api}/auth/forgot-password`,
                 {
-                    mobile_number: values.mobile_number,
+                    mobile_number: fullMobileNumber,
                 }
             );
 
@@ -50,10 +54,10 @@ const ForgotPassword = () => {
                 toasts
             );
 
-            // Store mobile number for OTP verification page
+            // Store full mobile number for OTP verification
             sessionStorage.setItem(
                 "resetMobile",
-                values.mobile_number
+                fullMobileNumber
             );
 
             navigate("/verify-otp");
@@ -146,58 +150,79 @@ const ForgotPassword = () => {
                             handleSubmit,
                         }) => (
                             <form onSubmit={handleSubmit}>
-
-                                <TextField
-                                    fullWidth
-                                    label="Mobile Number"
-                                    name="mobile_number"
-                                    type="text"
-                                    inputMode="numeric"
-                                    value={values.mobile_number}
-                                    onChange={(e) => {
-                                        const value = e.target.value
-                                            .replace(/\D/g, "")
-                                            .slice(0, 10);
-
-                                        handleChange({
-                                            target: {
-                                                name: "mobile_number",
-                                                value,
-                                            },
-                                        });
-                                    }}
-                                    onBlur={handleBlur}
-                                    error={
-                                        touched.mobile_number &&
-                                        Boolean(errors.mobile_number)
-                                    }
-                                    helperText={
-                                        touched.mobile_number &&
-                                        errors.mobile_number
-                                    }
-                                    margin="normal"
-                                    size="small"
-                                    placeholder="Enter 10-digit mobile number"
+                                <Stack
+                                    direction="row"
+                                    spacing={1}
                                     sx={{
-                                        "& .MuiOutlinedInput-root": {
-                                            backgroundColor: "#FFFFFF",
-                                            borderRadius: "12px",
-
-                                            "& .MuiOutlinedInput-notchedOutline": {
-                                                borderRadius: "12px",
-                                            },
-
-                                            "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                                                borderColor: "#FF9933",
-                                            },
-                                        },
-
-                                        "& .MuiInputLabel-root.Mui-focused": {
-                                            color: "#FF9933",
-                                        },
+                                        width: "100%",
                                     }}
-                                />
+                                >
+                                    <TextField
+                                        size="small"
+                                        value="US +1"
+                                        disabled
+                                        sx={{
+                                            width: {
+                                                xs: 105,
+                                                sm: 115,
+                                            },
+                                            "& .MuiInputBase-input.Mui-disabled": {
+                                                color: "#555",
+                                                WebkitTextFillColor: "#555",
+                                            },
+                                        }}
+                                    />
+                                    <TextField
+                                        fullWidth
+                                        label="Mobile Number"
+                                        name="mobile_number"
+                                        type="text"
+                                        inputMode="numeric"
+                                        value={values.mobile_number}
+                                        onChange={(e) => {
+                                            const value = e.target.value
+                                                .replace(/\D/g, "")
+                                                .slice(0, 10);
 
+                                            handleChange({
+                                                target: {
+                                                    name: "mobile_number",
+                                                    value,
+                                                },
+                                            });
+                                        }}
+                                        onBlur={handleBlur}
+                                        error={
+                                            touched.mobile_number &&
+                                            Boolean(errors.mobile_number)
+                                        }
+                                        helperText={
+                                            touched.mobile_number &&
+                                            errors.mobile_number
+                                        }
+                                        margin="normal"
+                                        size="small"
+                                        placeholder="Enter 10-digit mobile number"
+                                        sx={{
+                                            "& .MuiOutlinedInput-root": {
+                                                backgroundColor: "#FFFFFF",
+                                                borderRadius: "12px",
+
+                                                "& .MuiOutlinedInput-notchedOutline": {
+                                                    borderRadius: "12px",
+                                                },
+
+                                                "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                                                    borderColor: "#FF9933",
+                                                },
+                                            },
+
+                                            "& .MuiInputLabel-root.Mui-focused": {
+                                                color: "#FF9933",
+                                            },
+                                        }}
+                                    />
+                                </Stack>
                                 <Button
                                     type="submit"
                                     fullWidth
