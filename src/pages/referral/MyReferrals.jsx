@@ -1646,20 +1646,45 @@ const MyReferrals = () => {
                                 {/* COUNTRY CODE */}
 
                                 <TextField
+                                    select
                                     size="small"
-                                    value="US +1"
-                                    disabled
+                                    value={
+                                        countryCode
+                                    }
+                                    onChange={(
+                                        e
+                                    ) => {
+                                        setCountryCode(
+                                            e
+                                                .target
+                                                .value
+                                        );
+
+                                        /* 
+                                         * Clear the 
+                                         * previous number 
+                                         * when country 
+                                         * changes. 
+                                         */
+                                         mobile_number(
+                                            ""
+                                        );
+                                    }}
                                     sx={{
                                         width: {
                                             xs: 105,
                                             sm: 115,
                                         },
-                                        "& .MuiInputBase-input.Mui-disabled": {
-                                            color: "#555",
-                                            WebkitTextFillColor: "#555",
-                                        },
                                     }}
-                                />
+                                >
+                                    <MenuItem value="+91">
+                                        🇮🇳 +91
+                                    </MenuItem>
+
+                                    <MenuItem value="+1">
+                                        🇺🇸 +1
+                                    </MenuItem>
+                                </TextField> set this as default value and remove option
 
                                 {/* MOBILE */}
                                 <TextField
