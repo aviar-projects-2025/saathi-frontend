@@ -1684,7 +1684,7 @@ const MyReferrals = () => {
                                     <MenuItem value="+1">
                                         🇺🇸 +1
                                     </MenuItem>
-                                </TextField> set this as default value and remove option
+                                </TextField> 
 
                                 {/* MOBILE */}
                                 <TextField
