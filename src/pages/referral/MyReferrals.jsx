@@ -150,7 +150,7 @@ const MyReferrals = () => {
     useEffect(() => {
         if (user?.referralCode) {
             setShareLink(
-                `https://saathirides.net/register?ref=${user.referralCode}`
+                `https://saathi-frontend-sl8k.vercel.app/register?ref=${user.referralCode}`
             );
         }
     }, [user]);
