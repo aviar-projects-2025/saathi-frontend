@@ -575,11 +575,6 @@ const MyReferrals = () => {
                 stored.data
             );
 
-            console.log(response.data);
-            setInviteLoading(false);
-            setMobile_number('');
-            handleCloseShare();
-            alert("Referral link sent successfully!");
             /*
              * Check backend response.
              *
@@ -599,6 +594,17 @@ const MyReferrals = () => {
                     await axios.post(
                         `${Api}/referrals/send`,
                         {
+                            /*
+                             * IMPORTANT
+                             *
+                             * Send:
+                             *
+                             * +919600698331
+                             *
+                             * OR
+                             *
+                             * +12145551234
+                             */
                             mobile_number:
                                 fullMobileNumber,
 
@@ -1793,7 +1799,7 @@ const MyReferrals = () => {
                                         handlelink
                                     }
                                 >
-                                   {inviteLoading ? "Inviting..." : "Invite"}
+                                    Invite
                                 </Button>
                             </Stack>
                         </Box>
