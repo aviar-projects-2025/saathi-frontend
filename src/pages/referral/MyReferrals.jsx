@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, memo } from "react";
 import {
     Box,
     Typography,
@@ -49,6 +49,534 @@ const pillBtn = {
     fontWeight: 600,
 };
 
+const ReferralCard = memo(({
+    user: u,
+    showActions = false,
+}) => {
+    const [profileModalOpen, setProfileModalOpen] =
+        useState(false);
+
+    const [selectedProfile, setSelectedProfile] =
+        useState(null);
+    const [users, setUsers] =
+        useState(null);
+
+    const userData = {
+        firstName:
+            u?.data?.user
+                ?.firstName ||
+            u?.firstName ||
+            "",
+
+        lastName:
+            u?.data?.user?.lastName ||
+            u?.lastName ||
+            "",
+
+        email:
+            u?.data?.user?.email ||
+            u?.email ||
+            "",
+
+        id:
+            u?.data?.userId ||
+            u?._id ||
+            u?.id,
+    };
+
+    const userId =
+        userData.id;
+
+    const getUserData =
+        async () => {
+            if (!userId) return;
+
+            try {
+                const res =
+                    await axios.get(
+                        `${Api}/users/${userId}`
+                    );
+
+                setUsers(
+                    res?.data?.data ||
+                    null
+                );
+            } catch (err) {
+                console.error(
+                    "Failed to fetch user data:",
+                    err
+                );
+
+                setUsers(null);
+            }
+        };
+
+    useEffect(() => {
+        getUserData();
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    const profileImage =
+        users?.profileImage;
+
+    return (
+        <Paper
+            elevation={0}
+            sx={{
+                p: {
+                    xs: 0.8,
+                    sm: 1.5,
+                    md: 2,
+                },
+                borderRadius: 2,
+                border: "1px solid",
+                borderColor:
+                    "divider",
+
+                "&:hover": {
+                    borderColor:
+                        "primary.light",
+                    bgcolor:
+                        "action.hover",
+                },
+
+                transition:
+                    "all 0.15s ease",
+            }}
+        >
+            <Stack
+                direction="row"
+                alignItems="center"
+                justifyContent="space-between"
+                spacing={1.5}
+            >
+                {/* Left */}
+                <Stack
+                    direction="row"
+                    spacing={1.5}
+                    alignItems="center"
+                    sx={{
+                        minWidth: 0,
+                        flex: 1,
+                    }}
+                >
+                    <Avatar
+                        src={
+                            profileImage
+                        }
+                        alt={`${users?.firstName || ""} ${users?.lastName ||
+                            ""
+                            }`}
+                        onClick={() => {
+                            setSelectedProfile(
+                                users
+                            );
+
+                            setProfileModalOpen(
+                                true
+                            );
+                        }}
+                        sx={{
+                            width: {
+                                xs: 40,
+                                sm: 44,
+                            },
+
+                            height: {
+                                xs: 40,
+                                sm: 44,
+                            },
+
+                            cursor: users
+                                ? "pointer"
+                                : "default",
+
+                            bgcolor:
+                                "#FFF3E0",
+
+                            fontWeight: 600,
+                        }}
+                    >
+                        {!profileImage && (
+                            <>
+                                <Box
+                                    component="span"
+                                    sx={{
+                                        color:
+                                            "#FF9933",
+                                    }}
+                                >
+                                    {
+                                        users
+                                            ?.firstName?.[0]
+                                    }
+                                </Box>
+
+                                <Box
+                                    component="span"
+                                    sx={{
+                                        color:
+                                            "#FF9933",
+                                    }}
+                                >
+                                    {
+                                        users
+                                            ?.lastName?.[0]
+                                    }
+                                </Box>
+                            </>
+                        )}
+                    </Avatar>
+
+                    <Box
+                        sx={{
+                            minWidth: 0,
+                        }}
+                    >
+                        <Typography
+                            fontWeight={600}
+                            noWrap
+                            sx={{
+                                fontSize: {
+                                    xs: 13,
+                                    sm: 15,
+                                },
+
+                                color:
+                                    "text.primary",
+                            }}
+                        >
+                            {
+                                users?.firstName
+                            }{" "}
+                            {
+                                users?.lastName
+                            }
+                        </Typography>
+
+                        <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            noWrap
+                            sx={{
+                                fontSize: {
+                                    xs: 11,
+                                    sm: 13,
+                                },
+                            }}
+                        >
+                            {users?.email ||
+                                ""}
+                        </Typography>
+                    </Box>
+                </Stack>
+
+                {/* Right */}
+                {showActions ? (
+                    <Stack
+                        direction="row"
+                        spacing={0.75}
+                        alignItems="center"
+                        sx={{
+                            flexShrink: 0,
+                        }}
+                    >
+                        {/* Mobile */}
+                        <Box
+                            sx={{
+                                display: {
+                                    xs: "flex",
+                                    sm: "none",
+                                },
+
+                                gap: 0.5,
+                            }}
+                        >
+                            <Tooltip title="Approve">
+                                <IconButton
+                                    size="small"
+                                    onClick={() =>
+                                        approveUser(
+                                            userId
+                                        )
+                                    }
+                                    disabled={
+                                        approveLoading ||
+                                        rejectLoading ||
+                                        !userId
+                                    }
+                                    sx={{
+                                        bgcolor:
+                                            "#E6F4EA",
+
+                                        color:
+                                            "#1E8E3E",
+
+                                        width: 34,
+                                        height: 34,
+
+                                        "&:hover":
+                                        {
+                                            bgcolor:
+                                                "#C8E6C9",
+                                        },
+                                    }}
+                                >
+                                    {approveLoading ? (
+                                        <CircularProgress
+                                            size={
+                                                18
+                                            }
+                                            color="inherit"
+                                        />
+                                    ) : (
+                                        <CheckCircleIcon
+                                            sx={{
+                                                fontSize: 18,
+                                            }}
+                                        />
+                                    )}
+                                </IconButton>
+                            </Tooltip>
+
+                            <Tooltip title="Decline">
+                                <IconButton
+                                    size="small"
+                                    onClick={() =>
+                                        declineUser(
+                                            userId
+                                        )
+                                    }
+                                    disabled={
+                                        approveLoading ||
+                                        rejectLoading ||
+                                        !userId
+                                    }
+                                    sx={{
+                                        bgcolor:
+                                            "#FCE8E8",
+
+                                        color:
+                                            "#D93025",
+
+                                        width: 34,
+                                        height: 34,
+
+                                        "&:hover":
+                                        {
+                                            bgcolor:
+                                                "#F5C6C6",
+                                        },
+                                    }}
+                                >
+                                    {rejectLoading ? (
+                                        <CircularProgress
+                                            size={
+                                                18
+                                            }
+                                            color="inherit"
+                                        />
+                                    ) : (
+                                        <CancelIcon
+                                            sx={{
+                                                fontSize: 18,
+                                            }}
+                                        />
+                                    )}
+                                </IconButton>
+                            </Tooltip>
+                        </Box>
+
+                        {/* Desktop */}
+                        <Box
+                            sx={{
+                                display: {
+                                    xs: "none",
+                                    sm: "flex",
+                                },
+
+                                gap: 1,
+                            }}
+                        >
+                            <Button
+                                variant="contained"
+                                size="small"
+                                startIcon={
+                                    approveLoading ? (
+                                        <CircularProgress
+                                            size={
+                                                16
+                                            }
+                                            color="inherit"
+                                        />
+                                    ) : (
+                                        <CheckCircleIcon
+                                            sx={{
+                                                fontSize: 16,
+                                            }}
+                                        />
+                                    )
+                                }
+                                onClick={() =>
+                                    approveUser(
+                                        userId
+                                    )
+                                }
+                                disabled={
+                                    approveLoading ||
+                                    rejectLoading ||
+                                    !userId
+                                }
+                                disableElevation
+                                sx={{
+                                    bgcolor:
+                                        "#1E8E3E",
+
+                                    color:
+                                        "#fff",
+
+                                    textTransform:
+                                        "none",
+
+                                    fontWeight: 600,
+
+                                    fontSize: 13,
+
+                                    borderRadius: 5,
+
+                                    px: 2,
+
+                                    height: 32,
+
+                                    "&:hover":
+                                    {
+                                        bgcolor:
+                                            "#176D30",
+                                    },
+                                }}
+                            >
+                                {approveLoading
+                                    ? "Approving..."
+                                    : "Approve"}
+                            </Button>
+
+                            <Button
+                                variant="outlined"
+                                size="small"
+                                startIcon={
+                                    rejectLoading ? (
+                                        <CircularProgress
+                                            size={
+                                                16
+                                            }
+                                            color="inherit"
+                                        />
+                                    ) : (
+                                        <CancelIcon
+                                            sx={{
+                                                fontSize: 16,
+                                            }}
+                                        />
+                                    )
+                                }
+                                onClick={() =>
+                                    declineUser(
+                                        userId
+                                    )
+                                }
+                                disabled={
+                                    approveLoading ||
+                                    rejectLoading ||
+                                    !userId
+                                }
+                                sx={{
+                                    color:
+                                        "#D93025",
+
+                                    borderColor:
+                                        "#D93025",
+
+                                    textTransform:
+                                        "none",
+
+                                    fontWeight: 600,
+
+                                    fontSize: 13,
+
+                                    borderRadius: 5,
+
+                                    px: 2,
+
+                                    height: 32,
+
+                                    "&:hover":
+                                    {
+                                        bgcolor:
+                                            "#FCE8E8",
+
+                                        borderColor:
+                                            "#B3261E",
+                                    },
+                                }}
+                            >
+                                {rejectLoading
+                                    ? "Declining..."
+                                    : "Decline"}
+                            </Button>
+                        </Box>
+                    </Stack>
+                ) : (
+                    <Box
+                        sx={{
+                            display:
+                                "flex",
+                            alignItems:
+                                "center",
+                            gap: 0.5,
+                            bgcolor:
+                                "#E6F4EA",
+                            color:
+                                "#1E8E3E",
+                            fontSize: 10,
+                            fontWeight: 600,
+                            px: 1.5,
+                            py: 0.5,
+                            borderRadius: 5,
+                            flexShrink: 0,
+                        }}
+                    >
+                        <CheckCircleIcon
+                            sx={{
+                                fontSize: 14,
+                            }}
+                        />
+
+                        Approved
+                    </Box>
+                )}
+            </Stack>
+
+            <ProfileModal
+                open={
+                    profileModalOpen
+                }
+                selectedProfile={
+                    selectedProfile
+                }
+                onClose={() => {
+                    setProfileModalOpen(
+                        false
+                    );
+
+                    setSelectedProfile(
+                        null
+                    );
+                }}
+            />
+        </Paper>
+    );
+});
 const MyReferrals = () => {
     const [openShare, setOpenShare] = useState(false);
 
@@ -64,23 +592,10 @@ const MyReferrals = () => {
     const [rejectLoading, setRejectLoading] =
         useState(false);
 
-    const [profileModalOpen, setProfileModalOpen] =
-        useState(false);
-
-    const [selectedProfile, setSelectedProfile] =
-        useState(null);
-
-    /*
-     * Mobile number
-     */
     const [mobile_number, setMobile_number] =
         useState("");
 
-    /*
-     * Country code
-     *
-     * Default = India
-     */
+
     const [countryCode, setCountryCode] =
         useState("+1");
 
@@ -104,9 +619,7 @@ const MyReferrals = () => {
         theme.breakpoints.down("sm")
     );
 
-    // ==========================================
-    // GET USER FROM LOCAL STORAGE
-    // ==========================================
+
 
     const getUser = () => {
         try {
@@ -131,9 +644,7 @@ const MyReferrals = () => {
     const isProfileComplete =
         completion !== 100;
 
-    // ==========================================
-    // SHARE MODAL
-    // ==========================================
+
 
     const handleOpenShare = () => {
         setOpenShare(true);
@@ -143,9 +654,7 @@ const MyReferrals = () => {
         setOpenShare(false);
     };
 
-    // ==========================================
-    // SET SHARE LINK
-    // ==========================================
+
 
     useEffect(() => {
         if (user?.referralCode) {
@@ -279,9 +788,7 @@ const MyReferrals = () => {
         }
     };
 
-    // ==========================================
-    // INITIAL LOAD
-    // ==========================================
+
 
     useEffect(() => {
         getReferrals();
@@ -289,9 +796,7 @@ const MyReferrals = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // ==========================================
-    // HANDLE NOTIFICATIONS
-    // ==========================================
+
 
     useEffect(() => {
         if (notifications?.length) {
@@ -314,9 +819,6 @@ const MyReferrals = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [notifications]);
 
-    // ==========================================
-    // APPROVE USER
-    // ==========================================
 
     const approveUser = async (id) => {
         if (!id) {
@@ -375,9 +877,7 @@ const MyReferrals = () => {
         }
     };
 
-    // ==========================================
-    // DECLINE USER
-    // ==========================================
+
 
     const declineUser = async (id) => {
         if (!id) {
@@ -432,9 +932,6 @@ const MyReferrals = () => {
         }
     };
 
-    // ==========================================
-    // INITIALS
-    // ==========================================
 
     const getInitials = (
         firstName = "",
@@ -444,9 +941,6 @@ const MyReferrals = () => {
             }`
             .toUpperCase() || "?";
 
-    // ==========================================
-    // EMPTY STATE
-    // ==========================================
 
     const EmptyState = ({
         message1,
@@ -501,9 +995,6 @@ const MyReferrals = () => {
         </Box>
     );
 
-    // ==========================================
-    // SEND REFERRAL SMS
-    // ==========================================
 
     const handlelink = async () => {
         if (
@@ -534,21 +1025,6 @@ const MyReferrals = () => {
         const fullMobileNumber =
             `${countryCode}${mobile_number}`;
 
-        console.log(
-            "Country Code:",
-            countryCode
-        );
-
-        console.log(
-            "Mobile Number:",
-            mobile_number
-        );
-
-        console.log(
-            "Full Mobile Number:",
-            fullMobileNumber
-        );
-
         try {
             // ==================================
             // STORE REFERRAL INVITATION
@@ -570,41 +1046,18 @@ const MyReferrals = () => {
                     }
                 );
 
-            console.log(
-                "Referral invite stored:",
-                stored.data
-            );
 
-            /*
-             * Check backend response.
-             *
-             * Your existing backend appears
-             * to return:
-             *
-             * { status: true }
-             */
+
             if (
                 stored.data.status === true
             ) {
-                // ==================================
-                // SEND SMS THROUGH TWILIO
-                // ==================================
+
 
                 const response =
                     await axios.post(
                         `${Api}/referrals/send`,
                         {
-                            /*
-                             * IMPORTANT
-                             *
-                             * Send:
-                             *
-                             * +919600698331
-                             *
-                             * OR
-                             *
-                             * +12145551234
-                             */
+
                             mobile_number:
                                 fullMobileNumber,
 
@@ -654,537 +1107,7 @@ const MyReferrals = () => {
         }
     };
 
-    // ==========================================
-    // REFERRAL CARD
-    // ==========================================
 
-    const ReferralCard = ({
-        user: u,
-        showActions = false,
-    }) => {
-        const [users, setUsers] =
-            useState(null);
-
-        const userData = {
-            firstName:
-                u?.data?.user
-                    ?.firstName ||
-                u?.firstName ||
-                "",
-
-            lastName:
-                u?.data?.user?.lastName ||
-                u?.lastName ||
-                "",
-
-            email:
-                u?.data?.user?.email ||
-                u?.email ||
-                "",
-
-            id:
-                u?.data?.userId ||
-                u?._id ||
-                u?.id,
-        };
-
-        const userId =
-            userData.id;
-
-        const getUserData =
-            async () => {
-                if (!userId) return;
-
-                try {
-                    const res =
-                        await axios.get(
-                            `${Api}/users/${userId}`
-                        );
-
-                    setUsers(
-                        res?.data?.data ||
-                        null
-                    );
-                } catch (err) {
-                    console.error(
-                        "Failed to fetch user data:",
-                        err
-                    );
-
-                    setUsers(null);
-                }
-            };
-
-        useEffect(() => {
-            getUserData();
-
-            // eslint-disable-next-line react-hooks/exhaustive-deps
-        }, []);
-
-        const profileImage =
-            users?.profileImage;
-
-        return (
-            <Paper
-                elevation={0}
-                sx={{
-                    p: {
-                        xs: 0.8,
-                        sm: 1.5,
-                        md: 2,
-                    },
-                    borderRadius: 2,
-                    border: "1px solid",
-                    borderColor:
-                        "divider",
-
-                    "&:hover": {
-                        borderColor:
-                            "primary.light",
-                        bgcolor:
-                            "action.hover",
-                    },
-
-                    transition:
-                        "all 0.15s ease",
-                }}
-            >
-                <Stack
-                    direction="row"
-                    alignItems="center"
-                    justifyContent="space-between"
-                    spacing={1.5}
-                >
-                    {/* Left */}
-                    <Stack
-                        direction="row"
-                        spacing={1.5}
-                        alignItems="center"
-                        sx={{
-                            minWidth: 0,
-                            flex: 1,
-                        }}
-                    >
-                        <Avatar
-                            src={
-                                profileImage
-                            }
-                            alt={`${users?.firstName || ""} ${users?.lastName ||
-                                ""
-                                }`}
-                            onClick={() => {
-                                setSelectedProfile(
-                                    users
-                                );
-
-                                setProfileModalOpen(
-                                    true
-                                );
-                            }}
-                            sx={{
-                                width: {
-                                    xs: 40,
-                                    sm: 44,
-                                },
-
-                                height: {
-                                    xs: 40,
-                                    sm: 44,
-                                },
-
-                                cursor: users
-                                    ? "pointer"
-                                    : "default",
-
-                                bgcolor:
-                                    "#FFF3E0",
-
-                                fontWeight: 600,
-                            }}
-                        >
-                            {!profileImage && (
-                                <>
-                                    <Box
-                                        component="span"
-                                        sx={{
-                                            color:
-                                                "#FF9933",
-                                        }}
-                                    >
-                                        {
-                                            users
-                                                ?.firstName?.[0]
-                                        }
-                                    </Box>
-
-                                    <Box
-                                        component="span"
-                                        sx={{
-                                            color:
-                                                "#FF9933",
-                                        }}
-                                    >
-                                        {
-                                            users
-                                                ?.lastName?.[0]
-                                        }
-                                    </Box>
-                                </>
-                            )}
-                        </Avatar>
-
-                        <Box
-                            sx={{
-                                minWidth: 0,
-                            }}
-                        >
-                            <Typography
-                                fontWeight={600}
-                                noWrap
-                                sx={{
-                                    fontSize: {
-                                        xs: 13,
-                                        sm: 15,
-                                    },
-
-                                    color:
-                                        "text.primary",
-                                }}
-                            >
-                                {
-                                    users?.firstName
-                                }{" "}
-                                {
-                                    users?.lastName
-                                }
-                            </Typography>
-
-                            <Typography
-                                variant="body2"
-                                color="text.secondary"
-                                noWrap
-                                sx={{
-                                    fontSize: {
-                                        xs: 11,
-                                        sm: 13,
-                                    },
-                                }}
-                            >
-                                {users?.email ||
-                                    ""}
-                            </Typography>
-                        </Box>
-                    </Stack>
-
-                    {/* Right */}
-                    {showActions ? (
-                        <Stack
-                            direction="row"
-                            spacing={0.75}
-                            alignItems="center"
-                            sx={{
-                                flexShrink: 0,
-                            }}
-                        >
-                            {/* Mobile */}
-                            <Box
-                                sx={{
-                                    display: {
-                                        xs: "flex",
-                                        sm: "none",
-                                    },
-
-                                    gap: 0.5,
-                                }}
-                            >
-                                <Tooltip title="Approve">
-                                    <IconButton
-                                        size="small"
-                                        onClick={() =>
-                                            approveUser(
-                                                userId
-                                            )
-                                        }
-                                        disabled={
-                                            approveLoading ||
-                                            rejectLoading ||
-                                            !userId
-                                        }
-                                        sx={{
-                                            bgcolor:
-                                                "#E6F4EA",
-
-                                            color:
-                                                "#1E8E3E",
-
-                                            width: 34,
-                                            height: 34,
-
-                                            "&:hover":
-                                            {
-                                                bgcolor:
-                                                    "#C8E6C9",
-                                            },
-                                        }}
-                                    >
-                                        {approveLoading ? (
-                                            <CircularProgress
-                                                size={
-                                                    18
-                                                }
-                                                color="inherit"
-                                            />
-                                        ) : (
-                                            <CheckCircleIcon
-                                                sx={{
-                                                    fontSize: 18,
-                                                }}
-                                            />
-                                        )}
-                                    </IconButton>
-                                </Tooltip>
-
-                                <Tooltip title="Decline">
-                                    <IconButton
-                                        size="small"
-                                        onClick={() =>
-                                            declineUser(
-                                                userId
-                                            )
-                                        }
-                                        disabled={
-                                            approveLoading ||
-                                            rejectLoading ||
-                                            !userId
-                                        }
-                                        sx={{
-                                            bgcolor:
-                                                "#FCE8E8",
-
-                                            color:
-                                                "#D93025",
-
-                                            width: 34,
-                                            height: 34,
-
-                                            "&:hover":
-                                            {
-                                                bgcolor:
-                                                    "#F5C6C6",
-                                            },
-                                        }}
-                                    >
-                                        {rejectLoading ? (
-                                            <CircularProgress
-                                                size={
-                                                    18
-                                                }
-                                                color="inherit"
-                                            />
-                                        ) : (
-                                            <CancelIcon
-                                                sx={{
-                                                    fontSize: 18,
-                                                }}
-                                            />
-                                        )}
-                                    </IconButton>
-                                </Tooltip>
-                            </Box>
-
-                            {/* Desktop */}
-                            <Box
-                                sx={{
-                                    display: {
-                                        xs: "none",
-                                        sm: "flex",
-                                    },
-
-                                    gap: 1,
-                                }}
-                            >
-                                <Button
-                                    variant="contained"
-                                    size="small"
-                                    startIcon={
-                                        approveLoading ? (
-                                            <CircularProgress
-                                                size={
-                                                    16
-                                                }
-                                                color="inherit"
-                                            />
-                                        ) : (
-                                            <CheckCircleIcon
-                                                sx={{
-                                                    fontSize: 16,
-                                                }}
-                                            />
-                                        )
-                                    }
-                                    onClick={() =>
-                                        approveUser(
-                                            userId
-                                        )
-                                    }
-                                    disabled={
-                                        approveLoading ||
-                                        rejectLoading ||
-                                        !userId
-                                    }
-                                    disableElevation
-                                    sx={{
-                                        bgcolor:
-                                            "#1E8E3E",
-
-                                        color:
-                                            "#fff",
-
-                                        textTransform:
-                                            "none",
-
-                                        fontWeight: 600,
-
-                                        fontSize: 13,
-
-                                        borderRadius: 5,
-
-                                        px: 2,
-
-                                        height: 32,
-
-                                        "&:hover":
-                                        {
-                                            bgcolor:
-                                                "#176D30",
-                                        },
-                                    }}
-                                >
-                                    {approveLoading
-                                        ? "Approving..."
-                                        : "Approve"}
-                                </Button>
-
-                                <Button
-                                    variant="outlined"
-                                    size="small"
-                                    startIcon={
-                                        rejectLoading ? (
-                                            <CircularProgress
-                                                size={
-                                                    16
-                                                }
-                                                color="inherit"
-                                            />
-                                        ) : (
-                                            <CancelIcon
-                                                sx={{
-                                                    fontSize: 16,
-                                                }}
-                                            />
-                                        )
-                                    }
-                                    onClick={() =>
-                                        declineUser(
-                                            userId
-                                        )
-                                    }
-                                    disabled={
-                                        approveLoading ||
-                                        rejectLoading ||
-                                        !userId
-                                    }
-                                    sx={{
-                                        color:
-                                            "#D93025",
-
-                                        borderColor:
-                                            "#D93025",
-
-                                        textTransform:
-                                            "none",
-
-                                        fontWeight: 600,
-
-                                        fontSize: 13,
-
-                                        borderRadius: 5,
-
-                                        px: 2,
-
-                                        height: 32,
-
-                                        "&:hover":
-                                        {
-                                            bgcolor:
-                                                "#FCE8E8",
-
-                                            borderColor:
-                                                "#B3261E",
-                                        },
-                                    }}
-                                >
-                                    {rejectLoading
-                                        ? "Declining..."
-                                        : "Decline"}
-                                </Button>
-                            </Box>
-                        </Stack>
-                    ) : (
-                        <Box
-                            sx={{
-                                display:
-                                    "flex",
-                                alignItems:
-                                    "center",
-                                gap: 0.5,
-                                bgcolor:
-                                    "#E6F4EA",
-                                color:
-                                    "#1E8E3E",
-                                fontSize: 10,
-                                fontWeight: 600,
-                                px: 1.5,
-                                py: 0.5,
-                                borderRadius: 5,
-                                flexShrink: 0,
-                            }}
-                        >
-                            <CheckCircleIcon
-                                sx={{
-                                    fontSize: 14,
-                                }}
-                            />
-
-                            Approved
-                        </Box>
-                    )}
-                </Stack>
-
-                <ProfileModal
-                    open={
-                        profileModalOpen
-                    }
-                    selectedProfile={
-                        selectedProfile
-                    }
-                    onClose={() => {
-                        setProfileModalOpen(
-                            false
-                        );
-
-                        setSelectedProfile(
-                            null
-                        );
-                    }}
-                />
-            </Paper>
-        );
-    };
-
-    // ==========================================
-    // LOADING
-    // ==========================================
 
     const LoadingSpinner = () => (
         <Box
@@ -1205,9 +1128,6 @@ const MyReferrals = () => {
         </Box>
     );
 
-    // ==========================================
-    // SHARE
-    // ==========================================
 
     const handleInvite = () => {
         if (
@@ -1243,9 +1163,7 @@ const MyReferrals = () => {
         }
     };
 
-    // ==========================================
-    // UI
-    // ==========================================
+
 
     return (
         <PageLayout>
@@ -1447,9 +1365,6 @@ const MyReferrals = () => {
                         </Stack>
                     ))}
 
-                {/* ==================================
-                    SHARE MODAL
-                    ================================== */}
 
                 <Modal
                     open={openShare}
@@ -1666,9 +1581,7 @@ const MyReferrals = () => {
                                          * when country 
                                          * changes. 
                                          */
-                                         mobile_number(
-                                            ""
-                                        );
+                                        setMobile_number("")
                                     }}
                                     sx={{
                                         width: {
@@ -1684,7 +1597,7 @@ const MyReferrals = () => {
                                     <MenuItem value="+1">
                                         🇺🇸 +1
                                     </MenuItem>
-                                </TextField> 
+                                </TextField>
 
                                 {/* MOBILE */}
                                 <TextField
@@ -1785,9 +1698,7 @@ const MyReferrals = () => {
                                         },
                                     }}
                                     onClick={() =>
-                                        setMobile_number(
-                                            ""
-                                        )
+                                        setMobile_number("")
                                     }
                                 >
                                     Clear

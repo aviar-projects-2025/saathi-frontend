@@ -278,17 +278,16 @@ const RequestRide = ({ ride }) => {
     }
   };
 
-  // Filter: Only show ACTIVE requests (not deleted/cancelled/rejected)
+  
   const activeRequests = allMyRequests.filter(
     (req) =>
       req?.rideId &&
-      // req.status !== "DELETED" &&
-      req.status !== "CANCELLED" &&
+      //  req.status !== "DELETED" &&
+      req?.rideId?.travelStatus !== "Cancelled" &&
       req.status !== "REJECTED",
   );
 
-  // ── Derive the same `maxSeats` / `remainingSeatsForUser` semantics that
-  // RideCard.jsx uses, so opening Ridebook from here shows identical numbers.
+ 
   const isFlightForEdit = selectedRide?.modeOfTravel === "Flight";
   const isAcceptedForEdit = selectedRequest?.status === "ACCEPTED";
   const requestedByMeForEdit = Number(selectedRequest?.seatsRequested || 0);
