@@ -339,7 +339,12 @@ const handlelink = async () => {
       return;
     
 
-  
+  useEffect (()=>{
+    if(currentUser?._id) {
+       getCommunityPost()
+    }
+
+  },[currentUser])
 
   const getCommunityPost = async () => {
     try {
