@@ -1564,7 +1564,7 @@ console.log(environment);
                                 }}
                             >
                                 {/* COUNTRY CODE */}
-                                {isProduction && (
+                                {isTesting && (
                                     <TextField
                                         size="small"
                                         value="US +1"
