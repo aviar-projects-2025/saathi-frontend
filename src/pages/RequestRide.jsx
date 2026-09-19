@@ -278,7 +278,7 @@ const RequestRide = ({ ride }) => {
     }
   };
 
-  
+
   const activeRequests = allMyRequests.filter(
     (req) =>
       req?.rideId &&
@@ -287,7 +287,7 @@ const RequestRide = ({ ride }) => {
       req.status !== "REJECTED",
   );
 
- 
+
   const isFlightForEdit = selectedRide?.modeOfTravel === "Flight";
   const isAcceptedForEdit = selectedRequest?.status === "ACCEPTED";
   const requestedByMeForEdit = Number(selectedRequest?.seatsRequested || 0);
@@ -296,9 +296,9 @@ const RequestRide = ({ ride }) => {
   const remainingSeatsForUserEdit = isFlightForEdit
     ? null
     : Math.max(
-        Number(selectedRide?.availableSeats || 0) - pendingSeatsByMeForEdit,
-        0
-      );
+      Number(selectedRide?.availableSeats || 0) - pendingSeatsByMeForEdit,
+      0
+    );
 
   // RequestRide always opens Ridebook in edit mode (requestToEdit is always
   // set here), so this mirrors RideCard's `alreadyRequested` branch.
@@ -359,7 +359,7 @@ const RequestRide = ({ ride }) => {
               justifyContent: "center",
               alignItems: "center",
               textAlign: "center",
-              px: 2,
+              // px: 2,
             }}
           >
             <Typography variant="h6" fontWeight={700} color="text.primary">
@@ -916,7 +916,7 @@ const RequestRide = ({ ride }) => {
           }}
         >
           <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>
-            Cancel ride request
+            Cancel ride request ?
             <IconButton
               onClick={() => setOpenCancelDialog(false)}
               sx={{ position: "absolute", right: 12, top: 12 }}
@@ -947,7 +947,7 @@ const RequestRide = ({ ride }) => {
 
           <DialogActions sx={{ px: 3, pb: 3, gap: 1 }}>
             <Button
-              variant="outlined"
+              variant="contained"
               onClick={() => setOpenCancelDialog(false)}
               sx={{
                 borderRadius: 2,
@@ -955,8 +955,17 @@ const RequestRide = ({ ride }) => {
                 flex: 1,
                 minHeight: 44,
                 fontWeight: 600,
-                borderColor: "#D9D9D9",
-                color: "text.primary",
+                backgroundColor: "#757575",
+                color: "#fff",
+
+                "&:hover": {
+                  backgroundColor: "#9E9E9E",
+                },
+
+                "&.Mui-disabled": {
+                  backgroundColor: "#D0D0D0",
+                  color: "#fff",
+                },
               }}
               disabled={isCancelling}
             >

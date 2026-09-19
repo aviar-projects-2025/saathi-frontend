@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react';
 import PageLayout from '../components/PageLayout'
 import { Avatar, Box, Divider, List, ListItem, ListItemAvatar, Typography } from '@mui/material';
 import moment from 'moment';
@@ -6,8 +6,12 @@ import { useNotifications } from '../context/NotificationContext';
 import { useReferral } from '../context/ReferralContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import ProfileModal from './Avatar.jsx';
 
 const Notifications = () => {
+
+    const [profileModalOpen, setProfileModalOpen] = useState(false);
+    const [selectedProfile, setSelectedProfile] = useState(null);
     const { tabNotification, fetchNotifications } = useNotifications();
     const { getPendingReferralCount } = useReferral();
 
@@ -104,7 +108,14 @@ const Notifications = () => {
                                     }}
                                 >
                                     <ListItemAvatar>
-                                        <Avatar src={item?.actorId?.profileImage || item?.data?.profileImage}>
+                                        <Avatar
+                                            src={item?.actorId?.profileImage || item?.data?.profileImage}
+                                            onClick={(event) => {
+                                                event.stopPropagation();
+                                                setSelectedProfile(item?.actorId || item?.data);
+                                                setProfileModalOpen(true);
+                                            }}
+                                        >
                                             {item?.actorId?.firstName?.[0] || "U"}
                                         </Avatar>
                                     </ListItemAvatar>
@@ -181,6 +192,14 @@ const Notifications = () => {
                     })
                 )}
             </List>
+
+            <ProfileModal
+                open={profileModalOpen}
+                selectedProfile={selectedProfile}
+                onClose={() => {
+                    setProfileModalOpen(false);
+                }}
+            />
         </PageLayout>
     )
 }

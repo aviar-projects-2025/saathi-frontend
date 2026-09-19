@@ -580,6 +580,8 @@ const ReferralCard = memo(({
 const MyReferrals = () => {
     const [openShare, setOpenShare] = useState(false);
 
+    const [inviteLoading, setInviteLoading] = useState(false);
+
     const [referrals, setMyReferrals] = useState([]);
     const [approvedReferrals, setApprovedReferrals] =
         useState([]);
@@ -669,9 +671,9 @@ const MyReferrals = () => {
     }, [user]);
 
     const environment =
-    import.meta.env.VITE_COUNTRY_CODE_VALIDATION;
+        import.meta.env.VITE_COUNTRY_CODE_VALIDATION;
 
-console.log(environment);
+    console.log(environment);
 
     const handleCopy = (value) => {
         if (navigator.clipboard) {
@@ -1002,6 +1004,7 @@ console.log(environment);
 
 
     const handlelink = async () => {
+        setInviteLoading(true);
         if (
             !mobile_number ||
             mobile_number.length !== 10
@@ -1109,6 +1112,10 @@ console.log(environment);
                     ?.message ||
                 "Failed to send referral SMS"
             );
+        } finally {
+            setInviteLoading(false);
+            setMobile_number("");
+            handleCloseShare();
         }
     };
 
@@ -1562,66 +1569,66 @@ console.log(environment);
                                 {/* COUNTRY CODE */}
                                 {isProduction && (
                                     <>
+                                        <TextField
+                                            size="small"
+                                            value="US +1"
+                                            disabled
+                                            sx={{
+                                                width: {
+                                                    xs: 105,
+                                                    sm: 115,
+                                                },
+                                                "& .MuiInputBase-input.Mui-disabled": {
+                                                    color: "#555",
+                                                    WebkitTextFillColor: "#555",
+                                                },
+                                            }}
+                                        />
+
+                                    </>
+                                )}
+                                {isTesting && (
                                     <TextField
+                                        select
                                         size="small"
-                                        value="US +1"
-                                        disabled
+                                        value={
+                                            countryCode
+                                        }
+                                        onChange={(
+                                            e
+                                        ) => {
+                                            setCountryCode(
+                                                e
+                                                    .target
+                                                    .value
+                                            );
+
+                                            /* 
+                                             * Clear the 
+                                             * previous number 
+                                             * when country 
+                                             * changes. 
+                                             */
+                                            setMobile_number("")
+                                        }}
                                         sx={{
                                             width: {
                                                 xs: 105,
                                                 sm: 115,
                                             },
-                                            "& .MuiInputBase-input.Mui-disabled": {
-                                                color: "#555",
-                                                WebkitTextFillColor: "#555",
-                                            },
                                         }}
-                                    />
-                              
-                                </>
+                                    >
+
+                                        <MenuItem value="+91">
+                                            🇮🇳 +91
+                                        </MenuItem>
+
+                                        <MenuItem value="+1">
+                                            🇺🇸 +1
+                                        </MenuItem>
+                                    </TextField>
                                 )}
-                                {isTesting && (
-                                          <TextField
-                                    select
-                                    size="small"
-                                    value={
-                                        countryCode
-                                    }
-                                    onChange={(
-                                        e
-                                    ) => {
-                                        setCountryCode(
-                                            e
-                                                .target
-                                                .value
-                                        );
 
-                                        /* 
-                                         * Clear the 
-                                         * previous number 
-                                         * when country 
-                                         * changes. 
-                                         */
-                                        setMobile_number("")
-                                    }}
-                                    sx={{
-                                        width: {
-                                            xs: 105,
-                                            sm: 115,
-                                        },
-                                    }}
-                                >
-
-                                    <MenuItem value="+91">
-                                        🇮🇳 +91
-                                    </MenuItem>
-
-                                    <MenuItem value="+1">
-                                        🇺🇸 +1
-                                    </MenuItem>
-                                </TextField>
-                                )}
-                                
 
                                 {/* MOBILE */}
                                 <TextField
@@ -1759,7 +1766,9 @@ console.log(environment);
                                         handlelink
                                     }
                                 >
-                                    Invite
+                                    {inviteLoading
+                                        ? "Inviting..."
+                                        : " Invite"}
                                 </Button>
                             </Stack>
                         </Box>
