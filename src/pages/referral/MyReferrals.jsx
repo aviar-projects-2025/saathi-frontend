@@ -1564,7 +1564,8 @@ console.log(environment);
                                 }}
                             >
                                 {/* COUNTRY CODE */}
-                                {isTesting && (
+                                {isProduction && (
+                                    <>
                                     <TextField
                                         size="small"
                                         value="US +1"
@@ -1580,8 +1581,11 @@ console.log(environment);
                                             },
                                         }}
                                     />
+                              
+                                </>
                                 )}
-                                <TextField
+                                {isTesting && (
+                                          <TextField
                                     select
                                     size="small"
                                     value={
@@ -1620,6 +1624,8 @@ console.log(environment);
                                         🇺🇸 +1
                                     </MenuItem>
                                 </TextField>
+                                )}
+                                
 
                                 {/* MOBILE */}
                                 <TextField
