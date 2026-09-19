@@ -619,7 +619,11 @@ const MyReferrals = () => {
         theme.breakpoints.down("sm")
     );
 
+    const isProduction =
+        import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "Production";
 
+    const isTesting =
+        import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "Testing";
 
     const getUser = () => {
         try {
@@ -659,14 +663,15 @@ const MyReferrals = () => {
     useEffect(() => {
         if (user?.referralCode) {
             setShareLink(
-                `https://saathi-frontend-sl8k.vercel.app/register?ref=${user.referralCode}`
+                `${window.location.origin}/register?ref=${user.referralCode}`
             );
         }
     }, [user]);
 
-    // ==========================================
-    // COPY
-    // ==========================================
+    const environment =
+    import.meta.env.VITE_COUNTRY_CODE_VALIDATION;
+
+console.log(environment);
 
     const handleCopy = (value) => {
         if (navigator.clipboard) {
@@ -1559,7 +1564,23 @@ const MyReferrals = () => {
                                 }}
                             >
                                 {/* COUNTRY CODE */}
-
+                                {isProduction && (
+                                    <TextField
+                                        size="small"
+                                        value="US +1"
+                                        disabled
+                                        sx={{
+                                            width: {
+                                                xs: 105,
+                                                sm: 115,
+                                            },
+                                            "& .MuiInputBase-input.Mui-disabled": {
+                                                color: "#555",
+                                                WebkitTextFillColor: "#555",
+                                            },
+                                        }}
+                                    />
+                                )}
                                 <TextField
                                     select
                                     size="small"
@@ -1590,6 +1611,7 @@ const MyReferrals = () => {
                                         },
                                     }}
                                 >
+
                                     <MenuItem value="+91">
                                         🇮🇳 +91
                                     </MenuItem>
