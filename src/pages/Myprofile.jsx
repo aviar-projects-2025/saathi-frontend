@@ -329,6 +329,11 @@ const Myprofile = () => {
       );
     }
   };
+  const isProduction =
+    import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "Production";
+
+  const isTesting =
+    import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "Testing";
 
   const getCommunityPost = async () => {
     try {
@@ -879,46 +884,68 @@ const Myprofile = () => {
                 width: "100%",
               }}
             >
-              <TextField
-                select
-                size="small"
-                value={
-                  countryCode
-                }
-                onChange={(
-                  e
-                ) => {
-                  setCountryCode(
+              {isProduction && (
+                <>
+                  <TextField
+                    size="small"
+                    value="US +1"
+                    disabled
+                    sx={{
+                      width: {
+                        xs: 105,
+                        sm: 115,
+                      },
+                      "& .MuiInputBase-input.Mui-disabled": {
+                        color: "#555",
+                        WebkitTextFillColor: "#555",
+                      },
+                    }}
+                  />
+
+                </>
+              )}
+              {isTesting && (
+                <TextField
+                  select
+                  size="small"
+                  value={
+                    countryCode
+                  }
+                  onChange={(
                     e
-                      .target
-                      .value
-                  );
+                  ) => {
+                    setCountryCode(
+                      e
+                        .target
+                        .value
+                    );
 
-                  /* 
-                   * Clear the 
-                   * previous number 
-                   * when country 
-                   * changes. 
-                   */
-                  mobile_number(
-                    ""
-                  );
-                }}
-                sx={{
-                  width: {
-                    xs: 105,
-                    sm: 115,
-                  },
-                }}
-              >
-                <MenuItem value="+91">
-                  🇮🇳 +91
-                </MenuItem>
+                    /* 
+                     * Clear the 
+                     * previous number 
+                     * when country 
+                     * changes. 
+                     */
+                    setMobile_number("")
+                  }}
+                  sx={{
+                    width: {
+                      xs: 105,
+                      sm: 115,
+                    },
+                  }}
+                >
 
-                <MenuItem value="+1">
-                  🇺🇸 +1
-                </MenuItem>
-              </TextField>
+                  <MenuItem value="+91">
+                    🇮🇳 +91
+                  </MenuItem>
+
+                  <MenuItem value="+1">
+                    🇺🇸 +1
+                  </MenuItem>
+                </TextField>
+              )}
+
               <TextField
                 fullWidth
                 value={mobile_number}

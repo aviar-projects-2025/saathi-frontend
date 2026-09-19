@@ -232,6 +232,11 @@ const Register = () => {
       otpInputRefs.current[index - 1]?.focus();
     }
   };
+  const isProduction =
+    import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "Production";
+
+  const isTesting =
+    import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "Testing";
 
   // Registration submit
   const registerSubmit = async (values, { setSubmitting }) => {
@@ -308,39 +313,63 @@ const Register = () => {
           width: "100%",
         }}
       >
-        <TextField
-          select
-          size="small"
-          value={
-            countryCode
-          }
-          onChange={(
-            e
-          ) => {
-            setCountryCode(
-              e
-                .target
-                .value
-            );
-            setMobileNumber(
-              ""
-            );
-          }}
-          sx={{
-            width: {
-              xs: 105,
-              sm: 115,
-            },
-          }}
-        >
-          <MenuItem value="+91">
-            🇮🇳 +91
-          </MenuItem>
+        {isProduction && (
+          <>
+            <TextField
+              size="small"
+              value="US +1"
+              disabled
+              sx={{
+                width: {
+                  xs: 105,
+                  sm: 115,
+                },
+                "& .MuiInputBase-input.Mui-disabled": {
+                  color: "#555",
+                  WebkitTextFillColor: "#555",
+                },
+              }}
+            />
 
-          <MenuItem value="+1">
-            🇺🇸 +1
-          </MenuItem>
-        </TextField>
+          </>
+        )}
+        {isTesting && (
+          <TextField
+            select
+            size="small"
+            value={
+              countryCode
+            }
+            onChange={(
+              e
+            ) => {
+              setCountryCode(
+                e
+                  .target
+                  .value
+              );
+
+
+              setMobileNumber("")
+            }}
+            sx={{
+              width: {
+                xs: 105,
+                sm: 115,
+              },
+            }}
+          >
+
+            <MenuItem value="+91">
+              🇮🇳 +91
+            </MenuItem>
+
+            <MenuItem value="+1">
+              🇺🇸 +1
+            </MenuItem>
+          </TextField>
+        )}
+
         <TextField
           fullWidth
           label="Enter Mobile Number"

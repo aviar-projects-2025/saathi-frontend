@@ -1552,10 +1552,6 @@ console.log(environment);
                                 </Tooltip>
                             </Paper>
 
-                            {/* ==================================
-                                COUNTRY + MOBILE NUMBER
-                                ================================== */}
-
                             <Stack
                                 direction="row"
                                 spacing={1}
