@@ -13,8 +13,10 @@ import {
   Stack,
   Switch,
   Modal,
+  MenuItem,
   TextField,
   Chip,
+  Tooltip,
   useTheme,
   Grid,
   CircularProgress,
@@ -116,11 +118,13 @@ const Myprofile = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const { currentUser, getuserData, completion } = useUser();
+  const [mobile_number, setMobile_number] = useState("");
+  const [openShare, setOpenShare] = useState(false);
   const handleOpenShare = () => setOpenShare(true);
   const handleCloseShare = () => setOpenShare(false);
-  const [openShare, setOpenShare] = useState(false);
+  const [inviteLoading, setInviteLoading] = useState(false);
   const feedRef = useRef(null);
-  const [mobile_number, setMobile_number] = useState("");
+  // const [mobile_number, setMobile_number] = useState("");
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null);
   const [countryCode, setCountryCode] =
@@ -869,6 +873,7 @@ const Myprofile = () => {
         </Box>
       </Modal>
 
+
       <Modal
         open={openShare}
         onClose={(event, reason) => {
@@ -896,8 +901,8 @@ const Myprofile = () => {
             sx={{
               position: "relative",
               bgcolor: "white",
-              width: { xs: "100%", sm: 320 },
-              maxWidth: 320,
+              width: { xs: "100%", sm: 380 },
+              maxWidth: 380,
               borderRadius: { xs: 2, sm: 2 },
               p: { xs: 2, sm: 3 },
               boxShadow: 24,
@@ -924,7 +929,7 @@ const Myprofile = () => {
                 pr: 3,
               }}
             >
-              Share your referral link
+              Invite your friends
             </Typography>
             <Stack
               direction="row"
@@ -1095,7 +1100,6 @@ const Myprofile = () => {
           </Box>
         </Box>
       </Modal>
-
       {/* ── Notifications ── */}
       {/* <SectionCard sx={{ mt: 3 }}>
         <SectionHeader icon={<NotificationsIcon />} label="Notifications" />

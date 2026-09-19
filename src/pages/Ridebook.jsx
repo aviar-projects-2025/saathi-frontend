@@ -39,7 +39,8 @@ export default function Ridebook({
   remainingSeatsForUser,
   setAllMyRequests,
   allMyRequests,
-
+  myRequestedRides,
+  setMyRequestedRides,
   onRequestUpdated,
 }) {
 
@@ -216,6 +217,7 @@ export default function Ridebook({
   const [editingRequest, setEditingRequest] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+
   useEffect(() => {
     if (editingRequest) {
       setRequestData((prev) => ({
@@ -362,7 +364,15 @@ export default function Ridebook({
 
     return true;
   };
+  const myRequest = myRequestedRides?.find(
+    (item) =>
+      item.rideId === ride._id &&
+      item.status !== "CANCELLED"
+  );
 
+  const isAccepted = myRequest?.status === "ACCEPTED";
+  const requestedByMe = Number(myRequest?.seatsRequested || 0);
+  const pendingSeatsByMe = isAccepted ? 0 : requestedByMe;
   const handleRequestSubmit = async () => {
     if (!ride) return;
     if (isSubmittingRef.current) return;
@@ -461,9 +471,12 @@ export default function Ridebook({
   const isSelfAlreadyConfirmed = existingMembers?.some(isSelfMember);
 
   const availableSeatsForAdd = Math.max(
-    remainingSeats - (requestToEdit?.pendingReqSeats || 0),
+    Number(ride?.availableSeats || 0) - pendingSeatsByMe,
     0
   );
+
+  const isAddMemberDisabled =
+    !isFlight && newMembers.length >= availableSeatsForAdd;
 
   const editableMembersWithMeta = editableMembers.map(
     (member, originalIndex) => ({
@@ -621,7 +634,12 @@ export default function Ridebook({
               Available Seats
             </Typography>
             <Chip
-              label={`${Math.max(remainingSeats - (requestToEdit?.pendingReqSeats || 0), 0)}`}
+              label={`${Math.max(
+                Number(ride?.availableSeats || 0) -
+                pendingSeatsByMe -
+                newMembers.length,
+                0
+              )}`}
               size="small"
               sx={{
                 bgcolor: ORANGE,
@@ -861,7 +879,7 @@ export default function Ridebook({
         <Button
           startIcon={<AddCircleOutlineIcon />}
           onClick={handleAddMember}
-          disabled={!isFlight && availableSeatsForAdd <= 0}
+          disabled={isAddMemberDisabled}
           sx={{
             mt: { xs: 1.5, sm: 1.5 },
             mb: { xs: 2.5, sm: 2.5 },
