@@ -13,8 +13,10 @@ import {
   Stack,
   Switch,
   Modal,
+  MenuItem,
   TextField,
   Chip,
+  Tooltip,
   useTheme,
   Grid,
   CircularProgress,
@@ -116,11 +118,13 @@ const Myprofile = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const { currentUser, getuserData, completion } = useUser();
+  const [mobile_number, setMobile_number] = useState("");
+  const [openShare, setOpenShare] = useState(false);
   const handleOpenShare = () => setOpenShare(true);
   const handleCloseShare = () => setOpenShare(false);
-  const [openShare, setOpenShare] = useState(false);
+  const [inviteLoading, setInviteLoading] = useState(false);
   const feedRef = useRef(null);
-  const [mobile_number, setMobile_number] = useState("");
+ 
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null);
   const [countryCode, setCountryCode] =
@@ -273,154 +277,70 @@ const Myprofile = () => {
       setPasswordLoading(false);
     }
   };
-  const handlelink = async () => {
-    if (
-      !mobile_number ||
-      mobile_number.length !== 10
-    ) {
-      alert(
-        "Enter a valid 10-digit mobile number"
-      );
+
+const handlelink = async () => {
+    if (!mobile_number || mobile_number.length !== 10) {
+      alert("Enter a valid 10-digit mobile number");
+      return;
+    }
+    const fullMobileNumber =
+      `${countryCode}${mobile_number}`;
+    setInviteLoading(true);
+    try {
+
+      const stored = await axios.post(
+        `${Api}/referralInvite/`,
+        {
+          referredBy: user.id,
+          mobile: fullMobileNumber,
+          status: 'Waiting',
+        }
+      )
+
+      if (stored.data.status == true) {
+
+        const response = await axios.post(
+          `${Api}/referrals/send`,
+          {
+            mobile_number,
+            shareLink,
+            referrerId: user?.referralCode,
+          },
+          {
+            withCredentials: true,
+          }
+        );
+
+        console.log(response.data);
+        setInviteLoading(false);
+        setMobile_number('');
+        handleCloseShare();
+        alert("Referral link sent successfully!");
+      }
+
+    } catch (error) {
+      console.error(
+        "Referral SMS error:",
+        error.response?.data || error.message
+      );
+
+      alert(
+        error.response?.data?.message ||
+        "Failed to send referral SMS"
+      );
+    }
+  };
+  const isProduction =
+    import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "Production";
+
+  const isTesting =
+    import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "Testing";
 
       return;
-    }
+    
 
-    if (!user?.id) {
-      alert("User not found");
-      return;
-    }
+  
 
-    /*
-     * Build international number.
-     *
-     * India:
-     * +919600698331
-     *
-     * USA:
-     * +12145551234
-     */
-    const fullMobileNumber =
-      `${countryCode}${mobile_number}`;
-
-    console.log(
-      "Country Code:",
-      countryCode
-    );
-
-    console.log(
-      "Mobile Number:",
-      mobile_number
-    );
-
-    console.log(
-      "Full Mobile Number:",
-      fullMobileNumber
-    );
-
-    try {
-      // ==================================
-      // STORE REFERRAL INVITATION
-      // ==================================
-
-      const stored =
-        await axios.post(
-          `${Api}/referralInvite/`,
-          {
-            referredBy: user.id,
-
-            /*
-             * Store international number
-             */
-            mobile:
-              fullMobileNumber,
-
-            status: "Waiting",
-          }
-        );
-
-      console.log(
-        "Referral invite stored:",
-        stored.data
-      );
-
-      /*
-       * Check backend response.
-       *
-       * Your existing backend appears
-       * to return:
-       *
-       * { status: true }
-       */
-      if (
-        stored.data.status === true
-      ) {
-        // ==================================
-        // SEND SMS THROUGH TWILIO
-        // ==================================
-
-        const response =
-          await axios.post(
-            `${Api}/referrals/send`,
-            {
-              /*
-               * IMPORTANT
-               *
-               * Send:
-               *
-               * +919600698331
-               *
-               * OR
-               *
-               * +12145551234
-               */
-              mobile_number:
-                fullMobileNumber,
-
-              shareLink,
-
-              referrerId:
-                user?.referralCode,
-            },
-            {
-              withCredentials:
-                true,
-            }
-          );
-
-        console.log(
-          "Referral SMS response:",
-          response.data
-        );
-
-        alert(
-          `Referral link sent successfully to ${fullMobileNumber}`
-        );
-
-        /*
-         * Clear mobile after
-         * successful SMS
-         */
-        setMobile_number("");
-      } else {
-        alert(
-          stored.data?.message ||
-          "Unable to create referral invitation"
-        );
-      }
-    } catch (error) {
-      console.error(
-        "Referral SMS error:",
-        error.response?.data ||
-        error.message
-      );
-
-      alert(
-        error.response?.data
-          ?.message ||
-        "Failed to send referral SMS"
-      );
-    }
-  };
   const getCommunityPost = async () => {
     try {
       const postsRes = await axios.get(Api + "/community/");
@@ -869,6 +789,7 @@ const Myprofile = () => {
         </Box>
       </Modal>
 
+
       <Modal
         open={openShare}
         onClose={(event, reason) => {
@@ -896,8 +817,8 @@ const Myprofile = () => {
             sx={{
               position: "relative",
               bgcolor: "white",
-              width: { xs: "100%", sm: 320 },
-              maxWidth: 320,
+              width: { xs: "100%", sm: 380 },
+              maxWidth: 380,
               borderRadius: { xs: 2, sm: 2 },
               p: { xs: 2, sm: 3 },
               boxShadow: 24,
@@ -924,8 +845,131 @@ const Myprofile = () => {
                 pr: 3,
               }}
             >
-              Share your referral link
+              Invite your friends
             </Typography>
+
+            {/* Referral Link - Copyable */}
+            <Paper
+              variant="outlined"
+              sx={{
+                p: 1.5,
+                mb: 2,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                bgcolor: "#f5f5f5",
+                borderRadius: 1,
+              }}
+            >
+              <Typography
+                sx={{
+                  fontSize: { xs: "0.7rem", sm: "0.8rem" },
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  flex: 1,
+                  mr: 1,
+                }}
+              >
+                {shareLink}
+              </Typography>
+              <Tooltip title="Copy link">
+                <IconButton
+                  size="small"
+                  onClick={() => handleCopy(shareLink)}
+                  sx={{ flexShrink: 0 }}
+                >
+                  <ContentCopyIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </Paper>
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{
+                width: "100%",
+              }}
+            >
+              {isProduction && (
+                <>
+                  <TextField
+                    size="small"
+                    value="US +1"
+                    disabled
+                    sx={{
+                      width: {
+                        xs: 105,
+                        sm: 115,
+                      },
+                      "& .MuiInputBase-input.Mui-disabled": {
+                        color: "#555",
+                        WebkitTextFillColor: "#555",
+                      },
+                    }}
+                  />
+
+                </>
+              )}
+              {isTesting && (
+                <TextField
+                  select
+                  size="small"
+                  value={
+                    countryCode
+                  }
+                  onChange={(
+                    e
+                  ) => {
+                    setCountryCode(
+                      e
+                        .target
+                        .value
+                    );
+
+                    /* 
+                     * Clear the 
+                     * previous number 
+                     * when country 
+                     * changes. 
+                     */
+                    setMobile_number("")
+                  }}
+                  sx={{
+                    width: {
+                      xs: 105,
+                      sm: 115,
+                    },
+                  }}
+                >
+
+                  <MenuItem value="+91">
+                    🇮🇳 +91
+                  </MenuItem>
+
+                  <MenuItem value="+1">
+                    🇺🇸 +1
+                  </MenuItem>
+                </TextField>
+              )}
+
+              <TextField
+                fullWidth
+                value={mobile_number}
+                type="text"
+                inputMode="numeric"
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, "").slice(0, 10);
+                  setMobile_number(value);
+                }}
+                size="small"
+                placeholder="Enter mobile number"
+                InputProps={{
+                  sx: {
+                    fontSize: { xs: "0.75rem", sm: "0.85rem" },
+                  },
+                }}
+              />
+            </Stack>
             <Stack
               direction="row"
               spacing={1}
@@ -1027,33 +1071,13 @@ const Myprofile = () => {
                 variant="contained"
                 size="small"
                 sx={{
-                  fontSize: {
-                    xs: "0.75rem",
-                    sm: "0.85rem",
-                  },
-
-                  py: {
-                    xs: 0.5,
-                    sm: 0.75,
-                  },
-
-                  textTransform:
-                    "none",
-
-                  bgcolor:
-                    "#FF9933",
-
-                  "&:hover":
-                  {
-                    bgcolor:
-                      "#da9a3a",
-                  },
+                  fontSize: { xs: "0.75rem", sm: "0.85rem" },
+                  py: { xs: 0.5, sm: 0.75 },
+                  textTransform: "none",
+                  bgcolor: "#FF9933",
+                  "&:hover": { bgcolor: "#da9a3a" },
                 }}
-                onClick={() =>
-                  setMobile_number(
-                    ""
-                  )
-                }
+                onClick={() => setMobile_number('')}
               >
                 Clear
               </Button>
@@ -1063,39 +1087,20 @@ const Myprofile = () => {
                 variant="contained"
                 size="small"
                 sx={{
-                  fontSize: {
-                    xs: "0.75rem",
-                    sm: "0.85rem",
-                  },
-
-                  py: {
-                    xs: 0.5,
-                    sm: 0.75,
-                  },
-
-                  textTransform:
-                    "none",
-
-                  bgcolor:
-                    "#09710f",
-
-                  "&:hover":
-                  {
-                    bgcolor:
-                      "#065a0b",
-                  },
+                  fontSize: { xs: "0.75rem", sm: "0.85rem" },
+                  py: { xs: 0.5, sm: 0.75 },
+                  textTransform: "none",
+                  bgcolor: "#09710f",
+                  "&:hover": { bgcolor: "#065a0b" },
                 }}
-                onClick={
-                  handlelink
-                }
+                onClick={() => handlelink(mobile_number)}
               >
-                Invite
+                {inviteLoading ? "Inviting..." : "Invite"}
               </Button>
             </Stack>
           </Box>
         </Box>
       </Modal>
-
       {/* ── Notifications ── */}
       {/* <SectionCard sx={{ mt: 3 }}>
         <SectionHeader icon={<NotificationsIcon />} label="Notifications" />

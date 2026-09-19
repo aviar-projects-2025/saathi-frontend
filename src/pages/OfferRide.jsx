@@ -64,12 +64,12 @@ const ACCENT_TINT = "rgba(255,153,51,0.12)";
 const steps = ["Trip Details", "Preferences", "Review"];
 
 const TRAVELLER_TYPES = [
+  "Regular",
   "First-time traveller",
   "Senior citizen support",
   "Student travel companion",
   "Women-only companion",
   "Family companion",
-  "Regular"
 ];
 
 const AGE_GROUPS = ["Any", "18-25", "26-40", "41-60", "60+"];
@@ -279,6 +279,8 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
       ...ride,
       date,
       time,
+      form: ride.form,
+      destination: ride.destination,
       availableSeats: ride.availableSeats ?? ride.totalSeats ?? 1,
       price: ride.fuelSharing || ride.price || 0,
       fuelSharing: Boolean(ride.fuelSharing || ride.price),
@@ -314,7 +316,16 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
       [MapPin, "From → Destination", `${form.from || "—"} → ${form.destination || "—"}`],
       [Calendar, "Date & Time", `${form.date || "—"} at ${form.time || "—"}`],
 
-      (isCar || isBike) && [Clock, "Journey Duration", form.duration || "—"],
+      (isCar || isBike) && [
+        Clock,
+        "Journey Duration",
+        form.duration != null
+          ? form.duration >= 60
+            ? `${Math.floor(form.duration / 60)} hr ${form.duration % 60
+            } min`
+            : `${form.duration} min`
+          : "—",
+      ],
 
       [isBus ? Bus : isBike ? Bike : Car, "Mode of Travel", form.modeOfTravel],
 
@@ -1059,6 +1070,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                           route?.durationMinutes ?? null,
                       }));
                     }}
+                    ride={ride}
                   />
                 </Stack>
               )}
@@ -1111,7 +1123,10 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                   size={inputSize}
                   value={
                     form.duration != null
-                      ? `${form.duration} min`
+                      ? form.duration >= 60
+                        ? `${Math.floor(form.duration / 60)} hr ${form.duration % 60
+                        } min`
+                        : `${form.duration} min`
                       : ""
                   }
                   InputProps={{

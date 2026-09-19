@@ -13,17 +13,23 @@ import {
   Grid,
   Modal,
   TextField,
+  Menu,
+  ListItemText,
+  ListItemIcon,
   MenuItem,
+  DialogTitle,
   Dialog,
   DialogContent,
   Tooltip,
+  DialogActions,
   Slider,
 } from "@mui/material";
-
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
 import LogoutIcon from "@mui/icons-material/Logout";
-import DeleteIcon from "@mui/icons-material/Delete";
+import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import SettingsIcon from "@mui/icons-material/Settings";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import ShareIcon from "@mui/icons-material/Share";
@@ -36,7 +42,7 @@ import Api from "../Api";
 import { toast } from "react-toastify";
 import { useUser } from "../context/userConetext";
 import Mypost from "./Myprofile.jsx";
-
+import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import PersonPinIcon from "@mui/icons-material/PersonPin";
 import { Tabs, Tab, IconButton, Collapse } from "@mui/material";
 import GridOnIcon from "@mui/icons-material/GridOn";
@@ -47,7 +53,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import CommunityComments from "./CommunityComments.jsx";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-
+import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import ToastConfig from "../components/ToastConfig.jsx";
 import CircularProgress from "@mui/material/CircularProgress";
 
@@ -59,7 +65,7 @@ const CARD_BORDER = "1px solid #F0E6DC";
 
 import CloseIcon from "@mui/icons-material/Close";
 
-import { useNavigate,useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import uploadToCloudinary from "../components/uploadToCloudinary.jsx";
 
 // Size (px) of the square adjust/crop box
@@ -122,9 +128,10 @@ const StatBlock = ({ value, label }) => (
 
 const UserProfile = () => {
   const theme = useTheme();
-  
+  const [editImage, setEditImage] = useState(null);
+  const [previewImage, setPreviewImage] = useState("");
   const toasts = ToastConfig();
-
+  const [imageDeleteLoading, setImageDeleteLoading] = useState(false);
   const [openComments, setOpenComments] = useState({});
   const handleToggleComments = (id) => {
     setOpenComments((prev) => ({
@@ -133,9 +140,17 @@ const UserProfile = () => {
     }));
   };
   const { currentUser, getuserData, savedPost, removeSavedPost } = useUser();
-
+  const onImageSelected = (e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+      setEditImage(selectedFile);
+      setPreviewImage(URL.createObjectURL(selectedFile));
+    }
+    closeImageMenu();
+    e.target.value = null; // allow re-selecting same file next time
+  };
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-    const location = useLocation();
+  const location = useLocation();
 
   const [editProfile, setEditProfile] = useState(
     location.state?.openEditProfile || false
@@ -154,7 +169,7 @@ const UserProfile = () => {
     confirmPassword: "",
   });
   const navigate = useNavigate();
-
+  const [imagePostLoading, setImagePostLoading] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null);
 
@@ -173,14 +188,12 @@ const UserProfile = () => {
 
   const shareLink = `${window.location.origin}/register?ref=${user?.referralCode}`;
 
-  /* ---------------------------------------------------------------- */
-  /*  PHOTO ADJUST / CROP BOX STATE                                    */
-  /* ---------------------------------------------------------------- */
+
   const [showAdjustModal, setShowAdjustModal] = useState(false);
-  const [rawImage, setRawImage] = useState(""); // dataURL of the freshly picked file
+  const [rawImage, setRawImage] = useState("");
   const [naturalSize, setNaturalSize] = useState({ w: 0, h: 0 });
   const [zoom, setZoom] = useState(1);
-  const [offset, setOffset] = useState({ x: 0, y: 0 }); // top-left of displayed image relative to box
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
   const dragState = useRef({
     dragging: false,
     startX: 0,
@@ -212,8 +225,6 @@ const UserProfile = () => {
       setShowAdjustModal(true);
     };
     reader.readAsDataURL(file);
-
-    // allow re-selecting the same file later
     e.target.value = "";
   };
 
@@ -467,6 +478,7 @@ const UserProfile = () => {
       setProfileFile(null);
     }
   }, [currentUser]);
+
   useEffect(() => {
     if (selectedPost) {
       setTimeout(() => {
@@ -481,12 +493,14 @@ const UserProfile = () => {
       }, 100);
     }
   }, [selectedPost]);
+
   const feedRef = useRef(null);
   const logout = () => {
     localStorage.clear();
     window.location.replace("/login");
   };
-
+  const [anchorEl, setAnchorEl] = useState(null);
+  // const [selectedPost, setSelectedPost] = useState(null);
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -523,41 +537,6 @@ const UserProfile = () => {
     }
   };
 
-
-  // const handleUpdateProfile = async () => {
-
-  //   try {
-  //     setSubmitLoading(true);
-  //     const validationErrors = validateForm(formData);
-  //     if (Object.keys(validationErrors).length > 0) {
-  //       setErrors(validationErrors);
-  //       return;
-  //     }
-  //     const data = new FormData();
-
-  //     if (profileFile) {
-  //       data.append("profileImage", profileFile);
-  //     }
-
-  //     data.append("firstName", formData.firstName);
-  //     data.append("lastName", formData.lastName);
-  //     data.append("mobile", formData.mobile);
-  //     data.append("dob", formData.dob ? formData.dob.format("YYYY-MM-DD") : "");
-  //     data.append("gender", formData.gender);
-  //     data.append("bio", formData.bio);
-
-  //     await axios.post(Api + `/users/update/${user?.id}`, data);
-  //     getuserData();
-  //     toast.success("Profile Updated", toasts);
-  //     setEditProfile(false);
-  //   } catch (error) {
-  //     console.log(error.response);
-  //     toast.error(error.response.data.message, toasts);
-  //   } finally {
-  //     setSubmitLoading(false);
-  //   }
-  // };
-
   const handleUpdateProfile = async () => {
     try {
       setSubmitLoading(true);
@@ -575,7 +554,6 @@ const UserProfile = () => {
       if (profileFile) {
         profileImage = await uploadToCloudinary(profileFile);
 
-        console.log(profileImage, 'profileImage ')
       }
 
       const data = {
@@ -625,8 +603,115 @@ const UserProfile = () => {
     }
   };
 
+  const [originalDescription, setOriginalDescription] = useState("");
+  const [originalImage, setOriginalImage] = useState(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [tab, setTab] = useState(0);
+  const handleMenuOpen = (event, post) => {
+    setAnchorEl(event.currentTarget);
+    setSelectedPost(post);
+  };
+  const [imageMenuAnchor, setImageMenuAnchor] = useState(null);
+  const isImageMenuOpen = Boolean(imageMenuAnchor);
 
+  const openImageMenu = (e) => setImageMenuAnchor(e.currentTarget);
+  const closeImageMenu = () => setImageMenuAnchor(null);
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+  const handleEdit = (post) => {
+    setSelectedPost(post);
+
+    setPreviewImage(post.postImage);
+
+    setOriginalImage(post.postImage);
+
+    setEditImage(null);
+    setEditOpen(true);
+  };
+  const handleReset = () => {
+    // setEditDescription(originalDescription);
+
+    setEditImage(null);               // remove selected File
+    setPreviewImage(originalImage);   // restore original image URL
+  };
+  const handleDelete = async (postId) => {
+
+    try {
+
+      setImageDeleteLoading(true);
+
+      const user = JSON.parse(localStorage.getItem("user"));
+
+      const res = await axios.delete(`${Api}/community/${postId}`, {
+        data: {
+          userId: user.id,
+        },
+      });
+
+      setCommunityPosts((prev) =>
+        prev.filter((post) => post._id !== postId)
+      );
+
+      toast.success(res.data.message, toasts);
+
+      setDeleteOpen(false);
+
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Failed to delete post", toasts);
+    } finally {
+      setImageDeleteLoading(false);
+    }
+  };
+  const handleUpdate = async () => {
+    try {
+      setImagePostLoading(true);
+
+      const user = JSON.parse(localStorage.getItem("user"));
+
+      const formData = new FormData();
+      formData.append("userId", user.id);
+
+
+      if (editImage) {
+        formData.append("postImage", editImage);
+      }
+
+      const res = await axios.put(
+        `${Api}/community/${selectedPost._id}`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      setCommunityPosts((prev) =>
+
+        prev.map((post) =>
+          post._id === selectedPost._id
+            ? {
+              ...post,
+              postImage: res.data.data.postImage,
+            }
+            : post
+        )
+      );
+
+      toast.success(res.data.message, toasts);
+
+      setEditOpen(false);
+      setSelectedPost(null);
+      setEditImage(null);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to update post", toasts);
+    } finally {
+      setImagePostLoading(false);
+    }
+  };
   const handleCopy = (value) => {
     navigator.clipboard.writeText(value);
     toast.success("Copied to Clipboard!", toasts);
@@ -874,66 +959,389 @@ const UserProfile = () => {
                   communityPosts.map((post) => (
                     <Grid item xs={4} key={post._id} sx={{ mt: 1 }}>
                       {post.postImage && (
-                        <Box
-                          onClick={() => {
-                            setSelectedPost(post);
-                            setSelectedImage(
-                              Array.isArray(post.postImage)
-                                ? post.postImage[0]
-                                : post.postImage,
-                            );
-                            setOpenImage(true);
-                          }}
-                          sx={{
-                            position: "relative",
-                            cursor: "pointer",
-                            width: { xs: 90, sm: 100, md: 130, lg: 150 },
-                            height: { xs: 110, sm: 130, md: 160, lg: 180 },
-                            overflow: "hidden",
-                            borderRadius: { xs: 0.5, sm: 1 },
-                            "&:hover .postOverlay": { opacity: 1 },
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                          }}
-                        >
-                          <img
-                            src={
-                              Array.isArray(post.postImage)
-                                ? post.postImage[0]
-                                : post.postImage
-                            }
-                            alt=""
-                            style={{
-                              width: "100%",
-                              height: "100%",
-                              objectFit: "cover ",
-                              display: "block",
+                        <>
+
+                          <Box
+                            onClick={() => {
+                              setSelectedPost(post);
+                              setSelectedImage(
+                                Array.isArray(post.postImage)
+                                  ? post.postImage[0]
+                                  : post.postImage
+                              );
+                              setOpenImage(true);
                             }}
-                          />
-                          {/* <Box
-                            className="postOverlay"
                             sx={{
-                              position: "absolute",
-                              inset: 0,
-                              bgcolor: "rgba(0,0,0,0.15)",
-                              opacity: 0,
-                              transition: "opacity 0.15s ease",
-                              display: { xs: "none", sm: "flex" },
-                              alignItems: "center",
-                              justifyContent: "center",
+                              position: "relative",
+                              cursor: "pointer",
+                              width: { xs: 90, sm: 100, md: 130, lg: 150 },
+                              height: { xs: 110, sm: 130, md: 160, lg: 180 },
+                              overflow: "hidden",
+                              borderRadius: { xs: 0.5, sm: 1 },
                             }}
                           >
-                            <Stack
-                              direction="row"
-                              spacing={2}
-                              sx={{ color: "#fff" }}
+                            {/* More menu button */}
+                            <IconButton
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleMenuOpen(e, post);
+                              }}
+                              sx={{
+                                position: "absolute",
+                                top: 5,
+                                right: 5,
+                                zIndex: 2,
+                                color: "#fff",
+                                backgroundColor: "rgba(0,0,0,0.5)",
+                                "&:hover": {
+                                  backgroundColor: "rgba(0,0,0,0.7)",
+                                },
+                              }}
                             >
-                              <ThumbUpOffAltIcon fontSize="small" />
-                              <ChatIcon fontSize="small" />
-                            </Stack>
-                          </Box> */}
-                        </Box>
+                              <MoreVertIcon />
+                            </IconButton>
+
+                            {/* Image */}
+                            <img
+                              src={
+                                Array.isArray(post.postImage)
+                                  ? post.postImage[0]
+                                  : post.postImage
+                              }
+                              alt=""
+                              style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover",
+                                display: "block",
+                              }}
+                            />
+                          </Box>
+
+                          {/* Menu */}
+                          <Menu
+                            anchorEl={anchorEl}
+                            open={Boolean(anchorEl)}
+                            onClose={handleMenuClose}
+                          >
+                            <MenuItem
+                              onClick={() => {
+                                handleMenuClose();
+                                handleEdit(selectedPost);
+                              }}
+                            >
+                              <ListItemIcon>
+                                <EditIcon fontSize="small" />
+                              </ListItemIcon>
+                              <ListItemText>Edit</ListItemText>
+                            </MenuItem>
+
+                            <MenuItem
+                              onClick={() => {
+                                handleMenuClose();
+                                setDeleteOpen(true);
+                              }}
+                            >
+                              <ListItemIcon>
+                                <DeleteIcon fontSize="small" color="error" />
+                              </ListItemIcon>
+                              <ListItemText>Delete</ListItemText>
+                            </MenuItem>
+                          </Menu>
+
+                          <Dialog
+                            open={deleteOpen}
+                            onClose={(event, reason) => {
+                              if (reason === "backdropClick") {
+                                return;
+                              }
+
+                              setDeleteOpen(false);
+                            }}
+                            fullWidth
+                            maxWidth="xs"
+                            PaperProps={{
+                              sx: {
+                                width: { xs: "95%", sm: "100%" },
+                                m: { xs: 1.5, sm: 2 },
+                                borderRadius: { xs: 2, sm: 3 },
+                              },
+                            }}
+                          >
+                            <DialogTitle
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1,
+                                fontWeight: 600,
+                              }}
+                            >
+                              <WarningAmberRoundedIcon color="error" />
+                              Delete Post ?
+                            </DialogTitle>
+
+                            <DialogContent sx={{ pt: 1 }}>
+                              <Typography
+                                sx={{
+                                  fontSize: { xs: "0.9rem", sm: "1rem" },
+                                  color: "text.secondary",
+                                }}
+                              >
+                                Are you sure you want to delete this post?
+                              </Typography>
+                            </DialogContent>
+
+                            <DialogActions
+                              sx={{
+                                px: { xs: 2, sm: 3 },
+                                pb: { xs: 2, sm: 3 },
+                                gap: 1,
+                              }}
+                            >
+                              <Button
+                                variant="contained"
+                                onClick={() => setDeleteOpen(false)}
+                                sx={{
+                                  flex: 1,
+                                  py: 1,
+                                  fontSize: { xs: "0.8rem", sm: "0.9rem" },
+                                  fontWeight: 600,
+                                  color: "#ffff",
+                                  bgcolor: "grey.700",
+                                  textTransform: "none"
+                                }}
+                              >
+                                Cancel
+                              </Button>
+
+                              <Button
+                                variant="contained"
+                                color="error"
+                                disabled={imageDeleteLoading}
+                                onClick={() => {
+                                  const postId = selectedPost._id;
+                                  handleMenuClose();
+                                  handleDelete(postId);
+                                  // setDeleteOpen(false);
+                                }}
+                                sx={{
+                                  flex: 1,
+                                  py: 1,
+                                  fontSize: { xs: "0.8rem", sm: "0.9rem" },
+                                  fontWeight: 600,
+                                  textTransform: "none"
+                                }}
+                              >
+                                {imageDeleteLoading ? "Deleting..." : "Delete"}
+                              </Button>
+                            </DialogActions>
+                          </Dialog>
+
+                          <Dialog
+                            open={editOpen}
+                            onClose={(event, reason) => {
+                              if (reason === "backdropClick") {
+                                return;
+                              }
+
+                              setEditOpen(false);
+                            }}
+                            fullWidth
+                            maxWidth="sm"
+                            PaperProps={{
+                              sx: {
+                                borderRadius: { xs: 0, sm: 3 },
+                                m: { xs: 0, sm: 2 },
+                              },
+                            }}
+                          >
+                            {/* Dialog Header */}
+                            <DialogTitle
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                fontWeight: 600,
+                                fontSize: { xs: "1rem", sm: "1.15rem" },
+                                py: 1.5,
+                                px: 2,
+                              }}
+                            >
+                              Edit Post
+
+                              <IconButton
+                                onClick={() => setEditOpen(false)}
+                                size="small"
+                                sx={{
+                                  color: "#666",
+                                  "&:hover": { bgcolor: "#f5f5f5" },
+                                }}
+                              >
+                                <CloseIcon fontSize="small" />
+                              </IconButton>
+                            </DialogTitle>
+
+                            {/* Dialog Content */}
+                            <DialogContent dividers sx={{ px: { xs: 1.5, sm: 3 }, py: 2 }}>
+
+
+                              <Box sx={{ mt: 2 }}>
+
+                                {previewImage && (
+                                  <Box
+                                    component="img"
+                                    src={editImage ? URL.createObjectURL(editImage) : previewImage}
+                                    alt="Preview"
+                                    sx={{
+                                      width: "100%",
+                                      height: { xs: 160, sm: 220, md: 280 },
+                                      objectFit: "contain",
+                                      borderRadius: 2,
+                                      // border: "1px solid #eee",
+                                      mb: 1.5,
+                                    }}
+                                  />
+                                )}
+
+                                <Button
+                                  variant="contained"
+                                  size="small"
+                                  onClick={openImageMenu}
+                                  sx={{
+                                    width: "fit-content", // or "auto"
+                                    minWidth: "unset",    // optional: removes MUI's default minimum width
+                                    height: 36,
+                                    bgcolor: "#FF9933",
+                                    color: "#fff",
+                                    fontWeight: 600,
+                                    fontSize: "0.8rem",
+                                    textTransform: "none",
+                                    borderRadius: 2,
+                                    px: 2, // horizontal padding
+                                    "&:hover": {
+                                      bgcolor: "#E68A00",
+                                    },
+                                  }}
+                                >
+                                  {!previewImage ? "Add Image" : "Change Image"}
+                                </Button>
+
+
+                                {/* Image Menu */}
+                                <Menu
+                                  anchorEl={imageMenuAnchor}
+                                  open={isImageMenuOpen}
+                                  onClose={closeImageMenu}
+                                  anchorOrigin={{ vertical: "top", horizontal: "center" }}
+                                  transformOrigin={{ vertical: "bottom", horizontal: "center" }}
+                                >
+                                  <MenuItem component="label" dense >
+                                    <ListItemIcon>
+                                      <CameraAltIcon fontSize="small" sx={{ color: "#FF9933" }} />
+                                    </ListItemIcon>
+                                    <ListItemText primaryTypographyProps={{ fontSize: "0.85rem" }}>
+                                      Camera
+                                    </ListItemText>
+                                    <input
+                                      hidden
+                                      type="file"
+                                      accept="image/*"
+                                      capture="environment"
+                                      onChange={onImageSelected}
+                                    />
+                                  </MenuItem>
+
+                                  <MenuItem component="label" dense>
+                                    <ListItemIcon>
+                                      <InsertDriveFileIcon fontSize="small" sx={{ color: "#FF9933" }} />
+                                    </ListItemIcon>
+                                    <ListItemText primaryTypographyProps={{ fontSize: "0.85rem" }}>
+                                      Gallery
+                                    </ListItemText>
+                                    <input
+                                      hidden
+                                      type="file"
+                                      accept="image/*"
+                                      onChange={onImageSelected}
+                                    />
+                                  </MenuItem>
+                                </Menu>
+                              </Box>
+                            </DialogContent>
+
+                            {/* Dialog Footer */}
+                            <DialogActions
+                              sx={{
+                                p: { xs: 1.5, sm: 2 },
+                                display: "flex",
+                                flexDirection: { xs: "column", sm: "row" },
+                                gap: 1,
+                              }}
+                            >
+                              <Stack
+                                direction="row"
+                                spacing={2}
+                                justifyContent="flex-end"
+                                sx={{ pt: 2 }}
+                              >
+                                <Button
+                                  variant="contained"
+                                  size="small"
+                                  onClick={handleReset}
+                                  sx={{
+                                    width: "fit-content",
+                                    minWidth: "unset",
+                                    px: 2,
+                                    height: 36,
+                                    backgroundColor: "#838282",
+                                    color: "#fff",
+                                    fontWeight: 600,
+                                    fontSize: "0.8rem",
+                                    textTransform: "none",
+                                    borderRadius: 2,
+                                  }}
+                                >
+                                  Reset
+                                </Button>
+
+                                <Button
+                                  variant="contained"
+                                  size="small"
+                                  disabled={imagePostLoading}
+                                  onClick={handleUpdate}
+                                  sx={{
+                                    width: "fit-content",
+                                    minWidth: "unset",
+                                    px: 2,
+                                    height: 36,
+                                    bgcolor: "#FF9933",
+                                    color: "#fff",
+                                    fontWeight: 600,
+                                    fontSize: "0.8rem",
+                                    textTransform: "none",
+                                    borderRadius: 2,
+                                    "&:hover": {
+                                      bgcolor: "#E68A00",
+                                    },
+                                  }}
+                                >
+                                  {imagePostLoading ? "Saving..." : "Save"}
+                                </Button>
+                              </Stack>
+                            </DialogActions>
+                          </Dialog>
+
+
+                          {editImage && (
+                            <img
+                              src={URL.createObjectURL(editImage)}
+                              alt="Preview"
+                              width={150}
+                              style={{ marginTop: 10, borderRadius: 8 }}
+                            />
+                          )}
+                        </>
+
                       )}
                     </Grid>
                   ))
@@ -1112,14 +1520,11 @@ const UserProfile = () => {
                   <IconButton
                     onClick={async () => {
                       if (!selectedPost?.postId?._id) {
-                        console.log("Saved post ID missing");
+
                         return;
                       }
 
-                      console.log(
-                        "Removing saved post:",
-                        selectedPost.postId._id,
-                      );
+
 
                       await removeSavedPost(selectedPost.postId._id);
 
@@ -1458,12 +1863,12 @@ const UserProfile = () => {
                     >
                       Female
                     </MenuItem>
-                    <MenuItem
+                    {/* <MenuItem
                       value="Other"
                       sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem" } }}
                     >
                       Other
-                    </MenuItem>
+                    </MenuItem> */}
                   </TextField>
                 </Stack>
 

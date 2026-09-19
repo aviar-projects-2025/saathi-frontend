@@ -13,6 +13,7 @@ const PageLayout = ({ children }) => {
                 pb: { xs: 2, sm: 4 },
                 boxSizing: 'border-box',
                 // border:'1px solid black'
+                overflowX: "hidden",
             }}
         >
             {children}
