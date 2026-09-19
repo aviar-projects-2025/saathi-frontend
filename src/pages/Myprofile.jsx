@@ -124,11 +124,11 @@ const Myprofile = () => {
   const handleCloseShare = () => setOpenShare(false);
   const [inviteLoading, setInviteLoading] = useState(false);
   const feedRef = useRef(null);
-
-  const [profileModalOpen, setProfileModalOpen] = useState(false);
-  const [selectedProfile, setSelectedProfile] = useState(null);
   const [countryCode, setCountryCode] =
     useState("+1");
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState(null);
+
   const navigate = useNavigate();
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const [passwordModel, setPasswordModel] = useState("");
@@ -277,7 +277,6 @@ const Myprofile = () => {
       setPasswordLoading(false);
     }
   };
-
   const handlelink = async () => {
     if (!mobile_number || mobile_number.length !== 10) {
       alert("Enter a valid 10-digit mobile number");
@@ -336,8 +335,6 @@ const Myprofile = () => {
   const isTesting =
     import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "Testing";
 
-  return;
-
   const getCommunityPost = async () => {
     try {
       const postsRes = await axios.get(Api + "/community/");
@@ -370,12 +367,6 @@ const Myprofile = () => {
       </Typography>
     </Box>
   );
-  useEffect(() => {
-    if (currentUser?._id) {
-      getCommunityPost()
-    }
-
-  }, [currentUser])
   const shareLink = `${window.location.origin}/register?ref=${user?.referralCode}`;
   return (
     <Box
@@ -975,99 +966,8 @@ const Myprofile = () => {
             </Stack>
             <Stack
               direction="row"
-              spacing={1}
-              sx={{
-                width: "100%",
-              }}
-            >
-              {/* COUNTRY CODE */}
-
-              <TextField
-                size="small"
-                value="US +1"
-                disabled
-                sx={{
-                  width: {
-                    xs: 105,
-                    sm: 115,
-                  },
-                  "& .MuiInputBase-input.Mui-disabled": {
-                    color: "#555",
-                    WebkitTextFillColor: "#555",
-                  },
-                }}
-              />
-
-              {/* MOBILE */}
-              <TextField
-                fullWidth
-                value={
-                  mobile_number
-                }
-                type="text"
-                inputMode="numeric"
-                onChange={(
-                  e
-                ) => {
-                  const value =
-                    e.target.value
-                      .replace(
-                        /\D/g,
-                        ""
-                      )
-                      .slice(
-                        0,
-                        10
-                      );
-
-                  setMobile_number(
-                    value
-                  );
-                }}
-                size="small"
-                placeholder="Enter 10-digit mobile number"
-              />
-            </Stack>
-
-            {/* NUMBER PREVIEW */}
-            {mobile_number.length >
-              0 && (
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  sx={{
-                    display:
-                      "block",
-
-                    mt: 0.75,
-                  }}
-                >
-                  SMS will be
-                  sent to:{" "}
-                  <strong>
-                    {
-                      countryCode
-                    }
-                    {
-                      mobile_number
-                    }
-                  </strong>
-                </Typography>
-              )}
-
-            {/* BUTTONS */}
-            <Stack
-              direction="row"
-              spacing={{
-                xs: 1,
-                sm: 1,
-              }}
-              sx={{
-                mt: {
-                  xs: 1.5,
-                  sm: 2,
-                },
-              }}
+              spacing={{ xs: 1, sm: 1 }}
+              sx={{ mt: { xs: 1.5, sm: 2 } }}
             >
               <Button
                 fullWidth
