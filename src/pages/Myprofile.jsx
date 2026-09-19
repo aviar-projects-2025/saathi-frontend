@@ -124,7 +124,7 @@ const Myprofile = () => {
   const handleCloseShare = () => setOpenShare(false);
   const [inviteLoading, setInviteLoading] = useState(false);
   const feedRef = useRef(null);
- 
+
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null);
   const [countryCode, setCountryCode] =
@@ -278,73 +278,65 @@ const Myprofile = () => {
     }
   };
 
-const handlelink = async () => {
-    if (!mobile_number || mobile_number.length !== 10) {
-      alert("Enter a valid 10-digit mobile number");
-      return;
-    }
-    const fullMobileNumber =
-      `${countryCode}${mobile_number}`;
-    setInviteLoading(true);
-    try {
+  const handlelink = async () => {
+    if (!mobile_number || mobile_number.length !== 10) {
+      alert("Enter a valid 10-digit mobile number");
+      return;
+    }
+    const fullMobileNumber =
+      `${countryCode}${mobile_number}`;
+    setInviteLoading(true);
+    try {
 
-      const stored = await axios.post(
-        `${Api}/referralInvite/`,
-        {
-          referredBy: user.id,
-          mobile: fullMobileNumber,
-          status: 'Waiting',
-        }
-      )
+      const stored = await axios.post(
+        `${Api}/referralInvite/`,
+        {
+          referredBy: user.id,
+          mobile: fullMobileNumber,
+          status: 'Waiting',
+        }
+      )
 
-      if (stored.data.status == true) {
+      if (stored.data.status == true) {
 
-        const response = await axios.post(
-          `${Api}/referrals/send`,
-          {
-            mobile_number,
-            shareLink,
-            referrerId: user?.referralCode,
-          },
-          {
-            withCredentials: true,
-          }
-        );
+        const response = await axios.post(
+          `${Api}/referrals/send`,
+          {
+            mobile_number,
+            shareLink,
+            referrerId: user?.referralCode,
+          },
+          {
+            withCredentials: true,
+          }
+        );
 
-        console.log(response.data);
-        setInviteLoading(false);
-        setMobile_number('');
-        handleCloseShare();
-        alert("Referral link sent successfully!");
-      }
+        console.log(response.data);
+        setInviteLoading(false);
+        setMobile_number('');
+        handleCloseShare();
+        alert("Referral link sent successfully!");
+      }
 
-    } catch (error) {
-      console.error(
-        "Referral SMS error:",
-        error.response?.data || error.message
-      );
+    } catch (error) {
+      console.error(
+        "Referral SMS error:",
+        error.response?.data || error.message
+      );
 
-      alert(
-        error.response?.data?.message ||
-        "Failed to send referral SMS"
-      );
-    }
-  };
+      alert(
+        error.response?.data?.message ||
+        "Failed to send referral SMS"
+      );
+    }
+  };
   const isProduction =
     import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "Production";
 
   const isTesting =
     import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "Testing";
 
-      return;
-    
-
-  useEffect (()=>{
-    if(currentUser?._id) {
-       getCommunityPost()
-    }
-
-  },[currentUser])
+  return;
 
   const getCommunityPost = async () => {
     try {
@@ -378,6 +370,12 @@ const handlelink = async () => {
       </Typography>
     </Box>
   );
+  useEffect(() => {
+    if (currentUser?._id) {
+      getCommunityPost()
+    }
+
+  }, [currentUser])
   const shareLink = `${window.location.origin}/register?ref=${user?.referralCode}`;
   return (
     <Box
