@@ -816,7 +816,7 @@ export default function Community() {
           </Button>
           <Button
             variant="contained"
-             onClick={() => {
+            onClick={() => {
               navigate("/user-profile", {
                 state: {
                   openEditProfile: true,
@@ -1519,28 +1519,36 @@ export default function Community() {
                                   />
                                 )}
 
-                                <Button
-                                  variant="contained"
-                                  size="small"
-                                  onClick={openImageMenu}
+                                <Box
                                   sx={{
-                                    width: "fit-content", // or "auto"
-                                    minWidth: "unset",    // optional: removes MUI's default minimum width
-                                    height: 36,
-                                    bgcolor: "#FF9933",
-                                    color: "#fff",
-                                    fontWeight: 600,
-                                    fontSize: "0.8rem",
-                                    textTransform: "none",
-                                    borderRadius: 2,
-                                    px: 2, // horizontal padding
-                                    "&:hover": {
-                                      bgcolor: "#E68A00",
-                                    },
+                                    display: "flex",
+                                    justifyContent: "flex-end",
+                                    width: "100%",
                                   }}
                                 >
-                                  {!previewImage ? "Add Image" : "Change Image"}
-                                </Button>
+                                  <Button
+                                    variant="contained"
+                                    size="small"
+                                    onClick={openImageMenu}
+                                    sx={{
+                                      width: "fit-content",
+                                      minWidth: "unset",
+                                      height: 36,
+                                      bgcolor: "#FF9933",
+                                      color: "#fff",
+                                      fontWeight: 600,
+                                      fontSize: "0.8rem",
+                                      textTransform: "none",
+                                      borderRadius: 2,
+                                      px: 2,
+                                      "&:hover": {
+                                        bgcolor: "#E68A00",
+                                      },
+                                    }}
+                                  >
+                                    {!previewImage ? "Add Image" : "Change Image"}
+                                  </Button>
+                                </Box>
 
 
                                 {/* Image Menu */}

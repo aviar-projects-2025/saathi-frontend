@@ -974,8 +974,8 @@ const UserProfile = () => {
                             sx={{
                               position: "relative",
                               cursor: "pointer",
-                              width: { xs: 90, sm: 100, md: 130, lg: 150 },
-                              height: { xs: 110, sm: 130, md: 160, lg: 180 },
+                              width: { xs: 108, sm: 135, md: 175, lg: 225 },
+                              height: { xs: 150, sm: 250, md: 300, lg: 350 },
                               overflow: "hidden",
                               borderRadius: { xs: 0.5, sm: 1 },
                             }}
@@ -991,10 +991,18 @@ const UserProfile = () => {
                                 top: 5,
                                 right: 5,
                                 zIndex: 2,
+                                width: 24,
+                                height: 24,
+                                padding: 0,
                                 color: "#fff",
                                 backgroundColor: "rgba(0,0,0,0.5)",
+
                                 "&:hover": {
                                   backgroundColor: "rgba(0,0,0,0.7)",
+                                },
+
+                                "& .MuiSvgIcon-root": {
+                                  fontSize: 16,
                                 },
                               }}
                             >
@@ -1422,7 +1430,7 @@ const UserProfile = () => {
                   </Box>
                 ) : (
                   savedPost?.map((post) => (
-                    <Grid item xs={4} key={post._id} sx={{ mt: 1 }}>
+                    <Grid item xs={4} key={post._id} sx={{ mt: 0.2 }}>
                       {post.postId?.postImage && (
                         <Box
                           onClick={() => {
@@ -1437,8 +1445,8 @@ const UserProfile = () => {
                           sx={{
                             position: "relative",
                             cursor: "pointer",
-                            width: { xs: 90, sm: 100, md: 130, lg: 150 },
-                            height: { xs: 110, sm: 130, md: 160, lg: 180 },
+                            width: { xs: 108, sm: 135, md: 175, lg: 225 },
+                            height: { xs: 150, sm: 250, md: 300, lg: 350 },
                             overflow: "hidden",
                             borderRadius: { xs: 0.5, sm: 1 },
                             "&:hover .postOverlay": { opacity: 1 },

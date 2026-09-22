@@ -262,6 +262,20 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
 
   const TOASTS = ToastConfig();
 
+  const formatTime12Hour = (time) => {
+    if (!time) return "—";
+
+    const [hours, minutes] = time.split(":");
+    const date = new Date();
+    date.setHours(hours, minutes);
+
+    return date.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
+
   /* ──────────────── HYDRATE FORM WHEN EDITING ──────────────── */
   useEffect(() => {
     if (!ride) return;
@@ -292,7 +306,11 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
     ? [
       [MapPin, "Route", `${form.fromAirport || "—"} → ${form.toAirport || "—"}`],
       [MapPin, "Country", `${form.fromCountry || "—"} → ${form.toCountry || "—"}`],
-      [Calendar, "Date & Departure", `${form.date || "—"} at ${form.time || "—"}`],
+      [
+        Calendar,
+        "Date & Departure",
+        `${form.date || "—"} at ${formatTime12Hour(form.time)}`
+      ],
       [Plane, "Mode of Travel", form.modeOfTravel],
       // [Clock, "Journey Duration", form.duration || "—"],
       [Plane, "Flight Number", form.flightNumber || "—"],
@@ -314,7 +332,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
     ].filter(Boolean)
     : [
       [MapPin, "From → Destination", `${form.from || "—"} → ${form.destination || "—"}`],
-      [Calendar, "Date & Time", `${form.date || "—"} at ${form.time || "—"}`],
+      [Calendar, "Date & Time", `${form.date || "—"} at ${formatTime12Hour(form.time)}`],
 
       (isCar || isBike) && [
         Clock,
@@ -1695,9 +1713,9 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                 }}
               >
                 {isEditMode
-                  ? isSubmitted || saving
-                    ? "Saving..."
-                    : "Save Changes"
+                  ? saving
+                    ? "Updating..."
+                    : "Update Ride"
                   : isSubmitted
                     ? "Ride Posting..."
                     : "Post Your Ride"}

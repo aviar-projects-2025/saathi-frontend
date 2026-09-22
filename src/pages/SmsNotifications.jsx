@@ -75,6 +75,11 @@ const SmsNotifications = () => {
      */
     const isValid = consent && isValidPhone;
 
+    const isProduction =
+        import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "Production";
+
+    const isTesting =
+        import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "Testing";
     const handleSubmit = async () => {
         if (!isValid || loading) return;
 
@@ -117,7 +122,7 @@ const SmsNotifications = () => {
 
             setError(
                 error?.response?.data?.message ||
-                    "We couldn't complete your Saathi Rides SMS subscription. Please try again."
+                "We couldn't complete your Saathi Rides SMS subscription. Please try again."
             );
         } finally {
             setLoading(false);
@@ -451,9 +456,6 @@ const SmsNotifications = () => {
                     />
                 </Box>
 
-                {/* =====================================================
-                    OPT-IN CARD
-                ===================================================== */}
 
                 <Paper
                     elevation={0}
@@ -465,9 +467,7 @@ const SmsNotifications = () => {
                         mb: 4,
                     }}
                 >
-                    {/* =================================================
-                        ALREADY SUBSCRIBED
-                    ================================================= */}
+
 
                     {isSmsApproved ? (
                         <Box
@@ -577,9 +577,6 @@ const SmsNotifications = () => {
                         </Box>
                     ) : !submitted ? (
                         <>
-                            {/* =========================================
-                                OPT-IN FORM
-                            ========================================= */}
 
                             <Typography
                                 sx={{
@@ -639,42 +636,68 @@ const SmsNotifications = () => {
                                     mb: 2.5,
                                 }}
                             >
-                                <Select
-                                    value={countryCode}
-                                    onChange={(e) => {
-                                        setCountryCode(e.target.value);
-                                        setPhone("");
-                                    }}
-                                    size="small"
-                                    sx={{
-                                        minWidth: 100,
-                                        backgroundColor: cream,
-                                        borderRadius: 1.5,
+                                {/* COUNTRY CODE */}
+                                {isProduction && (
+                                    <>
+                                        <TextField
+                                            size="small"
+                                            value="US +1"
+                                            disabled
+                                            sx={{
+                                                width: {
+                                                    xs: 105,
+                                                    sm: 115,
+                                                },
+                                                "& .MuiInputBase-input.Mui-disabled": {
+                                                    color: "#555",
+                                                    WebkitTextFillColor: "#555",
+                                                },
+                                            }}
+                                        />
 
-                                        "& .MuiOutlinedInput-notchedOutline":
-                                            {
-                                                borderColor: border,
+                                    </>
+                                )}
+                                {isTesting && (
+                                    <TextField
+                                        select
+                                        size="small"
+                                        value={
+                                            countryCode
+                                        }
+                                        onChange={(
+                                            e
+                                        ) => {
+                                            setCountryCode(
+                                                e
+                                                    .target
+                                                    .value
+                                            );
+
+                                            /* 
+                                             * Clear the 
+                                             * previous number 
+                                             * when country 
+                                             * changes. 
+                                             */
+                                            setMobile_number("")
+                                        }}
+                                        sx={{
+                                            width: {
+                                                xs: 105,
+                                                sm: 115,
                                             },
+                                        }}
+                                    >
 
-                                        "&:hover .MuiOutlinedInput-notchedOutline":
-                                            {
-                                                borderColor: saffron,
-                                            },
+                                        <MenuItem value="+91">
+                                            🇮🇳 +91
+                                        </MenuItem>
 
-                                        "&.Mui-focused .MuiOutlinedInput-notchedOutline":
-                                            {
-                                                borderColor: saffron,
-                                            },
-                                    }}
-                                >
-                                    <MenuItem value="+1">
-                                        🇺🇸 +1
-                                    </MenuItem>
-
-                                    <MenuItem value="+91">
-                                        🇮🇳 +91
-                                    </MenuItem>
-                                </Select>
+                                        <MenuItem value="+1">
+                                            🇺🇸 +1
+                                        </MenuItem>
+                                    </TextField>
+                                )}
 
                                 <TextField
                                     fullWidth
@@ -691,11 +714,7 @@ const SmsNotifications = () => {
                                         setPhone(value);
                                         setError("");
                                     }}
-                                    placeholder={
-                                        countryCode === "+1"
-                                            ? "(972) 555-0142"
-                                            : "9876543210"
-                                    }
+
                                     inputProps={{
                                         maxLength: 10,
                                         inputMode: "numeric",
@@ -732,10 +751,6 @@ const SmsNotifications = () => {
                                     }}
                                 />
                             </Box>
-
-                            {/* =========================================
-                                CONSENT
-                            ========================================= */}
 
                             <Box
                                 sx={{
