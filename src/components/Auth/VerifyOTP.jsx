@@ -24,7 +24,7 @@ const VerifyOTP = () => {
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isResending, setIsResending] = useState(false);
-    const [mobile_number, setMobile_number] = useState(null);
+    const [mobileNumber, setMobileNumber] = useState(null);
     const [error, setError] = useState(null);
 
     useEffect(() => {
@@ -33,11 +33,11 @@ const VerifyOTP = () => {
         if (!storedMobile) {
             navigate("/forgot-password");
         } else {
-            setMobile_number(storedMobile);
+            setMobileNumber(storedMobile);
         }
     }, [navigate]);
 
-    if (mobile_number === null) {
+    if (mobileNumber === null) {
         return (
             <Box
                 sx={{
@@ -67,7 +67,7 @@ const VerifyOTP = () => {
             const response = await axios.post(
                 `${Api}/auth/forgot-password/verify-otp`,
                 {
-                    mobile_number,
+                    mobileNumber,
                     otp: values.otp,
                 }
             );
@@ -86,7 +86,7 @@ const VerifyOTP = () => {
 
             sessionStorage.setItem(
                 "resetMobile",
-                mobile_number
+                mobileNumber
             );
 
             // Store temporary reset token
@@ -120,7 +120,7 @@ const VerifyOTP = () => {
             const response = await axios.post(
                 `${Api}/auth/forgot-password`,
                 {
-                    mobile_number,
+                    mobileNumber,
                 }
             );
 
@@ -179,7 +179,7 @@ const VerifyOTP = () => {
                     >
                         Enter the 6-digit OTP sent to your mobile number
                         <br />
-                        <strong>+91 {mobile_number}</strong>
+                        <strong>{mobileNumber}</strong>
                     </Typography>
 
                     {error && (

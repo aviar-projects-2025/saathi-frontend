@@ -26,42 +26,39 @@ const ForgotPassword = () => {
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState(null);
+    const [mobileNumber, setMobileNumber] = useState();
     const [countryCode, setCountryCode] = useState("+1");
     const validationSchema = Yup.object({
-        mobile_number: Yup.string()
+        mobileNumber: Yup.string()
             .matches(/^[0-9]{10}$/, "Please enter a valid 10-digit mobile number")
             .required("Mobile number is required"),
     });
-
+       
     const handleSubmit = async (values, { setFieldError }) => {
         setIsSubmitting(true);
         setError(null);
 
         try {
-            const fullMobileNumber = `${countryCode}${values.mobile_number}`;
-
+            const fullMobileNumber =
+                `${countryCode}${values.mobileNumber}`;
+        
             const response = await axios.post(
                 `${Api}/auth/forgot-password`,
                 {
-                    mobile_number: fullMobileNumber,
+                    mobileNumber: fullMobileNumber,
                 }
             );
-
-            console.log(response.data);
-
             toast.success(
                 response.data.message || "OTP sent successfully!",
                 toasts
             );
 
-            // Store full mobile number for OTP verification
             sessionStorage.setItem(
                 "resetMobile",
                 fullMobileNumber
             );
 
             navigate("/verify-otp");
-
         } catch (error) {
             console.error("Forgot password error:", error);
 
@@ -73,14 +70,14 @@ const ForgotPassword = () => {
                 errorMessage =
                     error.response.data?.message || "Server error";
             } else if (error.request) {
-                errorMessage = "Please check your network connection.";
+                errorMessage =
+                    "Please check your network connection.";
             }
 
             toast.error(errorMessage, toasts);
 
-            setFieldError("mobile_number", errorMessage);
+            setFieldError("mobileNumber", errorMessage);
             setError(errorMessage);
-
         } finally {
             setIsSubmitting(false);
         }
@@ -138,11 +135,12 @@ const ForgotPassword = () => {
                         </Alert>
                     )}
 
+
                     <Formik
                         initialValues={{
-                            mobile_number: "",
+                            mobileNumber: "",
                         }}
-                        validationSchema={validationSchema}
+                         validationSchema={validationSchema}
                         onSubmit={handleSubmit}
                     >
                         {({
@@ -151,6 +149,7 @@ const ForgotPassword = () => {
                             handleChange,
                             handleBlur,
                             values,
+                            setFieldValue,
                             handleSubmit,
                         }) => (
                             <form onSubmit={handleSubmit}>
@@ -161,44 +160,33 @@ const ForgotPassword = () => {
                                         width: "100%",
                                     }}
                                 >
+                                    {/* Production: Fixed US +1 */}
                                     {isProduction && (
-                                        <>
-                                            <TextField
-                                                size="small"
-                                                value="US +1"
-                                                disabled
-                                                sx={{
-                                                    width: {
-                                                        xs: 105,
-                                                        sm: 115,
-                                                    },
-                                                    "& .MuiInputBase-input.Mui-disabled": {
-                                                        color: "#555",
-                                                        WebkitTextFillColor: "#555",
-                                                    },
-                                                }}
-                                            />
-
-                                        </>
+                                        <TextField
+                                            size="small"
+                                            value="US +1"
+                                            disabled
+                                            sx={{
+                                                width: {
+                                                    xs: 105,
+                                                    sm: 115,
+                                                },
+                                                "& .MuiInputBase-input.Mui-disabled": {
+                                                    color: "#555",
+                                                    WebkitTextFillColor: "#555",
+                                                },
+                                            }}
+                                        />
                                     )}
+
+                                    {/* Testing: Select country code */}
                                     {isTesting && (
                                         <TextField
                                             select
                                             size="small"
-                                            value={
-                                                countryCode
-                                            }
-                                            onChange={(
-                                                e
-                                            ) => {
-                                                setCountryCode(
-                                                    e
-                                                        .target
-                                                        .value
-                                                );
-
-
-                                                setMobileNumber("")
+                                            value={countryCode}
+                                            onChange={(e) => {
+                                                setCountryCode(e.target.value);
                                             }}
                                             sx={{
                                                 width: {
@@ -207,7 +195,6 @@ const ForgotPassword = () => {
                                                 },
                                             }}
                                         >
-
                                             <MenuItem value="+91">
                                                 🇮🇳 +91
                                             </MenuItem>
@@ -218,80 +205,58 @@ const ForgotPassword = () => {
                                         </TextField>
                                     )}
 
+                                    {/* Mobile Number */}
                                     <TextField
                                         fullWidth
-                                        label="Mobile Number"
-                                        name="mobile_number"
+                                        size="small"
+                                        name="mobileNumber"
                                         type="text"
                                         inputMode="numeric"
-                                        value={values.mobile_number}
+                                        placeholder="Enter 10-digit mobile number"
+                                        value={values.mobileNumber}
                                         onChange={(e) => {
                                             const value = e.target.value
                                                 .replace(/\D/g, "")
                                                 .slice(0, 10);
 
-                                            handleChange({
-                                                target: {
-                                                    name: "mobile_number",
-                                                    value,
-                                                },
-                                            });
+                                            setFieldValue("mobileNumber", value);
                                         }}
                                         onBlur={handleBlur}
-                                        error={
-                                            touched.mobile_number &&
-                                            Boolean(errors.mobile_number)
-                                        }
-                                        helperText={
-                                            touched.mobile_number &&
-                                            errors.mobile_number
-                                        }
-                                        margin="normal"
-                                        size="small"
-                                        placeholder="Enter 10-digit mobile number"
-                                        sx={{
-                                            "& .MuiOutlinedInput-root": {
-                                                backgroundColor: "#FFFFFF",
-                                                borderRadius: "12px",
-
-                                                "& .MuiOutlinedInput-notchedOutline": {
-                                                    borderRadius: "12px",
-                                                },
-
-                                                "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                                                    borderColor: "#FF9933",
-                                                },
-                                            },
-
-                                            "& .MuiInputLabel-root.Mui-focused": {
-                                                color: "#FF9933",
-                                            },
-                                        }}
+                                        // error={
+                                        //     touched.mobileNumber &&
+                                        //     Boolean(errors.mobileNumber)
+                                        // }
+                                        // helperText={
+                                        //     touched.mobileNumber
+                                        //         ? errors.mobileNumber
+                                        //         : ""
+                                        // }
                                     />
                                 </Stack>
+
                                 <Button
                                     type="submit"
                                     fullWidth
                                     disabled={
                                         isSubmitting ||
-                                        values.mobile_number.length !== 10
+                                        values.mobileNumber.length !== 10
                                     }
                                     sx={{
                                         mt: 3,
                                         py: 1.2,
-                                        background: "#FF9933",
-                                        color: "#ffff",
+                                        backgroundColor: "#FF9933",
+                                        color: "#fff",
                                         textTransform: "none",
                                         fontSize: "14px",
                                         fontWeight: 700,
                                         borderRadius: "999px",
 
                                         "&:hover": {
-                                            background: "#e6862c",
+                                            backgroundColor: "#e6862c",
                                         },
 
                                         "&:disabled": {
-                                            background: "#ffcc80",
+                                            backgroundColor: "#ffcc80",
                                             color: "#666",
                                         },
                                     }}
@@ -301,6 +266,7 @@ const ForgotPassword = () => {
                                             sx={{
                                                 display: "flex",
                                                 alignItems: "center",
+                                                justifyContent: "center",
                                                 gap: 1,
                                             }}
                                         >
@@ -333,10 +299,11 @@ const ForgotPassword = () => {
                                         Back to Login
                                     </MuiLink>
                                 </Box>
-
                             </form>
                         )}
                     </Formik>
+
+
                 </Paper>
             </Container>
         </Box>
