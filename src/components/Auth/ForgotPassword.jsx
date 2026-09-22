@@ -26,24 +26,25 @@ const ForgotPassword = () => {
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState(null);
+    const [mobileNumber,setMobileNumber] = useState();
     const [countryCode, setCountryCode] = useState("+1");
     const validationSchema = Yup.object({
-        mobile_number: Yup.string()
+        mobileNumber: Yup.string()
             .matches(/^[0-9]{10}$/, "Please enter a valid 10-digit mobile number")
             .required("Mobile number is required"),
     });
 
-    const handleSubmit = async (values, { setFieldError }) => {
+    const handleSubmit = async ({ setFieldError }) => {
         setIsSubmitting(true);
         setError(null);
 
         try {
-            const fullMobileNumber = `${countryCode}${values.mobile_number}`;
+            const fullMobileNumber = `${countryCode}${mobileNumber}`;
 
             const response = await axios.post(
                 `${Api}/auth/forgot-password`,
                 {
-                    mobile_number: fullMobileNumber,
+                    mobileNumber: fullMobileNumber,
                 }
             );
 
@@ -78,7 +79,7 @@ const ForgotPassword = () => {
 
             toast.error(errorMessage, toasts);
 
-            setFieldError("mobile_number", errorMessage);
+            setFieldError("mobileNumber", errorMessage);
             setError(errorMessage);
 
         } finally {
@@ -140,7 +141,7 @@ const ForgotPassword = () => {
 
                     <Formik
                         initialValues={{
-                            mobile_number: "",
+                            mobileNumber: "",
                         }}
                         validationSchema={validationSchema}
                         onSubmit={handleSubmit}
@@ -221,10 +222,10 @@ const ForgotPassword = () => {
                                     <TextField
                                         fullWidth
                                         label="Mobile Number"
-                                        name="mobile_number"
+                                        name="mobileNumber"
                                         type="text"
                                         inputMode="numeric"
-                                        value={values.mobile_number}
+                                        value={mobileNumber}
                                         onChange={(e) => {
                                             const value = e.target.value
                                                 .replace(/\D/g, "")
@@ -232,19 +233,19 @@ const ForgotPassword = () => {
 
                                             handleChange({
                                                 target: {
-                                                    name: "mobile_number",
+                                                    name: "mobileNumber",
                                                     value,
                                                 },
                                             });
                                         }}
                                         onBlur={handleBlur}
                                         error={
-                                            touched.mobile_number &&
-                                            Boolean(errors.mobile_number)
+                                            touched.mobileNumber &&
+                                            Boolean(errors.mobileNumber)
                                         }
                                         helperText={
-                                            touched.mobile_number &&
-                                            errors.mobile_number
+                                            touched.mobileNumber &&
+                                            errors.mobileNumber
                                         }
                                         margin="normal"
                                         size="small"
@@ -274,7 +275,7 @@ const ForgotPassword = () => {
                                     fullWidth
                                     disabled={
                                         isSubmitting ||
-                                        values.mobile_number.length !== 10
+                                        values.mobileNumber.length !== 10
                                     }
                                     sx={{
                                         mt: 3,
