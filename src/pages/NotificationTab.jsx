@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { useState } from 'react';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import Divider from '@mui/material/Divider';
@@ -14,8 +14,11 @@ import axios from 'axios';
 import Api from '../Api';
 import { toast } from 'react-toastify';
 import { useReferral } from '../context/ReferralContext';
+import ProfileModal from './Avatar.jsx';
 
 export default function NotificationTab({ handleCloseNotifications }) {
+    const [profileModalOpen, setProfileModalOpen] = useState(false);
+    const [selectedProfile, setSelectedProfile] = useState(null);
     const { tabNotification, fetchNotifications } = useNotifications();
     const { getPendingReferralCount } = useReferral();
 
@@ -32,7 +35,7 @@ export default function NotificationTab({ handleCloseNotifications }) {
         console.log(item.type, 'item.type')
         switch (item.type) {
             case "new_request":
-            case "ride_request_update" :
+            case "ride_request_update":
                 navigate("/myride", { state: { tab: 2, rideId: item.data?.rideId }, });
                 break;
             case "request_rejected":
@@ -49,7 +52,7 @@ export default function NotificationTab({ handleCloseNotifications }) {
                 navigate("/my-referalls");
                 break;
             case "ride_started":
-                navigate("/myride", { state: { tab: 0}, })
+                navigate("/myride", { state: { tab: 0 }, })
                 break;
 
             default:
@@ -65,7 +68,7 @@ export default function NotificationTab({ handleCloseNotifications }) {
                 .then((res) => {
                     fetchNotifications();
                     getPendingReferralCount();
-                    console.log(res,'res')
+                    console.log(res, 'res')
                 })
         } catch (error) {
             console.log(error.message)
@@ -136,7 +139,14 @@ export default function NotificationTab({ handleCloseNotifications }) {
                                     }}
                                 >
                                     <ListItemAvatar>
-                                        <Avatar src={item?.actorId?.profileImage || item?.data?.profileImage}>
+                                        <Avatar
+                                            src={item?.actorId?.profileImage || item?.data?.profileImage}
+                                            onClick={(event) => {
+                                                event.stopPropagation();
+                                                setSelectedProfile(item?.actorId || item?.data);
+                                                setProfileModalOpen(true);
+                                            }}
+                                        >
                                             {item?.actorId?.firstName?.[0] || "U"}
                                         </Avatar>
                                     </ListItemAvatar>
@@ -213,6 +223,13 @@ export default function NotificationTab({ handleCloseNotifications }) {
                     })
                 )}
             </List>
+            <ProfileModal
+                open={profileModalOpen}
+                selectedProfile={selectedProfile}
+                onClose={() => {
+                    setProfileModalOpen(false);
+                }}
+            />
         </Box>
     );
 }

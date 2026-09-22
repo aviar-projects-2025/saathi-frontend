@@ -277,6 +277,31 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
   const [someState, setSomeState] = useState([]);
   const [approvalRejectionLoading, setApprovalRejectionLoading] = useState(false);
 
+  useEffect(() => {
+    if (!approvalRejectionLoading) return;
+
+    if (
+      confirmState.action === "approve" &&
+      !isApproveBusy
+    ) {
+      setConfirmState({ open: false, action: null });
+      setApprovalRejectionLoading(false);
+    }
+
+    if (
+      confirmState.action === "reject" &&
+      !isRejectBusy
+    ) {
+      setConfirmState({ open: false, action: null });
+      setApprovalRejectionLoading(false);
+    }
+  }, [
+    approvalRejectionLoading,
+    isApproveBusy,
+    isRejectBusy,
+    confirmState.action,
+  ]);
+
   const handleMenuOpen = (event, request) => {
     event.stopPropagation();
     setAnchorEl(event.currentTarget);
@@ -327,14 +352,13 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
   };
 
   const handleConfirm = () => {
-    if (confirmState.action === 'approve') {
-      onApprove(request._id);
-      setConfirmState({ open: false, action: null });
-    } else if (confirmState.action === 'reject') {
-      onReject(request._id);
-      setConfirmState({ open: false, action: null });
-    }
+    setApprovalRejectionLoading(true);
 
+    if (confirmState.action === "approve") {
+      onApprove(request._id);
+    } else if (confirmState.action === "reject") {
+      onReject(request._id);
+    }
   };
 
   const handleExited = () => {
@@ -442,7 +466,12 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
             </Box>
           </Stack>
 
-          <Stack direction="row" spacing={0.5} alignItems="center" sx={{ flexShrink: 0 }}>
+          <Stack direction="row" spacing={1.5}
+            sx={{
+              flexShrink: 0,
+              display: 'flex',
+              alignItems: 'center',
+            }}>
             {isPending ? (
               dense ? (
                 <>
@@ -562,23 +591,25 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
                 )}
               </>
             )}
-            <IconButton
+            {/* <IconButton
               size="small" aria-label="Toggle passenger details">
               {open ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
-            </IconButton>
+            </IconButton> */}
+
+            {v.label === "Approved" && (
+              <IconButton
+                onClick={(event) => handleMenuOpen(event, request)}
+                sx={{
+                  color: "#fff",
+                  p: { xs: 0.5, sm: 0.75, md: 1 },
+                  "&:hover": { bgcolor: "rgba(255,255,255,0.1)" },
+                }}
+              >
+                <MoreVerIcon sx={{ color: "text.secondary" }} />
+              </IconButton>
+            )}
+
           </Stack>
-          {v.label === "Approved" && (
-            <IconButton
-              onClick={(event) => handleMenuOpen(event, request)}
-              sx={{
-                color: "#fff",
-                p: { xs: 0.5, sm: 0.75, md: 1 },
-                "&:hover": { bgcolor: "rgba(255,255,255,0.1)" },
-              }}
-            >
-              <MoreVerIcon sx={{ color: "text.secondary" }} />
-            </IconButton>
-          )}
 
         </Box>
 
@@ -782,7 +813,7 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
             fontSize: { xs: '1rem', sm: '1.1rem' },
           }}
         >
-          {confirmState.action === 'approve' ? 'Approve request?' : 'Reject request?'}
+          {confirmState.action === 'approve' ? 'Approve request ?' : 'Reject request ?'}
         </DialogTitle>
 
         <DialogContent>
@@ -810,29 +841,33 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
 
           <Button
             onClick={handleConfirm}
-            disabled={isBusy}
+            disabled={isBusy || approvalRejectionLoading}
             variant="contained"
             sx={{
               fontFamily: TOKENS.bodyFont,
-              textTransform: 'none',
+              textTransform: "none",
               fontWeight: 700,
-              minWidth: 96,
-              bgcolor: confirmState.action === 'approve' ? TOKENS.green : TOKENS.red,
-              '&:hover': {
-                bgcolor: confirmState.action === 'approve' ? TOKENS.green : TOKENS.red,
+              minWidth: 110,
+              bgcolor:
+                confirmState.action === "approve"
+                  ? TOKENS.green
+                  : TOKENS.red,
+              "&:hover": {
+                bgcolor:
+                  confirmState.action === "approve"
+                    ? TOKENS.green
+                    : TOKENS.red,
                 opacity: 0.9,
               },
             }}
           >
-
-            {isApproveBusy
-              ? "Approving..."
+            {confirmState.action === "approve"
+              ? isApproveBusy
+                ? "Approving..."
+                : "Approve"
               : isRejectBusy
                 ? "Rejecting..."
-                : confirmState.action === "approve"
-                  ? "Approve"
-                  : "Reject"}
-
+                : "Reject"}
           </Button>
         </DialogActions>
       </Dialog>
