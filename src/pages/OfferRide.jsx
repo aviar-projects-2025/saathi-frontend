@@ -215,7 +215,7 @@ function ReviewItem({ icon: Icon, label, value }) {
     </Stack>
   );
 }
-
+// commit changes new
 export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen }) {
   const navigate = useNavigate();
   const theme = useTheme();
