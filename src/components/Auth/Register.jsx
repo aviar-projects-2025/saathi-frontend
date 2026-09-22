@@ -129,7 +129,7 @@ const Register = () => {
         }
       )
 
-      console.log(res)
+
 
       if (res?.status === false) {
         toast.warning(res?.message)
@@ -255,7 +255,7 @@ const Register = () => {
       // Add mobile number to values
       const payload = {
         ...values,
-        mobileNumber: fullMobileNumber,
+        mobile: fullMobileNumber,
         isMobileVerified: true,
       };
 
@@ -263,7 +263,7 @@ const Register = () => {
 
       toast.success("Registration Success!", toasts);
 
-      console.log(res, 'res')
+
 
       if (res?.data?.data?.refApprove === "Approved") {
         navigate("/login");
@@ -549,7 +549,7 @@ const Register = () => {
         lastName: "",
         email: "",
         password: "",
-        mobile: mobileNumber,
+        mobile: fullMobileNumber,
         role: "USER",
         referralCode: referralFromUrl,
       }}
