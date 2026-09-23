@@ -38,6 +38,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import RideCard from "./RideCard.jsx";
 import UserProfile from "./UserProfile.jsx"
 import Api from "../Api";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
 
 // ── Saffron design tokens ──────────────────────────────────────────────────
 const saffron = {
@@ -127,6 +128,7 @@ export default function FindRides() {
   const [userLocation, setUserLocation] = useState(null);
   const [locationLoading, setLocationLoading] = useState(true);
   const [locationError, setLocationError] = useState("");
+  const [locationDialogOpen, setLocationDialogOpen] = useState(false);
 
   const [draftFilters, setDraftFilters] = useState(emptyFilters);
   const [appliedFilters, setAppliedFilters] = useState(emptyFilters);
@@ -243,12 +245,52 @@ export default function FindRides() {
   };
 
   // Automatically request GPS once. Do NOT use watchPosition().
-  useEffect(() => {
+  // useEffect(() => {
+  //   if (!navigator.geolocation) {
+  //     setLocationError("Geolocation is not supported by this browser.");
+  //     setLocationLoading(false);
+  //     return;
+  //   }
+
+  //   navigator.geolocation.getCurrentPosition(
+  //     (position) => {
+  //       const location = {
+  //         latitude: position.coords.latitude,
+  //         longitude: position.coords.longitude,
+  //         accuracy: position.coords.accuracy,
+  //       };
+
+  //       console.log("CURRENT USER GPS LOCATION:", location);
+  //       setUserLocation(location);
+  //       setLocationError("");
+  //       setLocationLoading(false);
+  //     },
+  //     (error) => {
+  //       console.error("GPS LOCATION ERROR:", error);
+  //       setLocationError("Unable to get your current location.");
+  //       setLocationLoading(false);
+  //     },
+  //     {
+  //       enableHighAccuracy: true,
+  //       timeout: 10000,
+  //       maximumAge: 60000,
+  //     }
+  //   );
+  // }, []);
+
+  const requestCurrentLocation = () => {
     if (!navigator.geolocation) {
-      setLocationError("Geolocation is not supported by this browser.");
+      setUserLocation(null);
       setLocationLoading(false);
+      setLocationError(
+        "Location services are not supported by this browser."
+      );
+      setLocationDialogOpen(true);
       return;
     }
+
+    setLocationLoading(true);
+    setLocationError("");
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -259,14 +301,44 @@ export default function FindRides() {
         };
 
         console.log("CURRENT USER GPS LOCATION:", location);
+
         setUserLocation(location);
-        setLocationError("");
         setLocationLoading(false);
+        setLocationError("");
+        setLocationDialogOpen(false);
       },
       (error) => {
         console.error("GPS LOCATION ERROR:", error);
-        setLocationError("Unable to get your current location.");
+
+        setUserLocation(null);
         setLocationLoading(false);
+
+        let message =
+          "Unable to get your current location. Please check your location settings.";
+
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            message =
+              "Location permission is denied. Please allow location access for this website.";
+            break;
+
+          case error.POSITION_UNAVAILABLE:
+            message =
+              "Your device Location Services are turned off or unavailable. Please turn on Location Services.";
+            break;
+
+          case error.TIMEOUT:
+            message =
+              "The location request timed out. Please make sure Location Services are turned on and try again.";
+            break;
+
+          default:
+            message =
+              "Unable to get your current location. Please check your location settings.";
+        }
+
+        setLocationError(message);
+        setLocationDialogOpen(true);
       },
       {
         enableHighAccuracy: true,
@@ -274,6 +346,11 @@ export default function FindRides() {
         maximumAge: 60000,
       }
     );
+  };
+
+  // Automatically request location when Find Rides opens.
+  useEffect(() => {
+    requestCurrentLocation();
   }, []);
 
   useEffect(() => {
@@ -509,6 +586,130 @@ export default function FindRides() {
 
   return (
     <>
+
+      <Dialog
+        open={locationDialogOpen}
+        onClose={() => { }}
+        disableEscapeKeyDown
+        fullWidth
+        maxWidth="xs"
+        PaperProps={{
+          sx: {
+            borderRadius: { xs: 3, sm: 4 },
+            m: { xs: 2, sm: 3 },
+            p: { xs: 1, sm: 1.5 },
+            textAlign: "center",
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 1,
+            fontWeight: 700,
+            fontSize: { xs: "1.1rem", sm: "1.25rem" },
+            pt: 2,
+          }}
+        >
+          <LocationOnIcon
+            sx={{
+              fontSize: { xs: 42, sm: 48 },
+              color: "#E8650A",
+            }}
+          />
+
+          Turn On Location
+        </DialogTitle>
+
+        <DialogContent>
+          <Typography
+            sx={{
+              color: "text.secondary",
+              fontSize: { xs: "0.85rem", sm: "0.95rem" },
+              lineHeight: 1.6,
+            }}
+          >
+            Saathi Rides needs your current location to show rides
+            starting near you.
+          </Typography>
+
+          <Typography
+            sx={{
+              mt: 1.5,
+              color: "text.secondary",
+              fontSize: { xs: "0.78rem", sm: "0.85rem" },
+              lineHeight: 1.5,
+            }}
+          >
+            Please turn on Location Services on your phone or laptop
+            and allow location permission for this website.
+          </Typography>
+
+          {locationError && (
+            <Box
+              sx={{
+                mt: 2,
+                p: 1.5,
+                borderRadius: 2,
+                background: "#FFF3F0",
+              }}
+            >
+              <Typography
+                sx={{
+                  color: "#D32F2F",
+                  fontSize: { xs: "0.75rem", sm: "0.82rem" },
+                  lineHeight: 1.5,
+                }}
+              >
+                {locationError}
+              </Typography>
+            </Box>
+          )}
+        </DialogContent>
+
+        <DialogActions
+          sx={{
+            justifyContent: "center",
+            pb: 2,
+            pt: 0.5,
+          }}
+        >
+          <Button
+            variant="contained"
+            onClick={requestCurrentLocation}
+            disabled={locationLoading}
+            sx={{
+              minWidth: 130,
+              bgcolor: "#E8650A",
+              color: "#fff",
+              borderRadius: 999,
+              px: 4,
+              py: 1,
+              textTransform: "none",
+              fontWeight: 700,
+              "&:hover": {
+                bgcolor: "#c85608",
+              },
+              "&.Mui-disabled": {
+                bgcolor: "#E8650A",
+                color: "#fff",
+                opacity: 0.7,
+              },
+            }}
+          >
+            {locationLoading ? (
+              <CircularProgress
+                size={20}
+                sx={{ color: "#fff" }}
+              />
+            ) : (
+              "Try Again"
+            )}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Dialog
         open={profileGateOpen}
