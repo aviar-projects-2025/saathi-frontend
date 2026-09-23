@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import {
   Box,
   Typography,
@@ -514,26 +514,114 @@ const UserProfile = () => {
       [name]: "",
     }));
   };
+
   const [communityPosts, setCommunityPosts] = useState([]);
+  const [communityPage, setCommunityPage] = useState(1);
+  const [hasMorePosts, setHasMorePosts] = useState(true);
+  const [loadingMorePosts, setLoadingMorePosts] = useState(false);
+
+  // Refs mirror the latest pagination state so the IntersectionObserver
+  // callback always reads current values instead of stale ones captured
+  // in a closure.
+  const isFetchingRef = useRef(false);
+  const hasMoreRef = useRef(true);
+  const pageRef = useRef(1);
+  const observerRef = useRef(null);
+
+  useEffect(() => {
+    hasMoreRef.current = hasMorePosts;
+  }, [hasMorePosts]);
+
+  useEffect(() => {
+    pageRef.current = communityPage;
+  }, [communityPage]);
 
   useEffect(() => {
     if (currentUser?._id) {
-      getCommunityPost();
-    }
-  }, [currentUser]);
-  const getCommunityPost = async () => {
-    try {
-      setCommunityLoading(true);
-      const postsRes = await axios.get(Api + "/community/");
-      const myPosts = postsRes.data.data.filter(
-        (item) => item.authorId?._id === currentUser?._id,
-      );
+      setCommunityPosts([]);
+      setCommunityPage(1);
+      setHasMorePosts(true);
+      pageRef.current = 1;
+      hasMoreRef.current = true;
+      isFetchingRef.current = false;
 
-      setCommunityPosts(myPosts);
+      getCommunityPost(1);
+    }
+  }, [currentUser?._id]);
+
+  // Callback ref (instead of useRef + a useEffect keyed on currentUser?._id)
+  // so the observer attaches the moment the sentinel div actually exists in
+  // the DOM. The sentinel only renders once communityPosts.length > 0, which
+  // happens AFTER the first fetch resolves -- a plain useRef + useEffect
+  // combo fires before that div is mounted, finds loadMoreRef.current still
+  // null, bails out, and never gets a second chance to attach. That was why
+  // pagination silently stopped dead at the first 12 posts no matter how
+  // many actually existed on the server. A callback ref re-runs every time
+  // React attaches or detaches the node (including switching tabs away and
+  // back), so it always has a live element to observe.
+  const setLoadMoreRef = useCallback((node) => {
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+      observerRef.current = null;
+    }
+
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries[0].isIntersecting) return;
+        if (isFetchingRef.current) return; // a fetch is already in flight
+        if (!hasMoreRef.current) return; // no more pages left
+
+        isFetchingRef.current = true;
+        getCommunityPost(pageRef.current + 1).finally(() => {
+          isFetchingRef.current = false;
+        });
+      },
+      {
+        root: null,
+        rootMargin: "200px",
+        threshold: 0,
+      }
+    );
+
+    observer.observe(node);
+    observerRef.current = observer;
+  }, []);
+
+  const getCommunityPost = async (page = 1) => {
+    try {
+      if (page === 1) {
+        setCommunityLoading(true);
+      } else {
+        setLoadingMorePosts(true);
+      }
+
+    const postsRes = await axios.get(
+  `${Api}/post-images/profile/${currentUser?._id}?page=${page}&limit=12`
+);
+      const newPosts = postsRes.data.data || [];
+      const pagination = postsRes.data.pagination;
+
+      if (page === 1) {
+        // First 12
+        setCommunityPosts(newPosts);
+      } else {
+        // Add next 12 to existing posts
+        setCommunityPosts((prev) => [...prev, ...newPosts]);
+      }
+
+      setCommunityPage(page);
+      pageRef.current = page;
+
+      const hasMore = pagination?.hasMore ?? false;
+      setHasMorePosts(hasMore);
+      hasMoreRef.current = hasMore;
     } catch (error) {
-      console.error(error);
+      console.error("Get community posts error:", error);
     } finally {
       setCommunityLoading(false);
+      setLoadingMorePosts(false);
     }
   };
 
@@ -885,478 +973,304 @@ const UserProfile = () => {
             </Tabs>
 
             {tab === 0 && (
-              <Grid
-                container
-                spacing={{ xs: "12px", sm: "15px", md: "20px" }}
-                sx={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                {communityLoading ? (
+              <>
+                <Grid
+                  container
+                  spacing={{
+                    xs: "12px",
+                    sm: "15px",
+                    md: "20px",
+                  }}
+                  sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+
+                  {/* ========================= */}
+                  {/* INITIAL LOADING */}
+                  {/* ========================= */}
+
+                  {communityLoading ? (
+
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        width: "100%",
+                        minHeight: 100,
+                      }}
+                    >
+                      <CircularProgress
+                        size={30}
+                        thickness={5}
+                        sx={{
+                          color: "#FF9933",
+                        }}
+                      />
+                    </Box>
+
+                  ) : communityPosts.length === 0 ? (
+
+                    /* ========================= */
+                    /* NO POSTS */
+                    /* ========================= */
+
+                    <Box
+                      sx={{
+                        width: "100%",
+                        maxWidth: {
+                          xs: "100%",
+                          sm: 440,
+                          md: 480,
+                        },
+
+                        textAlign: "center",
+
+                        flexDirection: "column",
+
+                        mx: "auto",
+
+                        display: "flex",
+
+                        justifyContent: "center",
+
+                        alignItems: "center",
+
+                        mt: {
+                          xs: "35%",
+                          sm: "7%",
+                        },
+                      }}
+                    >
+
+                      <Typography
+                        variant="h6"
+                        fontWeight={600}
+                        color="text.primary"
+                        sx={{
+                          fontSize: {
+                            xs: "0.95rem",
+                            sm: "1.05rem",
+                            md: "1.15rem",
+                          },
+                        }}
+                      >
+                        No Community Posts Yet
+                      </Typography>
+
+
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{
+                          mt: 1,
+
+                          fontSize: {
+                            xs: "0.75rem",
+                            sm: "0.85rem",
+                            md: "0.95rem",
+                          },
+                        }}
+                      >
+                        Community posts will appear here when available.
+                      </Typography>
+
+                    </Box>
+
+                  ) : (
+
+                    /* ========================= */
+                    /* POSTS */
+                    /* ========================= */
+
+                    communityPosts.map((post) => (
+
+                      <Grid
+                        item
+                        xs={4}
+                        key={post._id}
+                        sx={{
+                          mt: 1,
+                        }}
+                      >
+
+                        {post.postImage && (
+                          <>
+
+                            <Box
+                              onClick={() => {
+
+                                setSelectedPost(post);
+
+                                setSelectedImage(
+                                  Array.isArray(
+                                    post.postImage
+                                  )
+                                    ? post.postImage[0]
+                                    : post.postImage
+                                );
+
+                                setOpenImage(true);
+                              }}
+
+                              sx={{
+                                position: "relative",
+
+                                cursor: "pointer",
+
+                                width: {
+                                  xs: 108,
+                                  sm: 135,
+                                  md: 175,
+                                  lg: 225,
+                                },
+
+                                height: {
+                                  xs: 150,
+                                  sm: 250,
+                                  md: 300,
+                                  lg: 350,
+                                },
+
+                                overflow: "hidden",
+
+                                borderRadius: {
+                                  xs: 0.5,
+                                  sm: 1,
+                                },
+                              }}
+                            >
+
+                              {/* YOUR EXISTING IMAGE */}
+                              <Box
+                                component="img"
+                                src={
+                                  Array.isArray(
+                                    post.postImage
+                                  )
+                                    ? post.postImage[0]
+                                    : post.postImage
+                                }
+                                alt="Community post"
+                                loading="lazy"
+                                sx={{
+                                  width: "100%",
+                                  height: "100%",
+                                  objectFit: "cover",
+                                }}
+                              />
+
+
+                              {/* YOUR EXISTING MORE MENU */}
+                              <IconButton
+                                onClick={(e) => {
+
+                                  e.stopPropagation();
+
+                                  handleMenuOpen(
+                                    e,
+                                    post
+                                  );
+                                }}
+
+                                sx={{
+                                  position: "absolute",
+
+                                  top: 5,
+                                  right: 5,
+
+                                  zIndex: 2,
+
+                                  width: 24,
+                                  height: 24,
+
+                                  padding: 0,
+
+                                  color: "#fff",
+
+                                  backgroundColor:
+                                    "rgba(0,0,0,0.5)",
+
+                                  "&:hover": {
+                                    backgroundColor:
+                                      "rgba(0,0,0,0.7)",
+                                  },
+                                }}
+                              >
+                                <MoreVertIcon
+                                  fontSize="small"
+                                />
+                              </IconButton>
+
+                            </Box>
+
+                          </>
+                        )}
+
+                      </Grid>
+
+                    ))
+
+                  )}
+
+                </Grid>
+
+
+                {/* ================================= */}
+                {/* INFINITE SCROLL SENTINEL */}
+                {/* ================================= */}
+
+                {communityPosts.length > 0 && (
                   <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      width: 45,
-                      height: 45,
-                    }}
-                  >
-                    <CircularProgress
-                      size={30}
-                      thickness={5}
-                      sx={{ color: "#FF9933" }}
-                    />
-                  </Box>
-                ) : communityPosts.length == 0 ? (
-                  <Box
+                    ref={setLoadMoreRef}
+
                     sx={{
                       width: "100%",
-                      maxWidth: { xs: "100%", sm: 440, md: 480 },
-                      textAlign: "center",
-                      flexDirection: "column",
-                      mx: "auto",
+
+                      minHeight: 70,
+
                       display: "flex",
+
                       justifyContent: "center",
+
                       alignItems: "center",
-                      mt: { xs: '35%', sm: '7%' }
+
+                      py: 3,
                     }}
                   >
-                    <Typography
-                      variant="h6"
-                      fontWeight={600}
-                      color="text.primary"
-                      sx={{
-                        fontSize: {
-                          xs: "0.95rem",
-                          sm: "1.05rem",
-                          md: "1.15rem",
-                        },
-                      }}
-                    >
-                      No Community Posts Yet
-                    </Typography>
 
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{
-                        mt: 1,
-                        fontSize: {
-                          xs: "0.75rem",
-                          sm: "0.85rem",
-                          md: "0.95rem",
-                        },
-                      }}
-                    >
-                      Community posts will appear here when available.
-                    </Typography>
-                  </Box>
-                ) : (
-                  communityPosts.map((post) => (
-                    <Grid item xs={4} key={post._id} sx={{ mt: 1 }}>
-                      {post.postImage && (
-                        <>
-
-                          <Box
-                            onClick={() => {
-                              setSelectedPost(post);
-                              setSelectedImage(
-                                Array.isArray(post.postImage)
-                                  ? post.postImage[0]
-                                  : post.postImage
-                              );
-                              setOpenImage(true);
-                            }}
-                            sx={{
-                              position: "relative",
-                              cursor: "pointer",
-                              width: { xs: 108, sm: 135, md: 175, lg: 225 },
-                              height: { xs: 150, sm: 250, md: 300, lg: 350 },
-                              overflow: "hidden",
-                              borderRadius: { xs: 0.5, sm: 1 },
-                            }}
-                          >
-                            {/* More menu button */}
-                            <IconButton
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleMenuOpen(e, post);
-                              }}
-                              sx={{
-                                position: "absolute",
-                                top: 5,
-                                right: 5,
-                                zIndex: 2,
-                                width: 24,
-                                height: 24,
-                                padding: 0,
-                                color: "#fff",
-                                backgroundColor: "rgba(0,0,0,0.5)",
-
-                                "&:hover": {
-                                  backgroundColor: "rgba(0,0,0,0.7)",
-                                },
-
-                                "& .MuiSvgIcon-root": {
-                                  fontSize: 16,
-                                },
-                              }}
-                            >
-                              <MoreVertIcon />
-                            </IconButton>
-
-                            {/* Image */}
-                            <img
-                              src={
-                                Array.isArray(post.postImage)
-                                  ? post.postImage[0]
-                                  : post.postImage
-                              }
-                              alt=""
-                              style={{
-                                width: "100%",
-                                height: "100%",
-                                objectFit: "cover",
-                                display: "block",
-                              }}
-                            />
-                          </Box>
-
-                          {/* Menu */}
-                          <Menu
-                            anchorEl={anchorEl}
-                            open={Boolean(anchorEl)}
-                            onClose={handleMenuClose}
-                          >
-                            <MenuItem
-                              onClick={() => {
-                                handleMenuClose();
-                                handleEdit(selectedPost);
-                              }}
-                            >
-                              <ListItemIcon>
-                                <EditIcon fontSize="small" />
-                              </ListItemIcon>
-                              <ListItemText>Edit</ListItemText>
-                            </MenuItem>
-
-                            <MenuItem
-                              onClick={() => {
-                                handleMenuClose();
-                                setDeleteOpen(true);
-                              }}
-                            >
-                              <ListItemIcon>
-                                <DeleteIcon fontSize="small" color="error" />
-                              </ListItemIcon>
-                              <ListItemText>Delete</ListItemText>
-                            </MenuItem>
-                          </Menu>
-
-                          <Dialog
-                            open={deleteOpen}
-                            onClose={(event, reason) => {
-                              if (reason === "backdropClick") {
-                                return;
-                              }
-
-                              setDeleteOpen(false);
-                            }}
-                            fullWidth
-                            maxWidth="xs"
-                            PaperProps={{
-                              sx: {
-                                width: { xs: "95%", sm: "100%" },
-                                m: { xs: 1.5, sm: 2 },
-                                borderRadius: { xs: 2, sm: 3 },
-                              },
-                            }}
-                          >
-                            <DialogTitle
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 1,
-                                fontWeight: 600,
-                              }}
-                            >
-                              <WarningAmberRoundedIcon color="error" />
-                              Delete Post ?
-                            </DialogTitle>
-
-                            <DialogContent sx={{ pt: 1 }}>
-                              <Typography
-                                sx={{
-                                  fontSize: { xs: "0.9rem", sm: "1rem" },
-                                  color: "text.secondary",
-                                }}
-                              >
-                                Are you sure you want to delete this post?
-                              </Typography>
-                            </DialogContent>
-
-                            <DialogActions
-                              sx={{
-                                px: { xs: 2, sm: 3 },
-                                pb: { xs: 2, sm: 3 },
-                                gap: 1,
-                              }}
-                            >
-                              <Button
-                                variant="contained"
-                                onClick={() => setDeleteOpen(false)}
-                                sx={{
-                                  flex: 1,
-                                  py: 1,
-                                  fontSize: { xs: "0.8rem", sm: "0.9rem" },
-                                  fontWeight: 600,
-                                  color: "#ffff",
-                                  bgcolor: "grey.700",
-                                  textTransform: "none"
-                                }}
-                              >
-                                Cancel
-                              </Button>
-
-                              <Button
-                                variant="contained"
-                                color="error"
-                                disabled={imageDeleteLoading}
-                                onClick={() => {
-                                  const postId = selectedPost._id;
-                                  handleMenuClose();
-                                  handleDelete(postId);
-                                  // setDeleteOpen(false);
-                                }}
-                                sx={{
-                                  flex: 1,
-                                  py: 1,
-                                  fontSize: { xs: "0.8rem", sm: "0.9rem" },
-                                  fontWeight: 600,
-                                  textTransform: "none"
-                                }}
-                              >
-                                {imageDeleteLoading ? "Deleting..." : "Delete"}
-                              </Button>
-                            </DialogActions>
-                          </Dialog>
-
-                          <Dialog
-                            open={editOpen}
-                            onClose={(event, reason) => {
-                              if (reason === "backdropClick") {
-                                return;
-                              }
-
-                              setEditOpen(false);
-                            }}
-                            fullWidth
-                            maxWidth="sm"
-                            PaperProps={{
-                              sx: {
-                                borderRadius: { xs: 0, sm: 3 },
-                                m: { xs: 0, sm: 2 },
-                              },
-                            }}
-                          >
-                            {/* Dialog Header */}
-                            <DialogTitle
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                fontWeight: 600,
-                                fontSize: { xs: "1rem", sm: "1.15rem" },
-                                py: 1.5,
-                                px: 2,
-                              }}
-                            >
-                              Edit Post
-
-                              <IconButton
-                                onClick={() => setEditOpen(false)}
-                                size="small"
-                                sx={{
-                                  color: "#666",
-                                  "&:hover": { bgcolor: "#f5f5f5" },
-                                }}
-                              >
-                                <CloseIcon fontSize="small" />
-                              </IconButton>
-                            </DialogTitle>
-
-                            {/* Dialog Content */}
-                            <DialogContent dividers sx={{ px: { xs: 1.5, sm: 3 }, py: 2 }}>
+                    {loadingMorePosts && (
+                      <CircularProgress
+                        size={28}
+                        thickness={4}
+                        sx={{
+                          color: "#FF9933",
+                        }}
+                      />
+                    )}
 
 
-                              <Box sx={{ mt: 2 }}>
-
-                                {previewImage && (
-                                  <Box
-                                    component="img"
-                                    src={editImage ? URL.createObjectURL(editImage) : previewImage}
-                                    alt="Preview"
-                                    sx={{
-                                      width: "100%",
-                                      height: { xs: 160, sm: 220, md: 280 },
-                                      objectFit: "contain",
-                                      borderRadius: 2,
-                                      // border: "1px solid #eee",
-                                      mb: 1.5,
-                                    }}
-                                  />
-                                )}
-
-                                <Button
-                                  variant="contained"
-                                  size="small"
-                                  onClick={openImageMenu}
-                                  sx={{
-                                    width: "fit-content", // or "auto"
-                                    minWidth: "unset",    // optional: removes MUI's default minimum width
-                                    height: 36,
-                                    bgcolor: "#FF9933",
-                                    color: "#fff",
-                                    fontWeight: 600,
-                                    fontSize: "0.8rem",
-                                    textTransform: "none",
-                                    borderRadius: 2,
-                                    px: 2, // horizontal padding
-                                    "&:hover": {
-                                      bgcolor: "#E68A00",
-                                    },
-                                  }}
-                                >
-                                  {!previewImage ? "Add Image" : "Change Image"}
-                                </Button>
-
-
-                                {/* Image Menu */}
-                                <Menu
-                                  anchorEl={imageMenuAnchor}
-                                  open={isImageMenuOpen}
-                                  onClose={closeImageMenu}
-                                  anchorOrigin={{ vertical: "top", horizontal: "center" }}
-                                  transformOrigin={{ vertical: "bottom", horizontal: "center" }}
-                                >
-                                  <MenuItem component="label" dense >
-                                    <ListItemIcon>
-                                      <CameraAltIcon fontSize="small" sx={{ color: "#FF9933" }} />
-                                    </ListItemIcon>
-                                    <ListItemText primaryTypographyProps={{ fontSize: "0.85rem" }}>
-                                      Camera
-                                    </ListItemText>
-                                    <input
-                                      hidden
-                                      type="file"
-                                      accept="image/*"
-                                      capture="environment"
-                                      onChange={onImageSelected}
-                                    />
-                                  </MenuItem>
-
-                                  <MenuItem component="label" dense>
-                                    <ListItemIcon>
-                                      <InsertDriveFileIcon fontSize="small" sx={{ color: "#FF9933" }} />
-                                    </ListItemIcon>
-                                    <ListItemText primaryTypographyProps={{ fontSize: "0.85rem" }}>
-                                      Gallery
-                                    </ListItemText>
-                                    <input
-                                      hidden
-                                      type="file"
-                                      accept="image/*"
-                                      onChange={onImageSelected}
-                                    />
-                                  </MenuItem>
-                                </Menu>
-                              </Box>
-                            </DialogContent>
-
-                            {/* Dialog Footer */}
-                            <DialogActions
-                              sx={{
-                                p: { xs: 1.5, sm: 2 },
-                                display: "flex",
-                                flexDirection: { xs: "column", sm: "row" },
-                                gap: 1,
-                              }}
-                            >
-                              <Stack
-                                direction="row"
-                                spacing={2}
-                                justifyContent="flex-end"
-                                sx={{ pt: 2 }}
-                              >
-                                <Button
-                                  variant="contained"
-                                  size="small"
-                                  onClick={handleReset}
-                                  sx={{
-                                    width: "fit-content",
-                                    minWidth: "unset",
-                                    px: 2,
-                                    height: 36,
-                                    backgroundColor: "#838282",
-                                    color: "#fff",
-                                    fontWeight: 600,
-                                    fontSize: "0.8rem",
-                                    textTransform: "none",
-                                    borderRadius: 2,
-                                  }}
-                                >
-                                  Reset
-                                </Button>
-
-                                <Button
-                                  variant="contained"
-                                  size="small"
-                                  disabled={imagePostLoading}
-                                  onClick={handleUpdate}
-                                  sx={{
-                                    width: "fit-content",
-                                    minWidth: "unset",
-                                    px: 2,
-                                    height: 36,
-                                    bgcolor: "#FF9933",
-                                    color: "#fff",
-                                    fontWeight: 600,
-                                    fontSize: "0.8rem",
-                                    textTransform: "none",
-                                    borderRadius: 2,
-                                    "&:hover": {
-                                      bgcolor: "#E68A00",
-                                    },
-                                  }}
-                                >
-                                  {imagePostLoading ? "Saving..." : "Save"}
-                                </Button>
-                              </Stack>
-                            </DialogActions>
-                          </Dialog>
-
-
-                          {editImage && (
-                            <img
-                              src={URL.createObjectURL(editImage)}
-                              alt="Preview"
-                              width={150}
-                              style={{ marginTop: 10, borderRadius: 8 }}
-                            />
-                          )}
-                        </>
-
+                    {!loadingMorePosts &&
+                      !hasMorePosts && (
+                        <Typography
+                          color="text.secondary"
+                          sx={{
+                            fontSize: "0.8rem",
+                          }}
+                        >
+                          No more posts
+                        </Typography>
                       )}
-                    </Grid>
-                  ))
-                )}
-              </Grid>
-            )}
 
+                  </Box>
+                )}
+
+              </>
+            )}
             {tab === 1 && (
               <Grid
                 container
@@ -1469,29 +1383,6 @@ const UserProfile = () => {
                               display: "block",
                             }}
                           />
-
-                          {/* <Box
-                            className="postOverlay"
-                            sx={{
-                              position: "absolute",
-                              inset: 0,
-                              bgcolor: "rgba(0,0,0,0.15)",
-                              opacity: 0,
-                              transition: "opacity 0.15s ease",
-                              display: { xs: "none", sm: "flex" },
-                              alignItems: "center",
-                              justifyContent: "center",
-                            }}
-                          >
-                            <Stack
-                              direction="row"
-                              spacing={2}
-                              sx={{ color: "#fff" }}
-                            >
-                              <ThumbUpOffAltIcon fontSize="small" />
-                              <ChatIcon fontSize="small" />
-                            </Stack>
-                          </Box> */}
                         </Box>
                       )}
                     </Grid>
@@ -1872,12 +1763,6 @@ const UserProfile = () => {
                     >
                       Female
                     </MenuItem>
-                    {/* <MenuItem
-                      value="Other"
-                      sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem" } }}
-                    >
-                      Other
-                    </MenuItem> */}
                   </TextField>
                 </Stack>
 
