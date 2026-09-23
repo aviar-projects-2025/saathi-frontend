@@ -133,7 +133,7 @@ export default function FindRides() {
   const isProfileComplete = completion === 100;
   const SIDEBAR_SCROLL_HEIGHT = 'calc(100vh - 120px)';
 
-console.log(currentUser,'currentUser')
+  console.log(currentUser, 'currentUser')
   const [profileGateOpen, setProfileGateOpen] = useState(false);
   const hasCheckedProfileGateRef = useRef(false);
 
@@ -147,6 +147,7 @@ console.log(currentUser,'currentUser')
   const fetchRides = async () => {
     try {
       const res = await axios.get(`${Api}/rides/get`);
+      console.log(res.data.data, 'res.data.data')
       setRides(res.data.data || []);
     } catch (error) {
       console.log(error);
@@ -189,27 +190,53 @@ console.log(currentUser,'currentUser')
   // Get the actual FROM coordinates of the ride.
   // Priority: explicit ride coordinates -> GeoJSON -> creator coordinates (legacy fallback).
   const getRideCoordinates = (ride) => {
-    const fromLatitude = Number(ride?.fromLatitude);
-    const fromLongitude = Number(ride?.fromLongitude);
+    // 1. Current ride structure
+    const fromLatitude = Number(ride?.fromLocation?.latitude);
+    const fromLongitude = Number(ride?.fromLocation?.longitude);
 
-    if (Number.isFinite(fromLatitude) && Number.isFinite(fromLongitude)) {
-      return { latitude: fromLatitude, longitude: fromLongitude };
+    if (
+      Number.isFinite(fromLatitude) &&
+      Number.isFinite(fromLongitude)
+    ) {
+      return {
+        latitude: fromLatitude,
+        longitude: fromLongitude,
+      };
     }
 
+    // 2. Direct coordinate structure
+    const directLatitude = Number(ride?.fromLatitude);
+    const directLongitude = Number(ride?.fromLongitude);
+
+    if (
+      Number.isFinite(directLatitude) &&
+      Number.isFinite(directLongitude)
+    ) {
+      return {
+        latitude: directLatitude,
+        longitude: directLongitude,
+      };
+    }
+
+    // 3. GeoJSON structure
     const coordinates = ride?.fromLocation?.coordinates;
-    if (Array.isArray(coordinates) && coordinates.length >= 2) {
+
+    if (
+      Array.isArray(coordinates) &&
+      coordinates.length >= 2
+    ) {
       const longitude = Number(coordinates[0]);
       const latitude = Number(coordinates[1]);
-      if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
-        return { latitude, longitude };
-      }
-    }
 
-    // Legacy fallback only. New rides should store FROM coordinates.
-    const creatorLatitude = Number(ride?.createdBy?.latitude);
-    const creatorLongitude = Number(ride?.createdBy?.longitude);
-    if (Number.isFinite(creatorLatitude) && Number.isFinite(creatorLongitude)) {
-      return { latitude: creatorLatitude, longitude: creatorLongitude };
+      if (
+        Number.isFinite(latitude) &&
+        Number.isFinite(longitude)
+      ) {
+        return {
+          latitude,
+          longitude,
+        };
+      }
     }
 
     return null;
