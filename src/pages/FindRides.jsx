@@ -115,7 +115,7 @@ export default function FindRides() {
   const { currentUser } = useUser();
   const [rides, setRides] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filtersOpen, setFiltersOpen] = useState(false); 
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const navigate = useNavigate();
   const [searchFrom, setSearchFrom] = useState("");
   const [searchDestination, setSearchDestination] = useState("");
@@ -123,12 +123,17 @@ export default function FindRides() {
   const { completion, savedPost, setSavedPost, removeSavedPost } = useUser();
   const [editProfileModal, setEditProfileModal] = useState(false);
 
+  // Automatically get the user's current location once when Find Rides opens.
+  const [userLocation, setUserLocation] = useState(null);
+  const [locationLoading, setLocationLoading] = useState(true);
+  const [locationError, setLocationError] = useState("");
+
   const [draftFilters, setDraftFilters] = useState(emptyFilters);
   const [appliedFilters, setAppliedFilters] = useState(emptyFilters);
   const isProfileComplete = completion === 100;
   const SIDEBAR_SCROLL_HEIGHT = 'calc(100vh - 120px)';
 
-
+console.log(currentUser,'currentUser')
   const [profileGateOpen, setProfileGateOpen] = useState(false);
   const hasCheckedProfileGateRef = useRef(false);
 
@@ -149,6 +154,100 @@ export default function FindRides() {
       setLoading(false);
     }
   };
+
+  const calculateDistanceKm = (lat1, lon1, lat2, lon2) => {
+    if (
+      lat1 == null ||
+      lon1 == null ||
+      lat2 == null ||
+      lon2 == null
+    ) {
+      return Infinity;
+    }
+
+    const R = 6371; // Earth's radius in km
+
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) ** 2;
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return R * c;
+  };
+
+
+
+
+
+
+  // Get the actual FROM coordinates of the ride.
+  // Priority: explicit ride coordinates -> GeoJSON -> creator coordinates (legacy fallback).
+  const getRideCoordinates = (ride) => {
+    const fromLatitude = Number(ride?.fromLatitude);
+    const fromLongitude = Number(ride?.fromLongitude);
+
+    if (Number.isFinite(fromLatitude) && Number.isFinite(fromLongitude)) {
+      return { latitude: fromLatitude, longitude: fromLongitude };
+    }
+
+    const coordinates = ride?.fromLocation?.coordinates;
+    if (Array.isArray(coordinates) && coordinates.length >= 2) {
+      const longitude = Number(coordinates[0]);
+      const latitude = Number(coordinates[1]);
+      if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
+        return { latitude, longitude };
+      }
+    }
+
+    // Legacy fallback only. New rides should store FROM coordinates.
+    const creatorLatitude = Number(ride?.createdBy?.latitude);
+    const creatorLongitude = Number(ride?.createdBy?.longitude);
+    if (Number.isFinite(creatorLatitude) && Number.isFinite(creatorLongitude)) {
+      return { latitude: creatorLatitude, longitude: creatorLongitude };
+    }
+
+    return null;
+  };
+
+  // Automatically request GPS once. Do NOT use watchPosition().
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      setLocationError("Geolocation is not supported by this browser.");
+      setLocationLoading(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const location = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          accuracy: position.coords.accuracy,
+        };
+
+        console.log("CURRENT USER GPS LOCATION:", location);
+        setUserLocation(location);
+        setLocationError("");
+        setLocationLoading(false);
+      },
+      (error) => {
+        console.error("GPS LOCATION ERROR:", error);
+        setLocationError("Unable to get your current location.");
+        setLocationLoading(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 60000,
+      }
+    );
+  }, []);
 
   useEffect(() => {
     if (hasCheckedProfileGateRef.current) return;
@@ -311,12 +410,6 @@ export default function FindRides() {
     (ride) => ride.travelStatus !== "Cancelled"
   );
 
-  const normalizePostal = (code) =>
-    String(code || "")
-      .trim()
-      .toUpperCase()
-      .replace(/\s+/g, "");
-
   const longestCommonPrefixLength = (a, b) => {
     let i = 0;
     const len = Math.min(a.length, b.length);
@@ -327,64 +420,48 @@ export default function FindRides() {
 
     return i;
   };
-  const getZipcodeProximityScore = (author, current) => {
-    const authorZip = normalizePostal(author?.zipcode);
-    const currentZip = normalizePostal(current?.zipcode);
 
-    if (!authorZip || !currentZip) {
-      return Infinity;
-    }
 
-    // Exact postal code = highest priority
-    if (authorZip === currentZip) {
-      return 0;
-    }
 
-    // Different length = lower priority
-    if (authorZip.length !== currentZip.length) {
-      return 100;
-    }
+  const getRideDistanceKm = (ride) => {
+    if (!userLocation) return Infinity;
 
-    const commonLen = longestCommonPrefixLength(
-      authorZip,
-      currentZip
+    const rideCoordinates = getRideCoordinates(ride);
+    if (!rideCoordinates) return Infinity;
+
+    return calculateDistanceKm(
+      userLocation.latitude,
+      userLocation.longitude,
+      rideCoordinates.latitude,
+      rideCoordinates.longitude
     );
-
-    // More matching starting digits = closer
-    return authorZip.length - commonLen;
   };
 
-  const sortRidesByProximity = (rides, currentZip) => {
-    return [...rides].sort((a, b) => {
-      const scoreA = getZipcodeProximityScore(
-        a?.createdBy?.zipcode,
-        currentZip
-      );
+  const sortedVisibleRides = useMemo(() => {
+    return [...visibleRides].sort((a, b) => {
+      if (userLocation) {
+        const distanceA = getRideDistanceKm(a);
+        const distanceB = getRideDistanceKm(b);
+        const validA = Number.isFinite(distanceA);
+        const validB = Number.isFinite(distanceB);
 
-      const scoreB = getZipcodeProximityScore(
-        b?.createdBy?.zipcode,
-        currentZip
-      );
-
-      // Nearby ZIP rides first
-      if (scoreA !== scoreB) {
-        return scoreA - scoreB;
+        if (validA && !validB) return -1;
+        if (!validA && validB) return 1;
+        if (validA && validB && distanceA !== distanceB) {
+          return distanceA - distanceB;
+        }
       }
 
-      // Same proximity → earliest ride first
-      return new Date(a.startTime) - new Date(b.startTime);
+      return new Date(a.startTime).getTime() - new Date(b.startTime).getTime();
     });
+  }, [visibleRides, userLocation]);
+
+  const formatDistance = (distanceKm) => {
+    if (!Number.isFinite(distanceKm)) return null;
+    if (distanceKm < 1) return `${Math.round(distanceKm * 1000)} m`;
+    return `${distanceKm.toFixed(1)} km`;
   };
 
-
-  const sortedVisibleRides = useMemo(
-    () =>
-      sortRidesByProximity(
-        visibleRides,
-        currentUser?.zipcode
-      ),
-    [visibleRides, currentUser?.zipcode]
-  );
 
   if (loading) {
     return (
@@ -972,7 +1049,7 @@ export default function FindRides() {
                   }}
                 >
                   <Button
-                    startIon={<FilterListOffIcon sx={{ fontSize: { xs: 12, sm: 16 } }} />}
+                    startIcon={<FilterListOffIcon sx={{ fontSize: { xs: 12, sm: 16 } }} />}
                     onClick={clearFilters}
                     variant="contained"
                     sx={{
@@ -1040,7 +1117,7 @@ export default function FindRides() {
 
             </Box>
             {sortedVisibleRides.length > 0 ? (
-              <Grid spacing={{ xs: 1, sm: 2 }}>
+              <Grid container spacing={{ xs: 1, sm: 2 }}>
                 {sortedVisibleRides.map((ride) => {
                   const isOwnRide = ride.createdBy?._id === currentUser?._id;
                   return (
@@ -1048,6 +1125,8 @@ export default function FindRides() {
                       <RideCard
                         ride={ride}
                         isOwnRide={isOwnRide}
+                        distanceKm={getRideDistanceKm(ride)}
+                        distanceLabel={formatDistance(getRideDistanceKm(ride))}
                       />
                     </Grid>
                   );
