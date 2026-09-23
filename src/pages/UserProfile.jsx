@@ -417,7 +417,7 @@ const UserProfile = () => {
       errors.email = "Email is required";
     } else {
       const emailRegex =
-        /^[A-Za-z0-9](?:[A-Za-z0-9._%+-]{0,62}[A-Za-z0-9])?@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z]{2,})+$/;
+        /^[a-z0-9]+(?:[._%+-][a-z0-9]+)*@[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z]{2,})+$/;
       if (!emailRegex.test(formData.email)) {
         errors.email =
           "Please enter a valid email address (e.g., name@domain.com) || (e.g., avair123@aviartech.com) ";

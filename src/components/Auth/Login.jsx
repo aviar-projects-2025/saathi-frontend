@@ -42,7 +42,7 @@ const Login = () => {
       .lowercase()
       .email("Please enter a valid Email address")
       .matches(
-        /^[A-Za-z0-9](?:[A-Za-z0-9._%+-]{0,62}[A-Za-z0-9])?@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z]{2,})+$/,
+        /^[a-z0-9]+(?:[._%+-][a-z0-9]+)*@[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z]{2,})+$/,
         "Please enter a valid email address"
       )
       .required("Email is required"),
@@ -146,6 +146,7 @@ const Login = () => {
                 handleBlur,
                 handleSubmit,
                 isSubmitting,
+                setFieldValue,
               }) => (
                 <form onSubmit={handleSubmit}>
                   <Typography
@@ -162,7 +163,10 @@ const Login = () => {
                     label="Email"
                     name="email"
                     value={values.email}
-                    onChange={handleChange}
+                    // onChange={handleChange}
+                    onChange={(e) => {
+                      setFieldValue("email", e.target.value.toLowerCase());
+                    }}
                     onBlur={handleBlur}
                     error={touched.email && Boolean(errors.email)}
                     helperText={touched.email && errors.email}
