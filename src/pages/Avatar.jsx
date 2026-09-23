@@ -81,7 +81,7 @@ const ProfileModal = ({
                 >
                     {!selectedProfile?.profileImage &&
                         `${selectedProfile?.firstName?.[0] || ""} ${selectedProfile?.lastName?.[0] || ""
-                        } ${selectedProfile?.name || ""}`}
+                        } ${selectedProfile?.name?.[0] || ""}`}
                 </Avatar>
 
                 <Typography

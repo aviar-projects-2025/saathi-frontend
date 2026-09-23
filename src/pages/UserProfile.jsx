@@ -717,6 +717,77 @@ const UserProfile = () => {
     toast.success("Copied to Clipboard!", toasts);
   };
 
+
+  const [photoMenuAnchor, setPhotoMenuAnchor] = useState(null);
+
+  const cameraFileRef = useRef(null);
+  const galleryFileRef = useRef(null);
+
+  const isPhotoMenuOpen = Boolean(photoMenuAnchor);
+
+  const handlePhotoMenuOpen = (event) => {
+    setPhotoMenuAnchor(event.currentTarget);
+  };
+
+  const handlePhotoMenuClose = () => {
+    setPhotoMenuAnchor(null);
+  };
+
+  const handleCameraClick = () => {
+    handlePhotoMenuClose();
+    cameraFileRef.current?.click();
+  };
+
+  const handleFileClick = () => {
+    handlePhotoMenuClose();
+    galleryFileRef.current?.click();
+  };
+
+  const handleCameraChange = (event) => {
+    const file = event.target.files?.[0];
+
+    if (file) {
+      handlePickImage({
+        target: {
+          files: [file],
+        },
+      });
+    }
+
+    event.target.value = "";
+  };
+
+  const handleGalleryChange = (event) => {
+    const file = event.target.files?.[0];
+
+    if (file) {
+      handlePickImage({
+        target: {
+          files: [file],
+        },
+      });
+    }
+
+    event.target.value = "";
+  };
+
+  const [dropDown, setDropDown] = useState(null);
+
+  const isdropdownMenuOpen = Boolean(dropDown);
+
+  const handleDropdownMenuOpen = (event) => {
+    setDropDown(event.currentTarget);
+  };
+
+  const handleDropdownMenuClose = () => {
+    setDropDown(null);
+  };
+
+  const handleSettingClick = () => {
+    handleDropdownMenuClose();
+    navigate("/myprofile");
+  };
+
   return (
     <PageLayout>
       <Box sx={{ mx: "auto", px: { xs: 0, sm: 2, md: 0 } }}>
@@ -821,7 +892,7 @@ const UserProfile = () => {
               </Stack>
 
               <IconButton
-                onClick={() => navigate("/myprofile")}
+                onClick={handleDropdownMenuOpen}
                 sx={{
                   color: "#555",
                   ml: 1,
@@ -829,6 +900,33 @@ const UserProfile = () => {
               >
                 <MoreVertIcon />
               </IconButton>
+
+              <Menu
+                anchorEl={dropDown}
+                open={isdropdownMenuOpen}
+                onClose={handleDropdownMenuClose}
+                anchorOrigin={{
+                  vertical: "bottom",
+                  horizontal: "left",
+                }}
+                transformOrigin={{
+                  vertical: "top",
+                  horizontal: "left",
+                }}
+              >
+                <MenuItem
+                  onClick={handleSettingClick}
+                  sx={{
+                    "&:hover": {
+                      // backgroundColor: "#FFF3E0",
+                      color: "#E8650A",
+                    },
+                  }}
+                >
+                  <ListItemText primary="Settings" />
+                </MenuItem>
+              </Menu>
+
             </Box>
 
             {currentUser?.bio && (
@@ -974,8 +1072,8 @@ const UserProfile = () => {
                             sx={{
                               position: "relative",
                               cursor: "pointer",
-                              width: { xs: 108, sm: 135, md: 175, lg: 225 },
-                              height: { xs: 150, sm: 250, md: 300, lg: 350 },
+                              width: { xs: 108, sm: 125, md: 150, lg: 175 },
+                              height: { xs: 150, sm: 200, md: 225, lg: 250 },
                               overflow: "hidden",
                               borderRadius: { xs: 0.5, sm: 1 },
                             }}
@@ -1445,8 +1543,8 @@ const UserProfile = () => {
                           sx={{
                             position: "relative",
                             cursor: "pointer",
-                            width: { xs: 108, sm: 135, md: 175, lg: 225 },
-                            height: { xs: 150, sm: 250, md: 300, lg: 350 },
+                            width: { xs: 108, sm: 125, md: 150, lg: 175 },
+                            height: { xs: 150, sm: 200, md: 225, lg: 250 },
                             overflow: "hidden",
                             borderRadius: { xs: 0.5, sm: 1 },
                             "&:hover .postOverlay": { opacity: 1 },
@@ -1562,17 +1660,29 @@ const UserProfile = () => {
                   onClick={() => setOpenImage(false)}
                   sx={{
                     position: "absolute",
-                    top: 8,
-                    right: 8,
+                    top: { xs: 4, sm: 6, md: 8 },
+                    right: { xs: 4, sm: 6, md: 8 },
+                    width: { xs: 24, sm: 28, md: 30 },
+                    height: { xs: 24, sm: 28, md: 30 },
+                    padding: 0,
                     color: "#fff",
                     bgcolor: "rgba(0,0,0,0.5)",
-                    "&:hover": { bgcolor: "rgba(0,0,0,0.7)" },
+                    "&:hover": {
+                      bgcolor: "rgba(0,0,0,0.7)",
+                    },
                     zIndex: 10,
                   }}
                 >
-                  <CloseIcon />
+                  <CloseIcon
+                    sx={{
+                      fontSize: {
+                        xs: 14,
+                        sm: 16,
+                        md: 18,
+                      },
+                    }}
+                  />
                 </IconButton>
-
                 <DialogContent
                   sx={{
                     p: 0,
@@ -1693,8 +1803,8 @@ const UserProfile = () => {
 
                   <Button
                     variant="contained"
-                    component="label"
                     size="small"
+                    onClick={handlePhotoMenuOpen}
                     sx={{
                       width: { xs: "100px", sm: "120px" },
                       minWidth: 0,
@@ -1711,13 +1821,76 @@ const UserProfile = () => {
                     }}
                   >
                     Change Photo
-                    <input
-                      hidden
-                      type="file"
-                      accept="image/*"
-                      onChange={handlePickImage}
-                    />
                   </Button>
+
+                  {/* Photo options */}
+                  <Menu
+                    anchorEl={photoMenuAnchor}
+                    open={isPhotoMenuOpen}
+                    onClose={handlePhotoMenuClose}
+                    anchorOrigin={{
+                      vertical: "bottom",
+                      horizontal: "left",
+                    }}
+                    transformOrigin={{
+                      vertical: "top",
+                      horizontal: "left",
+                    }}
+                  >
+                    <MenuItem
+                      onClick={handleCameraClick}
+                      sx={{
+                        "&:hover": {
+                          // backgroundColor: "#FFF3E0",
+                          color: "#E8650A",
+                        },
+                      }}
+                    >
+                      <ListItemText primary="Camera" />
+                    </MenuItem>
+
+                    <MenuItem onClick={handleFileClick}
+                      sx={{
+                        "&:hover": {
+                          // backgroundColor: "#FFF3E0",
+                          color: "#E8650A",
+                        },
+                      }}
+                    >
+                      <ListItemText
+                        primary={
+                          <Box>
+                            <Box sx={{ display: { xs: "block", sm: "none" } }}>
+                              Gallery
+                            </Box>
+
+                            <Box sx={{ display: { xs: "none", sm: "block" } }}>
+                              File
+                            </Box>
+                          </Box>
+                        }
+                      />
+                    </MenuItem>
+                  </Menu>
+
+                  {/* Camera input */}
+                  <input
+                    ref={cameraFileRef}
+                    hidden
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={handleCameraChange}
+                  />
+
+                  {/* File input */}
+                  <input
+                    ref={galleryFileRef}
+                    hidden
+                    type="file"
+                    accept="image/*"
+                    onChange={handleGalleryChange}
+                  />
                 </Box>
 
                 <Stack

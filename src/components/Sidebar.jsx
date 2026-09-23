@@ -26,11 +26,16 @@ import { useUser } from "../context/userConetext";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useReferral } from "../context/ReferralContext";
 
+import ProfileModal from "../pages/Avatar";
+
 export default function Sidebar({ onItemClick, isMobile = false }) {
   const { currentUser, completion } = useUser();
   const navigate = useNavigate();
   const location = useLocation();
   const { notificationLengthcount } = useReferral();
+
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState(null);
 
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null);
@@ -173,7 +178,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
           },
         }}
       >
-        <Stack direction="row" spacing={2} alignItems="center">
+        <Stack direction="row" spacing={2} alignItems="center" onClick={() => navigate("/user-profile")} sx={{ cursor: "pointer" }}>
           <Box
             sx={{
               position: "relative",
@@ -183,6 +188,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
+              cursor: "pointer",
             }}
           >
             <CircularProgress
@@ -215,10 +221,13 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
                 height: 52,
                 bgcolor: SAFFRON,
               }}
+              onClick={(event) => {
+                event.stopPropagation();
+                setSelectedProfile(currentUser);
+                setProfileModalOpen(true);
+              }}
             >
-              {!currentUser?.profileImage &&
-                `${currentUser?.firstName?.[0] || ""}${currentUser?.lastName?.[0] || ""
-                }`}
+              {currentUser?.firstName?.[0]}{currentUser?.lastName?.[0]}
             </Avatar>
           </Box>
 
@@ -279,7 +288,16 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
               {Math.round(completion)}% complete
             </Typography>
           </Box>
+
+          <ProfileModal
+            open={profileModalOpen}
+            selectedProfile={selectedProfile}
+            onClose={() => {
+              setProfileModalOpen(false);
+            }}
+          />
         </Stack>
+
       </Box>
 
       {/* ---------- MENU ---------- */}
