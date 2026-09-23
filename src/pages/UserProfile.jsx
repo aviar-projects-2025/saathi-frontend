@@ -1786,6 +1786,7 @@ const UserProfile = () => {
                   <TextField
                     label="Mobile Number"
                     name="mobile"
+                    disabled
                     size="small"
                     fullWidth
                     value={formData?.mobile || ""}

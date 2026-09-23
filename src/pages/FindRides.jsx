@@ -35,10 +35,9 @@ import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import TrainIcon from "@mui/icons-material/Train";
 import FilterListOffIcon from "@mui/icons-material/FilterListOff";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import RideCard from "./RideCard.jsx";
-import UserProfile from "./UserProfile.jsx"
-import Api from "../Api";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
+import RideCard from "./RideCard.jsx";
+import Api from "../Api";
 
 // ── Saffron design tokens ──────────────────────────────────────────────────
 const saffron = {
@@ -124,20 +123,19 @@ export default function FindRides() {
   const { completion, savedPost, setSavedPost, removeSavedPost } = useUser();
   const [editProfileModal, setEditProfileModal] = useState(false);
 
-  // Automatically get the user's current location once when Find Rides opens.
-  const [userLocation, setUserLocation] = useState(null);
-  const [locationLoading, setLocationLoading] = useState(true);
-  const [locationError, setLocationError] = useState("");
-  const [locationDialogOpen, setLocationDialogOpen] = useState(false);
-
   const [draftFilters, setDraftFilters] = useState(emptyFilters);
   const [appliedFilters, setAppliedFilters] = useState(emptyFilters);
   const isProfileComplete = completion === 100;
   const SIDEBAR_SCROLL_HEIGHT = 'calc(100vh - 120px)';
 
-  console.log(currentUser, 'currentUser')
+console.log(currentUser,'currentUser')
   const [profileGateOpen, setProfileGateOpen] = useState(false);
   const hasCheckedProfileGateRef = useRef(false);
+
+  // Current user's GPS location. We request it once when the page opens.
+  const [userLocation, setUserLocation] = useState(null);
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [locationError, setLocationError] = useState("");
 
   const resultsRef = useRef(null);
   const scrollStartRef = useRef(0);
@@ -149,7 +147,6 @@ export default function FindRides() {
   const fetchRides = async () => {
     try {
       const res = await axios.get(`${Api}/rides/get`);
-      console.log(res.data.data, 'res.data.data')
       setRides(res.data.data || []);
     } catch (error) {
       console.log(error);
@@ -189,103 +186,11 @@ export default function FindRides() {
 
 
 
-  // Get the actual FROM coordinates of the ride.
-  // Priority: explicit ride coordinates -> GeoJSON -> creator coordinates (legacy fallback).
-  const getRideCoordinates = (ride) => {
-    // 1. Current ride structure
-    const fromLatitude = Number(ride?.fromLocation?.latitude);
-    const fromLongitude = Number(ride?.fromLocation?.longitude);
-
-    if (
-      Number.isFinite(fromLatitude) &&
-      Number.isFinite(fromLongitude)
-    ) {
-      return {
-        latitude: fromLatitude,
-        longitude: fromLongitude,
-      };
-    }
-
-    // 2. Direct coordinate structure
-    const directLatitude = Number(ride?.fromLatitude);
-    const directLongitude = Number(ride?.fromLongitude);
-
-    if (
-      Number.isFinite(directLatitude) &&
-      Number.isFinite(directLongitude)
-    ) {
-      return {
-        latitude: directLatitude,
-        longitude: directLongitude,
-      };
-    }
-
-    // 3. GeoJSON structure
-    const coordinates = ride?.fromLocation?.coordinates;
-
-    if (
-      Array.isArray(coordinates) &&
-      coordinates.length >= 2
-    ) {
-      const longitude = Number(coordinates[0]);
-      const latitude = Number(coordinates[1]);
-
-      if (
-        Number.isFinite(latitude) &&
-        Number.isFinite(longitude)
-      ) {
-        return {
-          latitude,
-          longitude,
-        };
-      }
-    }
-
-    return null;
-  };
-
-  // Automatically request GPS once. Do NOT use watchPosition().
-  // useEffect(() => {
-  //   if (!navigator.geolocation) {
-  //     setLocationError("Geolocation is not supported by this browser.");
-  //     setLocationLoading(false);
-  //     return;
-  //   }
-
-  //   navigator.geolocation.getCurrentPosition(
-  //     (position) => {
-  //       const location = {
-  //         latitude: position.coords.latitude,
-  //         longitude: position.coords.longitude,
-  //         accuracy: position.coords.accuracy,
-  //       };
-
-  //       console.log("CURRENT USER GPS LOCATION:", location);
-  //       setUserLocation(location);
-  //       setLocationError("");
-  //       setLocationLoading(false);
-  //     },
-  //     (error) => {
-  //       console.error("GPS LOCATION ERROR:", error);
-  //       setLocationError("Unable to get your current location.");
-  //       setLocationLoading(false);
-  //     },
-  //     {
-  //       enableHighAccuracy: true,
-  //       timeout: 10000,
-  //       maximumAge: 60000,
-  //     }
-  //   );
-  // }, []);
-
   const requestCurrentLocation = () => {
     if (!navigator.geolocation) {
       setUserLocation(null);
       setLocationLoading(false);
-      setLocationError(
-        "Location services are not supported by this browser."
-      );
-      setLocationDialogOpen(true);
+      setLocationError("Location is not supported by this browser.");
       return;
     }
 
@@ -305,7 +210,6 @@ export default function FindRides() {
         setUserLocation(location);
         setLocationLoading(false);
         setLocationError("");
-        setLocationDialogOpen(false);
       },
       (error) => {
         console.error("GPS LOCATION ERROR:", error);
@@ -313,32 +217,28 @@ export default function FindRides() {
         setUserLocation(null);
         setLocationLoading(false);
 
-        let message =
-          "Unable to get your current location. Please check your location settings.";
-
         switch (error.code) {
           case error.PERMISSION_DENIED:
-            message =
-              "Location permission is denied. Please allow location access for this website.";
+            setLocationError(
+              "Location permission is denied. Please allow location access."
+            );
             break;
 
           case error.POSITION_UNAVAILABLE:
-            message =
-              "Your device Location Services are turned off or unavailable. Please turn on Location Services.";
+            setLocationError(
+              "Location Services are turned off. Please turn them on."
+            );
             break;
 
           case error.TIMEOUT:
-            message =
-              "The location request timed out. Please make sure Location Services are turned on and try again.";
+            setLocationError(
+              "Location request timed out. Please try again."
+            );
             break;
 
           default:
-            message =
-              "Unable to get your current location. Please check your location settings.";
+            setLocationError("Unable to get your current location.");
         }
-
-        setLocationError(message);
-        setLocationDialogOpen(true);
       },
       {
         enableHighAccuracy: true,
@@ -348,10 +248,65 @@ export default function FindRides() {
     );
   };
 
-  // Automatically request location when Find Rides opens.
+  // Request GPS once when Find Rides opens. No watchPosition is used.
   useEffect(() => {
     requestCurrentLocation();
   }, []);
+
+  const getRideCoordinates = (ride) => {
+    // 1. Current ride structure: fromLocation.latitude / longitude
+    const fromLatitude = Number(ride?.fromLocation?.latitude);
+    const fromLongitude = Number(ride?.fromLocation?.longitude);
+
+    if (Number.isFinite(fromLatitude) && Number.isFinite(fromLongitude)) {
+      return {
+        latitude: fromLatitude,
+        longitude: fromLongitude,
+      };
+    }
+
+    // 2. Direct coordinate structure
+    const directLatitude = Number(ride?.fromLatitude);
+    const directLongitude = Number(ride?.fromLongitude);
+
+    if (Number.isFinite(directLatitude) && Number.isFinite(directLongitude)) {
+      return {
+        latitude: directLatitude,
+        longitude: directLongitude,
+      };
+    }
+
+    // 3. GeoJSON structure: [longitude, latitude]
+    const coordinates = ride?.fromLocation?.coordinates;
+
+    if (Array.isArray(coordinates) && coordinates.length >= 2) {
+      const longitude = Number(coordinates[0]);
+      const latitude = Number(coordinates[1]);
+
+      if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
+        return {
+          latitude,
+          longitude,
+        };
+      }
+    }
+
+    return null;
+  };
+
+  const getRideDistanceKm = (ride) => {
+    if (!userLocation) return Infinity;
+
+    const rideCoordinates = getRideCoordinates(ride);
+    if (!rideCoordinates) return Infinity;
+
+    return calculateDistanceKm(
+      userLocation.latitude,
+      userLocation.longitude,
+      rideCoordinates.latitude,
+      rideCoordinates.longitude
+    );
+  };
 
   useEffect(() => {
     if (hasCheckedProfileGateRef.current) return;
@@ -527,35 +482,27 @@ export default function FindRides() {
 
 
 
-  const getRideDistanceKm = (ride) => {
-    if (!userLocation) return Infinity;
-
-    const rideCoordinates = getRideCoordinates(ride);
-    if (!rideCoordinates) return Infinity;
-
-    return calculateDistanceKm(
-      userLocation.latitude,
-      userLocation.longitude,
-      rideCoordinates.latitude,
-      rideCoordinates.longitude
-    );
-  };
-
   const sortedVisibleRides = useMemo(() => {
     return [...visibleRides].sort((a, b) => {
       if (userLocation) {
         const distanceA = getRideDistanceKm(a);
         const distanceB = getRideDistanceKm(b);
+
         const validA = Number.isFinite(distanceA);
         const validB = Number.isFinite(distanceB);
 
+        // Rides with valid GPS coordinates come before rides without them.
         if (validA && !validB) return -1;
         if (!validA && validB) return 1;
+
+        // Nearest ride FROM location first.
         if (validA && validB && distanceA !== distanceB) {
           return distanceA - distanceB;
         }
       }
 
+      // If GPS is unavailable (or both rides have no coordinates),
+      // preserve a predictable fallback: earliest start time first.
       return new Date(a.startTime).getTime() - new Date(b.startTime).getTime();
     });
   }, [visibleRides, userLocation]);
@@ -565,7 +512,6 @@ export default function FindRides() {
     if (distanceKm < 1) return `${Math.round(distanceKm * 1000)} m`;
     return `${distanceKm.toFixed(1)} km`;
   };
-
 
   if (loading) {
     return (
@@ -586,130 +532,6 @@ export default function FindRides() {
 
   return (
     <>
-
-      <Dialog
-        open={locationDialogOpen}
-        onClose={() => { }}
-        disableEscapeKeyDown
-        fullWidth
-        maxWidth="xs"
-        PaperProps={{
-          sx: {
-            borderRadius: { xs: 3, sm: 4 },
-            m: { xs: 2, sm: 3 },
-            p: { xs: 1, sm: 1.5 },
-            textAlign: "center",
-          },
-        }}
-      >
-        <DialogTitle
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 1,
-            fontWeight: 700,
-            fontSize: { xs: "1.1rem", sm: "1.25rem" },
-            pt: 2,
-          }}
-        >
-          <LocationOnIcon
-            sx={{
-              fontSize: { xs: 42, sm: 48 },
-              color: "#E8650A",
-            }}
-          />
-
-          Turn On Location
-        </DialogTitle>
-
-        <DialogContent>
-          <Typography
-            sx={{
-              color: "text.secondary",
-              fontSize: { xs: "0.85rem", sm: "0.95rem" },
-              lineHeight: 1.6,
-            }}
-          >
-            Saathi Rides needs your current location to show rides
-            starting near you.
-          </Typography>
-
-          <Typography
-            sx={{
-              mt: 1.5,
-              color: "text.secondary",
-              fontSize: { xs: "0.78rem", sm: "0.85rem" },
-              lineHeight: 1.5,
-            }}
-          >
-            Please turn on Location Services on your phone or laptop
-            and allow location permission for this website.
-          </Typography>
-
-          {locationError && (
-            <Box
-              sx={{
-                mt: 2,
-                p: 1.5,
-                borderRadius: 2,
-                background: "#FFF3F0",
-              }}
-            >
-              <Typography
-                sx={{
-                  color: "#D32F2F",
-                  fontSize: { xs: "0.75rem", sm: "0.82rem" },
-                  lineHeight: 1.5,
-                }}
-              >
-                {locationError}
-              </Typography>
-            </Box>
-          )}
-        </DialogContent>
-
-        <DialogActions
-          sx={{
-            justifyContent: "center",
-            pb: 2,
-            pt: 0.5,
-          }}
-        >
-          <Button
-            variant="contained"
-            onClick={requestCurrentLocation}
-            disabled={locationLoading}
-            sx={{
-              minWidth: 130,
-              bgcolor: "#E8650A",
-              color: "#fff",
-              borderRadius: 999,
-              px: 4,
-              py: 1,
-              textTransform: "none",
-              fontWeight: 700,
-              "&:hover": {
-                bgcolor: "#c85608",
-              },
-              "&.Mui-disabled": {
-                bgcolor: "#E8650A",
-                color: "#fff",
-                opacity: 0.7,
-              },
-            }}
-          >
-            {locationLoading ? (
-              <CircularProgress
-                size={20}
-                sx={{ color: "#fff" }}
-              />
-            ) : (
-              "Try Again"
-            )}
-          </Button>
-        </DialogActions>
-      </Dialog>
 
       <Dialog
         open={profileGateOpen}
@@ -876,6 +698,66 @@ export default function FindRides() {
               >
                 Find Rides & Flight Companions
               </Typography>
+
+              {/* Current location control */}
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  mt: 1,
+                  mb: 0.5,
+                  flexWrap: "wrap",
+                }}
+              >
+                <Button
+                  onClick={requestCurrentLocation}
+                  disabled={locationLoading}
+                  startIcon={
+                    <LocationOnIcon
+                      sx={{
+                        fontSize: "18px !important",
+                        color: userLocation ? "#2E7D32" : "#E8650A",
+                      }}
+                    />
+                  }
+                  sx={{
+                    minHeight: 30,
+                    px: 1.5,
+                    borderRadius: 999,
+                    textTransform: "none",
+                    fontSize: { xs: "0.72rem", sm: "0.78rem" },
+                    fontWeight: 600,
+                    color: userLocation ? "#2E7D32" : "#E8650A",
+                    background: userLocation ? "#EAF6EC" : "#FFF4E8",
+                    border: `1px solid ${
+                      userLocation ? "#A5D6A7" : "#FFD09B"
+                    }`,
+                    boxShadow: "none",
+                    "&:hover": {
+                      background: userLocation ? "#E0F2E3" : "#FFEBD7",
+                      boxShadow: "none",
+                    },
+                  }}
+                >
+                  {locationLoading
+                    ? "Getting location..."
+                    : userLocation
+                      ? "Location Enabled"
+                      : "Enable Location"}
+                </Button>
+
+                {!userLocation && !locationLoading && locationError && (
+                  <Typography
+                    sx={{
+                      fontSize: { xs: "0.68rem", sm: "0.75rem" },
+                      color: "#D32F2F",
+                    }}
+                  >
+                    {locationError}
+                  </Typography>
+                )}
+              </Box>
 
               {/* <Typography variant="h5" sx={{ color: '#E8650A', fontWeight: 900, fontSize: { xs: "1.2rem", sm: "1.2rem", md: "1.35rem", lg: "1.5rem" } }}>
               Find Rides & <span style={{ color: '#138808' }}>Flight Companions</span>
@@ -1277,7 +1159,7 @@ export default function FindRides() {
                   }}
                 >
                   <Button
-                    startIcon={<FilterListOffIcon sx={{ fontSize: { xs: 12, sm: 16 } }} />}
+                    startIon={<FilterListOffIcon sx={{ fontSize: { xs: 12, sm: 16 } }} />}
                     onClick={clearFilters}
                     variant="contained"
                     sx={{
@@ -1345,7 +1227,7 @@ export default function FindRides() {
 
             </Box>
             {sortedVisibleRides.length > 0 ? (
-              <Grid container spacing={{ xs: 1, sm: 2 }}>
+              <Grid spacing={{ xs: 1, sm: 2 }}>
                 {sortedVisibleRides.map((ride) => {
                   const isOwnRide = ride.createdBy?._id === currentUser?._id;
                   return (
