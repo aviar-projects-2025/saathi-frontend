@@ -410,7 +410,7 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
                 fontSize: { xs: '0.8rem', sm: '0.9rem' },
               }}
             >
-              {firstName[0]} {lastName[0]}
+              {firstName?.[0]}{lastName?.[0]}
             </Avatar>
             <Box sx={{ minWidth: 0 }}>
               <Typography

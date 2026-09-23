@@ -260,8 +260,10 @@ const CommunityImage = ({ src }) => {
             onClick={handleClose}
             sx={{
               position: "absolute",
-              top: 8,
-              right: 8,
+              top: { xs: 4, sm: 6, md: 8 },
+              right: { xs: 4, sm: 6, md: 8 },
+              width: { xs: 25, sm: 30, md: 35 },
+              height: { xs: 25, sm: 30, md: 35 },
               color: "#fff",
               bgcolor: "rgba(0,0,0,0.5)",
               "&:hover": {
@@ -270,9 +272,16 @@ const CommunityImage = ({ src }) => {
               zIndex: 10,
             }}
           >
-            <CloseIcon />
+            <CloseIcon
+              sx={{
+                fontSize: {
+                  xs: 16,
+                  sm: 18,
+                  md: 20,
+                },
+              }}
+            />
           </IconButton>
-
           <DialogContent
             sx={{
               p: 0,

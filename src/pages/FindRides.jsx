@@ -589,7 +589,7 @@ console.log(currentUser,'currentUser')
                 height: 8,
                 borderRadius: 5,
                 bgcolor: "#F0E6DC",
-                "& .MuiLinearProgress-bar": { bgcolor: "#E8650A" },
+                "& .MuiLinearProgress-bar": { bgcolor: "#FF9933" },
               }}
             />
           </Box>
@@ -611,10 +611,10 @@ console.log(currentUser,'currentUser')
               borderRadius: 999,
               px: 3,
               fontWeight: 600,
-              bgcolor: "#E8650A",
+              bgcolor: "#FF9933",
               color: "#fff",
               "&:hover": {
-                bgcolor: "#c85608",
+                bgcolor: "#FF9933",
                 color: "#fff",
               },
             }}
@@ -635,10 +635,10 @@ console.log(currentUser,'currentUser')
               borderRadius: 999,
               px: 3,
               fontWeight: 600,
-              bgcolor: "#E8650A",
+              bgcolor: "#FF9933",
               color: "#fff",
               "&:hover": {
-                bgcolor: "#c85608",
+                bgcolor: "#FF9933",
                 color: "#fff",
               },
             }}

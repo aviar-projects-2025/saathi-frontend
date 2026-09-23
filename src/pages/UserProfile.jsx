@@ -725,7 +725,7 @@ const UserProfile = () => {
         m < 0 ||
         (m === 0 &&
           today.getDate() <
-            dob.getDate())
+          dob.getDate())
       ) {
         age--;
       }
@@ -919,8 +919,8 @@ const UserProfile = () => {
 
           dob: formData.dob
             ? formData.dob.format(
-                "YYYY-MM-DD"
-              )
+              "YYYY-MM-DD"
+            )
             : "",
 
           gender:
@@ -1090,7 +1090,7 @@ const UserProfile = () => {
       toast.error(
         error.response?.data
           ?.message ||
-          "Failed to delete post",
+        "Failed to delete post",
         toasts
       );
     } finally {
@@ -1141,13 +1141,13 @@ const UserProfile = () => {
           (prev) =>
             prev.map((post) =>
               post._id ===
-              selectedPost._id
+                selectedPost._id
                 ? {
-                    ...post,
-                    postImage:
-                      res.data.data
-                        .postImage,
-                  }
+                  ...post,
+                  postImage:
+                    res.data.data
+                      .postImage,
+                }
                 : post
             )
         );
@@ -1164,7 +1164,7 @@ const UserProfile = () => {
         toast.error(
           error.response?.data
             ?.message ||
-            "Failed to update post",
+          "Failed to update post",
           toasts
         );
       } finally {
@@ -1183,6 +1183,76 @@ const UserProfile = () => {
       "Copied to Clipboard!",
       toasts
     );
+  };
+
+  const [photoMenuAnchor, setPhotoMenuAnchor] = useState(null);
+
+  const cameraFileRef = useRef(null);
+  const galleryFileRef = useRef(null);
+
+  const isPhotoMenuOpen = Boolean(photoMenuAnchor);
+
+  const handlePhotoMenuOpen = (event) => {
+    setPhotoMenuAnchor(event.currentTarget);
+  };
+
+  const handlePhotoMenuClose = () => {
+    setPhotoMenuAnchor(null);
+  };
+
+  const handleCameraClick = () => {
+    handlePhotoMenuClose();
+    cameraFileRef.current?.click();
+  };
+
+  const handleFileClick = () => {
+    handlePhotoMenuClose();
+    galleryFileRef.current?.click();
+  };
+
+  const handleCameraChange = (event) => {
+    const file = event.target.files?.[0];
+
+    if (file) {
+      handlePickImage({
+        target: {
+          files: [file],
+        },
+      });
+    }
+
+    event.target.value = "";
+  };
+
+  const handleGalleryChange = (event) => {
+    const file = event.target.files?.[0];
+
+    if (file) {
+      handlePickImage({
+        target: {
+          files: [file],
+        },
+      });
+    }
+
+    event.target.value = "";
+  };
+
+  const [dropDown, setDropDown] = useState(null);
+
+  const isdropdownMenuOpen = Boolean(dropDown);
+
+  const handleDropdownMenuOpen = (event) => {
+    setDropDown(event.currentTarget);
+  };
+
+  const handleDropdownMenuClose = () => {
+    setDropDown(null);
+  };
+
+  const handleSettingClick = () => {
+    handleDropdownMenuClose();
+    navigate("/myprofile");
   };
 
   return (
@@ -1276,9 +1346,8 @@ const UserProfile = () => {
                     currentUser?.profileImage ||
                     ""
                   }
-                  alt={`${currentUser?.firstName || ""} ${
-                    currentUser?.lastName || ""
-                  }`}
+                  alt={`${currentUser?.firstName || ""} ${currentUser?.lastName || ""
+                    }`}
                   onClick={() => {
                     setSelectedProfile(
                       currentUser
@@ -1391,11 +1460,7 @@ const UserProfile = () => {
               </Stack>
 
               <IconButton
-                onClick={() =>
-                  navigate(
-                    "/myprofile"
-                  )
-                }
+                onClick={handleDropdownMenuOpen}
                 sx={{
                   color: "#555",
                   ml: 1,
@@ -1403,6 +1468,32 @@ const UserProfile = () => {
               >
                 <MoreVertIcon />
               </IconButton>
+
+              <Menu
+                anchorEl={dropDown}
+                open={isdropdownMenuOpen}
+                onClose={handleDropdownMenuClose}
+                anchorOrigin={{
+                  vertical: "bottom",
+                  horizontal: "left",
+                }}
+                transformOrigin={{
+                  vertical: "top",
+                  horizontal: "left",
+                }}
+              >
+                <MenuItem
+                  onClick={handleSettingClick}
+                  sx={{
+                    "&:hover": {
+                      // backgroundColor: "#FFF3E0",
+                      color: "#E8650A",
+                    },
+                  }}
+                >
+                  <ListItemText primary="Settings" />
+                </MenuItem>
+              </Menu>
             </Box>
 
             {currentUser?.bio && (
@@ -1482,15 +1573,15 @@ const UserProfile = () => {
                 },
 
                 "& .MuiTabs-indicator":
-                  {
-                    backgroundColor:
-                      SAFFRON,
-                  },
+                {
+                  backgroundColor:
+                    SAFFRON,
+                },
 
                 "& .Mui-selected":
-                  {
-                    color: `${SAFFRON} !important`,
-                  },
+                {
+                  color: `${SAFFRON} !important`,
+                },
 
                 mb: 3,
               }}
@@ -1584,11 +1675,11 @@ const UserProfile = () => {
                       color="text.primary"
                       sx={{
                         fontSize:
-                          {
-                            xs: "0.95rem",
-                            sm: "1.05rem",
-                            md: "1.15rem",
-                          },
+                        {
+                          xs: "0.95rem",
+                          sm: "1.05rem",
+                          md: "1.15rem",
+                        },
                       }}
                     >
                       No Community
@@ -1601,11 +1692,11 @@ const UserProfile = () => {
                       sx={{
                         mt: 1,
                         fontSize:
-                          {
-                            xs: "0.75rem",
-                            sm: "0.85rem",
-                            md: "0.95rem",
-                          },
+                        {
+                          xs: "0.75rem",
+                          sm: "0.85rem",
+                          md: "0.95rem",
+                        },
                       }}
                     >
                       Community posts
@@ -1640,7 +1731,7 @@ const UserProfile = () => {
                                     post.postImage
                                   )
                                     ? post
-                                        .postImage[0]
+                                      .postImage[0]
                                     : post.postImage
                                 );
 
@@ -1653,27 +1744,15 @@ const UserProfile = () => {
                                   "relative",
                                 cursor:
                                   "pointer",
-                                width:
-                                  {
-                                    xs: 108,
-                                    sm: 135,
-                                    md: 175,
-                                    lg: 225,
-                                  },
-                                height:
-                                  {
-                                    xs: 150,
-                                    sm: 250,
-                                    md: 300,
-                                    lg: 350,
-                                  },
+                                width: { xs: 108, sm: 125, md: 150, lg: 175 },
+                                height: { xs: 150, sm: 200, md: 225, lg: 250 },
                                 overflow:
                                   "hidden",
                                 borderRadius:
-                                  {
-                                    xs: 0.5,
-                                    sm: 1,
-                                  },
+                                {
+                                  xs: 0.5,
+                                  sm: 1,
+                                },
                               }}
                             >
                               <IconButton
@@ -1702,15 +1781,15 @@ const UserProfile = () => {
                                     "rgba(0,0,0,0.5)",
 
                                   "&:hover":
-                                    {
-                                      backgroundColor:
-                                        "rgba(0,0,0,0.7)",
-                                    },
+                                  {
+                                    backgroundColor:
+                                      "rgba(0,0,0,0.7)",
+                                  },
 
                                   "& .MuiSvgIcon-root":
-                                    {
-                                      fontSize: 16,
-                                    },
+                                  {
+                                    fontSize: 16,
+                                  },
                                 }}
                               >
                                 <MoreVertIcon />
@@ -1722,7 +1801,7 @@ const UserProfile = () => {
                                     post.postImage
                                   )
                                     ? post
-                                        .postImage[0]
+                                      .postImage[0]
                                     : post.postImage
                                 }
                                 alt=""
@@ -1820,10 +1899,10 @@ const UserProfile = () => {
                                     sm: 2,
                                   },
                                   borderRadius:
-                                    {
-                                      xs: 2,
-                                      sm: 3,
-                                    },
+                                  {
+                                    xs: 2,
+                                    sm: 3,
+                                  },
                                 },
                               }}
                             >
@@ -1851,10 +1930,10 @@ const UserProfile = () => {
                                 <Typography
                                   sx={{
                                     fontSize:
-                                      {
-                                        xs: "0.9rem",
-                                        sm: "1rem",
-                                      },
+                                    {
+                                      xs: "0.9rem",
+                                      sm: "1rem",
+                                    },
                                     color:
                                       "text.secondary",
                                   }}
@@ -1892,10 +1971,10 @@ const UserProfile = () => {
                                     flex: 1,
                                     py: 1,
                                     fontSize:
-                                      {
-                                        xs: "0.8rem",
-                                        sm: "0.9rem",
-                                      },
+                                    {
+                                      xs: "0.8rem",
+                                      sm: "0.9rem",
+                                    },
                                     fontWeight:
                                       600,
                                     color:
@@ -1929,10 +2008,10 @@ const UserProfile = () => {
                                     flex: 1,
                                     py: 1,
                                     fontSize:
-                                      {
-                                        xs: "0.8rem",
-                                        sm: "0.9rem",
-                                      },
+                                    {
+                                      xs: "0.8rem",
+                                      sm: "0.9rem",
+                                    },
                                     fontWeight:
                                       600,
                                     textTransform:
@@ -1970,10 +2049,10 @@ const UserProfile = () => {
                               PaperProps={{
                                 sx: {
                                   borderRadius:
-                                    {
-                                      xs: 0,
-                                      sm: 3,
-                                    },
+                                  {
+                                    xs: 0,
+                                    sm: 3,
+                                  },
                                   m: {
                                     xs: 0,
                                     sm: 2,
@@ -1992,10 +2071,10 @@ const UserProfile = () => {
                                   fontWeight:
                                     600,
                                   fontSize:
-                                    {
-                                      xs: "1rem",
-                                      sm: "1.15rem",
-                                    },
+                                  {
+                                    xs: "1rem",
+                                    sm: "1.15rem",
+                                  },
                                   py: 1.5,
                                   px: 2,
                                 }}
@@ -2013,10 +2092,10 @@ const UserProfile = () => {
                                     color:
                                       "#666",
                                     "&:hover":
-                                      {
-                                        bgcolor:
-                                          "#f5f5f5",
-                                      },
+                                    {
+                                      bgcolor:
+                                        "#f5f5f5",
+                                    },
                                   }}
                                 >
                                   <CloseIcon fontSize="small" />
@@ -2044,8 +2123,8 @@ const UserProfile = () => {
                                       src={
                                         editImage
                                           ? URL.createObjectURL(
-                                              editImage
-                                            )
+                                            editImage
+                                          )
                                           : previewImage
                                       }
                                       alt="Preview"
@@ -2053,11 +2132,11 @@ const UserProfile = () => {
                                         width:
                                           "100%",
                                         height:
-                                          {
-                                            xs: 160,
-                                            sm: 220,
-                                            md: 280,
-                                          },
+                                        {
+                                          xs: 160,
+                                          sm: 220,
+                                          md: 280,
+                                        },
                                         objectFit:
                                           "contain",
                                         borderRadius: 2,
@@ -2092,10 +2171,10 @@ const UserProfile = () => {
                                       px: 2,
 
                                       "&:hover":
-                                        {
-                                          bgcolor:
-                                            "#E68A00",
-                                        },
+                                      {
+                                        bgcolor:
+                                          "#E68A00",
+                                      },
                                     }}
                                   >
                                     {!previewImage
@@ -2205,10 +2284,10 @@ const UserProfile = () => {
                                   display:
                                     "flex",
                                   flexDirection:
-                                    {
-                                      xs: "column",
-                                      sm: "row",
-                                    },
+                                  {
+                                    xs: "column",
+                                    sm: "row",
+                                  },
                                   gap: 1,
                                 }}
                               >
@@ -2278,10 +2357,10 @@ const UserProfile = () => {
                                       borderRadius: 2,
 
                                       "&:hover":
-                                        {
-                                          bgcolor:
-                                            "#E68A00",
-                                        },
+                                      {
+                                        bgcolor:
+                                          "#E68A00",
+                                      },
                                     }}
                                   >
                                     {imagePostLoading
@@ -2390,11 +2469,11 @@ const UserProfile = () => {
                       color="text.primary"
                       sx={{
                         fontSize:
-                          {
-                            xs: "0.95rem",
-                            sm: "1.05rem",
-                            md: "1.15rem",
-                          },
+                        {
+                          xs: "0.95rem",
+                          sm: "1.05rem",
+                          md: "1.15rem",
+                        },
                       }}
                     >
                       No Saved Posts
@@ -2407,11 +2486,11 @@ const UserProfile = () => {
                       sx={{
                         mt: 1,
                         fontSize:
-                          {
-                            xs: "0.75rem",
-                            sm: "0.85rem",
-                            md: "0.95rem",
-                          },
+                        {
+                          xs: "0.75rem",
+                          sm: "0.85rem",
+                          md: "0.95rem",
+                        },
                       }}
                     >
                       Saved posts will
@@ -2434,96 +2513,84 @@ const UserProfile = () => {
                       >
                         {post.postId
                           ?.postImage && (
-                          <Box
-                            onClick={() => {
-                              setSelectedPost(
-                                post
-                              );
-
-                              setSelectedImage(
-                                Array.isArray(
+                            <Box
+                              onClick={() => {
+                                setSelectedPost(
                                   post
-                                    .postId
-                                    .postImage
-                                )
-                                  ? post
-                                      .postId
-                                      .postImage[0]
-                                  : post
+                                );
+
+                                setSelectedImage(
+                                  Array.isArray(
+                                    post
                                       .postId
                                       .postImage
-                              );
+                                  )
+                                    ? post
+                                      .postId
+                                      .postImage[0]
+                                    : post
+                                      .postId
+                                      .postImage
+                                );
 
-                              setOpenImage(
-                                true
-                              );
-                            }}
-                            sx={{
-                              position:
-                                "relative",
-                              cursor:
-                                "pointer",
-                              width:
-                                {
-                                  xs: 108,
-                                  sm: 135,
-                                  md: 175,
-                                  lg: 225,
-                                },
-                              height:
-                                {
-                                  xs: 150,
-                                  sm: 250,
-                                  md: 300,
-                                  lg: 350,
-                                },
-                              overflow:
-                                "hidden",
-                              borderRadius:
+                                setOpenImage(
+                                  true
+                                );
+                              }}
+                              sx={{
+                                position:
+                                  "relative",
+                                cursor:
+                                  "pointer",
+                                width: { xs: 108, sm: 125, md: 150, lg: 175 },
+                                height: { xs: 150, sm: 200, md: 225, lg: 250 },
+                                overflow:
+                                  "hidden",
+                                borderRadius:
                                 {
                                   xs: 0.5,
                                   sm: 1,
                                 },
-                              "&:hover .postOverlay":
+                                "&:hover .postOverlay":
                                 {
                                   opacity: 1,
                                 },
-                              display:
-                                "flex",
-                              justifyContent:
-                                "center",
-                              alignItems:
-                                "center",
-                            }}
-                          >
-                            <img
-                              src={
-                                Array.isArray(
-                                  post
-                                    .postId
-                                    .postImage
-                                )
-                                  ? post
-                                      .postId
-                                      .postImage[0]
-                                  : post
+                                display:
+                                  "flex",
+                                justifyContent:
+                                  "center",
+                                alignItems:
+                                  "center",
+                              }}
+                            >
+                              <img
+                                src={
+                                  Array.isArray(
+                                    post
                                       .postId
                                       .postImage
-                              }
-                              alt=""
-                              style={{
-                                width:
-                                  "100%",
-                                height:
-                                  "100%",
-                                objectFit:
-                                  "cover",
-                                display:
-                                  "block",
-                              }}
-                            />
-                          </Box>
-                        )}
+                                  )
+                                    ? post
+                                      .postId
+                                      .postImage[0]
+                                    : post
+                                      .postId
+                                      .postImage
+                                }
+                                alt=""
+                                style={{
+                                  width:
+                                    "100%",
+                                  height:
+                                    "100%",
+                                  objectFit:
+                                    "cover",
+                                  display:
+                                    "block",
+                                }}
+                              />
+                            </Box>
+                          )}
                       </Grid>
                     )
                   )
@@ -2932,47 +2999,94 @@ const UserProfile = () => {
 
                 <Button
                   variant="contained"
-                  component="label"
                   size="small"
+                  onClick={handlePhotoMenuOpen}
                   sx={{
-                    width: {
-                      xs: "100px",
-                      sm: "120px",
-                    },
+                    width: { xs: "100px", sm: "120px" },
                     minWidth: 0,
-                    height: {
-                      xs: "30px",
-                      sm: "34px",
-                    },
+                    height: { xs: "30px", sm: "34px" },
                     px: 1,
                     py: 0,
-                    fontSize: {
-                      xs: "0.65rem",
-                      sm: "0.75rem",
-                    },
-                    textTransform:
-                      "none",
+                    fontSize: { xs: "0.65rem", sm: "0.75rem" },
+                    textTransform: "none",
                     color: "#fff",
-                    bgcolor:
-                      "#FF9933",
-
+                    bgcolor: "#FF9933",
                     "&:hover": {
-                      bgcolor:
-                        "#e68a2e",
+                      bgcolor: "#e68a2e",
                     },
                   }}
                 >
                   Change Photo
-
-                  <input
-                    hidden
-                    type="file"
-                    accept="image/*"
-                    onChange={
-                      handlePickImage
-                    }
-                  />
                 </Button>
+
+                {/* Photo options */}
+                <Menu
+                  anchorEl={photoMenuAnchor}
+                  open={isPhotoMenuOpen}
+                  onClose={handlePhotoMenuClose}
+                  anchorOrigin={{
+                    vertical: "bottom",
+                    horizontal: "left",
+                  }}
+                  transformOrigin={{
+                    vertical: "top",
+                    horizontal: "left",
+                  }}
+                >
+                  <MenuItem
+                    onClick={handleCameraClick}
+                    sx={{
+                      "&:hover": {
+                        // backgroundColor: "#FFF3E0",
+                        color: "#E8650A",
+                      },
+                    }}
+                  >
+                    <ListItemText primary="Camera" />
+                  </MenuItem>
+
+                  <MenuItem onClick={handleFileClick}
+                    sx={{
+                      "&:hover": {
+                        // backgroundColor: "#FFF3E0",
+                        color: "#E8650A",
+                      },
+                    }}
+                  >
+                    <ListItemText
+                      primary={
+                        <Box>
+                          <Box sx={{ display: { xs: "block", sm: "none" } }}>
+                            Gallery
+                          </Box>
+
+                          <Box sx={{ display: { xs: "none", sm: "block" } }}>
+                            File
+                          </Box>
+                        </Box>
+                      }
+                    />
+                  </MenuItem>
+                </Menu>
+
+                {/* Camera input */}
+                <input
+                  ref={cameraFileRef}
+                  hidden
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handleCameraChange}
+                />
+
+                {/* File input */}
+                <input
+                  ref={galleryFileRef}
+                  hidden
+                  type="file"
+                  accept="image/*"
+                  onChange={handleGalleryChange}
+                />
               </Box>
 
               {/* First Name / Last Name */}
@@ -3231,20 +3345,20 @@ const UserProfile = () => {
                         InputProps: {
                           sx: {
                             fontSize:
-                              {
-                                xs: "0.8rem",
-                                sm: "0.9rem",
-                              },
+                            {
+                              xs: "0.8rem",
+                              sm: "0.9rem",
+                            },
                           },
                         },
 
                         InputLabelProps: {
                           sx: {
                             fontSize:
-                              {
-                                xs: "0.8rem",
-                                sm: "0.9rem",
-                              },
+                            {
+                              xs: "0.8rem",
+                              sm: "0.9rem",
+                            },
                           },
                         },
                       },
@@ -3720,10 +3834,10 @@ const UserProfile = () => {
             sx={{
               display: "flex",
               justifyContent:
-                {
-                  xs: "center",
-                  sm: "flex-end",
-                },
+              {
+                xs: "center",
+                sm: "flex-end",
+              },
             }}
           >
             <Button

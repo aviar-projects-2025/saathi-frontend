@@ -999,22 +999,21 @@ function RideCard({
                     </Typography>
                     <Typography
                       fontWeight={700}
-                      noWrap
                       sx={{
                         flex: 1,
                         minWidth: 0,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
+                        textAlign: "left",
                         fontSize: {
                           xs: "0.78rem",
                           sm: "0.88rem",
                           md: "0.95rem",
                         },
                         lineHeight: 1.3,
+                        whiteSpace: "normal",
+                        overflowWrap: "break-word",
+                        wordBreak: "break-word",
                       }}
                     >
-                      {/* 📍 */}
                       {formFrom(ride)}
                     </Typography>
                   </Box>
@@ -1045,22 +1044,21 @@ function RideCard({
                     </Typography>
                     <Typography
                       fontWeight={700}
-                      noWrap
                       sx={{
                         flex: 1,
                         minWidth: 0,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
+                        textAlign: "right",
                         fontSize: {
                           xs: "0.78rem",
                           sm: "0.88rem",
                           md: "0.95rem",
                         },
                         lineHeight: 1.3,
+                        whiteSpace: "normal",
+                        overflowWrap: "break-word",
+                        wordBreak: "break-word",
                       }}
                     >
-                      {/* 📍  */}
                       {formTo(ride)}
                     </Typography>
                   </Box>
@@ -1211,20 +1209,20 @@ function RideCard({
       {detailsOpen && (
 
         <RideDetailsModal
-  ride={ride}
-  user={user}
-  showEdit={showEdit}
-  showDelete={showDelete}
-  onEdit={onEdit}
-  onDelete={onDelete}
-  onClose={() => setDetailsOpen(false)}
-  requests={rideRequests}
-  onApprove={handleApprove}
-  onReject={handleReject}
-  onRequestUpdated={handleRequestUpdated}
-  approveLoading={approveLoading}
-  rejectLoading={rejectLoading}
-/>
+          ride={ride}
+          user={user}
+          showEdit={showEdit}
+          showDelete={showDelete}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onClose={() => setDetailsOpen(false)}
+          requests={rideRequests}
+          onApprove={handleApprove}
+          onReject={handleReject}
+          onRequestUpdated={handleRequestUpdated}
+          approveLoading={approveLoading}
+          rejectLoading={rejectLoading}
+        />
       )}
 
       <Dialog
@@ -1486,7 +1484,7 @@ const MyRides = () => {
     newNotifs.forEach((n) => processedIds.current.add(n.id));
 
     const shouldRefetch = newNotifs.some((n) =>
-      ["request_update","request_accepted","ride_request_update","request_rejected"].includes(
+      ["request_update", "request_accepted", "ride_request_update", "request_rejected"].includes(
         n.type,
       ),
     );
