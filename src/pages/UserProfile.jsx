@@ -361,7 +361,22 @@ const UserProfile = () => {
       0.92,
     );
   };
+  const [dropDown, setDropDown] = useState(null);
 
+  const isdropdownMenuOpen = Boolean(dropDown);
+
+  const handleDropdownMenuOpen = (event) => {
+    setDropDown(event.currentTarget);
+  };
+
+  const handleDropdownMenuClose = () => {
+    setDropDown(null);
+  };
+
+  const handleSettingClick = () => {
+    handleDropdownMenuClose();
+    navigate("/myprofile");
+  };
   const handlePasswordChange = (e) => {
     const { name, value } = e.target;
 
