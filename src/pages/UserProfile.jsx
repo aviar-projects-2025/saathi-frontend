@@ -1169,75 +1169,45 @@ const UserProfile = () => {
 
                         {post.postImage && (
                           <>
-
                             <Box
                               onClick={() => {
-
-                                setSelectedPost(post);
+                                setSelectedPost(
+                                  post
+                                );
 
                                 setSelectedImage(
                                   Array.isArray(
                                     post.postImage
                                   )
-                                    ? post.postImage[0]
+                                    ? post
+                                      .postImage[0]
                                     : post.postImage
                                 );
 
-                                setOpenImage(true);
+                                setOpenImage(
+                                  true
+                                );
                               }}
-
                               sx={{
-                                position: "relative",
-
-                                cursor: "pointer",
-
-                                width: {
-                                  xs: 108,
-                                  sm: 135,
-                                  md: 175,
-                                  lg: 225,
-                                },
-
-                                height: {
-                                  xs: 150,
-                                  sm: 250,
-                                  md: 300,
-                                  lg: 350,
-                                },
-
-                                overflow: "hidden",
-
-                                borderRadius: {
+                                position:
+                                  "relative",
+                                cursor:
+                                  "pointer",
+                                width: { xs: 108, sm: 125, md: 150, lg: 175 },
+                                height: { xs: 150, sm: 200, md: 225, lg: 250 },
+                                overflow:
+                                  "hidden",
+                                borderRadius:
+                                {
                                   xs: 0.5,
                                   sm: 1,
                                 },
                               }}
                             >
-
-                              {/* YOUR EXISTING IMAGE */}
-                              <Box
-                                component="img"
-                                src={
-                                  Array.isArray(
-                                    post.postImage
-                                  )
-                                    ? post.postImage[0]
-                                    : post.postImage
-                                }
-                                alt="Community post"
-                                loading="lazy"
-                                sx={{
-                                  width: "100%",
-                                  height: "100%",
-                                  objectFit: "cover",
-                                }}
-                              />
-
-
-                              {/* YOUR EXISTING MORE MENU */}
                               <IconButton
-                                onClick={(e) => {
-
+                                onClick={(
+                                  e
+                                ) => {
                                   e.stopPropagation();
 
                                   handleMenuOpen(
@@ -1245,38 +1215,624 @@ const UserProfile = () => {
                                     post
                                   );
                                 }}
-
                                 sx={{
-                                  position: "absolute",
-
+                                  position:
+                                    "absolute",
                                   top: 5,
                                   right: 5,
-
                                   zIndex: 2,
-
                                   width: 24,
                                   height: 24,
-
                                   padding: 0,
-
-                                  color: "#fff",
-
+                                  color:
+                                    "#fff",
                                   backgroundColor:
                                     "rgba(0,0,0,0.5)",
 
-                                  "&:hover": {
+                                  "&:hover":
+                                  {
                                     backgroundColor:
                                       "rgba(0,0,0,0.7)",
                                   },
+
+                                  "& .MuiSvgIcon-root":
+                                  {
+                                    fontSize: 16,
+                                  },
                                 }}
                               >
-                                <MoreVertIcon
-                                  fontSize="small"
-                                />
+                                <MoreVertIcon />
                               </IconButton>
 
+                              <img
+                                src={
+                                  Array.isArray(
+                                    post.postImage
+                                  )
+                                    ? post
+                                      .postImage[0]
+                                    : post.postImage
+                                }
+                                alt=""
+                                style={{
+                                  width:
+                                    "100%",
+                                  height:
+                                    "100%",
+                                  objectFit:
+                                    "cover",
+                                  display:
+                                    "block",
+                                }}
+                              />
                             </Box>
 
+                            <Menu
+                              anchorEl={
+                                anchorEl
+                              }
+                              open={Boolean(
+                                anchorEl
+                              )}
+                              onClose={
+                                handleMenuClose
+                              }
+                            >
+                              <MenuItem
+                                onClick={() => {
+                                  handleMenuClose();
+                                  handleEdit(
+                                    selectedPost
+                                  );
+                                }}
+                              >
+                                <ListItemIcon>
+                                  <EditIcon fontSize="small" />
+                                </ListItemIcon>
+
+                                <ListItemText>
+                                  Edit
+                                </ListItemText>
+                              </MenuItem>
+
+                              <MenuItem
+                                onClick={() => {
+                                  handleMenuClose();
+                                  setDeleteOpen(
+                                    true
+                                  );
+                                }}
+                              >
+                                <ListItemIcon>
+                                  <DeleteIcon
+                                    fontSize="small"
+                                    color="error"
+                                  />
+                                </ListItemIcon>
+
+                                <ListItemText>
+                                  Delete
+                                </ListItemText>
+                              </MenuItem>
+                            </Menu>
+
+                            <Dialog
+                              open={
+                                deleteOpen
+                              }
+                              onClose={(
+                                event,
+                                reason
+                              ) => {
+                                if (
+                                  reason ===
+                                  "backdropClick"
+                                ) {
+                                  return;
+                                }
+
+                                setDeleteOpen(
+                                  false
+                                );
+                              }}
+                              fullWidth
+                              maxWidth="xs"
+                              PaperProps={{
+                                sx: {
+                                  width: {
+                                    xs: "95%",
+                                    sm: "100%",
+                                  },
+                                  m: {
+                                    xs: 1.5,
+                                    sm: 2,
+                                  },
+                                  borderRadius:
+                                  {
+                                    xs: 2,
+                                    sm: 3,
+                                  },
+                                },
+                              }}
+                            >
+                              <DialogTitle
+                                sx={{
+                                  display:
+                                    "flex",
+                                  alignItems:
+                                    "center",
+                                  gap: 1,
+                                  fontWeight:
+                                    600,
+                                }}
+                              >
+                                <WarningAmberRoundedIcon color="error" />
+
+                                Delete Post ?
+                              </DialogTitle>
+
+                              <DialogContent
+                                sx={{
+                                  pt: 1,
+                                }}
+                              >
+                                <Typography
+                                  sx={{
+                                    fontSize:
+                                    {
+                                      xs: "0.9rem",
+                                      sm: "1rem",
+                                    },
+                                    color:
+                                      "text.secondary",
+                                  }}
+                                >
+                                  Are you
+                                  sure you
+                                  want to
+                                  delete
+                                  this
+                                  post?
+                                </Typography>
+                              </DialogContent>
+
+                              <DialogActions
+                                sx={{
+                                  px: {
+                                    xs: 2,
+                                    sm: 3,
+                                  },
+                                  pb: {
+                                    xs: 2,
+                                    sm: 3,
+                                  },
+                                  gap: 1,
+                                }}
+                              >
+                                <Button
+                                  variant="contained"
+                                  onClick={() =>
+                                    setDeleteOpen(
+                                      false
+                                    )
+                                  }
+                                  sx={{
+                                    flex: 1,
+                                    py: 1,
+                                    fontSize:
+                                    {
+                                      xs: "0.8rem",
+                                      sm: "0.9rem",
+                                    },
+                                    fontWeight:
+                                      600,
+                                    color:
+                                      "#ffff",
+                                    bgcolor:
+                                      "grey.700",
+                                    textTransform:
+                                      "none",
+                                  }}
+                                >
+                                  Cancel
+                                </Button>
+
+                                <Button
+                                  variant="contained"
+                                  color="error"
+                                  disabled={
+                                    imageDeleteLoading
+                                  }
+                                  onClick={() => {
+                                    const postId =
+                                      selectedPost._id;
+
+                                    handleMenuClose();
+
+                                    handleDelete(
+                                      postId
+                                    );
+                                  }}
+                                  sx={{
+                                    flex: 1,
+                                    py: 1,
+                                    fontSize:
+                                    {
+                                      xs: "0.8rem",
+                                      sm: "0.9rem",
+                                    },
+                                    fontWeight:
+                                      600,
+                                    textTransform:
+                                      "none",
+                                  }}
+                                >
+                                  {imageDeleteLoading
+                                    ? "Deleting..."
+                                    : "Delete"}
+                                </Button>
+                              </DialogActions>
+                            </Dialog>
+
+                            <Dialog
+                              open={
+                                editOpen
+                              }
+                              onClose={(
+                                event,
+                                reason
+                              ) => {
+                                if (
+                                  reason ===
+                                  "backdropClick"
+                                ) {
+                                  return;
+                                }
+
+                                setEditOpen(
+                                  false
+                                );
+                              }}
+                              fullWidth
+                              maxWidth="sm"
+                              PaperProps={{
+                                sx: {
+                                  borderRadius:
+                                  {
+                                    xs: 0,
+                                    sm: 3,
+                                  },
+                                  m: {
+                                    xs: 0,
+                                    sm: 2,
+                                  },
+                                },
+                              }}
+                            >
+                              <DialogTitle
+                                sx={{
+                                  display:
+                                    "flex",
+                                  alignItems:
+                                    "center",
+                                  justifyContent:
+                                    "space-between",
+                                  fontWeight:
+                                    600,
+                                  fontSize:
+                                  {
+                                    xs: "1rem",
+                                    sm: "1.15rem",
+                                  },
+                                  py: 1.5,
+                                  px: 2,
+                                }}
+                              >
+                                Edit Post
+
+                                <IconButton
+                                  onClick={() =>
+                                    setEditOpen(
+                                      false
+                                    )
+                                  }
+                                  size="small"
+                                  sx={{
+                                    color:
+                                      "#666",
+                                    "&:hover":
+                                    {
+                                      bgcolor:
+                                        "#f5f5f5",
+                                    },
+                                  }}
+                                >
+                                  <CloseIcon fontSize="small" />
+                                </IconButton>
+                              </DialogTitle>
+
+                              <DialogContent
+                                dividers
+                                sx={{
+                                  px: {
+                                    xs: 1.5,
+                                    sm: 3,
+                                  },
+                                  py: 2,
+                                }}
+                              >
+                                <Box
+                                  sx={{
+                                    mt: 2,
+                                  }}
+                                >
+                                  {previewImage && (
+                                    <Box
+                                      component="img"
+                                      src={
+                                        editImage
+                                          ? URL.createObjectURL(
+                                            editImage
+                                          )
+                                          : previewImage
+                                      }
+                                      alt="Preview"
+                                      sx={{
+                                        width:
+                                          "100%",
+                                        height:
+                                        {
+                                          xs: 160,
+                                          sm: 220,
+                                          md: 280,
+                                        },
+                                        objectFit:
+                                          "contain",
+                                        borderRadius: 2,
+                                        mb: 1.5,
+                                      }}
+                                    />
+                                  )}
+
+                                  <Button
+                                    variant="contained"
+                                    size="small"
+                                    onClick={
+                                      openImageMenu
+                                    }
+                                    sx={{
+                                      width:
+                                        "fit-content",
+                                      minWidth:
+                                        "unset",
+                                      height: 36,
+                                      bgcolor:
+                                        "#FF9933",
+                                      color:
+                                        "#fff",
+                                      fontWeight:
+                                        600,
+                                      fontSize:
+                                        "0.8rem",
+                                      textTransform:
+                                        "none",
+                                      borderRadius: 2,
+                                      px: 2,
+
+                                      "&:hover":
+                                      {
+                                        bgcolor:
+                                          "#E68A00",
+                                      },
+                                    }}
+                                  >
+                                    {!previewImage
+                                      ? "Add Image"
+                                      : "Change Image"}
+                                  </Button>
+
+                                  <Menu
+                                    anchorEl={
+                                      imageMenuAnchor
+                                    }
+                                    open={
+                                      isImageMenuOpen
+                                    }
+                                    onClose={
+                                      closeImageMenu
+                                    }
+                                    anchorOrigin={{
+                                      vertical:
+                                        "top",
+                                      horizontal:
+                                        "center",
+                                    }}
+                                    transformOrigin={{
+                                      vertical:
+                                        "bottom",
+                                      horizontal:
+                                        "center",
+                                    }}
+                                  >
+                                    <MenuItem
+                                      component="label"
+                                      dense
+                                    >
+                                      <ListItemIcon>
+                                        <CameraAltIcon
+                                          fontSize="small"
+                                          sx={{
+                                            color:
+                                              "#FF9933",
+                                          }}
+                                        />
+                                      </ListItemIcon>
+
+                                      <ListItemText
+                                        primaryTypographyProps={{
+                                          fontSize:
+                                            "0.85rem",
+                                        }}
+                                      >
+                                        Camera
+                                      </ListItemText>
+
+                                      <input
+                                        hidden
+                                        type="file"
+                                        accept="image/*"
+                                        capture="environment"
+                                        onChange={
+                                          onImageSelected
+                                        }
+                                      />
+                                    </MenuItem>
+
+                                    <MenuItem
+                                      component="label"
+                                      dense
+                                    >
+                                      <ListItemIcon>
+                                        <InsertDriveFileIcon
+                                          fontSize="small"
+                                          sx={{
+                                            color:
+                                              "#FF9933",
+                                          }}
+                                        />
+                                      </ListItemIcon>
+
+                                      <ListItemText
+                                        primaryTypographyProps={{
+                                          fontSize:
+                                            "0.85rem",
+                                        }}
+                                      >
+                                        Gallery
+                                      </ListItemText>
+
+                                      <input
+                                        hidden
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={
+                                          onImageSelected
+                                        }
+                                      />
+                                    </MenuItem>
+                                  </Menu>
+                                </Box>
+                              </DialogContent>
+
+                              <DialogActions
+                                sx={{
+                                  p: {
+                                    xs: 1.5,
+                                    sm: 2,
+                                  },
+                                  display:
+                                    "flex",
+                                  flexDirection:
+                                  {
+                                    xs: "column",
+                                    sm: "row",
+                                  },
+                                  gap: 1,
+                                }}
+                              >
+                                <Stack
+                                  direction="row"
+                                  spacing={2}
+                                  justifyContent="flex-end"
+                                  sx={{
+                                    pt: 2,
+                                  }}
+                                >
+                                  <Button
+                                    variant="contained"
+                                    size="small"
+                                    onClick={
+                                      handleReset
+                                    }
+                                    sx={{
+                                      width:
+                                        "fit-content",
+                                      minWidth:
+                                        "unset",
+                                      px: 2,
+                                      height: 36,
+                                      backgroundColor:
+                                        "#838282",
+                                      color:
+                                        "#fff",
+                                      fontWeight:
+                                        600,
+                                      fontSize:
+                                        "0.8rem",
+                                      textTransform:
+                                        "none",
+                                      borderRadius: 2,
+                                    }}
+                                  >
+                                    Reset
+                                  </Button>
+
+                                  <Button
+                                    variant="contained"
+                                    size="small"
+                                    disabled={
+                                      imagePostLoading
+                                    }
+                                    onClick={
+                                      handleUpdate
+                                    }
+                                    sx={{
+                                      width:
+                                        "fit-content",
+                                      minWidth:
+                                        "unset",
+                                      px: 2,
+                                      height: 36,
+                                      bgcolor:
+                                        "#FF9933",
+                                      color:
+                                        "#fff",
+                                      fontWeight:
+                                        600,
+                                      fontSize:
+                                        "0.8rem",
+                                      textTransform:
+                                        "none",
+                                      borderRadius: 2,
+
+                                      "&:hover":
+                                      {
+                                        bgcolor:
+                                          "#E68A00",
+                                      },
+                                    }}
+                                  >
+                                    {imagePostLoading
+                                      ? "Saving..."
+                                      : "Save"}
+                                  </Button>
+                                </Stack>
+                              </DialogActions>
+                            </Dialog>
+
+                            {editImage && (
+                              <img
+                                src={URL.createObjectURL(
+                                  editImage
+                                )}
+                                alt="Preview"
+                                width={150}
+                                style={{
+                                  marginTop: 10,
+                                  borderRadius: 8,
+                                }}
+                              />
+                            )}
                           </>
                         )}
 
