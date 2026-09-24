@@ -806,56 +806,56 @@ const UserProfile = () => {
 
   const [photoMenuAnchor, setPhotoMenuAnchor] = useState(null);
 
-  const cameraFileRef = useRef(null);
-  const galleryFileRef = useRef(null);
+  const cameraFileRef = useRef(null);
+  const galleryFileRef = useRef(null);
 
-  const isPhotoMenuOpen = Boolean(photoMenuAnchor);
+  const isPhotoMenuOpen = Boolean(photoMenuAnchor);
 
-  const handlePhotoMenuOpen = (event) => {
-    setPhotoMenuAnchor(event.currentTarget);
-  };
+  const handlePhotoMenuOpen = (event) => {
+    setPhotoMenuAnchor(event.currentTarget);
+  };
 
-  const handlePhotoMenuClose = () => {
-    setPhotoMenuAnchor(null);
-  };
+  const handlePhotoMenuClose = () => {
+    setPhotoMenuAnchor(null);
+  };
 
-  const handleCameraClick = () => {
-    handlePhotoMenuClose();
-    cameraFileRef.current?.click();
-  };
+  const handleCameraClick = () => {
+    handlePhotoMenuClose();
+    cameraFileRef.current?.click();
+  };
 
-  const handleFileClick = () => {
-    handlePhotoMenuClose();
-    galleryFileRef.current?.click();
-  };
+  const handleFileClick = () => {
+    handlePhotoMenuClose();
+    galleryFileRef.current?.click();
+  };
 
-  const handleCameraChange = (event) => {
-    const file = event.target.files?.[0];
+  const handleCameraChange = (event) => {
+    const file = event.target.files?.[0];
 
-    if (file) {
-      handlePickImage({
-        target: {
-          files: [file],
-        },
-      });
-    }
+    if (file) {
+      handlePickImage({
+        target: {
+          files: [file],
+        },
+      });
+    }
 
-    event.target.value = "";
-  };
+    event.target.value = "";
+  };
 
-  const handleGalleryChange = (event) => {
-    const file = event.target.files?.[0];
+  const handleGalleryChange = (event) => {
+    const file = event.target.files?.[0];
 
-    if (file) {
-      handlePickImage({
-        target: {
-          files: [file],
-        },
-      });
-    }
+    if (file) {
+      handlePickImage({
+        target: {
+          files: [file],
+        },
+      });
+    }
 
-    event.target.value = "";
-  };
+    event.target.value = "";
+  };
 
   return (
     <PageLayout>
@@ -1558,7 +1558,7 @@ const UserProfile = () => {
       </Box>
 
       {/* ── Edit Profile Modal ── */}
-       {/* ─────────────────────────────────────
+      {/* ─────────────────────────────────────
           EDIT PROFILE MODAL
       ───────────────────────────────────── */}
 
