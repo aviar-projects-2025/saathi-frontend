@@ -26,32 +26,22 @@ import {
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import NotificationsIcon from "@mui/icons-material/Notifications";
-import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
-import LogoutIcon from "@mui/icons-material/Logout";
+
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
-import SettingsIcon from "@mui/icons-material/Settings";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import ShareIcon from "@mui/icons-material/Share";
+
 import PageLayout from "../components/PageLayout";
-import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import dayjs from "dayjs";
+
 import axios from "axios";
 import Api from "../Api";
 import { toast } from "react-toastify";
 import { useUser } from "../context/userConetext";
-import Mypost from "./Myprofile.jsx";
+
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
-import PersonPinIcon from "@mui/icons-material/PersonPin";
+
 import { Tabs, Tab, IconButton, Collapse } from "@mui/material";
 import GridOnIcon from "@mui/icons-material/GridOn";
 import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
-import ThumbUpOffAltIcon from "@mui/icons-material/ThumbUpOffAlt";
-import ChatIcon from "@mui/icons-material/Chat";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ExpandLessIcon from "@mui/icons-material/ExpandLess";
-import CommunityComments from "./CommunityComments.jsx";
+
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import ToastConfig from "../components/ToastConfig.jsx";
@@ -66,7 +56,8 @@ const CARD_BORDER = "1px solid #F0E6DC";
 import CloseIcon from "@mui/icons-material/Close";
 
 import { useNavigate, useLocation } from "react-router-dom";
-import uploadToCloudinary from "../components/uploadToCloudinary.jsx";
+
+import EditProfile from "./EditProfile.jsx";
 
 // Size (px) of the square adjust/crop box
 const CROP_BOX_SIZE = 260;
@@ -93,38 +84,6 @@ const SectionCard = ({ children, sx = {} }) => (
     {children}
   </Paper>
 );
-// Shared wrapper that centers any modal content on every screen size
-const modalCenterWrapper = {
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "center",
-  width: "100%",
-  height: "100%",
-  minHeight: "100vh",
-  p: { xs: 1, sm: 2, md: 3 },
-  outline: "none",
-};
-
-// Instagram-style stat block used in the profile header
-const StatBlock = ({ value, label }) => (
-  <Box sx={{ textAlign: "center", minWidth: { xs: 52, sm: 64 } }}>
-    <Typography
-      fontWeight={800}
-      sx={{
-        fontSize: { xs: "0.85rem", sm: "0.95rem", md: "1.05rem" },
-        lineHeight: 1.2,
-      }}
-    >
-      {value}
-    </Typography>
-    <Typography
-      color="text.secondary"
-      sx={{ fontSize: { xs: "0.62rem", sm: "0.7rem", md: "0.75rem" } }}
-    >
-      {label}
-    </Typography>
-  </Box>
-);
 
 const UserProfile = () => {
   const theme = useTheme();
@@ -133,12 +92,7 @@ const UserProfile = () => {
   const toasts = ToastConfig();
   const [imageDeleteLoading, setImageDeleteLoading] = useState(false);
   const [openComments, setOpenComments] = useState({});
-  const handleToggleComments = (id) => {
-    setOpenComments((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
-  };
+
   const { currentUser, getuserData, savedPost, removeSavedPost } = useUser();
   const onImageSelected = (e) => {
     const selectedFile = e.target.files[0];
@@ -155,28 +109,16 @@ const UserProfile = () => {
   const [editProfile, setEditProfile] = useState(
     location.state?.openEditProfile || false
   );
-  const [profileImage, setProfileImage] = useState(
-    currentUser?.profileImage || "",
-  );
-  const [profileFile, setProfileFile] = useState(null);
-  const [submitLoading, setSubmitLoading] = useState(false);
-  const [passwordModel, setPasswordModel] = useState("");
+
   const [errors, setErrors] = useState({});
   const user = JSON.parse(localStorage.getItem("user"));
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
-  });
+
   const navigate = useNavigate();
   const [imagePostLoading, setImagePostLoading] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null);
-
-  const [openShare, setOpenShare] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
-  const handleOpenShare = () => setOpenShare(true);
-  const handleCloseShare = () => setOpenShare(false);
+
 
   // const theme = useTheme();
   const isTab = useMediaQuery(theme.breakpoints.down("sm"));
@@ -186,12 +128,9 @@ const UserProfile = () => {
 
   const [communityLoading, setCommunityLoading] = useState(false);
 
-  const shareLink = `${window.location.origin}/register?ref=${user?.referralCode}`;
-
-
   const [showAdjustModal, setShowAdjustModal] = useState(false);
   const [rawImage, setRawImage] = useState("");
-  const [naturalSize, setNaturalSize] = useState({ w: 0, h: 0 });
+
   const [zoom, setZoom] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const dragState = useRef({
@@ -200,7 +139,7 @@ const UserProfile = () => {
     startY: 0,
     startOffset: { x: 0, y: 0 },
   });
-  const cropImgRef = useRef(null);
+
 
   const getBaseScale = (w, h) => Math.max(CROP_BOX_SIZE / w, CROP_BOX_SIZE / h);
 
@@ -228,271 +167,8 @@ const UserProfile = () => {
     e.target.value = "";
   };
 
-  const handleCropImageLoad = (e) => {
-    const w = e.target.naturalWidth;
-    const h = e.target.naturalHeight;
-    setNaturalSize({ w, h });
 
-    const baseScale = getBaseScale(w, h);
-    const displayedW = w * baseScale;
-    const displayedH = h * baseScale;
 
-    setOffset({
-      x: (CROP_BOX_SIZE - displayedW) / 2,
-      y: (CROP_BOX_SIZE - displayedH) / 2,
-    });
-  };
-
-  const getDisplayedSize = () => {
-    const baseScale = getBaseScale(naturalSize.w, naturalSize.h);
-    return {
-      displayedW: naturalSize.w * baseScale * zoom,
-      displayedH: naturalSize.h * baseScale * zoom,
-      scale: baseScale * zoom,
-    };
-  };
-
-  const handleZoomChange = (e, value) => {
-    const { displayedW: oldW, displayedH: oldH } = getDisplayedSize();
-
-    // find the point currently at box-center, in old displayed coords
-    const centerX = CROP_BOX_SIZE / 2 - offset.x;
-    const centerY = CROP_BOX_SIZE / 2 - offset.y;
-
-    setZoom(value);
-
-    const baseScale = getBaseScale(naturalSize.w, naturalSize.h);
-    const newW = naturalSize.w * baseScale * value;
-    const newH = naturalSize.h * baseScale * value;
-    const ratioX = newW / oldW;
-    const ratioY = newH / oldH;
-
-    const newOffset = {
-      x: CROP_BOX_SIZE / 2 - centerX * ratioX,
-      y: CROP_BOX_SIZE / 2 - centerY * ratioY,
-    };
-
-    setOffset(clampOffset(newOffset, newW, newH));
-  };
-
-  const startDrag = (clientX, clientY) => {
-    dragState.current = {
-      dragging: true,
-      startX: clientX,
-      startY: clientY,
-      startOffset: { ...offset },
-    };
-  };
-
-  const moveDrag = (clientX, clientY) => {
-    if (!dragState.current.dragging) return;
-    const { displayedW, displayedH } = getDisplayedSize();
-    const dx = clientX - dragState.current.startX;
-    const dy = clientY - dragState.current.startY;
-    const next = {
-      x: dragState.current.startOffset.x + dx,
-      y: dragState.current.startOffset.y + dy,
-    };
-    setOffset(clampOffset(next, displayedW, displayedH));
-  };
-
-  const endDrag = () => {
-    dragState.current.dragging = false;
-  };
-
-  const handleMouseDown = (e) => startDrag(e.clientX, e.clientY);
-  const handleMouseMove = (e) => moveDrag(e.clientX, e.clientY);
-  const handleMouseUp = () => endDrag();
-
-  const handleTouchStart = (e) => {
-    const t = e.touches[0];
-    startDrag(t.clientX, t.clientY);
-  };
-  const handleTouchMove = (e) => {
-    const t = e.touches[0];
-    moveDrag(t.clientX, t.clientY);
-  };
-  const handleTouchEnd = () => endDrag();
-
-  const handleAdjustCancel = () => {
-    setShowAdjustModal(false);
-    setRawImage("");
-    setZoom(1);
-    setOffset({ x: 0, y: 0 });
-  };
-
-  const handleAdjustSave = () => {
-    const { scale } = getDisplayedSize();
-
-    const canvas = document.createElement("canvas");
-    canvas.width = OUTPUT_SIZE;
-    canvas.height = OUTPUT_SIZE;
-    const ctx = canvas.getContext("2d");
-
-    const sx = -offset.x / scale;
-    const sy = -offset.y / scale;
-    const sSize = CROP_BOX_SIZE / scale;
-
-    ctx.drawImage(
-      cropImgRef.current,
-      sx,
-      sy,
-      sSize,
-      sSize,
-      0,
-      0,
-      OUTPUT_SIZE,
-      OUTPUT_SIZE,
-    );
-
-    canvas.toBlob(
-      (blob) => {
-        if (!blob) return;
-        const file = new File([blob], "profile.jpg", { type: "image/jpeg" });
-        const previewUrl = URL.createObjectURL(blob);
-
-        setProfileFile(file);
-        setProfileImage(previewUrl);
-
-        setShowAdjustModal(false);
-        setRawImage("");
-      },
-      "image/jpeg",
-      0.92,
-    );
-  };
-  // const [dropDown, setDropDown] = useState(null);
-
-  // const isdropdownMenuOpen = Boolean(dropDown);
-
-  // const handleDropdownMenuOpen = (event) => {
-  //   setDropDown(event.currentTarget);
-  // };
-
-  // const handleDropdownMenuClose = () => {
-  //   setDropDown(null);
-  // };
-
-  // const handleSettingClick = () => {
-  //   handleDropdownMenuClose();
-  //   navigate("/myprofile");
-  // };
-  const handlePasswordChange = (e) => {
-    const { name, value } = e.target;
-
-    setPasswordData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const resetForm = () => {
-    setFormData({
-      firstName: currentUser?.firstName,
-      lastName: currentUser?.lastName,
-      email: currentUser?.email,
-      mobile: currentUser?.mobile || "",
-      dob: currentUser?.dob ? dayjs(currentUser.dob) : null,
-      gender: currentUser?.gender || "",
-      bio: currentUser?.bio || "",
-      profileImage: currentUser?.profileImage || "",
-      zipcode: currentUser?.zipcode || "",
-    });
-  };
-
-  const [formData, setFormData] = useState({
-    firstName: currentUser?.firstName || "",
-    lastName: currentUser?.lastName || "",
-    email: currentUser?.email || "",
-    mobile: currentUser?.mobile || "",
-    dob: currentUser?.dob ? dayjs(currentUser.dob) : null,
-    gender: currentUser?.gender || "",
-    bio: currentUser?.bio || "",
-    profileImage: currentUser?.profileImage || "",
-    zipcode: currentUser?.zipcode || "",
-  });
-
-  const validateForm = (formData) => {
-    const errors = {};
-
-    // First Name
-    if (!formData.firstName?.trim()) {
-      errors.firstName = "First name is required";
-    } else if (formData.firstName.length < 2) {
-      errors.firstName = "Minimum 2 characters required";
-    }
-
-    // Last Name
-    if (!formData.lastName?.trim()) {
-      errors.lastName = "Last name is required";
-    }
-
-    // Email
-    if (!formData.email) {
-      errors.email = "Email is required";
-    } else {
-      const emailRegex =
-        /^[a-z0-9]+(?:[._%+-][a-z0-9]+)*@[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z]{2,})+$/;
-      if (!emailRegex.test(formData.email)) {
-        errors.email =
-          "Please enter a valid email address (e.g., name@domain.com) || (e.g., avair123@aviartech.com) ";
-      }
-    }
-
-    const phone = formData.mobile?.trim();
-
-    if (!phone) {
-      errors.mobile = "Mobile number is required";
-    } else if (!/^\+?\d{10,15}$/.test(phone)) {
-      errors.mobile = "Please enter a valid mobile number (10–15 digits)";
-    }
-
-    // DOB (Age >= 18)
-    if (!formData.dob) {
-      errors.dob = "Date of birth is required";
-    } else {
-      const today = new Date();
-      const dob = new Date(formData.dob);
-      let age = today.getFullYear() - dob.getFullYear();
-
-      const m = today.getMonth() - dob.getMonth();
-      if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
-        age--;
-      }
-
-      if (age < 18) {
-        errors.dob = "You must be at least 18 years old";
-      }
-    }
-    // ZipCode / Postal Code
-    const zipcode = formData.zipcode?.trim();
-
-    if (!zipcode) {
-      errors.zipcode = "ZipCode is required";
-    } else if (!/^[A-Za-z0-9](?:[A-Za-z0-9\s-]{0,14}[A-Za-z0-9])?$/.test(zipcode)) {
-      errors.zipcode = "Please enter a valid ZipCode / Postal Code";
-    }
-    return errors;
-  };
-
-  useEffect(() => {
-    if (currentUser) {
-      setFormData({
-        firstName: currentUser?.firstName || "",
-        lastName: currentUser?.lastName || "",
-        email: currentUser?.email || "",
-        mobile: currentUser?.mobile || "",
-        dob: currentUser?.dob ? dayjs(currentUser.dob) : null,
-        gender: currentUser?.gender || "",
-        bio: currentUser?.bio || "",
-        profileImage: currentUser?.profileImage || "",
-        zipcode: currentUser?.zipcode || "",
-      });
-
-      setProfileImage(currentUser?.profileImage || "");
-      setProfileFile(null);
-    }
-  }, [currentUser]);
 
   useEffect(() => {
     if (selectedPost) {
@@ -509,11 +185,7 @@ const UserProfile = () => {
     }
   }, [selectedPost]);
 
-  const feedRef = useRef(null);
-  const logout = () => {
-    localStorage.clear();
-    window.location.replace("/login");
-  };
+
   const [anchorEl, setAnchorEl] = useState(null);
   // const [selectedPost, setSelectedPost] = useState(null);
   const handleChange = (e) => {
@@ -639,73 +311,6 @@ const UserProfile = () => {
     }
   };
 
-  const handleUpdateProfile = async () => {
-    try {
-      setSubmitLoading(true);
-
-      const validationErrors = validateForm(formData);
-
-      if (Object.keys(validationErrors).length > 0) {
-        setErrors(validationErrors);
-        return;
-      }
-
-      let profileImage = null;
-
-      // Upload directly to Cloudinary
-      if (profileFile) {
-        profileImage = await uploadToCloudinary(profileFile);
-
-      }
-
-      const data = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        mobile: formData.mobile,
-        dob: formData.dob
-          ? formData.dob.format("YYYY-MM-DD")
-          : "",
-        gender: formData.gender,
-        bio: formData.bio,
-        zipcode: formData.zipcode,
-
-        ...(profileImage && {
-          profileImage: profileImage?.url,
-          profileImagePublicId: profileImage?.publicId,
-        }),
-      };
-
-      await axios.post(
-        `${Api}/users/update/${user?.id}`,
-        data
-      );
-
-      getuserData();
-
-      toast.success("Profile Updated", toasts);
-      setEditProfile(false);
-
-    } catch (error) {
-      console.log(error.response);
-
-      const message =
-        error.response?.data?.message || "Something went wrong";
-
-      setErrors((prev) => ({
-        ...prev,
-        mobile: message,
-      }));
-
-      // toast.error(
-      //   error.response?.data?.message || "Something went wrong",
-      //   toasts
-      // );
-    } finally {
-      setSubmitLoading(false);
-    }
-  };
-
-  const [originalDescription, setOriginalDescription] = useState("");
   const [originalImage, setOriginalImage] = useState(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -733,11 +338,10 @@ const UserProfile = () => {
     setEditOpen(true);
   };
   const handleReset = () => {
-    // setEditDescription(originalDescription);
-
-    setEditImage(null);               // remove selected File
-    setPreviewImage(originalImage);   // restore original image URL
+    setEditImage(null);
+    setPreviewImage(originalImage);
   };
+
   const handleDelete = async (postId) => {
 
     try {
@@ -814,64 +418,6 @@ const UserProfile = () => {
       setImagePostLoading(false);
     }
   };
-  const handleCopy = (value) => {
-    navigator.clipboard.writeText(value);
-    toast.success("Copied to Clipboard!", toasts);
-  };
-
-  const [photoMenuAnchor, setPhotoMenuAnchor] = useState(null);
-
-  const cameraFileRef = useRef(null);
-  const galleryFileRef = useRef(null);
-
-  const isPhotoMenuOpen = Boolean(photoMenuAnchor);
-
-  const handlePhotoMenuOpen = (event) => {
-    setPhotoMenuAnchor(event.currentTarget);
-  };
-
-  const handlePhotoMenuClose = () => {
-    setPhotoMenuAnchor(null);
-  };
-
-  const handleCameraClick = () => {
-    handlePhotoMenuClose();
-    cameraFileRef.current?.click();
-  };
-
-  const handleFileClick = () => {
-    handlePhotoMenuClose();
-    galleryFileRef.current?.click();
-  };
-
-  const handleCameraChange = (event) => {
-    const file = event.target.files?.[0];
-
-    if (file) {
-      handlePickImage({
-        target: {
-          files: [file],
-        },
-      });
-    }
-
-    event.target.value = "";
-  };
-
-  const handleGalleryChange = (event) => {
-    const file = event.target.files?.[0];
-
-    if (file) {
-      handlePickImage({
-        target: {
-          files: [file],
-        },
-      });
-    }
-
-    event.target.value = "";
-  };
-
   const [dropDown, setDropDown] = useState(null);
 
   const isdropdownMenuOpen = Boolean(dropDown);
@@ -1055,11 +601,22 @@ const UserProfile = () => {
             >
               <Button
                 variant="outlined"
-                onClick={() => setEditProfile(true)}
+                onClick={() => {
+                  console.log("Edit Profile clicked");
+                  setEditProfile(true);
+                }}
                 sx={{ ...pillBtn, borderColor: "#EADFD3" }}
               >
                 Edit Profile
               </Button>
+              {editProfile && (
+                <EditProfile
+                  open={editProfile}
+                  onClose={() => setEditProfile(false)}
+                />
+
+              )}
+
             </Stack>
           </SectionCard>
 
@@ -1102,10 +659,6 @@ const UserProfile = () => {
                   }}
                 >
 
-                  {/* ========================= */}
-                  {/* INITIAL LOADING */}
-                  {/* ========================= */}
-
                   {communityLoading ? (
 
                     <Box
@@ -1127,11 +680,6 @@ const UserProfile = () => {
                     </Box>
 
                   ) : communityPosts.length === 0 ? (
-
-                    /* ========================= */
-                    /* NO POSTS */
-                    /* ========================= */
-
                     <Box
                       sx={{
                         width: "100%",
@@ -1195,11 +743,6 @@ const UserProfile = () => {
                     </Box>
 
                   ) : (
-
-                    /* ========================= */
-                    /* POSTS */
-                    /* ========================= */
-
                     communityPosts.map((post) => (
 
                       <Grid
@@ -1888,11 +1431,6 @@ const UserProfile = () => {
 
                 </Grid>
 
-
-                {/* ================================= */}
-                {/* INFINITE SCROLL SENTINEL */}
-                {/* ================================= */}
-
                 {communityPosts.length > 0 && (
                   <Box
                     ref={setLoadMoreRef}
@@ -2091,11 +1629,7 @@ const UserProfile = () => {
 
                         return;
                       }
-
-
-
                       await removeSavedPost(selectedPost.postId._id);
-
                       setOpenImage(false);
                       setSelectedPost(null);
                     }}
@@ -2177,10 +1711,9 @@ const UserProfile = () => {
                 </DialogContent>
               </Box>
             </Dialog>
-            {/* </SectionCard> */}
           </Box>
         </Stack>
-
+        
         <ProfileModal
           open={profileModalOpen}
           selectedProfile={selectedProfile}
@@ -2189,1024 +1722,6 @@ const UserProfile = () => {
           }}
         />
       </Box>
-
-      {/* ── Edit Profile Modal ── */}
-      {/* ─────────────────────────────────────
-          EDIT PROFILE MODAL
-      ───────────────────────────────────── */}
-
-      <Modal
-        open={editProfile}
-        onClose={(
-          event,
-          reason
-        ) => {
-          if (
-            reason ===
-            "backdropClick"
-          ) {
-            return;
-          }
-
-          setEditProfile(
-            false
-          );
-        }}
-      >
-        <Box
-          sx={{
-            position: "fixed",
-            top: "50%",
-            left: "50%",
-            transform:
-              "translate(-50%, -50%)",
-            display: "flex",
-            alignItems:
-              "center",
-            justifyContent:
-              "center",
-            width: {
-              xs: "92%",
-              sm: "100%",
-            },
-            px: {
-              xs: 2,
-              sm: 0,
-            },
-          }}
-        >
-          <Box
-            sx={{
-              bgcolor: "white",
-              width: {
-                xs: "100%",
-                sm: "85%",
-                md: 480,
-                lg: 500,
-              },
-              maxWidth: 500,
-              borderRadius: 2,
-              boxShadow: 24,
-              p: {
-                xs: 2,
-                sm: 3,
-              },
-              maxHeight: {
-                xs: "85vh",
-                sm: "90vh",
-              },
-              overflowY: "auto",
-            }}
-          >
-            {/* Modal Header */}
-
-            <Box
-              sx={{
-                position:
-                  "relative",
-                display:
-                  "flex",
-                justifyContent:
-                  "space-between",
-                mb: 2,
-              }}
-            >
-              <Typography
-                variant="h6"
-                sx={{
-                  fontWeight: 700,
-                  fontSize: {
-                    xs: "1rem",
-                    sm: "1.15rem",
-                    md: "1.25rem",
-                  },
-                }}
-              >
-                Edit Profile
-              </Typography>
-
-              <IconButton
-                aria-label="close"
-                onClick={() =>
-                  setEditProfile(
-                    false
-                  )
-                }
-                sx={{
-                  position:
-                    "absolute",
-                  right: 0,
-                  top: "50%",
-                  transform:
-                    "translateY(-50%)",
-                  color:
-                    "text.secondary",
-                  "&:hover": {
-                    bgcolor:
-                      "action.hover",
-                  },
-                }}
-              >
-                <CloseIcon />
-              </IconButton>
-            </Box>
-
-            {/* ─────────────────────────────
-                PRIVACY / SAFETY MESSAGE
-            ───────────────────────────── */}
-
-            <Box
-              sx={{
-                mb: 2.5,
-                p: {
-                  xs: 1.5,
-                  sm: 2,
-                },
-                borderRadius: 2,
-                backgroundColor:
-                  "#FFF8F2",
-                border:
-                  "1px solid #F4D8C2",
-              }}
-            >
-              <Typography
-                sx={{
-                  fontSize: {
-                    xs: "0.78rem",
-                    sm: "0.85rem",
-                  },
-                  fontWeight: 700,
-                  color: "#5D4037",
-                  mb: 0.5,
-                }}
-              >
-                🔒 Your information helps us keep Saathi Rides safe
-              </Typography>
-
-              <Typography
-                sx={{
-                  fontSize: {
-                    xs: "0.7rem",
-                    sm: "0.78rem",
-                  },
-                  lineHeight: 1.5,
-                  color:
-                    "text.secondary",
-                }}
-              >
-                Some details may be
-                requested to help us
-                verify accounts, maintain
-                a trusted community, and
-                improve the safety and
-                security of Saathi Rides.
-                We understand that
-                personal information is
-                sensitive, so we only ask
-                for information that helps
-                support these purposes.
-              </Typography>
-            </Box>
-
-            <Stack
-              spacing={{
-                xs: 1.5,
-                sm: 2.5,
-              }}
-              sx={{
-                width: "100%",
-              }}
-            >
-              {/* Profile Image */}
-
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent:
-                    "space-between",
-                  alignItems:
-                    "center",
-                }}
-              >
-                <Avatar
-                  src={
-                    profileImage ||
-                    formData.profileImage ||
-                    ""
-                  }
-                  sx={{
-                    width: {
-                      xs: 60,
-                      sm: 85,
-                      md: 110,
-                    },
-                    height: {
-                      xs: 60,
-                      sm: 85,
-                      md: 110,
-                    },
-                    fontSize: {
-                      xs: 18,
-                      sm: 24,
-                      md: 32,
-                    },
-                    bgcolor:
-                      SAFFRON,
-                  }}
-                >
-                  {!profileImage &&
-                    !formData.profileImage &&
-                    `${formData?.firstName?.[0] || ""}${formData?.lastName?.[0] || ""}`}
-                </Avatar>
-
-                <Button
-                  variant="contained"
-                  size="small"
-                  onClick={handlePhotoMenuOpen}
-                  sx={{
-                    width: { xs: "100px", sm: "120px" },
-                    minWidth: 0,
-                    height: { xs: "30px", sm: "34px" },
-                    px: 1,
-                    py: 0,
-                    fontSize: { xs: "0.65rem", sm: "0.75rem" },
-                    textTransform: "none",
-                    color: "#fff",
-                    bgcolor: "#FF9933",
-                    "&:hover": {
-                      bgcolor: "#e68a2e",
-                    },
-                  }}
-                >
-                  Change Photo
-                </Button>
-
-                {/* Photo options */}
-                <Menu
-                  anchorEl={photoMenuAnchor}
-                  open={isPhotoMenuOpen}
-                  onClose={handlePhotoMenuClose}
-                  anchorOrigin={{
-                    vertical: "bottom",
-                    horizontal: "left",
-                  }}
-                  transformOrigin={{
-                    vertical: "top",
-                    horizontal: "left",
-                  }}
-                >
-                  <MenuItem
-                    onClick={handleCameraClick}
-                    sx={{
-                      "&:hover": {
-                        // backgroundColor: "#FFF3E0",
-                        color: "#E8650A",
-                      },
-                    }}
-                  >
-                    <ListItemText primary="Camera" />
-                  </MenuItem>
-
-                  <MenuItem onClick={handleFileClick}
-                    sx={{
-                      "&:hover": {
-                        // backgroundColor: "#FFF3E0",
-                        color: "#E8650A",
-                      },
-                    }}
-                  >
-                    <ListItemText
-                      primary={
-                        <Box>
-                          <Box sx={{ display: { xs: "block", sm: "none" } }}>
-                            Gallery
-                          </Box>
-
-                          <Box sx={{ display: { xs: "none", sm: "block" } }}>
-                            File
-                          </Box>
-                        </Box>
-                      }
-                    />
-                  </MenuItem>
-                </Menu>
-
-                {/* Camera input */}
-                <input
-                  ref={cameraFileRef}
-                  hidden
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  onChange={handleCameraChange}
-                />
-
-                {/* File input */}
-                <input
-                  ref={galleryFileRef}
-                  hidden
-                  type="file"
-                  accept="image/*"
-                  onChange={handleGalleryChange}
-                />
-              </Box>
-
-              {/* First Name / Last Name */}
-
-              <Stack
-                direction={{
-                  xs: "column",
-                  sm: "row",
-                }}
-                spacing={{
-                  xs: 2,
-                  sm: 3,
-                }}
-                sx={{
-                  width: "100%",
-                }}
-              >
-                <TextField
-                  name="firstName"
-                  label="First Name"
-                  size="small"
-                  fullWidth
-                  value={
-                    formData?.firstName
-                  }
-                  onChange={
-                    handleChange
-                  }
-                  InputProps={{
-                    sx: {
-                      fontSize: {
-                        xs: "0.8rem",
-                        sm: "0.9rem",
-                      },
-                    },
-                  }}
-                  InputLabelProps={{
-                    sx: {
-                      fontSize: {
-                        xs: "0.8rem",
-                        sm: "0.9rem",
-                      },
-                    },
-                  }}
-                  error={
-                    !!errors.firstName
-                  }
-                  helperText={
-                    errors.firstName
-                  }
-                />
-
-                <TextField
-                  label="Last Name"
-                  name="lastName"
-                  size="small"
-                  fullWidth
-                  value={
-                    formData?.lastName
-                  }
-                  error={
-                    !!errors.lastName
-                  }
-                  helperText={
-                    errors.lastName
-                  }
-                  onChange={
-                    handleChange
-                  }
-                  InputProps={{
-                    sx: {
-                      fontSize: {
-                        xs: "0.8rem",
-                        sm: "0.9rem",
-                      },
-                    },
-                  }}
-                  InputLabelProps={{
-                    sx: {
-                      fontSize: {
-                        xs: "0.8rem",
-                        sm: "0.9rem",
-                      },
-                    },
-                  }}
-                />
-              </Stack>
-
-              {/* Email / Mobile */}
-
-              <Stack
-                direction={{
-                  xs: "column",
-                  sm: "row",
-                }}
-                spacing={{
-                  xs: 1.5,
-                  sm: 2,
-                }}
-                sx={{
-                  width: "100%",
-                }}
-              >
-                <TextField
-                  label="Email"
-                  name="email"
-                  size="small"
-                  fullWidth
-                  value={
-                    formData?.email
-                  }
-                  onChange={
-                    handleChange
-                  }
-                  error={
-                    !!errors.email
-                  }
-                  helperText={
-                    errors.email
-                  }
-                  disabled
-                  InputProps={{
-                    sx: {
-                      fontSize: {
-                        xs: "0.8rem",
-                        sm: "0.9rem",
-                      },
-                    },
-                  }}
-                  InputLabelProps={{
-                    sx: {
-                      fontSize: {
-                        xs: "0.8rem",
-                        sm: "0.9rem",
-                      },
-                    },
-                  }}
-                />
-
-                <TextField
-                  label="Mobile Number"
-                  name="mobile"
-                  disabled
-                  size="small"
-                  fullWidth
-                  value={
-                    formData?.mobile ||
-                    ""
-                  }
-                  onChange={(e) => {
-                    let value =
-                      e.target.value;
-
-                    value =
-                      value
-                        .replace(
-                          /[^\d+]/g,
-                          ""
-                        )
-                        .replace(
-                          /(?!^)\+/g,
-                          ""
-                        )
-                        .slice(
-                          0,
-                          16
-                        );
-
-                    handleChange({
-                      target: {
-                        name:
-                          "mobile",
-                        value,
-                      },
-                    });
-                  }}
-                  error={
-                    !!errors.mobile
-                  }
-                  helperText={
-                    errors.mobile
-                  }
-                  inputProps={{
-                    maxLength: 16,
-                  }}
-                  InputProps={{
-                    sx: {
-                      fontSize: {
-                        xs: "0.8rem",
-                        sm: "0.9rem",
-                      },
-                    },
-                  }}
-                  InputLabelProps={{
-                    sx: {
-                      fontSize: {
-                        xs: "0.8rem",
-                        sm: "0.9rem",
-                      },
-                    },
-                  }}
-                />
-              </Stack>
-
-              {/* DOB / Gender */}
-
-              <Stack
-                direction={{
-                  xs: "column",
-                  sm: "row",
-                }}
-                spacing={{
-                  xs: 1.5,
-                  sm: 2,
-                }}
-                sx={{
-                  width: "100%",
-                }}
-              >
-                <LocalizationProvider
-                  dateAdapter={
-                    AdapterDayjs
-                  }
-                >
-                  <DatePicker
-                    label="Date of Birth"
-                    value={
-                      formData?.dob
-                    }
-                    onChange={(
-                      newValue
-                    ) => {
-                      setFormData(
-                        (prev) => ({
-                          ...prev,
-                          dob: newValue,
-                        })
-                      );
-
-                      setErrors(
-                        (prev) => ({
-                          ...prev,
-                          dob: "",
-                        })
-                      );
-                    }}
-                    slotProps={{
-                      textField: {
-                        size: "small",
-                        error:
-                          !!errors.dob,
-                        helperText:
-                          errors.dob,
-                        fullWidth: true,
-
-                        InputProps: {
-                          sx: {
-                            fontSize:
-                            {
-                              xs: "0.8rem",
-                              sm: "0.9rem",
-                            },
-                          },
-                        },
-
-                        InputLabelProps: {
-                          sx: {
-                            fontSize:
-                            {
-                              xs: "0.8rem",
-                              sm: "0.9rem",
-                            },
-                          },
-                        },
-                      },
-                    }}
-                    sx={{
-                      width: {
-                        xs: "100%",
-                        sm: "48%",
-                      },
-                    }}
-                  />
-                </LocalizationProvider>
-
-                <TextField
-                  select
-                  label="Gender"
-                  name="gender"
-                  size="small"
-                  fullWidth
-                  sx={{
-                    width: {
-                      xs: "100%",
-                      sm: "48%",
-                    },
-                  }}
-                  value={
-                    formData?.gender
-                  }
-                  onChange={
-                    handleChange
-                  }
-                  error={
-                    !!errors.gender
-                  }
-                  helperText={
-                    errors.gender
-                  }
-                  InputProps={{
-                    sx: {
-                      fontSize: {
-                        xs: "0.8rem",
-                        sm: "0.9rem",
-                      },
-                    },
-                  }}
-                  InputLabelProps={{
-                    sx: {
-                      fontSize: {
-                        xs: "0.8rem",
-                        sm: "0.9rem",
-                      },
-                    },
-                  }}
-                >
-                  <MenuItem
-                    value="Male"
-                    sx={{
-                      fontSize: {
-                        xs: "0.8rem",
-                        sm: "0.9rem",
-                      },
-                    }}
-                  >
-                    Male
-                  </MenuItem>
-
-                  <MenuItem
-                    value="Female"
-                    sx={{
-                      fontSize: {
-                        xs: "0.8rem",
-                        sm: "0.9rem",
-                      },
-                    }}
-                  >
-                    Female
-                  </MenuItem>
-                </TextField>
-              </Stack>
-
-              {/* Profession */}
-
-              <TextField
-                label="Profession"
-                name="bio"
-                multiline
-                rows={3}
-                fullWidth
-                value={
-                  formData?.bio
-                }
-                error={
-                  !!errors.bio
-                }
-                helperText={
-                  errors.bio ||
-                  "You can share your profession. For example: Software Engineer, Doctor, Teacher."
-                }
-                onChange={
-                  handleChange
-                }
-                placeholder="Share a little about what you do..."
-                InputProps={{
-                  sx: {
-                    fontSize: {
-                      xs: "0.8rem",
-                      sm: "0.9rem",
-                    },
-                  },
-                }}
-                InputLabelProps={{
-                  sx: {
-                    fontSize: {
-                      xs: "0.8rem",
-                      sm: "0.9rem",
-                    },
-                  },
-                }}
-              />
-
-              {/* Zip Code */}
-
-              <TextField
-                label="ZipCode"
-                name="zipcode"
-                fullWidth
-                value={
-                  formData?.zipcode ||
-                  ""
-                }
-                error={
-                  !!errors.zipcode
-                }
-                helperText={
-                  errors.zipcode
-                }
-                onChange={(e) => {
-                  setFormData(
-                    (prev) => ({
-                      ...prev,
-                      zipcode:
-                        e.target
-                          .value,
-                    })
-                  );
-
-                  setErrors(
-                    (prev) => ({
-                      ...prev,
-                      zipcode: "",
-                    })
-                  );
-                }}
-                inputProps={{
-                  maxLength: 16,
-                }}
-                InputProps={{
-                  sx: {
-                    fontSize: {
-                      xs: "0.8rem",
-                      sm: "0.9rem",
-                    },
-                  },
-                }}
-                InputLabelProps={{
-                  sx: {
-                    fontSize: {
-                      xs: "0.8rem",
-                      sm: "0.9rem",
-                    },
-                  },
-                }}
-              />
-
-              {/* Buttons */}
-
-              <Stack
-                direction="row"
-                spacing={{
-                  xs: 1,
-                  sm: 1.5,
-                }}
-                sx={{
-                  width: "100%",
-                  mt: {
-                    xs: 0.5,
-                    sm: 1,
-                  },
-                  display: "flex",
-                  justifyContent:
-                    "flex-end",
-                }}
-              >
-                <Button
-                  variant="contained"
-                  size="small"
-                  sx={{
-                    width: {
-                      xs: "100%",
-                      sm: "auto",
-                    },
-                    fontSize: {
-                      xs: "0.75rem",
-                      sm: "0.85rem",
-                    },
-                    py: {
-                      xs: 0.5,
-                      sm: 0.75,
-                    },
-                    px: {
-                      xs: 1.5,
-                      sm: 2.5,
-                    },
-                    minWidth: {
-                      xs: "auto",
-                      sm: 90,
-                    },
-                    bgcolor:
-                      "#757575",
-                    color:
-                      "#ffff",
-                    textTransform:
-                      "none",
-                  }}
-                  onClick={() => {
-                    setProfileImage(
-                      ""
-                    );
-
-                    resetForm();
-
-                    setErrors(
-                      {}
-                    );
-                  }}
-                >
-                  Reset
-                </Button>
-
-                <Button
-                  variant="contained"
-                  size="small"
-                  sx={{
-                    width: {
-                      xs: "100%",
-                      sm: "auto",
-                    },
-                    fontSize: {
-                      xs: "0.75rem",
-                      sm: "0.85rem",
-                    },
-                    py: {
-                      xs: 0.5,
-                      sm: 0.75,
-                    },
-                    px: {
-                      xs: 1.5,
-                      sm: 2.5,
-                    },
-                    minWidth: {
-                      xs: "auto",
-                      sm: 110,
-                    },
-                    bgcolor:
-                      "#FF9933",
-                    color:
-                      "#fff",
-                    textTransform:
-                      "none",
-
-                    "&:hover": {
-                      bgcolor:
-                        "#ef9104",
-                    },
-                  }}
-                  onClick={
-                    handleUpdateProfile
-                  }
-                  disabled={
-                    submitLoading
-                  }
-                >
-                  {submitLoading
-                    ? "Saving Changes..."
-                    : "Save Changes"}
-                </Button>
-              </Stack>
-            </Stack>
-          </Box>
-        </Box>
-      </Modal>
-
-      {/* ── Adjust Photo Modal (shows selected image, drag + zoom, then submit) ── */}
-      <Modal open={showAdjustModal} onClose={handleAdjustCancel}>
-        <Box
-          sx={{
-            position: "fixed",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: { xs: "62%", sm: 340 },
-            bgcolor: "white",
-            borderRadius: 2,
-            boxShadow: 24,
-            p: 2,
-            outline: "none",
-          }}
-        >
-          <Typography
-            variant="h6"
-            sx={{
-              fontWeight: 700,
-              mb: 3,
-              fontSize: "1.05rem",
-            }}
-          >
-            Adjust Photo
-          </Typography>
-
-          <IconButton
-            onClick={handleAdjustCancel}
-            sx={{
-              position: "absolute",
-              top: 7,
-              right: 10,
-              zIndex: 2,
-              color: "rgba(0,0,0,0.8)",
-              bgcolor: "#fff",
-              "&:hover": {
-                bgcolor: "rgba(0,0,0,0.6)",
-                color: "#fff",
-              },
-            }}
-          >
-            <CloseIcon />
-          </IconButton>
-
-          {/* Draggable / zoomable preview box */}
-          <Box
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-            sx={{
-              position: "relative",
-              width: { xs: 190, sm: CROP_BOX_SIZE },
-              height: { xs: 190, sm: CROP_BOX_SIZE },
-              mx: "auto",
-              borderRadius: "50%",
-              overflow: "hidden",
-              bgcolor: "#222",
-              cursor: "grab",
-              touchAction: "none",
-              border: "2px solid #FF9933",
-            }}
-          >
-            {rawImage && (
-              <img
-                ref={cropImgRef}
-                src={rawImage}
-                alt="Selected"
-                onLoad={handleCropImageLoad}
-                draggable={false}
-                style={{
-                  position: "absolute",
-                  left: offset.x,
-                  top: offset.y,
-                  width: getDisplayedSize().displayedW || "auto",
-                  height: getDisplayedSize().displayedH || "auto",
-                  userSelect: "none",
-                  pointerEvents: "none",
-                }}
-              />
-            )}
-          </Box>
-
-          {/* Zoom slider */}
-          <Box sx={{ px: 1, mt: 2 }}>
-            <Typography variant="caption" color="text.secondary">
-              Zoom
-            </Typography>
-            <Slider
-              value={zoom}
-              min={1}
-              max={3}
-              step={0.05}
-              onChange={handleZoomChange}
-              sx={{ color: "#FF9933" }}
-            />
-          </Box>
-
-          <Stack
-            direction="row"
-            spacing={1.5}
-            sx={{
-              display: "flex",
-              justifyContent: { xs: "center", sm: "flex-end" },
-            }}
-          >
-            <Button
-              variant="contained"
-              size="small"
-              sx={{ bgcolor: "#757575", color: "#fff", textTransform: "none" }}
-              onClick={handleAdjustCancel}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="contained"
-              size="small"
-              sx={{
-                bgcolor: "#FF9933",
-                color: "#fff",
-                textTransform: "none",
-                "&:hover": { bgcolor: "#ef9104" },
-              }}
-              onClick={handleAdjustSave}
-            >
-              Use Photo
-            </Button>
-          </Stack>
-        </Box>
-      </Modal>
     </PageLayout>
   );
 };
