@@ -804,6 +804,59 @@ const UserProfile = () => {
     toast.success("Copied to Clipboard!", toasts);
   };
 
+  const [photoMenuAnchor, setPhotoMenuAnchor] = useState(null);
+
+  const cameraFileRef = useRef(null);
+  const galleryFileRef = useRef(null);
+
+  const isPhotoMenuOpen = Boolean(photoMenuAnchor);
+
+  const handlePhotoMenuOpen = (event) => {
+    setPhotoMenuAnchor(event.currentTarget);
+  };
+
+  const handlePhotoMenuClose = () => {
+    setPhotoMenuAnchor(null);
+  };
+
+  const handleCameraClick = () => {
+    handlePhotoMenuClose();
+    cameraFileRef.current?.click();
+  };
+
+  const handleFileClick = () => {
+    handlePhotoMenuClose();
+    galleryFileRef.current?.click();
+  };
+
+  const handleCameraChange = (event) => {
+    const file = event.target.files?.[0];
+
+    if (file) {
+      handlePickImage({
+        target: {
+          files: [file],
+        },
+      });
+    }
+
+    event.target.value = "";
+  };
+
+  const handleGalleryChange = (event) => {
+    const file = event.target.files?.[0];
+
+    if (file) {
+      handlePickImage({
+        target: {
+          files: [file],
+        },
+      });
+    }
+
+    event.target.value = "";
+  };
+
   return (
     <PageLayout>
       <Box sx={{ mx: "auto", px: { xs: 0, sm: 2, md: 0 } }}>
@@ -1505,374 +1558,887 @@ const UserProfile = () => {
       </Box>
 
       {/* ── Edit Profile Modal ── */}
+       {/* ─────────────────────────────────────
+          EDIT PROFILE MODAL
+      ───────────────────────────────────── */}
+
       <Modal
         open={editProfile}
-        children={
+        onClose={(
+          event,
+          reason
+        ) => {
+          if (
+            reason ===
+            "backdropClick"
+          ) {
+            return;
+          }
+
+          setEditProfile(
+            false
+          );
+        }}
+      >
+        <Box
+          sx={{
+            position: "fixed",
+            top: "50%",
+            left: "50%",
+            transform:
+              "translate(-50%, -50%)",
+            display: "flex",
+            alignItems:
+              "center",
+            justifyContent:
+              "center",
+            width: {
+              xs: "92%",
+              sm: "100%",
+            },
+            px: {
+              xs: 2,
+              sm: 0,
+            },
+          }}
+        >
           <Box
             sx={{
-              position: "fixed",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: { xs: "92%", sm: "100%" },
-              px: { xs: 2, sm: 0 },
+              bgcolor: "white",
+              width: {
+                xs: "100%",
+                sm: "85%",
+                md: 480,
+                lg: 500,
+              },
+              maxWidth: 500,
+              borderRadius: 2,
+              boxShadow: 24,
+              p: {
+                xs: 2,
+                sm: 3,
+              },
+              maxHeight: {
+                xs: "85vh",
+                sm: "90vh",
+              },
+              overflowY: "auto",
             }}
           >
+            {/* Modal Header */}
+
             <Box
               sx={{
-                bgcolor: "white",
-                width: { xs: "100%", sm: "85%", md: 480, lg: 500 },
-                maxWidth: 500,
-                borderRadius: 2,
-                boxShadow: 24,
-                p: { xs: 2, sm: 3 },
-                maxHeight: { xs: "85vh", sm: "90vh" },
-                overflowY: "auto",
+                position:
+                  "relative",
+                display:
+                  "flex",
+                justifyContent:
+                  "space-between",
+                mb: 2,
               }}
             >
-              <Box
+              <Typography
+                variant="h6"
                 sx={{
-                  position: "relative",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  mb: 3,
+                  fontWeight: 700,
+                  fontSize: {
+                    xs: "1rem",
+                    sm: "1.15rem",
+                    md: "1.25rem",
+                  },
                 }}
               >
-                <Typography
-                  variant="h6"
+                Edit Profile
+              </Typography>
+
+              <IconButton
+                aria-label="close"
+                onClick={() =>
+                  setEditProfile(
+                    false
+                  )
+                }
+                sx={{
+                  position:
+                    "absolute",
+                  right: 0,
+                  top: "50%",
+                  transform:
+                    "translateY(-50%)",
+                  color:
+                    "text.secondary",
+                  "&:hover": {
+                    bgcolor:
+                      "action.hover",
+                  },
+                }}
+              >
+                <CloseIcon />
+              </IconButton>
+            </Box>
+
+            {/* ─────────────────────────────
+                PRIVACY / SAFETY MESSAGE
+            ───────────────────────────── */}
+
+            <Box
+              sx={{
+                mb: 2.5,
+                p: {
+                  xs: 1.5,
+                  sm: 2,
+                },
+                borderRadius: 2,
+                backgroundColor:
+                  "#FFF8F2",
+                border:
+                  "1px solid #F4D8C2",
+              }}
+            >
+              <Typography
+                sx={{
+                  fontSize: {
+                    xs: "0.78rem",
+                    sm: "0.85rem",
+                  },
+                  fontWeight: 700,
+                  color: "#5D4037",
+                  mb: 0.5,
+                }}
+              >
+                🔒 Your information helps us keep Saathi Rides safe
+              </Typography>
+
+              <Typography
+                sx={{
+                  fontSize: {
+                    xs: "0.7rem",
+                    sm: "0.78rem",
+                  },
+                  lineHeight: 1.5,
+                  color:
+                    "text.secondary",
+                }}
+              >
+                Some details may be
+                requested to help us
+                verify accounts, maintain
+                a trusted community, and
+                improve the safety and
+                security of Saathi Rides.
+                We understand that
+                personal information is
+                sensitive, so we only ask
+                for information that helps
+                support these purposes.
+              </Typography>
+            </Box>
+
+            <Stack
+              spacing={{
+                xs: 1.5,
+                sm: 2.5,
+              }}
+              sx={{
+                width: "100%",
+              }}
+            >
+              {/* Profile Image */}
+
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent:
+                    "space-between",
+                  alignItems:
+                    "center",
+                }}
+              >
+                <Avatar
+                  src={
+                    profileImage ||
+                    formData.profileImage ||
+                    ""
+                  }
                   sx={{
-                    fontWeight: 700,
-                    fontSize: { xs: "1rem", sm: "1.15rem", md: "1.25rem" },
+                    width: {
+                      xs: 60,
+                      sm: 85,
+                      md: 110,
+                    },
+                    height: {
+                      xs: 60,
+                      sm: 85,
+                      md: 110,
+                    },
+                    fontSize: {
+                      xs: 18,
+                      sm: 24,
+                      md: 32,
+                    },
+                    bgcolor:
+                      SAFFRON,
                   }}
                 >
-                  Edit Profile
-                </Typography>
+                  {!profileImage &&
+                    !formData.profileImage &&
+                    `${formData?.firstName?.[0] || ""}${formData?.lastName?.[0] || ""}`}
+                </Avatar>
 
-                <IconButton
-                  aria-label="close"
-                  onClick={() => setEditProfile(false)}
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={handlePhotoMenuOpen}
                   sx={{
-                    position: "absolute",
-                    right: 0,
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    color: "text.secondary",
-                    "&:hover": { bgcolor: "action.hover" },
+                    width: { xs: "100px", sm: "120px" },
+                    minWidth: 0,
+                    height: { xs: "30px", sm: "34px" },
+                    px: 1,
+                    py: 0,
+                    fontSize: { xs: "0.65rem", sm: "0.75rem" },
+                    textTransform: "none",
+                    color: "#fff",
+                    bgcolor: "#FF9933",
+                    "&:hover": {
+                      bgcolor: "#e68a2e",
+                    },
                   }}
                 >
-                  <CloseIcon />
-                </IconButton>
-              </Box>
+                  Change Photo
+                </Button>
 
-              <Stack spacing={{ xs: 1.5, sm: 2.5 }} sx={{ width: "100%" }}>
-                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }} spacing={1}>
-                  <Avatar
-                    src={profileImage || formData.profileImage || ""}
+                {/* Photo options */}
+                <Menu
+                  anchorEl={photoMenuAnchor}
+                  open={isPhotoMenuOpen}
+                  onClose={handlePhotoMenuClose}
+                  anchorOrigin={{
+                    vertical: "bottom",
+                    horizontal: "left",
+                  }}
+                  transformOrigin={{
+                    vertical: "top",
+                    horizontal: "left",
+                  }}
+                >
+                  <MenuItem
+                    onClick={handleCameraClick}
                     sx={{
-                      width: { xs: 60, sm: 85, md: 110 },
-                      height: { xs: 60, sm: 85, md: 110 },
-                      fontSize: { xs: 18, sm: 24, md: 32 },
-                      bgcolor: SAFFRON,
-                    }}
-                  >
-                    {!profileImage &&
-                      !formData.profileImage &&
-                      `${formData?.firstName?.[0] || ""}${formData?.lastName?.[0] || ""}`}
-                  </Avatar>
-
-                  <Button
-                    variant="contained"
-                    component="label"
-                    size="small"
-                    sx={{
-                      width: { xs: "100px", sm: "120px" },
-                      minWidth: 0,
-                      height: { xs: "30px", sm: "34px" },
-                      px: 1,
-                      py: 0,
-                      fontSize: { xs: "0.65rem", sm: "0.75rem" },
-                      textTransform: "none",
-                      color: "#fff",
-                      bgcolor: "#FF9933",
                       "&:hover": {
-                        bgcolor: "#e68a2e",
+                        // backgroundColor: "#FFF3E0",
+                        color: "#E8650A",
                       },
                     }}
                   >
-                    Change Photo
-                    <input
-                      hidden
-                      type="file"
-                      accept="image/*"
-                      onChange={handlePickImage}
+                    <ListItemText primary="Camera" />
+                  </MenuItem>
+
+                  <MenuItem onClick={handleFileClick}
+                    sx={{
+                      "&:hover": {
+                        // backgroundColor: "#FFF3E0",
+                        color: "#E8650A",
+                      },
+                    }}
+                  >
+                    <ListItemText
+                      primary={
+                        <Box>
+                          <Box sx={{ display: { xs: "block", sm: "none" } }}>
+                            Gallery
+                          </Box>
+
+                          <Box sx={{ display: { xs: "none", sm: "block" } }}>
+                            File
+                          </Box>
+                        </Box>
+                      }
                     />
-                  </Button>
-                </Box>
+                  </MenuItem>
+                </Menu>
 
-                <Stack
-                  direction={{ xs: "column", sm: "row" }}
-                  spacing={{ xs: 2, sm: 3 }}
-                  sx={{ width: "100%" }}
+                {/* Camera input */}
+                <input
+                  ref={cameraFileRef}
+                  hidden
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handleCameraChange}
+                />
+
+                {/* File input */}
+                <input
+                  ref={galleryFileRef}
+                  hidden
+                  type="file"
+                  accept="image/*"
+                  onChange={handleGalleryChange}
+                />
+              </Box>
+
+              {/* First Name / Last Name */}
+
+              <Stack
+                direction={{
+                  xs: "column",
+                  sm: "row",
+                }}
+                spacing={{
+                  xs: 2,
+                  sm: 3,
+                }}
+                sx={{
+                  width: "100%",
+                }}
+              >
+                <TextField
+                  name="firstName"
+                  label="First Name"
+                  size="small"
+                  fullWidth
+                  value={
+                    formData?.firstName
+                  }
+                  onChange={
+                    handleChange
+                  }
+                  InputProps={{
+                    sx: {
+                      fontSize: {
+                        xs: "0.8rem",
+                        sm: "0.9rem",
+                      },
+                    },
+                  }}
+                  InputLabelProps={{
+                    sx: {
+                      fontSize: {
+                        xs: "0.8rem",
+                        sm: "0.9rem",
+                      },
+                    },
+                  }}
+                  error={
+                    !!errors.firstName
+                  }
+                  helperText={
+                    errors.firstName
+                  }
+                />
+
+                <TextField
+                  label="Last Name"
+                  name="lastName"
+                  size="small"
+                  fullWidth
+                  value={
+                    formData?.lastName
+                  }
+                  error={
+                    !!errors.lastName
+                  }
+                  helperText={
+                    errors.lastName
+                  }
+                  onChange={
+                    handleChange
+                  }
+                  InputProps={{
+                    sx: {
+                      fontSize: {
+                        xs: "0.8rem",
+                        sm: "0.9rem",
+                      },
+                    },
+                  }}
+                  InputLabelProps={{
+                    sx: {
+                      fontSize: {
+                        xs: "0.8rem",
+                        sm: "0.9rem",
+                      },
+                    },
+                  }}
+                />
+              </Stack>
+
+              {/* Email / Mobile */}
+
+              <Stack
+                direction={{
+                  xs: "column",
+                  sm: "row",
+                }}
+                spacing={{
+                  xs: 1.5,
+                  sm: 2,
+                }}
+                sx={{
+                  width: "100%",
+                }}
+              >
+                <TextField
+                  label="Email"
+                  name="email"
+                  size="small"
+                  fullWidth
+                  value={
+                    formData?.email
+                  }
+                  onChange={
+                    handleChange
+                  }
+                  error={
+                    !!errors.email
+                  }
+                  helperText={
+                    errors.email
+                  }
+                  disabled
+                  InputProps={{
+                    sx: {
+                      fontSize: {
+                        xs: "0.8rem",
+                        sm: "0.9rem",
+                      },
+                    },
+                  }}
+                  InputLabelProps={{
+                    sx: {
+                      fontSize: {
+                        xs: "0.8rem",
+                        sm: "0.9rem",
+                      },
+                    },
+                  }}
+                />
+
+                <TextField
+                  label="Mobile Number"
+                  name="mobile"
+                  disabled
+                  size="small"
+                  fullWidth
+                  value={
+                    formData?.mobile ||
+                    ""
+                  }
+                  onChange={(e) => {
+                    let value =
+                      e.target.value;
+
+                    value =
+                      value
+                        .replace(
+                          /[^\d+]/g,
+                          ""
+                        )
+                        .replace(
+                          /(?!^)\+/g,
+                          ""
+                        )
+                        .slice(
+                          0,
+                          16
+                        );
+
+                    handleChange({
+                      target: {
+                        name:
+                          "mobile",
+                        value,
+                      },
+                    });
+                  }}
+                  error={
+                    !!errors.mobile
+                  }
+                  helperText={
+                    errors.mobile
+                  }
+                  inputProps={{
+                    maxLength: 16,
+                  }}
+                  InputProps={{
+                    sx: {
+                      fontSize: {
+                        xs: "0.8rem",
+                        sm: "0.9rem",
+                      },
+                    },
+                  }}
+                  InputLabelProps={{
+                    sx: {
+                      fontSize: {
+                        xs: "0.8rem",
+                        sm: "0.9rem",
+                      },
+                    },
+                  }}
+                />
+              </Stack>
+
+              {/* DOB / Gender */}
+
+              <Stack
+                direction={{
+                  xs: "column",
+                  sm: "row",
+                }}
+                spacing={{
+                  xs: 1.5,
+                  sm: 2,
+                }}
+                sx={{
+                  width: "100%",
+                }}
+              >
+                <LocalizationProvider
+                  dateAdapter={
+                    AdapterDayjs
+                  }
                 >
-                  <TextField
-                    name="firstName"
-                    label="First Name"
-                    size="small"
-                    fullWidth
-                    value={formData?.firstName}
-                    onChange={handleChange}
-                    InputProps={{
-                      sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } },
-                    }}
-                    InputLabelProps={{
-                      sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } },
-                    }}
-                    error={!!errors.firstName}
-                    helperText={errors.firstName}
-                  />
+                  <DatePicker
+                    label="Date of Birth"
+                    value={
+                      formData?.dob
+                    }
+                    onChange={(
+                      newValue
+                    ) => {
+                      setFormData(
+                        (prev) => ({
+                          ...prev,
+                          dob: newValue,
+                        })
+                      );
 
-                  <TextField
-                    label="Last Name"
-                    name="lastName"
-                    size="small"
-                    fullWidth
-                    value={formData?.lastName}
-                    error={!!errors.lastName}
-                    helperText={errors.lastName}
-                    onChange={handleChange}
-                    InputProps={{
-                      sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } },
+                      setErrors(
+                        (prev) => ({
+                          ...prev,
+                          dob: "",
+                        })
+                      );
                     }}
-                    InputLabelProps={{
-                      sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } },
-                    }}
-                  />
-                </Stack>
+                    slotProps={{
+                      textField: {
+                        size: "small",
+                        error:
+                          !!errors.dob,
+                        helperText:
+                          errors.dob,
+                        fullWidth: true,
 
-                <Stack
-                  direction={{ xs: "column", sm: "row" }}
-                  spacing={{ xs: 1.5, sm: 2 }}
-                  sx={{ width: "100%" }}
-                >
-                  <TextField
-                    label="Email"
-                    name="email"
-                    size="small"
-                    fullWidth
-                    value={formData?.email}
-                    onChange={handleChange}
-                    error={!!errors.email}
-                    helperText={errors.email}
-                    disabled
-                    InputProps={{
-                      sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } },
-                    }}
-                    InputLabelProps={{
-                      sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } },
-                    }}
-                  />
-
-                  <TextField
-                    label="Mobile Number"
-                    name="mobile"
-                    disabled
-                    size="small"
-                    fullWidth
-                    value={formData?.mobile || ""}
-                    onChange={(e) => {
-                      let value = e.target.value;
-                      value = value
-                        .replace(/[^\d+]/g, "")
-                        .replace(/(?!^)\+/g, "")
-                        .slice(0, 16);
-
-                      handleChange({ target: { name: "mobile", value } });
-                    }}
-                    error={!!errors.mobile}
-                    helperText={errors.mobile}
-                    inputProps={{ maxLength: 16 }}
-                    InputProps={{
-                      sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } },
-                    }}
-                    InputLabelProps={{
-                      sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } },
-                    }}
-                  />
-                </Stack>
-
-                <Stack
-                  direction={{ xs: "column", sm: "row" }}
-                  spacing={{ xs: 1.5, sm: 2 }}
-                  sx={{ width: "100%" }}
-                >
-                  <LocalizationProvider dateAdapter={AdapterDayjs}>
-                    <DatePicker
-                      label="Date of Birth"
-                      value={formData?.dob}
-                      onChange={(newValue) => {
-                        setFormData((prev) => ({ ...prev, dob: newValue }));
-                        setErrors((prev) => ({ ...prev, dob: "" }));
-                      }}
-                      slotProps={{
-                        textField: {
-                          size: "small",
-                          error: !!errors.dob,
-                          helperText: errors.dob,
-                          fullWidth: true,
-                          InputProps: {
-                            sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } },
-                          },
-                          InputLabelProps: {
-                            sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } },
+                        InputProps: {
+                          sx: {
+                            fontSize:
+                            {
+                              xs: "0.8rem",
+                              sm: "0.9rem",
+                            },
                           },
                         },
-                      }}
-                      sx={{ width: { xs: "100%", sm: "48%" } }}
-                    />
-                  </LocalizationProvider>
 
-                  <TextField
-                    select
-                    label="Gender"
-                    name="gender"
-                    size="small"
-                    fullWidth
-                    sx={{ width: { xs: "100%", sm: "48%" } }}
-                    value={formData?.gender}
-                    onChange={handleChange}
-                    error={!!errors.gender}
-                    helperText={errors.gender}
-                    InputProps={{
-                      sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } },
+                        InputLabelProps: {
+                          sx: {
+                            fontSize:
+                            {
+                              xs: "0.8rem",
+                              sm: "0.9rem",
+                            },
+                          },
+                        },
+                      },
                     }}
-                    InputLabelProps={{
-                      sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } },
+                    sx={{
+                      width: {
+                        xs: "100%",
+                        sm: "48%",
+                      },
                     }}
-                  >
-                    <MenuItem
-                      value="Male"
-                      sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem" } }}
-                    >
-                      Male
-                    </MenuItem>
-                    <MenuItem
-                      value="Female"
-                      sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem" } }}
-                    >
-                      Female
-                    </MenuItem>
-                  </TextField>
-                </Stack>
+                  />
+                </LocalizationProvider>
 
                 <TextField
-                  label="Bio"
-                  name="bio"
-                  multiline
-                  rows={3}
+                  select
+                  label="Gender"
+                  name="gender"
+                  size="small"
                   fullWidth
-                  value={formData?.bio}
-                  error={!!errors.bio}
-                  helperText={errors.bio}
-                  onChange={handleChange}
-                  InputProps={{
-                    sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } },
-                  }}
-                  InputLabelProps={{
-                    sx: { fontSize: { xs: "0.8rem", sm: "0.9rem" } },
-                  }}
-                />
-                <TextField
-                  label="ZipCode"
-                  name="zipcode"
-                  fullWidth
-                  value={formData?.zipcode || ""}
-
-                  error={!!errors.zipcode}
-                  helperText={errors.zipcode}
-                  onChange={(e) => {
-                    setFormData((prev) => ({
-                      ...prev,
-                      zipcode: e.target.value,
-                    }));
-
-                    setErrors((prev) => ({
-                      ...prev,
-                      zipcode: "",
-                    }));
-                  }}
-                  inputProps={{ maxLength: 16 }}
-                  InputProps={{
-                    sx: {
-                      fontSize: { xs: "0.8rem", sm: "0.9rem" },
-                    },
-                  }}
-                  InputLabelProps={{
-                    sx: {
-                      fontSize: { xs: "0.8rem", sm: "0.9rem" },
-                    },
-                  }}
-                />
-
-                <Stack
-                  direction={{ xs: "row", sm: "row" }}
-                  spacing={{ xs: 1, sm: 1.5 }}
                   sx={{
-                    width: "100%",
-                    mt: { xs: 0.5, sm: 1 },
-                    display: "flex",
-                    justifyContent: "end",
+                    width: {
+                      xs: "100%",
+                      sm: "48%",
+                    },
+                  }}
+                  value={
+                    formData?.gender
+                  }
+                  onChange={
+                    handleChange
+                  }
+                  error={
+                    !!errors.gender
+                  }
+                  helperText={
+                    errors.gender
+                  }
+                  InputProps={{
+                    sx: {
+                      fontSize: {
+                        xs: "0.8rem",
+                        sm: "0.9rem",
+                      },
+                    },
+                  }}
+                  InputLabelProps={{
+                    sx: {
+                      fontSize: {
+                        xs: "0.8rem",
+                        sm: "0.9rem",
+                      },
+                    },
                   }}
                 >
-                  <Button
-                    variant="contained"
-                    size="small"
+                  <MenuItem
+                    value="Male"
                     sx={{
-                      width: { xs: "100%", sm: "auto" },
-                      fontSize: { xs: "0.75rem", sm: "0.85rem" },
-                      py: { xs: 0.5, sm: 0.75 },
-                      px: { xs: 1.5, sm: 2.5 },
-                      minWidth: { xs: "auto", sm: 90 },
-                      bgcolor: "#757575",
-                      color: "#ffff",
-                      textTransform: "none",
-                    }}
-                    onClick={() => {
-                      setProfileImage("");
-                      resetForm();
-                      setErrors({});
+                      fontSize: {
+                        xs: "0.8rem",
+                        sm: "0.9rem",
+                      },
                     }}
                   >
-                    Reset
-                  </Button>
+                    Male
+                  </MenuItem>
 
-                  <Button
-                    variant="contained"
-                    size="small"
+                  <MenuItem
+                    value="Female"
                     sx={{
-                      width: { xs: "100%", sm: "auto" },
-                      fontSize: { xs: "0.75rem", sm: "0.85rem" },
-                      py: { xs: 0.5, sm: 0.75 },
-                      px: { xs: 1.5, sm: 2.5 },
-                      minWidth: { xs: "auto", sm: 110 },
-                      bgcolor: "#FF9933",
-                      color: "#fff",
-                      textTransform: "none",
-                      "&:hover": { bgcolor: "#ef9104" },
+                      fontSize: {
+                        xs: "0.8rem",
+                        sm: "0.9rem",
+                      },
                     }}
-                    onClick={handleUpdateProfile}
-                    disabled={submitLoading}
                   >
-                    {submitLoading ? "Saving Changes..." : "Save Changes"}
-                  </Button>
-                </Stack>
+                    Female
+                  </MenuItem>
+                </TextField>
               </Stack>
-            </Box>
+
+              {/* Profession */}
+
+              <TextField
+                label="Profession"
+                name="bio"
+                multiline
+                rows={3}
+                fullWidth
+                value={
+                  formData?.bio
+                }
+                error={
+                  !!errors.bio
+                }
+                helperText={
+                  errors.bio ||
+                  "You can share your profession. For example: Software Engineer, Doctor, Teacher."
+                }
+                onChange={
+                  handleChange
+                }
+                placeholder="Share a little about what you do..."
+                InputProps={{
+                  sx: {
+                    fontSize: {
+                      xs: "0.8rem",
+                      sm: "0.9rem",
+                    },
+                  },
+                }}
+                InputLabelProps={{
+                  sx: {
+                    fontSize: {
+                      xs: "0.8rem",
+                      sm: "0.9rem",
+                    },
+                  },
+                }}
+              />
+
+              {/* Zip Code */}
+
+              <TextField
+                label="ZipCode"
+                name="zipcode"
+                fullWidth
+                value={
+                  formData?.zipcode ||
+                  ""
+                }
+                error={
+                  !!errors.zipcode
+                }
+                helperText={
+                  errors.zipcode
+                }
+                onChange={(e) => {
+                  setFormData(
+                    (prev) => ({
+                      ...prev,
+                      zipcode:
+                        e.target
+                          .value,
+                    })
+                  );
+
+                  setErrors(
+                    (prev) => ({
+                      ...prev,
+                      zipcode: "",
+                    })
+                  );
+                }}
+                inputProps={{
+                  maxLength: 16,
+                }}
+                InputProps={{
+                  sx: {
+                    fontSize: {
+                      xs: "0.8rem",
+                      sm: "0.9rem",
+                    },
+                  },
+                }}
+                InputLabelProps={{
+                  sx: {
+                    fontSize: {
+                      xs: "0.8rem",
+                      sm: "0.9rem",
+                    },
+                  },
+                }}
+              />
+
+              {/* Buttons */}
+
+              <Stack
+                direction="row"
+                spacing={{
+                  xs: 1,
+                  sm: 1.5,
+                }}
+                sx={{
+                  width: "100%",
+                  mt: {
+                    xs: 0.5,
+                    sm: 1,
+                  },
+                  display: "flex",
+                  justifyContent:
+                    "flex-end",
+                }}
+              >
+                <Button
+                  variant="contained"
+                  size="small"
+                  sx={{
+                    width: {
+                      xs: "100%",
+                      sm: "auto",
+                    },
+                    fontSize: {
+                      xs: "0.75rem",
+                      sm: "0.85rem",
+                    },
+                    py: {
+                      xs: 0.5,
+                      sm: 0.75,
+                    },
+                    px: {
+                      xs: 1.5,
+                      sm: 2.5,
+                    },
+                    minWidth: {
+                      xs: "auto",
+                      sm: 90,
+                    },
+                    bgcolor:
+                      "#757575",
+                    color:
+                      "#ffff",
+                    textTransform:
+                      "none",
+                  }}
+                  onClick={() => {
+                    setProfileImage(
+                      ""
+                    );
+
+                    resetForm();
+
+                    setErrors(
+                      {}
+                    );
+                  }}
+                >
+                  Reset
+                </Button>
+
+                <Button
+                  variant="contained"
+                  size="small"
+                  sx={{
+                    width: {
+                      xs: "100%",
+                      sm: "auto",
+                    },
+                    fontSize: {
+                      xs: "0.75rem",
+                      sm: "0.85rem",
+                    },
+                    py: {
+                      xs: 0.5,
+                      sm: 0.75,
+                    },
+                    px: {
+                      xs: 1.5,
+                      sm: 2.5,
+                    },
+                    minWidth: {
+                      xs: "auto",
+                      sm: 110,
+                    },
+                    bgcolor:
+                      "#FF9933",
+                    color:
+                      "#fff",
+                    textTransform:
+                      "none",
+
+                    "&:hover": {
+                      bgcolor:
+                        "#ef9104",
+                    },
+                  }}
+                  onClick={
+                    handleUpdateProfile
+                  }
+                  disabled={
+                    submitLoading
+                  }
+                >
+                  {submitLoading
+                    ? "Saving Changes..."
+                    : "Save Changes"}
+                </Button>
+              </Stack>
+            </Stack>
           </Box>
-        }
-      />
+        </Box>
+      </Modal>
 
       {/* ── Adjust Photo Modal (shows selected image, drag + zoom, then submit) ── */}
       <Modal open={showAdjustModal} onClose={handleAdjustCancel}>
