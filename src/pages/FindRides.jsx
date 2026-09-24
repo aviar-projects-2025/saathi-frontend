@@ -226,6 +226,8 @@ export default function FindRides() {
   const [locationLoading, setLocationLoading] = useState(false);
   const [locationError, setLocationError] = useState("");
 
+  const token = localStorage.getItem('token')
+  console.log(token, 'token')
   const resultsRef = useRef(null);
   const scrollStartRef = useRef(0);
 
@@ -239,11 +241,30 @@ export default function FindRides() {
 
   const fetchRides = async () => {
     try {
-      const res = await axios.get(`${Api}/rides/get`);
+      const res = await axios.get(`${Api}/rides/get`, {
+        params: {
+          type: "find",
+
+          searchFrom,
+          searchDestination,
+          search,
+
+          transportMode: appliedTransportMode,
+          gender: appliedGender,
+          fuelSharing: appliedFuelSharing,
+          language: appliedLanguage,
+        },
+
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      console.log(res.data.data, "data");
 
       setRides(res.data.data || []);
     } catch (error) {
-      console.log(error);
+      console.log(error.response?.data || error);
     } finally {
       setLoading(false);
     }
@@ -271,8 +292,8 @@ export default function FindRides() {
     const a =
       Math.sin(dLat / 2) ** 2 +
       Math.cos((lat1 * Math.PI) / 180) *
-        Math.cos((lat2 * Math.PI) / 180) *
-        Math.sin(dLon / 2) ** 2;
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) ** 2;
 
     const c =
       2 * Math.atan2(
@@ -519,7 +540,7 @@ export default function FindRides() {
 
     const delta = Math.abs(
       e.target.scrollTop -
-        scrollStartRef.current
+      scrollStartRef.current
     );
 
     if (
@@ -611,11 +632,10 @@ export default function FindRides() {
     appliedFuelSharing !== "" && {
       key: "fuel",
 
-      label: `Fuel: ${
-        appliedFuelSharing === "true"
-          ? "Yes"
-          : "No"
-      }`,
+      label: `Fuel: ${appliedFuelSharing === "true"
+        ? "Yes"
+        : "No"
+        }`,
 
       clear: () => {
         const next = {
@@ -667,16 +687,14 @@ export default function FindRides() {
 
       const fromValue =
         ride.modeOfTravel === "Flight"
-          ? `${ride.fromAirport || ""} ${
-              ride.fromCountry || ""
-            } ${ride.from || ""}`
+          ? `${ride.fromAirport || ""} ${ride.fromCountry || ""
+          } ${ride.from || ""}`
           : ride.from || "";
 
       const destinationValue =
         ride.modeOfTravel === "Flight"
-          ? `${ride.toAirport || ""} ${
-              ride.toCountry || ""
-            } ${ride.destination || ""}`
+          ? `${ride.toAirport || ""} ${ride.toCountry || ""
+          } ${ride.destination || ""}`
           : ride.destination || "";
 
       const fromMatch =
@@ -726,18 +744,18 @@ export default function FindRides() {
       const transportMatch =
         !appliedTransportMode ||
         ride.modeOfTravel ===
-          appliedTransportMode;
+        appliedTransportMode;
 
       const genderMatch =
         !appliedGender ||
         ride.genderPreference ===
-          appliedGender;
+        appliedGender;
 
       const fuelMatch =
         appliedFuelSharing === "" ||
         ride.modeOfTravel === "Flight" ||
         ride.fuelSharing?.toString() ===
-          appliedFuelSharing;
+        appliedFuelSharing;
 
       const languageMatch =
         !appliedLanguage ||
@@ -986,9 +1004,9 @@ export default function FindRides() {
                 bgcolor: "#F0E6DC",
 
                 "& .MuiLinearProgress-bar":
-                  {
-                    bgcolor: "#E8650A",
-                  },
+                {
+                  bgcolor: "#E8650A",
+                },
               }}
             />
           </Box>
@@ -1198,11 +1216,10 @@ export default function FindRides() {
                         ? "#EAF6EC"
                         : "#FFF4E8",
 
-                    border: `1px solid ${
-                      userLocation
-                        ? "#A5D6A7"
-                        : "#FFD09B"
-                    }`,
+                    border: `1px solid ${userLocation
+                      ? "#A5D6A7"
+                      : "#FFD09B"
+                      }`,
 
                     boxShadow: "none",
 
@@ -1219,8 +1236,8 @@ export default function FindRides() {
                   {locationLoading
                     ? "Getting location..."
                     : userLocation
-                    ? "Location Enabled"
-                    : "Enable Location"}
+                      ? "Location Enabled"
+                      : "Enable Location"}
                 </Button>
 
                 {/* ─────────────────────────────
@@ -1362,49 +1379,49 @@ export default function FindRides() {
                     minWidth: 0,
 
                     "& .MuiOutlinedInput-root":
-                      {
-                        borderRadius:
-                          "12px",
+                    {
+                      borderRadius:
+                        "12px",
 
-                        background:
-                          "rgba(255,255,255,0.96)",
+                      background:
+                        "rgba(255,255,255,0.96)",
 
-                        fontSize: {
-                          xs: "0.65rem",
-                          sm: "0.84rem",
-                        },
-
-                        height: {
-                          xs: 32,
-                          sm: 40,
-                        },
-
-                        "& fieldset": {
-                          border: "none",
-                        },
-
-                        "& input": {
-                          py: 0,
-
-                          px: {
-                            xs: 1,
-                            sm: 1,
-                          },
-                        },
-
-                        "& .MuiInputAdornment-root":
-                          {
-                            ml: {
-                              xs: 0.75,
-                              sm: 1,
-                            },
-
-                            mr: {
-                              xs: 0.25,
-                              sm: 0.5,
-                            },
-                          },
+                      fontSize: {
+                        xs: "0.65rem",
+                        sm: "0.84rem",
                       },
+
+                      height: {
+                        xs: 32,
+                        sm: 40,
+                      },
+
+                      "& fieldset": {
+                        border: "none",
+                      },
+
+                      "& input": {
+                        py: 0,
+
+                        px: {
+                          xs: 1,
+                          sm: 1,
+                        },
+                      },
+
+                      "& .MuiInputAdornment-root":
+                      {
+                        ml: {
+                          xs: 0.75,
+                          sm: 1,
+                        },
+
+                        mr: {
+                          xs: 0.25,
+                          sm: 0.5,
+                        },
+                      },
+                    },
                   }}
                 />
               </Box>
@@ -1481,49 +1498,49 @@ export default function FindRides() {
                     minWidth: 0,
 
                     "& .MuiOutlinedInput-root":
-                      {
-                        borderRadius:
-                          "12px",
+                    {
+                      borderRadius:
+                        "12px",
 
-                        background:
-                          "rgba(255,255,255,0.96)",
+                      background:
+                        "rgba(255,255,255,0.96)",
 
-                        fontSize: {
-                          xs: "0.65rem",
-                          sm: "0.84rem",
-                        },
-
-                        height: {
-                          xs: 34,
-                          sm: 40,
-                        },
-
-                        "& fieldset": {
-                          border: "none",
-                        },
-
-                        "& input": {
-                          py: 0,
-
-                          px: {
-                            xs: 1,
-                            sm: 1,
-                          },
-                        },
-
-                        "& .MuiInputAdornment-root":
-                          {
-                            ml: {
-                              xs: 0.75,
-                              sm: 1,
-                            },
-
-                            mr: {
-                              xs: 0.25,
-                              sm: 0.5,
-                            },
-                          },
+                      fontSize: {
+                        xs: "0.65rem",
+                        sm: "0.84rem",
                       },
+
+                      height: {
+                        xs: 34,
+                        sm: 40,
+                      },
+
+                      "& fieldset": {
+                        border: "none",
+                      },
+
+                      "& input": {
+                        py: 0,
+
+                        px: {
+                          xs: 1,
+                          sm: 1,
+                        },
+                      },
+
+                      "& .MuiInputAdornment-root":
+                      {
+                        ml: {
+                          xs: 0.75,
+                          sm: 1,
+                        },
+
+                        mr: {
+                          xs: 0.25,
+                          sm: 0.5,
+                        },
+                      },
+                    },
                   }}
                 />
 
@@ -1572,51 +1589,51 @@ export default function FindRides() {
                     minWidth: 0,
 
                     "& .MuiOutlinedInput-root":
-                      {
-                        borderRadius:
-                          "12px",
+                    {
+                      borderRadius:
+                        "12px",
 
-                        background:
-                          "rgba(255,255,255,0.96)",
+                      background:
+                        "rgba(255,255,255,0.96)",
 
-                        fontSize: {
-                          xs: "0.65rem",
-                          sm: "0.84rem",
-                        },
-
-                        height: {
-                          xs: 34,
-                          sm: 40,
-                        },
-
-                        pr: 0.5,
-
-                        "& fieldset": {
-                          border: "none",
-                        },
-
-                        "& input": {
-                          py: 0,
-
-                          px: {
-                            xs: 1,
-                            sm: 1,
-                          },
-                        },
-
-                        "& .MuiInputAdornment-root":
-                          {
-                            ml: {
-                              xs: 0.75,
-                              sm: 1,
-                            },
-
-                            mr: {
-                              xs: 0.25,
-                              sm: 0.5,
-                            },
-                          },
+                      fontSize: {
+                        xs: "0.65rem",
+                        sm: "0.84rem",
                       },
+
+                      height: {
+                        xs: 34,
+                        sm: 40,
+                      },
+
+                      pr: 0.5,
+
+                      "& fieldset": {
+                        border: "none",
+                      },
+
+                      "& input": {
+                        py: 0,
+
+                        px: {
+                          xs: 1,
+                          sm: 1,
+                        },
+                      },
+
+                      "& .MuiInputAdornment-root":
+                      {
+                        ml: {
+                          xs: 0.75,
+                          sm: 1,
+                        },
+
+                        mr: {
+                          xs: 0.25,
+                          sm: 0.5,
+                        },
+                      },
+                    },
                   }}
                 />
 
@@ -1712,14 +1729,14 @@ export default function FindRides() {
                   >
                     Filters
                     {activeFilters.length >
-                    0
+                      0
                       ? ` (${activeFilters.length})`
                       : ""}
                   </Box>
 
                   {isMobile &&
                     activeFilters.length >
-                      0 && (
+                    0 && (
                       <Box
                         sx={{
                           width: 6,
@@ -1760,10 +1777,10 @@ export default function FindRides() {
                     },
 
                     "&.Mui-disabled":
-                      {
-                        bgcolor:
-                          "#e0e0e0",
-                      },
+                    {
+                      bgcolor:
+                        "#e0e0e0",
+                    },
 
                     fontWeight: 700,
 
@@ -1801,55 +1818,55 @@ export default function FindRides() {
 
               {activeFilters.length >
                 0 && (
-                <Box
-                  sx={{
-                    display: "flex",
+                  <Box
+                    sx={{
+                      display: "flex",
 
-                    flexWrap:
-                      "wrap",
+                      flexWrap:
+                        "wrap",
 
-                    gap: {
-                      xs: 0.5,
-                      sm: 0.75,
-                    },
+                      gap: {
+                        xs: 0.5,
+                        sm: 0.75,
+                      },
 
-                    mt: 1.25,
-                  }}
-                >
-                  {activeFilters.map(
-                    (f) => (
-                      <Chip
-                        key={f.key}
-                        label={f.label}
-                        onDelete={
-                          f.clear
-                        }
-                        deleteIcon={
-                          <CloseIcon />
-                        }
-                        size="small"
-                        sx={{
-                          background:
-                            "rgba(255,255,255,0.9)",
+                      mt: 1.25,
+                    }}
+                  >
+                    {activeFilters.map(
+                      (f) => (
+                        <Chip
+                          key={f.key}
+                          label={f.label}
+                          onDelete={
+                            f.clear
+                          }
+                          deleteIcon={
+                            <CloseIcon />
+                          }
+                          size="small"
+                          sx={{
+                            background:
+                              "rgba(255,255,255,0.9)",
 
-                          border: `1px solid ${saffron[300]}`,
+                            border: `1px solid ${saffron[300]}`,
 
-                          color:
-                            saffron[800],
+                            color:
+                              saffron[800],
 
-                          fontWeight: 600,
+                            fontWeight: 600,
 
-                          fontSize: {
-                            xs: "0.65rem",
-                            sm: "0.75rem",
-                          },
+                            fontSize: {
+                              xs: "0.65rem",
+                              sm: "0.75rem",
+                            },
 
-                          height: {
-                            xs: 22,
-                            sm: 26,
-                          },
+                            height: {
+                              xs: 22,
+                              sm: 26,
+                            },
 
-                          "& .MuiChip-deleteIcon":
+                            "& .MuiChip-deleteIcon":
                             {
                               color:
                                 saffron[500],
@@ -1860,19 +1877,19 @@ export default function FindRides() {
                               },
                             },
 
-                          "& .MuiChip-label":
+                            "& .MuiChip-label":
                             {
                               px: {
                                 xs: 0.75,
                                 sm: 1,
                               },
                             },
-                        }}
-                      />
-                    )
-                  )}
-                </Box>
-              )}
+                          }}
+                        />
+                      )
+                    )}
+                  </Box>
+                )}
             </Container>
           </Box>
         </Box>
@@ -1899,23 +1916,23 @@ export default function FindRides() {
             },
 
             "&::-webkit-scrollbar":
-              {
-                width: 5,
-              },
+            {
+              width: 5,
+            },
 
             "&::-webkit-scrollbar-track":
-              {
-                background:
-                  saffron[50],
-              },
+            {
+              background:
+                saffron[50],
+            },
 
             "&::-webkit-scrollbar-thumb":
-              {
-                background:
-                  saffron[300],
+            {
+              background:
+                saffron[300],
 
-                borderRadius: 4,
-              },
+              borderRadius: 4,
+            },
           }}
         >
           <Container
@@ -2034,11 +2051,10 @@ export default function FindRides() {
                               borderRadius:
                                 "20px",
 
-                              border: `1.5px solid ${
-                                selected
-                                  ? saffron[500]
-                                  : saffron[200]
-                              }`,
+                              border: `1.5px solid ${selected
+                                ? saffron[500]
+                                : saffron[200]
+                                }`,
 
                               background:
                                 selected
@@ -2066,41 +2082,41 @@ export default function FindRides() {
                                 "pointer",
 
                               "& .MuiChip-label":
-                                {
-                                  px: {
-                                    xs: 1,
-                                    sm: 1.8,
-                                  },
+                              {
+                                px: {
+                                  xs: 1,
+                                  sm: 1.8,
                                 },
+                              },
 
                               "&:hover":
-                                {
-                                  background:
-                                    selected
-                                      ? saffron[600]
-                                      : saffron[50],
+                              {
+                                background:
+                                  selected
+                                    ? saffron[600]
+                                    : saffron[50],
 
-                                  borderColor:
-                                    saffron[400],
-                                },
+                                borderColor:
+                                  saffron[400],
+                              },
 
                               "& .MuiChip-icon":
-                                {
-                                  color:
-                                    selected
-                                      ? "#fff"
-                                      : saffron[500],
+                              {
+                                color:
+                                  selected
+                                    ? "#fff"
+                                    : saffron[500],
 
-                                  ml: {
-                                    xs: 0.5,
-                                    sm: 0.75,
-                                  },
-
-                                  mr: {
-                                    xs: "-4px",
-                                    sm: "-2px",
-                                  },
+                                ml: {
+                                  xs: 0.5,
+                                  sm: 0.75,
                                 },
+
+                                mr: {
+                                  xs: "-4px",
+                                  sm: "-2px",
+                                },
+                              },
                             }}
                           />
                         );
@@ -2303,65 +2319,65 @@ export default function FindRides() {
 
                   {transportMode ===
                     "Flight" && (
-                    <Grid
-                      item
-                      xs={12}
-                      sm={4}
-                      md={6}
-                    >
-                      <Typography
-                        component="span"
-                        sx={{
-                          fontSize: {
-                            xs: "0.6rem",
-                            sm: "0.7rem",
-                          },
-
-                          fontWeight: 600,
-
-                          textTransform:
-                            "uppercase",
-
-                          letterSpacing:
-                            "0.08em",
-
-                          color:
-                            saffron[700],
-
-                          display:
-                            "block",
-
-                          mt: 1,
-                        }}
+                      <Grid
+                        item
+                        xs={12}
+                        sm={4}
+                        md={6}
                       >
-                        Language
-                      </Typography>
+                        <Typography
+                          component="span"
+                          sx={{
+                            fontSize: {
+                              xs: "0.6rem",
+                              sm: "0.7rem",
+                            },
 
-                      <TextField
-                        fullWidth
-                        size="small"
+                            fontWeight: 600,
 
-                        placeholder="Tamil, English, Hindi…"
+                            textTransform:
+                              "uppercase",
 
-                        value={
-                          language
-                        }
+                            letterSpacing:
+                              "0.08em",
 
-                        onChange={(e) =>
-                          updateDraft(
-                            "language",
-                            e.target
-                              .value
-                          )
-                        }
+                            color:
+                              saffron[700],
 
-                        sx={{
-                          ...inputFieldSx,
+                            display:
+                              "block",
 
-                          "& .MuiOutlinedInput-root":
+                            mt: 1,
+                          }}
+                        >
+                          Language
+                        </Typography>
+
+                        <TextField
+                          fullWidth
+                          size="small"
+
+                          placeholder="Tamil, English, Hindi…"
+
+                          value={
+                            language
+                          }
+
+                          onChange={(e) =>
+                            updateDraft(
+                              "language",
+                              e.target
+                                .value
+                            )
+                          }
+
+                          sx={{
+                            ...inputFieldSx,
+
+                            "& .MuiOutlinedInput-root":
                             {
                               ...inputFieldSx[
-                                "& .MuiOutlinedInput-root"
+                              "& .MuiOutlinedInput-root"
                               ],
 
                               fontSize: {
@@ -2376,10 +2392,10 @@ export default function FindRides() {
 
                               mt: 1,
                             },
-                        }}
-                      />
-                    </Grid>
-                  )}
+                          }}
+                        />
+                      </Grid>
+                    )}
                 </Grid>
 
                 {/* Filter actions */}
@@ -2537,7 +2553,7 @@ export default function FindRides() {
                   color="text.secondary"
                 >
                   {visibleRides.length ===
-                  1
+                    1
                     ? "result"
                     : "results"}{" "}
                   found
@@ -2550,7 +2566,7 @@ export default function FindRides() {
             ─────────────────────────────── */}
 
             {sortedVisibleRides.length >
-            0 ? (
+              0 ? (
               <Grid
                 container
                 spacing={{

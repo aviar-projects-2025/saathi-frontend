@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 import {
@@ -12,164 +12,43 @@ import {
   Button,
   Chip,
   Avatar,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
 } from "@mui/material";
 
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
-import LocationOnRoundedIcon from "@mui/icons-material/LocationOnRounded";
 import PeopleAltRoundedIcon from "@mui/icons-material/PeopleAltRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
 
 import Api from "../Api";
+import { useUser } from "../context/userConetext";
 
 const ORANGE = "#E8650A";
 
-const saffron = {
-  50: "#FFF8EE",
-  100: "#FFE9C2",
-  200: "#FFD492",
-  300: "#FFC05C",
-  400: "#FFAB28",
-  500: "#F59300",
-  600: "#D47A00",
-  700: "#A85F00",
-  800: "#7C4500",
-};
-
-const RADIUS_OPTIONS = [
-  { label: "5 miles", value: 5 },
-  { label: "10 miles", value: 10 },
-  { label: "25 miles", value: 25 },
-  { label: "50 miles", value: 50 },
-];
-
 export default function PeopleNearYou() {
   const navigate = useNavigate();
-  const routerLocation = useLocation();
 
-  /*
-   * FindRides passes the user's GPS location through
-   * navigate("/people-nearby", { state: { userLocation } })
-   */
-  const initialLocation = routerLocation.state?.userLocation || null;
-
-  const [userLocation, setUserLocation] = useState(initialLocation);
+  const { currentUser } = useUser();
 
   const [people, setPeople] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [locationLoading, setLocationLoading] = useState(false);
-
-  const [locationError, setLocationError] = useState("");
   const [search, setSearch] = useState("");
-  const [radius, setRadius] = useState(25);
+  const [loading, setLoading] = useState(false);
 
-  /*
-   * ---------------------------------------------------------
-   * GET CURRENT LOCATION
-   * ---------------------------------------------------------
-   */
-
-  const requestCurrentLocation = () => {
-    if (!navigator.geolocation) {
-      setLocationError(
-        "Location is not supported by this browser."
-      );
-      return;
-    }
-
-    setLocationLoading(true);
-    setLocationError("");
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const location = {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          accuracy: position.coords.accuracy,
-        };
-
-        setUserLocation(location);
-        setLocationLoading(false);
-      },
-      (error) => {
-        console.error("LOCATION ERROR:", error);
-
-        setLocationLoading(false);
-
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            setLocationError(
-              "Location permission is denied. Please allow location access."
-            );
-            break;
-
-          case error.POSITION_UNAVAILABLE:
-            setLocationError(
-              "Location services are unavailable."
-            );
-            break;
-
-          case error.TIMEOUT:
-            setLocationError(
-              "Location request timed out. Please try again."
-            );
-            break;
-
-          default:
-            setLocationError(
-              "Unable to get your current location."
-            );
-        }
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 60000,
-      }
-    );
-  };
-
-  /*
-   * ---------------------------------------------------------
-   * FETCH NEARBY PEOPLE
-   * ---------------------------------------------------------
-   */
+  // ---------------------------------------------------------
+  // FETCH PEOPLE WITH SAME ZIPCODE
+  // ---------------------------------------------------------
 
   const fetchNearbyPeople = async () => {
-    if (!userLocation) return;
+    if (!currentUser?.zipcode) {
+      setPeople([]);
+      return;
+    }
 
     try {
       setLoading(true);
 
-      /*
-       * IMPORTANT:
-       *
-       * This assumes your backend provides:
-       *
-       * GET /users/nearby
-       *
-       * with:
-       * latitude
-       * longitude
-       * radius
-       *
-       * Example:
-       *
-       * /users/nearby?latitude=32.7767&longitude=-96.7970&radius=25
-       */
-
-      const response = await axios.get(`${Api}/users/nearby`, {
-        params: {
-          latitude: userLocation.latitude,
-          longitude: userLocation.longitude,
-          radius,
-        },
-      });
+      console.log(currentUser,'currentUser')
+      const response = await axios.get(Api + `/users/nearby/user/${currentUser._id}`);
 
       setPeople(response.data?.data || []);
     } catch (error) {
@@ -180,32 +59,19 @@ export default function PeopleNearYou() {
     }
   };
 
-  /*
-   * Fetch whenever location or radius changes.
-   */
+  // ---------------------------------------------------------
+  // FETCH WHEN ZIPCODE IS AVAILABLE
+  // ---------------------------------------------------------
 
   useEffect(() => {
-    if (userLocation) {
+    if (currentUser?.zipcode) {
       fetchNearbyPeople();
     }
-  }, [userLocation, radius]);
+  }, [currentUser?.zipcode]);
 
-  /*
-   * If page was opened directly without FindRides state,
-   * request location automatically.
-   */
-
-  useEffect(() => {
-    if (!userLocation) {
-      requestCurrentLocation();
-    }
-  }, []);
-
-  /*
-   * ---------------------------------------------------------
-   * SEARCH
-   * ---------------------------------------------------------
-   */
+  // ---------------------------------------------------------
+  // SEARCH
+  // ---------------------------------------------------------
 
   const filteredPeople = useMemo(() => {
     const value = search.trim().toLowerCase();
@@ -215,71 +81,163 @@ export default function PeopleNearYou() {
     }
 
     return people.filter((person) => {
-      const firstName =
-        person?.firstName?.toLowerCase() || "";
-
-      const lastName =
-        person?.lastName?.toLowerCase() || "";
-
-      const profession =
-        person?.bio?.toLowerCase() || "";
-
-      const city =
-        person?.city?.toLowerCase() || "";
-
-      const zipcode =
-        person?.zipcode?.toLowerCase() || "";
+      const firstName = person?.firstName?.toLowerCase() || "";
+      const lastName = person?.lastName?.toLowerCase() || "";
+      const profession = person?.profession?.toLowerCase() || "";
+      const bio = person?.bio?.toLowerCase() || "";
+      const city = person?.city?.toLowerCase() || "";
 
       return (
         firstName.includes(value) ||
         lastName.includes(value) ||
         profession.includes(value) ||
-        city.includes(value) ||
-        zipcode.includes(value)
+        bio.includes(value) ||
+        city.includes(value)
       );
     });
   }, [people, search]);
 
-  /*
-   * ---------------------------------------------------------
-   * DISTANCE FORMAT
-   * ---------------------------------------------------------
-   */
-
-  const formatDistance = (distance) => {
-    if (distance == null || !Number.isFinite(Number(distance))) {
-      return null;
-    }
-
-    const value = Number(distance);
-
-    if (value < 0.1) {
-      return "Less than 0.1 mi away";
-    }
-
-    return `${value.toFixed(1)} mi away`;
-  };
-
-  /*
-   * ---------------------------------------------------------
-   * PROFILE
-   * ---------------------------------------------------------
-   */
+  // ---------------------------------------------------------
+  // VIEW PROFILE
+  // ---------------------------------------------------------
 
   const handleViewProfile = (person) => {
-    /*
-     * Change this route if your application already has
-     * a different public profile route.
-     */
-
     navigate(`/user-profile/${person._id}`);
   };
 
-  /*
-   * ---------------------------------------------------------
-   * RENDER
-   * ---------------------------------------------------------
-   */
+  // ---------------------------------------------------------
+  // NO ZIPCODE
+  // ---------------------------------------------------------
+
+  if (!currentUser?.zipcode) {
+    return (
+      <Box
+        sx={{
+          minHeight: "100vh",
+          background: "#FCFAF8",
+        }}
+      >
+        {/* HEADER */}
+        <Box
+          sx={{
+            position: "sticky",
+            top: 0,
+            zIndex: 20,
+            background: "#FFFFFF",
+            borderBottom: "1px solid #F0E8E0",
+          }}
+        >
+          <Box
+            sx={{
+              minHeight: 58,
+              px: { xs: 1.5, sm: 3 },
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+            }}
+          >
+            <IconButton
+              onClick={() => navigate(-1)}
+              sx={{
+                color: "#4A3327",
+                width: 38,
+                height: 38,
+              }}
+            >
+              <ArrowBackRoundedIcon />
+            </IconButton>
+
+            <Box>
+              <Typography
+                sx={{
+                  fontSize: { xs: "1rem", sm: "1.2rem" },
+                  fontWeight: 800,
+                  color: "#2D211B",
+                }}
+              >
+                People Near You
+              </Typography>
+
+              <Typography
+                sx={{
+                  fontSize: { xs: "0.65rem", sm: "0.72rem" },
+                  color: "text.secondary",
+                }}
+              >
+                Discover Saathi members around your area
+              </Typography>
+            </Box>
+          </Box>
+        </Box>
+
+        {/* CONTENT */}
+        <Box
+          sx={{
+            minHeight: "70vh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            px: 3,
+          }}
+        >
+          <Box sx={{ textAlign: "center", maxWidth: 350 }}>
+            <PeopleAltRoundedIcon
+              sx={{
+                fontSize: 50,
+                color: ORANGE,
+                mb: 1,
+              }}
+            />
+
+            <Typography
+              sx={{
+                fontSize: "1rem",
+                fontWeight: 700,
+                color: "#33251D",
+              }}
+            >
+              ZIP code required
+            </Typography>
+
+            <Typography
+              sx={{
+                mt: 1,
+                fontSize: "0.75rem",
+                color: "text.secondary",
+                lineHeight: 1.5,
+              }}
+            >
+              Please add your ZIP code to your profile to discover
+              Saathi members in your area.
+            </Typography>
+
+            <Button
+              onClick={() => navigate("/profile")}
+              sx={{
+                mt: 2,
+                borderRadius: 999,
+                background: ORANGE,
+                color: "#FFF",
+                px: 2.5,
+                textTransform: "none",
+                fontSize: "0.75rem",
+                fontWeight: 700,
+                "&:hover": {
+                  background: "#C95608",
+                },
+              }}
+            >
+              Update Profile
+            </Button>
+          </Box>
+        </Box>
+      </Box>
+    );
+  }
+
+  // ---------------------------------------------------------
+  // MAIN PAGE
+  // ---------------------------------------------------------
 
   return (
     <Box
@@ -290,10 +248,7 @@ export default function PeopleNearYou() {
         overflowX: "hidden",
       }}
     >
-      {/* ------------------------------------------------ */}
       {/* HEADER */}
-      {/* ------------------------------------------------ */}
-
       <Box
         sx={{
           position: "sticky",
@@ -326,10 +281,7 @@ export default function PeopleNearYou() {
           <Box sx={{ flex: 1 }}>
             <Typography
               sx={{
-                fontSize: {
-                  xs: "1rem",
-                  sm: "1.2rem",
-                },
+                fontSize: { xs: "1rem", sm: "1.2rem" },
                 fontWeight: 800,
                 color: "#2D211B",
               }}
@@ -339,10 +291,7 @@ export default function PeopleNearYou() {
 
             <Typography
               sx={{
-                fontSize: {
-                  xs: "0.65rem",
-                  sm: "0.72rem",
-                },
+                fontSize: { xs: "0.65rem", sm: "0.72rem" },
                 color: "text.secondary",
               }}
             >
@@ -352,7 +301,7 @@ export default function PeopleNearYou() {
 
           <IconButton
             onClick={fetchNearbyPeople}
-            disabled={loading || !userLocation}
+            disabled={loading}
             sx={{
               color: ORANGE,
             }}
@@ -362,10 +311,7 @@ export default function PeopleNearYou() {
         </Box>
       </Box>
 
-      {/* ------------------------------------------------ */}
       {/* CONTENT */}
-      {/* ------------------------------------------------ */}
-
       <Box
         sx={{
           width: "100%",
@@ -375,8 +321,7 @@ export default function PeopleNearYou() {
           py: { xs: 1.5, sm: 3 },
         }}
       >
-        {/* LOCATION INFO */}
-
+        {/* AREA INFO */}
         <Box
           sx={{
             p: { xs: 1.4, sm: 2 },
@@ -401,7 +346,7 @@ export default function PeopleNearYou() {
               justifyContent: "center",
             }}
           >
-            <LocationOnRoundedIcon
+            <PeopleAltRoundedIcon
               sx={{
                 color: ORANGE,
                 fontSize: 22,
@@ -412,10 +357,7 @@ export default function PeopleNearYou() {
           <Box sx={{ flex: 1 }}>
             <Typography
               sx={{
-                fontSize: {
-                  xs: "0.76rem",
-                  sm: "0.85rem",
-                },
+                fontSize: { xs: "0.76rem", sm: "0.85rem" },
                 fontWeight: 700,
                 color: "#4A3327",
               }}
@@ -425,165 +367,59 @@ export default function PeopleNearYou() {
 
             <Typography
               sx={{
-                fontSize: {
-                  xs: "0.63rem",
-                  sm: "0.72rem",
-                },
+                fontSize: { xs: "0.63rem", sm: "0.72rem" },
                 color: "text.secondary",
                 mt: 0.3,
               }}
             >
-              Showing members within approximately {radius} miles
+              Showing Saathi members in your registered area
             </Typography>
           </Box>
         </Box>
 
-        {/* ------------------------------------------------ */}
-        {/* SEARCH + RADIUS */}
-        {/* ------------------------------------------------ */}
-
-        <Box
+        {/* SEARCH */}
+        <TextField
+          fullWidth
+          size="small"
+          placeholder="Search people or profession..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
           sx={{
-            display: "flex",
-            gap: 1,
             mt: 1.5,
+            "& .MuiOutlinedInput-root": {
+              height: 40,
+              borderRadius: "12px",
+              background: "#FFFFFF",
+              fontSize: {
+                xs: "0.7rem",
+                sm: "0.8rem",
+              },
+              "& fieldset": {
+                borderColor: "#E8DDD4",
+              },
+              "&:hover fieldset": {
+                borderColor: "#FFAB28",
+              },
+              "&.Mui-focused fieldset": {
+                borderColor: ORANGE,
+              },
+            },
           }}
-        >
-          <TextField
-            fullWidth
-            size="small"
-            placeholder="Search people or profession..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchRoundedIcon
-                    sx={{
-                      fontSize: 19,
-                      color: ORANGE,
-                    }}
-                  />
-                </InputAdornment>
-              ),
-            }}
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                height: 40,
-                borderRadius: "12px",
-                background: "#FFFFFF",
-                fontSize: {
-                  xs: "0.7rem",
-                  sm: "0.8rem",
-                },
-                "& fieldset": {
-                  borderColor: "#E8DDD4",
-                },
-                "&:hover fieldset": {
-                  borderColor: "#FFAB28",
-                },
-                "&.Mui-focused fieldset": {
-                  borderColor: ORANGE,
-                },
-              },
-            }}
-          />
-
-          <FormControl
-            size="small"
-            sx={{
-              minWidth: {
-                xs: 92,
-                sm: 120,
-              },
-            }}
-          >
-            <InputLabel
-              sx={{
-                fontSize: "0.75rem",
-              }}
-            >
-              Radius
-            </InputLabel>
-
-            <Select
-              value={radius}
-              label="Radius"
-              onChange={(e) =>
-                setRadius(Number(e.target.value))
-              }
-              sx={{
-                height: 40,
-                borderRadius: "12px",
-                background: "#FFFFFF",
-                fontSize: {
-                  xs: "0.7rem",
-                  sm: "0.8rem",
-                },
-              }}
-            >
-              {RADIUS_OPTIONS.map((option) => (
-                <MenuItem
-                  key={option.value}
-                  value={option.value}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchRoundedIcon
                   sx={{
-                    fontSize: "0.8rem",
+                    fontSize: 19,
+                    color: ORANGE,
                   }}
-                >
-                  {option.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Box>
+                />
+              </InputAdornment>
+            ),
+          }}
+        />
 
-        {/* ------------------------------------------------ */}
-        {/* LOCATION ERROR */}
-        {/* ------------------------------------------------ */}
-
-        {locationError && (
-          <Box
-            sx={{
-              mt: 1.5,
-              p: 1.5,
-              borderRadius: 2,
-              background: "#FFF4F4",
-              border: "1px solid #F3C5C5",
-            }}
-          >
-            <Typography
-              sx={{
-                fontSize: "0.72rem",
-                color: "#D32F2F",
-              }}
-            >
-              {locationError}
-            </Typography>
-
-            <Button
-              onClick={requestCurrentLocation}
-              disabled={locationLoading}
-              sx={{
-                mt: 0.5,
-                p: 0,
-                minWidth: 0,
-                textTransform: "none",
-                fontSize: "0.7rem",
-                color: ORANGE,
-                fontWeight: 700,
-              }}
-            >
-              {locationLoading
-                ? "Getting location..."
-                : "Try again"}
-            </Button>
-          </Box>
-        )}
-
-        {/* ------------------------------------------------ */}
         {/* RESULT COUNT */}
-        {/* ------------------------------------------------ */}
-
         <Box
           sx={{
             mt: 2,
@@ -595,10 +431,7 @@ export default function PeopleNearYou() {
         >
           <Typography
             sx={{
-              fontSize: {
-                xs: "0.78rem",
-                sm: "0.9rem",
-              },
+              fontSize: { xs: "0.78rem", sm: "0.9rem" },
               fontWeight: 700,
               color: "#4A3327",
             }}
@@ -606,19 +439,12 @@ export default function PeopleNearYou() {
             {loading
               ? "Finding people..."
               : `${filteredPeople.length} ${
-                  filteredPeople.length === 1
-                    ? "member"
-                    : "members"
-                } nearby`}
+                  filteredPeople.length === 1 ? "member" : "members"
+                } in your area`}
           </Typography>
 
           <Chip
-            icon={
-              <PeopleAltRoundedIcon
-                sx={{ fontSize: "15px !important" }}
-              />
-            }
-            label={`${radius} mi`}
+            label="Your Area"
             size="small"
             sx={{
               height: 25,
@@ -626,17 +452,11 @@ export default function PeopleNearYou() {
               color: "#A85F00",
               fontSize: "0.65rem",
               fontWeight: 700,
-              "& .MuiChip-icon": {
-                color: ORANGE,
-              },
             }}
           />
         </Box>
 
-        {/* ------------------------------------------------ */}
         {/* LOADING */}
-        {/* ------------------------------------------------ */}
-
         {loading && (
           <Box
             sx={{
@@ -661,16 +481,13 @@ export default function PeopleNearYou() {
                 color: "text.secondary",
               }}
             >
-              Finding Saathi members near you...
+              Finding Saathi members in your area...
             </Typography>
           </Box>
         )}
 
-        {/* ------------------------------------------------ */}
         {/* PEOPLE LIST */}
-        {/* ------------------------------------------------ */}
-
-        {!loading && userLocation && filteredPeople.length > 0 && (
+        {!loading && filteredPeople.length > 0 && (
           <Box
             sx={{
               display: "flex",
@@ -698,33 +515,23 @@ export default function PeopleNearYou() {
                 }}
               >
                 {/* PROFILE IMAGE */}
-
                 <Avatar
                   src={person.profileImage || ""}
                   alt={`${person.firstName || ""} ${
                     person.lastName || ""
                   }`}
                   sx={{
-                    width: {
-                      xs: 52,
-                      sm: 58,
-                    },
-                    height: {
-                      xs: 52,
-                      sm: 58,
-                    },
+                    width: { xs: 52, sm: 58 },
+                    height: { xs: 52, sm: 58 },
                     background: "#FFF0DC",
                     color: ORANGE,
                     border: "2px solid #FFE0B2",
                   }}
                 >
-                  {!person.profileImage && (
-                    <PersonRoundedIcon />
-                  )}
+                  {!person.profileImage && <PersonRoundedIcon />}
                 </Avatar>
 
                 {/* DETAILS */}
-
                 <Box
                   sx={{
                     flex: 1,
@@ -749,8 +556,7 @@ export default function PeopleNearYou() {
                         color: "#2D211B",
                       }}
                     >
-                      {person.firstName}{" "}
-                      {person.lastName}
+                      {person.firstName} {person.lastName}
                     </Typography>
 
                     {person.isVerified && (
@@ -768,7 +574,7 @@ export default function PeopleNearYou() {
                     )}
                   </Box>
 
-                  {person.bio && (
+                  {(person.profession || person.bio) && (
                     <Typography
                       sx={{
                         mt: 0.25,
@@ -782,81 +588,30 @@ export default function PeopleNearYou() {
                         whiteSpace: "nowrap",
                       }}
                     >
-                      {person.bio}
+                      {person.profession || person.bio}
                     </Typography>
                   )}
 
-                  <Box
+                  <Typography
                     sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 0.4,
                       mt: 0.45,
+                      fontSize: {
+                        xs: "0.62rem",
+                        sm: "0.7rem",
+                      },
+                      color: "#777",
                     }}
                   >
-                    <LocationOnRoundedIcon
-                      sx={{
-                        fontSize: 13,
-                        color: ORANGE,
-                      }}
-                    />
-
-                    <Typography
-                      sx={{
-                        fontSize: {
-                          xs: "0.62rem",
-                          sm: "0.7rem",
-                        },
-                        color: "#777",
-                      }}
-                    >
-                      {person.city ||
-                        person.location ||
-                        "Nearby"}
-                    </Typography>
-
-                    {person.distance != null && (
-                      <>
-                        <Typography
-                          sx={{
-                            fontSize: "0.65rem",
-                            color: "#BBB",
-                          }}
-                        >
-                          •
-                        </Typography>
-
-                        <Typography
-                          sx={{
-                            fontSize: {
-                              xs: "0.62rem",
-                              sm: "0.7rem",
-                            },
-                            color: ORANGE,
-                            fontWeight: 600,
-                          }}
-                        >
-                          {formatDistance(
-                            person.distance
-                          )}
-                        </Typography>
-                      </>
-                    )}
-                  </Box>
+                    {person.city || "Your area"}
+                  </Typography>
                 </Box>
 
                 {/* VIEW PROFILE */}
-
-                <Button
-                  onClick={() =>
-                    handleViewProfile(person)
-                  }
+                {/* <Button
+                  onClick={() => handleViewProfile(person)}
                   sx={{
                     minWidth: "auto",
-                    px: {
-                      xs: 1,
-                      sm: 1.5,
-                    },
+                    px: { xs: 1, sm: 1.5 },
                     py: 0.7,
                     borderRadius: 2,
                     background: "#FFF4E8",
@@ -874,102 +629,71 @@ export default function PeopleNearYou() {
                   }}
                 >
                   View
-                </Button>
+                </Button> */}
               </Box>
             ))}
           </Box>
         )}
 
-        {/* ------------------------------------------------ */}
         {/* EMPTY STATE */}
-        {/* ------------------------------------------------ */}
-
-        {!loading &&
-          userLocation &&
-          filteredPeople.length === 0 && (
+        {!loading && filteredPeople.length === 0 && (
+          <Box
+            sx={{
+              minHeight: 300,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+              px: 3,
+            }}
+          >
             <Box
               sx={{
-                minHeight: 300,
+                width: 68,
+                height: 68,
+                borderRadius: "50%",
+                background: "#FFF2E2",
                 display: "flex",
-                flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
-                textAlign: "center",
-                px: 3,
+                mb: 1.5,
               }}
             >
-              <Box
+              <PeopleAltRoundedIcon
                 sx={{
-                  width: 68,
-                  height: 68,
-                  borderRadius: "50%",
-                  background: "#FFF2E2",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  mb: 1.5,
+                  fontSize: 32,
+                  color: "#F59300",
                 }}
-              >
-                <PeopleAltRoundedIcon
-                  sx={{
-                    fontSize: 32,
-                    color: "#F59300",
-                  }}
-                />
-              </Box>
-
-              <Typography
-                sx={{
-                  fontSize: "1rem",
-                  fontWeight: 700,
-                  color: "#33251D",
-                }}
-              >
-                No people found nearby
-              </Typography>
-
-              <Typography
-                sx={{
-                  mt: 0.8,
-                  fontSize: "0.75rem",
-                  color: "text.secondary",
-                  maxWidth: 300,
-                  lineHeight: 1.5,
-                }}
-              >
-                Try increasing the search radius or
-                changing your search.
-              </Typography>
-
-              <Button
-                onClick={() =>
-                  setRadius((prev) =>
-                    prev < 50 ? 50 : prev
-                  )
-                }
-                sx={{
-                  mt: 2,
-                  borderRadius: 999,
-                  background: ORANGE,
-                  color: "#FFF",
-                  px: 2.5,
-                  textTransform: "none",
-                  fontSize: "0.75rem",
-                  fontWeight: 700,
-                  "&:hover": {
-                    background: "#C95608",
-                  },
-                }}
-              >
-                Search a larger area
-              </Button>
+              />
             </Box>
-          )}
 
-        {/* ------------------------------------------------ */}
+            <Typography
+              sx={{
+                fontSize: "1rem",
+                fontWeight: 700,
+                color: "#33251D",
+              }}
+            >
+              No people found in your area
+            </Typography>
+
+            <Typography
+              sx={{
+                mt: 0.8,
+                fontSize: "0.75rem",
+                color: "text.secondary",
+                maxWidth: 300,
+                lineHeight: 1.5,
+              }}
+            >
+              We couldn't find any other Saathi members
+              registered in your area yet.
+            </Typography>
+          </Box>
+        )}
+
         {/* PRIVACY NOTE */}
-        {/* ------------------------------------------------ */}
-
         <Box
           sx={{
             mt: 3,
@@ -992,10 +716,9 @@ export default function PeopleNearYou() {
               textAlign: "center",
             }}
           >
-            🔒 For privacy, exact locations and
-            addresses are not shown to other members.
-            Only an approximate distance and available
-            profile information are displayed.
+            🔒 Your registered location is used to find
+            members in your area. Exact addresses are not
+            shown to other members.
           </Typography>
         </Box>
       </Box>

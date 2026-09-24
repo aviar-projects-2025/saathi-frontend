@@ -146,7 +146,7 @@ const noZoomInputSx = {
   },
 };
 
-const user = JSON.parse(localStorage.getItem("user") || "null");
+const user = JSON.parse(localStorage.getItem("user"));
 
 // ── Empty State ──────────────────────────────────────────────────────────────
 function EmptyState({ message1, message2 }) {
@@ -1369,7 +1369,6 @@ const MyRides = () => {
   const sentinelRef = useRef(null);
   const processedRideIds = useRef(new Set());
   const processedNotificationIds = useRef(new Set());
-  const categoryLoadingRef = useRef({ current: false, upcoming: false, posts: false, history: false });
   const toastss = ToastConfig();
 
   const active = tabs[tab];
@@ -1383,11 +1382,10 @@ const MyRides = () => {
   const fetchCategory = async (category, { reset = false } = {}) => {
     if (!currentUser?.id) return;
     const state = data[category];
-    if (categoryLoadingRef.current[category]) return;
+    if (state.loading) return;
     if (!reset && state.loaded && !state.hasMore) return;
     const page = reset ? 1 : state.page + 1;
 
-    categoryLoadingRef.current[category] = true;
     setCategory(category, { loading: true });
     try {
       const res = await axios.get(`${Api}/rides/get`, {
@@ -1410,7 +1408,6 @@ const MyRides = () => {
       setCategory(category, { loading: false, loaded: true });
       toast.error(error?.response?.data?.message || `Failed to load ${category} rides`, toastss);
     } finally {
-      categoryLoadingRef.current[category] = false;
       setInitialLoading(false);
     }
   };
@@ -1642,6 +1639,8 @@ const MyRides = () => {
             <Button variant="contained" onClick={() => setConfirmRide(null)} sx={{ flex: 1, minWidth: 0, minHeight: { xs: 36, sm: 40 }, bgcolor: "#757575", color: "#fff", textTransform: "none", borderRadius: 2 }}>Not yet</Button>
             <Button variant="contained" onClick={() => handleStartOrComplete(confirmRide?._id, confirmRide?.travelStatus)} sx={{ flex: 1, minWidth: 0, minHeight: { xs: 36, sm: 40 }, bgcolor: "#f89b04", color: "#fff", textTransform: "none", borderRadius: 2 }}>Started</Button>
           </DialogActions>
+        </Dialog>
+
         </Dialog>
       </Box>
     </Box>
