@@ -1348,12 +1348,18 @@ const MyRides = () => {
   const token = localStorage.getItem("token");
   const currentUser = JSON.parse(localStorage.getItem("user") || "null");
   const ITEMS_PER_PAGE = 10;
+  const [rideCounts, setRideCounts] = useState({
+    current: 0,
+    upcoming: 0,
+    posts: 0,
+    history: 0,
+  });
 
   const tabs = [
-    { key: "current", label: "Current", empty1: "No Rides in Progress", empty2: "You don't have any rides currently in progress.", current: true, edit: true, del: true },
-    { key: "upcoming", label: "Upcoming", empty1: "No Upcoming Rides", empty2: "You don't have any upcoming rides scheduled.", current: false, edit: true, del: true },
-    { key: "posts", label: "My Posts", empty1: "No Posted Rides", empty2: "You haven't posted any rides yet.", current: false, edit: true, del: true },
-    { key: "history", label: "History", empty1: "No Ride History", empty2: "No completed or cancelled rides are available at the moment.", current: false, edit: false, del: false },
+    { key: "current", label: `Current (${rideCounts.current})`, empty1: "No Rides in Progress", empty2: "You don't have any rides currently in progress.", current: true, edit: true, del: true },
+    { key: "upcoming", label: `Upcoming (${rideCounts.upcoming})`, empty1: "No Upcoming Rides", empty2: "You don't have any upcoming rides scheduled.", current: false, edit: true, del: true },
+    { key: "posts", label: `My Posts (${rideCounts.posts})`, empty1: "No Posted Rides", empty2: "You haven't posted any rides yet.", current: false, edit: true, del: true },
+    { key: "history", label: `History (${rideCounts.history})`, empty1: "No Ride History", empty2: "No completed or cancelled rides are available at the moment.", current: false, edit: false, del: false },
   ];
 
   const emptyPage = () => ({ rides: [], page: 0, hasMore: true, total: null, loading: false, loaded: false });
@@ -1434,26 +1440,86 @@ const MyRides = () => {
     }
   };
 
+  const fetchRideCounts = async () => {
+    try {
+      const res = await axios.get(
+        `${Api}/rides/my/counts`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (res.data?.success) {
+        setRideCounts(res.data.data);
+      }
+    } catch (error) {
+      console.error(
+        "Failed to fetch ride counts:",
+        error
+      );
+    }
+  };
+
+  const refreshAllCategories = async () => {
+    await Promise.all([
+      fetchCategory("current", { reset: true }),
+      fetchCategory("upcoming", { reset: true }),
+      fetchCategory("posts", { reset: true }),
+      fetchCategory("history", { reset: true }),
+      fetchAllRequests(),
+      fetchRideCounts(),
+    ]);
+  };
+
   useEffect(() => {
     if (!currentUser?.id) { setInitialLoading(false); return; }
     fetchCategory("current", { reset: true });
     fetchAllRequests();
+    fetchRideCounts();
   }, []);
 
   useEffect(() => {
     const requestedTab = Number(location.state?.tab);
-    if (location.state?.tab === undefined || Number.isNaN(requestedTab) || requestedTab < 0 || requestedTab > 3) return;
+
+    if (
+      location.state?.tab === undefined ||
+      Number.isNaN(requestedTab) ||
+      requestedTab < 0 ||
+      requestedTab > 3
+    ) {
+      return;
+    }
+
     setTab(requestedTab);
     setNotificationRide(location.state?.rideId || null);
+
     const category = tabs[requestedTab].key;
-    if (!data[category].loaded) fetchCategory(category, { reset: true });
+
+    if (location.state?.refresh) {
+      fetchCategory(category, { reset: true });
+      fetchAllRequests();
+      fetchRideCounts();
+      return;
+    }
+
+    if (!data[category].loaded) {
+      fetchCategory(category, { reset: true });
+    }
   }, [location.state]);
 
   useEffect(() => {
-    const handler = () => { refreshCategory(active.key); fetchAllRequests(); };
+    const handler = () => {
+      refreshAllCategories();
+    };
+
     window.addEventListener("rideDataChanged", handler);
-    return () => window.removeEventListener("rideDataChanged", handler);
-  }, [active.key]);
+
+    return () => {
+      window.removeEventListener("rideDataChanged", handler);
+    };
+  }, []);
 
   useEffect(() => {
     if (!refreshRide) return;
@@ -1608,7 +1674,7 @@ const MyRides = () => {
 
         <Box sx={{ width: "100%", minWidth: 0, borderBottom: "1px solid", borderColor: "divider", flexShrink: 0, position: "sticky", top: -3, zIndex: 10, bgcolor: "background.paper" }}>
           <Tabs value={tab} onChange={handleTabChange} variant="fullWidth" sx={{ width: "100%", minHeight: { xs: 40, sm: 48, md: 50 }, "& .MuiTabs-flexContainer": { width: "100%" }, "& .MuiTab-root": { minWidth: 0, flex: 1, padding: { xs: "4px 2px", sm: "8px 12px", md: "12px 16px" }, fontSize: { xs: "0.68rem", sm: "0.78rem", md: "0.82rem" }, fontWeight: 600, textTransform: "none", minHeight: { xs: 36, sm: 44, md: 48 }, lineHeight: 1.1, color: "#666", "&.Mui-selected": { color: "#FF9933" } }, "& .MuiTabs-indicator": { height: 3, backgroundColor: "#FF9933" } }}>
-            {tabs.map(item => <Tab key={item.key} label={<Typography component="span" noWrap sx={{ fontSize: { xs: "0.62rem", sm: "0.72rem", md: "0.8rem" }, fontWeight: "bold", lineHeight: 1.5 }}>{`${item.label} ( ${countFor(item.key)} )`}</Typography>} />)}
+            {tabs.map(item => <Tab key={item.key} label={<Typography component="span" noWrap sx={{ fontSize: { xs: "0.62rem", sm: "0.72rem", md: "0.8rem" }, fontWeight: "bold", lineHeight: 1.5 }}>{`${item.label}`}</Typography>} />)}
           </Tabs>
         </Box>
 
