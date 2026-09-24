@@ -520,14 +520,11 @@ const UserProfile = () => {
   const [hasMorePosts, setHasMorePosts] = useState(true);
   const [loadingMorePosts, setLoadingMorePosts] = useState(false);
 
-  // Refs mirror the latest pagination state so the IntersectionObserver
-  // callback always reads current values instead of stale ones captured
-  // in a closure.
   const isFetchingRef = useRef(false);
   const hasMoreRef = useRef(true);
   const pageRef = useRef(1);
   const observerRef = useRef(null);
-
+  const [totalPostCount, setTotalPostCount] = useState(0);
   useEffect(() => {
     hasMoreRef.current = hasMorePosts;
   }, [hasMorePosts]);
@@ -549,16 +546,7 @@ const UserProfile = () => {
     }
   }, [currentUser?._id]);
 
-  // Callback ref (instead of useRef + a useEffect keyed on currentUser?._id)
-  // so the observer attaches the moment the sentinel div actually exists in
-  // the DOM. The sentinel only renders once communityPosts.length > 0, which
-  // happens AFTER the first fetch resolves -- a plain useRef + useEffect
-  // combo fires before that div is mounted, finds loadMoreRef.current still
-  // null, bails out, and never gets a second chance to attach. That was why
-  // pagination silently stopped dead at the first 12 posts no matter how
-  // many actually existed on the server. A callback ref re-runs every time
-  // React attaches or detaches the node (including switching tabs away and
-  // back), so it always has a live element to observe.
+
   const setLoadMoreRef = useCallback((node) => {
     if (observerRef.current) {
       observerRef.current.disconnect();
@@ -570,8 +558,8 @@ const UserProfile = () => {
     const observer = new IntersectionObserver(
       (entries) => {
         if (!entries[0].isIntersecting) return;
-        if (isFetchingRef.current) return; // a fetch is already in flight
-        if (!hasMoreRef.current) return; // no more pages left
+        if (isFetchingRef.current) return;
+        if (!hasMoreRef.current) return;
 
         isFetchingRef.current = true;
         getCommunityPost(pageRef.current + 1).finally(() => {
@@ -597,26 +585,37 @@ const UserProfile = () => {
         setLoadingMorePosts(true);
       }
 
-    const postsRes = await axios.get(
-  `${Api}/post-images/profile/${currentUser?._id}?page=${page}&limit=12`
-);
+      const postsRes = await axios.get(
+        `${Api}/post-images/profile/${currentUser?._id}?page=${page}&limit=12`
+      );
+
       const newPosts = postsRes.data.data || [];
       const pagination = postsRes.data.pagination;
 
+
+      const totalCount = pagination?.totalCount ?? 0;
+
+      setTotalPostCount(totalCount);
+
       if (page === 1) {
-        // First 12
+        // First 12 posts
         setCommunityPosts(newPosts);
       } else {
-        // Add next 12 to existing posts
-        setCommunityPosts((prev) => [...prev, ...newPosts]);
+        // Add next 12 posts
+        setCommunityPosts((prev) => [
+          ...prev,
+          ...newPosts,
+        ]);
       }
 
       setCommunityPage(page);
       pageRef.current = page;
 
       const hasMore = pagination?.hasMore ?? false;
+
       setHasMorePosts(hasMore);
       hasMoreRef.current = hasMore;
+
     } catch (error) {
       console.error("Get community posts error:", error);
     } finally {
@@ -903,7 +902,9 @@ const UserProfile = () => {
                   </Typography>
 
                   <Stack direction="row" spacing={{ xs: 2, sm: 3.5 }}>
-                    <StatBlock value={communityPosts.length} label="Posts" />
+                    <Typography>
+                      Posts: {totalPostCount}
+                    </Typography>
                   </Stack>
                 </Box>
               </Stack>
