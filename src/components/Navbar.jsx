@@ -519,8 +519,7 @@ const TopNav = ({ onMenuClick }) => {
                   cursor: "pointer",
                 }}
               >
-                {!currentUser?.profileImage &&
-                  (currentUser?.firstName?.[0] || "U")}
+                {currentUser?.firstName?.[0]}{currentUser?.lastName?.[0]}
               </Avatar>
             </Box>
             <Menu
