@@ -361,22 +361,22 @@ const UserProfile = () => {
       0.92,
     );
   };
-  const [dropDown, setDropDown] = useState(null);
+  // const [dropDown, setDropDown] = useState(null);
 
-  const isdropdownMenuOpen = Boolean(dropDown);
+  // const isdropdownMenuOpen = Boolean(dropDown);
 
-  const handleDropdownMenuOpen = (event) => {
-    setDropDown(event.currentTarget);
-  };
+  // const handleDropdownMenuOpen = (event) => {
+  //   setDropDown(event.currentTarget);
+  // };
 
-  const handleDropdownMenuClose = () => {
-    setDropDown(null);
-  };
+  // const handleDropdownMenuClose = () => {
+  //   setDropDown(null);
+  // };
 
-  const handleSettingClick = () => {
-    handleDropdownMenuClose();
-    navigate("/myprofile");
-  };
+  // const handleSettingClick = () => {
+  //   handleDropdownMenuClose();
+  //   navigate("/myprofile");
+  // };
   const handlePasswordChange = (e) => {
     const { name, value } = e.target;
 
@@ -872,6 +872,24 @@ const UserProfile = () => {
     event.target.value = "";
   };
 
+  const [dropDown, setDropDown] = useState(null);
+
+  const isdropdownMenuOpen = Boolean(dropDown);
+
+  const handleDropdownMenuOpen = (event) => {
+    setDropDown(event.currentTarget);
+  };
+
+  const handleDropdownMenuClose = () => {
+    setDropDown(null);
+  };
+
+  const handleSettingClick = () => {
+    handleDropdownMenuClose();
+    navigate("/myprofile");
+  };
+
+
   return (
     <PageLayout>
       <Box sx={{ mx: "auto", px: { xs: 0, sm: 2, md: 0 } }}>
@@ -978,7 +996,7 @@ const UserProfile = () => {
               </Stack>
 
               <IconButton
-                onClick={() => navigate("/myprofile")}
+                onClick={handleDropdownMenuOpen}
                 sx={{
                   color: "#555",
                   ml: 1,
@@ -986,6 +1004,32 @@ const UserProfile = () => {
               >
                 <MoreVertIcon />
               </IconButton>
+
+              <Menu
+                anchorEl={dropDown}
+                open={isdropdownMenuOpen}
+                onClose={handleDropdownMenuClose}
+                anchorOrigin={{
+                  vertical: "bottom",
+                  horizontal: "left",
+                }}
+                transformOrigin={{
+                  vertical: "top",
+                  horizontal: "left",
+                }}
+              >
+                <MenuItem
+                  onClick={handleSettingClick}
+                  sx={{
+                    "&:hover": {
+                      // backgroundColor: "#FFF3E0",
+                      color: "#E8650A",
+                    },
+                  }}
+                >
+                  <ListItemText primary="Settings" />
+                </MenuItem>
+              </Menu>
             </Box>
 
             {currentUser?.bio && (
@@ -1984,8 +2028,8 @@ const UserProfile = () => {
                           sx={{
                             position: "relative",
                             cursor: "pointer",
-                            width: { xs: 108, sm: 135, md: 175, lg: 225 },
-                            height: { xs: 150, sm: 250, md: 300, lg: 350 },
+                            width: { xs: 108, sm: 125, md: 150, lg: 175 },
+                            height: { xs: 150, sm: 200, md: 225, lg: 250 },
                             overflow: "hidden",
                             borderRadius: { xs: 0.5, sm: 1 },
                             "&:hover .postOverlay": { opacity: 1 },
@@ -2061,7 +2105,7 @@ const UserProfile = () => {
                       left: 8,
                       color: "#fff",
                       bgcolor: "rgba(0,0,0,0.5)",
-                      "&:hover": { bgcolor: "rgba(0,0,0,0.7)" },
+                      "&:hover": { bgcolor: "#ffff" },
                       zIndex: 10,
                     }}
                   >
@@ -2075,18 +2119,36 @@ const UserProfile = () => {
                 )}
 
                 <IconButton
+                  size="small"
                   onClick={() => setOpenImage(false)}
                   sx={{
                     position: "absolute",
-                    top: 8,
-                    right: 8,
+                    top: { xs: 4, sm: 6, md: 8 },
+                    right: { xs: 4, sm: 6, md: 8 },
+
+                    width: { xs: 24, sm: 28, md: 32 },
+                    height: { xs: 24, sm: 28, md: 32 },
+
                     color: "#fff",
                     bgcolor: "rgba(0,0,0,0.5)",
-                    "&:hover": { bgcolor: "rgba(0,0,0,0.7)" },
+
+                    "&:hover": {
+                      color: "rgba(0,0,0,0.7)",
+                      backgroundColor: "#fff",
+                    },
+
                     zIndex: 10,
                   }}
                 >
-                  <CloseIcon />
+                  <CloseIcon
+                    sx={{
+                      fontSize: {
+                        xs: 15,
+                        sm: 18,
+                        md: 20,
+                      },
+                    }}
+                  />
                 </IconButton>
 
                 <DialogContent
