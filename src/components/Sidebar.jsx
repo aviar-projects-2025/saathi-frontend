@@ -178,7 +178,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
           },
         }}
       >
-        <Stack direction="row" spacing={2} alignItems="center" onClick={() => navigate("/user-profile")} sx={{ cursor: "pointer" }}>
+        <Stack direction="row" spacing={2} alignItems="center" sx={{ cursor: "pointer" }}>
           <Box
             sx={{
               position: "relative",
@@ -189,6 +189,11 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
               alignItems: "center",
               justifyContent: "center",
               cursor: "pointer",
+            }}
+            onClick={(event) => {
+              event.stopPropagation();
+              setSelectedProfile(currentUser);
+              setProfileModalOpen(true);
             }}
           >
             <CircularProgress
@@ -221,11 +226,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
                 height: 52,
                 bgcolor: SAFFRON,
               }}
-              onClick={(event) => {
-                event.stopPropagation();
-                setSelectedProfile(currentUser);
-                setProfileModalOpen(true);
-              }}
+
             >
               {currentUser?.firstName?.[0]}{currentUser?.lastName?.[0]}
             </Avatar>
@@ -242,6 +243,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
               },
               overflow: "hidden",
             }}
+            onClick={() => navigate("/user-profile")}
           >
             <Typography
               sx={{

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import {
   Box,
   Typography,
@@ -23,11 +23,7 @@ import {
   Tooltip,
   DialogActions,
   Slider,
-  IconButton,
-  Tabs,
-  Tab,
 } from "@mui/material";
-
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import NotificationsIcon from "@mui/icons-material/Notifications";
@@ -37,74 +33,59 @@ import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import SettingsIcon from "@mui/icons-material/Settings";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import ShareIcon from "@mui/icons-material/Share";
+import PageLayout from "../components/PageLayout";
+import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs from "dayjs";
+import axios from "axios";
+import Api from "../Api";
+import { toast } from "react-toastify";
+import { useUser } from "../context/userConetext";
+import Mypost from "./Myprofile.jsx";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import PersonPinIcon from "@mui/icons-material/PersonPin";
+import { Tabs, Tab, IconButton, Collapse } from "@mui/material";
 import GridOnIcon from "@mui/icons-material/GridOn";
 import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
 import ThumbUpOffAltIcon from "@mui/icons-material/ThumbUpOffAlt";
 import ChatIcon from "@mui/icons-material/Chat";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import CommunityComments from "./CommunityComments.jsx";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
-import CloseIcon from "@mui/icons-material/Close";
-
-import PageLayout from "../components/PageLayout";
-
-import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-
-import dayjs from "dayjs";
-import axios from "axios";
-import Api from "../Api";
-import { toast } from "react-toastify";
-
-import { useUser } from "../context/userConetext";
-import Mypost from "./Myprofile.jsx";
-import CommunityComments from "./CommunityComments.jsx";
 import ToastConfig from "../components/ToastConfig.jsx";
 import CircularProgress from "@mui/material/CircularProgress";
 
 import ProfileModal from "./Avatar.jsx";
+
+const SAFFRON = "#E8650A";
+const SAFFRON_LIGHT = "#FDF0E8";
+const CARD_BORDER = "1px solid #F0E6DC";
+
+import CloseIcon from "@mui/icons-material/Close";
 
 import { useNavigate, useLocation } from "react-router-dom";
 import uploadToCloudinary from "../components/uploadToCloudinary.jsx";
 
 // Size (px) of the square adjust/crop box
 const CROP_BOX_SIZE = 260;
-
 // Output resolution of the final cropped image
 const OUTPUT_SIZE = 500;
-
-const SAFFRON = "#E8650A";
-const SAFFRON_LIGHT = "#FDF0E8";
-const CARD_BORDER = "1px solid #F0E6DC";
 
 const pillBtn = {
   textTransform: "none",
   border: "none",
-  fontSize: {
-    xs: "0.72rem",
-    sm: "0.85rem",
-    md: "0.9rem",
-  },
+  fontSize: { xs: "0.72rem", sm: "0.85rem", md: "0.9rem" },
   color: SAFFRON,
   fontWeight: 600,
 };
-
 const SectionCard = ({ children, sx = {} }) => (
   <Paper
     elevation={0}
     sx={{
-      p: {
-        xs: "12px 14px",
-        sm: "16px 18px",
-        md: "20px 24px",
-      },
-      borderRadius: {
-        xs: 2,
-        sm: 3,
-      },
+      p: { xs: "12px 14px", sm: "16px 18px", md: "20px 24px" },
+      borderRadius: { xs: 2, sm: 3 },
       border: CARD_BORDER,
       ...sx,
     }}
@@ -112,7 +93,7 @@ const SectionCard = ({ children, sx = {} }) => (
     {children}
   </Paper>
 );
-
+// Shared wrapper that centers any modal content on every screen size
 const modalCenterWrapper = {
   display: "flex",
   justifyContent: "center",
@@ -120,47 +101,25 @@ const modalCenterWrapper = {
   width: "100%",
   height: "100%",
   minHeight: "100vh",
-  p: {
-    xs: 1,
-    sm: 2,
-    md: 3,
-  },
+  p: { xs: 1, sm: 2, md: 3 },
   outline: "none",
 };
 
+// Instagram-style stat block used in the profile header
 const StatBlock = ({ value, label }) => (
-  <Box
-    sx={{
-      textAlign: "center",
-      minWidth: {
-        xs: 52,
-        sm: 64,
-      },
-    }}
-  >
+  <Box sx={{ textAlign: "center", minWidth: { xs: 52, sm: 64 } }}>
     <Typography
       fontWeight={800}
       sx={{
-        fontSize: {
-          xs: "0.85rem",
-          sm: "0.95rem",
-          md: "1.05rem",
-        },
+        fontSize: { xs: "0.85rem", sm: "0.95rem", md: "1.05rem" },
         lineHeight: 1.2,
       }}
     >
       {value}
     </Typography>
-
     <Typography
       color="text.secondary"
-      sx={{
-        fontSize: {
-          xs: "0.62rem",
-          sm: "0.7rem",
-          md: "0.75rem",
-        },
-      }}
+      sx={{ fontSize: { xs: "0.62rem", sm: "0.7rem", md: "0.75rem" } }}
     >
       {label}
     </Typography>
@@ -169,184 +128,112 @@ const StatBlock = ({ value, label }) => (
 
 const UserProfile = () => {
   const theme = useTheme();
-
   const [editImage, setEditImage] = useState(null);
   const [previewImage, setPreviewImage] = useState("");
-
   const toasts = ToastConfig();
-
   const [imageDeleteLoading, setImageDeleteLoading] = useState(false);
-
   const [openComments, setOpenComments] = useState({});
-
   const handleToggleComments = (id) => {
     setOpenComments((prev) => ({
       ...prev,
       [id]: !prev[id],
     }));
   };
-
-  const {
-    currentUser,
-    getuserData,
-    savedPost,
-    removeSavedPost,
-  } = useUser();
-
+  const { currentUser, getuserData, savedPost, removeSavedPost } = useUser();
   const onImageSelected = (e) => {
     const selectedFile = e.target.files[0];
-
     if (selectedFile) {
       setEditImage(selectedFile);
       setPreviewImage(URL.createObjectURL(selectedFile));
     }
-
     closeImageMenu();
-
-    e.target.value = null;
+    e.target.value = null; // allow re-selecting same file next time
   };
-
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
   const location = useLocation();
 
   const [editProfile, setEditProfile] = useState(
     location.state?.openEditProfile || false
   );
-
   const [profileImage, setProfileImage] = useState(
-    currentUser?.profileImage || ""
+    currentUser?.profileImage || "",
   );
-
   const [profileFile, setProfileFile] = useState(null);
-
   const [submitLoading, setSubmitLoading] = useState(false);
-
   const [passwordModel, setPasswordModel] = useState("");
-
   const [errors, setErrors] = useState({});
-
   const user = JSON.parse(localStorage.getItem("user"));
-
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
-
   const navigate = useNavigate();
-
   const [imagePostLoading, setImagePostLoading] = useState(false);
-
   const [profileModalOpen, setProfileModalOpen] = useState(false);
-
   const [selectedProfile, setSelectedProfile] = useState(null);
 
   const [openShare, setOpenShare] = useState(false);
-
   const [selectedPost, setSelectedPost] = useState(null);
-
   const handleOpenShare = () => setOpenShare(true);
-
   const handleCloseShare = () => setOpenShare(false);
 
+  // const theme = useTheme();
   const isTab = useMediaQuery(theme.breakpoints.down("sm"));
 
   const [openImage, setOpenImage] = useState(false);
-
   const [selectedImage, setSelectedImage] = useState("");
 
   const [communityLoading, setCommunityLoading] = useState(false);
 
   const shareLink = `${window.location.origin}/register?ref=${user?.referralCode}`;
 
+
   const [showAdjustModal, setShowAdjustModal] = useState(false);
-
   const [rawImage, setRawImage] = useState("");
-
-  const [naturalSize, setNaturalSize] = useState({
-    w: 0,
-    h: 0,
-  });
-
+  const [naturalSize, setNaturalSize] = useState({ w: 0, h: 0 });
   const [zoom, setZoom] = useState(1);
-
-  const [offset, setOffset] = useState({
-    x: 0,
-    y: 0,
-  });
-
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
   const dragState = useRef({
     dragging: false,
     startX: 0,
     startY: 0,
-    startOffset: {
-      x: 0,
-      y: 0,
-    },
+    startOffset: { x: 0, y: 0 },
   });
-
   const cropImgRef = useRef(null);
 
-  const getBaseScale = (w, h) =>
-    Math.max(
-      CROP_BOX_SIZE / w,
-      CROP_BOX_SIZE / h
-    );
+  const getBaseScale = (w, h) => Math.max(CROP_BOX_SIZE / w, CROP_BOX_SIZE / h);
 
-  const clampOffset = (
-    nextOffset,
-    displayedW,
-    displayedH
-  ) => {
+  const clampOffset = (nextOffset, displayedW, displayedH) => {
     const minX = CROP_BOX_SIZE - displayedW;
     const minY = CROP_BOX_SIZE - displayedH;
-
     return {
-      x: Math.min(
-        0,
-        Math.max(minX, nextOffset.x)
-      ),
-      y: Math.min(
-        0,
-        Math.max(minY, nextOffset.y)
-      ),
+      x: Math.min(0, Math.max(minX, nextOffset.x)),
+      y: Math.min(0, Math.max(minY, nextOffset.y)),
     };
   };
 
   const handlePickImage = (e) => {
     const file = e.target.files[0];
-
     if (!file) return;
 
     const reader = new FileReader();
-
     reader.onload = () => {
       setRawImage(reader.result);
       setZoom(1);
-      setOffset({
-        x: 0,
-        y: 0,
-      });
+      setOffset({ x: 0, y: 0 });
       setShowAdjustModal(true);
     };
-
     reader.readAsDataURL(file);
-
     e.target.value = "";
   };
 
   const handleCropImageLoad = (e) => {
     const w = e.target.naturalWidth;
     const h = e.target.naturalHeight;
-
-    setNaturalSize({
-      w,
-      h,
-    });
+    setNaturalSize({ w, h });
 
     const baseScale = getBaseScale(w, h);
-
     const displayedW = w * baseScale;
     const displayedH = h * baseScale;
 
@@ -357,76 +244,35 @@ const UserProfile = () => {
   };
 
   const getDisplayedSize = () => {
-    const baseScale = getBaseScale(
-      naturalSize.w,
-      naturalSize.h
-    );
-
+    const baseScale = getBaseScale(naturalSize.w, naturalSize.h);
     return {
-      displayedW:
-        naturalSize.w *
-        baseScale *
-        zoom,
-
-      displayedH:
-        naturalSize.h *
-        baseScale *
-        zoom,
-
-      scale:
-        baseScale * zoom,
+      displayedW: naturalSize.w * baseScale * zoom,
+      displayedH: naturalSize.h * baseScale * zoom,
+      scale: baseScale * zoom,
     };
   };
 
   const handleZoomChange = (e, value) => {
-    const {
-      displayedW: oldW,
-      displayedH: oldH,
-    } = getDisplayedSize();
+    const { displayedW: oldW, displayedH: oldH } = getDisplayedSize();
 
-    const centerX =
-      CROP_BOX_SIZE / 2 - offset.x;
-
-    const centerY =
-      CROP_BOX_SIZE / 2 - offset.y;
+    // find the point currently at box-center, in old displayed coords
+    const centerX = CROP_BOX_SIZE / 2 - offset.x;
+    const centerY = CROP_BOX_SIZE / 2 - offset.y;
 
     setZoom(value);
 
-    const baseScale = getBaseScale(
-      naturalSize.w,
-      naturalSize.h
-    );
-
-    const newW =
-      naturalSize.w *
-      baseScale *
-      value;
-
-    const newH =
-      naturalSize.h *
-      baseScale *
-      value;
-
+    const baseScale = getBaseScale(naturalSize.w, naturalSize.h);
+    const newW = naturalSize.w * baseScale * value;
+    const newH = naturalSize.h * baseScale * value;
     const ratioX = newW / oldW;
     const ratioY = newH / oldH;
 
     const newOffset = {
-      x:
-        CROP_BOX_SIZE / 2 -
-        centerX * ratioX,
-
-      y:
-        CROP_BOX_SIZE / 2 -
-        centerY * ratioY,
+      x: CROP_BOX_SIZE / 2 - centerX * ratioX,
+      y: CROP_BOX_SIZE / 2 - centerY * ratioY,
     };
 
-    setOffset(
-      clampOffset(
-        newOffset,
-        newW,
-        newH
-      )
-    );
+    setOffset(clampOffset(newOffset, newW, newH));
   };
 
   const startDrag = (clientX, clientY) => {
@@ -434,112 +280,58 @@ const UserProfile = () => {
       dragging: true,
       startX: clientX,
       startY: clientY,
-      startOffset: {
-        ...offset,
-      },
+      startOffset: { ...offset },
     };
   };
 
   const moveDrag = (clientX, clientY) => {
     if (!dragState.current.dragging) return;
-
-    const {
-      displayedW,
-      displayedH,
-    } = getDisplayedSize();
-
-    const dx =
-      clientX -
-      dragState.current.startX;
-
-    const dy =
-      clientY -
-      dragState.current.startY;
-
+    const { displayedW, displayedH } = getDisplayedSize();
+    const dx = clientX - dragState.current.startX;
+    const dy = clientY - dragState.current.startY;
     const next = {
-      x:
-        dragState.current.startOffset.x +
-        dx,
-
-      y:
-        dragState.current.startOffset.y +
-        dy,
+      x: dragState.current.startOffset.x + dx,
+      y: dragState.current.startOffset.y + dy,
     };
-
-    setOffset(
-      clampOffset(
-        next,
-        displayedW,
-        displayedH
-      )
-    );
+    setOffset(clampOffset(next, displayedW, displayedH));
   };
 
   const endDrag = () => {
     dragState.current.dragging = false;
   };
 
-  const handleMouseDown = (e) =>
-    startDrag(e.clientX, e.clientY);
-
-  const handleMouseMove = (e) =>
-    moveDrag(e.clientX, e.clientY);
-
-  const handleMouseUp = () =>
-    endDrag();
+  const handleMouseDown = (e) => startDrag(e.clientX, e.clientY);
+  const handleMouseMove = (e) => moveDrag(e.clientX, e.clientY);
+  const handleMouseUp = () => endDrag();
 
   const handleTouchStart = (e) => {
     const t = e.touches[0];
-
-    startDrag(
-      t.clientX,
-      t.clientY
-    );
+    startDrag(t.clientX, t.clientY);
   };
-
   const handleTouchMove = (e) => {
     const t = e.touches[0];
-
-    moveDrag(
-      t.clientX,
-      t.clientY
-    );
+    moveDrag(t.clientX, t.clientY);
   };
-
-  const handleTouchEnd = () =>
-    endDrag();
+  const handleTouchEnd = () => endDrag();
 
   const handleAdjustCancel = () => {
     setShowAdjustModal(false);
     setRawImage("");
     setZoom(1);
-    setOffset({
-      x: 0,
-      y: 0,
-    });
+    setOffset({ x: 0, y: 0 });
   };
 
   const handleAdjustSave = () => {
-    const { scale } =
-      getDisplayedSize();
+    const { scale } = getDisplayedSize();
 
-    const canvas =
-      document.createElement("canvas");
-
+    const canvas = document.createElement("canvas");
     canvas.width = OUTPUT_SIZE;
     canvas.height = OUTPUT_SIZE;
+    const ctx = canvas.getContext("2d");
 
-    const ctx =
-      canvas.getContext("2d");
-
-    const sx =
-      -offset.x / scale;
-
-    const sy =
-      -offset.y / scale;
-
-    const sSize =
-      CROP_BOX_SIZE / scale;
+    const sx = -offset.x / scale;
+    const sy = -offset.y / scale;
+    const sSize = CROP_BOX_SIZE / scale;
 
     ctx.drawImage(
       cropImgRef.current,
@@ -550,23 +342,14 @@ const UserProfile = () => {
       0,
       0,
       OUTPUT_SIZE,
-      OUTPUT_SIZE
+      OUTPUT_SIZE,
     );
 
     canvas.toBlob(
       (blob) => {
         if (!blob) return;
-
-        const file = new File(
-          [blob],
-          "profile.jpg",
-          {
-            type: "image/jpeg",
-          }
-        );
-
-        const previewUrl =
-          URL.createObjectURL(blob);
+        const file = new File([blob], "profile.jpg", { type: "image/jpeg" });
+        const previewUrl = URL.createObjectURL(blob);
 
         setProfileFile(file);
         setProfileImage(previewUrl);
@@ -575,15 +358,27 @@ const UserProfile = () => {
         setRawImage("");
       },
       "image/jpeg",
-      0.92
+      0.92,
     );
   };
+  // const [dropDown, setDropDown] = useState(null);
 
+  // const isdropdownMenuOpen = Boolean(dropDown);
+
+  // const handleDropdownMenuOpen = (event) => {
+  //   setDropDown(event.currentTarget);
+  // };
+
+  // const handleDropdownMenuClose = () => {
+  //   setDropDown(null);
+  // };
+
+  // const handleSettingClick = () => {
+  //   handleDropdownMenuClose();
+  //   navigate("/myprofile");
+  // };
   const handlePasswordChange = (e) => {
-    const {
-      name,
-      value,
-    } = e.target;
+    const { name, value } = e.target;
 
     setPasswordData((prev) => ({
       ...prev,
@@ -593,204 +388,108 @@ const UserProfile = () => {
 
   const resetForm = () => {
     setFormData({
-      firstName:
-        currentUser?.firstName || "",
-
-      lastName:
-        currentUser?.lastName || "",
-
-      email:
-        currentUser?.email || "",
-
-      mobile:
-        currentUser?.mobile || "",
-
-      dob: currentUser?.dob
-        ? dayjs(currentUser.dob)
-        : null,
-
-      gender:
-        currentUser?.gender || "",
-
-      bio:
-        currentUser?.bio || "",
-
-      profileImage:
-        currentUser?.profileImage || "",
-
-      zipcode:
-        currentUser?.zipcode || "",
+      firstName: currentUser?.firstName,
+      lastName: currentUser?.lastName,
+      email: currentUser?.email,
+      mobile: currentUser?.mobile || "",
+      dob: currentUser?.dob ? dayjs(currentUser.dob) : null,
+      gender: currentUser?.gender || "",
+      bio: currentUser?.bio || "",
+      profileImage: currentUser?.profileImage || "",
+      zipcode: currentUser?.zipcode || "",
     });
   };
 
-  const [formData, setFormData] =
-    useState({
-      firstName:
-        currentUser?.firstName || "",
-
-      lastName:
-        currentUser?.lastName || "",
-
-      email:
-        currentUser?.email || "",
-
-      mobile:
-        currentUser?.mobile || "",
-
-      dob: currentUser?.dob
-        ? dayjs(currentUser.dob)
-        : null,
-
-      gender:
-        currentUser?.gender || "",
-
-      bio:
-        currentUser?.bio || "",
-
-      profileImage:
-        currentUser?.profileImage || "",
-
-      zipcode:
-        currentUser?.zipcode || "",
-    });
+  const [formData, setFormData] = useState({
+    firstName: currentUser?.firstName || "",
+    lastName: currentUser?.lastName || "",
+    email: currentUser?.email || "",
+    mobile: currentUser?.mobile || "",
+    dob: currentUser?.dob ? dayjs(currentUser.dob) : null,
+    gender: currentUser?.gender || "",
+    bio: currentUser?.bio || "",
+    profileImage: currentUser?.profileImage || "",
+    zipcode: currentUser?.zipcode || "",
+  });
 
   const validateForm = (formData) => {
     const errors = {};
 
     // First Name
     if (!formData.firstName?.trim()) {
-      errors.firstName =
-        "First name is required";
-    } else if (
-      formData.firstName.length < 2
-    ) {
-      errors.firstName =
-        "Minimum 2 characters required";
+      errors.firstName = "First name is required";
+    } else if (formData.firstName.length < 2) {
+      errors.firstName = "Minimum 2 characters required";
     }
 
     // Last Name
     if (!formData.lastName?.trim()) {
-      errors.lastName =
-        "Last name is required";
+      errors.lastName = "Last name is required";
     }
 
     // Email
     if (!formData.email) {
-      errors.email =
-        "Email is required";
+      errors.email = "Email is required";
     } else {
       const emailRegex =
         /^[a-z0-9]+(?:[._%+-][a-z0-9]+)*@[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z]{2,})+$/;
-
       if (!emailRegex.test(formData.email)) {
         errors.email =
-          "Please enter a valid email address";
+          "Please enter a valid email address (e.g., name@domain.com) || (e.g., avair123@aviartech.com) ";
       }
     }
 
-    // Mobile
-    const phone =
-      formData.mobile?.trim();
+    const phone = formData.mobile?.trim();
 
     if (!phone) {
-      errors.mobile =
-        "Mobile number is required";
-    } else if (
-      !/^\+?\d{10,15}$/.test(phone)
-    ) {
-      errors.mobile =
-        "Please enter a valid mobile number (10–15 digits)";
+      errors.mobile = "Mobile number is required";
+    } else if (!/^\+?\d{10,15}$/.test(phone)) {
+      errors.mobile = "Please enter a valid mobile number (10–15 digits)";
     }
 
     // DOB (Age >= 18)
     if (!formData.dob) {
-      errors.dob =
-        "Date of birth is required";
+      errors.dob = "Date of birth is required";
     } else {
-      const today =
-        new Date();
+      const today = new Date();
+      const dob = new Date(formData.dob);
+      let age = today.getFullYear() - dob.getFullYear();
 
-      const dob =
-        new Date(formData.dob);
-
-      let age =
-        today.getFullYear() -
-        dob.getFullYear();
-
-      const m =
-        today.getMonth() -
-        dob.getMonth();
-
-      if (
-        m < 0 ||
-        (m === 0 &&
-          today.getDate() <
-          dob.getDate())
-      ) {
+      const m = today.getMonth() - dob.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
         age--;
       }
 
       if (age < 18) {
-        errors.dob =
-          "You must be at least 18 years old";
+        errors.dob = "You must be at least 18 years old";
       }
     }
-
     // ZipCode / Postal Code
-    const zipcode =
-      formData.zipcode?.trim();
+    const zipcode = formData.zipcode?.trim();
 
     if (!zipcode) {
-      errors.zipcode =
-        "ZipCode is required";
-    } else if (
-      !/^[A-Za-z0-9](?:[A-Za-z0-9\s-]{0,14}[A-Za-z0-9])?$/.test(
-        zipcode
-      )
-    ) {
-      errors.zipcode =
-        "Please enter a valid ZipCode / Postal Code";
+      errors.zipcode = "ZipCode is required";
+    } else if (!/^[A-Za-z0-9](?:[A-Za-z0-9\s-]{0,14}[A-Za-z0-9])?$/.test(zipcode)) {
+      errors.zipcode = "Please enter a valid ZipCode / Postal Code";
     }
-
     return errors;
   };
 
   useEffect(() => {
     if (currentUser) {
       setFormData({
-        firstName:
-          currentUser?.firstName || "",
-
-        lastName:
-          currentUser?.lastName || "",
-
-        email:
-          currentUser?.email || "",
-
-        mobile:
-          currentUser?.mobile || "",
-
-        dob: currentUser?.dob
-          ? dayjs(currentUser.dob)
-          : null,
-
-        gender:
-          currentUser?.gender || "",
-
-        bio:
-          currentUser?.bio || "",
-
-        profileImage:
-          currentUser?.profileImage || "",
-
-        zipcode:
-          currentUser?.zipcode || "",
+        firstName: currentUser?.firstName || "",
+        lastName: currentUser?.lastName || "",
+        email: currentUser?.email || "",
+        mobile: currentUser?.mobile || "",
+        dob: currentUser?.dob ? dayjs(currentUser.dob) : null,
+        gender: currentUser?.gender || "",
+        bio: currentUser?.bio || "",
+        profileImage: currentUser?.profileImage || "",
+        zipcode: currentUser?.zipcode || "",
       });
 
-      setProfileImage(
-        currentUser?.profileImage || ""
-      );
-
+      setProfileImage(currentUser?.profileImage || "");
       setProfileFile(null);
     }
   }, [currentUser]);
@@ -798,10 +497,7 @@ const UserProfile = () => {
   useEffect(() => {
     if (selectedPost) {
       setTimeout(() => {
-        const element =
-          document.getElementById(
-            `post-${selectedPost._id}`
-          );
+        const element = document.getElementById(`post-${selectedPost._id}`);
 
         if (element) {
           element.scrollIntoView({
@@ -814,22 +510,14 @@ const UserProfile = () => {
   }, [selectedPost]);
 
   const feedRef = useRef(null);
-
   const logout = () => {
     localStorage.clear();
-    window.location.replace(
-      "/login"
-    );
+    window.location.replace("/login");
   };
-
-  const [anchorEl, setAnchorEl] =
-    useState(null);
-
+  const [anchorEl, setAnchorEl] = useState(null);
+  // const [selectedPost, setSelectedPost] = useState(null);
   const handleChange = (e) => {
-    const {
-      name,
-      value,
-    } = e.target;
+    const { name, value } = e.target;
 
     setFormData((prev) => ({
       ...prev,
@@ -842,347 +530,293 @@ const UserProfile = () => {
     }));
   };
 
-  const [
-    communityPosts,
-    setCommunityPosts,
-  ] = useState([]);
+  const [communityPosts, setCommunityPosts] = useState([]);
+  const [communityPage, setCommunityPage] = useState(1);
+  const [hasMorePosts, setHasMorePosts] = useState(true);
+  const [loadingMorePosts, setLoadingMorePosts] = useState(false);
+
+  const isFetchingRef = useRef(false);
+  const hasMoreRef = useRef(true);
+  const pageRef = useRef(1);
+  const observerRef = useRef(null);
+  const [totalPostCount, setTotalPostCount] = useState(0);
+  useEffect(() => {
+    hasMoreRef.current = hasMorePosts;
+  }, [hasMorePosts]);
+
+  useEffect(() => {
+    pageRef.current = communityPage;
+  }, [communityPage]);
 
   useEffect(() => {
     if (currentUser?._id) {
-      getCommunityPost();
+      setCommunityPosts([]);
+      setCommunityPage(1);
+      setHasMorePosts(true);
+      pageRef.current = 1;
+      hasMoreRef.current = true;
+      isFetchingRef.current = false;
+
+      getCommunityPost(1);
     }
-  }, [currentUser]);
+  }, [currentUser?._id]);
 
-  const getCommunityPost = async () => {
+
+  const setLoadMoreRef = useCallback((node) => {
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+      observerRef.current = null;
+    }
+
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries[0].isIntersecting) return;
+        if (isFetchingRef.current) return;
+        if (!hasMoreRef.current) return;
+
+        isFetchingRef.current = true;
+        getCommunityPost(pageRef.current + 1).finally(() => {
+          isFetchingRef.current = false;
+        });
+      },
+      {
+        root: null,
+        rootMargin: "200px",
+        threshold: 0,
+      }
+    );
+
+    observer.observe(node);
+    observerRef.current = observer;
+  }, []);
+
+  const getCommunityPost = async (page = 1) => {
     try {
-      setCommunityLoading(true);
+      if (page === 1) {
+        setCommunityLoading(true);
+      } else {
+        setLoadingMorePosts(true);
+      }
 
-      const postsRes =
-        await axios.get(
-          Api + "/community/"
-        );
-
-      const myPosts =
-        postsRes.data.data.filter(
-          (item) =>
-            item.authorId?._id ===
-            currentUser?._id
-        );
-
-      setCommunityPosts(
-        myPosts
+      const postsRes = await axios.get(
+        `${Api}/post-images/profile/${currentUser?._id}?page=${page}&limit=12`
       );
+
+      const newPosts = postsRes.data.data || [];
+      const pagination = postsRes.data.pagination;
+
+
+      const totalCount = pagination?.totalCount ?? 0;
+
+      setTotalPostCount(totalCount);
+
+      if (page === 1) {
+        // First 12 posts
+        setCommunityPosts(newPosts);
+      } else {
+        // Add next 12 posts
+        setCommunityPosts((prev) => [
+          ...prev,
+          ...newPosts,
+        ]);
+      }
+
+      setCommunityPage(page);
+      pageRef.current = page;
+
+      const hasMore = pagination?.hasMore ?? false;
+
+      setHasMorePosts(hasMore);
+      hasMoreRef.current = hasMore;
+
     } catch (error) {
-      console.error(error);
+      console.error("Get community posts error:", error);
     } finally {
       setCommunityLoading(false);
+      setLoadingMorePosts(false);
     }
   };
 
-  const handleUpdateProfile =
-    async () => {
-      try {
-        setSubmitLoading(true);
+  const handleUpdateProfile = async () => {
+    try {
+      setSubmitLoading(true);
 
-        const validationErrors =
-          validateForm(formData);
+      const validationErrors = validateForm(formData);
 
-        if (
-          Object.keys(
-            validationErrors
-          ).length > 0
-        ) {
-          setErrors(
-            validationErrors
-          );
-          return;
-        }
-
-        let profileImage = null;
-
-        if (profileFile) {
-          profileImage =
-            await uploadToCloudinary(
-              profileFile
-            );
-        }
-
-        const data = {
-          firstName:
-            formData.firstName,
-
-          lastName:
-            formData.lastName,
-
-          mobile:
-            formData.mobile,
-
-          dob: formData.dob
-            ? formData.dob.format(
-              "YYYY-MM-DD"
-            )
-            : "",
-
-          gender:
-            formData.gender,
-
-          bio:
-            formData.bio,
-
-          zipcode:
-            formData.zipcode,
-
-          ...(profileImage && {
-            profileImage:
-              profileImage?.url,
-
-            profileImagePublicId:
-              profileImage?.publicId,
-          }),
-        };
-
-        await axios.post(
-          `${Api}/users/update/${user?.id}`,
-          data
-        );
-
-        getuserData();
-
-        toast.success(
-          "Profile Updated",
-          toasts
-        );
-
-        setEditProfile(false);
-      } catch (error) {
-        console.log(
-          error.response
-        );
-
-        const message =
-          error.response?.data
-            ?.message ||
-          "Something went wrong";
-
-        setErrors((prev) => ({
-          ...prev,
-          mobile: message,
-        }));
-      } finally {
-        setSubmitLoading(false);
+      if (Object.keys(validationErrors).length > 0) {
+        setErrors(validationErrors);
+        return;
       }
-    };
 
-  const [
-    originalDescription,
-    setOriginalDescription,
-  ] = useState("");
+      let profileImage = null;
 
-  const [
-    originalImage,
-    setOriginalImage,
-  ] = useState(null);
+      // Upload directly to Cloudinary
+      if (profileFile) {
+        profileImage = await uploadToCloudinary(profileFile);
 
-  const [
-    deleteOpen,
-    setDeleteOpen,
-  ] = useState(false);
+      }
 
-  const [
-    editOpen,
-    setEditOpen,
-  ] = useState(false);
+      const data = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        mobile: formData.mobile,
+        dob: formData.dob
+          ? formData.dob.format("YYYY-MM-DD")
+          : "",
+        gender: formData.gender,
+        bio: formData.bio,
+        zipcode: formData.zipcode,
 
-  const [tab, setTab] =
-    useState(0);
+        ...(profileImage && {
+          profileImage: profileImage?.url,
+          profileImagePublicId: profileImage?.publicId,
+        }),
+      };
 
-  const handleMenuOpen = (
-    event,
-    post
-  ) => {
-    setAnchorEl(
-      event.currentTarget
-    );
+      await axios.post(
+        `${Api}/users/update/${user?.id}`,
+        data
+      );
 
-    setSelectedPost(post);
+      getuserData();
+
+      toast.success("Profile Updated", toasts);
+      setEditProfile(false);
+
+    } catch (error) {
+      console.log(error.response);
+
+      const message =
+        error.response?.data?.message || "Something went wrong";
+
+      setErrors((prev) => ({
+        ...prev,
+        mobile: message,
+      }));
+
+      // toast.error(
+      //   error.response?.data?.message || "Something went wrong",
+      //   toasts
+      // );
+    } finally {
+      setSubmitLoading(false);
+    }
   };
 
-  const [
-    imageMenuAnchor,
-    setImageMenuAnchor,
-  ] = useState(null);
+  const [originalDescription, setOriginalDescription] = useState("");
+  const [originalImage, setOriginalImage] = useState(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [tab, setTab] = useState(0);
+  const handleMenuOpen = (event, post) => {
+    setAnchorEl(event.currentTarget);
+    setSelectedPost(post);
+  };
+  const [imageMenuAnchor, setImageMenuAnchor] = useState(null);
+  const isImageMenuOpen = Boolean(imageMenuAnchor);
 
-  const isImageMenuOpen =
-    Boolean(imageMenuAnchor);
-
-  const openImageMenu = (e) =>
-    setImageMenuAnchor(
-      e.currentTarget
-    );
-
-  const closeImageMenu = () =>
-    setImageMenuAnchor(null);
-
-  const handleMenuClose = () =>
+  const openImageMenu = (e) => setImageMenuAnchor(e.currentTarget);
+  const closeImageMenu = () => setImageMenuAnchor(null);
+  const handleMenuClose = () => {
     setAnchorEl(null);
-
+  };
   const handleEdit = (post) => {
     setSelectedPost(post);
 
-    setPreviewImage(
-      post.postImage
-    );
+    setPreviewImage(post.postImage);
 
-    setOriginalImage(
-      post.postImage
-    );
+    setOriginalImage(post.postImage);
 
     setEditImage(null);
-
     setEditOpen(true);
   };
-
   const handleReset = () => {
-    setEditImage(null);
-    setPreviewImage(
-      originalImage
-    );
-  };
+    // setEditDescription(originalDescription);
 
-  const handleDelete = async (
-    postId
-  ) => {
+    setEditImage(null);               // remove selected File
+    setPreviewImage(originalImage);   // restore original image URL
+  };
+  const handleDelete = async (postId) => {
+
     try {
+
       setImageDeleteLoading(true);
 
-      const user =
-        JSON.parse(
-          localStorage.getItem(
-            "user"
-          )
-        );
+      const user = JSON.parse(localStorage.getItem("user"));
 
-      const res =
-        await axios.delete(
-          `${Api}/community/${postId}`,
-          {
-            data: {
-              userId: user.id,
-            },
-          }
-        );
+      const res = await axios.delete(`${Api}/community/${postId}`, {
+        data: {
+          userId: user.id,
+        },
+      });
 
-      setCommunityPosts(
-        (prev) =>
-          prev.filter(
-            (post) =>
-              post._id !== postId
-          )
+      setCommunityPosts((prev) =>
+        prev.filter((post) => post._id !== postId)
       );
 
-      toast.success(
-        res.data.message,
-        toasts
-      );
+      toast.success(res.data.message, toasts);
 
       setDeleteOpen(false);
+
     } catch (error) {
       toast.error(
-        error.response?.data
-          ?.message ||
-        "Failed to delete post",
-        toasts
-      );
+        error.response?.data?.message || "Failed to delete post", toasts);
     } finally {
       setImageDeleteLoading(false);
     }
   };
+  const handleUpdate = async () => {
+    try {
+      setImagePostLoading(true);
 
-  const handleUpdate =
-    async () => {
-      try {
-        setImagePostLoading(true);
+      const user = JSON.parse(localStorage.getItem("user"));
 
-        const user =
-          JSON.parse(
-            localStorage.getItem(
-              "user"
-            )
-          );
+      const formData = new FormData();
+      formData.append("userId", user.id);
 
-        const formData =
-          new FormData();
 
-        formData.append(
-          "userId",
-          user.id
-        );
-
-        if (editImage) {
-          formData.append(
-            "postImage",
-            editImage
-          );
-        }
-
-        const res =
-          await axios.put(
-            `${Api}/community/${selectedPost._id}`,
-            formData,
-            {
-              headers: {
-                "Content-Type":
-                  "multipart/form-data",
-              },
-            }
-          );
-
-        setCommunityPosts(
-          (prev) =>
-            prev.map((post) =>
-              post._id ===
-                selectedPost._id
-                ? {
-                  ...post,
-                  postImage:
-                    res.data.data
-                      .postImage,
-                }
-                : post
-            )
-        );
-
-        toast.success(
-          res.data.message,
-          toasts
-        );
-
-        setEditOpen(false);
-        setSelectedPost(null);
-        setEditImage(null);
-      } catch (error) {
-        toast.error(
-          error.response?.data
-            ?.message ||
-          "Failed to update post",
-          toasts
-        );
-      } finally {
-        setImagePostLoading(false);
+      if (editImage) {
+        formData.append("postImage", editImage);
       }
-    };
 
-  const handleCopy = (
-    value
-  ) => {
-    navigator.clipboard.writeText(
-      value
-    );
+      const res = await axios.put(
+        `${Api}/community/${selectedPost._id}`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
-    toast.success(
-      "Copied to Clipboard!",
-      toasts
-    );
+      setCommunityPosts((prev) =>
+
+        prev.map((post) =>
+          post._id === selectedPost._id
+            ? {
+              ...post,
+              postImage: res.data.data.postImage,
+            }
+            : post
+        )
+      );
+
+      toast.success(res.data.message, toasts);
+
+      setEditOpen(false);
+      setSelectedPost(null);
+      setEditImage(null);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to update post", toasts);
+    } finally {
+      setImagePostLoading(false);
+    }
+  };
+  const handleCopy = (value) => {
+    navigator.clipboard.writeText(value);
+    toast.success("Copied to Clipboard!", toasts);
   };
 
   const [photoMenuAnchor, setPhotoMenuAnchor] = useState(null);
@@ -1255,39 +889,16 @@ const UserProfile = () => {
     navigate("/myprofile");
   };
 
+
   return (
     <PageLayout>
-      <Box
-        sx={{
-          mx: "auto",
-          px: {
-            xs: 0,
-            sm: 2,
-            md: 0,
-          },
-        }}
-      >
+      <Box sx={{ mx: "auto", px: { xs: 0, sm: 2, md: 0 } }}>
         {/* Page heading */}
-        <Box
-          sx={{
-            pt: {
-              xs: 2,
-              sm: 0,
-            },
-            mb: 1,
-            flexShrink: 0,
-          }}
-        >
+        <Box sx={{ pt: { xs: 2, sm: 0 }, mb: 1, flexShrink: 0 }}>
           <Typography
             variant="h5"
             fontWeight={800}
-            sx={{
-              fontSize: {
-                xs: "1.1rem",
-                sm: "1.35rem",
-                md: "1.5rem",
-              },
-            }}
+            sx={{ fontSize: { xs: "1.1rem", sm: "1.35rem", md: "1.5rem" } }}
           >
             My Profile
           </Typography>
@@ -1296,165 +907,90 @@ const UserProfile = () => {
         <Typography
           color="text.secondary"
           sx={{
-            mt: {
-              xs: 1,
-              sm: 1,
-            },
-            fontSize: {
-              xs: "0.72rem",
-              sm: "1rem",
-              md: "1rem",
-            },
+            mt: { xs: 1, sm: 1 },
+            fontSize: { xs: "0.72rem", sm: "1rem", md: "1rem" },
           }}
         >
-          Manage your Saathi account,
-          referrals, and preferences.
+          Manage your Saathi account, referrals, and preferences.
         </Typography>
 
-        <Stack
-          spacing={{
-            xs: 1.25,
-            sm: 1.75,
-            md: 3,
-          }}
-          sx={{ mt: 2 }}
-        >
-          {/* Profile */}
+        <Stack spacing={{ xs: 1.25, sm: 1.75, md: 3 }} sx={{ mt: 2 }}>
+          {/* ── Profile (Instagram-style header) ── */}
           <SectionCard>
             <Box
               sx={{
                 display: "flex",
-                justifyContent:
-                  "space-between",
-                alignItems:
-                  "flex-start",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
               }}
             >
               <Stack
                 direction="row"
-                spacing={{
-                  xs: 2,
-                  sm: 3,
-                }}
+                spacing={{ xs: 2, sm: 3 }}
                 alignItems="center"
-                sx={{
-                  flex: 1,
-                }}
+                sx={{ flex: 1 }}
               >
                 <Avatar
-                  src={
-                    currentUser?.profileImage ||
-                    ""
-                  }
+                  src={currentUser?.profileImage || ""}
                   alt={`${currentUser?.firstName || ""} ${currentUser?.lastName || ""
                     }`}
                   onClick={() => {
-                    setSelectedProfile(
-                      currentUser
-                    );
-                    setProfileModalOpen(
-                      true
-                    );
+                    setSelectedProfile(currentUser);
+                    setProfileModalOpen(true);
                   }}
                   sx={{
-                    width: {
-                      xs: 64,
-                      sm: 84,
-                      md: 96,
-                    },
-                    height: {
-                      xs: 64,
-                      sm: 84,
-                      md: 96,
-                    },
+                    width: { xs: 64, sm: 84, md: 96 },
+                    height: { xs: 64, sm: 84, md: 96 },
                     bgcolor: SAFFRON,
                     color: "#fff",
                     fontWeight: 800,
-                    fontSize: {
-                      xs: "1rem",
-                      sm: "1.3rem",
-                      md: "1.5rem",
-                    },
+                    fontSize: { xs: "1rem", sm: "1.3rem", md: "1.5rem" },
                     flexShrink: 0,
                     cursor: "pointer",
-                    transition:
-                      "all 0.2s ease",
+                    transition: "all 0.2s ease",
 
                     "&:hover": {
-                      transform:
-                        "scale(1.05)",
-                      boxShadow:
-                        "0 0 0 4px rgba(232, 101, 10, 0.25)",
+                      transform: "scale(1.05)",
+                      boxShadow: "0 0 0 4px rgba(232, 101, 10, 0.25)",
                     },
                   }}
                 >
                   {!currentUser?.profileImage &&
-                    `${currentUser?.firstName?.[0] || ""}${currentUser?.lastName?.[0] || ""}`}
+                    `${currentUser?.firstName?.[0] || ""}${currentUser?.lastName?.[0] || ""
+                    }`}
                 </Avatar>
 
-                <Box
-                  sx={{
-                    flex: 1,
-                    minWidth: 0,
-                  }}
-                >
+                <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Typography
                     fontWeight={700}
                     sx={{
-                      fontSize: {
-                        xs: "0.82rem",
-                        sm: "0.9rem",
-                        md: "1rem",
-                      },
-                      whiteSpace:
-                        "nowrap",
-                      overflow:
-                        "hidden",
-                      textOverflow:
-                        "ellipsis",
+                      fontSize: { xs: "0.82rem", sm: "0.9rem", md: "1rem" },
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
                     }}
                   >
-                    {currentUser?.firstName}{" "}
-                    {currentUser?.lastName}
+                    {currentUser?.firstName} {currentUser?.lastName}
                   </Typography>
 
                   <Typography
                     variant="body2"
                     color="text.secondary"
                     sx={{
-                      fontSize: {
-                        xs: "0.68rem",
-                        sm: "0.75rem",
-                        md: "0.8rem",
-                      },
-                      whiteSpace:
-                        "nowrap",
-                      overflow:
-                        "hidden",
-                      textOverflow:
-                        "ellipsis",
-                      mb: {
-                        xs: 1,
-                        sm: 1.5,
-                      },
+                      fontSize: { xs: "0.68rem", sm: "0.75rem", md: "0.8rem" },
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      mb: { xs: 1, sm: 1.5 },
                     }}
                   >
                     {currentUser?.email}
                   </Typography>
 
-                  <Stack
-                    direction="row"
-                    spacing={{
-                      xs: 2,
-                      sm: 3.5,
-                    }}
-                  >
-                    <StatBlock
-                      value={
-                        communityPosts.length
-                      }
-                      label="Posts"
-                    />
+                  <Stack direction="row" spacing={{ xs: 2, sm: 3.5 }}>
+                    <Typography>
+                      Posts: {totalPostCount}
+                    </Typography>
                   </Stack>
                 </Box>
               </Stack>
@@ -1499,15 +1035,8 @@ const UserProfile = () => {
             {currentUser?.bio && (
               <Typography
                 sx={{
-                  mt: {
-                    xs: 1.25,
-                    sm: 1.5,
-                  },
-                  fontSize: {
-                    xs: "0.72rem",
-                    sm: "0.8rem",
-                    md: "0.85rem",
-                  },
+                  mt: { xs: 1.25, sm: 1.5 },
+                  fontSize: { xs: "0.72rem", sm: "0.8rem", md: "0.85rem" },
                   color: "text.primary",
                 }}
               >
@@ -1517,207 +1046,171 @@ const UserProfile = () => {
 
             <Stack
               direction="row"
-              spacing={{
-                xs: 1,
-                sm: 1.5,
-              }}
+              spacing={{ xs: 1, sm: 1.5 }}
               sx={{
-                mt: {
-                  xs: 0.5,
-                  sm: 1,
-                },
+                mt: { xs: 0.5, sm: 1 },
                 display: "flex",
-                justifyContent:
-                  "flex-end",
+                justifyContent: "flex-end",
               }}
             >
               <Button
                 variant="outlined"
-                onClick={() =>
-                  setEditProfile(true)
-                }
-                sx={{
-                  ...pillBtn,
-                  borderColor:
-                    "#EADFD3",
-                }}
+                onClick={() => setEditProfile(true)}
+                sx={{ ...pillBtn, borderColor: "#EADFD3" }}
               >
                 Edit Profile
               </Button>
             </Stack>
           </SectionCard>
 
+          {/* <SectionCard> */}
           <Box>
+
             <Tabs
               value={tab}
-              onChange={(
-                e,
-                value
-              ) => {
+              onChange={(e, value) => {
                 setTab(value);
                 setSelectedPost(null);
               }}
               centered
               sx={{
-                minHeight: {
-                  xs: 36,
-                  sm: 44,
-                },
-
-                "& .MuiTab-root": {
-                  minHeight: {
-                    xs: 36,
-                    sm: 44,
-                  },
-                  py: 0,
-                },
-
-                "& .MuiTabs-indicator":
-                {
-                  backgroundColor:
-                    SAFFRON,
-                },
-
-                "& .Mui-selected":
-                {
-                  color: `${SAFFRON} !important`,
-                },
-
+                minHeight: { xs: 36, sm: 44 },
+                "& .MuiTab-root": { minHeight: { xs: 36, sm: 44 }, py: 0 },
+                "& .MuiTabs-indicator": { backgroundColor: SAFFRON },
+                "& .Mui-selected": { color: `${SAFFRON} !important` },
                 mb: 3,
               }}
             >
-              <Tab
-                icon={
-                  <GridOnIcon fontSize="small" />
-                }
-              />
-
-              <Tab
-                icon={
-                  <BookmarkBorderIcon fontSize="small" />
-                }
-              />
+              <Tab icon={<GridOnIcon fontSize="small" />} />
+              <Tab icon={<BookmarkBorderIcon fontSize="small" />} />
             </Tabs>
 
             {tab === 0 && (
-              <Grid
-                container
-                spacing={{
-                  xs: "12px",
-                  sm: "15px",
-                  md: "20px",
-                }}
-                sx={{
-                  display: "flex",
-                  justifyContent:
-                    "center",
-                  alignContent:
-                    "center",
-                  alignItems:
-                    "center",
-                }}
-              >
-                {communityLoading ? (
-                  <Box
-                    sx={{
-                      display:
-                        "flex",
-                      justifyContent:
-                        "center",
-                      alignItems:
-                        "center",
-                      width: 45,
-                      height: 45,
-                    }}
-                  >
-                    <CircularProgress
-                      size={30}
-                      thickness={5}
-                      sx={{
-                        color:
-                          "#FF9933",
-                      }}
-                    />
-                  </Box>
-                ) : communityPosts.length ===
-                  0 ? (
-                  <Box
-                    sx={{
-                      width:
-                        "100%",
-                      maxWidth: {
-                        xs: "100%",
-                        sm: 440,
-                        md: 480,
-                      },
-                      textAlign:
-                        "center",
-                      flexDirection:
-                        "column",
-                      mx: "auto",
-                      display:
-                        "flex",
-                      justifyContent:
-                        "center",
-                      alignItems:
-                        "center",
-                      mt: {
-                        xs: "35%",
-                        sm: "7%",
-                      },
-                    }}
-                  >
-                    <Typography
-                      variant="h6"
-                      fontWeight={
-                        600
-                      }
-                      color="text.primary"
-                      sx={{
-                        fontSize:
-                        {
-                          xs: "0.95rem",
-                          sm: "1.05rem",
-                          md: "1.15rem",
-                        },
-                      }}
-                    >
-                      No Community
-                      Posts Yet
-                    </Typography>
+              <>
+                <Grid
+                  container
+                  spacing={{
+                    xs: "12px",
+                    sm: "15px",
+                    md: "20px",
+                  }}
+                  sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignContent: "center",
+                    alignItems: "center",
+                  }}
+                >
 
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
+                  {/* ========================= */}
+                  {/* INITIAL LOADING */}
+                  {/* ========================= */}
+
+                  {communityLoading ? (
+
+                    <Box
                       sx={{
-                        mt: 1,
-                        fontSize:
-                        {
-                          xs: "0.75rem",
-                          sm: "0.85rem",
-                          md: "0.95rem",
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        width: "100%",
+                        minHeight: 100,
+                      }}
+                    >
+                      <CircularProgress
+                        size={30}
+                        thickness={5}
+                        sx={{
+                          color: "#FF9933",
+                        }}
+                      />
+                    </Box>
+
+                  ) : communityPosts.length === 0 ? (
+
+                    /* ========================= */
+                    /* NO POSTS */
+                    /* ========================= */
+
+                    <Box
+                      sx={{
+                        width: "100%",
+                        maxWidth: {
+                          xs: "100%",
+                          sm: 440,
+                          md: 480,
+                        },
+
+                        textAlign: "center",
+
+                        flexDirection: "column",
+
+                        mx: "auto",
+
+                        display: "flex",
+
+                        justifyContent: "center",
+
+                        alignItems: "center",
+
+                        mt: {
+                          xs: "35%",
+                          sm: "7%",
                         },
                       }}
                     >
-                      Community posts
-                      will appear
-                      here when
-                      available.
-                    </Typography>
-                  </Box>
-                ) : (
-                  communityPosts.map(
-                    (post) => (
+
+                      <Typography
+                        variant="h6"
+                        fontWeight={600}
+                        color="text.primary"
+                        sx={{
+                          fontSize: {
+                            xs: "0.95rem",
+                            sm: "1.05rem",
+                            md: "1.15rem",
+                          },
+                        }}
+                      >
+                        No Community Posts Yet
+                      </Typography>
+
+
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{
+                          mt: 1,
+
+                          fontSize: {
+                            xs: "0.75rem",
+                            sm: "0.85rem",
+                            md: "0.95rem",
+                          },
+                        }}
+                      >
+                        Community posts will appear here when available.
+                      </Typography>
+
+                    </Box>
+
+                  ) : (
+
+                    /* ========================= */
+                    /* POSTS */
+                    /* ========================= */
+
+                    communityPosts.map((post) => (
+
                       <Grid
                         item
                         xs={4}
-                        key={
-                          post._id
-                        }
+                        key={post._id}
                         sx={{
                           mt: 1,
                         }}
                       >
+
                         {post.postImage && (
                           <>
                             <Box
@@ -2386,40 +1879,84 @@ const UserProfile = () => {
                             )}
                           </>
                         )}
-                      </Grid>
-                    )
-                  )
-                )}
-              </Grid>
-            )}
 
+                      </Grid>
+
+                    ))
+
+                  )}
+
+                </Grid>
+
+
+                {/* ================================= */}
+                {/* INFINITE SCROLL SENTINEL */}
+                {/* ================================= */}
+
+                {communityPosts.length > 0 && (
+                  <Box
+                    ref={setLoadMoreRef}
+
+                    sx={{
+                      width: "100%",
+
+                      minHeight: 70,
+
+                      display: "flex",
+
+                      justifyContent: "center",
+
+                      alignItems: "center",
+
+                      py: 3,
+                    }}
+                  >
+
+                    {loadingMorePosts && (
+                      <CircularProgress
+                        size={28}
+                        thickness={4}
+                        sx={{
+                          color: "#FF9933",
+                        }}
+                      />
+                    )}
+
+
+                    {!loadingMorePosts &&
+                      !hasMorePosts && (
+                        <Typography
+                          color="text.secondary"
+                          sx={{
+                            fontSize: "0.8rem",
+                          }}
+                        >
+                          No more posts
+                        </Typography>
+                      )}
+
+                  </Box>
+                )}
+
+              </>
+            )}
             {tab === 1 && (
               <Grid
                 container
-                spacing={{
-                  xs: "12px",
-                  sm: "15px",
-                  md: "20px",
-                }}
+                spacing={{ xs: "12px", sm: "15px", md: "20px" }}
                 sx={{
                   display: "flex",
-                  justifyContent:
-                    "center",
-                  alignContent:
-                    "center",
-                  alignItems:
-                    "center",
+                  justifyContent: "center",
+                  alignContent: "center",
+                  alignItems: "center",
                 }}
               >
                 {communityLoading ? (
                   <Box
                     sx={{
-                      display:
-                        "flex",
-                      justifyContent:
-                        "center",
-                      alignItems:
-                        "center",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
                       width: 45,
                       height: 45,
                     }}
@@ -2427,57 +1964,36 @@ const UserProfile = () => {
                     <CircularProgress
                       size={30}
                       thickness={5}
-                      sx={{
-                        color:
-                          "#FF9933",
-                      }}
+                      sx={{ color: "#FF9933" }}
                     />
                   </Box>
-                ) : savedPost?.length ===
-                  0 ? (
+                ) : savedPost?.length == 0 ? (
                   <Box
                     sx={{
-                      width:
-                        "100%",
-                      maxWidth: {
-                        xs: "100%",
-                        sm: 440,
-                        md: 480,
-                      },
-                      textAlign:
-                        "center",
-                      flexDirection:
-                        "column",
+                      width: "100%",
+                      maxWidth: { xs: "100%", sm: 440, md: 480 },
+                      textAlign: "center",
+                      flexDirection: "column",
                       mx: "auto",
-                      display:
-                        "flex",
-                      justifyContent:
-                        "center",
-                      alignItems:
-                        "center",
-                      mt: {
-                        xs: "35%",
-                        sm: "7%",
-                      },
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      mt: { xs: '35%', sm: '7%' }
                     }}
                   >
                     <Typography
                       variant="h6"
-                      fontWeight={
-                        600
-                      }
+                      fontWeight={600}
                       color="text.primary"
                       sx={{
-                        fontSize:
-                        {
+                        fontSize: {
                           xs: "0.95rem",
                           sm: "1.05rem",
                           md: "1.15rem",
                         },
                       }}
                     >
-                      No Saved Posts
-                      Yet
+                      No Saved Posts Yet
                     </Typography>
 
                     <Typography
@@ -2485,129 +2001,68 @@ const UserProfile = () => {
                       color="text.secondary"
                       sx={{
                         mt: 1,
-                        fontSize:
-                        {
+                        fontSize: {
                           xs: "0.75rem",
                           sm: "0.85rem",
                           md: "0.95rem",
                         },
                       }}
                     >
-                      Saved posts will
-                      appear here
-                      when available.
+                      Saved posts will appear here when available.
                     </Typography>
                   </Box>
                 ) : (
-                  savedPost?.map(
-                    (post) => (
-                      <Grid
-                        item
-                        xs={4}
-                        key={
-                          post._id
-                        }
-                        sx={{
-                          mt: 0.2,
-                        }}
-                      >
-                        {post.postId
-                          ?.postImage && (
-                            <Box
-                              onClick={() => {
-                                setSelectedPost(
-                                  post
-                                );
-
-                                setSelectedImage(
-                                  Array.isArray(
-                                    post
-                                      .postId
-                                      .postImage
-                                  )
-                                    ? post
-                                      .postId
-                                      .postImage[0]
-                                    : post
-                                      .postId
-                                      .postImage
-                                );
-
-                                setOpenImage(
-                                  true
-                                );
-                              }}
-                              sx={{
-                                position:
-                                  "relative",
-                                cursor:
-                                  "pointer",
-                                width: { xs: 108, sm: 125, md: 150, lg: 175 },
-                                height: { xs: 150, sm: 200, md: 225, lg: 250 },
-                                overflow:
-                                  "hidden",
-                                borderRadius:
-                                {
-                                  xs: 0.5,
-                                  sm: 1,
-                                },
-                                "&:hover .postOverlay":
-                                {
-                                  opacity: 1,
-                                },
-                                display:
-                                  "flex",
-                                justifyContent:
-                                  "center",
-                                alignItems:
-                                  "center",
-                              }}
-                            >
-                              <img
-                                src={
-                                  Array.isArray(
-                                    post
-                                      .postId
-                                      .postImage
-                                  )
-                                    ? post
-                                      .postId
-                                      .postImage[0]
-                                    : post
-                                      .postId
-                                      .postImage
-                                }
-                                alt=""
-                                style={{
-                                  width:
-                                    "100%",
-                                  height:
-                                    "100%",
-                                  objectFit:
-                                    "cover",
-                                  display:
-                                    "block",
-                                }}
-                              />
-                            </Box>
-                          )}
-                      </Grid>
-                    )
-                  )
+                  savedPost?.map((post) => (
+                    <Grid item xs={4} key={post._id} sx={{ mt: 0.2 }}>
+                      {post.postId?.postImage && (
+                        <Box
+                          onClick={() => {
+                            setSelectedPost(post);
+                            setSelectedImage(
+                              Array.isArray(post.postId.postImage)
+                                ? post.postId.postImage[0]
+                                : post.postId.postImage,
+                            );
+                            setOpenImage(true);
+                          }}
+                          sx={{
+                            position: "relative",
+                            cursor: "pointer",
+                            width: { xs: 108, sm: 125, md: 150, lg: 175 },
+                            height: { xs: 150, sm: 200, md: 225, lg: 250 },
+                            overflow: "hidden",
+                            borderRadius: { xs: 0.5, sm: 1 },
+                            "&:hover .postOverlay": { opacity: 1 },
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                          }}
+                        >
+                          <img
+                            src={
+                              Array.isArray(post.postId.postImage)
+                                ? post.postId.postImage[0]
+                                : post.postId.postImage
+                            }
+                            alt=""
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                              display: "block",
+                            }}
+                          />
+                        </Box>
+                      )}
+                    </Grid>
+                  ))
                 )}
               </Grid>
             )}
-
             <Dialog
               open={openImage}
-              onClose={(
-                event,
-                reason
-              ) => {
-                if (
-                  reason ===
-                  "backdropClick"
-                ) {
+              onClose={(event, reason) => {
+                if (reason === "backdropClick") {
                   return;
                 }
 
@@ -2617,158 +2072,125 @@ const UserProfile = () => {
               slotProps={{
                 paper: {
                   sx: {
-                    bgcolor:
-                      "transparent",
-                    boxShadow:
-                      "none",
-                    overflow:
-                      "hidden",
+                    bgcolor: "transparent",
+                    boxShadow: "none",
+                    overflow: "hidden",
                     width: "auto",
-                    maxWidth:
-                      "95vw",
-                    maxHeight:
-                      "95vh",
+                    maxWidth: "95vw",
+                    maxHeight: "95vh",
                     m: 1,
                   },
                 },
               }}
             >
-              <Box
-                sx={{
-                  position:
-                    "relative",
-                }}
-              >
+              <Box sx={{ position: "relative" }}>
                 {tab === 1 && (
                   <IconButton
                     onClick={async () => {
-                      if (
-                        !selectedPost?.postId?._id
-                      ) {
+                      if (!selectedPost?.postId?._id) {
+
                         return;
                       }
 
-                      await removeSavedPost(
-                        selectedPost
-                          .postId
-                          ._id
-                      );
 
-                      setOpenImage(
-                        false
-                      );
 
-                      setSelectedPost(
-                        null
-                      );
+                      await removeSavedPost(selectedPost.postId._id);
+
+                      setOpenImage(false);
+                      setSelectedPost(null);
                     }}
                     sx={{
-                      position:
-                        "absolute",
+                      position: "absolute",
                       top: 8,
                       left: 8,
                       color: "#fff",
-                      bgcolor:
-                        "rgba(0,0,0,0.5)",
-                      "&:hover": {
-                        bgcolor:
-                          "rgba(0,0,0,0.7)",
-                      },
+                      bgcolor: "rgba(0,0,0,0.5)",
+                      "&:hover": { bgcolor: "#ffff" },
                       zIndex: 10,
                     }}
                   >
                     <Tooltip title="Remove from saved">
                       <BookmarkBorderIcon
                         fontSize="small"
-                        sx={{
-                          color:
-                            "#ff5e00ff",
-                        }}
+                        sx={{ color: "#ff5e00ff" }}
                       />
                     </Tooltip>
                   </IconButton>
                 )}
 
                 <IconButton
-                  onClick={() =>
-                    setOpenImage(
-                      false
-                    )
-                  }
+                  size="small"
+                  onClick={() => setOpenImage(false)}
                   sx={{
-                    position:
-                      "absolute",
-                    top: 8,
-                    right: 8,
+                    position: "absolute",
+                    top: { xs: 4, sm: 6, md: 8 },
+                    right: { xs: 4, sm: 6, md: 8 },
+
+                    width: { xs: 24, sm: 28, md: 32 },
+                    height: { xs: 24, sm: 28, md: 32 },
+
                     color: "#fff",
-                    bgcolor:
-                      "rgba(0,0,0,0.5)",
+                    bgcolor: "rgba(0,0,0,0.5)",
+
                     "&:hover": {
-                      bgcolor:
-                        "rgba(0,0,0,0.7)",
+                      color: "rgba(0,0,0,0.7)",
+                      backgroundColor: "#fff",
                     },
+
                     zIndex: 10,
                   }}
                 >
-                  <CloseIcon />
+                  <CloseIcon
+                    sx={{
+                      fontSize: {
+                        xs: 15,
+                        sm: 18,
+                        md: 20,
+                      },
+                    }}
+                  />
                 </IconButton>
 
                 <DialogContent
                   sx={{
                     p: 0,
-                    display:
-                      "flex",
-                    justifyContent:
-                      "center",
-                    alignItems:
-                      "center",
-                    bgcolor:
-                      "transparent",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    bgcolor: "transparent",
                   }}
                 >
                   <Box
                     component="img"
-                    src={
-                      selectedImage
-                    }
+                    src={selectedImage}
                     alt="Post"
                     sx={{
-                      display:
-                        "block",
-                      maxWidth:
-                        "95vw",
-                      maxHeight:
-                        "90vh",
-                      width:
-                        "auto",
-                      height:
-                        "auto",
-                      objectFit:
-                        "contain",
+                      display: "block",
+                      maxWidth: "95vw",
+                      maxHeight: "90vh",
+                      width: "auto",
+                      height: "auto",
+                      objectFit: "contain",
                       borderRadius: 2,
                     }}
                   />
                 </DialogContent>
               </Box>
             </Dialog>
+            {/* </SectionCard> */}
           </Box>
         </Stack>
 
         <ProfileModal
-          open={
-            profileModalOpen
-          }
-          selectedProfile={
-            selectedProfile
-          }
+          open={profileModalOpen}
+          selectedProfile={selectedProfile}
           onClose={() => {
-            setProfileModalOpen(
-              false
-            );
+            setProfileModalOpen(false);
           }}
         />
       </Box>
 
+      {/* ── Edit Profile Modal ── */}
       {/* ─────────────────────────────────────
           EDIT PROFILE MODAL
       ───────────────────────────────────── */}
@@ -3651,29 +3073,15 @@ const UserProfile = () => {
         </Box>
       </Modal>
 
-      {/* ─────────────────────────────────────
-          ADJUST PHOTO MODAL
-      ───────────────────────────────────── */}
-
-      <Modal
-        open={
-          showAdjustModal
-        }
-        onClose={
-          handleAdjustCancel
-        }
-      >
+      {/* ── Adjust Photo Modal (shows selected image, drag + zoom, then submit) ── */}
+      <Modal open={showAdjustModal} onClose={handleAdjustCancel}>
         <Box
           sx={{
             position: "fixed",
             top: "50%",
             left: "50%",
-            transform:
-              "translate(-50%, -50%)",
-            width: {
-              xs: "62%",
-              sm: 340,
-            },
+            transform: "translate(-50%, -50%)",
+            width: { xs: "62%", sm: 340 },
             bgcolor: "white",
             borderRadius: 2,
             boxShadow: 24,
@@ -3693,22 +3101,16 @@ const UserProfile = () => {
           </Typography>
 
           <IconButton
-            onClick={
-              handleAdjustCancel
-            }
+            onClick={handleAdjustCancel}
             sx={{
-              position:
-                "absolute",
+              position: "absolute",
               top: 7,
               right: 10,
               zIndex: 2,
-              color:
-                "rgba(0,0,0,0.8)",
+              color: "rgba(0,0,0,0.8)",
               bgcolor: "#fff",
-
               "&:hover": {
-                bgcolor:
-                  "rgba(0,0,0,0.6)",
+                bgcolor: "rgba(0,0,0,0.6)",
                 color: "#fff",
               },
             }}
@@ -3716,115 +3118,60 @@ const UserProfile = () => {
             <CloseIcon />
           </IconButton>
 
+          {/* Draggable / zoomable preview box */}
           <Box
-            onMouseDown={
-              handleMouseDown
-            }
-            onMouseMove={
-              handleMouseMove
-            }
-            onMouseUp={
-              handleMouseUp
-            }
-            onMouseLeave={
-              handleMouseUp
-            }
-            onTouchStart={
-              handleTouchStart
-            }
-            onTouchMove={
-              handleTouchMove
-            }
-            onTouchEnd={
-              handleTouchEnd
-            }
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
             sx={{
-              position:
-                "relative",
-              width: {
-                xs: 190,
-                sm: CROP_BOX_SIZE,
-              },
-              height: {
-                xs: 190,
-                sm: CROP_BOX_SIZE,
-              },
+              position: "relative",
+              width: { xs: 190, sm: CROP_BOX_SIZE },
+              height: { xs: 190, sm: CROP_BOX_SIZE },
               mx: "auto",
-              borderRadius:
-                "50%",
+              borderRadius: "50%",
               overflow: "hidden",
               bgcolor: "#222",
               cursor: "grab",
-              touchAction:
-                "none",
-              border:
-                "2px solid #FF9933",
+              touchAction: "none",
+              border: "2px solid #FF9933",
             }}
           >
             {rawImage && (
               <img
-                ref={
-                  cropImgRef
-                }
-                src={
-                  rawImage
-                }
+                ref={cropImgRef}
+                src={rawImage}
                 alt="Selected"
-                onLoad={
-                  handleCropImageLoad
-                }
-                draggable={
-                  false
-                }
+                onLoad={handleCropImageLoad}
+                draggable={false}
                 style={{
-                  position:
-                    "absolute",
-                  left:
-                    offset.x,
-                  top:
-                    offset.y,
-                  width:
-                    getDisplayedSize()
-                      .displayedW ||
-                    "auto",
-                  height:
-                    getDisplayedSize()
-                      .displayedH ||
-                    "auto",
-                  userSelect:
-                    "none",
-                  pointerEvents:
-                    "none",
+                  position: "absolute",
+                  left: offset.x,
+                  top: offset.y,
+                  width: getDisplayedSize().displayedW || "auto",
+                  height: getDisplayedSize().displayedH || "auto",
+                  userSelect: "none",
+                  pointerEvents: "none",
                 }}
               />
             )}
           </Box>
 
-          <Box
-            sx={{
-              px: 1,
-              mt: 2,
-            }}
-          >
-            <Typography
-              variant="caption"
-              color="text.secondary"
-            >
+          {/* Zoom slider */}
+          <Box sx={{ px: 1, mt: 2 }}>
+            <Typography variant="caption" color="text.secondary">
               Zoom
             </Typography>
-
             <Slider
               value={zoom}
               min={1}
               max={3}
               step={0.05}
-              onChange={
-                handleZoomChange
-              }
-              sx={{
-                color:
-                  "#FF9933",
-              }}
+              onChange={handleZoomChange}
+              sx={{ color: "#FF9933" }}
             />
           </Box>
 
@@ -3833,48 +3180,27 @@ const UserProfile = () => {
             spacing={1.5}
             sx={{
               display: "flex",
-              justifyContent:
-              {
-                xs: "center",
-                sm: "flex-end",
-              },
+              justifyContent: { xs: "center", sm: "flex-end" },
             }}
           >
             <Button
               variant="contained"
               size="small"
-              sx={{
-                bgcolor:
-                  "#757575",
-                color: "#fff",
-                textTransform:
-                  "none",
-              }}
-              onClick={
-                handleAdjustCancel
-              }
+              sx={{ bgcolor: "#757575", color: "#fff", textTransform: "none" }}
+              onClick={handleAdjustCancel}
             >
               Cancel
             </Button>
-
             <Button
               variant="contained"
               size="small"
               sx={{
-                bgcolor:
-                  "#FF9933",
+                bgcolor: "#FF9933",
                 color: "#fff",
-                textTransform:
-                  "none",
-
-                "&:hover": {
-                  bgcolor:
-                    "#ef9104",
-                },
+                textTransform: "none",
+                "&:hover": { bgcolor: "#ef9104" },
               }}
-              onClick={
-                handleAdjustSave
-              }
+              onClick={handleAdjustSave}
             >
               Use Photo
             </Button>
