@@ -199,7 +199,16 @@ export default function FindRides() {
   const navigate = useNavigate();
 
   const [rides, setRides] = useState([]);
+
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+
+  const LIMIT = 10;
+
+  const loadingMoreRef = useRef(false);
 
   const [filtersOpen, setFiltersOpen] = useState(false);
 
@@ -227,32 +236,69 @@ export default function FindRides() {
   const [locationError, setLocationError] = useState("");
 
   const token = localStorage.getItem('token')
-  console.log(token, 'token')
   const resultsRef = useRef(null);
   const scrollStartRef = useRef(0);
+
 
   // ─────────────────────────────────────────────
   // Fetch rides
   // ─────────────────────────────────────────────
 
-  useEffect(() => {
-    fetchRides();
-  }, []);
 
-  const fetchRides = async () => {
+
+  const {
+    transportMode,
+    gender,
+    fuelSharing,
+    language,
+  } = draftFilters;
+
+  const {
+    transportMode: appliedTransportMode,
+    gender: appliedGender,
+    fuelSharing: appliedFuelSharing,
+    language: appliedLanguage,
+  } = appliedFilters;
+
+  const fetchRides = async ({
+    pageNumber = 1,
+    reset = false,
+    searchFromValue = searchFrom,
+    searchDestinationValue = searchDestination,
+    searchValue = search,
+    transportModeValue = appliedTransportMode,
+    genderValue = appliedGender,
+    fuelSharingValue = appliedFuelSharing,
+    languageValue = appliedLanguage,
+  } = {}) => {
+    if (loadingMoreRef.current) {
+      return;
+    }
+
     try {
+      if (reset) {
+        setLoading(true);
+      } else {
+        setLoadingMore(true);
+      }
+
+      loadingMoreRef.current = true;
+
       const res = await axios.get(`${Api}/rides/get`, {
         params: {
           type: "find",
 
-          searchFrom,
-          searchDestination,
-          search,
+          page: pageNumber,
+          limit: LIMIT,
 
-          transportMode: appliedTransportMode,
-          gender: appliedGender,
-          fuelSharing: appliedFuelSharing,
-          language: appliedLanguage,
+          searchFrom: searchFromValue,
+          searchDestination: searchDestinationValue,
+          search: searchValue,
+
+          transportMode: transportModeValue,
+          gender: genderValue,
+          fuelSharing: fuelSharingValue,
+          language: languageValue,
         },
 
         headers: {
@@ -260,15 +306,92 @@ export default function FindRides() {
         },
       });
 
-      console.log(res.data.data, "data");
+      const body = res?.data || {};
 
-      setRides(res.data.data || []);
+      const newRides = Array.isArray(body.data)
+        ? body.data
+        : [];
+
+      console.log(
+        `Find Rides page ${pageNumber}:`,
+        newRides
+      );
+
+      setRides((prev) => {
+        if (reset) {
+          return newRides;
+        }
+
+        const existingIds = new Set(
+          prev.map((ride) => String(ride?._id))
+        );
+
+        const uniqueRides = newRides.filter(
+          (ride) =>
+            !existingIds.has(String(ride?._id))
+        );
+
+        return [...prev, ...uniqueRides];
+      });
+
+      setPage(pageNumber);
+
+      setHasMore(
+        typeof body.hasMore === "boolean"
+          ? body.hasMore
+          : newRides.length === LIMIT
+      );
+
     } catch (error) {
-      console.log(error.response?.data || error);
+      console.error(
+        "Find rides error:",
+        error?.response?.data || error
+      );
     } finally {
+      loadingMoreRef.current = false;
       setLoading(false);
+      setLoadingMore(false);
     }
   };
+
+  useEffect(() => {
+    fetchRides({
+      pageNumber: 1,
+      reset: true,
+    });
+  }, []);
+
+  const isFirstFilterRender = useRef(true);
+
+  useEffect(() => {
+    if (isFirstFilterRender.current) {
+      isFirstFilterRender.current = false;
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setRides([]);
+      setPage(1);
+      setHasMore(true);
+
+      fetchRides({
+        pageNumber: 1,
+        reset: true,
+      });
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [
+    searchFrom,
+    searchDestination,
+    search,
+    appliedTransportMode,
+    appliedGender,
+    appliedFuelSharing,
+    appliedLanguage,
+  ]);
+
+
 
   // ─────────────────────────────────────────────
   // Distance calculation
@@ -534,19 +657,43 @@ export default function FindRides() {
   };
 
   const handleResultsScroll = (e) => {
-    if (!filtersOpen) {
-      return;
+    const element = e.currentTarget;
+
+    // ----------------------------------------
+    // Close filters when user starts scrolling
+    // ----------------------------------------
+    if (filtersOpen) {
+      const delta = Math.abs(
+        element.scrollTop - scrollStartRef.current
+      );
+
+      if (delta > SCROLL_COLLAPSE_THRESHOLD) {
+        closeFilters();
+      }
     }
 
-    const delta = Math.abs(
-      e.target.scrollTop -
-      scrollStartRef.current
-    );
+    // ----------------------------------------
+    // Infinite scroll
+    // ----------------------------------------
+    const distanceFromBottom =
+      element.scrollHeight -
+      element.scrollTop -
+      element.clientHeight;
 
     if (
-      delta > SCROLL_COLLAPSE_THRESHOLD
+      distanceFromBottom <= 300 &&
+      hasMore &&
+      !loadingMoreRef.current
     ) {
-      closeFilters();
+      console.log(
+        "🔥 Near bottom. Loading page:",
+        page + 1
+      );
+
+      fetchRides({
+        pageNumber: page + 1,
+        reset: false,
+      });
     }
   };
 
@@ -580,20 +727,6 @@ export default function FindRides() {
       return next;
     });
   };
-
-  const {
-    transportMode,
-    gender,
-    fuelSharing,
-    language,
-  } = draftFilters;
-
-  const {
-    transportMode: appliedTransportMode,
-    gender: appliedGender,
-    fuelSharing: appliedFuelSharing,
-    language: appliedLanguage,
-  } = appliedFilters;
 
   const activeFilters = [
     appliedTransportMode && {
@@ -671,117 +804,8 @@ export default function FindRides() {
 
   const now = new Date();
 
-  const filteredRides = rides
-    .filter(
-      (ride) =>
-        ride.createdBy?._id !==
-        currentUser?._id
-    )
 
-    .filter((ride) => {
-      if (
-        new Date(ride.startTime) <= now
-      ) {
-        return false;
-      }
-
-      const fromValue =
-        ride.modeOfTravel === "Flight"
-          ? `${ride.fromAirport || ""} ${ride.fromCountry || ""
-          } ${ride.from || ""}`
-          : ride.from || "";
-
-      const destinationValue =
-        ride.modeOfTravel === "Flight"
-          ? `${ride.toAirport || ""} ${ride.toCountry || ""
-          } ${ride.destination || ""}`
-          : ride.destination || "";
-
-      const fromMatch =
-        fromValue
-          .toLowerCase()
-          .includes(
-            searchFrom.toLowerCase()
-          );
-
-      const destinationMatch =
-        destinationValue
-          .toLowerCase()
-          .includes(
-            searchDestination.toLowerCase()
-          );
-
-      const searchText =
-        search.toLowerCase();
-
-      const generalSearchMatch =
-        !search ||
-        ride.from
-          ?.toLowerCase()
-          .includes(searchText) ||
-        ride.destination
-          ?.toLowerCase()
-          .includes(searchText) ||
-        ride.fromAirport
-          ?.toLowerCase()
-          .includes(searchText) ||
-        ride.destinationAirport
-          ?.toLowerCase()
-          .includes(searchText) ||
-        ride.airlineName
-          ?.toLowerCase()
-          .includes(searchText) ||
-        ride.flightNumber
-          ?.toLowerCase()
-          .includes(searchText) ||
-        ride.createdBy?.firstName
-          ?.toLowerCase()
-          .includes(searchText) ||
-        ride.createdBy?.lastName
-          ?.toLowerCase()
-          .includes(searchText);
-
-      const transportMatch =
-        !appliedTransportMode ||
-        ride.modeOfTravel ===
-        appliedTransportMode;
-
-      const genderMatch =
-        !appliedGender ||
-        ride.genderPreference ===
-        appliedGender;
-
-      const fuelMatch =
-        appliedFuelSharing === "" ||
-        ride.modeOfTravel === "Flight" ||
-        ride.fuelSharing?.toString() ===
-        appliedFuelSharing;
-
-      const languageMatch =
-        !appliedLanguage ||
-        ride.language
-          ?.toLowerCase()
-          .includes(
-            appliedLanguage.toLowerCase()
-          );
-
-      return (
-        fromMatch &&
-        destinationMatch &&
-        generalSearchMatch &&
-        transportMatch &&
-        genderMatch &&
-        fuelMatch &&
-        languageMatch
-      );
-    });
-
-  const visibleRides =
-    filteredRides.filter(
-      (ride) =>
-        ride.travelStatus !==
-        "Cancelled"
-    );
+  const visibleRides = rides;
 
   // ─────────────────────────────────────────────
   // Sort rides by distance
@@ -868,34 +892,27 @@ export default function FindRides() {
   // Loading
   // ─────────────────────────────────────────────
 
-  if (loading) {
-    return (
-      <Box
-        sx={{
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <CircularProgress
-          sx={{
-            color: saffron[500],
-          }}
-        />
-      </Box>
-    );
-  }
-
-  // ─────────────────────────────────────────────
-  // UI
-  // ─────────────────────────────────────────────
+  // if (loading) {
+  //   return (
+  //     <Box
+  //       sx={{
+  //         minHeight: "100vh",
+  //         display: "flex",
+  //         alignItems: "center",
+  //         justifyContent: "center",
+  //       }}
+  //     >
+  //       <CircularProgress
+  //         sx={{
+  //           color: saffron[500],
+  //         }}
+  //       />
+  //     </Box>
+  //   );
+  // }
 
   return (
     <>
-      {/* ────────────────────────────────────────
-          Profile completion dialog
-      ───────────────────────────────────────── */}
 
       <Dialog
         open={profileGateOpen}
@@ -1072,10 +1089,6 @@ export default function FindRides() {
           </Button>
         </DialogActions>
       </Dialog>
-
-      {/* ────────────────────────────────────────
-          Main page
-      ───────────────────────────────────────── */}
 
       <Box
         sx={{
@@ -2515,14 +2528,9 @@ export default function FindRides() {
               </Box>
             </Collapse>
 
-            {/* ───────────────────────────────
-                Results count
-            ─────────────────────────────── */}
-
             <Box
               sx={{
                 display: "flex",
-
                 mb: {
                   xs: 1.5,
                   sm: 2,
@@ -2534,7 +2542,7 @@ export default function FindRides() {
                 },
               }}
             >
-              <Typography
+              {/* <Typography
                 fontWeight={700}
                 sx={{
                   color:
@@ -2558,108 +2566,159 @@ export default function FindRides() {
                     : "results"}{" "}
                   found
                 </Typography>
-              </Typography>
+              </Typography> */}
             </Box>
 
             {/* ───────────────────────────────
                 Ride cards
             ─────────────────────────────── */}
 
-            {sortedVisibleRides.length >
-              0 ? (
-              <Grid
-                container
-                spacing={{
-                  xs: 1,
-                  sm: 2,
-                }}
-              >
-                {sortedVisibleRides.map(
-                  (ride) => {
-                    const isOwnRide =
-                      ride.createdBy?._id ===
-                      currentUser?._id;
+            {loading ?
 
-                    const distanceKm =
-                      getRideDistanceKm(
-                        ride
-                      );
-
-                    return (
-                      <Grid
-                        item
-                        xs={12}
-                        sm={6}
-                        md={4}
-                        key={
-                          ride._id
-                        }
-                      >
-                        <RideCard
-                          ride={ride}
-                          isOwnRide={
-                            isOwnRide
-                          }
-                          distanceKm={
-                            distanceKm
-                          }
-                          distanceLabel={formatDistance(
-                            distanceKm
-                          )}
-                        />
-                      </Grid>
-                    );
-                  }
-                )}
-              </Grid>
-            ) : (
               <Box
                 sx={{
-                  borderRadius: {
-                    xs: 3,
-                    sm: 4,
-                  },
-
-                  textAlign:
-                    "center",
-
-                  py: {
-                    xs: 3,
-                    sm: 5,
-                  },
-
-                  px: {
-                    xs: 2,
-                    sm: 4,
-                  },
-
-                  mt: {
-                    xs: "40%",
-                    sm: "10%",
-                  },
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                 }}
               >
-                <Typography
-                  variant="h6"
-                  fontWeight={600}
-                  color="text.primary"
-                >
-                  No rides found
-                </Typography>
-
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
+                <CircularProgress
                   sx={{
-                    mt: 1,
+                    color: saffron[500],
+                  }}
+                />
+              </Box>
+              :
+
+              sortedVisibleRides.length >
+                0 ? (
+                <>
+                  <Grid
+                    container
+                    spacing={{
+                      xs: 1,
+                      sm: 2,
+                    }}
+                  >
+                    {sortedVisibleRides.map(
+                      (ride) => {
+                        const isOwnRide =
+                          ride.createdBy?._id ===
+                          currentUser?._id;
+
+                        const distanceKm =
+                          getRideDistanceKm(
+                            ride
+                          );
+
+                        return (
+                          <Grid
+                            item
+                            xs={12}
+                            sm={6}
+                            md={4}
+                            key={
+                              ride._id
+                            }
+                          >
+                            <RideCard
+                              ride={ride}
+                              isOwnRide={
+                                isOwnRide
+                              }
+                              distanceKm={
+                                distanceKm
+                              }
+                              distanceLabel={formatDistance(
+                                distanceKm
+                              )}
+                            />
+                          </Grid>
+                        );
+                      }
+                    )}
+                  </Grid>
+
+                  {loadingMore && (
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "center",
+                        py: 2,
+                      }}
+                    >
+                      <CircularProgress
+                        size={26}
+                        sx={{
+                          color: saffron[500],
+                        }}
+                      />
+                    </Box>
+                  )}
+
+                  {!hasMore && (
+                    <Typography
+                      sx={{
+                        textAlign: "center",
+                        color: "text.secondary",
+                        fontSize: "0.8rem",
+                        py: 2,
+                      }}
+                    >
+                      No more rides
+                    </Typography>
+                  )}
+                </>
+
+              ) : (
+                <Box
+                  sx={{
+                    borderRadius: {
+                      xs: 3,
+                      sm: 4,
+                    },
+
+                    textAlign:
+                      "center",
+
+                    py: {
+                      xs: 3,
+                      sm: 5,
+                    },
+
+                    px: {
+                      xs: 2,
+                      sm: 4,
+                    },
+
+                    mt: {
+                      xs: "40%",
+                      sm: "10%",
+                    },
                   }}
                 >
-                  Try adjusting your
-                  filters or search
-                  terms
-                </Typography>
-              </Box>
-            )}
+                  <Typography
+                    variant="h6"
+                    fontWeight={600}
+                    color="text.primary"
+                  >
+                    No rides found
+                  </Typography>
+
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{
+                      mt: 1,
+                    }}
+                  >
+                    Try adjusting your
+                    filters or search
+                    terms
+                  </Typography>
+                </Box>
+              )
+            }
           </Container>
         </Box>
       </Box>
