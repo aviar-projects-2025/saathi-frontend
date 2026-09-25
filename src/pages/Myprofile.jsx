@@ -337,9 +337,9 @@ const Myprofile = () => {
 
   const getCommunityPost = async () => {
     try {
-      const postsRes = await axios.get(Api + "/community/");
+      const postsRes = await axios.get(Api + `/post-images/profile/${currentUser?._id}`);
 
-      // Only current user's posts
+     console.log("postsRes...",postsRes)
       const myPosts = postsRes.data.data.filter(
         (item) => item.authorId?._id === currentUser?._id,
       );

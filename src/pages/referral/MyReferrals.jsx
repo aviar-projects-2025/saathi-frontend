@@ -199,33 +199,10 @@ const ReferralCard = memo(({
                         }}
                     >
                         {!profileImage && (
-                            <>
-                                <Box
-                                    component="span"
-                                    sx={{
-                                        color:
-                                            "#FF9933",
-                                    }}
-                                >
-                                    {
-                                        users
-                                            ?.firstName?.[0]
-                                    }
-                                </Box>
-
-                                <Box
-                                    component="span"
-                                    sx={{
-                                        color:
-                                            "#FF9933",
-                                    }}
-                                >
-                                    {
-                                        users
-                                            ?.lastName?.[0]
-                                    }
-                                </Box>
-                            </>
+                            <Box component="span" sx={{ color: "#ffff", backgroundColor: "#FF9933" }}>
+                                {users?.firstName?.[0]}
+                                {users?.lastName?.[0]}
+                            </Box>
                         )}
                     </Avatar>
 

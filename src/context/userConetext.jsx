@@ -69,16 +69,47 @@ export const UserProvider = ({ children }) => {
         }
     };
 
-    const getSavedPost = async () => {
+    const [page, setPage] = useState(1);
+    const [hasNextPage, setHasNextPage] = useState(true);
+    const [loading, setLoading] = useState(false);
+
+    const [savedPage, setSavedPage] = useState(1);
+    const [savedHasNextPage, setSavedHasNextPage] = useState(true);
+    const [savedLoading, setSavedLoading] = useState(false);
+
+    const getSavedPost = async (pageNumber = 1) => {
+        if (savedLoading || !savedHasNextPage) return;
+
         try {
-            axios.get(Api + `/save-post/${storedUser.id}`)
-                .then((res) => {
-                    setSavedPost(res?.data?.savedPosts)
-                })
+            setSavedLoading(true);
+
+            const res = await axios.get(
+                Api + `/save-post/${storedUser.id}?page=${pageNumber}&limit=12`
+            );
+
+            const newPosts = res?.data?.savedPosts || [];
+            const pagination = res?.data?.pagination;
+
+            setSavedPost((prev) => {
+                if (pageNumber === 1) {
+                    return newPosts;
+                }
+
+                return [...prev, ...newPosts];
+            });
+
+            setSavedPage(pageNumber);
+
+            setSavedHasNextPage(
+                pagination?.hasNextPage ?? false
+            );
+
         } catch (error) {
-            console.log(error)
+            console.log(error);
+        } finally {
+            setSavedLoading(false);
         }
-    }
+    };
 
     return (
         <UserContext.Provider
@@ -89,6 +120,11 @@ export const UserProvider = ({ children }) => {
                 completion,
                 savedPost,
                 setSavedPost,
+                getSavedPost,
+                savedPage,
+                savedHasNextPage,
+                savedLoading,
+
                 removeSavedPost
             }}
         >

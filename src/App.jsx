@@ -42,6 +42,8 @@ const Discover = React.lazy(() => import("./pages/Discover.jsx"));
 const UserProfile = React.lazy(() => import("./pages/UserProfile.jsx"));
 const OfferRide = React.lazy(() => import("./pages/OfferRide.jsx"));
 const MyRides = React.lazy(() => import("./pages/MyRides.jsx"));
+const PeopleNearYou = React.lazy(() => import("./pages/PeopleNearYou.jsx"));
+
 const MyReferrals = React.lazy(() =>
   import("./pages/referral/MyReferrals.jsx")
 );
@@ -131,9 +133,11 @@ function App() {
               <Route path="/request-ride" element={<RequestRide />} />
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/optin" element={<SmsNotifications />} />
+              <Route path="/people-nearby" element={<PeopleNearYou />} />
+
             </Route>
           </Route>
-
+          
           {/* Both ADMIN and USER */}
           <Route
             element={<ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.USER]} />}

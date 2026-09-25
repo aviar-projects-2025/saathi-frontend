@@ -94,6 +94,8 @@ const Register = () => {
     lastName: Yup.string().required("Last name is required"),
     email: Yup.string()
       .required("Email is required")
+      .trim()
+      .lowercase()
       .matches(
         /^[a-z0-9]+(?:[._%+-][a-z0-9]+)*@[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z]{2,})+$/,
         "Please enter a valid email address"
@@ -564,6 +566,7 @@ const Register = () => {
         handleBlur,
         handleSubmit,
         isSubmitting,
+        setFieldValue,
       }) => (
         <form onSubmit={handleSubmit}>
           <Stack spacing={2.5}>
@@ -607,9 +610,13 @@ const Register = () => {
               name="email"
               type="email"
               value={values.email}
+              // onChange={(e) => {
+              //   handleChange(e);
+              //   setFieldErrors((prev) => ({ ...prev, email: "" }));
+              // }}
               onChange={(e) => {
-                handleChange(e);
                 setFieldErrors((prev) => ({ ...prev, email: "" }));
+                setFieldValue("email", e.target.value.toLowerCase());
               }}
               onBlur={handleBlur}
               error={Boolean(

@@ -610,6 +610,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
 
     try {
       setIsSubmitted(true);
+
       await axios.post(`${Api}/rides/`, payload);
 
       toast.success("Ride Created Successfully...!", {
@@ -628,30 +629,26 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
         },
       });
 
+      // UI cleanup
+      setStep(0);
+      formReset();
+      setSubmitted(true);
+      setShowErrors(false);
+      setOpen(false);
 
-      // UI updates should not trigger the API error toast
-      try {
-        refreshRides();
-        setStep(0);
-        formReset();
-        setSubmitted(true);
-        setShowErrors(false);
-        setOpen(false);
-      } catch (uiError) {
-        console.error("UI cleanup error:", uiError);
+      // Go to My Rides -> My Posts
+      if (onClose) {
+        onClose();
+      } else {
+        navigate("/myride", {
+          state: {
+            tab: 2,
+            refresh: true,
+          },
+        });
       }
 
-      // Navigate/close after success
-      setTimeout(() => {
-        if (onClose) {
-          onClose();
-        } else {
-          navigate("/myride");
-        }
-      }, 1000);
-
     } catch (error) {
-      // ONLY API errors come here
       console.error("Create ride error:", error);
 
       toast.error(
