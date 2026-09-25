@@ -515,6 +515,7 @@ function RideCard({
   setNotificationRide,
   onDelete,
   allRequests,
+  fetchRideCounts,
   setAllRequests,
 }) {
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -671,6 +672,7 @@ function RideCard({
         setConfirmRide(null);
         fetchRides();
         toast.success("Ride Started", toasts);
+        fetchRideCounts()
       } else if (status === "Started") {
         const response = await axios.patch(
           `${Api}/rides/edit/${rideId}`,
@@ -687,6 +689,7 @@ function RideCard({
 
         setConfirmRide(null);
         fetchRides();
+        fetchRideCounts();
         toast.success("Ride Completed", toasts);
       }
     } catch (error) {
@@ -1658,6 +1661,7 @@ const MyRides = () => {
       onEdit={setEditRide}
       onDelete={setDeleteRide}
       allRequests={allRequests}
+      fetchRideCounts={fetchRideCounts}
       setAllRequests={setAllRequests}
       fetchAllRequests={fetchAllRequests}
     />;
