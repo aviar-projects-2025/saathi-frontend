@@ -47,7 +47,7 @@ export default function PeopleNearYou() {
     try {
       setLoading(true);
 
-      console.log(currentUser,'currentUser')
+      console.log(currentUser, 'currentUser')
       const response = await axios.get(Api + `/users/nearby/user/${currentUser._id}`);
 
       setPeople(response.data?.data || []);
@@ -317,8 +317,17 @@ export default function PeopleNearYou() {
           width: "100%",
           maxWidth: 700,
           mx: "auto",
-          px: { xs: 1.5, sm: 3 },
-          py: { xs: 1.5, sm: 3 },
+          px: {
+            xs: 1,
+            sm: 2,
+            md: 3,
+          },
+          py: {
+            xs: 1,
+            sm: 2,
+            md: 3,
+          },
+          boxSizing: "border-box",
         }}
       >
         {/* AREA INFO */}
@@ -438,9 +447,8 @@ export default function PeopleNearYou() {
           >
             {loading
               ? "Finding people..."
-              : `${filteredPeople.length} ${
-                  filteredPeople.length === 1 ? "member" : "members"
-                } in your area`}
+              : `${filteredPeople.length} ${filteredPeople.length === 1 ? "member" : "members"
+              } in your area`}
           </Typography>
 
           <Chip
@@ -517,9 +525,8 @@ export default function PeopleNearYou() {
                 {/* PROFILE IMAGE */}
                 <Avatar
                   src={person.profileImage || ""}
-                  alt={`${person.firstName || ""} ${
-                    person.lastName || ""
-                  }`}
+                  alt={`${person.firstName || ""} ${person.lastName || ""
+                    }`}
                   sx={{
                     width: { xs: 52, sm: 58 },
                     height: { xs: 52, sm: 58 },
