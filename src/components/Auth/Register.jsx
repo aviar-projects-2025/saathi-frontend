@@ -678,6 +678,7 @@ const Register = () => {
               label="Referral Code"
               name="referralCode"
               type="text"
+              disabled
               value={values.referralCode}
               InputProps={{
                 readOnly: !!referralFromUrl,
