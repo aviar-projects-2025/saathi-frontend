@@ -315,7 +315,7 @@ export default function PeopleNearYou() {
       <Box
         sx={{
           width: "100%",
-          maxWidth: 700,
+          maxWidth:"100%",
           mx: "auto",
           px: {
             xs: 1,
