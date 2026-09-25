@@ -287,7 +287,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
                 mt: 0.5,
               }}
             >
-              {Math.round(completion)}% complete
+              {Math.round(completion)}% completed
             </Typography>
           </Box>
 
