@@ -13,6 +13,7 @@ import {
   Grid,
   Modal,
   TextField,
+  Skeleton,
   Menu,
   ListItemText,
   ListItemIcon,
@@ -92,8 +93,17 @@ const UserProfile = () => {
   const toasts = ToastConfig();
   const [imageDeleteLoading, setImageDeleteLoading] = useState(false);
   const [openComments, setOpenComments] = useState({});
-
-  const { currentUser, getuserData, savedPost, removeSavedPost } = useUser();
+  const {
+    currentUser,
+    getuserData,
+    savedPost,
+    removeSavedPost,
+    getSavedPost,
+    savedPage,
+    savedHasNextPage,
+    savedLoading,
+  } = useUser();
+  const savedPostObserverRef = useRef(null);
   const onImageSelected = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
@@ -139,36 +149,6 @@ const UserProfile = () => {
     startY: 0,
     startOffset: { x: 0, y: 0 },
   });
-
-
-  const getBaseScale = (w, h) => Math.max(CROP_BOX_SIZE / w, CROP_BOX_SIZE / h);
-
-  const clampOffset = (nextOffset, displayedW, displayedH) => {
-    const minX = CROP_BOX_SIZE - displayedW;
-    const minY = CROP_BOX_SIZE - displayedH;
-    return {
-      x: Math.min(0, Math.max(minX, nextOffset.x)),
-      y: Math.min(0, Math.max(minY, nextOffset.y)),
-    };
-  };
-
-  const handlePickImage = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      setRawImage(reader.result);
-      setZoom(1);
-      setOffset({ x: 0, y: 0 });
-      setShowAdjustModal(true);
-    };
-    reader.readAsDataURL(file);
-    e.target.value = "";
-  };
-
-
-
 
   useEffect(() => {
     if (selectedPost) {
@@ -429,6 +409,42 @@ const UserProfile = () => {
   const handleDropdownMenuClose = () => {
     setDropDown(null);
   };
+  useEffect(() => {
+    if (tab !== 1) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (
+          entries[0].isIntersecting &&
+          !savedLoading &&
+          savedHasNextPage
+        ) {
+          getSavedPost(savedPage + 1);
+        }
+      },
+      {
+        threshold: 0.1,
+      }
+    );
+
+    const currentRef = savedPostObserverRef.current;
+
+    if (currentRef) {
+      observer.observe(currentRef);
+    }
+
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef);
+      }
+    };
+  }, [
+    tab,
+    savedPage,
+    savedLoading,
+    savedHasNextPage,
+    getSavedPost,
+  ]);
 
   const handleSettingClick = () => {
     handleDropdownMenuClose();
@@ -660,25 +676,39 @@ const UserProfile = () => {
                 >
 
                   {communityLoading ? (
-
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        width: "100%",
-                        minHeight: 100,
-                      }}
-                    >
-                      <CircularProgress
-                        size={30}
-                        thickness={5}
-                        sx={{
-                          color: "#FF9933",
-                        }}
-                      />
-                    </Box>
-
+                    <>
+                      {Array.from({ length: 12 }).map((_, index) => (
+                        <Grid
+                          item
+                          xs={4}
+                          key={`community-skeleton-${index}`}
+                          sx={{ mt: 1 }}
+                        >
+                          <Skeleton
+                            variant="rectangular"
+                            animation="wave"
+                            sx={{
+                              width: {
+                                xs: 108,
+                                sm: 125,
+                                md: 150,
+                                lg: 175,
+                              },
+                              height: {
+                                xs: 150,
+                                sm: 200,
+                                md: 225,
+                                lg: 250,
+                              },
+                              borderRadius: {
+                                xs: 0.5,
+                                sm: 1,
+                              },
+                            }}
+                          />
+                        </Grid>
+                      ))}
+                    </>
                   ) : communityPosts.length === 0 ? (
                     <Box
                       sx={{
@@ -1481,7 +1511,11 @@ const UserProfile = () => {
             {tab === 1 && (
               <Grid
                 container
-                spacing={{ xs: "12px", sm: "15px", md: "20px" }}
+                spacing={{
+                  xs: "12px",
+                  sm: "15px",
+                  md: "20px",
+                }}
                 sx={{
                   display: "flex",
                   justifyContent: "center",
@@ -1489,34 +1523,61 @@ const UserProfile = () => {
                   alignItems: "center",
                 }}
               >
-                {communityLoading ? (
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      width: 45,
-                      height: 45,
-                    }}
-                  >
-                    <CircularProgress
-                      size={30}
-                      thickness={5}
-                      sx={{ color: "#FF9933" }}
-                    />
-                  </Box>
-                ) : savedPost?.length == 0 ? (
+                {/* Initial loading - show skeletons */}
+                {savedLoading && savedPost?.length === 0 ? (
+                  <>
+                    {Array.from({ length: 12 }).map((_, index) => (
+                      <Grid
+                        item
+                        xs={4}
+                        key={`saved-skeleton-${index}`}
+                        sx={{ mt: 0.2 }}
+                      >
+                        <Skeleton
+                          variant="rectangular"
+                          animation="wave"
+                          sx={{
+                            width: {
+                              xs: 108,
+                              sm: 125,
+                              md: 150,
+                              lg: 175,
+                            },
+                            height: {
+                              xs: 150,
+                              sm: 200,
+                              md: 225,
+                              lg: 250,
+                            },
+                            borderRadius: {
+                              xs: 0.5,
+                              sm: 1,
+                            },
+                          }}
+                        />
+                      </Grid>
+                    ))}
+                  </>
+                ) : savedPost?.length === 0 ? (
+                  /* No saved posts */
                   <Box
                     sx={{
                       width: "100%",
-                      maxWidth: { xs: "100%", sm: 440, md: 480 },
+                      maxWidth: {
+                        xs: "100%",
+                        sm: 440,
+                        md: 480,
+                      },
                       textAlign: "center",
                       flexDirection: "column",
                       mx: "auto",
                       display: "flex",
                       justifyContent: "center",
                       alignItems: "center",
-                      mt: { xs: '35%', sm: '7%' }
+                      mt: {
+                        xs: "35%",
+                        sm: "7%",
+                      },
                     }}
                   >
                     <Typography
@@ -1550,50 +1611,124 @@ const UserProfile = () => {
                     </Typography>
                   </Box>
                 ) : (
-                  savedPost?.map((post) => (
-                    <Grid item xs={4} key={post._id} sx={{ mt: 0.2 }}>
-                      {post.postId?.postImage && (
-                        <Box
-                          onClick={() => {
-                            setSelectedPost(post);
-                            setSelectedImage(
-                              Array.isArray(post.postId.postImage)
-                                ? post.postId.postImage[0]
-                                : post.postId.postImage,
-                            );
-                            setOpenImage(true);
-                          }}
-                          sx={{
-                            position: "relative",
-                            cursor: "pointer",
-                            width: { xs: 108, sm: 125, md: 150, lg: 175 },
-                            height: { xs: 150, sm: 200, md: 225, lg: 250 },
-                            overflow: "hidden",
-                            borderRadius: { xs: 0.5, sm: 1 },
-                            "&:hover .postOverlay": { opacity: 1 },
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                          }}
-                        >
-                          <img
-                            src={
-                              Array.isArray(post.postId.postImage)
-                                ? post.postId.postImage[0]
-                                : post.postId.postImage
-                            }
-                            alt=""
-                            style={{
-                              width: "100%",
-                              height: "100%",
-                              objectFit: "cover",
-                              display: "block",
+                  <>
+                    {/* Saved Posts */}
+                    {savedPost?.map((post) => (
+                      <Grid
+                        item
+                        xs={4}
+                        key={post._id}
+                        sx={{ mt: 0.2 }}
+                      >
+                        {post.postId?.postImage && (
+                          <Box
+                            onClick={() => {
+                              setSelectedPost(post);
+
+                              setSelectedImage(
+                                Array.isArray(
+                                  post.postId.postImage
+                                )
+                                  ? post.postId.postImage[0]
+                                  : post.postId.postImage
+                              );
+
+                              setOpenImage(true);
                             }}
-                          />
-                        </Box>
-                      )}
-                    </Grid>
-                  ))
+                            sx={{
+                              position: "relative",
+                              cursor: "pointer",
+                              width: {
+                                xs: 108,
+                                sm: 125,
+                                md: 150,
+                                lg: 175,
+                              },
+                              height: {
+                                xs: 150,
+                                sm: 200,
+                                md: 225,
+                                lg: 250,
+                              },
+                              overflow: "hidden",
+                              borderRadius: {
+                                xs: 0.5,
+                                sm: 1,
+                              },
+                              display: "flex",
+                              justifyContent: "center",
+                              alignItems: "center",
+                            }}
+                          >
+                            <img
+                              src={
+                                Array.isArray(
+                                  post.postId.postImage
+                                )
+                                  ? post.postId.postImage[0]
+                                  : post.postId.postImage
+                              }
+                              alt=""
+                              style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover",
+                                display: "block",
+                              }}
+                            />
+                          </Box>
+                        )}
+                      </Grid>
+                    ))}
+
+                    {/* Loading next page */}
+                    {savedLoading && savedPost?.length > 0 && (
+                      <>
+                        {Array.from({ length: 3 }).map((_, index) => (
+                          <Grid
+                            item
+                            xs={4}
+                            key={`next-skeleton-${index}`}
+                            sx={{ mt: 0.2 }}
+                          >
+                            <Skeleton
+                              variant="rectangular"
+                              animation="wave"
+                              sx={{
+                                width: {
+                                  xs: 108,
+                                  sm: 125,
+                                  md: 150,
+                                  lg: 175,
+                                },
+                                height: {
+                                  xs: 150,
+                                  sm: 200,
+                                  md: 225,
+                                  lg: 250,
+                                },
+                                borderRadius: {
+                                  xs: 0.5,
+                                  sm: 1,
+                                },
+                              }}
+                            />
+                          </Grid>
+                        ))}
+                      </>
+                    )}
+
+                    {/* Scroll detection element */}
+                    {savedHasNextPage && (
+                      <Box
+                        ref={savedPostObserverRef}
+                        sx={{
+                          width: "100%",
+                          height: "30px",
+                        }}
+                      />
+                    )}
+                  </>
                 )}
               </Grid>
             )}
@@ -1713,7 +1848,7 @@ const UserProfile = () => {
             </Dialog>
           </Box>
         </Stack>
-        
+
         <ProfileModal
           open={profileModalOpen}
           selectedProfile={selectedProfile}
