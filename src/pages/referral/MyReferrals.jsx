@@ -1020,12 +1020,9 @@ const MyReferrals = () => {
                     `${Api}/referralInvite/`,
                     {
                         referredBy: user.id,
+                        referrerName: `${user.firstName} ${user.lastName}`,
 
-                        /*
-                         * Store international number
-                         */
-                        mobile:
-                            fullMobileNumber,
+                        mobile: fullMobileNumber,
 
                         status: "Waiting",
                     }
