@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import {
   Box, Typography, Grid, Paper, Chip, Avatar, Button,
   Divider, Stack, LinearProgress,
@@ -77,6 +77,7 @@ function useResponsiveTier() {
 
 export default function Community() {
   const [post, setPost] = useState("");
+  const [editPreviewUrl, setEditPreviewUrl] = useState("");
   const [media, setMedia] = useState(null);
   const [preview, setPreview] = useState("");
   const [loading, setLoading] = useState(false);
@@ -409,7 +410,11 @@ export default function Community() {
   };
 
 
+  const editImagePreview = useMemo(() => {
+    if (!editImage) return previewImage;
 
+    return URL.createObjectURL(editImage);
+  }, [editImage, previewImage]);
   const isPostSaved = (postId) => {
     return savedPost?.some(
       (item) => item.postId?._id === postId
@@ -424,15 +429,26 @@ export default function Community() {
   const closeImageMenu = () => setImageMenuAnchor(null);
 
   const onImageSelected = (e) => {
-    const selectedFile = e.target.files[0];
+    const selectedFile = e.target.files?.[0];
+
     if (selectedFile) {
       setEditImage(selectedFile);
-      setPreviewImage(URL.createObjectURL(selectedFile));
+
+      const url = URL.createObjectURL(selectedFile);
+      setEditPreviewUrl(url);
     }
+
     closeImageMenu();
-    e.target.value = null; // allow re-selecting same file next time
+    e.target.value = null;
   };
 
+  useEffect(() => {
+    return () => {
+      if (editPreviewUrl) {
+        URL.revokeObjectURL(editPreviewUrl);
+      }
+    };
+  }, [editPreviewUrl]);
   const navigate = useNavigate();
   const tier = useResponsiveTier();
   const isMobile = tier === 'xs';                 // phones
@@ -563,11 +579,9 @@ export default function Community() {
 
   const handleReset = () => {
     setEditDescription(originalDescription);
-
-    setEditImage(null);               // remove selected File
-    setPreviewImage(originalImage);   // restore original image URL
+    setEditImage(null);
+    setPreviewImage(originalImage);
   };
-
   const handleCreatePost = async () => {
     try {
       setLoading(true);
@@ -1446,6 +1460,10 @@ export default function Community() {
 
                           <Dialog
                             open={editOpen}
+                            fullWidth
+                            maxWidth="sm"
+                            scroll="paper"
+                            disableRestoreFocus
                             onClose={(event, reason) => {
                               if (reason === "backdropClick") {
                                 return;
@@ -1453,12 +1471,16 @@ export default function Community() {
 
                               setEditOpen(false);
                             }}
-                            fullWidth
-                            maxWidth="sm"
                             PaperProps={{
                               sx: {
                                 borderRadius: { xs: 0, sm: 3 },
                                 m: { xs: 0, sm: 2 },
+
+                                // Important for mobile keyboard
+                                maxHeight: {
+                                  xs: "100dvh",
+                                  sm: "calc(100% - 64px)",
+                                },
                               },
                             }}
                           >
@@ -1489,7 +1511,15 @@ export default function Community() {
                             </DialogTitle>
 
                             {/* Dialog Content */}
-                            <DialogContent dividers sx={{ px: { xs: 1.5, sm: 3 }, py: 2 }}>
+                            <DialogContent
+                              dividers
+                              sx={{
+                                px: { xs: 1.5, sm: 3 },
+                                py: 2,
+                                overflowY: "auto",
+                                WebkitOverflowScrolling: "touch",
+                              }}
+                            >
                               <TextField
                                 fullWidth
                                 multiline
@@ -1506,15 +1536,15 @@ export default function Community() {
                                 {previewImage && (
                                   <Box
                                     component="img"
-                                    src={editImage ? URL.createObjectURL(editImage) : previewImage}
+                                    src={editImagePreview}
                                     alt="Preview"
                                     sx={{
                                       width: "100%",
                                       height: { xs: 160, sm: 220, md: 280 },
                                       objectFit: "contain",
                                       borderRadius: 2,
-                                      // border: "1px solid #eee",
                                       mb: 1.5,
+                                      display: "block",
                                     }}
                                   />
                                 )}
@@ -1656,14 +1686,7 @@ export default function Community() {
                           </Dialog>
 
 
-                          {editImage && (
-                            <img
-                              src={URL.createObjectURL(editImage)}
-                              alt="Preview"
-                              width={150}
-                              style={{ marginTop: 10, borderRadius: 8 }}
-                            />
-                          )}
+
                         </>
                       )}
 
