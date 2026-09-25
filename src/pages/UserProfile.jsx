@@ -675,14 +675,19 @@ const UserProfile = () => {
                   }}
                 >
 
+
                   {communityLoading ? (
                     <>
                       {Array.from({ length: 12 }).map((_, index) => (
                         <Grid
                           item
                           xs={4}
-                          key={`community-skeleton-${index}`}
-                          sx={{ mt: 1 }}
+                          key={index}
+                          sx={{
+                            mt: 1,
+                            display: "flex",
+                            justifyContent: "center",
+                          }}
                         >
                           <Skeleton
                             variant="rectangular"
@@ -710,6 +715,8 @@ const UserProfile = () => {
                       ))}
                     </>
                   ) : communityPosts.length === 0 ? (
+
+
                     <Box
                       sx={{
                         width: "100%",
