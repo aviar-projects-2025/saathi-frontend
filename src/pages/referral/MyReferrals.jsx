@@ -1044,7 +1044,7 @@ const MyReferrals = () => {
                                 fullMobileNumber,
 
                             shareLink,
-
+                            referrerName: `${user.firstName} ${user.lastName}`,
                             referrerId:
                                 user?.referralCode,
                         },
@@ -1070,15 +1070,15 @@ const MyReferrals = () => {
                 setMobile_number("");
             } else {
                 alert(
-                    stored.data?.message ||
+                    stored?.data?.message ||
                     "Unable to create referral invitation"
                 );
             }
         } catch (error) {
             console.error(
                 "Referral SMS error:",
-                error.response?.data ||
-                error.message
+                error?.response?.data ||
+                error?.message
             );
 
             alert(
