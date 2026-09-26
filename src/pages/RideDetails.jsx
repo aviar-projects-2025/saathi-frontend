@@ -129,7 +129,7 @@ const requestVisual = (request) => {
   const travelStatus = request?.rideId?.travelStatus;
   const pendingReqSeats = request?.pendingReqSeats;
 
-  if (status === "Cancelled") {
+  if (status === "CANCELLED") {
     return {
       label: `${request?.requestedBy?.firstName} Cancelled`,
       color: TOKENS.red,
@@ -255,6 +255,7 @@ function Field({ icon: Icon, label, value, span }) {
 function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approveLoading, rejectLoading, dense }) {
   const [open, setOpen] = useState(false);
   const v = requestVisual(request);
+  console.log("v.....",request)
   const isPending = request?.status?.toUpperCase() === 'PENDING';
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedPost, setSelectedPost] = useState(null);
@@ -306,6 +307,7 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
     event.stopPropagation();
     setAnchorEl(event.currentTarget);
     setSelectedRequest(request);
+ 
   };
   const askConfirm = (action, e) => {
     e?.stopPropagation?.();
@@ -591,10 +593,6 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
                 )}
               </>
             )}
-            {/* <IconButton
-              size="small" aria-label="Toggle passenger details">
-              {open ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
-            </IconButton> */}
 
             {v.label === "Approved" && (
               <IconButton
