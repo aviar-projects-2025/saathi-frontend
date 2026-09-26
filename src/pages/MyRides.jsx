@@ -1564,6 +1564,16 @@ const MyRides = () => {
     }
   }, [notifications, active.key]);
 
+
+  useEffect(() => {
+  if (location.state?.refresh) {
+
+    console.log("Refreshing all categories due to location state refresh");
+
+    refreshAllCategories();
+  }
+}, [location.state?.refreshKey]);
+
   useEffect(() => {
     if (active.key !== "current") return;
     const check = () => {
