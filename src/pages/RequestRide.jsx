@@ -546,7 +546,7 @@ const RequestRide = ({ ride }) => {
                               }}
                             />
 
-                            {request?.status != "Cancelled" && request?.status != "REJECTED" && request?.rideId?.travelStatus != "Cancelled" && new Date() <= new Date(request.rideId.startTime) &&
+                            {request?.status != "Cancelled" && request?.status != "REJECTED" && request?.rideId?.travelStatus != "Cancelled" && new Date() <= new Date(request?.rideId?.startTime) &&
                               <IconButton
                                 onClick={(event) => handleMenuOpen(event, request)}
                                 sx={{
