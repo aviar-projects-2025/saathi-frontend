@@ -72,7 +72,7 @@ export const UserProvider = ({ children }) => {
     const [page, setPage] = useState(1);
     const [hasNextPage, setHasNextPage] = useState(true);
     const [loading, setLoading] = useState(false);
-
+    const [userLoading, setUserLoading] = useState(true);
     const [savedPage, setSavedPage] = useState(1);
     const [savedHasNextPage, setSavedHasNextPage] = useState(true);
     const [savedLoading, setSavedLoading] = useState(false);

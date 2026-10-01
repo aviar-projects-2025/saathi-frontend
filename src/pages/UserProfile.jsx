@@ -100,6 +100,7 @@ const UserProfile = () => {
     removeSavedPost,
     getSavedPost,
     savedPage,
+    userLoading,
     savedHasNextPage,
     savedLoading,
   } = useUser();
@@ -186,7 +187,7 @@ const UserProfile = () => {
   const [communityPage, setCommunityPage] = useState(1);
   const [hasMorePosts, setHasMorePosts] = useState(true);
   const [loadingMorePosts, setLoadingMorePosts] = useState(false);
-
+  
   const isFetchingRef = useRef(false);
   const hasMoreRef = useRef(true);
   const pageRef = useRef(1);
@@ -201,7 +202,7 @@ const UserProfile = () => {
   }, [communityPage]);
 
   useEffect(() => {
-    if (currentUser?._id) {
+    if (currentUser) {
       setCommunityPosts([]);
       setCommunityPage(1);
       setHasMorePosts(true);
@@ -211,7 +212,7 @@ const UserProfile = () => {
 
       getCommunityPost(1);
     }
-  }, [currentUser?._id]);
+  }, [currentUser]);
 
 
   const setLoadMoreRef = useCallback((node) => {
