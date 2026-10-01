@@ -644,6 +644,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
           state: {
             tab: 2,
             refresh: true,
+            refreshKey: Date.now(),
           },
         });
       }

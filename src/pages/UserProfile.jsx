@@ -100,6 +100,7 @@ const UserProfile = () => {
     removeSavedPost,
     getSavedPost,
     savedPage,
+    userLoading,
     savedHasNextPage,
     savedLoading,
   } = useUser();
@@ -186,7 +187,7 @@ const UserProfile = () => {
   const [communityPage, setCommunityPage] = useState(1);
   const [hasMorePosts, setHasMorePosts] = useState(true);
   const [loadingMorePosts, setLoadingMorePosts] = useState(false);
-
+  
   const isFetchingRef = useRef(false);
   const hasMoreRef = useRef(true);
   const pageRef = useRef(1);
@@ -201,7 +202,7 @@ const UserProfile = () => {
   }, [communityPage]);
 
   useEffect(() => {
-    if (currentUser?._id) {
+    if (currentUser) {
       setCommunityPosts([]);
       setCommunityPage(1);
       setHasMorePosts(true);
@@ -211,7 +212,7 @@ const UserProfile = () => {
 
       getCommunityPost(1);
     }
-  }, [currentUser?._id]);
+  }, [currentUser]);
 
 
   const setLoadMoreRef = useCallback((node) => {
@@ -292,6 +293,7 @@ const UserProfile = () => {
   };
 
   const [originalImage, setOriginalImage] = useState(null);
+  const [editDescription, setEditDescription] = useState("");
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [tab, setTab] = useState(0);
@@ -308,18 +310,27 @@ const UserProfile = () => {
     setAnchorEl(null);
   };
   const handleEdit = (post) => {
+    if (!post) return;
+
     setSelectedPost(post);
 
-    setPreviewImage(post.postImage);
+    setPreviewImage(
+      Array.isArray(post.postImage) ? post.postImage[0] : post.postImage || ""
+    );
 
-    setOriginalImage(post.postImage);
+    setOriginalImage(
+      Array.isArray(post.postImage) ? post.postImage[0] : post.postImage || ""
+    );
 
+    setEditDescription(post.description || "");
     setEditImage(null);
     setEditOpen(true);
   };
+
   const handleReset = () => {
     setEditImage(null);
     setPreviewImage(originalImage);
+    setEditDescription(selectedPost?.description || "");
   };
 
   const handleDelete = async (postId) => {
@@ -359,7 +370,7 @@ const UserProfile = () => {
 
       const formData = new FormData();
       formData.append("userId", user.id);
-
+      formData.append("description", editDescription);
 
       if (editImage) {
         formData.append("postImage", editImage);
@@ -375,14 +386,17 @@ const UserProfile = () => {
         }
       );
 
-      setCommunityPosts((prev) =>
+      const updatedPost = res.data?.data || {};
 
+      setCommunityPosts((prev) =>
         prev.map((post) =>
           post._id === selectedPost._id
             ? {
-              ...post,
-              postImage: res.data.data.postImage,
-            }
+                ...post,
+                ...updatedPost,
+                postImage: updatedPost.postImage ?? post.postImage,
+                description: updatedPost.description ?? editDescription,
+              }
             : post
         )
       );
@@ -390,8 +404,10 @@ const UserProfile = () => {
       toast.success(res.data.message, toasts);
 
       setEditOpen(false);
+      setOpenImage(false);
       setSelectedPost(null);
       setEditImage(null);
+      setEditDescription("");
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to update post", toasts);
     } finally {
@@ -618,7 +634,6 @@ const UserProfile = () => {
               <Button
                 variant="outlined"
                 onClick={() => {
-                  console.log("Edit Profile clicked");
                   setEditProfile(true);
                 }}
                 sx={{ ...pillBtn, borderColor: "#EADFD3" }}
@@ -1346,6 +1361,25 @@ const UserProfile = () => {
                                     </MenuItem>
                                   </Menu>
                                 </Box>
+
+                                <TextField
+                                  fullWidth
+                                  multiline
+                                  minRows={3}
+                                  maxRows={6}
+                                  label="Description"
+                                  placeholder="Write something about this post..."
+                                  value={editDescription}
+                                  onChange={(e) =>
+                                    setEditDescription(e.target.value)
+                                  }
+                                  sx={{
+                                    mt: 2,
+                                    "& .MuiOutlinedInput-root": {
+                                      borderRadius: 2,
+                                    },
+                                  }}
+                                />
                               </DialogContent>
 
                               <DialogActions
@@ -1742,116 +1776,188 @@ const UserProfile = () => {
             <Dialog
               open={openImage}
               onClose={(event, reason) => {
-                if (reason === "backdropClick") {
-                  return;
-                }
+                if (reason === "backdropClick") return;
 
                 setOpenImage(false);
+                setSelectedPost(null);
               }}
-              maxWidth={false}
-              slotProps={{
-                paper: {
-                  sx: {
-                    bgcolor: "transparent",
-                    boxShadow: "none",
-                    overflow: "hidden",
-                    width: "auto",
-                    maxWidth: "95vw",
-                    maxHeight: "95vh",
-                    m: 1,
-                  },
+              maxWidth="lg"
+              fullWidth
+              PaperProps={{
+                sx: {
+                  borderRadius: { xs: 0, sm: 3 },
+                  overflow: "hidden",
+                  bgcolor: "#111",
+                  m: { xs: 0, sm: 2 },
+                  width: { xs: "100%", sm: "95vw", md: "90vw" },
+                  maxWidth: 1100,
                 },
               }}
             >
-              <Box sx={{ position: "relative" }}>
-                {tab === 1 && (
-                  <IconButton
-                    onClick={async () => {
-                      if (!selectedPost?.postId?._id) {
+              {(() => {
+                const viewerPost =
+                  tab === 1 ? selectedPost?.postId : selectedPost;
 
-                        return;
-                      }
-                      await removeSavedPost(selectedPost.postId._id);
-                      setOpenImage(false);
-                      setSelectedPost(null);
-                    }}
+                const viewerAuthorId =
+                  viewerPost?.authorId?._id ||
+                  viewerPost?.authorId ||
+                  viewerPost?.userId?._id ||
+                  viewerPost?.userId;
+
+                const currentUserId =
+                  currentUser?._id || currentUser?.id || user?.id;
+
+                const isPostOwner =
+                  viewerAuthorId &&
+                  currentUserId &&
+                  String(viewerAuthorId) === String(currentUserId);
+
+                return (
+                  <Box
                     sx={{
-                      position: "absolute",
-                      top: 8,
-                      left: 8,
-                      color: "#fff",
-                      bgcolor: "rgba(0,0,0,0.5)",
-                      "&:hover": { bgcolor: "#ffff" },
-                      zIndex: 10,
+                      display: "flex",
+                      flexDirection: { xs: "column", md: "row" },
+                      minHeight: { xs: "auto", md: 500 },
+                      maxHeight: { xs: "90vh", md: "85vh" },
                     }}
                   >
-                    <Tooltip title="Remove from saved">
-                      <BookmarkBorderIcon
-                        fontSize="small"
-                        sx={{ color: "#ff5e00ff" }}
+                    <Box
+                      sx={{
+                        position: "relative",
+                        flex: { md: 1.5 },
+                        minWidth: 0,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        bgcolor: "#000",
+                        minHeight: { xs: 280, sm: 400, md: 500 },
+                      }}
+                    >
+                      {tab === 1 && (
+                        <IconButton
+                          onClick={async () => {
+                            if (!selectedPost?.postId?._id) return;
+
+                            await removeSavedPost(selectedPost.postId._id);
+                            setOpenImage(false);
+                            setSelectedPost(null);
+                          }}
+                          sx={{
+                            position: "absolute",
+                            top: 10,
+                            left: 10,
+                            color: "#fff",
+                            bgcolor: "rgba(0,0,0,0.55)",
+                            zIndex: 3,
+                            "&:hover": { bgcolor: "rgba(255,255,255,0.9)" },
+                          }}
+                        >
+                          <Tooltip title="Remove from saved">
+                            <BookmarkBorderIcon
+                              fontSize="small"
+                              sx={{ color: "#ff5e00" }}
+                            />
+                          </Tooltip>
+                        </IconButton>
+                      )}
+
+                      <IconButton
+                        size="small"
+                        onClick={() => {
+                          setOpenImage(false);
+                          setSelectedPost(null);
+                        }}
+                        sx={{
+                          position: "absolute",
+                          top: 10,
+                          right: 10,
+                          width: 34,
+                          height: 34,
+                          color: "#fff",
+                          bgcolor: "rgba(0,0,0,0.55)",
+                          zIndex: 3,
+                          "&:hover": {
+                            color: "#111",
+                            bgcolor: "#fff",
+                          },
+                        }}
+                      >
+                        <CloseIcon fontSize="small" />
+                      </IconButton>
+
+                      <Box
+                        component="img"
+                        src={selectedImage}
+                        alt="Post"
+                        sx={{
+                          display: "block",
+                          width: "100%",
+                          height: "100%",
+                          maxHeight: { xs: "55vh", md: "85vh" },
+                          objectFit: "contain",
+                        }}
                       />
-                    </Tooltip>
-                  </IconButton>
-                )}
+                    </Box>
 
-                <IconButton
-                  size="small"
-                  onClick={() => setOpenImage(false)}
-                  sx={{
-                    position: "absolute",
-                    top: { xs: 4, sm: 6, md: 8 },
-                    right: { xs: 4, sm: 6, md: 8 },
+                    <Box
+                      sx={{
+                        width: { xs: "100%", md: 360 },
+                        bgcolor: "#fff",
+                        color: "#222",
+                        p: { xs: 2, sm: 3 },
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "space-between",
+                        overflowY: "auto",
+                      }}
+                    >
+                      <Box>
+                        <Typography
+                          variant="subtitle1"
+                          sx={{ fontWeight: 700, mb: 1.5 }}
+                        >
+                          Description
+                        </Typography>
 
-                    width: { xs: 24, sm: 28, md: 32 },
-                    height: { xs: 24, sm: 28, md: 32 },
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            whiteSpace: "pre-wrap",
+                            wordBreak: "break-word",
+                            color: viewerPost?.description
+                              ? "#444"
+                              : "#999",
+                            lineHeight: 1.7,
+                          }}
+                        >
+                          {viewerPost?.description || "No description added."}
+                        </Typography>
+                      </Box>
 
-                    color: "#fff",
-                    bgcolor: "rgba(0,0,0,0.5)",
-
-                    "&:hover": {
-                      color: "rgba(0,0,0,0.7)",
-                      backgroundColor: "#fff",
-                    },
-
-                    zIndex: 10,
-                  }}
-                >
-                  <CloseIcon
-                    sx={{
-                      fontSize: {
-                        xs: 15,
-                        sm: 18,
-                        md: 20,
-                      },
-                    }}
-                  />
-                </IconButton>
-
-                <DialogContent
-                  sx={{
-                    p: 0,
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    bgcolor: "transparent",
-                  }}
-                >
-                  <Box
-                    component="img"
-                    src={selectedImage}
-                    alt="Post"
-                    sx={{
-                      display: "block",
-                      maxWidth: "95vw",
-                      maxHeight: "90vh",
-                      width: "auto",
-                      height: "auto",
-                      objectFit: "contain",
-                      borderRadius: 2,
-                    }}
-                  />
-                </DialogContent>
-              </Box>
+                      {isPostOwner && tab !== 1 && (
+                        <Button
+                          variant="contained"
+                          startIcon={<EditIcon />}
+                          onClick={() => {
+                            setOpenImage(false);
+                            handleEdit(viewerPost);
+                          }}
+                          sx={{
+                            mt: 3,
+                            bgcolor: SAFFRON,
+                            textTransform: "none",
+                            fontWeight: 600,
+                            borderRadius: 2,
+                            "&:hover": { bgcolor: "#d95706" },
+                          }}
+                        >
+                          Edit Post
+                        </Button>
+                      )}
+                    </Box>
+                  </Box>
+                );
+              })()}
             </Dialog>
           </Box>
         </Stack>
