@@ -1358,6 +1358,8 @@ const MyRides = () => {
     history: 0,
   });
 
+  console.log(notifications, 'notifications')
+
   const tabs = [
     { key: "current", label: `Current (${rideCounts.current})`, empty1: "No Rides in Progress", empty2: "You don't have any rides currently in progress.", current: true, edit: true, del: true },
     { key: "upcoming", label: `Upcoming (${rideCounts.upcoming})`, empty1: "No Upcoming Rides", empty2: "You don't have any upcoming rides scheduled.", current: false, edit: true, del: true },
@@ -1444,6 +1446,7 @@ const MyRides = () => {
   };
 
   const fetchRideCounts = async () => {
+console.log('count')
     try {
       const res = await axios.get(
         `${Api}/rides/my/counts`,
@@ -1527,52 +1530,59 @@ const MyRides = () => {
   useEffect(() => {
     if (!refreshRide) return;
     refreshCategory(active.key);
+    refreshAllCategories();
     fetchAllRequests();
   }, [refreshRide]);
 
   useEffect(() => {
     if (!notifications?.length) return;
-    const fresh = notifications.filter(n => {
+
+    const fresh = notifications.filter((n) => {
       const id = String(n?.id || n?._id || "");
-      if (!id || processedNotificationIds.current.has(id)) return false;
+
+      if (!id || processedNotificationIds.current.has(id)) {
+        return false;
+      }
+
       processedNotificationIds.current.add(id);
       return true;
     });
+
     if (!fresh.length) return;
 
-    const newRequest = fresh.filter(n => n?.type === "new_request");
-    const refreshTypes = ["request_update", "request_accepted", "ride_request_update", "request_rejected", "ride_cancelled", "ride_status"];
-    if (newRequest.length) fetchAllRequests();
-    if (fresh.some(n => refreshTypes.includes(n?.type))) refreshCategory(active.key);
+    const newRequest = fresh.filter(
+      (n) => n?.type === "new_request"
+    );
+
+    const refreshTypes = [
+      "request_update",
+      "request_accepted",
+      "ride_request_update",
+      "request_rejected",
+      "ride_cancelled",
+      "ride_status",
+      "ride_started",
+    ];
 
     if (newRequest.length) {
-      const normalized = newRequest.map(n => {
-        const booking = n?.data?.bookingData;
-        if (!booking) return null;
-        return {
-          ...booking,
-          rideId: typeof booking.rideId === "object" ? booking.rideId : { _id: booking.rideId },
-          requestedBy: {
-            _id: booking.requestedBy,
-            profileImage: n?.data?.profileImage,
-            firstName: n?.data?.requestBy?.requestedBy?.firstName || "",
-            lastName: n?.data?.requestBy?.requestedBy?.lastName || "",
-          },
-        };
-      }).filter(Boolean);
-      setAllRequests(prev => [...normalized, ...prev].filter((item, i, arr) => i === arr.findIndex(x => x?._id === item?._id)));
+      fetchAllRequests();
     }
-  }, [notifications, active.key]);
 
-
-  useEffect(() => {
-  if (location.state?.refresh) {
-
-    console.log("Refreshing all categories due to location state refresh");
+    if (fresh.some((n) => refreshTypes.includes(n?.type))) {
+      refreshCategory(active.key);
+    }
 
     refreshAllCategories();
-  }
-}, [location.state?.refreshKey]);
+  }, [notifications, active.key]);
+
+  useEffect(() => {
+    if (location.state?.refresh) {
+
+      console.log("Refreshing all categories due to location state refresh");
+
+      refreshAllCategories();
+    }
+  }, [location.state?.refreshKey]);
 
   useEffect(() => {
     if (active.key !== "current") return;
