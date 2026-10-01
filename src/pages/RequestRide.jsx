@@ -278,15 +278,17 @@ const RequestRide = ({ ride }) => {
     }
   };
 
+  const now = new Date();
+  const activeRequests = allMyRequests?.filter((item)=>{
+    const status = item.status;
+    const startTime = new Date(item.rideId?.startTime);
 
-  const activeRequests = allMyRequests.filter(
-    (req) =>
-      req?.rideId &&
-      //  req.status !== "DELETED" &&
-      req?.rideId?.travelStatus !== "Cancelled" &&
-      req.status !== "REJECTED",
-  );
-
+    if(status === "REJECTED"){
+         return startTime > now;
+    }
+    return true;
+  })
+   
 
   const isFlightForEdit = selectedRide?.modeOfTravel === "Flight";
   const isAcceptedForEdit = selectedRequest?.status === "ACCEPTED";
@@ -385,13 +387,13 @@ const RequestRide = ({ ride }) => {
 
               const isCancelled =
                 request?.rideId?.travelStatus === "Cancelled" ?
-                  `Ride Cancelled` : request?.status === "Cancelled" ?
+                  `Ride Cancelled` : request?.status === "REJECTED" ?
                     `You Cancelled` : request?.pendingReqSeats > 0 && request?.rideId?.travelStatus === "Completed" ? "Auto Rejected" : null;
 
               const isAccepted = request?.status === "ACCEPTED";
               const requestedByMe = Number(request?.seatsRequested || 0);
               const approvedSeats = Number(request?.approvedSeats || 0);
-
+                 
               const mainText = isRejected
                 ? rejectedSeats > 0 && approvedSeats > 0
                   ? `You have ${approvedSeats} approved seat${approvedSeats > 1 ? "s" : ""
