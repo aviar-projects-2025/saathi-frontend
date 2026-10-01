@@ -1022,7 +1022,7 @@ export default function FindRides() {
 
                 "& .MuiLinearProgress-bar":
                 {
-                  bgcolor: "#E8650A",
+                  bgcolor: "#FF9933",
                 },
               }}
             />
@@ -1038,7 +1038,7 @@ export default function FindRides() {
           }}
         >
           <Button
-            variant="outlined"
+            variant="contained"
             onClick={
               handleCloseProfileGate
             }
@@ -1060,7 +1060,7 @@ export default function FindRides() {
           </Button>
 
           <Button
-            variant="outlined"
+            variant="contained"
             onClick={() => {
               navigate(
                 "/user-profile",
@@ -1121,13 +1121,7 @@ export default function FindRides() {
           <Box
             sx={{
               color: "#000000",
-
-              pt: {
-                xs: 1,
-                sm: 2,
-                md: 5,
-              },
-
+              pt: 1,
               pb: {
                 xs: 0,
                 sm: 2,
@@ -2594,7 +2588,6 @@ export default function FindRides() {
                 0 ? (
                 <>
                   <Grid
-                    container
                     spacing={{
                       xs: 1,
                       sm: 2,
