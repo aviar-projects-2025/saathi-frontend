@@ -187,7 +187,7 @@ const UserProfile = () => {
   const [communityPage, setCommunityPage] = useState(1);
   const [hasMorePosts, setHasMorePosts] = useState(true);
   const [loadingMorePosts, setLoadingMorePosts] = useState(false);
-  
+
   const isFetchingRef = useRef(false);
   const hasMoreRef = useRef(true);
   const pageRef = useRef(1);
@@ -392,11 +392,11 @@ const UserProfile = () => {
         prev.map((post) =>
           post._id === selectedPost._id
             ? {
-                ...post,
-                ...updatedPost,
-                postImage: updatedPost.postImage ?? post.postImage,
-                description: updatedPost.description ?? editDescription,
-              }
+              ...post,
+              ...updatedPost,
+              postImage: updatedPost.postImage ?? post.postImage,
+              description: updatedPost.description ?? editDescription,
+            }
             : post
         )
       );
@@ -566,7 +566,16 @@ const UserProfile = () => {
                   </Typography>
 
                   <Stack direction="row" spacing={{ xs: 2, sm: 3.5 }}>
-                    <Typography>
+                    <Typography
+                      sx={{
+                        fontSize: {
+                          xs: "12px",
+                          sm: "14px",
+                          md: "15px",
+                          lg: "16px",
+                        },
+                      }}
+                    >
                       Posts: {totalPostCount}
                     </Typography>
                   </Stack>
@@ -1200,6 +1209,24 @@ const UserProfile = () => {
                                   py: 2,
                                 }}
                               >
+                                <TextField
+                                  fullWidth
+                                  multiline
+                                  minRows={3}
+                                  maxRows={6}
+                                  label="Description"
+                                  placeholder="Write something about this post..."
+                                  value={editDescription}
+                                  onChange={(e) =>
+                                    setEditDescription(e.target.value)
+                                  }
+                                  sx={{
+                                    mt: 2,
+                                    "& .MuiOutlinedInput-root": {
+                                      borderRadius: 2,
+                                    },
+                                  }}
+                                />
                                 <Box
                                   sx={{
                                     mt: 2,
@@ -1232,43 +1259,45 @@ const UserProfile = () => {
                                       }}
                                     />
                                   )}
-
-                                  <Button
-                                    variant="contained"
-                                    size="small"
-                                    onClick={
-                                      openImageMenu
-                                    }
-                                    sx={{
-                                      width:
-                                        "fit-content",
-                                      minWidth:
-                                        "unset",
-                                      height: 36,
-                                      bgcolor:
-                                        "#FF9933",
-                                      color:
-                                        "#fff",
-                                      fontWeight:
-                                        600,
-                                      fontSize:
-                                        "0.8rem",
-                                      textTransform:
-                                        "none",
-                                      borderRadius: 2,
-                                      px: 2,
-
-                                      "&:hover":
-                                      {
+                                  <Box sx={{ display: "flex", justifyContent: "end", mb: 1.5 }}>
+                                    <Button
+                                      variant="contained"
+                                      size="small"
+                                      onClick={
+                                        openImageMenu
+                                      }
+                                      sx={{
+                                        width:
+                                          "fit-content",
+                                        minWidth:
+                                          "unset",
+                                        height: 36,
                                         bgcolor:
-                                          "#E68A00",
-                                      },
-                                    }}
-                                  >
-                                    {!previewImage
-                                      ? "Add Image"
-                                      : "Change Image"}
-                                  </Button>
+                                          "#FF9933",
+                                        color:
+                                          "#fff",
+                                        fontWeight:
+                                          600,
+                                        fontSize:
+                                          "0.8rem",
+                                        textTransform:
+                                          "none",
+                                        borderRadius: 2,
+                                        px: 2,
+
+                                        "&:hover":
+                                        {
+                                          bgcolor:
+                                            "#E68A00",
+                                        },
+                                      }}
+                                    >
+                                      {!previewImage
+                                        ? "Add Image"
+                                        : "Change Image"}
+                                    </Button>
+                                  </Box>
+
 
                                   <Menu
                                     anchorEl={
@@ -1362,24 +1391,6 @@ const UserProfile = () => {
                                   </Menu>
                                 </Box>
 
-                                <TextField
-                                  fullWidth
-                                  multiline
-                                  minRows={3}
-                                  maxRows={6}
-                                  label="Description"
-                                  placeholder="Write something about this post..."
-                                  value={editDescription}
-                                  onChange={(e) =>
-                                    setEditDescription(e.target.value)
-                                  }
-                                  sx={{
-                                    mt: 2,
-                                    "& .MuiOutlinedInput-root": {
-                                      borderRadius: 2,
-                                    },
-                                  }}
-                                />
                               </DialogContent>
 
                               <DialogActions

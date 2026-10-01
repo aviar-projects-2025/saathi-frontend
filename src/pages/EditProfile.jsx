@@ -24,6 +24,8 @@ import { toast } from "react-toastify";
 import uploadToCloudinary from "../components/uploadToCloudinary.jsx";
 import { useUser } from "../context/userConetext";
 import Api from "../Api";
+import CameraAltIcon from "@mui/icons-material/CameraAlt";
+import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 
 const CROP_BOX_SIZE = 260;
 const CROP_BOX_SIZE_MOBILE = 190;
@@ -587,9 +589,7 @@ const EditProfile = ({ open, onClose }) => {
                                         bgcolor: SAFFRON,
                                     }}
                                 >
-                                    {!profileImage &&
-                                        !formData.profileImage &&
-                                        `${formData?.firstName?.[0] || ""}${formData?.lastName?.[0] || ""}`}
+                                    {formData?.firstName?.[0]}{formData?.lastName?.[0]}
                                 </Avatar>
 
                                 <Button
@@ -636,6 +636,18 @@ const EditProfile = ({ open, onClose }) => {
                                             },
                                         }}
                                     >
+                                        <CameraAltIcon
+                                            sx={{
+                                                mr: 1,
+                                                color: "#E8650A",
+                                                fontSize: {
+                                                    xs: "16px",
+                                                    sm: "17px",
+                                                    md: "18px",
+                                                    lg: "20px",
+                                                },
+                                            }}
+                                        />
                                         <ListItemText primary="Camera" />
                                     </MenuItem>
 
@@ -647,6 +659,18 @@ const EditProfile = ({ open, onClose }) => {
                                             },
                                         }}
                                     >
+                                        <InsertDriveFileIcon
+                                            sx={{
+                                                mr: 1,
+                                                color: "#E8650A",
+                                                fontSize: {
+                                                    xs: "16px",
+                                                    sm: "17px",
+                                                    md: "18px",
+                                                    lg: "20px",
+                                                },
+                                            }}
+                                        />
                                         <ListItemText
                                             primary={
                                                 <Box>

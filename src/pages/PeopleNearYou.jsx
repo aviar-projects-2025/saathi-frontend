@@ -271,17 +271,41 @@ export default function PeopleNearYou() {
             onClick={() => navigate(-1)}
             sx={{
               color: "#4A3327",
-              width: 38,
-              height: 38,
+              width: {
+                xs: 32,
+                sm: 36,
+                md: 38,
+                lg: 40,
+              },
+              height: {
+                xs: 32,
+                sm: 36,
+                md: 38,
+                lg: 40,
+              },
             }}
           >
-            <ArrowBackRoundedIcon />
+            <ArrowBackRoundedIcon
+              sx={{
+                fontSize: {
+                  xs: 20,
+                  sm: 22,
+                  md: 24,
+                  lg: 26,
+                },
+              }}
+            />
           </IconButton>
 
           <Box sx={{ flex: 1 }}>
             <Typography
               sx={{
-                fontSize: { xs: "1rem", sm: "1.2rem" },
+                fontSize: {
+                  xs: "0.85rem",
+                  sm: "1rem",
+                  md: "1.1rem",
+                  lg: "1.2rem",
+                },
                 fontWeight: 800,
                 color: "#2D211B",
               }}
@@ -315,7 +339,7 @@ export default function PeopleNearYou() {
       <Box
         sx={{
           width: "100%",
-          maxWidth:"100%",
+          maxWidth: "100%",
           mx: "auto",
           px: {
             xs: 1,
