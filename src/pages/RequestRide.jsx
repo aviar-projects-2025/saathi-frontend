@@ -118,7 +118,7 @@ const RequestRide = ({ ride }) => {
 
       if (!user?.id) return;
       const res = await axios.get(`${Api}/bookride/send/${user.id}`);
-
+      console.log(res, 'res')
       const requestUser = res.data.data.map((item) => item.members);
       const rejectedreq = res.data.data.map((item) => item.rejectedSeats);
       setRejectedSeats(res.data.data.map((item) => item.rejectedSeats))
@@ -279,16 +279,16 @@ const RequestRide = ({ ride }) => {
   };
 
   const now = new Date();
-  const activeRequests = allMyRequests?.filter((item)=>{
+  const activeRequests = allMyRequests?.filter((item) => {
     const status = item.status;
     const startTime = new Date(item.rideId?.startTime);
 
-    if(status === "REJECTED"){
-         return startTime > now;
+    if (status === "REJECTED") {
+      return startTime > now;
     }
     return true;
   })
-   
+
 
   const isFlightForEdit = selectedRide?.modeOfTravel === "Flight";
   const isAcceptedForEdit = selectedRequest?.status === "ACCEPTED";
@@ -387,31 +387,27 @@ const RequestRide = ({ ride }) => {
 
               const isCancelled =
                 request?.rideId?.travelStatus === "Cancelled" ?
-                  `Ride Cancelled` : request?.status === "REJECTED" ?
+                  `Ride Cancelled` || `CANCELLED` : request?.status === "REJECTED" ?
                     `You Cancelled` : request?.pendingReqSeats > 0 && request?.rideId?.travelStatus === "Completed" ? "Auto Rejected" : null;
 
               const isAccepted = request?.status === "ACCEPTED";
               const requestedByMe = Number(request?.seatsRequested || 0);
               const approvedSeats = Number(request?.approvedSeats || 0);
-                 
-              const mainText = isRejected
-                ? rejectedSeats > 0 && approvedSeats > 0
-                  ? `You have ${approvedSeats} approved seat${approvedSeats > 1 ? "s" : ""
-                  } and ${rejectedSeats} rejected seat${rejectedSeats > 1 ? "s" : ""
-                  }`
-                  : "Rejected"
-                : isCancelled
-                  ? isCancelled
-                  : isAccepted
-                    ? rejectedSeats > 0
-                      ? `You have ${approvedSeats} approved seat${approvedSeats > 1 ? "s" : ""
-                      } and ${rejectedSeats} rejected seat${rejectedSeats > 1 ? "s" : ""
-                      }`
-                      : `You have ${approvedSeats} approved seat${approvedSeats > 1 ? "s" : ""
-                      }`
-                    : `You applied for ${requestedByMe} seat${requestedByMe > 1 ? "s" : ""
-                    }`;
 
+              const mainText =
+                request?.status === "AUTO_REJECTED"
+                  ? "Auto Rejected"
+                  : isRejected
+                    ? rejectedSeats > 0 && approvedSeats > 0
+                      ? `You have ${approvedSeats} approved seat${approvedSeats > 1 ? "s" : ""} and ${rejectedSeats} rejected seat${rejectedSeats > 1 ? "s" : ""}`
+                      : "Rejected"
+                    : isCancelled
+                      ? isCancelled
+                      : isAccepted
+                        ? rejectedSeats > 0
+                          ? `You have ${approvedSeats} approved seat${approvedSeats > 1 ? "s" : ""} and ${rejectedSeats} rejected seat${rejectedSeats > 1 ? "s" : ""}`
+                          : `You have ${approvedSeats} approved seat${approvedSeats > 1 ? "s" : ""}`
+                        : `You applied for ${requestedByMe} seat${requestedByMe > 1 ? "s" : ""}`;
 
               const pendingText =
                 isAccepted && pendingReqSeats > 0
@@ -546,18 +542,29 @@ const RequestRide = ({ ride }) => {
                               }}
                             />
 
-                            {request?.status != "Cancelled" && request?.status != "REJECTED" && request?.rideId?.travelStatus != "Cancelled" && new Date() <= new Date(request?.rideId?.startTime) &&
-                              <IconButton
-                                onClick={(event) => handleMenuOpen(event, request)}
-                                sx={{
-                                  color: "#fff",
-                                  p: { xs: 0.5, sm: 0.75, md: 1 },
-                                  "&:hover": { bgcolor: "rgba(255,255,255,0.1)" },
-                                }}
-                              >
-                                <MoreVertIcon sx={{ fontSize: { xs: 18, sm: 20, md: 22 } }} />
-                              </IconButton>
-                            }
+                            {request?.status !== "CANCELLED" &&
+                              request?.status !== "Cancelled" &&
+                              request?.status !== "REJECTED" &&
+                              request?.rideId?.travelStatus !== "CANCELLED" &&
+                              request?.rideId?.travelStatus !== "Cancelled" &&
+                              new Date() <= new Date(request?.rideId?.startTime) && (
+                                <IconButton
+                                  onClick={(event) => handleMenuOpen(event, request)}
+                                  sx={{
+                                    color: "#fff",
+                                    p: { xs: 0.5, sm: 0.75, md: 1 },
+                                    "&:hover": {
+                                      bgcolor: "rgba(255,255,255,0.1)",
+                                    },
+                                  }}
+                                >
+                                  <MoreVertIcon
+                                    sx={{
+                                      fontSize: { xs: 18, sm: 20, md: 22 },
+                                    }}
+                                  />
+                                </IconButton>
+                              )}
                           </Box>
                         </Box>
 

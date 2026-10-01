@@ -1457,6 +1457,8 @@ console.log('count')
         }
       );
 
+      console.log('res : ',res)
+
       if (res.data?.success) {
         setRideCounts(res.data.data);
       }
