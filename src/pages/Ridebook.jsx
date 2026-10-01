@@ -554,30 +554,40 @@ export default function Ridebook({
           sx={{
             display: "flex",
             alignItems: "center",
-            gap: 1,
+            gap: 2,
             mb: 3,
             p: 1.5,
             borderRadius: 2.5,
             bgcolor: "#FAFAFA",
             border: "1px solid #EEE",
             width: "100%",
-            maxWidth: { xs: "100%", sm: 500, md: 600 },
+            maxWidth: { xs: "100%", sm:600, md: 700 },
             boxSizing: "border-box",
             overflow: "hidden",
           }}
         >
           <Typography
             sx={{
-              fontSize: { xs: "0.85rem", sm: "0.95rem" },
+              fontSize: {
+                xs: "0.6rem",
+                sm: "0.7rem",
+                md: "0.8rem",
+                lg: "0.9rem",
+              },
               fontWeight: 600,
               fontFamily: "'Inter', sans-serif",
               color: "#333",
 
               minWidth: 0,
-              maxWidth: { xs: "40%", sm: 220, md: 280 },
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
+              width: "100%",
+              maxWidth: "100%",
+
+              // Display the complete name
+              whiteSpace: "normal",
+              overflow: "visible",
+              textOverflow: "clip",
+              overflowWrap: "anywhere",
+              wordBreak: "break-word",
             }}
           >
             {ride?.from || "—"}
@@ -593,16 +603,26 @@ export default function Ridebook({
 
           <Typography
             sx={{
-              fontSize: { xs: "0.85rem", sm: "0.95rem" },
+              fontSize: {
+                xs: "0.6rem",
+                sm: "0.7rem",
+                md: "0.8rem",
+                lg: "0.9rem",
+              },
               fontWeight: 600,
               fontFamily: "'Inter', sans-serif",
               color: "#333",
 
               minWidth: 0,
-              maxWidth: { xs: "40%", sm: 220, md: 280 },
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
+              width: "100%",
+              maxWidth: "100%",
+
+              // Show complete destination name
+              whiteSpace: "normal",
+              overflow: "visible",
+              textOverflow: "clip",
+              overflowWrap: "anywhere",
+              wordBreak: "break-word",
             }}
           >
             {ride?.destination || "—"}
