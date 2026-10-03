@@ -480,12 +480,12 @@ export default function RideCard({ ride }) {
           {
             label: "Duration",
             icon: <AccessTimeIcon sx={iconSx} />,
-            value:ride.duration != null
-                      ? ride.duration >= 60
-                        ? `${Math.floor(ride.duration / 60)} hr ${ride.duration % 60
-                        } min`
-                        : `${ride.duration} min`
-                      : "",
+            value: ride.duration != null
+              ? ride.duration >= 60
+                ? `${Math.floor(ride.duration / 60)} hr ${ride.duration % 60
+                } min`
+                : `${ride.duration} min`
+              : "",
           },
         ]
         : []),
@@ -766,7 +766,7 @@ export default function RideCard({ ride }) {
               <Box
                 sx={{
                   display: "flex",
-                  justifyContent: "flex-end",
+                  justifyContent: "space-between",
                   // alignItems:"center",
                   // gap:1,
                 }}
@@ -791,6 +791,129 @@ export default function RideCard({ ride }) {
                     />
                   )}
                 </IconButton> */}
+
+                <Box
+                  sx={{
+                    mt: 1.5,
+                    display: "flex",
+                    justifyContent: "flex-start",
+                  }}
+                >
+                  {/* {myRequest && (
+                  <Chip
+                    label={
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 0.5,
+                        }}
+                      >
+                        <Typography
+                          component="span"
+                          sx={{
+                            fontSize: { xs: "0.65rem", sm: "0.7rem" },
+                            fontWeight: 600,
+                            color: isAccepted ? "#2E7D32" : "#1565C0",
+                          }}
+                        >
+                          {isAccepted
+                            ? `You have ${approvedSeats} approved seat${approvedSeats > 1 ? "s" : ""
+                            }`
+                            : `You applied for ${requestedByMe} seat${requestedByMe > 1 ? "s" : ""
+                            }`}
+                        </Typography>
+
+                        {isAccepted && pendingReqSeats > 0 && (
+                          <Typography
+                            component="span"
+                            sx={{
+                              fontSize: { xs: "0.65rem", sm: "0.7rem" },
+                              fontWeight: 600,
+                              color: "#F57C00",
+                            }}
+                          >
+                            {`and ${pendingReqSeats} pending seat${pendingReqSeats > 1 ? "s" : ""
+                              }`}
+                          </Typography>
+                        )}
+                      </Box>
+                    }
+                    color={isAccepted ? "success" : "info"}
+                    sx={{
+                      height: { xs: 18, sm: 25 },
+                      bgcolor: isAccepted ? "#E8F5E9" : "#E3F2FD",
+                      "& .MuiChip-label": {
+                        px: { xs: 0.5, sm: 1 },
+                      },
+                    }}
+                  />
+                )} */}
+
+                  {myRequest &&
+                    (() => {
+                      const isFlight = ride?.modeOfTravel === "Flight";
+
+                      const mainText = isFlight
+                        ? isAccepted
+                          ? "You've been accepted for a companion"
+                          : "You requested for a companion"
+                        : isAccepted
+                          ? `You have ${approvedSeats} approved seat${approvedSeats > 1 ? "s" : ""}`
+                          : `You applied for ${requestedByMe} seat${requestedByMe > 1 ? "s" : ""}`;
+
+                      const pendingText =
+                        !isFlight && isAccepted && pendingReqSeats > 0
+                          ? `and ${pendingReqSeats} pending seat${pendingReqSeats > 1 ? "s" : ""}`
+                          : null;
+
+                      return (
+                        <Chip
+                          label={
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 0.5,
+                              }}
+                            >
+                              <Typography
+                                component="span"
+                                sx={{
+                                  fontSize: { xs: "0.65rem", sm: "0.7rem" },
+                                  fontWeight: 600,
+                                  color: isAccepted ? "#2E7D32" : "#1565C0",
+                                }}
+                              >
+                                {mainText}
+                              </Typography>
+
+                              {pendingText && (
+                                <Typography
+                                  component="span"
+                                  sx={{
+                                    fontSize: { xs: "0.65rem", sm: "0.7rem" },
+                                    fontWeight: 600,
+                                    color: "#F57C00",
+                                  }}
+                                >
+                                  {pendingText}
+                                </Typography>
+                              )}
+                            </Box>
+                          }
+                          color={isAccepted ? "success" : "info"}
+                          sx={{
+                            height: { xs: 18, sm: 25 },
+                            bgcolor: isAccepted ? "#E8F5E9" : "#E3F2FD",
+                            "& .MuiChip-label": {
+                              px: { xs: 0.5, sm: 1 },
+                            },
+                          }}
+                        />
+                      );
+                    })()}
+                </Box>
 
                 <Tooltip
                   title={
@@ -906,127 +1029,7 @@ export default function RideCard({ ride }) {
                   </Box>
                 </Tooltip>
               </Box>
-              <Box
-                sx={{
-                  mt: 1.5,
-                  display: "flex",
-                  justifyContent: "flex-start",
-                }}
-              >
-                {/* {myRequest && (
-                  <Chip
-                    label={
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 0.5,
-                        }}
-                      >
-                        <Typography
-                          component="span"
-                          sx={{
-                            fontSize: { xs: "0.65rem", sm: "0.7rem" },
-                            fontWeight: 600,
-                            color: isAccepted ? "#2E7D32" : "#1565C0",
-                          }}
-                        >
-                          {isAccepted
-                            ? `You have ${approvedSeats} approved seat${approvedSeats > 1 ? "s" : ""
-                            }`
-                            : `You applied for ${requestedByMe} seat${requestedByMe > 1 ? "s" : ""
-                            }`}
-                        </Typography>
 
-                        {isAccepted && pendingReqSeats > 0 && (
-                          <Typography
-                            component="span"
-                            sx={{
-                              fontSize: { xs: "0.65rem", sm: "0.7rem" },
-                              fontWeight: 600,
-                              color: "#F57C00",
-                            }}
-                          >
-                            {`and ${pendingReqSeats} pending seat${pendingReqSeats > 1 ? "s" : ""
-                              }`}
-                          </Typography>
-                        )}
-                      </Box>
-                    }
-                    color={isAccepted ? "success" : "info"}
-                    sx={{
-                      height: { xs: 18, sm: 25 },
-                      bgcolor: isAccepted ? "#E8F5E9" : "#E3F2FD",
-                      "& .MuiChip-label": {
-                        px: { xs: 0.5, sm: 1 },
-                      },
-                    }}
-                  />
-                )} */}
-                {myRequest &&
-                  (() => {
-                    const isFlight = ride?.modeOfTravel === "Flight";
-
-                    const mainText = isFlight
-                      ? isAccepted
-                        ? "You've been accepted for a companion"
-                        : "You requested for a companion"
-                      : isAccepted
-                        ? `You have ${approvedSeats} approved seat${approvedSeats > 1 ? "s" : ""}`
-                        : `You applied for ${requestedByMe} seat${requestedByMe > 1 ? "s" : ""}`;
-
-                    const pendingText =
-                      !isFlight && isAccepted && pendingReqSeats > 0
-                        ? `and ${pendingReqSeats} pending seat${pendingReqSeats > 1 ? "s" : ""}`
-                        : null;
-
-                    return (
-                      <Chip
-                        label={
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 0.5,
-                            }}
-                          >
-                            <Typography
-                              component="span"
-                              sx={{
-                                fontSize: { xs: "0.65rem", sm: "0.7rem" },
-                                fontWeight: 600,
-                                color: isAccepted ? "#2E7D32" : "#1565C0",
-                              }}
-                            >
-                              {mainText}
-                            </Typography>
-
-                            {pendingText && (
-                              <Typography
-                                component="span"
-                                sx={{
-                                  fontSize: { xs: "0.65rem", sm: "0.7rem" },
-                                  fontWeight: 600,
-                                  color: "#F57C00",
-                                }}
-                              >
-                                {pendingText}
-                              </Typography>
-                            )}
-                          </Box>
-                        }
-                        color={isAccepted ? "success" : "info"}
-                        sx={{
-                          height: { xs: 18, sm: 25 },
-                          bgcolor: isAccepted ? "#E8F5E9" : "#E3F2FD",
-                          "& .MuiChip-label": {
-                            px: { xs: 0.5, sm: 1 },
-                          },
-                        }}
-                      />
-                    );
-                  })()}
-              </Box>
               {/* Expanded details */}
               <Collapse in={expanded}>
                 <Box

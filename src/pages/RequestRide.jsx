@@ -550,13 +550,25 @@ const RequestRide = ({ ride }) => {
                           <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.5, sm: 1 } }}>
                             <Chip
                               label={
-                                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: { xs: 0.25, sm: 0.5, md: 0.75 },
+                                  }}
+                                >
                                   <Typography
                                     component="span"
                                     sx={{
-                                      fontSize: { xs: "0.65rem", sm: "0.7rem" },
+                                      fontSize: {
+                                        xs: "0.55rem",   // Mobile
+                                        sm: "0.65rem",   // Tablet
+                                        md: "0.7rem",  // Laptop
+                                        lg: "0.75rem",   // Desktop
+                                      },
                                       fontWeight: 600,
                                       color: isAccepted ? "#2E7D32" : "#f30b0b",
+                                      lineHeight: 1.2,
                                     }}
                                   >
                                     {mainText}
@@ -565,9 +577,15 @@ const RequestRide = ({ ride }) => {
                                     <Typography
                                       component="span"
                                       sx={{
-                                        fontSize: { xs: "0.65rem", sm: "0.7rem" },
+                                        fontSize: {
+                                          xs: "0.55rem",
+                                          sm: "0.65rem",
+                                          md: "0.7rem",
+                                          lg: "0.75rem",
+                                        },
                                         fontWeight: 600,
                                         color: "#F57C00",
+                                        lineHeight: 1.2,
                                       }}
                                     >
                                       {pendingText}
@@ -577,10 +595,19 @@ const RequestRide = ({ ride }) => {
                               }
                               color={isAccepted ? "success" : "info"}
                               sx={{
-                                height: { xs: 18, sm: 25 },
+                                height: {
+                                  xs: 18,
+                                  sm: 22,
+                                  md: 24,
+                                  lg: 26,
+                                },
                                 bgcolor: isAccepted ? "#E8F5E9" : "#f4f7f9",
                                 "& .MuiChip-label": {
-                                  px: { xs: 0.5, sm: 1 },
+                                  px: {
+                                    xs: 0.5,
+                                    sm: 0.75,
+                                    md: 1,
+                                  },
                                 },
                               }}
                             />

@@ -5,6 +5,7 @@ import {
   Dialog,
   DialogContent,
   IconButton,
+  useMediaQuery,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 
@@ -15,19 +16,16 @@ const CommunityImage = ({ src }) => {
   const [zoomed, setZoomed] = useState(false);
   const [origin, setOrigin] = useState("center center");
 
-  // Pan position
   const [position, setPosition] = useState({ x: 0, y: 0 });
 
   const lastTapRef = useRef(0);
 
-  // Drag refs
   const isDraggingRef = useRef(false);
   const dragStartRef = useRef({ x: 0, y: 0 });
   const startPositionRef = useRef({ x: 0, y: 0 });
 
-  // -----------------------------
-  // Zoom
-  // -----------------------------
+  const isMobile = useMediaQuery("(max-width: 767px)");
+
 
   const zoomAtPoint = (clientX, clientY, element) => {
     const rect = element.getBoundingClientRect();
@@ -39,8 +37,10 @@ const CommunityImage = ({ src }) => {
 
     setZoomed((prev) => {
       if (prev) {
-        // Zoom out
+      
         setPosition({ x: 0, y: 0 });
+        isDraggingRef.current = false;
+
         return false;
       }
 
@@ -48,17 +48,17 @@ const CommunityImage = ({ src }) => {
     });
   };
 
-  // Desktop double click
+
   const handleDoubleClick = (e) => {
+
+    if (isMobile) return;
+
     zoomAtPoint(e.clientX, e.clientY, e.currentTarget);
   };
 
-  // Mobile double tap
   const handleTouchEnd = (e) => {
-    // Don't treat dragging as double tap
-    if (isDraggingRef.current) {
-      return;
-    }
+
+    if (!isMobile) return;
 
     const now = Date.now();
     const timeSinceLastTap = now - lastTapRef.current;
@@ -78,12 +78,10 @@ const CommunityImage = ({ src }) => {
     }
   };
 
-  // -----------------------------
-  // Mouse Drag
-  // -----------------------------
 
   const handleMouseDown = (e) => {
-    if (!zoomed) return;
+  
+    if (isMobile || !zoomed) return;
 
     e.preventDefault();
 
@@ -100,10 +98,16 @@ const CommunityImage = ({ src }) => {
   };
 
   const handleMouseMove = (e) => {
-    if (!isDraggingRef.current || !zoomed) return;
+    
+    if (isMobile || !isDraggingRef.current || !zoomed) {
+      return;
+    }
 
-    const deltaX = e.clientX - dragStartRef.current.x;
-    const deltaY = e.clientY - dragStartRef.current.y;
+    const deltaX =
+      e.clientX - dragStartRef.current.x;
+
+    const deltaY =
+      e.clientY - dragStartRef.current.y;
 
     setPosition({
       x: startPositionRef.current.x + deltaX,
@@ -112,60 +116,11 @@ const CommunityImage = ({ src }) => {
   };
 
   const handleMouseUp = () => {
-    isDraggingRef.current = false;
-  };
-
-  // -----------------------------
-  // Touch Drag
-  // -----------------------------
-
-  const handleTouchStart = (e) => {
-    if (!zoomed) return;
-
-    const touch = e.touches[0];
+    if (isMobile) return;
 
     isDraggingRef.current = false;
-
-    dragStartRef.current = {
-      x: touch.clientX,
-      y: touch.clientY,
-    };
-
-    startPositionRef.current = {
-      ...position,
-    };
   };
 
-  const handleTouchMove = (e) => {
-    if (!zoomed) return;
-
-    const touch = e.touches[0];
-
-    const deltaX = touch.clientX - dragStartRef.current.x;
-    const deltaY = touch.clientY - dragStartRef.current.y;
-
-    // Only consider it a drag after moving
-    if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
-      isDraggingRef.current = true;
-    }
-
-    if (!isDraggingRef.current) return;
-
-    e.preventDefault();
-
-    setPosition({
-      x: startPositionRef.current.x + deltaX,
-      y: startPositionRef.current.y + deltaY,
-    });
-  };
-
-  const handleTouchCancel = () => {
-    isDraggingRef.current = false;
-  };
-
-  // -----------------------------
-  // Close
-  // -----------------------------
 
   const handleClose = () => {
     setOpen(false);
@@ -173,11 +128,12 @@ const CommunityImage = ({ src }) => {
     setPosition({ x: 0, y: 0 });
     setOrigin("center center");
     lastTapRef.current = 0;
+    isDraggingRef.current = false;
   };
 
   return (
     <>
-      {/* Thumbnail */}
+      
       <Box
         onClick={() => setOpen(true)}
         sx={{
@@ -260,10 +216,26 @@ const CommunityImage = ({ src }) => {
             onClick={handleClose}
             sx={{
               position: "absolute",
-              top: { xs: 4, sm: 6, md: 8 },
-              right: { xs: 4, sm: 6, md: 8 },
-              width: { xs: 25, sm: 30, md: 35 },
-              height: { xs: 25, sm: 30, md: 35 },
+              top: {
+                xs: 4,
+                sm: 6,
+                md: 8,
+              },
+              right: {
+                xs: 4,
+                sm: 6,
+                md: 8,
+              },
+              width: {
+                xs: 25,
+                sm: 30,
+                md: 35,
+              },
+              height: {
+                xs: 25,
+                sm: 30,
+                md: 35,
+              },
               color: "#fff",
               bgcolor: "rgba(0,0,0,0.5)",
               "&:hover": {
@@ -282,6 +254,7 @@ const CommunityImage = ({ src }) => {
               }}
             />
           </IconButton>
+
           <DialogContent
             sx={{
               p: 0,
@@ -299,20 +272,14 @@ const CommunityImage = ({ src }) => {
               src={src}
               alt="Post"
 
-              /* Zoom */
               onDoubleClick={handleDoubleClick}
+
               onTouchEnd={handleTouchEnd}
 
-              /* Mouse drag */
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
               onMouseLeave={handleMouseUp}
-
-              /* Touch drag */
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchCancel={handleTouchCancel}
 
               sx={{
                 display: "block",
@@ -332,7 +299,11 @@ const CommunityImage = ({ src }) => {
 
                 borderRadius: 2,
 
-                cursor: zoomed
+                cursor: isMobile
+                  ? zoomed
+                    ? "default"
+                    : "zoom-in"
+                  : zoomed
                   ? isDraggingRef.current
                     ? "grabbing"
                     : "grab"
@@ -350,11 +321,7 @@ const CommunityImage = ({ src }) => {
 
                 userSelect: "none",
                 WebkitUserSelect: "none",
-
-                // Important for touch dragging
-                touchAction: zoomed
-                  ? "none"
-                  : "manipulation",
+                touchAction: "manipulation",
               }}
             />
           </DialogContent>
@@ -365,4 +332,3 @@ const CommunityImage = ({ src }) => {
 };
 
 export default CommunityImage;
-

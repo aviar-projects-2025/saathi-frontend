@@ -544,6 +544,9 @@ function RideCard({
   const location = useLocation();
   const token = localStorage.getItem("token");
 
+  const [startRideLoading, setStartRideLoading] = useState(false);
+  const [completeRideLoading, setCompleteRideLoading] = useState(false);
+
   const status = statusConfig[ride?.status] || {
     color: "#9B2226",
     bg: "#FFEBEE",
@@ -654,8 +657,12 @@ function RideCard({
   };
 
   const handleEdit = async (rideId, status) => {
+
     try {
       if (status === "Waiting") {
+
+        setStartRideLoading(true);
+        
         const response = await axios.patch(
           `${Api}/rides/edit/${rideId}`,
           {
@@ -674,6 +681,9 @@ function RideCard({
         toast.success("Ride Started", toasts);
         fetchRideCounts()
       } else if (status === "Started") {
+
+        setCompleteRideLoading(true);
+
         const response = await axios.patch(
           `${Api}/rides/edit/${rideId}`,
           {
@@ -892,7 +902,14 @@ function RideCard({
                       },
                     }}
                   >
-                    {isStarted ? "Complete Ride" : "Start Ride"}
+                    {/* {isStarted ? "Complete Ride" : "Start Ride"} */}
+                    {startRideLoading
+                      ? "Starting..."
+                      : completeRideLoading
+                        ? "Completing..."
+                        : isStarted
+                          ? "Complete Ride"
+                          : "Start Ride"}
                   </Button>
                 ) : (
                   <span
@@ -1446,7 +1463,7 @@ const MyRides = () => {
   };
 
   const fetchRideCounts = async () => {
-console.log('count')
+    console.log('count')
     try {
       const res = await axios.get(
         `${Api}/rides/my/counts`,
@@ -1457,7 +1474,7 @@ console.log('count')
         }
       );
 
-      console.log('res : ',res)
+      console.log('res : ', res)
 
       if (res.data?.success) {
         setRideCounts(res.data.data);
@@ -1636,7 +1653,6 @@ console.log('count')
       });
     }
     setEditRide(null);
-    toast.success("Ride updated successfully", toastss);
     await refreshCategory(active.key);
   };
 
