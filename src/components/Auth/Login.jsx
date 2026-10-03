@@ -46,16 +46,16 @@ const Login = () => {
         "Please enter a valid email address"
       )
       .required("Email is required"),
-    password: Yup.string()
-      .matches(/^[A-Z]/, "Password must start with an uppercase letter")
-      .matches(/[a-z]/, "Password must contain at least one lowercase letter")
-      .matches(/[0-9]/, "Password must contain at least one number")
-      .matches(
-        /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/,
-        "Password must contain at least one special character"
-      )
-      .min(8, "Password must be at least 8 characters")
-      .required("Password is required"),
+    // password: Yup.string()
+    //   .matches(/^[A-Z]/, "Password must start with an uppercase letter")
+    //   .matches(/[a-z]/, "Password must contain at least one lowercase letter")
+    //   .matches(/[0-9]/, "Password must contain at least one number")
+    //   .matches(
+    //     /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/,
+    //     "Password must contain at least one special character"
+    //   )
+    //   .min(8, "Password must be at least 8 characters")
+    //   .required("Password is required"),
   });
 
   const loginSubmit = async (values) => {
