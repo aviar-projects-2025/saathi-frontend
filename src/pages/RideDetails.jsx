@@ -168,7 +168,14 @@ const requestVisual = (request) => {
       bg: TOKENS.redSoft,
     };
   }
-
+  if (status === "AUTO_REJECTED") {
+    return {
+      label: "Auto Rejected",
+      color: TOKENS.red,
+      bg: TOKENS.redSoft,
+    };
+  }
+  
   return {
     label: "",
     color: "transparent",
