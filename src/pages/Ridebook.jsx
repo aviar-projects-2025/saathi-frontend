@@ -43,7 +43,6 @@ export default function Ridebook({
   setMyRequestedRides,
   onRequestUpdated,
 }) {
-
   const theme = useTheme();
   const { currentUser } = useUser();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -52,7 +51,6 @@ export default function Ridebook({
   const isEditMode = Boolean(requestToEdit);
   const [requests, setRequests] = useState();
   const [requestLoading, setRequestLoading] = useState(false);
-
 
   // existingMembers = already CONFIRMED/APPROVED members on this request.
   // Read-only, shown for context, never sent back to the backend.
@@ -116,8 +114,7 @@ export default function Ridebook({
     if (isEditMode) {
       setNewMembers((prev) => {
         const usedSeats =
-          existingMembers.length -
-          requestToEdit.pendingReqSeats
+          existingMembers.length - requestToEdit.pendingReqSeats;
 
         if (!isFlight && usedSeats >= maxSeats) {
           setMemberListError(`Maximum ${maxSeats} seats allowed.`);
@@ -136,10 +133,7 @@ export default function Ridebook({
         return prev;
       }
 
-      const updatedMembers = [
-        ...prev.members,
-        { name: "", age: "" },
-      ];
+      const updatedMembers = [...prev.members, { name: "", age: "" }];
 
       return {
         ...prev,
@@ -216,7 +210,6 @@ export default function Ridebook({
 
   const [editingRequest, setEditingRequest] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
 
   useEffect(() => {
     if (editingRequest) {
@@ -365,9 +358,7 @@ export default function Ridebook({
     return true;
   };
   const myRequest = myRequestedRides?.find(
-    (item) =>
-      item.rideId === ride._id &&
-      item.status !== "CANCELLED"
+    (item) => item.rideId === ride._id && item.status !== "CANCELLED",
   );
 
   const isAccepted = myRequest?.status === "ACCEPTED";
@@ -423,6 +414,7 @@ export default function Ridebook({
   };
 
   const handleReset = () => {
+    setMemberListError("");
     if (isEditMode && requestToEdit) {
       // Restore original edit data
       setExistingMembers(requestToEdit.members || []);
@@ -433,7 +425,6 @@ export default function Ridebook({
         message: requestToEdit.message || "",
         phone: requestToEdit.phone || "",
       }));
-
     } else {
       // Restore new request defaults
       setExistingMembers([]);
@@ -472,7 +463,7 @@ export default function Ridebook({
 
   const availableSeatsForAdd = Math.max(
     Number(ride?.availableSeats || 0) - pendingSeatsByMe,
-    0
+    0,
   );
 
   const isAddMemberDisabled =
@@ -484,7 +475,7 @@ export default function Ridebook({
       originalIndex,
 
       isSelf: isSelfMember(member) && !isSelfAlreadyConfirmed,
-    })
+    }),
   );
 
   const visibleMembers = editableMembersWithMeta.filter(
@@ -561,7 +552,7 @@ export default function Ridebook({
             bgcolor: "#FAFAFA",
             border: "1px solid #EEE",
             width: "100%",
-            maxWidth: { xs: "100%", sm:600, md: 700 },
+            maxWidth: { xs: "100%", sm: 600, md: 700 },
             boxSizing: "border-box",
             overflow: "hidden",
           }}
@@ -656,9 +647,9 @@ export default function Ridebook({
             <Chip
               label={`${Math.max(
                 Number(ride?.availableSeats || 0) -
-                pendingSeatsByMe -
-                newMembers.length,
-                0
+                  pendingSeatsByMe -
+                  (isEditMode ? newMembers.length : requestData.members.length),
+                0,
               )}`}
               size="small"
               sx={{
@@ -772,7 +763,6 @@ export default function Ridebook({
           {visibleMembers.map((member) => {
             const index = member.originalIndex;
 
-
             const isLockedSelfSlot = member.isSelf;
             // const index = member.originalIndex;
 
@@ -818,7 +808,6 @@ export default function Ridebook({
                         : member.name
                     }
                     disabled={isLockedSelfSlot}
-
                     error={!isLockedSelfSlot && !!memberErrors[index]?.name}
                     helperText={
                       !isLockedSelfSlot && memberErrors[index]?.name
