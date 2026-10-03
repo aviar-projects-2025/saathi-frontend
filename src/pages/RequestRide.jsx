@@ -387,7 +387,7 @@ const RequestRide = ({ ride }) => {
 
               const isCancelled =
                 request?.rideId?.travelStatus === "Cancelled" ?
-                  `Ride Cancelled` || `CANCELLED` : request?.status === "REJECTED" ?
+                  `Ride Cancelled` || `CANCELLED` : request?.status === "CANCELLED" ?
                     `You Cancelled` : request?.pendingReqSeats > 0 && request?.rideId?.travelStatus === "Completed" ? "Auto Rejected" : null;
 
               const isAccepted = request?.status === "ACCEPTED";
@@ -573,7 +573,6 @@ const RequestRide = ({ ride }) => {
                                   >
                                     {mainText}
                                   </Typography>
-
                                   {pendingText && (
                                     <Typography
                                       component="span"
@@ -614,7 +613,6 @@ const RequestRide = ({ ride }) => {
                             />
 
                             {request?.status !== "CANCELLED" &&
-                              request?.status !== "Cancelled" &&
                               request?.status !== "REJECTED" &&
                               request?.rideId?.travelStatus !== "CANCELLED" &&
                               request?.rideId?.travelStatus !== "Cancelled" &&
@@ -634,8 +632,10 @@ const RequestRide = ({ ride }) => {
                                       fontSize: { xs: 18, sm: 20, md: 22 },
                                     }}
                                   />
+                                 
                                 </IconButton>
                               )}
+                              
                           </Box>
                         </Box>
 
