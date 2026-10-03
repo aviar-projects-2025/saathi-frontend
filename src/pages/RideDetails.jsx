@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -15,31 +15,31 @@ import {
   Collapse,
   useTheme,
   useMediaQuery,
-} from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import EventSeatIcon from '@mui/icons-material/EventSeat';
-import Diversity3Icon from '@mui/icons-material/Diversity3';
-import WcIcon from '@mui/icons-material/Wc';
-import LocalGasStationIcon from '@mui/icons-material/LocalGasStation';
-import DescriptionIcon from '@mui/icons-material/Description';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import CancelIcon from '@mui/icons-material/Cancel';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import FlightTakeoffIcon from '@mui/icons-material/FlightTakeoff';
-import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
+} from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import EventSeatIcon from "@mui/icons-material/EventSeat";
+import Diversity3Icon from "@mui/icons-material/Diversity3";
+import WcIcon from "@mui/icons-material/Wc";
+import LocalGasStationIcon from "@mui/icons-material/LocalGasStation";
+import DescriptionIcon from "@mui/icons-material/Description";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CancelIcon from "@mui/icons-material/Cancel";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import FlightTakeoffIcon from "@mui/icons-material/FlightTakeoff";
+import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
 import CircularProgress from "@mui/material/CircularProgress";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
-import MoreVerIcon from '@mui/icons-material/MoreVert';
+import MoreVerIcon from "@mui/icons-material/MoreVert";
 import PersonIcon from "@mui/icons-material/Person";
 import WomanIcon from "@mui/icons-material/Woman";
 import GroupsIcon from "@mui/icons-material/Groups";
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
@@ -59,23 +59,23 @@ import LanguageIcon from "@mui/icons-material/Language";
 import LuggageIcon from "@mui/icons-material/Luggage";
 import TransferWithinAStationIcon from "@mui/icons-material/TransferWithinAStation";
 import Api from "../Api";
-import { toast } from 'react-toastify';
+import { toast } from "react-toastify";
 
 // ── Design tokens ────────────────────────────────────────────────────────
 const TOKENS = {
-  paper: '#ffff',
-  paperDim: '#fdfcfb',
-  ink: '#1C2B33',
-  inkSoft: '#5B6B72',
-  accent: '#C9622A',
-  accentSoft: '#F3E1D2',
-  amber: '#D69A2D',
-  amberSoft: '#FBEFD7',
-  green: '#4a8d54',
-  greenSoft: '#E4EFDD',
-  red: '#B23B3B',
-  redSoft: '#F8E4E1',
-  line: '#E2D7C3',
+  paper: "#ffff",
+  paperDim: "#fdfcfb",
+  ink: "#1C2B33",
+  inkSoft: "#5B6B72",
+  accent: "#C9622A",
+  accentSoft: "#F3E1D2",
+  amber: "#D69A2D",
+  amberSoft: "#FBEFD7",
+  green: "#4a8d54",
+  greenSoft: "#E4EFDD",
+  red: "#B23B3B",
+  redSoft: "#F8E4E1",
+  line: "#E2D7C3",
   displayFont: "'Space Grotesk', 'Inter', sans-serif",
   bodyFont: "'Inter', sans-serif",
   monoFont: "'IBM Plex Mono', monospace",
@@ -105,9 +105,9 @@ const genderIcon = {
 };
 
 const statusStamp = {
-  OPEN: { label: 'OPENED', color: TOKENS.accent, bg: TOKENS.accentSoft },
-  FULL: { label: 'FILLED', color: TOKENS.paper, bg: TOKENS.green },
-  CLOSED: { label: 'VOID', color: TOKENS.red, bg: TOKENS.redSoft },
+  OPEN: { label: "OPENED", color: TOKENS.accent, bg: TOKENS.accentSoft },
+  FULL: { label: "FILLED", color: TOKENS.paper, bg: TOKENS.green },
+  CLOSED: { label: "VOID", color: TOKENS.red, bg: TOKENS.redSoft },
 };
 
 // function requestVisual(status) {
@@ -168,6 +168,13 @@ const requestVisual = (request) => {
       bg: TOKENS.redSoft,
     };
   }
+  if (status === "AUTO_REJECTED") {
+    return {
+      label: "Auto Rejected",
+      color: TOKENS.red,
+      bg: TOKENS.redSoft,
+    };
+  }
 
   return {
     label: "",
@@ -176,21 +183,25 @@ const requestVisual = (request) => {
   };
 };
 
-function stationCode(name = '') {
+function stationCode(name = "") {
   const clean = name.trim();
-  if (!clean) return '—';
+  if (!clean) return "—";
   const words = clean.split(/\s+/);
   if (words.length === 1) return clean.slice(0, 3).toUpperCase();
-  return words.slice(0, 3).map((w) => w[0]).join('').toUpperCase();
+  return words
+    .slice(0, 3)
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase();
 }
 
-const formFrom = (ride) => ride?.from || '—';
-const formTo = (ride) => ride?.destination || '—';
+const formFrom = (ride) => ride?.from || "—";
+const formTo = (ride) => ride?.destination || "—";
 
 // ── Perforated tear-line (the signature ticket element) ─────────────────
 function Perforation() {
   return (
-    <Box sx={{ position: 'relative', my: { xs: 2, sm: 2.5 } }}>
+    <Box sx={{ position: "relative", my: { xs: 2, sm: 2.5 } }}>
       <Box
         sx={{
           borderTop: `2px dashed ${TOKENS.line}`,
@@ -201,18 +212,17 @@ function Perforation() {
         <Box
           key={side}
           sx={{
-            position: 'absolute',
-            top: '50%',
-            [side === 0 ? 'left' : 'right']: { xs: -27, sm: -39 },
-            transform: 'translateY(-50%)',
+            position: "absolute",
+            top: "50%",
+            [side === 0 ? "left" : "right"]: { xs: -27, sm: -39 },
+            transform: "translateY(-50%)",
             width: 14,
             height: 14,
-            borderRadius: '50%',
-            bgcolor: 'background.default',
-            boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.06)',
+            borderRadius: "50%",
+            bgcolor: "background.default",
+            boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.06)",
           }}
         />
-
       ))}
     </Box>
   );
@@ -221,16 +231,21 @@ function Perforation() {
 // ── A single ticket field (label + mono value) ───────────────────────────
 function Field({ icon: Icon, label, value, span }) {
   return (
-    <Box sx={{ gridColumn: span ? '1 / -1' : 'auto' }}>
-      <Stack direction="row" spacing={0.75} alignItems="center" sx={{ mb: 0.4 }}>
+    <Box sx={{ gridColumn: span ? "1 / -1" : "auto" }}>
+      <Stack
+        direction="row"
+        spacing={0.75}
+        alignItems="center"
+        sx={{ mb: 0.4 }}
+      >
         <Icon sx={{ fontSize: { xs: 13, sm: 14 }, color: TOKENS.accent }} />
         <Typography
           sx={{
             fontFamily: TOKENS.bodyFont,
-            fontSize: { xs: '0.62rem', sm: '0.66rem' },
+            fontSize: { xs: "0.62rem", sm: "0.66rem" },
             fontWeight: 700,
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase',
+            letterSpacing: "0.08em",
+            textTransform: "uppercase",
             color: TOKENS.inkSoft,
           }}
         >
@@ -241,9 +256,9 @@ function Field({ icon: Icon, label, value, span }) {
         sx={{
           fontFamily: TOKENS.monoFont,
           fontWeight: 600,
-          fontSize: { xs: '0.85rem', sm: '0.95rem' },
+          fontSize: { xs: "0.85rem", sm: "0.95rem" },
           color: TOKENS.ink,
-          wordBreak: 'break-word',
+          wordBreak: "break-word",
         }}
       >
         {value}
@@ -252,47 +267,55 @@ function Field({ icon: Icon, label, value, span }) {
   );
 }
 
-function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approveLoading, rejectLoading, dense }) {
+function PassengerStub({
+  request,
+  onApprove,
+  onReject,
+  onRequestUpdated,
+  approveLoading,
+  rejectLoading,
+  dense,
+}) {
   const [open, setOpen] = useState(false);
   const v = requestVisual(request);
-  console.log("v.....",request)
-  const isPending = request?.status?.toUpperCase() === 'PENDING';
+
+  const isPending = request?.status?.toUpperCase() === "PENDING";
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedPost, setSelectedPost] = useState(null);
-  const firstName = request.requestedBy?.firstName || request?.data?.requestBy?.requestedBy?.firstName || 'U';
-  const lastName = request.requestedBy?.lastName || '';
+  const firstName =
+    request.requestedBy?.firstName ||
+    request?.data?.requestBy?.requestedBy?.firstName || "U";
+  const lastName = request.requestedBy?.lastName || "";
   const profilePic = request.requestedBy?.profileImage;
   const rejectedReq = Number(request?.rejectedSeats ?? 0);
   const pendingReq = Number(request?.pendingReqSeats ?? 0);
   const approvedSeats = Number(request?.approvedSeats ?? 0);
   const membersCount = request?.membersCount || 0;
   const [requests, setRequests] = useState([]);
-  const [editApproval, setEditApproval] = useState(false)
+  const [editApproval, setEditApproval] = useState(false);
   const theme = useTheme();
-  const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
-  const [confirmState, setConfirmState] = useState({ open: false, action: null });
+  const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
+  const [confirmState, setConfirmState] = useState({
+    open: false,
+    action: null,
+  });
   const [selectedRequest, setSelectedRequest] = useState(null);
   const isApproveBusy = approveLoading === request._id;
   const isRejectBusy = rejectLoading === request._id;
   const isBusy = isApproveBusy || isRejectBusy;
   const [someState, setSomeState] = useState([]);
-  const [approvalRejectionLoading, setApprovalRejectionLoading] = useState(false);
+  const [approvalRejectionLoading, setApprovalRejectionLoading] =
+    useState(false);
 
   useEffect(() => {
     if (!approvalRejectionLoading) return;
 
-    if (
-      confirmState.action === "approve" &&
-      !isApproveBusy
-    ) {
+    if (confirmState.action === "approve" && !isApproveBusy) {
       setConfirmState({ open: false, action: null });
       setApprovalRejectionLoading(false);
     }
 
-    if (
-      confirmState.action === "reject" &&
-      !isRejectBusy
-    ) {
+    if (confirmState.action === "reject" && !isRejectBusy) {
       setConfirmState({ open: false, action: null });
       setApprovalRejectionLoading(false);
     }
@@ -307,7 +330,6 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
     event.stopPropagation();
     setAnchorEl(event.currentTarget);
     setSelectedRequest(request);
- 
   };
   const askConfirm = (action, e) => {
     e?.stopPropagation?.();
@@ -327,14 +349,18 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
     onRequestUpdated?.(selectedRequest._id, {
       status: "REJECTED",
       approvedSeats: 0,
-      rejectedSeats: (selectedRequest.approvedSeats || 0) + (selectedRequest.rejectedSeats || 0),
+      rejectedSeats:
+        (selectedRequest.approvedSeats || 0) +
+        (selectedRequest.rejectedSeats || 0),
       pendingReqSeats: 0,
     });
     setEditApproval(false);
     closeConfirm();
 
     try {
-      const res = await axios.patch(`${Api}/bookride/${selectedRequest._id}/status?type=Reject`);
+      const res = await axios.patch(
+        `${Api}/bookride/${selectedRequest._id}/status?type=Reject`,
+      );
       const updatedRequest = res.data?.data?.request;
 
       if (updatedRequest) {
@@ -344,7 +370,9 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
       toast.success(res.data.message || "Ride request rejected successfully");
     } catch (error) {
       onRequestUpdated?.(prevSnapshot._id, prevSnapshot);
-      toast.error(error?.response?.data?.message || "Failed to reject ride request");
+      toast.error(
+        error?.response?.data?.message || "Failed to reject ride request",
+      );
     }
   };
 
@@ -382,24 +410,29 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
     <>
       <Box
         sx={{
-          position: 'relative',
+          position: "relative",
           borderRadius: 1.5,
-          bgcolor: 'background.default',
+          bgcolor: "background.default",
           border: `1px solid ${TOKENS.line}`,
-          overflow: 'hidden',
+          overflow: "hidden",
         }}
       >
         <Box
           sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
             gap: 1,
             p: { xs: 1.1, sm: 1.4 },
           }}
           onClick={() => setOpen((o) => !o)}
         >
-          <Stack direction="row" spacing={1.2} alignItems="center" sx={{ minWidth: 0 }}>
+          <Stack
+            direction="row"
+            spacing={1.2}
+            alignItems="center"
+            sx={{ minWidth: 0 }}
+          >
             <Avatar
               src={profilePic}
               sx={{
@@ -409,10 +442,11 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
                 color: TOKENS.paper,
                 fontFamily: TOKENS.displayFont,
                 fontWeight: 700,
-                fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                fontSize: { xs: "0.8rem", sm: "0.9rem" },
               }}
             >
-              {firstName?.[0]}{lastName?.[0]}
+              {firstName?.[0]}
+              {lastName?.[0]}
             </Avatar>
             <Box sx={{ minWidth: 0 }}>
               <Typography
@@ -420,19 +454,26 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
                 sx={{
                   fontFamily: TOKENS.bodyFont,
                   fontWeight: 700,
-                  fontSize: { xs: '0.82rem', sm: '0.9rem' },
+                  fontSize: { xs: "0.82rem", sm: "0.9rem" },
                   color: TOKENS.ink,
                 }}
               >
                 {firstName} {lastName}
               </Typography>
 
-              <Stack direction="row" spacing={0.6} alignItems="center" sx={{ mt: 0.3 }}>
-                <EventSeatIcon sx={{ fontSize: { xs: 12, sm: 13 }, color: TOKENS.inkSoft }} />
+              <Stack
+                direction="row"
+                spacing={0.6}
+                alignItems="center"
+                sx={{ mt: 0.3 }}
+              >
+                <EventSeatIcon
+                  sx={{ fontSize: { xs: 12, sm: 13 }, color: TOKENS.inkSoft }}
+                />
                 <Typography
                   sx={{
                     fontFamily: TOKENS.monoFont,
-                    fontSize: { xs: '0.64rem', sm: '0.7rem' },
+                    fontSize: { xs: "0.64rem", sm: "0.7rem" },
                     color: TOKENS.inkSoft,
                   }}
                 >
@@ -440,12 +481,19 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
                 </Typography>
               </Stack>
 
-              <Stack direction="row" spacing={0.6} alignItems="center" sx={{ mt: 0.3 }}>
-                <EventSeatIcon sx={{ fontSize: { xs: 12, sm: 13 }, color: TOKENS.inkSoft }} />
+              <Stack
+                direction="row"
+                spacing={0.6}
+                alignItems="center"
+                sx={{ mt: 0.3 }}
+              >
+                <EventSeatIcon
+                  sx={{ fontSize: { xs: 12, sm: 13 }, color: TOKENS.inkSoft }}
+                />
                 <Typography
                   sx={{
                     fontFamily: TOKENS.monoFont,
-                    fontSize: { xs: '0.64rem', sm: '0.7rem' },
+                    fontSize: { xs: "0.64rem", sm: "0.7rem" },
                     color: TOKENS.inkSoft,
                   }}
                 >
@@ -453,12 +501,19 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
                 </Typography>
               </Stack>
 
-              <Stack direction="row" spacing={0.6} alignItems="center" sx={{ mt: 0.3 }}>
-                <EventSeatIcon sx={{ fontSize: { xs: 12, sm: 13 }, color: TOKENS.inkSoft }} />
+              <Stack
+                direction="row"
+                spacing={0.6}
+                alignItems="center"
+                sx={{ mt: 0.3 }}
+              >
+                <EventSeatIcon
+                  sx={{ fontSize: { xs: 12, sm: 13 }, color: TOKENS.inkSoft }}
+                />
                 <Typography
                   sx={{
                     fontFamily: TOKENS.monoFont,
-                    fontSize: { xs: '0.64rem', sm: '0.7rem' },
+                    fontSize: { xs: "0.64rem", sm: "0.7rem" },
                     color: TOKENS.inkSoft,
                   }}
                 >
@@ -468,25 +523,28 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
             </Box>
           </Stack>
 
-          <Stack direction="row" spacing={1.5}
+          <Stack
+            direction="row"
+            spacing={1.5}
             sx={{
               flexShrink: 0,
-              display: 'flex',
-              alignItems: 'center',
-            }}>
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
             {isPending ? (
               dense ? (
                 <>
                   <IconButton
                     aria-label="Approve request"
-                    onClick={(e) => askConfirm('approve', e)}
+                    onClick={(e) => askConfirm("approve", e)}
                     disabled={isBusy}
                     sx={{
                       width: { xs: 28, sm: 32 },
                       height: { xs: 28, sm: 32 },
                       bgcolor: TOKENS.greenSoft,
                       color: TOKENS.green,
-                      '&:hover': { bgcolor: TOKENS.green, color: '#fff' },
+                      "&:hover": { bgcolor: TOKENS.green, color: "#fff" },
                     }}
                   >
                     {isApproveBusy ? (
@@ -497,14 +555,14 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
                   </IconButton>
                   <IconButton
                     aria-label="Reject request"
-                    onClick={(e) => askConfirm('reject', e)}
+                    onClick={(e) => askConfirm("reject", e)}
                     disabled={isBusy}
                     sx={{
                       width: { xs: 28, sm: 32 },
                       height: { xs: 28, sm: 32 },
                       bgcolor: TOKENS.redSoft,
                       color: TOKENS.red,
-                      '&:hover': { bgcolor: TOKENS.red, color: '#fff' },
+                      "&:hover": { bgcolor: TOKENS.red, color: "#fff" },
                     }}
                   >
                     {isRejectBusy ? (
@@ -518,36 +576,36 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
                 <>
                   <Button
                     size="small"
-                    onClick={(e) => askConfirm('approve', e)}
+                    onClick={(e) => askConfirm("approve", e)}
                     disabled={isBusy}
                     sx={{
                       fontFamily: TOKENS.bodyFont,
-                      textTransform: 'none',
+                      textTransform: "none",
                       fontWeight: 700,
-                      fontSize: { xs: '0.68rem', sm: '0.75rem' },
+                      fontSize: { xs: "0.68rem", sm: "0.75rem" },
                       color: TOKENS.green,
                       bgcolor: TOKENS.greenSoft,
                       borderRadius: 5,
                       px: { xs: 1, sm: 1.4 },
-                      '&:hover': { bgcolor: TOKENS.green, color: '#fff' },
+                      "&:hover": { bgcolor: TOKENS.green, color: "#fff" },
                     }}
                   >
                     {isApproveBusy ? "Approving..." : "Approve"}
                   </Button>
                   <Button
                     size="small"
-                    onClick={(e) => askConfirm('reject', e)}
+                    onClick={(e) => askConfirm("reject", e)}
                     disabled={isBusy}
                     sx={{
                       fontFamily: TOKENS.bodyFont,
-                      textTransform: 'none',
+                      textTransform: "none",
                       fontWeight: 700,
-                      fontSize: { xs: '0.68rem', sm: '0.75rem' },
+                      fontSize: { xs: "0.68rem", sm: "0.75rem" },
                       color: TOKENS.red,
                       bgcolor: TOKENS.redSoft,
                       borderRadius: 5,
                       px: { xs: 1, sm: 1.4 },
-                      '&:hover': { bgcolor: TOKENS.red, color: '#fff' },
+                      "&:hover": { bgcolor: TOKENS.red, color: "#fff" },
                     }}
                   >
                     {isRejectBusy ? "Rejecting..." : "Reject"}
@@ -587,9 +645,7 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
                         },
                       }}
                     />
-
                   </>
-
                 )}
               </>
             )}
@@ -606,22 +662,20 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
                 <MoreVerIcon sx={{ color: "text.secondary" }} />
               </IconButton>
             )}
-
           </Stack>
-
         </Box>
 
         <Menu
           anchorEl={anchorEl}
           open={Boolean(anchorEl)}
           onClose={handleMenuClose}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-          transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+          transformOrigin={{ vertical: "top", horizontal: "right" }}
           PaperProps={{
             sx: {
               borderRadius: 2,
               minWidth: 140,
-              boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+              boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
             },
           }}
         >
@@ -629,7 +683,7 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
             onClick={handleRejectClick}
             sx={{
               fontFamily: TOKENS.bodyFont,
-              fontSize: '0.85rem',
+              fontSize: "0.85rem",
               color: TOKENS.red,
               fontWeight: 600,
             }}
@@ -638,19 +692,17 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
           </MenuItem>
         </Menu>
         <Dialog open={editApproval}>
-          <DialogTitle>
-            Approved Seat Rejection
-          </DialogTitle>
-          <DialogContent>
-            Do you want to reject the appoved seat?
-          </DialogContent>
-          <DialogActions sx={{ px: { xs: 2, sm: 3 }, pb: { xs: 2, sm: 2.5 }, gap: 1 }}>
+          <DialogTitle>Approved Seat Rejection</DialogTitle>
+          <DialogContent>Do you want to reject the appoved seat?</DialogContent>
+          <DialogActions
+            sx={{ px: { xs: 2, sm: 3 }, pb: { xs: 2, sm: 2.5 }, gap: 1 }}
+          >
             <Button
               onClick={() => setEditApproval(false)}
               disabled={isBusy}
               sx={{
                 fontFamily: TOKENS.bodyFont,
-                textTransform: 'none',
+                textTransform: "none",
                 fontWeight: 700,
                 color: TOKENS.inkSoft,
               }}
@@ -663,12 +715,16 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
               variant="contained"
               sx={{
                 fontFamily: TOKENS.bodyFont,
-                textTransform: 'none',
+                textTransform: "none",
                 fontWeight: 700,
                 minWidth: 96,
-                bgcolor: confirmState.action === 'approve' ? TOKENS.green : TOKENS.red,
-                '&:hover': {
-                  bgcolor: confirmState.action === 'approve' ? TOKENS.green : TOKENS.red,
+                bgcolor:
+                  confirmState.action === "approve" ? TOKENS.green : TOKENS.red,
+                "&:hover": {
+                  bgcolor:
+                    confirmState.action === "approve"
+                      ? TOKENS.green
+                      : TOKENS.red,
                   opacity: 0.9,
                 },
               }}
@@ -684,21 +740,53 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
           </DialogActions>
         </Dialog>
         <Collapse in={open}>
-          <Box sx={{ px: { xs: 1.4, sm: 1.8 }, pb: 1.4, pt: 0, borderTop: `1px dashed ${TOKENS.line}` }}>
+          <Box
+            sx={{
+              px: { xs: 1.4, sm: 1.8 },
+              pb: 1.4,
+              pt: 0,
+              borderTop: `1px dashed ${TOKENS.line}`,
+            }}
+          >
             <Stack spacing={0.6} sx={{ mt: 1.2 }}>
-              <Typography sx={{ fontFamily: TOKENS.bodyFont, fontSize: '0.8rem', color: TOKENS.ink }}>
-                <strong>Message:</strong> {request.message || 'No message'}
+              <Typography
+                sx={{
+                  fontFamily: TOKENS.bodyFont,
+                  fontSize: "0.8rem",
+                  color: TOKENS.ink,
+                }}
+              >
+                <strong>Message:</strong> {request.message || "No message"}
               </Typography>
-              <Typography sx={{ fontFamily: TOKENS.bodyFont, fontSize: '0.8rem', color: TOKENS.ink }}>
-                <strong>Phone:</strong> {request.phone || 'Not provided'}
+              <Typography
+                sx={{
+                  fontFamily: TOKENS.bodyFont,
+                  fontSize: "0.8rem",
+                  color: TOKENS.ink,
+                }}
+              >
+                <strong>Phone:</strong> {request.phone || "Not provided"}
               </Typography>
               {request?.members?.length > 0 && (
                 <>
-                  <Typography sx={{ fontFamily: TOKENS.bodyFont, fontSize: '0.8rem', fontWeight: 700 }}>
+                  <Typography
+                    sx={{
+                      fontFamily: TOKENS.bodyFont,
+                      fontSize: "0.8rem",
+                      fontWeight: 700,
+                    }}
+                  >
                     Members:
                   </Typography>
                   {request.members.map((m, i) => (
-                    <Typography key={i} sx={{ fontFamily: TOKENS.bodyFont, fontSize: '0.78rem', ml: 2 }}>
+                    <Typography
+                      key={i}
+                      sx={{
+                        fontFamily: TOKENS.bodyFont,
+                        fontSize: "0.78rem",
+                        ml: 2,
+                      }}
+                    >
                       • {m.name} ({m.age} yrs)
                     </Typography>
                   ))}
@@ -706,11 +794,25 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
               )}
               {request?.pendingMembers?.length > 0 && (
                 <>
-                  <Typography sx={{ fontFamily: TOKENS.bodyFont, fontSize: '0.8rem', fontWeight: 700, color: 'red' }}>
+                  <Typography
+                    sx={{
+                      fontFamily: TOKENS.bodyFont,
+                      fontSize: "0.8rem",
+                      fontWeight: 700,
+                      color: "red",
+                    }}
+                  >
                     Pending Members:
                   </Typography>
                   {request?.pendingMembers?.map((m, i) => (
-                    <Typography key={i} sx={{ fontFamily: TOKENS.bodyFont, fontSize: '0.78rem', ml: 2 }}>
+                    <Typography
+                      key={i}
+                      sx={{
+                        fontFamily: TOKENS.bodyFont,
+                        fontSize: "0.78rem",
+                        ml: 2,
+                      }}
+                    >
                       • {m.name} ({m.age} yrs)
                     </Typography>
                   ))}
@@ -756,7 +858,7 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
                 bgcolor: "rgba(0,200,0,0.1)",
                 "&:hover": { bgcolor: "rgba(0,200,0,0.2)" },
               }}
-              onClick={(e) => askConfirm('approve', e)}
+              onClick={(e) => askConfirm("approve", e)}
               disabled={isBusy}
             >
               {isApproveBusy ? (
@@ -772,7 +874,7 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
                 bgcolor: "rgba(255,0,0,0.1)",
                 "&:hover": { bgcolor: "rgba(255,0,0,0.2)" },
               }}
-              onClick={(e) => askConfirm('reject', e)}
+              onClick={(e) => askConfirm("reject", e)}
               disabled={isBusy}
             >
               {isRejectBusy ? (
@@ -789,7 +891,7 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
       <Dialog
         open={confirmState.open}
         onClose={(event, reason) => {
-          if (reason === 'backdropClick') return;
+          if (reason === "backdropClick") return;
           closeConfirm();
         }}
         TransitionProps={{
@@ -808,28 +910,40 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
           sx={{
             fontFamily: TOKENS.bodyFont,
             fontWeight: 700,
-            fontSize: { xs: '1rem', sm: '1.1rem' },
+            fontSize: { xs: "1rem", sm: "1.1rem" },
           }}
         >
-          {confirmState.action === 'approve' ? 'Approve request ?' : 'Reject request ?'}
+          {confirmState.action === "approve"
+            ? "Approve request ?"
+            : "Reject request ?"}
         </DialogTitle>
 
         <DialogContent>
           <DialogContentText
-            sx={{ fontFamily: TOKENS.bodyFont, fontSize: { xs: '0.85rem', sm: '1rem' } }}
+            sx={{
+              fontFamily: TOKENS.bodyFont,
+              fontSize: { xs: "0.85rem", sm: "1rem" },
+            }}
           >
-            Are you sure you want to {confirmState.action === 'approve' ? 'approve' : 'reject'} the
-            request from <strong>{firstName} {lastName}</strong> ?
+            Are you sure you want to{" "}
+            {confirmState.action === "approve" ? "approve" : "reject"} the
+            request from{" "}
+            <strong>
+              {firstName} {lastName}
+            </strong>{" "}
+            ?
           </DialogContentText>
         </DialogContent>
 
-        <DialogActions sx={{ px: { xs: 2, sm: 3 }, pb: { xs: 2, sm: 2.5 }, gap: 1 }}>
+        <DialogActions
+          sx={{ px: { xs: 2, sm: 3 }, pb: { xs: 2, sm: 2.5 }, gap: 1 }}
+        >
           <Button
             onClick={closeConfirm}
             disabled={isBusy}
             sx={{
               fontFamily: TOKENS.bodyFont,
-              textTransform: 'none',
+              textTransform: "none",
               fontWeight: 700,
               color: TOKENS.inkSoft,
             }}
@@ -847,14 +961,10 @@ function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approve
               fontWeight: 700,
               minWidth: 110,
               bgcolor:
-                confirmState.action === "approve"
-                  ? TOKENS.green
-                  : TOKENS.red,
+                confirmState.action === "approve" ? TOKENS.green : TOKENS.red,
               "&:hover": {
                 bgcolor:
-                  confirmState.action === "approve"
-                    ? TOKENS.green
-                    : TOKENS.red,
+                  confirmState.action === "approve" ? TOKENS.green : TOKENS.red,
                 opacity: 0.9,
               },
             }}
@@ -885,32 +995,42 @@ export default function RideDetailsModal({
   onDelete,
   onClose,
   onRequestUpdated,
-  onApprove = () => { },
-  onReject = () => { },
+  onApprove = () => {},
+  onReject = () => {},
   approveLoading,
   rejectLoading,
 }) {
-
   const theme = useTheme();
-  const isXs = useMediaQuery(theme.breakpoints.down('sm'));
-  const isMd = useMediaQuery(theme.breakpoints.up('md'));
+  const isXs = useMediaQuery(theme.breakpoints.down("sm"));
+  const isMd = useMediaQuery(theme.breakpoints.up("md"));
   const pendingMember = requests.map((item) => item.pendingMembers);
   const isStarted = ride?.travelStatus === "Started";
   const startDate = new Date(ride?.startTime);
   const dateLabel = !isNaN(startDate)
-    ? startDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
-    : '—';
+    ? startDate.toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
+    : "—";
   const timeLabel = !isNaN(startDate)
-    ? startDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
-    : '—';
+    ? startDate.toLocaleTimeString("en-IN", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      })
+    : "—";
 
   const stamp = statusStamp[ride?.status];
 
   const TravelIcon = travelIcons[ride?.modeOfTravel] || DirectionsCarIcon;
   const GenderIcon = genderIcon[ride?.genderPreference] || Diversity3Icon;
-  const TravellerTypeIcon = travellerTypeIcons[ride?.travellerType] || ExploreIcon;
+  const TravellerTypeIcon =
+    travellerTypeIcons[ride?.travellerType] || ExploreIcon;
 
-  const pendingCount = requests.filter((r) => r?.status?.toUpperCase() === 'PENDING').length;
+  const pendingCount = requests.filter(
+    (r) => r?.status?.toUpperCase() === "PENDING",
+  ).length;
 
   return (
     <Dialog
@@ -937,7 +1057,7 @@ export default function RideDetailsModal({
       {/* ── Ticket header ── */}
       <Box
         sx={{
-          position: 'relative',
+          position: "relative",
           px: { xs: 2.5, sm: 4 },
           pt: { xs: 2.5, sm: 3 },
           pb: { xs: 2, sm: 2.5 },
@@ -949,29 +1069,36 @@ export default function RideDetailsModal({
           onClick={onClose}
           aria-label="Close"
           sx={{
-            position: 'absolute',
+            position: "absolute",
             right: { xs: 10, sm: 16 },
             top: { xs: 10, sm: 16 },
             color: TOKENS.paper,
             width: { xs: 36, sm: 40 },
             height: { xs: 36, sm: 40 },
-            bgcolor: 'rgba(255,255,255,0.08)',
-            '&:hover': { bgcolor: 'rgba(255,255,255,0.18)' },
+            bgcolor: "rgba(255,255,255,0.08)",
+            "&:hover": { bgcolor: "rgba(255,255,255,0.18)" },
           }}
         >
           <CloseIcon fontSize="small" />
         </IconButton>
 
-        <Stack direction="row" spacing={0.8} alignItems="center" sx={{ mb: { xs: 1.5, sm: 2 } }}>
-          <ConfirmationNumberIcon sx={{ fontSize: { xs: 15, sm: 17 }, color: TOKENS.accent }} />
+        <Stack
+          direction="row"
+          spacing={0.8}
+          alignItems="center"
+          sx={{ mb: { xs: 1.5, sm: 2 } }}
+        >
+          <ConfirmationNumberIcon
+            sx={{ fontSize: { xs: 15, sm: 17 }, color: TOKENS.accent }}
+          />
           <Typography
             sx={{
               fontFamily: TOKENS.bodyFont,
-              fontSize: { xs: '0.65rem', sm: '0.7rem' },
+              fontSize: { xs: "0.65rem", sm: "0.7rem" },
               fontWeight: 700,
-              letterSpacing: '0.18em',
-              textTransform: 'uppercase',
-              color: 'rgba(250,246,236,0.7)',
+              letterSpacing: "0.18em",
+              textTransform: "uppercase",
+              color: "rgba(250,246,236,0.7)",
             }}
           >
             Ride Pass
@@ -1066,7 +1193,7 @@ export default function RideDetailsModal({
                 display: "flex",
                 alignItems: "center",
                 // gap: 1,
-                mb: { xs: 3, sm: 1.5 }
+                mb: { xs: 3, sm: 1.5 },
               }}
             >
               <Box
@@ -1172,18 +1299,18 @@ export default function RideDetailsModal({
           label={stamp?.label}
           size="small"
           sx={{
-            position: 'absolute',
+            position: "absolute",
             right: { xs: 14, sm: 20 },
             bottom: { xs: -12, sm: -14 },
             bgcolor: stamp?.bg,
             color: stamp?.color,
             fontFamily: TOKENS.monoFont,
             fontWeight: 700,
-            fontSize: '0.68rem',
-            letterSpacing: '0.05em',
+            fontSize: "0.68rem",
+            letterSpacing: "0.05em",
             border: `1.5px solid ${stamp?.color}`,
-            transform: 'rotate(-4deg)',
-            boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+            transform: "rotate(-4deg)",
+            boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
           }}
         />
       </Box>
@@ -1196,32 +1323,42 @@ export default function RideDetailsModal({
           boxSizing: "border-box",
         }}
       >
-
         {requests.length > 0 && (
           <>
             <Box>
               {requests.length === 0 ? (
                 <Box
                   sx={{
-                    textAlign: 'center',
+                    textAlign: "center",
                     py: 3,
                     border: `1px dashed ${TOKENS.line}`,
                     borderRadius: 2,
                   }}
                 >
-                  <Typography sx={{ fontFamily: TOKENS.bodyFont, fontSize: '0.85rem', color: TOKENS.inkSoft }}>
+                  <Typography
+                    sx={{
+                      fontFamily: TOKENS.bodyFont,
+                      fontSize: "0.85rem",
+                      color: TOKENS.inkSoft,
+                    }}
+                  >
                     No requests yet
                   </Typography>
                 </Box>
               ) : (
                 <>
-                  <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.6 }}>
+                  <Stack
+                    direction="row"
+                    alignItems="center"
+                    justifyContent="space-between"
+                    sx={{ mb: 1.6 }}
+                  >
                     <Stack direction="row" spacing={0.8} alignItems="center">
                       <Typography
                         sx={{
                           fontFamily: TOKENS.displayFont,
                           fontWeight: 700,
-                          fontSize: { xs: '0.95rem', sm: '1.05rem' },
+                          fontSize: { xs: "0.95rem", sm: "1.05rem" },
                           color: TOKENS.ink,
                         }}
                       >
@@ -1236,12 +1373,20 @@ export default function RideDetailsModal({
                             color: TOKENS.amber,
                             fontFamily: TOKENS.bodyFont,
                             fontWeight: 700,
-                            fontSize: '0.7rem',
+                            fontSize: "0.7rem",
                           }}
                         />
                       )}
                     </Stack>
-                    <Typography sx={{ fontFamily: TOKENS.monoFont, fontSize: '0.9rem', color: TOKENS.inkSoft, mx: 2, mt: 0.3 }}>
+                    <Typography
+                      sx={{
+                        fontFamily: TOKENS.monoFont,
+                        fontSize: "0.9rem",
+                        color: TOKENS.inkSoft,
+                        mx: 2,
+                        mt: 0.3,
+                      }}
+                    >
                       {requests.length} Total
                     </Typography>
                   </Stack>
@@ -1280,7 +1425,6 @@ export default function RideDetailsModal({
                           rejectLoading={rejectLoading}
                           dense={isXs}
                         />
-
                       </Box>
                     ))}
                   </Box>
@@ -1289,54 +1433,129 @@ export default function RideDetailsModal({
             </Box>
 
             <Perforation />
-
           </>
         )}
-
 
         {/* ── Ticket data fields ── */}
         <Box
           sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr 1fr', sm: '1fr 1fr 1fr' },
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr 1fr", sm: "1fr 1fr 1fr" },
             gap: { xs: 2, sm: 2.5 },
           }}
         >
-          <Field icon={CalendarTodayIcon} label="Date" value={dateLabel || '—'} />
-          <Field icon={AccessTimeIcon} label="Time" value={timeLabel || '—'} />
-          <Field icon={TravelIcon} label="Mode" value={ride?.modeOfTravel || '—'} />
-          {ride?.duration && <Field icon={AccessTimeIcon} label="Travel Duration" value={ride.duration != null
-            ? ride.duration >= 60
-              ? `${Math.floor(ride.duration / 60)} hr ${ride.duration % 60
-              } min`
-              : `${ride.duration} min`
-            : "" || '—'} />}
-          <Field icon={BadgeIcon} label="Age Group Pref." value={ride?.ageGroupPreference || '—'} />
+          <Field
+            icon={CalendarTodayIcon}
+            label="Date"
+            value={dateLabel || "—"}
+          />
+          <Field icon={AccessTimeIcon} label="Time" value={timeLabel || "—"} />
+          <Field
+            icon={TravelIcon}
+            label="Mode"
+            value={ride?.modeOfTravel || "—"}
+          />
+          {ride?.duration && (
+            <Field
+              icon={AccessTimeIcon}
+              label="Travel Duration"
+              value={
+                ride.duration != null
+                  ? ride.duration >= 60
+                    ? `${Math.floor(ride.duration / 60)} hr ${
+                        ride.duration % 60
+                      } min`
+                    : `${ride.duration} min`
+                  : "" || "—"
+              }
+            />
+          )}
+          <Field
+            icon={BadgeIcon}
+            label="Age Group Pref."
+            value={ride?.ageGroupPreference || "—"}
+          />
           {ride?.availableSeats !== null &&
             ride?.availableSeats !== undefined && (
               <Field
                 icon={EventSeatIcon}
                 label="Seats avail."
-                value={Number(ride?.availableSeats) === 0 ? "Seats Filled" : ride?.availableSeats}
+                value={
+                  Number(ride?.availableSeats) === 0
+                    ? "Seats Filled"
+                    : ride?.availableSeats
+                }
               />
             )}
-          <Field icon={GenderIcon} label="Gender Pref." value={ride?.genderPreference || 'Any'} />
-          {ride?.airlineName && (<Field icon={FlightIcon} label="Airline Name" value={ride?.airlineName || '—'} />)}
-          {ride?.flightNumber && (<Field icon={ConfirmationNumberIcon} label="Flight Number" value={ride?.flightNumber || '—'} />)}
+          <Field
+            icon={GenderIcon}
+            label="Gender Pref."
+            value={ride?.genderPreference || "Any"}
+          />
+          {ride?.airlineName && (
+            <Field
+              icon={FlightIcon}
+              label="Airline Name"
+              value={ride?.airlineName || "—"}
+            />
+          )}
+          {ride?.flightNumber && (
+            <Field
+              icon={ConfirmationNumberIcon}
+              label="Flight Number"
+              value={ride?.flightNumber || "—"}
+            />
+          )}
 
-          {ride?.modeOfTravel !== 'Bike' ? (
+          {ride?.modeOfTravel !== "Bike" ? (
             <>
-              <Field icon={MedicalServicesIcon} label="Medical Assistance" value={ride?.medicalAssistance ? "Yes" : "No"} />
-              <Field icon={LanguageIcon} label="Language Support" value={ride?.languageSupport ? "Yes" : "No"} />
-              <Field icon={LuggageIcon} label="Baggage Help" value={ride?.baggageHelp ? "Yes" : "No"} />
-              <Field icon={TransferWithinAStationIcon} label="Transit Help" value={ride?.transitHelp ? "Yes" : "No"} />
+              <Field
+                icon={MedicalServicesIcon}
+                label="Medical Assistance"
+                value={ride?.medicalAssistance ? "Yes" : "No"}
+              />
+              <Field
+                icon={LanguageIcon}
+                label="Language Support"
+                value={ride?.languageSupport ? "Yes" : "No"}
+              />
+              <Field
+                icon={LuggageIcon}
+                label="Baggage Help"
+                value={ride?.baggageHelp ? "Yes" : "No"}
+              />
+              <Field
+                icon={TransferWithinAStationIcon}
+                label="Transit Help"
+                value={ride?.transitHelp ? "Yes" : "No"}
+              />
             </>
           ) : null}
 
-          {ride?.totalSeats && (<Field icon={EventSeatIcon} label="Total Seats" value={ride?.totalSeats || '—'} />)}
-          {ride?.modeOfTravel !== 'Flight' && ride?.modeOfTravel !== 'Bus' && ride?.fuelSharing >= 0 && (<Field icon={LocalGasStationIcon} label="Fuel Cost" value={`${ride?.fuelSharing === null ? '—' : `$ ${ride?.fuelSharing}/Person`} ` || '—'} />)}
-          <Field icon={TravellerTypeIcon} label="Traveller Type" value={ride?.travellerType || '—'} />
-
+          {ride?.totalSeats && (
+            <Field
+              icon={EventSeatIcon}
+              label="Total Seats"
+              value={ride?.totalSeats || "—"}
+            />
+          )}
+          {ride?.modeOfTravel !== "Flight" &&
+            ride?.modeOfTravel !== "Bus" &&
+            ride?.fuelSharing >= 0 && (
+              <Field
+                icon={LocalGasStationIcon}
+                label="Fuel Cost"
+                value={
+                  `${ride?.fuelSharing === null ? "—" : `$ ${ride?.fuelSharing}/Person`} ` ||
+                  "—"
+                }
+              />
+            )}
+          <Field
+            icon={TravellerTypeIcon}
+            label="Traveller Type"
+            value={ride?.travellerType || "—"}
+          />
 
           <Stack direction="column" alignItems="center">
             <Field icon={TranslateIcon} label="Languages" />
@@ -1344,12 +1563,12 @@ export default function RideDetailsModal({
               sx={{
                 fontFamily: TOKENS.monoFont,
                 fontWeight: 600,
-                fontSize: { xs: '0.85rem', sm: '0.95rem' },
+                fontSize: { xs: "0.85rem", sm: "0.95rem" },
                 color: TOKENS.ink,
                 // wordBreak: 'break-word',
               }}
             >
-              {ride?.language?.join(", ") || '—'}
+              {ride?.language?.join(", ") || "—"}
             </Typography>
           </Stack>
         </Box>
@@ -1357,92 +1576,95 @@ export default function RideDetailsModal({
         <br />
 
         {ride?.description && (
-          <Field icon={DescriptionIcon} label="Description" value={ride?.description || '—'} span />
+          <Field
+            icon={DescriptionIcon}
+            label="Description"
+            value={ride?.description || "—"}
+            span
+          />
         )}
-
-
-
       </DialogContent>
       {/* ── Actions ── */}
       <Box
         sx={{
-          display: 'flex',
-          flexWrap: 'wrap',
+          display: "flex",
+          flexWrap: "wrap",
           gap: 1,
           px: { xs: 2.5, sm: 4 },
           py: { xs: 2, sm: 2.5 },
           borderTop: `1px solid ${TOKENS.line}`,
         }}
       >
-        {(!pendingMember || pendingMember.length === 0) && showEdit && ride?.travelStatus !== "Started" && (
-
+        {(!pendingMember || pendingMember.length === 0) &&
+          showEdit &&
+          ride?.travelStatus !== "Started" &&
           (ride?.createdBy?._id === user?.id ||
-            typeof ride?.createdBy === 'string' && ride?.createdBy === user?.id) && (
+            (typeof ride?.createdBy === "string" &&
+              ride?.createdBy === user?.id)) && (
             <Button
               onClick={() => onEdit(ride)}
               startIcon={<EditIcon sx={{ fontSize: { xs: 16, sm: 18 } }} />}
-              size={isMd ? 'medium' : 'small'}
+              size={isMd ? "medium" : "small"}
               sx={{
                 fontFamily: TOKENS.bodyFont,
-                textTransform: 'none',
+                textTransform: "none",
                 fontWeight: 700,
-                fontSize: { xs: '0.8rem', sm: '0.88rem' },
+                fontSize: { xs: "0.8rem", sm: "0.88rem" },
                 color: TOKENS.ink,
                 border: `1.5px solid ${TOKENS.ink}`,
                 borderRadius: 5,
                 px: { xs: 1.6, sm: 2.2 },
                 minHeight: { xs: 40, sm: 44 },
-                flex: { xs: '1 1 auto', sm: '0 0 auto' },
-                '&:hover': { bgcolor: TOKENS.ink, color: TOKENS.paper },
+                flex: { xs: "1 1 auto", sm: "0 0 auto" },
+                "&:hover": { bgcolor: TOKENS.ink, color: TOKENS.paper },
               }}
             >
-
               Edit ride
             </Button>
-          )
-        )}
+          )}
 
-        {showDelete && ride?.travelStatus !== "Started" && (
+        {showDelete &&
+          ride?.travelStatus !== "Started" &&
           (ride.createdBy?._id === user?.id ||
-            typeof ride.createdBy === 'string' && ride.createdBy === user?.id) && (
+            (typeof ride.createdBy === "string" &&
+              ride.createdBy === user?.id)) && (
             <Button
               onClick={() => onDelete(ride)}
               startIcon={<DeleteIcon sx={{ fontSize: { xs: 16, sm: 18 } }} />}
-              size={isMd ? 'medium' : 'small'}
+              size={isMd ? "medium" : "small"}
               sx={{
                 fontFamily: TOKENS.bodyFont,
-                textTransform: 'none',
+                textTransform: "none",
                 fontWeight: 700,
-                fontSize: { xs: '0.8rem', sm: '0.88rem' },
+                fontSize: { xs: "0.8rem", sm: "0.88rem" },
                 color: TOKENS.red,
                 border: `1.5px solid ${TOKENS.red}`,
                 borderRadius: 5,
                 px: { xs: 1.6, sm: 2.2 },
                 minHeight: { xs: 40, sm: 44 },
-                flex: { xs: '1 1 auto', sm: '0 0 auto' },
-                '&:hover': { bgcolor: TOKENS.red, color: '#fff' },
+                flex: { xs: "1 1 auto", sm: "0 0 auto" },
+                "&:hover": { bgcolor: TOKENS.red, color: "#fff" },
               }}
             >
               Cancel Ride
             </Button>
-          )
-        )}
-        <Box sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }} />
+          )}
+        <Box sx={{ flexGrow: 1, display: { xs: "none", sm: "block" } }} />
         <Button
           onClick={onClose}
-          size={isMd ? 'medium' : 'small'}
+          size={isMd ? "medium" : "small"}
           sx={{
             fontFamily: TOKENS.bodyFont,
-            textTransform: 'none',
+            textTransform: "none",
             fontWeight: 700,
-            fontSize: { xs: '0.8rem', sm: '0.88rem' },
+            fontSize: { xs: "0.8rem", sm: "0.88rem" },
             color: "text.secondary",
             border: `1.5px solid ${TOKENS.line}`,
             borderRadius: 5,
             px: { xs: 1.6, sm: 2.2 },
             minHeight: { xs: 40, sm: 44 },
-            flex: { xs: '1 1 auto', sm: '0 0 auto' },
-            '&:hover': { bgcolor: TOKENS.paperDim },
+            flex: { xs: "1 1 auto", sm: "0 0 auto" },
+            "&:hover": { bgcolor: TOKENS.paperDim },
           }}
         >
           Close
