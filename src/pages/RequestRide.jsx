@@ -387,7 +387,7 @@ const RequestRide = ({ ride }) => {
 
               const isCancelled =
                 request?.rideId?.travelStatus === "Cancelled" ?
-                  `Ride Cancelled` || `CANCELLED` : request?.status === "REJECTED" ?
+                  `Ride Cancelled` || `CANCELLED` : request?.status === "CANCELLED" ?
                     `You Cancelled` : request?.pendingReqSeats > 0 && request?.rideId?.travelStatus === "Completed" ? "Auto Rejected" : null;
 
               const isAccepted = request?.status === "ACCEPTED";
