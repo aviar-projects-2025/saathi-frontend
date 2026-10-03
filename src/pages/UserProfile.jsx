@@ -103,6 +103,7 @@ const UserProfile = () => {
     userLoading,
     savedHasNextPage,
     savedLoading,
+    removeLoading
   } = useUser();
   const savedPostObserverRef = useRef(null);
   const onImageSelected = (e) => {
@@ -1796,18 +1797,20 @@ const UserProfile = () => {
               fullWidth
               PaperProps={{
                 sx: {
-                  borderRadius: { xs: 0, sm: 3 },
+                  borderRadius: { xs: 2, sm: 3 },
                   overflow: "hidden",
                   bgcolor: "#111",
-                  m: { xs: 0, sm: 2 },
-                  width: { xs: "100%", sm: "95vw", md: "90vw" },
+                  m: { xs: 1.5, sm: 2 },
+                  width: { xs: "calc(100% - 24px)", sm: "calc(100% - 32px)" },
                   maxWidth: 1100,
+                  maxHeight: { xs: "calc(100dvh - 24px)", sm: "calc(100dvh - 32px)" },
+                  display: "flex",
+                  flexDirection: "column",
                 },
               }}
             >
               {(() => {
-                const viewerPost =
-                  tab === 1 ? selectedPost?.postId : selectedPost;
+                const viewerPost = tab === 1 ? selectedPost?.postId : selectedPost;
 
                 const viewerAuthorId =
                   viewerPost?.authorId?._id ||
@@ -1815,8 +1818,7 @@ const UserProfile = () => {
                   viewerPost?.userId?._id ||
                   viewerPost?.userId;
 
-                const currentUserId =
-                  currentUser?._id || currentUser?.id || user?.id;
+                const currentUserId = currentUser?._id || currentUser?.id || user?.id;
 
                 const isPostOwner =
                   viewerAuthorId &&
@@ -1828,51 +1830,67 @@ const UserProfile = () => {
                     sx={{
                       display: "flex",
                       flexDirection: { xs: "column", md: "row" },
-                      minHeight: { xs: "auto", md: 500 },
-                      maxHeight: { xs: "90vh", md: "85vh" },
+                      flex: "1 1 auto",
+                      minHeight: 0,
+                      height: { xs: "auto", md: "min(85dvh, 760px)" },
                     }}
                   >
+                    {/* IMAGE BOX */}
                     <Box
                       sx={{
                         position: "relative",
-                        flex: { md: 1.5 },
+                        flex: { xs: "0 0 auto", md: "1 1 0" },
+                        height: {
+                          xs: "min(50dvh, 360px)",
+                          sm: "min(60dvh, 480px)",
+                          md: "auto",
+                        },
                         minWidth: 0,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
+                        minHeight: 0,
                         bgcolor: "#000",
-                        minHeight: { xs: 280, sm: 400, md: 500 },
+                        overflow: "hidden",
                       }}
                     >
                       {tab === 1 && (
-                        <IconButton
-                          onClick={async () => {
-                            if (!selectedPost?.postId?._id) return;
+                        <Tooltip title="Remove from saved">
+                          <IconButton
+                            aria-label="Remove from saved"
+                            size="small"
+                            onClick={async () => {
+                              if (!selectedPost?.postId?._id) return;
 
-                            await removeSavedPost(selectedPost.postId._id);
-                            setOpenImage(false);
-                            setSelectedPost(null);
-                          }}
-                          sx={{
-                            position: "absolute",
-                            top: 10,
-                            left: 10,
-                            color: "#fff",
-                            bgcolor: "rgba(0,0,0,0.55)",
-                            zIndex: 3,
-                            "&:hover": { bgcolor: "rgba(255,255,255,0.9)" },
-                          }}
-                        >
-                          <Tooltip title="Remove from saved">
-                            <BookmarkBorderIcon
-                              fontSize="small"
-                              sx={{ color: "#ff5e00" }}
-                            />
-                          </Tooltip>
-                        </IconButton>
+                              await removeSavedPost(selectedPost.postId._id);
+                              setOpenImage(false);
+                              setSelectedPost(null);
+                            }}
+                            sx={{
+                              position: "absolute",
+                              top: 10,
+                              left: 10,
+                              width: 34,
+                              height: 34,
+                              bgcolor: "rgba(0,0,0,0.55)",
+                              zIndex: 3,
+                              "&:hover": { bgcolor: "rgba(255,255,255,0.9)" },
+                            }}
+                          >
+                            {removeLoading ? (
+                              <CircularProgress
+                                size={18}
+                                sx={{ color: "#ff5e00" }}
+                              />
+                            ) : (
+                              <BookmarkBorderIcon
+                                fontSize="small"
+                                sx={{ color: "#ff5e00" }}
+                              />
+                            )}
+                          </IconButton>
+                        </Tooltip>
                       )}
 
                       <IconButton
+                        aria-label="Close"
                         size="small"
                         onClick={() => {
                           setOpenImage(false);
@@ -1901,31 +1919,72 @@ const UserProfile = () => {
                         src={selectedImage}
                         alt="Post"
                         sx={{
-                          display: "block",
+                          position: "absolute",
+                          inset: 0,
                           width: "100%",
                           height: "100%",
-                          maxHeight: { xs: "55vh", md: "85vh" },
                           objectFit: "contain",
                         }}
                       />
                     </Box>
 
+                    {/* DESCRIPTION BOX */}
                     <Box
                       sx={{
-                        width: { xs: "100%", md: 360 },
+                        flex: { xs: "1 1 auto", md: "0 0 360px", lg: "0 0 380px" },
+                        width: { xs: "100%", md: 360, lg: 380 },
+                        maxWidth: { xs: "100%", md: 380 },
+                        minWidth: 0,
+                        minHeight: { xs: 150, sm: 160, md: 0 },
+                        maxHeight: { xs: "45vh", md: "none" },
                         bgcolor: "#fff",
                         color: "#222",
-                        p: { xs: 2, sm: 3 },
+                        p: {
+                          xs: 1.75,
+                          sm: 2.25,
+                          md: 2.75,
+                          lg: 3,
+                        },
                         display: "flex",
                         flexDirection: "column",
-                        justifyContent: "space-between",
-                        overflowY: "auto",
+                        gap: {
+                          xs: 1.5,
+                          sm: 2,
+                          md: 2.5,
+                        },
+                        overflow: "hidden",
+                        boxSizing: "border-box",
                       }}
                     >
-                      <Box>
+                      {/* Description Section */}
+                      <Box
+                        sx={{
+                          flex: 1,
+                          minHeight: 0,
+                          width: "100%",
+                          overflowY: "auto",
+                          overflowX: "hidden",
+                          overscrollBehavior: "contain",
+                          WebkitOverflowScrolling: "touch",
+                          overflowWrap: "anywhere",
+                          wordBreak: "break-word",
+                          pr: { xs: 0.5, sm: 1 },
+                        }}
+                      >
                         <Typography
                           variant="subtitle1"
-                          sx={{ fontWeight: 700, mb: 1.5 }}
+                          sx={{
+                            fontWeight: 700,
+                            mb: {
+                              xs: 0.75,
+                              sm: 1,
+                            },
+                            fontSize: {
+                              xs: "0.95rem",
+                              sm: "1rem",
+                            },
+                            color: "#333",
+                          }}
                         >
                           Description
                         </Typography>
@@ -1934,37 +1993,85 @@ const UserProfile = () => {
                           variant="body2"
                           sx={{
                             whiteSpace: "pre-wrap",
+                            overflowWrap: "anywhere",
                             wordBreak: "break-word",
-                            color: viewerPost?.description
-                              ? "#444"
-                              : "#999",
-                            lineHeight: 1.7,
+                            color: viewerPost?.description ? "#444" : "#999",
+                            lineHeight: {
+                              xs: 1.55,
+                              sm: 1.65,
+                              md: 1.7,
+                            },
+                            fontSize: {
+                              xs: "0.85rem",
+                              sm: "0.9rem",
+                              md: "0.95rem",
+                            },
+                            maxWidth: "100%",
                           }}
                         >
                           {viewerPost?.description || "No description added."}
                         </Typography>
                       </Box>
 
-                      {isPostOwner && tab !== 1 && (
-                        <Button
-                          variant="contained"
-                          startIcon={<EditIcon />}
-                          onClick={() => {
-                            setOpenImage(false);
-                            handleEdit(viewerPost);
-                          }}
-                          sx={{
-                            mt: 3,
-                            bgcolor: SAFFRON,
-                            textTransform: "none",
-                            fontWeight: 600,
-                            borderRadius: 2,
-                            "&:hover": { bgcolor: "#d95706" },
-                          }}
-                        >
-                          Edit Post
-                        </Button>
-                      )}
+                      {/* Edit Button */}
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "flex-end",
+                          flexShrink: 0,
+                          width: "100%",
+                        }}
+                      >
+                        {isPostOwner && tab !== 1 && (
+                          <Button
+                            variant="contained"
+                            startIcon={<EditIcon />}
+                            onClick={() => {
+                              setOpenImage(false);
+                              handleEdit(viewerPost);
+                            }}
+                            fullWidth={false}
+                            sx={{
+                              alignSelf: {
+                                xs: "stretch",
+                                sm: "flex-start",
+                              },
+                              width: {
+                                xs: "100%",
+                                sm: "auto",
+                              },
+                              minHeight: {
+                                xs: 42,
+                                sm: 44,
+                              },
+                              px: {
+                                xs: 2,
+                                sm: 2.5,
+                              },
+                              bgcolor: SAFFRON,
+                              color: "#fff",
+                              textTransform: "none",
+                              fontWeight: 600,
+                              fontSize: {
+                                xs: "0.85rem",
+                                sm: "0.9rem",
+                              },
+                              borderRadius: 2,
+                              flexShrink: 0,
+                              boxShadow: "none",
+                              "&:hover": {
+                                bgcolor: "#d95706",
+                                boxShadow: "none",
+                              },
+                              "&:active": {
+                                transform: "scale(0.98)",
+                              },
+                            }}
+                          >
+                            Edit Post
+                          </Button>
+                        )}
+                      </Box>
                     </Box>
                   </Box>
                 );

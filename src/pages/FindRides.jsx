@@ -1093,23 +1093,17 @@ export default function FindRides() {
       <Box
         sx={{
           height: `calc(100vh - ${NAVBAR_HEIGHT}px)`,
-
           display: "flex",
           flexDirection: "column",
-
           width: "100%",
-
           boxSizing: "border-box",
-
           overflowX: "hidden",
-
           p: 1,
         }}
       >
         {/* ──────────────────────────────────────
             Sticky header
         ─────────────────────────────────────── */}
-
         <Box
           sx={{
             position: "sticky",
@@ -1135,7 +1129,6 @@ export default function FindRides() {
               {/* ───────────────────────────────
                   Page title
               ─────────────────────────────── */}
-
               <Typography
                 fontWeight={800}
                 sx={{
@@ -1144,10 +1137,8 @@ export default function FindRides() {
                     sm: "1.45rem",
                     md: "1.8rem",
                   },
-
                   letterSpacing:
                     "0.3px",
-
                   lineHeight: 1.2,
                 }}
               >
@@ -1158,84 +1149,74 @@ export default function FindRides() {
               {/* ───────────────────────────────
                   Location + People Near You
               ─────────────────────────────── */}
-
               <Box
                 sx={{
                   mt: 1,
                   mb: 0.5,
-
                   display: "flex",
-
                   alignItems:
                     "center",
-
                   gap: 1,
-
                   flexWrap: "wrap",
                 }}
               >
                 {/* Enable Location */}
-
                 <Button
-                  onClick={
-                    requestCurrentLocation
-                  }
-                  disabled={
-                    locationLoading
-                  }
+                  onClick={requestCurrentLocation}
+                  disabled={locationLoading}
                   startIcon={
                     <LocationOnIcon
                       sx={{
-                        fontSize:
-                          "18px !important",
-
-                        color:
-                          userLocation
-                            ? "#2E7D32"
-                            : "#E8650A",
+                        fontSize: {
+                          xs: "15px !important",
+                          sm: "17px !important",
+                          md: "18px !important",
+                        },
+                        color: userLocation ? "#2E7D32" : "#E8650A",
                       }}
                     />
                   }
                   sx={{
-                    minHeight: 30,
-
-                    px: 1.5,
-
-                    borderRadius: 999,
-
-                    textTransform:
-                      "none",
-
-                    fontSize: {
-                      xs: "0.72rem",
-                      sm: "0.78rem",
+                    minHeight: {
+                      xs: 26,
+                      sm: 28,
+                      md: 30,
                     },
-
+                    height: {
+                      xs: 28,
+                      sm: 30,
+                      md: 32,
+                    },
+                    px: {
+                      xs: 1,
+                      sm: 1.25,
+                      md: 1.5,
+                    },
+                    borderRadius: 999,
+                    textTransform: "none",
+                    fontSize: {
+                      xs: "0.62rem",
+                      sm: "0.70rem",
+                      md: "0.78rem",
+                    },
                     fontWeight: 600,
-
-                    color:
-                      userLocation
-                        ? "#2E7D32"
-                        : "#E8650A",
-
-                    background:
-                      userLocation
-                        ? "#EAF6EC"
-                        : "#FFF4E8",
-
-                    border: `1px solid ${userLocation
-                      ? "#A5D6A7"
-                      : "#FFD09B"
+                    lineHeight: 1,
+                    whiteSpace: "nowrap",
+                    color: userLocation ? "#2E7D32" : "#E8650A",
+                    background: userLocation ? "#EAF6EC" : "#FFF4E8",
+                    border: `1px solid ${userLocation ? "#A5D6A7" : "#FFD09B"
                       }`,
-
                     boxShadow: "none",
-
+                    "& .MuiButton-startIcon": {
+                      marginRight: {
+                        xs: "3px",
+                        sm: "4px",
+                        md: "5px",
+                      },
+                      marginLeft: 0,
+                    },
                     "&:hover": {
-                      background:
-                        userLocation
-                          ? "#E0F2E3"
-                          : "#FFEBD7",
-
+                      background: userLocation ? "#E0F2E3" : "#FFEBD7",
                       boxShadow: "none",
                     },
                   }}
@@ -1247,56 +1228,62 @@ export default function FindRides() {
                       : "Enable Location"}
                 </Button>
 
-                {/* ─────────────────────────────
-                    NEW: People Near You
-                ───────────────────────────── */}
+                {/* People Near You */}
 
                 <Button
-                  onClick={
-                    handlePeopleNearby
-                  }
+                  onClick={handlePeopleNearby}
                   startIcon={
                     <PeopleAltIcon
                       sx={{
-                        fontSize:
-                          "17px !important",
+                        fontSize: {
+                          xs: "14px !important",
+                          sm: "16px !important",
+                          md: "17px !important",
+                        },
                       }}
                     />
                   }
                   sx={{
-                    minHeight: 30,
-
-                    px: 1.5,
-
-                    borderRadius: 999,
-
-                    textTransform:
-                      "none",
-
-                    fontSize: {
-                      xs: "0.72rem",
-                      sm: "0.78rem",
+                    minHeight: {
+                      xs: 26,
+                      sm: 28,
+                      md: 30,
                     },
-
+                    height: {
+                      xs: 28,
+                      sm: 30,
+                      md: 32,
+                    },
+                    px: {
+                      xs: 1,
+                      sm: 1.25,
+                      md: 1.5,
+                    },
+                    borderRadius: 999,
+                    textTransform: "none",
+                    fontSize: {
+                      xs: "0.62rem",
+                      sm: "0.70rem",
+                      md: "0.78rem",
+                    },
                     fontWeight: 700,
-
+                    lineHeight: 1,
+                    whiteSpace: "nowrap",
                     color: "#E8650A",
-
-                    background:
-                      "#FFF",
-
-                    border:
-                      "1px solid #FFD09B",
-
+                    background: "#FFF",
+                    border: "1px solid #FFD09B",
                     boxShadow: "none",
-
+                    "& .MuiButton-startIcon": {
+                      marginRight: {
+                        xs: "3px",
+                        sm: "4px",
+                        md: "5px",
+                      },
+                      marginLeft: 0,
+                    },
                     "&:hover": {
-                      background:
-                        "#FFF4E8",
-
-                      borderColor:
-                        "#FFAB28",
-
+                      background: "#FFF4E8",
+                      borderColor: "#FFAB28",
                       boxShadow: "none",
                     },
                   }}
@@ -1315,12 +1302,10 @@ export default function FindRides() {
                           xs: "100%",
                           sm: "auto",
                         },
-
                         fontSize: {
                           xs: "0.68rem",
                           sm: "0.75rem",
                         },
-
                         color: "#D32F2F",
                       }}
                     >
@@ -1332,7 +1317,6 @@ export default function FindRides() {
               {/* ───────────────────────────────
                   General search
               ─────────────────────────────── */}
-
               <Box
                 sx={{
                   display: "flex",
@@ -1340,12 +1324,9 @@ export default function FindRides() {
                     xs: 0.7,
                     sm: 1.25,
                   },
-
                   alignItems:
                     "center",
-
                   flexDirection: "row",
-
                   mt: {
                     xs: 2.3,
                     sm: 1.5,
@@ -1354,11 +1335,8 @@ export default function FindRides() {
               >
                 <TextField
                   size="small"
-
                   placeholder="Search by From / To / Airport / City..."
-
                   value={search}
-
                   onChange={(e) =>
                     setSearch(
                       e.target.value
