@@ -162,6 +162,12 @@ export default function RideLocationPicker({
     return hours > 0 ? `${hours} hr ${minutes} min` : `${minutes} min`;
   };
 
+  const kmToMiles = (km) => {
+    if (km == null || Number.isNaN(Number(km))) return null;
+
+    return Number(km) * 0.621371;
+  };
+
   const setAutocompleteValue = (autocompleteRef, value) => {
     if (!autocompleteRef.current) return;
 
@@ -1237,7 +1243,8 @@ export default function RideLocationPicker({
 
             <br />
 
-            {routeInfo.distanceKm} km
+            {/* {routeInfo.distanceKm} km */}
+            {kmToMiles(routeInfo.distanceKm)?.toFixed(1)} mi
           </div>
 
           <div>
