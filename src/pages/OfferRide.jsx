@@ -634,7 +634,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
       formReset();
       setSubmitted(true);
       setShowErrors(false);
-      setOpen(false);
+      // setOpen(false);
 
       // Go to My Rides -> My Posts
       if (onClose) {
@@ -1166,9 +1166,10 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                 value={form.description}
                 onChange={(e) => update("description", e.target.value)}
                 placeholder={
-                  isFlight
-                    ? "Need companion for airport, transit, baggage or language support..."
-                    : "Traveling to Bangalore for a weekend trip..."
+                  // isFlight
+                    // ? "Need companion for airport, transit, baggage or language support..."
+                    // :
+                     "Please add more information related to your travel, what you are offering, where is the pickup spot, etc."
                 }
                 error={showErrors && !!errors.description}
                 helperText={showErrors ? errors.description : ""}

@@ -481,7 +481,7 @@ export default function FindRides() {
 
           case error.POSITION_UNAVAILABLE:
             setLocationError(
-              "Location Services are turned off. Please turn them on."
+              "Please turn on your location to find rides nearby."
             );
             break;
 
