@@ -168,6 +168,13 @@ const requestVisual = (request) => {
       bg: TOKENS.redSoft,
     };
   }
+  if (status === "AUTO_REJECTED") {
+    return {
+      label: "Auto Rejected",
+      color: TOKENS.red,
+      bg: TOKENS.redSoft,
+    };
+  }
 
   if (status === "AUTO_REJECTED") {
     return {
@@ -284,8 +291,7 @@ function PassengerStub({
   const [selectedPost, setSelectedPost] = useState(null);
   const firstName =
     request.requestedBy?.firstName ||
-    request?.data?.requestBy?.requestedBy?.firstName ||
-    "U";
+    request?.data?.requestBy?.requestedBy?.firstName || "U";
   const lastName = request.requestedBy?.lastName || "";
   const profilePic = request.requestedBy?.profileImage;
   const rejectedReq = Number(request?.rejectedSeats ?? 0);

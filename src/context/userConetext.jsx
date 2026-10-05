@@ -9,6 +9,7 @@ export const UserProvider = ({ children }) => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
     const [currentUser, setCurrentUser] = useState(null);
     const [savedPost, setSavedPost] = useState([]);
+    const [removeLoading, setRemoveLoading] = useState(false);
 
     const requiredFields = [
         "firstName",
@@ -56,6 +57,7 @@ export const UserProvider = ({ children }) => {
 
     const removeSavedPost = async (postId) => {
         try {
+            setRemoveLoading(true);
             await axios.delete(
                 `${Api}/save-post/${postId}/${currentUser._id}`
             );
@@ -66,6 +68,8 @@ export const UserProvider = ({ children }) => {
 
         } catch (error) {
             console.log(error);
+        } finally {
+            setRemoveLoading(false);
         }
     };
 
@@ -76,6 +80,7 @@ export const UserProvider = ({ children }) => {
     const [savedPage, setSavedPage] = useState(1);
     const [savedHasNextPage, setSavedHasNextPage] = useState(true);
     const [savedLoading, setSavedLoading] = useState(false);
+
 
     const getSavedPost = async (pageNumber = 1) => {
         if (savedLoading || !savedHasNextPage) return;
@@ -125,7 +130,8 @@ export const UserProvider = ({ children }) => {
                 savedHasNextPage,
                 savedLoading,
 
-                removeSavedPost
+                removeSavedPost,
+                removeLoading
             }}
         >
             {children}

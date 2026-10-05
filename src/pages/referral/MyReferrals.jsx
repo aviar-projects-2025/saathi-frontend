@@ -581,6 +581,8 @@ const MyReferrals = () => {
     const [shareLink, setShareLink] =
         useState("");
 
+    const [mobileError, setMobileError] = useState("");
+
     const { notifications } =
         useNotifications();
 
@@ -981,22 +983,25 @@ const MyReferrals = () => {
 
 
     const handlelink = async () => {
-        setInviteLoading(true);
-        if (
-            !mobile_number ||
-            mobile_number.length !== 10
-        ) {
-            alert(
-                "Enter a valid 10-digit mobile number"
-            );
 
+        if (!mobile_number) {
+            setMobileError("Mobile number is required");
             return;
         }
+
+        if (mobile_number.length !== 10) {
+            setMobileError("Enter a valid 10-digit mobile number");
+            return;
+        }
+
+        setMobileError("");
 
         if (!user?.id) {
-            alert("User not found");
+            setMobileError("User not found");
             return;
         }
+
+        setInviteLoading(true);
 
         /*
          * Build international number.
@@ -1605,7 +1610,7 @@ const MyReferrals = () => {
 
 
                                 {/* MOBILE */}
-                                <TextField
+                                {/* <TextField
                                     fullWidth
                                     value={
                                         mobile_number
@@ -1632,7 +1637,44 @@ const MyReferrals = () => {
                                     }}
                                     size="small"
                                     placeholder="Enter 10-digit mobile number"
+                                /> */}
+
+                                <TextField
+                                    fullWidth
+                                    value={mobile_number}
+                                    type="text"
+                                    inputMode="numeric"
+                                    size="small"
+                                    placeholder="Enter 10-digit mobile number"
+                                    error={Boolean(mobileError)}
+                                    helperText={mobileError}
+                                    onChange={(e) => {
+                                        const value = e.target.value
+                                            .replace(/\D/g, "")
+                                            .slice(0, 10);
+
+                                        setMobile_number(value);
+
+                                        // Clear error while entering a valid number
+                                        if (value.length === 10) {
+                                            setMobileError("");
+                                        } else if (value.length > 0) {
+                                            setMobileError("Mobile number must be 10 digits");
+                                        } else {
+                                            setMobileError("");
+                                        }
+                                    }}
+                                    onBlur={() => {
+                                        if (!mobile_number) {
+                                            setMobileError("Mobile number is required");
+                                        } else if (mobile_number.length !== 10) {
+                                            setMobileError("Enter a valid 10-digit mobile number");
+                                        } else {
+                                            setMobileError("");
+                                        }
+                                    }}
                                 />
+
                             </Stack>
 
                             {/* NUMBER PREVIEW */}

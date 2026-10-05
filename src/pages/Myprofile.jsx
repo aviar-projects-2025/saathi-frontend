@@ -1092,7 +1092,7 @@ const Myprofile = () => {
               }}
               disabled={isProfileComplete}
             >
-              Copy code
+              Copy Code
             </Button>
             <Button
               variant="outlined"
@@ -1104,7 +1104,7 @@ const Myprofile = () => {
               }}
               disabled={isProfileComplete}
             >
-              Share invite
+              Share Invite
             </Button>
           </Stack>
         </Grid>
