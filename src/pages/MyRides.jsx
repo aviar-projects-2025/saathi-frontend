@@ -729,12 +729,19 @@ function RideCard({
     <>
       <Box
         sx={{
-          p: { xs: 0, sm: 0 },
+          p: 0,
           width: "100%",
+          maxWidth: "100%",
+          minWidth: 0,
+          height: "auto",
+          overflow: "visible",
           mb: { xs: 1.5, sm: 2 },
           transition: "all .3s ease",
           "&:hover": {
-            transform: { xs: "none", sm: "translateY(-5px)" },
+            transform: {
+              xs: "none",
+              sm: "translateY(-5px)",
+            },
           },
         }}
       >
@@ -941,20 +948,30 @@ function RideCard({
           elevation={0}
           sx={{
             borderRadius: "0 0 18px 18px",
-            background: "#fff",
+            backgroundColor: "#fff",
             border: "1px solid #FFE2C2",
-            // boxShadow: "0 10px 30px rgba(255,153,51,.12)",
-            overflow: "hidden",
-            transition: ".3s",
-            // "&:hover": {
-            //   transform: "translateY(-5px)",
-            //   boxShadow: "0 18px 40px rgba(255,153,51,.22)"
-            // }
+            overflow: "visible",
+            width: "100%",
+            height: "auto",
+            minHeight: 0,
+            position: "relative",
+            display: "block",
+            boxSizing: "border-box",
           }}
         >
+
           <CardContent
             onClick={() => setDetailsOpen(true)}
             sx={{
+              display: "block !important",
+              position: "relative",
+              visibility: "visible",
+              opacity: 1,
+              width: "100%",
+              height: "auto",
+              minHeight: 0,
+              boxSizing: "border-box",
+
               p: {
                 xs: "10px !important",
                 sm: "16px 18px !important",
@@ -966,22 +983,34 @@ function RideCard({
               {/* FROM / TO row */}
               <Box
                 sx={{
-                  display: isMobile ? "block" : "flex",
-                  justifyContent: "space-between",
-                  // alignItems:'center',
+                  display: "flex",
+                  flexDirection: {
+                    xs: "column",
+                    sm: "row",
+                  },
+                  width: "100%",
+                  minWidth: 0,
+                  gap: {
+                    xs: 1.5,
+                    sm: 0,
+                  },
                 }}
               >
                 <Box
                   sx={{
-                    // border:'1px solid black',
                     display: "flex",
-                    width: isMobile ? "100%" : "35%",
+                    width: {
+                      xs: "100%",
+                      sm: "35%",
+                    },
+                    minWidth: 0,
                     alignItems: "center",
                     justifyContent: "space-between",
                     gap: 1,
-                    pb: isMobile && { xs: 1.2, sm: 1.5, md: 2 },
-                    // mb: { xs: 1.1, sm: 1.5, md: 2 },
-                    // borderBottom: '1px solid rgba(255,153,51,0.2)',
+                    pb: {
+                      xs: 1.2,
+                      sm: 0,
+                    },
                   }}
                 >
                   <Box sx={{ minWidth: 0, flex: 1 }}>
@@ -1068,15 +1097,25 @@ function RideCard({
                 </Box>
                 <Box
                   sx={{
-                    // border:'1px solid black',
-                    justifyContent: "space-around",
                     display: "flex",
-                    width: isMobile ? "100%" : "60%",
-                    gridTemplateColumns: {
-                      xs: "1fr 1fr",
-                      sm: "repeat(3, 1fr)",
+                    width: {
+                      xs: "100%",
+                      sm: "60%",
                     },
-                    gap: { xs: "10px 6px", sm: "16px", md: 3 },
+                    minWidth: 0,
+                    justifyContent: {
+                      xs: "space-between",
+                      sm: "space-around",
+                    },
+                    gap: {
+                      xs: 1,
+                      sm: 2,
+                      md: 3,
+                    },
+                    flexWrap: {
+                      xs: "wrap",
+                      sm: "nowrap",
+                    },
                   }}
                 >
                   <Box>
