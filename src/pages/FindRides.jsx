@@ -23,6 +23,7 @@ import {
   DialogContent,
   LinearProgress,
   DialogActions,
+  IconButton,
 } from "@mui/material";
 
 import { useUser } from "../context/userConetext";
@@ -43,6 +44,7 @@ import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
 
 import RideCard from "./RideCard.jsx";
 import Api from "../Api";
+import OfferRide from "./OfferRide.jsx";
 
 // ─────────────────────────────────────────────
 // Saffron design tokens
@@ -199,6 +201,7 @@ export default function FindRides() {
   const navigate = useNavigate();
 
   const [rides, setRides] = useState([]);
+  const [open, setOpen] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -1142,8 +1145,7 @@ export default function FindRides() {
                   lineHeight: 1.2,
                 }}
               >
-                Find Rides & Flight
-                Companions
+                Find a Ride
               </Typography>
 
               {/* ───────────────────────────────
@@ -1293,25 +1295,20 @@ export default function FindRides() {
 
                 {/* Location error */}
 
-                {!userLocation &&
-                  !locationLoading &&
-                  locationError && (
-                    <Typography
-                      sx={{
-                        width: {
-                          xs: "100%",
-                          sm: "auto",
-                        },
-                        fontSize: {
-                          xs: "0.68rem",
-                          sm: "0.75rem",
-                        },
-                        color: "#D32F2F",
-                      }}
-                    >
-                      {locationError}
-                    </Typography>
-                  )}
+                {!userLocation && !locationLoading && (
+                  <Typography
+                    sx={{
+                      mt: 0.75,
+                      fontSize: {
+                        xs: "0.68rem",
+                        sm: "0.75rem",
+                      },
+                      color: "text.secondary",
+                    }}
+                  >
+                    Enable location to see rides near you (optional)
+                  </Typography>
+                )}
               </Box>
 
               {/* ───────────────────────────────
@@ -2642,52 +2639,147 @@ export default function FindRides() {
                 </>
 
               ) : (
-                <Box
-                  sx={{
-                    borderRadius: {
-                      xs: 3,
-                      sm: 4,
-                    },
-
-                    textAlign:
-                      "center",
-
-                    py: {
-                      xs: 3,
-                      sm: 5,
-                    },
-
-                    px: {
-                      xs: 2,
-                      sm: 4,
-                    },
-
-                    mt: {
-                      xs: "40%",
-                      sm: "10%",
-                    },
-                  }}
-                >
-                  <Typography
-                    variant="h6"
-                    fontWeight={600}
-                    color="text.primary"
-                  >
-                    No rides found
-                  </Typography>
-
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
+                <>
+                  <Box
                     sx={{
-                      mt: 1,
+                      borderRadius: {
+                        xs: 3,
+                        sm: 4,
+                      },
+
+                      textAlign:
+                        "center",
+
+                      py: {
+                        xs: 3,
+                        sm: 5,
+                      },
+
+                      px: {
+                        xs: 2,
+                        sm: 4,
+                      },
+
+                      mt: {
+                        xs: "40%",
+                        sm: "10%",
+                      },
                     }}
                   >
-                    Try adjusting your
-                    filters or search
-                    terms
-                  </Typography>
-                </Box>
+                    <Typography
+                      variant="h6"
+                      fontWeight={600}
+                      color="text.primary"
+                    >
+                      No rides posted yet in your area.
+                    </Typography>
+
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{
+                        mt: 1,
+                      }}
+                    >
+                      Be the first to post a ride for your community!
+                    </Typography>
+
+                    <Button
+                      variant="contained"
+                      onClick={() => setOpen(true)}
+                      sx={{
+                        mt: 2.5,
+                        px: 3,
+                        py: 1,
+                        borderRadius: 999,
+                        backgroundColor: "#FF9933",
+                        color: "#fff",
+                        fontWeight: 700,
+                        textTransform: "none",
+                        boxShadow: "none",
+                        "&:hover": {
+                          backgroundColor: "#E68A00",
+                          boxShadow: "none",
+                        },
+                      }}
+                    >
+                      Post a Ride
+                    </Button>
+                    <Dialog
+                      open={open}
+                      onClose={(event, reason) => {
+                        if (reason === "backdropClick") return;
+                        setOpen(false);
+                      }}
+                      fullWidth
+                      maxWidth="sm"
+                      fullScreen={isMobile}
+                      PaperProps={{
+                        sx: {
+                          width: {
+                            xs: "100%",
+                            sm: "80%",
+                            md: "90%",
+                          },
+                          maxWidth: {
+                            sm: 600,
+                            md: 800,
+                          },
+                          borderRadius: {
+                            xs: 0,
+                            sm: 3,
+                          },
+                          m: {
+                            xs: 0,
+                            sm: 3,
+                          },
+                          overflow: "hidden",
+                        },
+                      }}
+                    >
+                      <DialogTitle
+                        sx={{
+                          position: "relative",
+                          fontWeight: 700,
+                          py: 2,
+                          pr: 6,
+                        }}
+                      >
+                        Offer Ride
+
+                        <IconButton
+                          aria-label="close"
+                          onClick={() => setOpen(false)}
+                          sx={{
+                            position: "absolute",
+                            top: 12,
+                            right: 12,
+                            color: "text.secondary",
+                          }}
+                        >
+                          <CloseIcon />
+                        </IconButton>
+                      </DialogTitle>
+
+                      <DialogContent
+                        dividers
+                        sx={{
+                          p: {
+                            xs: 1,
+                            sm: 2,
+                          },
+                          overflowY: "auto",
+                          maxHeight: {
+                            xs: "100vh",
+                            sm: "75vh",
+                          },
+                        }}
+                      >
+                        <OfferRide setOpen={setOpen} />
+                      </DialogContent>
+                    </Dialog>
+                  </Box>
+                </>
               )
             }
           </Container>

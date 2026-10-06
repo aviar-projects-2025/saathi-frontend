@@ -330,16 +330,16 @@ const Myprofile = () => {
     }
   };
   const isProduction =
-    import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "Production";
+    import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "production";
 
   const isTesting =
-    import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "Testing";
+    import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "testing";
 
   const getCommunityPost = async () => {
     try {
       const postsRes = await axios.get(Api + `/post-images/profile/${currentUser?._id}`);
 
-     console.log("postsRes...",postsRes)
+      console.log("postsRes...", postsRes)
       const myPosts = postsRes.data.data.filter(
         (item) => item.authorId?._id === currentUser?._id,
       );
@@ -532,7 +532,7 @@ const Myprofile = () => {
 
       {/* ── Security ── */}
 
-      <SectionCard sx={{ mt: 3 }}>
+      {/* <SectionCard sx={{ mt: 3 }}>
         <SectionHeader icon={<LockIcon />} label="Security" />
         <Divider sx={{ mt: 1 }} />
         <Grid
@@ -555,7 +555,7 @@ const Myprofile = () => {
             Change Password
           </Button>
         </Grid>
-      </SectionCard>
+      </SectionCard> */}
 
       <Modal open={passwordModel} onClose={() => setPasswordModel(false)}>
         <Box
@@ -974,11 +974,12 @@ const Myprofile = () => {
                 variant="contained"
                 size="small"
                 sx={{
+                  color: 'black',
                   fontSize: { xs: "0.75rem", sm: "0.85rem" },
                   py: { xs: 0.5, sm: 0.75 },
                   textTransform: "none",
-                  bgcolor: "#FF9933",
-                  "&:hover": { bgcolor: "#da9a3a" },
+                  bgcolor: "#b7b7b7ff",
+                  "&:hover": { bgcolor: "#939393ff" },
                 }}
                 onClick={() => setMobile_number('')}
               >
@@ -993,8 +994,8 @@ const Myprofile = () => {
                   fontSize: { xs: "0.75rem", sm: "0.85rem" },
                   py: { xs: 0.5, sm: 0.75 },
                   textTransform: "none",
-                  bgcolor: "#09710f",
-                  "&:hover": { bgcolor: "#065a0b" },
+                  bgcolor: "#FF9933",
+                  "&:hover": { bgcolor: "#da9a3a" },
                 }}
                 onClick={() => handlelink(mobile_number)}
               >

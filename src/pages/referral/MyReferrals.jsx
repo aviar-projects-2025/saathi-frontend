@@ -34,6 +34,7 @@ import { useNotifications } from "../../context/NotificationContext";
 import { useReferral } from "../../context/ReferralContext";
 import ToastConfig from "../../components/ToastConfig";
 import ProfileModal from "../Avatar.jsx";
+import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 
 const SAFFRON = "#E8650A";
 
@@ -116,6 +117,15 @@ const ReferralCard = memo(({
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    const formatMaskedPhone = (phone) => {
+        if (!phone) return "";
+
+        const digits = String(phone).replace(/\D/g, "");
+        const last4 = digits.slice(-4);
+
+        return `+1 (XXX) XXX-${last4}`;
+    };
 
     const profileImage =
         users?.profileImage;
@@ -243,8 +253,7 @@ const ReferralCard = memo(({
                                 },
                             }}
                         >
-                            {users?.email ||
-                                ""}
+                            {formatMaskedPhone(users?.mobile || users?.mobileNumber)}
                         </Typography>
                     </Box>
                 </Stack>
@@ -1359,14 +1368,8 @@ const MyReferrals = () => {
 
                 <Modal
                     open={openShare}
-                    onClose={(
-                        event,
-                        reason
-                    ) => {
-                        if (
-                            reason ===
-                            "backdropClick"
-                        ) {
+                    onClose={(event, reason) => {
+                        if (reason === "backdropClick") {
                             return;
                         }
 
@@ -1375,76 +1378,36 @@ const MyReferrals = () => {
                 >
                     <Box
                         sx={{
-                            position:
-                                "fixed",
-
+                            position: "fixed",
                             top: "50%",
-
                             left: "50%",
-
-                            transform:
-                                "translate(-50%, -50%)",
-
+                            transform: "translate(-50%, -50%)",
                             display: "flex",
-
-                            alignItems:
-                                "center",
-
-                            justifyContent:
-                                "center",
-
-                            width: {
-                                xs: "92%",
-                                sm: "100%",
-                            },
-
-                            px: {
-                                xs: 2,
-                                sm: 0,
-                            },
+                            alignItems: "center",
+                            justifyContent: "center",
+                            width: { xs: "92%", sm: "100%" },
+                            px: { xs: 2, sm: 0 },
                         }}
                     >
                         <Box
                             sx={{
-                                position:
-                                    "relative",
-
-                                bgcolor:
-                                    "white",
-
-                                width: {
-                                    xs: "100%",
-                                    sm: 380,
-                                },
-
+                                position: "relative",
+                                bgcolor: "white",
+                                width: { xs: "100%", sm: 380 },
                                 maxWidth: 380,
-
-                                borderRadius: 2,
-
-                                p: {
-                                    xs: 2,
-                                    sm: 3,
-                                },
-
+                                borderRadius: { xs: 2, sm: 2 },
+                                p: { xs: 2, sm: 3 },
                                 boxShadow: 24,
                             }}
                         >
-                            {/* CLOSE */}
                             <IconButton
-                                onClick={
-                                    handleCloseShare
-                                }
+                                onClick={handleCloseShare}
                                 size="small"
                                 sx={{
-                                    position:
-                                        "absolute",
-
+                                    position: "absolute",
                                     top: 8,
-
                                     right: 8,
-
-                                    color:
-                                        "grey.500",
+                                    color: "grey.500",
                                 }}
                             >
                                 <CloseIcon fontSize="small" />
@@ -1453,90 +1416,78 @@ const MyReferrals = () => {
                             <Typography
                                 fontWeight={600}
                                 sx={{
-                                    fontSize: {
-                                        xs: "0.9rem",
-                                        sm: "1rem",
-                                    },
-
-                                    mb: {
-                                        xs: 1.5,
-                                        sm: 2,
-                                    },
-
+                                    fontSize: { xs: "0.9rem", sm: "1rem" },
+                                    mb: { xs: 1.5, sm: 2 },
                                     pr: 3,
                                 }}
                             >
-                                Invite your
-                                friends
+                                Invite your friends
                             </Typography>
 
-                            {/* REFERRAL LINK */}
+                            {/* Referral Link - Copyable */}
                             <Paper
                                 variant="outlined"
                                 sx={{
                                     p: 1.5,
-
                                     mb: 2,
-
-                                    display:
-                                        "flex",
-
-                                    alignItems:
-                                        "center",
-
-                                    justifyContent:
-                                        "space-between",
-
-                                    bgcolor:
-                                        "#f5f5f5",
-
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "space-between",
+                                    bgcolor: "#f5f5f5",
                                     borderRadius: 1,
                                 }}
                             >
                                 <Typography
                                     sx={{
-                                        fontSize:
-                                        {
-                                            xs: "0.7rem",
-                                            sm: "0.8rem",
-                                        },
-
-                                        overflow:
-                                            "hidden",
-
-                                        textOverflow:
-                                            "ellipsis",
-
-                                        whiteSpace:
-                                            "nowrap",
-
+                                        fontSize: { xs: "0.7rem", sm: "0.8rem" },
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        whiteSpace: "nowrap",
                                         flex: 1,
-
                                         mr: 1,
                                     }}
                                 >
-                                    {
-                                        shareLink
-                                    }
+                                    {shareLink}
                                 </Typography>
 
                                 <Tooltip title="Copy link">
                                     <IconButton
                                         size="small"
-                                        onClick={() =>
-                                            handleCopy(
-                                                shareLink
-                                            )
-                                        }
-                                        sx={{
-                                            flexShrink:
-                                                0,
-                                        }}
+                                        onClick={() => handleCopy(shareLink)}
+                                        sx={{ flexShrink: 0 }}
                                     >
                                         <ContentCopyIcon fontSize="small" />
                                     </IconButton>
                                 </Tooltip>
                             </Paper>
+
+                            {/* WhatsApp Share */}
+                            {/* <Button
+                                fullWidth
+                                variant="contained"
+                                startIcon={<WhatsAppIcon />}
+                                onClick={() => {
+                                    const message = `Join Saathi Rides using my referral link:\n${shareLink}`;
+                                    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+
+                                    window.open(whatsappUrl, "_blank");
+                                }}
+                                sx={{
+                                    mb: 2,
+                                    py: { xs: 0.75, sm: 1 },
+                                    borderRadius: 2,
+                                    textTransform: "none",
+                                    fontSize: { xs: "0.8rem", sm: "0.9rem" },
+                                    fontWeight: 600,
+                                    bgcolor: "#25D366",
+                                    color: "#fff",
+                                    "&:hover": {
+                                        bgcolor: "#1DA851",
+                                    },
+                                }}
+                            >
+                                Share on WhatsApp
+                            </Button> */}
 
                             <Stack
                                 direction="row"
@@ -1545,7 +1496,6 @@ const MyReferrals = () => {
                                     width: "100%",
                                 }}
                             >
-                                {/* COUNTRY CODE */}
                                 {isProduction && (
                                     <>
                                         <TextField
@@ -1608,145 +1558,42 @@ const MyReferrals = () => {
                                     </TextField>
                                 )}
 
-
-                                {/* MOBILE */}
-                                {/* <TextField
-                                    fullWidth
-                                    value={
-                                        mobile_number
-                                    }
-                                    type="text"
-                                    inputMode="numeric"
-                                    onChange={(
-                                        e
-                                    ) => {
-                                        const value =
-                                            e.target.value
-                                                .replace(
-                                                    /\D/g,
-                                                    ""
-                                                )
-                                                .slice(
-                                                    0,
-                                                    10
-                                                );
-
-                                        setMobile_number(
-                                            value
-                                        );
-                                    }}
-                                    size="small"
-                                    placeholder="Enter 10-digit mobile number"
-                                /> */}
-
                                 <TextField
                                     fullWidth
                                     value={mobile_number}
                                     type="text"
                                     inputMode="numeric"
-                                    size="small"
-                                    placeholder="Enter 10-digit mobile number"
-                                    error={Boolean(mobileError)}
-                                    helperText={mobileError}
                                     onChange={(e) => {
-                                        const value = e.target.value
-                                            .replace(/\D/g, "")
-                                            .slice(0, 10);
-
+                                        const value = e.target.value.replace(/\D/g, "").slice(0, 10);
                                         setMobile_number(value);
-
-                                        // Clear error while entering a valid number
-                                        if (value.length === 10) {
-                                            setMobileError("");
-                                        } else if (value.length > 0) {
-                                            setMobileError("Mobile number must be 10 digits");
-                                        } else {
-                                            setMobileError("");
-                                        }
                                     }}
-                                    onBlur={() => {
-                                        if (!mobile_number) {
-                                            setMobileError("Mobile number is required");
-                                        } else if (mobile_number.length !== 10) {
-                                            setMobileError("Enter a valid 10-digit mobile number");
-                                        } else {
-                                            setMobileError("");
-                                        }
+                                    size="small"
+                                    placeholder="Enter mobile number"
+                                    InputProps={{
+                                        sx: {
+                                            fontSize: { xs: "0.75rem", sm: "0.85rem" },
+                                        },
                                     }}
                                 />
-
                             </Stack>
-
-                            {/* NUMBER PREVIEW */}
-                            {mobile_number.length >
-                                0 && (
-                                    <Typography
-                                        variant="caption"
-                                        color="text.secondary"
-                                        sx={{
-                                            display:
-                                                "block",
-
-                                            mt: 0.75,
-                                        }}
-                                    >
-                                        SMS will be
-                                        sent to:{" "}
-                                        <strong>
-                                            {
-                                                countryCode
-                                            }
-                                            {
-                                                mobile_number
-                                            }
-                                        </strong>
-                                    </Typography>
-                                )}
-
-                            {/* BUTTONS */}
                             <Stack
                                 direction="row"
-                                spacing={{
-                                    xs: 1,
-                                    sm: 1,
-                                }}
-                                sx={{
-                                    mt: {
-                                        xs: 1.5,
-                                        sm: 2,
-                                    },
-                                }}
+                                spacing={{ xs: 1, sm: 1 }}
+                                sx={{ mt: { xs: 1.5, sm: 2 } }}
                             >
                                 <Button
                                     fullWidth
                                     variant="contained"
                                     size="small"
                                     sx={{
-                                        fontSize: {
-                                            xs: "0.75rem",
-                                            sm: "0.85rem",
-                                        },
-
-                                        py: {
-                                            xs: 0.5,
-                                            sm: 0.75,
-                                        },
-
-                                        textTransform:
-                                            "none",
-
-                                        bgcolor:
-                                            "#FF9933",
-
-                                        "&:hover":
-                                        {
-                                            bgcolor:
-                                                "#da9a3a",
-                                        },
+                                        color: 'black',
+                                        fontSize: { xs: "0.75rem", sm: "0.85rem" },
+                                        py: { xs: 0.5, sm: 0.75 },
+                                        textTransform: "none",
+                                        bgcolor: "#b7b7b7ff",
+                                        "&:hover": { bgcolor: "#939393ff" },
                                     }}
-                                    onClick={() =>
-                                        setMobile_number("")
-                                    }
+                                    onClick={() => setMobile_number('')}
                                 >
                                     Clear
                                 </Button>
@@ -1756,35 +1603,15 @@ const MyReferrals = () => {
                                     variant="contained"
                                     size="small"
                                     sx={{
-                                        fontSize: {
-                                            xs: "0.75rem",
-                                            sm: "0.85rem",
-                                        },
-
-                                        py: {
-                                            xs: 0.5,
-                                            sm: 0.75,
-                                        },
-
-                                        textTransform:
-                                            "none",
-
-                                        bgcolor:
-                                            "#09710f",
-
-                                        "&:hover":
-                                        {
-                                            bgcolor:
-                                                "#065a0b",
-                                        },
+                                        fontSize: { xs: "0.75rem", sm: "0.85rem" },
+                                        py: { xs: 0.5, sm: 0.75 },
+                                        textTransform: "none",
+                                        bgcolor: "#FF9933",
+                                        "&:hover": { bgcolor: "#da9a3a" },
                                     }}
-                                    onClick={
-                                        handlelink
-                                    }
+                                    onClick={() => handlelink(mobile_number)}
                                 >
-                                    {inviteLoading
-                                        ? "Inviting..."
-                                        : " Invite"}
+                                    {inviteLoading ? "Inviting..." : "Invite"}
                                 </Button>
                             </Stack>
                         </Box>
