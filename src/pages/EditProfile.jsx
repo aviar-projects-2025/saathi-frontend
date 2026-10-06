@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
     Box,
     Typography,
@@ -15,6 +15,8 @@ import {
     IconButton,
     Slider,
 } from "@mui/material";
+
+import { Autocomplete, createFilterOptions } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -24,8 +26,35 @@ import { toast } from "react-toastify";
 import uploadToCloudinary from "../components/uploadToCloudinary.jsx";
 import { useUser } from "../context/userConetext";
 import Api from "../Api";
+import US_Cities from "../config/US_Cities.json"
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
+import Popper from "@mui/material/Popper";
+
+const CustomPopper = (props) => {
+    return (
+        <Popper
+            {...props}
+            placement="bottom-start"
+            modifiers={[
+                {
+                    name: "offset",
+                    options: {
+                        offset: [0, 8],
+                    },
+                },
+            ]}
+            sx={{
+                width: "50% !important",
+                maxWidth: "none !important",
+                "& .MuiPaper-root": {
+                    borderRadius: "8px",
+                    boxShadow: "0px 4px 15px rgba(0,0,0,0.15)",
+                },
+            }}
+        />
+    );
+};
 
 const CROP_BOX_SIZE = 260;
 const CROP_BOX_SIZE_MOBILE = 190;
@@ -37,14 +66,49 @@ const fieldFont = {
     },
 };
 
+const EXCLUDED = ["AS", "FM", "GU", "MH", "MP", "PW", "PR", "VI", "AE", "AP"];
+
+// 1. Every city paired with its state (must come first)
+const OPTIONS = US_Cities.filter((s) => !EXCLUDED.includes(s.abbr)).flatMap((s) =>
+    s.cities.map((city) => ({
+        city,
+        state: s.state,
+        abbr: s.abbr,
+        label: `${city}, ${s.state}`,
+    }))
+);
+
+// 2. "Other" option, then the full list that uses OPTIONS
+const OTHER_OPTION = {
+    city: "Other",
+    state: "",
+    abbr: "OTHER",
+    label: "Other (my city is not listed)",
+};
+const AUTOCOMPLETE_OPTIONS = [...OPTIONS, OTHER_OPTION];
+
+const filterOptions = (options, { inputValue }) => {
+    const words = inputValue.toLowerCase().trim().split(/\s+/).filter(Boolean);
+    const matches = [];
+    for (const o of options) {
+        if (o.abbr === "OTHER") continue;
+        const hay = `${o.city} ${o.state} ${o.abbr}`.toLowerCase();
+        if (words.every((w) => hay.includes(w))) {
+            matches.push(o);
+            if (matches.length === 50) break;
+        }
+    }
+    return [...matches, OTHER_OPTION];
+};
 const buildFormData = (user) => ({
     firstName: user?.firstName || "",
     lastName: user?.lastName || "",
-    email: user?.email || "",
+    // email: user?.email || "",
     mobile: user?.mobile || "",
     dob: user?.dob ? dayjs(user.dob) : null,
     gender: user?.gender || "",
     bio: user?.bio || "",
+    city: user?.city || "",
     profileImage: user?.profileImage || "",
     zipcode: user?.zipcode || "",
 });
@@ -64,41 +128,17 @@ const validateForm = (formData) => {
         errors.lastName = "Last name is required";
     }
 
-    if (!formData.email) {
-        errors.email = "Email is required";
-    } else {
-        const emailRegex =
-            /^[a-z0-9]+(?:[._%+-][a-z0-9]+)*@[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z]{2,})+$/i;
-        if (!emailRegex.test(formData.email)) {
-            errors.email =
-                "Please enter a valid email address (e.g., name@domain.com)";
-        }
+
+    // First Name
+    if (!formData.city?.trim()) {
+        errors.city = "City is required";
     }
 
-    // Mobile
     const phone = formData.mobile?.trim();
     if (!phone) {
         errors.mobile = "Mobile number is required";
     } else if (!/^\+?\d{10,15}$/.test(phone)) {
         errors.mobile = "Please enter a valid mobile number (10–15 digits)";
-    }
-
-    // DOB (Age >= 18)
-    if (!formData.dob) {
-        errors.dob = "Date of birth is required";
-    } else {
-        const today = new Date();
-        const dob = new Date(formData.dob);
-        let age = today.getFullYear() - dob.getFullYear();
-
-        const m = today.getMonth() - dob.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
-            age--;
-        }
-
-        if (age < 18) {
-            errors.dob = "You must be at least 18 years old";
-        }
     }
 
 
@@ -148,8 +188,14 @@ const EditProfile = ({ open, onClose }) => {
             setFormData(buildFormData(currentUser));
             setProfileImage(currentUser?.profileImage || "");
             setProfileFile(null);
+            syncCityUI(currentUser?.city);   // add
         }
     }, [currentUser]);
+
+    const resetForm = () => {
+        setFormData(buildFormData(currentUser));
+        syncCityUI(currentUser?.city);       // add
+    };
 
     const handleCloseProfile = () => {
         onClose?.();
@@ -343,9 +389,7 @@ const EditProfile = ({ open, onClose }) => {
         galleryFileRef.current?.click();
     };
 
-    const resetForm = () => {
-        setFormData(buildFormData(currentUser));
-    };
+
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -359,6 +403,38 @@ const EditProfile = ({ open, onClose }) => {
             ...prev,
             [name]: "",
         }));
+    };
+    const [value, setValue] = useState(null);
+    const [isOtherCity, setIsOtherCity] = useState(false);
+    const [otherCityState, setOtherCityState] = useState("");
+
+    // Fills the city field from a saved string like "Austin, Texas"
+    const syncCityUI = (saved = "") => {
+        const match = AUTOCOMPLETE_OPTIONS.find(
+            (o) => o.abbr !== "OTHER" && o.label === saved
+        );
+        if (match) {
+            setValue(match); setIsOtherCity(false); setOtherCityState("");
+        } else if (saved) {
+            setValue(OTHER_OPTION); setIsOtherCity(true); setOtherCityState(saved);
+        } else {
+            setValue(null); setIsOtherCity(false); setOtherCityState("");
+        }
+    };
+
+    const handleCitiesChange = (event, newValue) => {
+        const other = newValue?.abbr === "OTHER";
+        setValue(newValue);
+        setIsOtherCity(other);
+        setOtherCityState("");
+        setFormData((prev) => ({ ...prev, city: other ? "" : newValue?.label || "" }));
+        setErrors((prev) => ({ ...prev, city: "" }));
+    };
+
+    const handleOtherCityChange = (e) => {
+        setOtherCityState(e.target.value);
+        setFormData((prev) => ({ ...prev, city: e.target.value }));
+        setErrors((prev) => ({ ...prev, city: "" }));
     };
 
     const handleUpdateProfile = async () => {
@@ -386,6 +462,7 @@ const EditProfile = ({ open, onClose }) => {
                 dob: formData.dob ? formData.dob.format("YYYY-MM-DD") : "",
                 gender: formData.gender,
                 bio: formData.bio,
+                city: formData.city,
                 zipcode: formData.zipcode,
 
                 ...(uploadedImage && {
@@ -762,19 +839,7 @@ const EditProfile = ({ open, onClose }) => {
                                     width: "100%",
                                 }}
                             >
-                                <TextField
-                                    label="Email"
-                                    name="email"
-                                    size="small"
-                                    fullWidth
-                                    value={formData?.email}
-                                    onChange={handleChange}
-                                    error={!!errors.email}
-                                    helperText={errors.email}
-                                    disabled
-                                    InputProps={fieldFont}
-                                    InputLabelProps={fieldFont}
-                                />
+
 
                                 <TextField
                                     label="Mobile Number"
@@ -822,7 +887,7 @@ const EditProfile = ({ open, onClose }) => {
                             >
                                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                                     <DatePicker
-                                        label="Date of Birth"
+                                        label="Date of Birth (Optional)"
                                         value={formData?.dob}
                                         onChange={(newValue) => {
                                             setFormData((prev) => ({
@@ -830,15 +895,12 @@ const EditProfile = ({ open, onClose }) => {
                                                 dob: newValue,
                                             }));
 
-                                            setErrors((prev) => ({
-                                                ...prev,
-                                                dob: "",
-                                            }));
+
                                         }}
                                         slotProps={{
                                             textField: {
                                                 size: "small",
-                                                error: !!errors.dob,
+                                                // error: !!errors.dob,
                                                 helperText: errors.dob,
                                                 fullWidth: true,
                                                 InputProps: fieldFont,
@@ -902,7 +964,67 @@ const EditProfile = ({ open, onClose }) => {
                                 InputLabelProps={fieldFont}
                             />
 
-                            {/* Zip Code */}
+                            <Autocomplete
+                                fullWidth
+                                size="small"
+
+                                options={AUTOCOMPLETE_OPTIONS}
+                                value={value}
+
+                                onChange={handleCitiesChange}
+                                filterOptions={filterOptions}
+
+                                getOptionLabel={(o) => o?.label || ""}
+
+                                getOptionKey={(o) => `${o.abbr}-${o.city}`}
+
+                                isOptionEqualToValue={(a, b) =>
+                                    a.abbr === b.abbr && a.city === b.city
+                                }
+
+                                noOptionsText="No matching city"
+
+                                slots={{
+                                    popper: CustomPopper,
+                                }}
+
+                                slotProps={{
+                                    listbox: {
+                                        sx: {
+                                            maxHeight: "300px",
+
+                                            "& .MuiAutocomplete-option": {
+                                                padding: "12px 20px",
+                                                fontSize: "16px",
+                                                textAlign: "left",
+                                            },
+                                        },
+                                    },
+                                }}
+
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        label="City, State"
+                                        placeholder="Type a city or state"
+                                        error={!isOtherCity && !!errors.city}
+                                        helperText={!isOtherCity ? errors.city : ""}
+                                    />
+                                )}
+                            />
+
+                            {isOtherCity && (
+                                <TextField
+                                    fullWidth
+                                    size="small"
+                                    label="Enter City, State"
+                                    placeholder="Enter your city and state"
+                                    value={otherCityState}
+                                    onChange={handleOtherCityChange}
+                                    error={!!errors.city}
+                                    helperText={errors.city}
+                                />
+                            )}
                             <TextField
                                 label="ZipCode"
                                 name="zipcode"
