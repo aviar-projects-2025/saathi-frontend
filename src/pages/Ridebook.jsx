@@ -303,6 +303,7 @@ export default function Ridebook({
   };
 
   const validate = () => {
+  
     const membersToValidate = isEditMode ? newMembers : requestData.members;
 
     if (isEditMode) {
@@ -364,6 +365,7 @@ export default function Ridebook({
   const isAccepted = myRequest?.status === "ACCEPTED";
   const requestedByMe = Number(myRequest?.seatsRequested || 0);
   const pendingSeatsByMe = isAccepted ? 0 : requestedByMe;
+
   const handleRequestSubmit = async () => {
     if (!ride) return;
     if (isSubmittingRef.current) return;
@@ -376,7 +378,7 @@ export default function Ridebook({
     const storedUser = JSON.parse(localStorage.getItem("user"));
     const membersToSubmit = isEditMode ? newMembers : requestData.members;
     const seatsRequested = membersToSubmit.length;
-
+       console.log("fgfgghjkkhgjhhbh")
     const payload = {
       firstName: storedUser?.firstName,
       requestedBy: storedUser?.id,
@@ -847,11 +849,10 @@ export default function Ridebook({
                       },
                     }}
                     value={
-                      isLockedSelfSlot
-                        ? calculateAge(currentUser?.dob)
-                        : member.age
+                      
+                       member.age
                     }
-                    disabled={isLockedSelfSlot}
+                    // disabled={isLockedSelfSlot}
                     error={!isLockedSelfSlot && !!memberErrors[index]?.age}
                     helperText={
                       !isLockedSelfSlot && memberErrors[index]?.age

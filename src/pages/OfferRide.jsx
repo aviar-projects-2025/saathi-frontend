@@ -68,7 +68,7 @@ const TRAVELLER_TYPES = [
   "First-time traveller",
   "Senior citizen support",
   "Student travel companion",
-  "Women-only companion",
+  // "Women-only companion",
   "Family companion",
 ];
 

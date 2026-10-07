@@ -315,10 +315,7 @@ export default function FindRides() {
         ? body.data
         : [];
 
-      console.log(
-        `Find Rides page ${pageNumber}:`,
-        newRides
-      );
+   
 
       setRides((prev) => {
         if (reset) {
@@ -455,11 +452,6 @@ export default function FindRides() {
           longitude: position.coords.longitude,
           accuracy: position.coords.accuracy,
         };
-
-        console.log(
-          "CURRENT USER GPS LOCATION:",
-          location
-        );
 
         setUserLocation(location);
         setLocationLoading(false);
@@ -688,10 +680,7 @@ export default function FindRides() {
       hasMore &&
       !loadingMoreRef.current
     ) {
-      console.log(
-        "🔥 Near bottom. Loading page:",
-        page + 1
-      );
+   
 
       fetchRides({
         pageNumber: page + 1,
@@ -891,9 +880,6 @@ export default function FindRides() {
     )} km`;
   };
 
-  // ─────────────────────────────────────────────
-  // Loading
-  // ─────────────────────────────────────────────
 
   // if (loading) {
   //   return (

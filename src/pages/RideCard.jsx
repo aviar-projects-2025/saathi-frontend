@@ -89,7 +89,7 @@ export default function RideCard({ ride }) {
   const isTab = useMediaQuery(theme.breakpoints.down("sm"));
 
   const TOASTS = ToastConfig();
-  console.log("currrrrr", currentUser.language)
+
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null);
 
@@ -341,8 +341,6 @@ export default function RideCard({ ride }) {
   const isAccepted = myRequest?.status === "ACCEPTED";
   const requestedByMe = Number(myRequest?.seatsRequested || 0);
   const approvedSeats = myRequest?.approvedSeats || 0;
-  // console.log(requestedByMe, 'requestedByMe')
-  // console.log(myRequest, 'myRequest')
 
   const pendingSeatsByMe = isAccepted ? 0 : requestedByMe;
 
@@ -549,22 +547,22 @@ export default function RideCard({ ride }) {
                 {`${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`}
               </Avatar>
 
-          <Typography
-  fontWeight={700}
-  sx={{
-    fontSize: { xs: "0.8rem", sm: "0.95rem" },
-    position: "relative",
-    top: { xs: "-3px", sm: "-10px" },
-    whiteSpace: "nowrap",
-    textOverflow: "ellipsis",
-    minWidth: 0,
-    maxWidth: "100%",
-  }}
->
-  {userName}
-</Typography>
+              <Typography
+                fontWeight={700}
+                sx={{
+                  fontSize: { xs: "0.8rem", sm: "0.95rem" },
+                  position: "relative",
+                  top: { xs: "-3px", sm: "-10px" },
+                  whiteSpace: "nowrap",
+                  textOverflow: "ellipsis",
+                  minWidth: 0,
+                  maxWidth: "100%",
+                }}
+              >
+                {userName}
+              </Typography>
             </Box>
-    
+
             <Chip
               icon={
                 isFlight ? (
@@ -611,19 +609,19 @@ export default function RideCard({ ride }) {
                 },
               }}
             />
-            
+
           </Box>
-    <Typography
-  fontWeight={700}
-  sx={{
-    marginLeft:  { xs: "15%", sm: "12%" },
-    fontSize: { xs: "0.7rem", sm: "0.6rem" },
-    position: "relative",
-    top: { xs: "-18px", sm: "-30px" },
-  }}
->
-  {currentUser.language?.join(", ")}
-</Typography>
+          <Typography
+            fontWeight={700}
+            sx={{
+              marginLeft: { xs: "15%", sm: "12%" },
+              fontSize: { xs: "0.7rem", sm: "0.6rem" },
+              position: "relative",
+              top: { xs: "-18px", sm: "-30px" },
+            }}
+          >
+            {ride?.createdBy?.language?.join(", ")}
+          </Typography>
           <Card
             elevation={0}
             sx={{
