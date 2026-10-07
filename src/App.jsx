@@ -144,7 +144,7 @@ function App() {
           >
             <Route element={<UserLayout />}>
               <Route path="/invite" element={<Invite />} />
-              <Route path="/community" element={<Community />} />
+              {/* <Route path="/community" element={<Community />} /> */}
               <Route path="/my-referalls" element={<MyReferrals />} />
               
               {/* <Route path="/settings" element={<Settings />} /> */}
