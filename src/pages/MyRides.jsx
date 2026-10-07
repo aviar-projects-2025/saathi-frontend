@@ -1753,7 +1753,7 @@ const MyRides = () => {
           <Typography variant="h5" fontWeight={800} sx={{ fontSize: { xs: "1.1rem", sm: "1.35rem", md: "1.5rem" } }}>My Rides</Typography>
         </Box>
 
-        <Box sx={{ width: "100%", minWidth: 0, borderBottom: "1px solid", borderColor: "divider", flexShrink: 0, position: "sticky", top: -3, zIndex: 10, bgcolor: "background.paper" }}>
+        {/* <Box sx={{ width: "100%", minWidth: 0, borderBottom: "1px solid", borderColor: "divider", flexShrink: 0, position: "sticky", top: -3, zIndex: 10, bgcolor: "background.paper" }}>
           <Tabs value={tab} onChange={handleTabChange} variant="fullWidth" sx={{ width: "100%", minHeight: { xs: 40, sm: 48, md: 50 }, "& .MuiTabs-flexContainer": { width: "100%" }, "& .MuiTab-root": { minWidth: 0, flex: 1, padding: { xs: "4px 2px", sm: "8px 12px", md: "12px 16px" }, fontSize: { xs: "0.68rem", sm: "0.78rem", md: "0.82rem" }, fontWeight: 600, textTransform: "none", minHeight: { xs: 36, sm: 44, md: 48 }, lineHeight: 1.1, color: "#666", "&.Mui-selected": { color: "#FF9933" } }, "& .MuiTabs-indicator": { height: 3, backgroundColor: "#FF9933" } }}>
             {tabs.map(item => <Tab key={item.key} label={<Typography component="span" noWrap sx={{ fontSize: { xs: "0.62rem", sm: "0.72rem", md: "0.8rem" }, fontWeight: "bold", lineHeight: 1.5 }}>{`${item.label}`}</Typography>} />)}
           </Tabs>
@@ -1766,16 +1766,27 @@ const MyRides = () => {
             <EmptyState message1={active.empty1} message2={active.empty2} />
           ) : (
             <>
-              {/* {renderList(activeData.rides)} */}
-              <h1>Hello</h1>
-              <h1>Hello</h1><h1>Hello</h1><h1>Hello</h1><h1>Hello</h1><h1>Hello</h1><h1>Hello</h1><h1>Hello</h1><h1>Hello</h1>
+              {renderList(activeData.rides)}
               <Box ref={sentinelRef} sx={{ minHeight: activeData.hasMore ? 80 : 24, display: "flex", alignItems: "center", justifyContent: "center", py: 1 }}>
                 {activeData.loading && <CircularProgress size={28} sx={{ color: "#FF9933" }} />}
                 {!activeData.loading && !activeData.hasMore && activeData.rides.length > 0 && <Typography sx={{ fontSize: { xs: "0.7rem", sm: "0.78rem" }, color: "text.secondary", py: 1 }}>No more rides</Typography>}
               </Box>
             </>
           )}
-        </Box>
+        </Box> */}
+        <h1>Helklo</h1>
+        <h1>Helklo</h1>
+        <h1>Helklo</h1>
+        <h1>Helklo</h1>
+        <h1>Helklo</h1>
+        <h1>Helklo</h1>
+        <h1>Helklo</h1>
+        <h1>Helklo</h1>
+        <h1>Helklo</h1>
+        <h1>Helklo</h1>
+        <h1>Helklo</h1>
+        <h1>Helklo</h1>
+
 
         {editRide && <EditRideModal ride={editRide} onSave={handleEdit} onClose={() => setEditRide(null)} />}
         {deleteRide && <DeleteConfirmDialog ride={deleteRide} onConfirm={handleDelete} onClose={() => setDeleteRide(null)} />}
