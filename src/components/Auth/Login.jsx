@@ -1,340 +1,13 @@
-// import { Formik } from "formik";
-// import * as Yup from "yup";
-// import {
-//   Avatar,
-//   Box,
-//   Button,
-//   Container,
-//   Paper,
-//   TextField,
-//   Typography,
-//   Link as MuiLink,
-// } from "@mui/material";
-// import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-// import { Link, useNavigate } from "react-router-dom";
-// import { useAuth } from "./../../context/AuthContext";
-// import ROLES from "../../context/Role";
-// import { toast } from "react-toastify";
-// import Saathi from "../../assets/saathilogo.png";
-// import { useTheme, useMediaQuery } from "@mui/material";
-// import { useState } from "react";
-// import InputAdornment from "@mui/material/InputAdornment";
-// import IconButton from "@mui/material/IconButton";
-// import Visibility from "@mui/icons-material/Visibility";
-// import VisibilityOff from "@mui/icons-material/VisibilityOff";
-// import ToastConfig from "../ToastConfig";
-
-
-// const Login = () => {
-//   const { login } = useAuth();
-//   const navigate = useNavigate();
-
-//   const toasts = ToastConfig();
-
-//   const theme = useTheme();
-//   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
-//   const [serverError, setServerError] = useState("");
-
-//   const validationSchema = Yup.object({
-//     email: Yup.string()
-//       .trim()
-//       .lowercase()
-//       .email("Please enter a valid Email address")
-//       .matches(
-//         /^[a-z0-9]+(?:[._%+-][a-z0-9]+)*@[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z]{2,})+$/,
-//         "Please enter a valid email address"
-//       )
-//       .required("Email is required"),
-//     // password: Yup.string()
-//     //   .matches(/^[A-Z]/, "Password must start with an uppercase letter")
-//     //   .matches(/[a-z]/, "Password must contain at least one lowercase letter")
-//     //   .matches(/[0-9]/, "Password must contain at least one number")
-//     //   .matches(
-//     //     /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/,
-//     //     "Password must contain at least one special character"
-//     //   )
-//     //   .min(8, "Password must be at least 8 characters")
-//     //   .required("Password is required"),
-//   });
-
-//   const loginSubmit = async (values) => {
-//     try {
-//       const data = await login(values);
-//       if (data?.user.refApprove === "Approved") {
-//         toast.success("Login Successful!", toasts);
-//       } else {
-//         toast.info("Login successful! Waiting for admin approval.", toasts);
-//       }
-//       window.location.href =
-//         data?.user.role === ROLES.ADMIN
-//           ? "/admin/dashboard"
-//           : data?.user.refApprove === "Approved"
-//             ? "/find-ride"
-//             : "/waiting-approval";
-//     } catch (error) {
-//       // toast.error(error.message, toasts);
-//       setServerError(
-//         error.message ||
-//         "Something went wrong. Please try again."
-//       );
-//     }
-//   };
-
-//   const [showPassword, setShowPassword] = useState(false);
-
-//   const handleClickShowPassword = () => {
-//     setShowPassword((prev) => !prev);
-//   };
-
-//   const handleMouseDownPassword = (event) => {
-//     event.preventDefault();
-//   };
-
-//   return (
-//     <Box
-//       sx={{
-//         minHeight: "100vh",
-//         // background: "#F1EFEA",
-//         display: "flex",
-//         alignItems: "center",
-//         justifyContent: "center",
-//         p: 2,
-//       }}
-//     >
-//       <Container maxWidth="xs">
-//         <Paper
-//           elevation={3}
-//           sx={{
-//             borderRadius: 4,
-//             overflow: "hidden",
-//           }}
-//         >
-//           {/* Banner */}
-//           <Box
-//             sx={{
-//               height: 110,
-//               background: "#FF9933",
-//               position: "relative",
-//             }}
-//           />
-
-//           <Box sx={{ display: "flex", justifyContent: "center", mt: "-50px" }}>
-//             <Avatar
-//               src={Saathi}
-//               alt="Profile"
-//               sx={{
-//                 width: 125,
-//                 height: 143,
-//                 border: "4px solid #fff",
-//                 backgroundColor: "#1A1A1A",
-//               }}
-//             />
-//           </Box>
-
-//           <Box sx={{ px: 4, pb: 4, pt: 2 }}>
-//             <Formik
-//               initialValues={{ email: "", password: "" }}
-//               validationSchema={validationSchema}
-//               onSubmit={(values) => loginSubmit(values)}
-//             >
-//               {({
-//                 values,
-//                 errors,
-//                 touched,
-//                 handleChange,
-//                 handleBlur,
-//                 handleSubmit,
-//                 isSubmitting,
-//                 setFieldValue,
-//               }) => (
-//                 <form onSubmit={handleSubmit}>
-//                   <Typography
-//                     variant="h5"
-//                     align="center"
-//                     fontWeight={800}
-//                     sx={{ mb: 3 }}
-//                   >
-//                     Account Login
-//                   </Typography>
-
-//                   <TextField
-//                     fullWidth
-//                     label="Email"
-//                     name="email"
-//                     value={values.email}
-//                     // onChange={handleChange}
-//                     onChange={(e) => {
-//                       setFieldValue("email", e.target.value.toLowerCase());
-//                     }}
-//                     onBlur={handleBlur}
-//                     error={touched.email && Boolean(errors.email)}
-//                     helperText={touched.email && errors.email}
-//                     margin="normal"
-//                     size="small"
-//                     sx={{
-//                       "& .MuiOutlinedInput-root": {
-//                         backgroundColor: "#FFFFFF",
-//                         borderRadius: "12px",
-//                         "& input:-webkit-autofill": {
-//                           WebkitBoxShadow: "0 0 0 1000px #FFFFFF inset",
-//                           WebkitTextFillColor: "#000000",
-//                         },
-//                         "& .MuiOutlinedInput-notchedOutline": {
-//                           borderRadius: "12px",
-//                         },
-//                         "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-//                           borderColor: "#FF9933",
-//                         },
-//                       },
-//                       "& .MuiInputLabel-root.Mui-focused": {
-//                         color: "#FF9933",
-//                       },
-//                     }}
-//                   />
-
-//                   <TextField
-//                     fullWidth
-//                     type={showPassword ? "text" : "password"}
-//                     label="Password"
-//                     name="password"
-//                     value={values.password}
-//                     onChange={handleChange}
-//                     onBlur={handleBlur}
-//                     error={touched.password && Boolean(errors.password)}
-//                     helperText={touched.password && errors.password}
-//                     margin="normal"
-//                     size="small"
-//                     slotProps={{
-//                       input: {
-//                         endAdornment: (
-//                           <InputAdornment position="end">
-//                             <IconButton
-//                               onClick={handleClickShowPassword}
-//                               onMouseDown={handleMouseDownPassword}
-//                               edge="end"
-//                             >
-//                               {showPassword ? (
-//                                 <VisibilityOff />
-//                               ) : (
-//                                 <Visibility />
-//                               )}
-//                             </IconButton>
-//                           </InputAdornment>
-//                         ),
-//                       },
-//                     }}
-//                     sx={{
-//                       "& .MuiOutlinedInput-root": {
-//                         backgroundColor: "#FFFFFF",
-//                         borderRadius: "12px",
-//                         "& input:-webkit-autofill": {
-//                           WebkitBoxShadow: "0 0 0 1000px #FFFFFF inset",
-//                           WebkitTextFillColor: "#000000",
-//                         },
-//                         "& .MuiOutlinedInput-notchedOutline": {
-//                           borderRadius: "12px",
-//                         },
-//                         "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-//                           borderColor: "#FF9933",
-//                         },
-//                       },
-//                       "& .MuiInputLabel-root.Mui-focused": {
-//                         color: "#FF9933",
-//                       },
-//                     }}
-//                   />
-
-//                   {serverError && (
-//                     <Box
-//                       sx={{
-//                         mt: 1,
-//                         px: 1.5,
-//                         py: 1,
-//                         borderRadius: 1.5,
-//                         backgroundColor: "#FFF0F0",
-//                         border: "1px solid #FFCDD2",
-//                       }}
-//                     >
-//                       <Typography
-//                         color="error"
-//                         sx={{
-//                           fontSize: { xs: "0.78rem", sm: "0.85rem" },
-//                           fontWeight: 600,
-//                         }}
-//                       >
-//                         {serverError}
-//                       </Typography>
-//                     </Box>
-//                   )}
-
-//                   <Button
-//                     type="submit"
-//                     disabled={isSubmitting}
-//                     fullWidth
-//                     sx={{
-//                       mt: 3,
-//                       py: 1.2,
-//                       background: "#FF9933",
-//                       color: "#ffff",
-//                       textTransform: "none",
-//                       fontSize: "14px",
-//                       fontWeight: 700,
-//                       borderRadius: "999px",
-//                       "&:hover": { background: "#e6862c" },
-//                     }}
-//                   >
-//                     {isSubmitting ? "Logging in..." : "Login"}
-//                   </Button>
-
-//                   <Box sx={{ textAlign: "center", mt: 3 }}>
-//                     <Typography variant="body2" sx={{ color: "#333" }}>
-//                       Don't have an account?{" "}
-//                       <MuiLink
-//                         component={Link}
-//                         to="/register"
-//                         underline="hover"
-//                         sx={{ fontWeight: 600, color: "#FF9933" }}
-//                       >
-//                         Sign Up
-//                       </MuiLink>
-//                       <Box sx={{ textAlign: "center", mt: 1 }}>
-//                         <MuiLink
-//                           component={Link}
-//                           to="/forget-password"
-//                           underline="hover"
-//                           sx={{
-//                             fontWeight: 500,
-//                             color: "#FF9933",
-//                             fontSize: "14px",
-//                           }}
-//                         >
-//                           Forgot Password?
-//                         </MuiLink>
-//                       </Box>
-//                     </Typography>
-//                   </Box>
-//                 </form>
-//               )}
-//             </Formik>
-//           </Box>
-//         </Paper>
-//       </Container>
-//     </Box>
-//   );
-// };
-
-// export default Login;
-
 import React, { useRef, useState } from "react";
 import {
     Box,
     Button,
     TextField,
     Typography,
-    InputAdornment,
     useTheme,
     useMediaQuery,
+    MenuItem,
+    Stack,
 } from "@mui/material";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -350,6 +23,23 @@ const Login = () => {
     const { loginWithOtp } = useAuth();
 
     const [mobile, setMobile] = useState("");
+
+    // =====================================================
+    // COUNTRY CODE
+    // =====================================================
+
+    const [countryCode, setCountryCode] = useState("+1");
+
+    const isProduction =
+        import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "production";
+
+    const isTesting =
+        import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "testing";
+
+    // =====================================================
+    // OTP STATE
+    // =====================================================
+
     const [otp, setOtp] = useState(["", "", "", "", "", ""]);
     const [otpSent, setOtpSent] = useState(false);
     const [isSendingOtp, setIsSendingOtp] = useState(false);
@@ -374,12 +64,29 @@ const Login = () => {
             return;
         }
 
-        if (!/^[6-9]\d{9}$/.test(cleanedMobile)) {
+        // Keep existing 10-digit validation
+        if (cleanedMobile.length !== 10) {
             setServerError(
-                "Please enter a valid 10-digit Indian mobile number."
+                "Please enter a valid 10-digit mobile number."
             );
             return;
         }
+
+        // India-specific validation
+        if (countryCode === "+91") {
+            if (!/^[6-9]\d{9}$/.test(cleanedMobile)) {
+                setServerError(
+                    "Please enter a valid 10-digit Indian mobile number."
+                );
+                return;
+            }
+        }
+
+        // =================================================
+        // FULL INTERNATIONAL NUMBER
+        // =================================================
+
+        const fullMobileNumber = `${countryCode}${cleanedMobile}`;
 
         try {
             setIsSendingOtp(true);
@@ -392,7 +99,7 @@ const Login = () => {
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify({
-                        mobileNumber: cleanedMobile,
+                        mobileNumber: fullMobileNumber,
                     }),
                 }
             );
@@ -400,7 +107,9 @@ const Login = () => {
             const data = await response.json();
 
             if (!response.ok || !data.success) {
-                throw new Error(data.message || "Failed to send OTP");
+                throw new Error(
+                    data.message || "Failed to send OTP"
+                );
             }
 
             setMobile(cleanedMobile);
@@ -415,9 +124,13 @@ const Login = () => {
         } catch (error) {
             console.error("Send Login OTP Error:", error);
 
-            setServerError(error.message || "Unable to send OTP");
+            setServerError(
+                error.message || "Unable to send OTP"
+            );
 
-            toast.error(error.message || "Unable to send OTP");
+            toast.error(
+                error.message || "Unable to send OTP"
+            );
         } finally {
             setIsSendingOtp(false);
         }
@@ -455,7 +168,10 @@ const Login = () => {
             setOtp(newOtp);
             setServerError("");
 
-            const nextIndex = Math.min(index + digits.length, 5);
+            const nextIndex = Math.min(
+                index + digits.length,
+                5
+            );
 
             setTimeout(() => {
                 otpRefs.current[nextIndex]?.focus();
@@ -507,7 +223,9 @@ const Login = () => {
         const otpValue = otp.join("");
 
         if (otpValue.length !== 6) {
-            setServerError("Please enter the complete 6-digit OTP.");
+            setServerError(
+                "Please enter the complete 6-digit OTP."
+            );
             return;
         }
 
@@ -516,10 +234,17 @@ const Login = () => {
 
             const cleanedMobile = mobile.replace(/\D/g, "");
 
+            // Same country code used when sending OTP
+            const fullMobileNumber = `${countryCode}${cleanedMobile}`;
+
             const data = await loginWithOtp({
-                mobileNumber: cleanedMobile,
+                mobileNumber: fullMobileNumber,
                 otp: otpValue,
             });
+
+            // =================================================
+            // EXISTING LOGIN FLOW
+            // =================================================
 
             if (data?.user?.refApprove === "Approved") {
                 toast.success("Login successful");
@@ -529,22 +254,28 @@ const Login = () => {
                 );
             }
 
-            console.log(data,'data')
+            console.log(data, "data");
+
             window.location.href =
                 data?.user?.role === ROLES.ADMIN
                     ? "/admin/dashboard"
                     : data?.user?.refApprove === "Approved"
-                    ? "/find-ride"
-                    : "/waiting-approval";
+                        ? "/find-ride"
+                        : "/waiting-approval";
         } catch (error) {
-            console.error("Verify Login OTP Error:", error);
+            console.error(
+                "Verify Login OTP Error:",
+                error
+            );
 
             setServerError(
-                error.message || "Invalid or expired OTP"
+                error.message ||
+                "Invalid or expired OTP"
             );
 
             toast.error(
-                error.message || "Invalid or expired OTP"
+                error.message ||
+                "Invalid or expired OTP"
             );
         } finally {
             setIsVerifyingOtp(false);
@@ -583,7 +314,8 @@ const Login = () => {
                     maxWidth: 430,
                     backgroundColor: "#ffffff",
                     borderRadius: "18px",
-                    boxShadow: "0 10px 40px rgba(0,0,0,0.10)",
+                    boxShadow:
+                        "0 10px 40px rgba(0,0,0,0.10)",
                     px: isMobile ? 3 : 4,
                     py: isMobile ? 3.5 : 4.5,
                 }}
@@ -633,51 +365,100 @@ const Login = () => {
                     Login securely using your mobile number
                 </Typography>
 
-                {/* MOBILE NUMBER */}
+                {/* =====================================================
+                    MOBILE NUMBER
+                ===================================================== */}
 
-                <TextField
-                    fullWidth
-                    label="Mobile Number"
-                    placeholder="Enter 10-digit mobile number"
-                    value={mobile}
-                    disabled={otpSent}
-                    onChange={(e) => {
-                        const value = e.target.value
-                            .replace(/\D/g, "")
-                            .slice(0, 10);
-
-                        setMobile(value);
-                        setServerError("");
-                    }}
-                    InputProps={{
-                        startAdornment: (
-                            <InputAdornment position="start">
-                                <Typography
-                                    sx={{
-                                        color: "#555",
-                                        fontWeight: 500,
-                                    }}
-                                >
-                                    +91
-                                </Typography>
-                            </InputAdornment>
-                        ),
-                    }}
+                <Stack
+                    direction="row"
+                    spacing={1}
                     sx={{
+                        width: "100%",
                         mb: 2,
-                        "& .MuiOutlinedInput-root": {
-                            borderRadius: "10px",
-                        },
-                        "& .MuiOutlinedInput-root.Mui-focused fieldset": {
-                            borderColor: "#FF9933",
-                        },
-                        "& .MuiInputLabel-root.Mui-focused": {
-                            color: "#FF9933",
-                        },
                     }}
-                />
+                >
+                    {isProduction && (
+                        <TextField
+                            size="small"
+                            value="US +1"
+                            disabled
+                            sx={{
+                                width: {
+                                    xs: 105,
+                                    sm: 115,
+                                },
+                                "& .MuiInputBase-input.Mui-disabled": {
+                                    color: "#555",
+                                    WebkitTextFillColor: "#555",
+                                },
+                            }}
+                        />
+                    )}
 
-                {/* SEND OTP */}
+                    {isTesting && (
+                        <TextField
+                            select
+                            size="small"
+                            value={countryCode}
+                            disabled={otpSent}
+                            onChange={(e) => {
+                                setCountryCode(e.target.value);
+
+                                // Clear previous number when country changes
+                                setMobile("");
+
+                                // Clear OTP
+                                setOtp(["", "", "", "", "", ""]);
+
+                                setServerError("");
+                            }}
+                            sx={{
+                                width: {
+                                    xs: 105,
+                                    sm: 115,
+                                },
+                            }}
+                        >
+                            <MenuItem value="+91">
+                                🇮🇳 +91
+                            </MenuItem>
+
+                            <MenuItem value="+1">
+                                🇺🇸 +1
+                            </MenuItem>
+                        </TextField>
+                    )}
+
+                    <TextField
+                        fullWidth
+                        value={mobile}
+                        type="text"
+                        inputMode="numeric"
+                        disabled={otpSent}
+                        onChange={(e) => {
+                            const value = e.target.value
+                                .replace(/\D/g, "")
+                                .slice(0, 10);
+
+                            setMobile(value);
+                            setServerError("");
+                        }}
+                        size="small"
+                        placeholder="Enter mobile number"
+                        InputProps={{
+                            sx: {
+                                fontSize: {
+                                    xs: "0.75rem",
+                                    sm: "0.85rem",
+                                },
+                            },
+                        }}
+                    />
+                </Stack>
+
+                {/* =====================================================
+                    SEND OTP
+                ===================================================== */}
 
                 {!otpSent && (
                     <Button
@@ -692,16 +473,22 @@ const Login = () => {
                             fontWeight: 700,
                             fontSize: "15px",
                             textTransform: "none",
+
                             "&:hover": {
-                                backgroundColor: "#e88920",
+                                backgroundColor:
+                                    "#e88920",
                             },
                         }}
                     >
-                        {isSendingOtp ? "Sending OTP..." : "Send OTP"}
+                        {isSendingOtp
+                            ? "Sending OTP..."
+                            : "Send OTP"}
                     </Button>
                 )}
 
-                {/* OTP */}
+                {/* =====================================================
+                    OTP
+                ===================================================== */}
 
                 {otpSent && (
                     <Box sx={{ mt: 1 }}>
@@ -733,7 +520,7 @@ const Login = () => {
                                     mt: 0.3,
                                 }}
                             >
-                                +91 {mobile}
+                                {countryCode} {mobile}
                             </Typography>
                         </Box>
 
@@ -763,7 +550,8 @@ const Login = () => {
                                     key={index}
                                     value={digit}
                                     inputRef={(element) => {
-                                        otpRefs.current[index] = element;
+                                        otpRefs.current[index] =
+                                            element;
                                     }}
                                     onChange={(e) =>
                                         handleOtpChange(
@@ -772,7 +560,10 @@ const Login = () => {
                                         )
                                     }
                                     onKeyDown={(e) =>
-                                        handleOtpKeyDown(index, e)
+                                        handleOtpKeyDown(
+                                            index,
+                                            e
+                                        )
                                     }
                                     inputProps={{
                                         maxLength: 1,
@@ -783,13 +574,22 @@ const Login = () => {
                                                 : "off",
                                     }}
                                     sx={{
-                                        width: isMobile ? 43 : 50,
-                                        "& .MuiOutlinedInput-root": {
-                                            height: isMobile ? 50 : 56,
-                                            borderRadius: "10px",
+                                        width: isMobile
+                                            ? 43
+                                            : 50,
+
+                                        "& .MuiOutlinedInput-root":
+                                        {
+                                            height: isMobile
+                                                ? 50
+                                                : 56,
+                                            borderRadius:
+                                                "10px",
                                         },
+
                                         "& input": {
-                                            textAlign: "center",
+                                            textAlign:
+                                                "center",
                                             fontSize: "21px",
                                             fontWeight: 700,
                                             padding: 0,
@@ -812,12 +612,15 @@ const Login = () => {
                             sx={{
                                 height: 48,
                                 borderRadius: "10px",
-                                backgroundColor: "#FF9933",
+                                backgroundColor:
+                                    "#FF9933",
                                 fontWeight: 700,
                                 fontSize: "15px",
                                 textTransform: "none",
+
                                 "&:hover": {
-                                    backgroundColor: "#e88920",
+                                    backgroundColor:
+                                        "#e88920",
                                 },
                             }}
                         >
@@ -844,7 +647,9 @@ const Login = () => {
                     </Box>
                 )}
 
-                {/* ERROR */}
+                {/* =====================================================
+                    ERROR
+                ===================================================== */}
 
                 {serverError && (
                     <Typography
@@ -862,7 +667,9 @@ const Login = () => {
                     </Typography>
                 )}
 
-                {/* SIGN UP */}
+                {/* =====================================================
+                    SIGN UP
+                ===================================================== */}
 
                 <Box
                     sx={{
@@ -889,8 +696,11 @@ const Login = () => {
                     </Typography>
                 </Box>
 
-                {/* FORGOT PASSWORD
+                {/* =====================================================
+                    FORGOT PASSWORD
+                ===================================================== */}
 
+                {/*
                 <Box
                     sx={{
                         display: "flex",
@@ -908,7 +718,8 @@ const Login = () => {
                     >
                         Forgot Password?
                     </Link>
-                </Box> */}
+                </Box>
+                */}
             </Box>
         </Box>
     );

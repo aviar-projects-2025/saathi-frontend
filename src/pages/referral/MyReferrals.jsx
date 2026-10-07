@@ -610,10 +610,10 @@ const MyReferrals = () => {
     );
 
     const isProduction =
-        import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "Production";
+        import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "production";
 
     const isTesting =
-        import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "Testing";
+        import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "testing";
 
     const getUser = () => {
         try {
@@ -1049,29 +1049,29 @@ const MyReferrals = () => {
             ) {
 
 
-                const response =
-                    await axios.post(
-                        `${Api}/referrals/send`,
-                        {
+                // const response =
+                //     await axios.post(
+                //         `${Api}/referrals/send`,
+                //         {
 
-                            mobile_number:
-                                fullMobileNumber,
+                //             mobile_number:
+                //                 fullMobileNumber,
 
-                            shareLink,
-                            referrerName: `${user.firstName} ${user.lastName}`,
-                            referrerId:
-                                user?.referralCode,
-                        },
-                        {
-                            withCredentials:
-                                true,
-                        }
-                    );
+                //             shareLink,
+                //             referrerName: `${user.firstName} ${user.lastName}`,
+                //             referrerId:
+                //                 user?.referralCode,
+                //         },
+                //         {
+                //             withCredentials:
+                //                 true,
+                //         }
+                //     );
 
-                console.log(
-                    "Referral SMS response:",
-                    response.data
-                );
+                // console.log(
+                //     "Referral SMS response:",
+                //     response.data
+                // );
 
                 alert(
                     `Referral link sent successfully to ${fullMobileNumber}`
