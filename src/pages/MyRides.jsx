@@ -662,7 +662,7 @@ function RideCard({
       if (status === "Waiting") {
 
         setStartRideLoading(true);
-        
+
         const response = await axios.patch(
           `${Api}/rides/edit/${rideId}`,
           {
@@ -1759,21 +1759,92 @@ const MyRides = () => {
           </Tabs>
         </Box>
 
-        {/* <Box sx={{ flex: 1, minWidth: 0, overflowY: { xs: "auto", sm: "visible" }, overflowX: "hidden", px: { xs: 0.5, sm: 0 }, pt: 1.5, pb: { xs: 3, sm: 0 }, "&::-webkit-scrollbar": { width: "4px" }, "&::-webkit-scrollbar-track": { bgcolor: "transparent" }, "&::-webkit-scrollbar-thumb": { bgcolor: "divider", borderRadius: "4px" } }}>
-          {(initialLoading && active.key === "current" && !activeData.loaded) || (activeData.loading && !activeData.loaded) ? (
-            <Box sx={{ width: "100%", mt: "5rem", display: "flex", justifyContent: "center" }}><CircularProgress size={50} sx={{ color: "#FF9933" }} /></Box>
+        <Box
+          sx={{
+            flex: 1,
+            minWidth: 0,
+            width: "100%",
+            maxWidth: "100%",
+            boxSizing: "border-box",
+            overflowY: "visible",
+            overflowX: "hidden",
+            px: { xs: 0, sm: 0 },
+            pt: { xs: 1, sm: 1.5 },
+            pb: { xs: 3, sm: 0 },
+            "&::-webkit-scrollbar": {
+              width: "4px",
+            },
+            "&::-webkit-scrollbar-track": {
+              bgcolor: "transparent",
+            },
+            "&::-webkit-scrollbar-thumb": {
+              bgcolor: "divider",
+              borderRadius: "4px",
+            },
+          }}
+        >
+          {(initialLoading && active.key === "current" && !activeData.loaded) ||
+            (activeData.loading && !activeData.loaded) ? (
+            <Box
+              sx={{
+                width: "100%",
+                mt: "5rem",
+                display: "flex",
+                justifyContent: "center",
+              }}
+            >
+              <CircularProgress
+                size={50}
+                sx={{ color: "#FF9933" }}
+              />
+            </Box>
           ) : activeData.rides.length === 0 && !activeData.loading ? (
-            <EmptyState message1={active.empty1} message2={active.empty2} />
+            <EmptyState
+              message1={active.empty1}
+              message2={active.empty2}
+            />
           ) : (
             <>
               {renderList(activeData.rides)}
-              <Box ref={sentinelRef} sx={{ minHeight: activeData.hasMore ? 80 : 24, display: "flex", alignItems: "center", justifyContent: "center", py: 1 }}>
-                {activeData.loading && <CircularProgress size={28} sx={{ color: "#FF9933" }} />}
-                {!activeData.loading && !activeData.hasMore && activeData.rides.length > 0 && <Typography sx={{ fontSize: { xs: "0.7rem", sm: "0.78rem" }, color: "text.secondary", py: 1 }}>No more rides</Typography>}
+
+              <Box
+                ref={sentinelRef}
+                sx={{
+                  width: "100%",
+                  minHeight: activeData.hasMore ? 80 : 24,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  py: 1,
+                }}
+              >
+                {activeData.loading && (
+                  <CircularProgress
+                    size={28}
+                    sx={{ color: "#FF9933" }}
+                  />
+                )}
+
+                {!activeData.loading &&
+                  !activeData.hasMore &&
+                  activeData.rides.length > 0 && (
+                    <Typography
+                      sx={{
+                        fontSize: {
+                          xs: "0.7rem",
+                          sm: "0.78rem",
+                        },
+                        color: "text.secondary",
+                        py: 1,
+                      }}
+                    >
+                      No more rides
+                    </Typography>
+                  )}
               </Box>
             </>
           )}
-        </Box> */}
+        </Box>
         <h1>Helklo</h1>
         <h1>Helklo</h1>
         <h1>Helklo</h1>
