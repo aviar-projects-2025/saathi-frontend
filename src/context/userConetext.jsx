@@ -16,6 +16,7 @@ export const UserProvider = ({ children }) => {
         "lastName",
         "bio",
         "email",
+        "language",
         "mobile",
         "profileImage",
         "gender",
