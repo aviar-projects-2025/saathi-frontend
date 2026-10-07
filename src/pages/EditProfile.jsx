@@ -182,6 +182,14 @@ const EditProfile = ({ open, onClose }) => {
         startY: 0,
         startOffset: { x: 0, y: 0 },
     });
+    const [changeMobile, setChangeMobile] = useState(false);
+    const [newMobile, setNewMobile] = useState("");
+    const [otp, setOtp] = useState("");
+    const [otpSent, setOtpSent] = useState(false);
+    const [mobileLoading, setMobileLoading] = useState(false);
+    const [otpLoading, setOtpLoading] = useState(false);
+    const [mobileError, setMobileError] = useState("");
+    const token = localStorage.getItem("token");
 
     useEffect(() => {
         if (currentUser) {
@@ -199,6 +207,97 @@ const EditProfile = ({ open, onClose }) => {
 
     const handleCloseProfile = () => {
         onClose?.();
+    };
+
+
+    const sendMobileOtp = async () => {
+        if (!/^\+?\d{10,15}$/.test(newMobile)) {
+            setMobileError("Enter a valid mobile number");
+            return;
+        }
+
+        if (newMobile === formData.mobile) {
+            setMobileError("Enter a different mobile number");
+            return;
+        }
+
+        try {
+            setMobileLoading(true);
+            setMobileError("");
+
+            await axios.post(
+                `${Api}/auth/send-change-mobile-otp`,
+                {
+                    mobileNumber: newMobile,
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            setOtpSent(true);
+            toast.success("OTP sent successfully");
+        } catch (error) {
+            setMobileError(
+                error?.response?.data?.message ||
+                "Failed to send OTP"
+            );
+        } finally {
+            setMobileLoading(false);
+        }
+    };
+
+
+    const verifyMobileOtp = async () => {
+        if (!otp || otp.length !== 6) {
+            setMobileError("Enter a valid 6-digit OTP");
+            return;
+        }
+
+        try {
+            setOtpLoading(true);
+            setMobileError("");
+
+            const response = await axios.post(
+                `${Api}/auth/verify-change-mobile-otp`,
+                {
+                    mobileNumber: newMobile,
+                    otp,
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            setFormData((prev) => ({
+                ...prev,
+                mobile: response?.data?.mobile || newMobile,
+            }));
+
+            setChangeMobile(false);
+            setOtpSent(false);
+            setNewMobile("");
+            setOtp("");
+
+            // Refresh user data
+            await getuserData();
+
+            toast.success(
+                response?.data?.message ||
+                "Mobile number updated successfully"
+            );
+        } catch (error) {
+            setMobileError(
+                error?.response?.data?.message ||
+                "Invalid or expired OTP"
+            );
+        } finally {
+            setOtpLoading(false);
+        }
     };
 
     const getBaseScale = (w, h) =>
@@ -458,7 +557,7 @@ const EditProfile = ({ open, onClose }) => {
             const data = {
                 firstName: formData.firstName,
                 lastName: formData.lastName,
-                mobile: formData.mobile,
+                mobile: currentUser?.mobile,
                 dob: formData.dob ? formData.dob.format("YYYY-MM-DD") : "",
                 gender: formData.gender,
                 bio: formData.bio,
@@ -825,52 +924,229 @@ const EditProfile = ({ open, onClose }) => {
                                 />
                             </Stack>
 
-                            {/* Email / Mobile */}
-                            <Stack
-                                direction={{
-                                    xs: "column",
-                                    sm: "row",
-                                }}
-                                spacing={{
-                                    xs: 1.5,
-                                    sm: 2,
-                                }}
-                                sx={{
-                                    width: "100%",
-                                }}
-                            >
-
-
-                                <TextField
-                                    label="Mobile Number"
-                                    name="mobile"
-                                    disabled
-                                    size="small"
-                                    fullWidth
-                                    value={formData?.mobile || ""}
-                                    onChange={(e) => {
-                                        const value = e.target.value
-                                            .replace(/[^\d+]/g, "")
-                                            .replace(/(?!^)\+/g, "")
-                                            .slice(0, 16);
-
-                                        handleChange({
-                                            target: {
-                                                name: "mobile",
-                                                value,
-                                            },
-                                        });
+                            {/* Mobile Number */}
+                            <Box>
+                                <Typography
+                                    sx={{
+                                        fontSize: "0.8rem",
+                                        fontWeight: 600,
+                                        color: "text.secondary",
+                                        mb: 0.7,
                                     }}
-                                    error={!!errors.mobile}
-                                    helperText={errors.mobile}
-                                    inputProps={{
-                                        maxLength: 16,
-                                    }}
-                                    InputProps={fieldFont}
-                                    InputLabelProps={fieldFont}
-                                />
-                            </Stack>
+                                >
+                                    Mobile Number
+                                </Typography>
 
+                                {!changeMobile ? (
+                                    <Box
+                                        sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "space-between",
+                                            gap: 1,
+                                            px: 1.5,
+                                            py: 1,
+                                            border: "1px solid #E0E0E0",
+                                            borderRadius: 1.5,
+                                            bgcolor: "#FAFAFA",
+                                        }}
+                                    >
+                                        <Typography
+                                            sx={{
+                                                fontSize: "0.9rem",
+                                                color: "text.primary",
+                                                fontWeight: 500,
+                                            }}
+                                        >
+                                            {formData?.mobile || "No mobile number"}
+                                        </Typography>
+
+                                        <Button
+                                            size="small"
+                                            onClick={() => {
+                                                setChangeMobile(true);
+                                                setMobileError("");
+                                            }}
+                                            sx={{
+                                                minWidth: "auto",
+                                                px: 1,
+                                                textTransform: "none",
+                                                color: "#E8650A",
+                                                fontSize: "0.8rem",
+                                                fontWeight: 600,
+                                            }}
+                                        >
+                                            Change
+                                        </Button>
+                                    </Box>
+                                ) : (
+                                    <Box
+                                        sx={{
+                                            border: "1px solid #E8E8E8",
+                                            borderRadius: 2,
+                                            p: 1.5,
+                                            bgcolor: "#FFFDFB",
+                                        }}
+                                    >
+                                        {!otpSent ? (
+                                            <>
+                                                <Typography
+                                                    sx={{
+                                                        fontSize: "0.8rem",
+                                                        color: "text.secondary",
+                                                        mb: 1,
+                                                    }}
+                                                >
+                                                    Enter your new mobile number
+                                                </Typography>
+
+                                                <TextField
+                                                    fullWidth
+                                                    label="New Mobile Number"
+                                                    size="small"
+                                                    value={newMobile}
+                                                    onChange={(e) => {
+                                                        setNewMobile(
+                                                            e.target.value
+                                                                .replace(/[^\d+]/g, "")
+                                                                .replace(/(?!^)\+/g, "")
+                                                        );
+                                                        setMobileError("");
+                                                    }}
+                                                    error={!!mobileError}
+                                                    helperText={mobileError}
+                                                    InputProps={fieldFont}
+                                                    InputLabelProps={fieldFont}
+                                                />
+
+                                                <Stack
+                                                    direction="row"
+                                                    spacing={1}
+                                                    sx={{ mt: 1.2 }}
+                                                >
+                                                    <Button
+                                                        variant="contained"
+                                                        size="small"
+                                                        onClick={sendMobileOtp}
+                                                        disabled={mobileLoading}
+                                                        sx={{
+                                                            px: 2,
+                                                            textTransform: "none",
+                                                            bgcolor: "#E8650A",
+                                                            "&:hover": {
+                                                                bgcolor: "#D95D08",
+                                                            },
+                                                        }}
+                                                    >
+                                                        {mobileLoading ? "Sending..." : "Send OTP"}
+                                                    </Button>
+
+                                                    <Button
+                                                        size="small"
+                                                        onClick={() => {
+                                                            setChangeMobile(false);
+                                                            setNewMobile("");
+                                                            setMobileError("");
+                                                        }}
+                                                        sx={{
+                                                            px: 1.5,
+                                                            textTransform: "none",
+                                                            color: "text.secondary",
+                                                        }}
+                                                    >
+                                                        Cancel
+                                                    </Button>
+                                                </Stack>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Box
+                                                    sx={{
+                                                        mb: 1.2,
+                                                        p: 1,
+                                                        borderRadius: 1.5,
+                                                        bgcolor: "#FFF5EC",
+                                                    }}
+                                                >
+                                                    <Typography
+                                                        sx={{
+                                                            fontSize: "0.78rem",
+                                                            color: "#8A4B20",
+                                                        }}
+                                                    >
+                                                        OTP sent to{" "}
+                                                        <strong>{newMobile}</strong>
+                                                    </Typography>
+                                                </Box>
+
+                                                <TextField
+                                                    fullWidth
+                                                    label="Enter OTP"
+                                                    size="small"
+                                                    value={otp}
+                                                    onChange={(e) => {
+                                                        setOtp(
+                                                            e.target.value
+                                                                .replace(/\D/g, "")
+                                                                .slice(0, 6)
+                                                        );
+                                                        setMobileError("");
+                                                    }}
+                                                    error={!!mobileError}
+                                                    helperText={mobileError}
+                                                    inputProps={{
+                                                        maxLength: 6,
+                                                        inputMode: "numeric",
+                                                    }}
+                                                    InputProps={fieldFont}
+                                                    InputLabelProps={fieldFont}
+                                                />
+
+                                                <Stack
+                                                    direction="row"
+                                                    spacing={1}
+                                                    sx={{ mt: 1.2 }}
+                                                >
+                                                    <Button
+                                                        variant="contained"
+                                                        size="small"
+                                                        onClick={verifyMobileOtp}
+                                                        disabled={otpLoading}
+                                                        sx={{
+                                                            px: 2,
+                                                            textTransform: "none",
+                                                            bgcolor: "#E8650A",
+                                                            "&:hover": {
+                                                                bgcolor: "#D95D08",
+                                                            },
+                                                        }}
+                                                    >
+                                                        {otpLoading
+                                                            ? "Verifying..."
+                                                            : "Verify OTP"}
+                                                    </Button>
+
+                                                    <Button
+                                                        size="small"
+                                                        onClick={() => {
+                                                            setOtpSent(false);
+                                                            setOtp("");
+                                                            setMobileError("");
+                                                        }}
+                                                        sx={{
+                                                            px: 1.5,
+                                                            textTransform: "none",
+                                                            color: "#E8650A",
+                                                        }}
+                                                    >
+                                                        Change Number
+                                                    </Button>
+                                                </Stack>
+                                            </>
+                                        )}
+                                    </Box>
+                                )}
+                            </Box>
 
                             <Stack
                                 direction={{

@@ -1766,7 +1766,9 @@ const MyRides = () => {
             <EmptyState message1={active.empty1} message2={active.empty2} />
           ) : (
             <>
-              {renderList(activeData.rides)}
+              {/* {renderList(activeData.rides)} */}
+              <h1>Hello</h1>
+              <h1>Hello</h1><h1>Hello</h1><h1>Hello</h1><h1>Hello</h1><h1>Hello</h1><h1>Hello</h1><h1>Hello</h1><h1>Hello</h1>
               <Box ref={sentinelRef} sx={{ minHeight: activeData.hasMore ? 80 : 24, display: "flex", alignItems: "center", justifyContent: "center", py: 1 }}>
                 {activeData.loading && <CircularProgress size={28} sx={{ color: "#FF9933" }} />}
                 {!activeData.loading && !activeData.hasMore && activeData.rides.length > 0 && <Typography sx={{ fontSize: { xs: "0.7rem", sm: "0.78rem" }, color: "text.secondary", py: 1 }}>No more rides</Typography>}
