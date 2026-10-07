@@ -1753,13 +1753,13 @@ const MyRides = () => {
           <Typography variant="h5" fontWeight={800} sx={{ fontSize: { xs: "1.1rem", sm: "1.35rem", md: "1.5rem" } }}>My Rides</Typography>
         </Box>
 
-        {/* <Box sx={{ width: "100%", minWidth: 0, borderBottom: "1px solid", borderColor: "divider", flexShrink: 0, position: "sticky", top: -3, zIndex: 10, bgcolor: "background.paper" }}>
+        <Box sx={{ width: "100%", minWidth: 0, borderBottom: "1px solid", borderColor: "divider", flexShrink: 0, position: "sticky", top: -3, zIndex: 10, bgcolor: "background.paper" }}>
           <Tabs value={tab} onChange={handleTabChange} variant="fullWidth" sx={{ width: "100%", minHeight: { xs: 40, sm: 48, md: 50 }, "& .MuiTabs-flexContainer": { width: "100%" }, "& .MuiTab-root": { minWidth: 0, flex: 1, padding: { xs: "4px 2px", sm: "8px 12px", md: "12px 16px" }, fontSize: { xs: "0.68rem", sm: "0.78rem", md: "0.82rem" }, fontWeight: 600, textTransform: "none", minHeight: { xs: 36, sm: 44, md: 48 }, lineHeight: 1.1, color: "#666", "&.Mui-selected": { color: "#FF9933" } }, "& .MuiTabs-indicator": { height: 3, backgroundColor: "#FF9933" } }}>
             {tabs.map(item => <Tab key={item.key} label={<Typography component="span" noWrap sx={{ fontSize: { xs: "0.62rem", sm: "0.72rem", md: "0.8rem" }, fontWeight: "bold", lineHeight: 1.5 }}>{`${item.label}`}</Typography>} />)}
           </Tabs>
         </Box>
 
-        <Box sx={{ flex: 1, minWidth: 0, overflowY: { xs: "auto", sm: "visible" }, overflowX: "hidden", px: { xs: 0.5, sm: 0 }, pt: 1.5, pb: { xs: 3, sm: 0 }, "&::-webkit-scrollbar": { width: "4px" }, "&::-webkit-scrollbar-track": { bgcolor: "transparent" }, "&::-webkit-scrollbar-thumb": { bgcolor: "divider", borderRadius: "4px" } }}>
+        {/* <Box sx={{ flex: 1, minWidth: 0, overflowY: { xs: "auto", sm: "visible" }, overflowX: "hidden", px: { xs: 0.5, sm: 0 }, pt: 1.5, pb: { xs: 3, sm: 0 }, "&::-webkit-scrollbar": { width: "4px" }, "&::-webkit-scrollbar-track": { bgcolor: "transparent" }, "&::-webkit-scrollbar-thumb": { bgcolor: "divider", borderRadius: "4px" } }}>
           {(initialLoading && active.key === "current" && !activeData.loaded) || (activeData.loading && !activeData.loaded) ? (
             <Box sx={{ width: "100%", mt: "5rem", display: "flex", justifyContent: "center" }}><CircularProgress size={50} sx={{ color: "#FF9933" }} /></Box>
           ) : activeData.rides.length === 0 && !activeData.loading ? (
