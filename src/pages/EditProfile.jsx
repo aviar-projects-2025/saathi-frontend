@@ -9,6 +9,12 @@ import {
     useTheme,
     Modal,
     TextField,
+    FormControl,
+    Select,
+    InputLabel,
+    Chip,
+    FormHelperText,
+    FormControlLabel,
     Menu,
     ListItemText,
     MenuItem,
@@ -40,16 +46,40 @@ const CustomPopper = (props) => {
                 {
                     name: "offset",
                     options: {
-                        offset: [0, 8],
+                        offset: [0, 4],
                     },
                 },
             ]}
             sx={{
-                width: "50% !important",
-                maxWidth: "none !important",
+                zIndex: 1500,
+
                 "& .MuiPaper-root": {
-                    borderRadius: "8px",
-                    boxShadow: "0px 4px 15px rgba(0,0,0,0.15)",
+                    width: "100%",
+                    borderRadius: 0,
+                    boxShadow: "0px 4px 12px rgba(0,0,0,0.15)",
+                },
+
+                "& .MuiAutocomplete-listbox": {
+                    padding: 0,
+                    maxHeight: "500px",
+                    overflowY: "auto",
+                },
+
+                "& .MuiAutocomplete-option": {
+                    minHeight: "50px",
+                    padding: "8px 22px !important",
+                    fontSize: "23px",
+                    display: "flex",
+                    alignItems: "center",
+                    borderRadius: 0,
+
+                    "&[aria-selected='true']": {
+                        backgroundColor: "#eaf3fb !important",
+                    },
+
+                    "&.Mui-focused": {
+                        backgroundColor: "#eaf3fb !important",
+                    },
                 },
             }}
         />
@@ -67,7 +97,11 @@ const fieldFont = {
 };
 
 const EXCLUDED = ["AS", "FM", "GU", "MH", "MP", "PW", "PR", "VI", "AE", "AP"];
-
+const tfSx = {
+    "& .MuiInputBase-input": { fontSize: { xs: "0.8rem", sm: "0.9rem" } },
+};
+const selectSx = { fontSize: { xs: "0.8rem", sm: "0.9rem" } };
+const ilSx = { fontSize: { xs: "0.8rem", sm: "0.9rem" } };
 // 1. Every city paired with its state (must come first)
 const OPTIONS = US_Cities.filter((s) => !EXCLUDED.includes(s.abbr)).flatMap((s) =>
     s.cities.map((city) => ({
@@ -104,6 +138,7 @@ const buildFormData = (user) => ({
     firstName: user?.firstName || "",
     lastName: user?.lastName || "",
     // email: user?.email || "",
+    language: user?.language || "",
     mobile: user?.mobile || "",
     dob: user?.dob ? dayjs(user.dob) : null,
     gender: user?.gender || "",
@@ -249,7 +284,7 @@ const EditProfile = ({ open, onClose }) => {
         }
     };
 
-
+    const [otherLanguage, setOtherLanguage] = useState("");
     const verifyMobileOtp = async () => {
         if (!otp || otp.length !== 6) {
             setMobileError("Enter a valid 6-digit OTP");
@@ -488,7 +523,32 @@ const EditProfile = ({ open, onClose }) => {
         galleryFileRef.current?.click();
     };
 
+    const update = (key, val) => {
+        setFormData((prev) => ({ ...prev, [key]: val }));
+        setErrors((prev) => {
+            const newErrors = { ...prev };
 
+            if (val && String(val).trim() !== "") {
+                delete newErrors[key];
+            }
+
+            return newErrors;
+        });
+    };
+
+    const languages = [
+        "English",
+        "Tamil",
+        "Hindi",
+        "Bengali",
+        "Telugu",
+        "Marathi",
+        "Gujarati",
+        "Kannada",
+        "Malayalam",
+        "Punjabi",
+  
+    ];
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -520,7 +580,7 @@ const EditProfile = ({ open, onClose }) => {
             setValue(null); setIsOtherCity(false); setOtherCityState("");
         }
     };
-
+    const [languageOpen, setLanguageOpen] = useState(false);
     const handleCitiesChange = (event, newValue) => {
         const other = newValue?.abbr === "OTHER";
         setValue(newValue);
@@ -561,6 +621,7 @@ const EditProfile = ({ open, onClose }) => {
                 dob: formData.dob ? formData.dob.format("YYYY-MM-DD") : "",
                 gender: formData.gender,
                 bio: formData.bio,
+                language: formData?.language,
                 city: formData.city,
                 zipcode: formData.zipcode,
 
@@ -1147,7 +1208,173 @@ const EditProfile = ({ open, onClose }) => {
                                     </Box>
                                 )}
                             </Box>
+                            <FormControl fullWidth>
+                                <InputLabel sx={ilSx}>
+                                  Languages I Speak
+                                </InputLabel>
 
+                                <Select
+                              
+                                    multiple
+                                    open={languageOpen}
+                                    onOpen={() => setLanguageOpen(true)}
+                                    onClose={() => setLanguageOpen(false)}
+                                    value={
+                                        Array.isArray(formData?.language)
+                                            ? formData.language
+                                            : []
+                                    }
+                                     label="Languages I Speak"
+                                    onChange={(e) => {
+                                        const value = e.target.value;
+
+                                        update(
+                                            "language",
+                                            typeof value === "string"
+                                                ? value.split(",")
+                                                : value
+                                        );
+                                    }}
+                                    sx={selectSx}
+                                    renderValue={(selected) => (
+                                        <Box
+                                            sx={{
+                                                display: "flex",
+                                                flexWrap: "wrap",
+                                                gap: 0.5,
+                                                pr: 1,
+                                            }}
+                                        >
+                                            {selected.map((value) => (
+                                                <Chip
+                                                    key={value}
+                                                    label={value}
+                                                    size="small"
+                                                    onMouseDown={(e) => {
+                                                        e.stopPropagation();
+                                                    }}
+                                                    onDelete={(e) => {
+                                                        e.stopPropagation();
+
+                                                        update(
+                                                            "language",
+                                                            selected.filter(
+                                                                (item) => item !== value
+                                                            )
+                                                        );
+
+                                                        // Clear custom language
+                                                        if (value === otherLanguage) {
+                                                            setOtherLanguage("");
+                                                        }
+                                                    }}
+                                                />
+                                            ))}
+                                        </Box>
+                                    )}
+                                    MenuProps={{
+                                        disablePortal: true,
+                                        PaperProps: {
+                                            sx: {
+                                                maxHeight: 300,
+                                            },
+                                        },
+                                        MenuListProps: {
+                                            sx: {
+                                                pb: 0,
+                                            },
+                                        },
+                                    }}
+                                >
+                                    {languages.map((lang) => (
+                                        <MenuItem
+                                            key={lang}
+                                            value={lang}
+                                        >
+                                            {lang}
+                                        </MenuItem>
+                                    ))}
+
+                                    {/* Select Button */}
+                                    <Box
+                                        sx={{
+                                            position: "sticky",
+                                            bottom: 0,
+                                            backgroundColor: "#fff",
+                                            borderTop: "1px solid #e0e0e0",
+                                            p: 1,
+                                            display: "flex",
+                                            justifyContent: "flex-end",
+                                            zIndex: 2,
+                                        }}
+                                        onMouseDown={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                        }}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                        }}
+                                    >
+                                        <Button
+                                            variant="contained"
+                                            size="small"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                setLanguageOpen(false);
+                                            }}
+                                            sx={{
+                                                textTransform: "none",
+                                                borderRadius: 3,
+                                                minWidth: 80,
+                                                color: "#fff",
+                                                mt: 0.5,
+                                                bgcolor: "#E8650A",
+                                                "&:hover": {
+                                                    bgcolor: "#D95D08",
+                                                },
+                                            }}
+                                        >
+                                            Select
+                                        </Button>
+                                    </Box>
+                                </Select>
+                            </FormControl>
+                            {/* {formData?.language?.includes("Other") && (
+                                <TextField
+                                    fullWidth
+                                    size="small"
+                                    label="Other Language"
+                                    value={otherLanguage}
+                                    onChange={(e) => {
+                                        const value = e.target.value;
+
+                                        setOtherLanguage(value);
+
+                                        const existingLanguages = (
+                                            formData?.language || []
+                                        ).filter(
+                                            (lang) =>
+                                                languages.includes(lang) ||
+                                                lang === "Other"
+                                        );
+
+                                        if (value.trim()) {
+                                            update("language", [
+                                                ...existingLanguages.filter(
+                                                    (lang) => lang !== "Other"
+                                                ),
+                                                value.trim(),
+                                            ]);
+                                        }
+                                    }}
+                                    sx={{
+                                        mt: 1.5,
+                                    }}
+                                    InputProps={fieldFont}
+                                    InputLabelProps={fieldFont}
+                                />
+                            )} */}
                             <Stack
                                 direction={{
                                     xs: "column",
@@ -1267,7 +1494,7 @@ const EditProfile = ({ open, onClose }) => {
                                 slotProps={{
                                     listbox: {
                                         sx: {
-                                            maxHeight: "300px",
+                                            maxHeight: "200px",
 
                                             "& .MuiAutocomplete-option": {
                                                 padding: "12px 20px",

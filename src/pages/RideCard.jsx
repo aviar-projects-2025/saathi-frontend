@@ -89,7 +89,7 @@ export default function RideCard({ ride }) {
   const isTab = useMediaQuery(theme.breakpoints.down("sm"));
 
   const TOASTS = ToastConfig();
-
+  console.log("currrrrr", currentUser.language)
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null);
 
@@ -513,10 +513,15 @@ export default function RideCard({ ride }) {
           >
             {/* Avatar + name + verified */}
             <Box
-              display="flex"
-              alignItems="center"
-              gap={{ xs: 1, sm: 1.5 }}
-              sx={{ minWidth: 0, flex: 1 }}
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: { xs: 0.7, sm: 1 },
+                minWidth: 0,
+                flex: 1,
+                flexWrap: "nowrap",
+
+              }}
             >
               <Avatar
                 src={userProfile || ""}
@@ -544,30 +549,22 @@ export default function RideCard({ ride }) {
                 {`${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`}
               </Avatar>
 
-              <Box sx={{ minWidth: 0 }}>
-                <Typography
-                  fontWeight={700}
-                  sx={{
-                    fontSize: { xs: "0.8rem", sm: "0.95rem" },
-                    lineHeight: 1.2,
-                    mt: 0.5,
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                  }}
-                >
-                  {userName}
-                </Typography>
-                <Box display="flex" alignItems="center" gap={0.5}>
-                  {/* <VerifiedIcon color="success" sx={{ fontSize: { xs: 10, sm: 14 }, mt: 0.5 }} />
-                <Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: "0.6rem", sm: "0.7rem" } }}>
-                  Verified User
-                </Typography> */}
-                </Box>
-              </Box>
+          <Typography
+  fontWeight={700}
+  sx={{
+    fontSize: { xs: "0.8rem", sm: "0.95rem" },
+    position: "relative",
+    top: { xs: "-3px", sm: "-10px" },
+    whiteSpace: "nowrap",
+    textOverflow: "ellipsis",
+    minWidth: 0,
+    maxWidth: "100%",
+  }}
+>
+  {userName}
+</Typography>
             </Box>
-
-            {/* Mode chip */}
+    
             <Chip
               icon={
                 isFlight ? (
@@ -614,9 +611,19 @@ export default function RideCard({ ride }) {
                 },
               }}
             />
+            
           </Box>
-
-          {/* ── Card body ── */}
+    <Typography
+  fontWeight={700}
+  sx={{
+    marginLeft:  { xs: "15%", sm: "12%" },
+    fontSize: { xs: "0.7rem", sm: "0.6rem" },
+    position: "relative",
+    top: { xs: "-18px", sm: "-30px" },
+  }}
+>
+  {currentUser.language?.join(", ")}
+</Typography>
           <Card
             elevation={0}
             sx={{
