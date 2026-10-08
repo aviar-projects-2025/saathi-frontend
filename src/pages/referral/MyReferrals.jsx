@@ -49,7 +49,11 @@ const pillBtn = {
     color: SAFFRON,
     fontWeight: 600,
 };
+const isProduction =
+    import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "production";
 
+const isTesting =
+    import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "testing";
 const ReferralCard = memo(({
     user: u,
     showActions = false,
@@ -123,8 +127,8 @@ const ReferralCard = memo(({
 
         const digits = String(phone).replace(/\D/g, "");
         const last4 = digits.slice(-4);
-
-        return `+1 (XXX) XXX-${last4}`;
+        const phoneCode = isTesting ? `+91 (XXX) XXX-${last4}` : `+1 (XXX) XXX-${last4}`;
+        return phoneCode;
     };
 
     const profileImage =
@@ -254,6 +258,7 @@ const ReferralCard = memo(({
                             }}
                         >
                             {formatMaskedPhone(users?.mobile || users?.mobileNumber)}
+                            {console.log("formatMaskedPhone", formatMaskedPhone)}
                         </Typography>
                     </Box>
                 </Stack>
@@ -609,11 +614,7 @@ const MyReferrals = () => {
         theme.breakpoints.down("sm")
     );
 
-    const isProduction =
-        import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "production";
 
-    const isTesting =
-        import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "testing";
 
     const getUser = () => {
         try {
@@ -660,8 +661,6 @@ const MyReferrals = () => {
 
     const environment =
         import.meta.env.VITE_COUNTRY_CODE_VALIDATION;
-
-    console.log(environment);
 
     const handleCopy = (value) => {
         if (navigator.clipboard) {
@@ -714,10 +713,6 @@ const MyReferrals = () => {
             );
         }
     };
-
-    // ==========================================
-    // GET REFERRALS
-    // ==========================================
 
     const getReferrals = async () => {
         if (!user?.id) {
@@ -1068,10 +1063,7 @@ const MyReferrals = () => {
                         }
                     );
 
-                console.log(
-                    "Referral SMS response:",
-                    response.data
-                );
+
 
                 alert(
                     `Referral link sent successfully to ${fullMobileNumber}`
