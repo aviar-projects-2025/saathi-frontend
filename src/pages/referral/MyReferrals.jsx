@@ -258,7 +258,7 @@ const ReferralCard = memo(({
                             }}
                         >
                             {formatMaskedPhone(users?.mobile || users?.mobileNumber)}
-                            {console.log("formatMaskedPhone", formatMaskedPhone)}
+
                         </Typography>
                     </Box>
                 </Stack>
