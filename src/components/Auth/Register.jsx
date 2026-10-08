@@ -261,7 +261,6 @@ const Register = () => {
         isMobileVerified: true,
       };
 
-      console.log("Api")
       const res = await axios.post(`${Api}/users/`, payload);
 
 
