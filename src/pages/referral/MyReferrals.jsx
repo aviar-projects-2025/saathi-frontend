@@ -610,10 +610,10 @@ const MyReferrals = () => {
     );
 
     const isProduction =
-        import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "Production";
+        import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "production";
 
     const isTesting =
-        import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "Testing";
+        import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "testing";
 
     const getUser = () => {
         try {
