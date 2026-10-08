@@ -547,7 +547,7 @@ const EditProfile = ({ open, onClose }) => {
         "Kannada",
         "Malayalam",
         "Punjabi",
-  
+
     ];
 
     const handleChange = (e) => {
@@ -618,7 +618,9 @@ const EditProfile = ({ open, onClose }) => {
                 firstName: formData.firstName,
                 lastName: formData.lastName,
                 mobile: currentUser?.mobile,
-                dob: formData.dob ? formData.dob.format("YYYY-MM-DD") : "",
+                dob: formData.dob
+                    ? formData.dob.format("YYYY-MM-DD")
+                    : "",
                 gender: formData.gender,
                 bio: formData.bio,
                 language: formData?.language,
@@ -626,8 +628,8 @@ const EditProfile = ({ open, onClose }) => {
                 zipcode: formData.zipcode,
 
                 ...(uploadedImage && {
-                    profileImage: uploadedImage?.url,
-                    profileImagePublicId: uploadedImage?.publicId,
+                    profileImage: uploadedImage.url,
+                    imagePublicId: uploadedImage.publicId,
                 }),
             };
 
@@ -984,7 +986,7 @@ const EditProfile = ({ open, onClose }) => {
                                     InputLabelProps={fieldFont}
                                 />
                             </Stack>
-            
+
                             {/* Mobile Number */}
                             <Box>
                                 <Typography
@@ -1210,11 +1212,11 @@ const EditProfile = ({ open, onClose }) => {
                             </Box>
                             <FormControl fullWidth>
                                 <InputLabel sx={ilSx}>
-                                  Languages I Speak
+                                    Languages I Speak
                                 </InputLabel>
 
                                 <Select
-                              
+
                                     multiple
                                     open={languageOpen}
                                     onOpen={() => setLanguageOpen(true)}
@@ -1224,7 +1226,7 @@ const EditProfile = ({ open, onClose }) => {
                                             ? formData.language
                                             : []
                                     }
-                                     label="Languages I Speak"
+                                    label="Languages I Speak"
                                     onChange={(e) => {
                                         const value = e.target.value;
 
