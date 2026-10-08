@@ -1049,29 +1049,29 @@ const MyReferrals = () => {
             ) {
 
 
-                // const response =
-                //     await axios.post(
-                //         `${Api}/referrals/send`,
-                //         {
+                const response =
+                    await axios.post(
+                        `${Api}/referrals/send`,
+                        {
 
-                //             mobile_number:
-                //                 fullMobileNumber,
+                            mobile_number:
+                                fullMobileNumber,
 
-                //             shareLink,
-                //             referrerName: `${user.firstName} ${user.lastName}`,
-                //             referrerId:
-                //                 user?.referralCode,
-                //         },
-                //         {
-                //             withCredentials:
-                //                 true,
-                //         }
-                //     );
+                            shareLink,
+                            referrerName: `${user.firstName} ${user.lastName}`,
+                            referrerId:
+                                user?.referralCode,
+                        },
+                        {
+                            withCredentials:
+                                true,
+                        }
+                    );
 
-                // console.log(
-                //     "Referral SMS response:",
-                //     response.data
-                // );
+                console.log(
+                    "Referral SMS response:",
+                    response.data
+                );
 
                 alert(
                     `Referral link sent successfully to ${fullMobileNumber}`
