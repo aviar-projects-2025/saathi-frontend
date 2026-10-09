@@ -34,91 +34,76 @@ import { useNotifications } from "../../context/NotificationContext";
 import { useReferral } from "../../context/ReferralContext";
 import ToastConfig from "../../components/ToastConfig";
 import ProfileModal from "../Avatar.jsx";
+import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 
 const SAFFRON = "#E8650A";
 
-const pillBtn = {
-    textTransform: "none",
-    border: "none",
-    fontSize: {
-        xs: "0.72rem",
-        sm: "0.8rem",
-        md: "0.875rem",
-    },
-    color: SAFFRON,
-    fontWeight: 600,
-};
+const isProduction =
+    import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "production";
+
+const isTesting =
+    import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "testing";
 
 const ReferralCard = memo(({
     user: u,
     showActions = false,
+    onApprove,
+    // onDecline,
+    approveLoading = false,
+    rejectLoading = false,
 }) => {
-    const [profileModalOpen, setProfileModalOpen] =
-        useState(false);
+    const [profileModalOpen, setProfileModalOpen] = useState(false);
 
-    const [selectedProfile, setSelectedProfile] =
-        useState(null);
-    const [users, setUsers] =
-        useState(null);
+    const [selectedProfile, setSelectedProfile] = useState(null);
+    const [users, setUsers] = useState(null);
 
     const userData = {
-        firstName:
-            u?.data?.user
-                ?.firstName ||
-            u?.firstName ||
-            "",
-
-        lastName:
-            u?.data?.user?.lastName ||
-            u?.lastName ||
-            "",
-
-        email:
-            u?.data?.user?.email ||
-            u?.email ||
-            "",
-
-        id:
-            u?.data?.userId ||
-            u?._id ||
-            u?.id,
+        firstName: u?.data?.user?.firstName || u?.firstName || "",
+        lastName: u?.data?.user?.lastName || u?.lastName || "",
+        email: u?.data?.user?.email || u?.email || "",
+        id: u?.data?.userId || u?._id || u?.id,
     };
 
-    const userId =
-        userData.id;
+    const userId = userData.id;
 
-    const getUserData =
-        async () => {
-            if (!userId) return;
+    const getUserData = async () => {
+        if (!userId) return;
 
-            try {
-                const res =
-                    await axios.get(
-                        `${Api}/users/${userId}`
-                    );
+        try {
+            const res = await axios.get(`${Api}/users/${userId}`);
 
-                setUsers(
-                    res?.data?.data ||
-                    null
-                );
-            } catch (err) {
-                console.error(
-                    "Failed to fetch user data:",
-                    err
-                );
+            setUsers(res?.data?.data || null);
+        } catch (err) {
+            console.error("Failed to fetch user data:", err);
 
-                setUsers(null);
-            }
-        };
+            setUsers(null);
+        }
+    };
 
     useEffect(() => {
         getUserData();
 
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const profileImage =
-        users?.profileImage;
+    const formatMaskedPhone = (phone) => {
+        if (!phone) return "";
+
+        const digits = String(phone).replace(/\D/g, "");
+        const last4 = digits.slice(-4);
+        const phoneCode = isTesting ? `+91 (XXX) XXX-${last4}` : `+1 (XXX) XXX-${last4}`;
+        return phoneCode;
+    };
+
+    const profileImage = users?.profileImage;
+
+    const firstName = users?.firstName || userData.firstName;
+    const lastName = users?.lastName || userData.lastName;
+    const phone =
+        users?.mobile ||
+        users?.mobileNumber ||
+        u?.mobile ||
+        u?.mobileNumber ||
+        "";
 
     return (
         <Paper
@@ -131,18 +116,14 @@ const ReferralCard = memo(({
                 },
                 borderRadius: 2,
                 border: "1px solid",
-                borderColor:
-                    "divider",
+                borderColor: "divider",
 
                 "&:hover": {
-                    borderColor:
-                        "primary.light",
-                    bgcolor:
-                        "action.hover",
+                    borderColor: "primary.light",
+                    bgcolor: "action.hover",
                 },
 
-                transition:
-                    "all 0.15s ease",
+                transition: "all 0.15s ease",
             }}
         >
             <Stack
@@ -162,20 +143,14 @@ const ReferralCard = memo(({
                     }}
                 >
                     <Avatar
-                        src={
-                            profileImage
-                        }
-                        alt={`${users?.firstName || ""} ${users?.lastName ||
-                            ""
-                            }`}
+                        src={profileImage}
+                        alt={`${firstName} ${lastName}`}
                         onClick={() => {
-                            setSelectedProfile(
-                                users
-                            );
+                            if (!users) return;
 
-                            setProfileModalOpen(
-                                true
-                            );
+                            setSelectedProfile(users);
+
+                            setProfileModalOpen(true);
                         }}
                         sx={{
                             width: {
@@ -188,20 +163,17 @@ const ReferralCard = memo(({
                                 sm: 44,
                             },
 
-                            cursor: users
-                                ? "pointer"
-                                : "default",
+                            cursor: users ? "pointer" : "default",
 
-                            bgcolor:
-                                "#FFF3E0",
+                            bgcolor: "#FFF3E0",
 
                             fontWeight: 600,
                         }}
                     >
                         {!profileImage && (
                             <Box component="span" sx={{ color: "#ffff", backgroundColor: "#FF9933" }}>
-                                {users?.firstName?.[0]}
-                                {users?.lastName?.[0]}
+                                {firstName?.[0]}
+                                {lastName?.[0]}
                             </Box>
                         )}
                     </Avatar>
@@ -220,16 +192,10 @@ const ReferralCard = memo(({
                                     sm: 15,
                                 },
 
-                                color:
-                                    "text.primary",
+                                color: "text.primary",
                             }}
                         >
-                            {
-                                users?.firstName
-                            }{" "}
-                            {
-                                users?.lastName
-                            }
+                            {firstName} {lastName}
                         </Typography>
 
                         <Typography
@@ -243,8 +209,7 @@ const ReferralCard = memo(({
                                 },
                             }}
                         >
-                            {users?.email ||
-                                ""}
+                            {formatMaskedPhone(phone)}
                         </Typography>
                     </Box>
                 </Stack>
@@ -259,262 +224,85 @@ const ReferralCard = memo(({
                             flexShrink: 0,
                         }}
                     >
-                        {/* Mobile */}
+                        {/* Waiting badge */}
                         <Box
                             sx={{
-                                display: {
-                                    xs: "flex",
-                                    sm: "none",
-                                },
-
-                                gap: 0.5,
+                                display: "flex",
+                                alignItems: "center",
+                                bgcolor: "#FFF3E0",
+                                color: SAFFRON,
+                                fontSize: 10,
+                                fontWeight: 600,
+                                px: 1.5,
+                                py: 0.5,
+                                borderRadius: 5,
+                                flexShrink: 0,
                             }}
                         >
-                            <Tooltip title="Approve">
-                                <IconButton
-                                    size="small"
-                                    onClick={() =>
-                                        approveUser(
-                                            userId
-                                        )
-                                    }
-                                    disabled={
-                                        approveLoading ||
-                                        rejectLoading ||
-                                        !userId
-                                    }
-                                    sx={{
-                                        bgcolor:
-                                            "#E6F4EA",
-
-                                        color:
-                                            "#1E8E3E",
-
-                                        width: 34,
-                                        height: 34,
-
-                                        "&:hover":
-                                        {
-                                            bgcolor:
-                                                "#C8E6C9",
-                                        },
-                                    }}
-                                >
-                                    {approveLoading ? (
-                                        <CircularProgress
-                                            size={
-                                                18
-                                            }
-                                            color="inherit"
-                                        />
-                                    ) : (
-                                        <CheckCircleIcon
-                                            sx={{
-                                                fontSize: 18,
-                                            }}
-                                        />
-                                    )}
-                                </IconButton>
-                            </Tooltip>
-
-                            <Tooltip title="Decline">
-                                <IconButton
-                                    size="small"
-                                    onClick={() =>
-                                        declineUser(
-                                            userId
-                                        )
-                                    }
-                                    disabled={
-                                        approveLoading ||
-                                        rejectLoading ||
-                                        !userId
-                                    }
-                                    sx={{
-                                        bgcolor:
-                                            "#FCE8E8",
-
-                                        color:
-                                            "#D93025",
-
-                                        width: 34,
-                                        height: 34,
-
-                                        "&:hover":
-                                        {
-                                            bgcolor:
-                                                "#F5C6C6",
-                                        },
-                                    }}
-                                >
-                                    {rejectLoading ? (
-                                        <CircularProgress
-                                            size={
-                                                18
-                                            }
-                                            color="inherit"
-                                        />
-                                    ) : (
-                                        <CancelIcon
-                                            sx={{
-                                                fontSize: 18,
-                                            }}
-                                        />
-                                    )}
-                                </IconButton>
-                            </Tooltip>
+                            Waiting
                         </Box>
 
-                        {/* Desktop */}
-                        <Box
-                            sx={{
-                                display: {
-                                    xs: "none",
-                                    sm: "flex",
-                                },
-
-                                gap: 1,
-                            }}
-                        >
-                            <Button
-                                variant="contained"
-                                size="small"
-                                startIcon={
-                                    approveLoading ? (
-                                        <CircularProgress
-                                            size={
-                                                16
-                                            }
-                                            color="inherit"
-                                        />
-                                    ) : (
-                                        <CheckCircleIcon
-                                            sx={{
-                                                fontSize: 16,
-                                            }}
-                                        />
-                                    )
-                                }
-                                onClick={() =>
-                                    approveUser(
-                                        userId
-                                    )
-                                }
-                                disabled={
-                                    approveLoading ||
-                                    rejectLoading ||
-                                    !userId
-                                }
-                                disableElevation
+                        {/* Approve button (only when onApprove is passed) */}
+                        {onApprove && (
+                            <Box
                                 sx={{
-                                    bgcolor:
-                                        "#1E8E3E",
-
-                                    color:
-                                        "#fff",
-
-                                    textTransform:
-                                        "none",
-
-                                    fontWeight: 600,
-
-                                    fontSize: 13,
-
-                                    borderRadius: 5,
-
-                                    px: 2,
-
-                                    height: 32,
-
-                                    "&:hover":
-                                    {
-                                        bgcolor:
-                                            "#176D30",
+                                    display: {
+                                        xs: "flex",
+                                        sm: "none",
                                     },
+
+                                    gap: 0.5,
                                 }}
                             >
-                                {approveLoading
-                                    ? "Approving..."
-                                    : "Approve"}
-                            </Button>
-
-                            <Button
-                                variant="outlined"
-                                size="small"
-                                startIcon={
-                                    rejectLoading ? (
-                                        <CircularProgress
-                                            size={
-                                                16
+                                <Tooltip title="Approve">
+                                    <span>
+                                        <IconButton
+                                            size="small"
+                                            onClick={() => onApprove(userId)}
+                                            disabled={
+                                                approveLoading ||
+                                                rejectLoading ||
+                                                !userId
                                             }
-                                            color="inherit"
-                                        />
-                                    ) : (
-                                        <CancelIcon
                                             sx={{
-                                                fontSize: 16,
+                                                bgcolor: "#E6F4EA",
+
+                                                color: "#1E8E3E",
+
+                                                width: 34,
+                                                height: 34,
+
+                                                "&:hover": {
+                                                    bgcolor: "#C8E6C9",
+                                                },
                                             }}
-                                        />
-                                    )
-                                }
-                                onClick={() =>
-                                    declineUser(
-                                        userId
-                                    )
-                                }
-                                disabled={
-                                    approveLoading ||
-                                    rejectLoading ||
-                                    !userId
-                                }
-                                sx={{
-                                    color:
-                                        "#D93025",
-
-                                    borderColor:
-                                        "#D93025",
-
-                                    textTransform:
-                                        "none",
-
-                                    fontWeight: 600,
-
-                                    fontSize: 13,
-
-                                    borderRadius: 5,
-
-                                    px: 2,
-
-                                    height: 32,
-
-                                    "&:hover":
-                                    {
-                                        bgcolor:
-                                            "#FCE8E8",
-
-                                        borderColor:
-                                            "#B3261E",
-                                    },
-                                }}
-                            >
-                                {rejectLoading
-                                    ? "Declining..."
-                                    : "Decline"}
-                            </Button>
-                        </Box>
+                                        >
+                                            {approveLoading ? (
+                                                <CircularProgress
+                                                    size={18}
+                                                    color="inherit"
+                                                />
+                                            ) : (
+                                                <CheckCircleIcon
+                                                    sx={{
+                                                        fontSize: 18,
+                                                    }}
+                                                />
+                                            )}
+                                        </IconButton>
+                                    </span>
+                                </Tooltip>
+                            </Box>
+                        )}
                     </Stack>
                 ) : (
                     <Box
                         sx={{
-                            display:
-                                "flex",
-                            alignItems:
-                                "center",
+                            display: "flex",
+                            alignItems: "center",
                             gap: 0.5,
-                            bgcolor:
-                                "#E6F4EA",
-                            color:
-                                "#1E8E3E",
+                            bgcolor: "#E6F4EA",
+                            color: "#1E8E3E",
                             fontSize: 10,
                             fontWeight: 600,
                             px: 1.5,
@@ -535,90 +323,57 @@ const ReferralCard = memo(({
             </Stack>
 
             <ProfileModal
-                open={
-                    profileModalOpen
-                }
-                selectedProfile={
-                    selectedProfile
-                }
+                open={profileModalOpen}
+                selectedProfile={selectedProfile}
                 onClose={() => {
-                    setProfileModalOpen(
-                        false
-                    );
+                    setProfileModalOpen(false);
 
-                    setSelectedProfile(
-                        null
-                    );
+                    setSelectedProfile(null);
                 }}
             />
         </Paper>
     );
 });
+
 const MyReferrals = () => {
     const [openShare, setOpenShare] = useState(false);
 
     const [inviteLoading, setInviteLoading] = useState(false);
 
     const [referrals, setMyReferrals] = useState([]);
-    const [approvedReferrals, setApprovedReferrals] =
-        useState([]);
+    const [approvedReferrals, setApprovedReferrals] = useState([]);
 
     const [tab, setTab] = useState(0);
 
     const [loading, setLoading] = useState(false);
-    const [approveLoading, setApproveLoading] =
-        useState(false);
-    const [rejectLoading, setRejectLoading] =
-        useState(false);
 
-    const [mobile_number, setMobile_number] =
-        useState("");
+    const [mobile_number, setMobile_number] = useState("");
 
+    const [countryCode, setCountryCode] = useState("+1");
 
-    const [countryCode, setCountryCode] =
-        useState("+1");
-
-    const [shareLink, setShareLink] =
-        useState("");
+    const [shareLink, setShareLink] = useState("");
 
     const [mobileError, setMobileError] = useState("");
 
-    const { notifications } =
-        useNotifications();
+    const { notifications } = useNotifications();
 
-    const { getPendingReferralCount } =
-        useReferral();
+    const { getPendingReferralCount } = useReferral();
 
-    const { completion, currentUser } =
-        useUser();
+    const { completion, currentUser } = useUser();
 
     const toasts = ToastConfig();
 
     const theme = useTheme();
 
-    const isTab = useMediaQuery(
-        theme.breakpoints.down("sm")
-    );
-
-    const isProduction =
-        import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "Production";
-
-    const isTesting =
-        import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "Testing";
+    const isTab = useMediaQuery(theme.breakpoints.down("sm"));
 
     const getUser = () => {
         try {
-            const userData =
-                localStorage.getItem("user");
+            const userData = localStorage.getItem("user");
 
-            return userData
-                ? JSON.parse(userData)
-                : null;
+            return userData ? JSON.parse(userData) : null;
         } catch (error) {
-            console.error(
-                "Error parsing user data:",
-                error
-            );
+            console.error("Error parsing user data:", error);
 
             return null;
         }
@@ -626,10 +381,7 @@ const MyReferrals = () => {
 
     const user = getUser();
 
-    const isProfileComplete =
-        completion !== 100;
-
-
+    const isProfileComplete = completion !== 100;
 
     const handleOpenShare = () => {
         setOpenShare(true);
@@ -639,8 +391,6 @@ const MyReferrals = () => {
         setOpenShare(false);
     };
 
-
-
     useEffect(() => {
         if (user?.referralCode) {
             setShareLink(
@@ -649,73 +399,38 @@ const MyReferrals = () => {
         }
     }, [user]);
 
-    const environment =
-        import.meta.env.VITE_COUNTRY_CODE_VALIDATION;
-
-    console.log(environment);
+    const environment = import.meta.env.VITE_COUNTRY_CODE_VALIDATION;
 
     const handleCopy = (value) => {
         if (navigator.clipboard) {
             navigator.clipboard
                 .writeText(value)
-                .then(() =>
-                    toast.success(
-                        "Copied to Clipboard!",
-                        toasts
-                    )
-                )
-                .catch(() =>
-                    toast.error(
-                        "Failed to copy",
-                        toasts
-                    )
-                );
+                .then(() => toast.success("Copied to Clipboard!", toasts))
+                .catch(() => toast.error("Failed to copy", toasts));
         } else {
-            const textArea =
-                document.createElement(
-                    "textarea"
-                );
+            const textArea = document.createElement("textarea");
 
             textArea.value = value;
 
-            document.body.appendChild(
-                textArea
-            );
+            document.body.appendChild(textArea);
 
             textArea.select();
 
             try {
-                document.execCommand(
-                    "copy"
-                );
+                document.execCommand("copy");
 
-                toast.success(
-                    "Copied to Clipboard!",
-                    toasts
-                );
+                toast.success("Copied to Clipboard!", toasts);
             } catch (err) {
-                toast.error(
-                    "Failed to copy",
-                    toasts
-                );
+                toast.error("Failed to copy", toasts);
             }
 
-            document.body.removeChild(
-                textArea
-            );
+            document.body.removeChild(textArea);
         }
     };
 
-    // ==========================================
-    // GET REFERRALS
-    // ==========================================
-
     const getReferrals = async () => {
         if (!user?.id) {
-            toast.error(
-                "User not found",
-                toasts
-            );
+            toast.error("User not found", toasts);
 
             return;
         }
@@ -723,215 +438,62 @@ const MyReferrals = () => {
         try {
             setLoading(true);
 
-            const res = await axios.get(
-                Api +
-                `/referrals/${user.id}`
+            const res = await axios.get(Api + `/referrals/${user.id}`);
+
+            const data = res.data?.data || [];
+
+            const waitingReferrals = data.filter(
+                (item) => item.status === "Waiting"
             );
 
-            const data =
-                res.data?.data || [];
-
-            const waitingReferrals =
-                data.filter(
-                    (item) =>
-                        item.refApprove ===
-                        "Waiting"
-                );
-
-            const approved =
-                data.filter(
-                    (item) =>
-                        item.refApprove ===
-                        "Approved"
-                );
-
-            setMyReferrals(
-                waitingReferrals
+            const approved = data.filter(
+                (item) => item.refApprove === "Approved"
             );
 
-            setApprovedReferrals(
-                approved
-            );
+            setMyReferrals(waitingReferrals);
 
-            if (
-                getPendingReferralCount
-            ) {
+            setApprovedReferrals(approved);
+
+            if (getPendingReferralCount) {
                 getPendingReferralCount();
             }
         } catch (error) {
             const errorMsg =
-                error.response?.data
-                    ?.message ||
+                error.response?.data?.message ||
                 error.message ||
                 "Failed to fetch referrals";
 
-            toast.error(
-                errorMsg,
-                toasts
-            );
+            toast.error(errorMsg, toasts);
         } finally {
             setLoading(false);
         }
     };
 
-
-
     useEffect(() => {
         getReferrals();
-
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
-
-
 
     useEffect(() => {
         if (notifications?.length) {
-            const filtered =
-                notifications.filter(
-                    (n) =>
-                        n.type ===
-                        "referral_pending" ||
-                        n.type ===
-                        "referral_approved" ||
-                        n.type ===
-                        "referral_rejected"
-                );
+            const filtered = notifications.filter(
+                (n) =>
+                    n.type === "referral_pending" ||
+                    n.type === "referral_approved" ||
+                    n.type === "referral_rejected"
+            );
 
             if (filtered.length) {
                 getReferrals();
             }
         }
 
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [notifications]);
 
+    const getInitials = (firstName = "", lastName = "") =>
+        `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase() ||
+        "?";
 
-    const approveUser = async (id) => {
-        if (!id) {
-            toast.error(
-                "Invalid user ID",
-                toasts
-            );
-
-            return;
-        }
-
-        const confirmed =
-            window.confirm(
-                "Are you sure you want to approve this person?"
-            );
-
-        if (!confirmed) return;
-
-        setApproveLoading(true);
-
-        try {
-            await axios.patch(
-                Api +
-                `/referrals/${id}`,
-                {
-                    refApprove:
-                        "Approved",
-                }
-            );
-
-            toast.success(
-                "Referral approved successfully!",
-                toasts
-            );
-
-            await getReferrals();
-
-            if (
-                getPendingReferralCount
-            ) {
-                getPendingReferralCount();
-            }
-        } catch (error) {
-            const errorMsg =
-                error.response?.data
-                    ?.message ||
-                error.message ||
-                "Failed to approve referral";
-
-            toast.error(
-                errorMsg,
-                toasts
-            );
-        } finally {
-            setApproveLoading(false);
-        }
-    };
-
-
-
-    const declineUser = async (id) => {
-        if (!id) {
-            toast.error(
-                "Invalid user ID",
-                toasts
-            );
-
-            return;
-        }
-
-        const confirmed =
-            window.confirm(
-                "Are you sure you want to decline this person?"
-            );
-
-        if (!confirmed) return;
-
-        setRejectLoading(true);
-
-        try {
-            await axios.delete(
-                Api +
-                `/referrals/${id}`
-            );
-
-            toast.success(
-                "Referral declined",
-                toasts
-            );
-
-            await getReferrals();
-
-            if (
-                getPendingReferralCount
-            ) {
-                getPendingReferralCount();
-            }
-        } catch (error) {
-            const errorMsg =
-                error.response?.data
-                    ?.message ||
-                error.message ||
-                "Failed to decline referral";
-
-            toast.error(
-                errorMsg,
-                toasts
-            );
-        } finally {
-            setRejectLoading(false);
-        }
-    };
-
-
-    const getInitials = (
-        firstName = "",
-        lastName = ""
-    ) =>
-        `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""
-            }`
-            .toUpperCase() || "?";
-
-
-    const EmptyState = ({
-        message1,
-        message2,
-    }) => (
+    const EmptyState = ({ message1, message2 }) => (
         <Box
             sx={{
                 py: {
@@ -981,9 +543,7 @@ const MyReferrals = () => {
         </Box>
     );
 
-
     const handlelink = async () => {
-
         if (!mobile_number) {
             setMobileError("Mobile number is required");
             return;
@@ -1003,70 +563,35 @@ const MyReferrals = () => {
 
         setInviteLoading(true);
 
-        /*
-         * Build international number.
-         *
-         * India:
-         * +919600698331
-         *
-         * USA:
-         * +12145551234
-         */
-        const fullMobileNumber =
-            `${countryCode}${mobile_number}`;
+        const fullMobileNumber = `${countryCode}${mobile_number}`;
 
         try {
-            // ==================================
-            // STORE REFERRAL INVITATION
-            // ==================================
 
-            const stored =
-                await axios.post(
-                    `${Api}/referralInvite/`,
+            const stored = await axios.post(`${Api}/referralInvite/`, {
+                referredBy: user.id,
+                referrerName: `${user.firstName} ${user.lastName}`,
+
+                mobile: fullMobileNumber,
+
+                status: "Waiting",
+            });
+
+            if (stored.data.status === true) {
+                const response = await axios.post(
+                    `${Api}/referrals/send`,
                     {
-                        referredBy: user.id,
+                        mobile_number: fullMobileNumber,
+
+                        shareLink,
                         referrerName: `${user.firstName} ${user.lastName}`,
-
-                        mobile: fullMobileNumber,
-
-                        status: "Waiting",
+                        referrerId: user?.referralCode,
+                    },
+                    {
+                        withCredentials: true,
                     }
                 );
 
-
-
-            if (
-                stored.data.status === true
-            ) {
-
-
-                const response =
-                    await axios.post(
-                        `${Api}/referrals/send`,
-                        {
-
-                            mobile_number:
-                                fullMobileNumber,
-
-                            shareLink,
-                            referrerName: `${user.firstName} ${user.lastName}`,
-                            referrerId:
-                                user?.referralCode,
-                        },
-                        {
-                            withCredentials:
-                                true,
-                        }
-                    );
-
-                console.log(
-                    "Referral SMS response:",
-                    response.data
-                );
-
-                alert(
-                    `Referral link sent successfully to ${fullMobileNumber}`
-                );
+                alert(`Referral link sent successfully to ${fullMobileNumber}`);
 
                 /*
                  * Clear mobile after
@@ -1082,14 +607,11 @@ const MyReferrals = () => {
         } catch (error) {
             console.error(
                 "Referral SMS error:",
-                error?.response?.data ||
-                error?.message
+                error?.response?.data || error?.message
             );
 
             alert(
-                error.response?.data
-                    ?.message ||
-                "Failed to send referral SMS"
+                error.response?.data?.message || "Failed to send referral SMS"
             );
         } finally {
             setInviteLoading(false);
@@ -1098,14 +620,11 @@ const MyReferrals = () => {
         }
     };
 
-
-
     const LoadingSpinner = () => (
         <Box
             sx={{
                 display: "flex",
-                justifyContent:
-                    "center",
+                justifyContent: "center",
                 py: 8,
             }}
         >
@@ -1119,42 +638,10 @@ const MyReferrals = () => {
         </Box>
     );
 
-
-    const handleInvite = () => {
-        if (
-            !mobile_number ||
-            mobile_number.length < 10
-        ) {
-            toast.error(
-                "Please enter a valid 10-digit mobile number",
-                toasts
-            );
-
-            return;
-        }
-
-        if (navigator.share) {
-            navigator
-                .share({
-                    title:
-                        "Join using my referral",
-
-                    text: `Use my referral link: ${shareLink}`,
-
-                    url: shareLink,
-                })
-                .catch(() => {
-                    // User cancelled
-                });
-        } else {
-            toast.info(
-                "Sharing not supported on this device",
-                toasts
-            );
-        }
+    const tabLabelStyle = {
+        color: "#FF6B35",
+        fontWeight: 600,
     };
-
-
 
     return (
         <PageLayout>
@@ -1185,8 +672,7 @@ const MyReferrals = () => {
                                 sm: 22,
                             },
 
-                            color:
-                                "text.primary",
+                            color: "text.primary",
                         }}
                     >
                         My Referrals
@@ -1204,10 +690,8 @@ const MyReferrals = () => {
                             },
                         }}
                     >
-                        Review and approve
-                        members who joined
-                        using your referral
-                        code.
+                        Review and approve members who joined using your
+                        referral code.
                     </Typography>
                 </Box>
 
@@ -1215,17 +699,14 @@ const MyReferrals = () => {
                 <Button
                     variant="contained"
                     size="small"
-                    onClick={
-                        handleOpenShare
-                    }
+                    onClick={handleOpenShare}
                     sx={{
                         mt: {
                             xs: 0.5,
                             sm: 1.5,
                         },
 
-                        textTransform:
-                            "none",
+                        textTransform: "none",
 
                         borderRadius: 5,
 
@@ -1240,17 +721,13 @@ const MyReferrals = () => {
 
                         color: "#fff",
 
-                        bgcolor:
-                            "#FF9933",
+                        bgcolor: "#FF9933",
 
                         "&:hover": {
-                            bgcolor:
-                                "#da9a3a",
+                            bgcolor: "#da9a3a",
                         },
                     }}
-                    disabled={
-                        isProfileComplete
-                    }
+                    disabled={isProfileComplete}
                 >
                     Refer Now
                 </Button>
@@ -1258,18 +735,14 @@ const MyReferrals = () => {
                 {/* TABS */}
                 <Tabs
                     value={tab}
-                    onChange={(_, v) =>
-                        setTab(v)
-                    }
+                    onChange={(_, v) => setTab(v)}
                     variant="fullWidth"
                     centered
                     sx={{
                         mb: 2,
 
-                        "& .MuiTab-root":
-                        {
-                            textTransform:
-                                "none",
+                        "& .MuiTab-root": {
+                            textTransform: "none",
 
                             fontWeight: 600,
 
@@ -1283,43 +756,35 @@ const MyReferrals = () => {
                                 sm: 48,
                             },
 
-                            color:
-                                "text.secondary",
+                            color: "text.secondary",
                         },
 
-                        "& .Mui-selected":
-                        {
-                            color:
-                                "#FF6B35 !important",
+                        "& .Mui-selected": {
+                            color: "#FF6B35 !important",
                         },
 
-                        "& .MuiTabs-indicator":
-                        {
+                        "& .MuiTabs-indicator": {
                             height: 2,
 
-                            bgcolor:
-                                "#FF6B35",
+                            bgcolor: "#FF6B35",
 
-                            borderRadius:
-                                "2px 2px 0 0",
+                            borderRadius: "2px 2px 0 0",
                         },
                     }}
                 >
                     <Tab
                         label={
-                            <Stack
-                                direction="row"
-                                alignItems="center"
-                            >
-                                <span
-                                    style={{
-                                        color:
-                                            "#FF6B35",
-
-                                        fontWeight:
-                                            600,
-                                    }}
-                                >
+                            <Stack direction="row" alignItems="center">
+                                <span style={tabLabelStyle}>
+                                    {`Pending Approvals (${referrals.length})`}
+                                </span>
+                            </Stack>
+                        }
+                    />
+                    <Tab
+                        label={
+                            <Stack direction="row" alignItems="center">
+                                <span style={tabLabelStyle}>
                                     {`Approved Referrals (${approvedReferrals.length})`}
                                 </span>
                             </Stack>
@@ -1327,46 +792,53 @@ const MyReferrals = () => {
                     />
                 </Tabs>
 
-                {/* APPROVED */}
+                {/* PENDING (Waiting) */}
                 {tab === 0 &&
                     (loading ? (
                         <LoadingSpinner />
-                    ) : approvedReferrals.length ===
-                        0 ? (
+                    ) : referrals.length === 0 ? (
+                        <EmptyState
+                            message1="No Pending Approvals"
+                            message2="You don't have any pending referrals at the moment."
+                        />
+                    ) : (
+                        <Stack spacing={1.5}>
+                            {referrals.map((u) => (
+                                <ReferralCard
+                                    key={u._id || u.id}
+                                    user={u}
+                                    showActions
+
+                                />
+                            ))}
+                        </Stack>
+                    ))}
+
+                {/* APPROVED */}
+                {tab === 1 &&
+                    (loading ? (
+                        <LoadingSpinner />
+                    ) : approvedReferrals.length === 0 ? (
                         <EmptyState
                             message1="No Approved Referrals"
                             message2="You don't have any approved referrals at the moment."
                         />
                     ) : (
                         <Stack spacing={1.5}>
-                            {approvedReferrals.map(
-                                (u) => (
-                                    <ReferralCard
-                                        key={
-                                            u._id ||
-                                            u.id
-                                        }
-                                        user={u}
-                                        showActions={
-                                            false
-                                        }
-                                    />
-                                )
-                            )}
+                            {approvedReferrals.map((u) => (
+                                <ReferralCard
+                                    key={u._id || u.id}
+                                    user={u}
+                                    showActions={false}
+                                />
+                            ))}
                         </Stack>
                     ))}
 
-
                 <Modal
                     open={openShare}
-                    onClose={(
-                        event,
-                        reason
-                    ) => {
-                        if (
-                            reason ===
-                            "backdropClick"
-                        ) {
+                    onClose={(event, reason) => {
+                        if (reason === "backdropClick") {
                             return;
                         }
 
@@ -1375,76 +847,36 @@ const MyReferrals = () => {
                 >
                     <Box
                         sx={{
-                            position:
-                                "fixed",
-
+                            position: "fixed",
                             top: "50%",
-
                             left: "50%",
-
-                            transform:
-                                "translate(-50%, -50%)",
-
+                            transform: "translate(-50%, -50%)",
                             display: "flex",
-
-                            alignItems:
-                                "center",
-
-                            justifyContent:
-                                "center",
-
-                            width: {
-                                xs: "92%",
-                                sm: "100%",
-                            },
-
-                            px: {
-                                xs: 2,
-                                sm: 0,
-                            },
+                            alignItems: "center",
+                            justifyContent: "center",
+                            width: { xs: "92%", sm: "100%" },
+                            px: { xs: 2, sm: 0 },
                         }}
                     >
                         <Box
                             sx={{
-                                position:
-                                    "relative",
-
-                                bgcolor:
-                                    "white",
-
-                                width: {
-                                    xs: "100%",
-                                    sm: 380,
-                                },
-
+                                position: "relative",
+                                bgcolor: "white",
+                                width: { xs: "100%", sm: 380 },
                                 maxWidth: 380,
-
-                                borderRadius: 2,
-
-                                p: {
-                                    xs: 2,
-                                    sm: 3,
-                                },
-
+                                borderRadius: { xs: 2, sm: 2 },
+                                p: { xs: 2, sm: 3 },
                                 boxShadow: 24,
                             }}
                         >
-                            {/* CLOSE */}
                             <IconButton
-                                onClick={
-                                    handleCloseShare
-                                }
+                                onClick={handleCloseShare}
                                 size="small"
                                 sx={{
-                                    position:
-                                        "absolute",
-
+                                    position: "absolute",
                                     top: 8,
-
                                     right: 8,
-
-                                    color:
-                                        "grey.500",
+                                    color: "grey.500",
                                 }}
                             >
                                 <CloseIcon fontSize="small" />
@@ -1453,90 +885,78 @@ const MyReferrals = () => {
                             <Typography
                                 fontWeight={600}
                                 sx={{
-                                    fontSize: {
-                                        xs: "0.9rem",
-                                        sm: "1rem",
-                                    },
-
-                                    mb: {
-                                        xs: 1.5,
-                                        sm: 2,
-                                    },
-
+                                    fontSize: { xs: "0.9rem", sm: "1rem" },
+                                    mb: { xs: 1.5, sm: 2 },
                                     pr: 3,
                                 }}
                             >
-                                Invite your
-                                friends
+                                Invite your friends
                             </Typography>
 
-                            {/* REFERRAL LINK */}
+                            {/* Referral Link - Copyable */}
                             <Paper
                                 variant="outlined"
                                 sx={{
                                     p: 1.5,
-
                                     mb: 2,
-
-                                    display:
-                                        "flex",
-
-                                    alignItems:
-                                        "center",
-
-                                    justifyContent:
-                                        "space-between",
-
-                                    bgcolor:
-                                        "#f5f5f5",
-
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "space-between",
+                                    bgcolor: "#f5f5f5",
                                     borderRadius: 1,
                                 }}
                             >
                                 <Typography
                                     sx={{
-                                        fontSize:
-                                        {
-                                            xs: "0.7rem",
-                                            sm: "0.8rem",
-                                        },
-
-                                        overflow:
-                                            "hidden",
-
-                                        textOverflow:
-                                            "ellipsis",
-
-                                        whiteSpace:
-                                            "nowrap",
-
+                                        fontSize: { xs: "0.7rem", sm: "0.8rem" },
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        whiteSpace: "nowrap",
                                         flex: 1,
-
                                         mr: 1,
                                     }}
                                 >
-                                    {
-                                        shareLink
-                                    }
+                                    {shareLink}
                                 </Typography>
 
                                 <Tooltip title="Copy link">
                                     <IconButton
                                         size="small"
-                                        onClick={() =>
-                                            handleCopy(
-                                                shareLink
-                                            )
-                                        }
-                                        sx={{
-                                            flexShrink:
-                                                0,
-                                        }}
+                                        onClick={() => handleCopy(shareLink)}
+                                        sx={{ flexShrink: 0 }}
                                     >
                                         <ContentCopyIcon fontSize="small" />
                                     </IconButton>
                                 </Tooltip>
                             </Paper>
+
+                            {/* WhatsApp Share */}
+                            {/* <Button
+                                fullWidth
+                                variant="contained"
+                                startIcon={<WhatsAppIcon />}
+                                onClick={() => {
+                                    const message = `Join Saathi Rides using my referral link:\n${shareLink}`;
+                                    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+
+                                    window.open(whatsappUrl, "_blank");
+                                }}
+                                sx={{
+                                    mb: 2,
+                                    py: { xs: 0.75, sm: 1 },
+                                    borderRadius: 2,
+                                    textTransform: "none",
+                                    fontSize: { xs: "0.8rem", sm: "0.9rem" },
+                                    fontWeight: 600,
+                                    bgcolor: "#25D366",
+                                    color: "#fff",
+                                    "&:hover": {
+                                        bgcolor: "#1DA851",
+                                    },
+                                }}
+                            >
+                                Share on WhatsApp
+                            </Button> */}
 
                             <Stack
                                 direction="row"
@@ -1545,7 +965,6 @@ const MyReferrals = () => {
                                     width: "100%",
                                 }}
                             >
-                                {/* COUNTRY CODE */}
                                 {isProduction && (
                                     <>
                                         <TextField
@@ -1563,32 +982,16 @@ const MyReferrals = () => {
                                                 },
                                             }}
                                         />
-
                                     </>
                                 )}
                                 {isTesting && (
                                     <TextField
                                         select
                                         size="small"
-                                        value={
-                                            countryCode
-                                        }
-                                        onChange={(
-                                            e
-                                        ) => {
-                                            setCountryCode(
-                                                e
-                                                    .target
-                                                    .value
-                                            );
-
-                                            /* 
-                                             * Clear the 
-                                             * previous number 
-                                             * when country 
-                                             * changes. 
-                                             */
-                                            setMobile_number("")
+                                        value={countryCode}
+                                        onChange={(e) => {
+                                            setCountryCode(e.target.value);
+                                            setMobile_number("");
                                         }}
                                         sx={{
                                             width: {
@@ -1597,156 +1000,48 @@ const MyReferrals = () => {
                                             },
                                         }}
                                     >
+                                        <MenuItem value="+91">🇮🇳 +91</MenuItem>
 
-                                        <MenuItem value="+91">
-                                            🇮🇳 +91
-                                        </MenuItem>
-
-                                        <MenuItem value="+1">
-                                            🇺🇸 +1
-                                        </MenuItem>
+                                        <MenuItem value="+1">🇺🇸 +1</MenuItem>
                                     </TextField>
                                 )}
-
-
-                                {/* MOBILE */}
-                                {/* <TextField
-                                    fullWidth
-                                    value={
-                                        mobile_number
-                                    }
-                                    type="text"
-                                    inputMode="numeric"
-                                    onChange={(
-                                        e
-                                    ) => {
-                                        const value =
-                                            e.target.value
-                                                .replace(
-                                                    /\D/g,
-                                                    ""
-                                                )
-                                                .slice(
-                                                    0,
-                                                    10
-                                                );
-
-                                        setMobile_number(
-                                            value
-                                        );
-                                    }}
-                                    size="small"
-                                    placeholder="Enter 10-digit mobile number"
-                                /> */}
 
                                 <TextField
                                     fullWidth
                                     value={mobile_number}
                                     type="text"
                                     inputMode="numeric"
-                                    size="small"
-                                    placeholder="Enter 10-digit mobile number"
-                                    error={Boolean(mobileError)}
-                                    helperText={mobileError}
                                     onChange={(e) => {
-                                        const value = e.target.value
-                                            .replace(/\D/g, "")
-                                            .slice(0, 10);
-
+                                        const value = e.target.value.replace(/\D/g, "").slice(0, 10);
                                         setMobile_number(value);
-
-                                        // Clear error while entering a valid number
-                                        if (value.length === 10) {
-                                            setMobileError("");
-                                        } else if (value.length > 0) {
-                                            setMobileError("Mobile number must be 10 digits");
-                                        } else {
-                                            setMobileError("");
-                                        }
                                     }}
-                                    onBlur={() => {
-                                        if (!mobile_number) {
-                                            setMobileError("Mobile number is required");
-                                        } else if (mobile_number.length !== 10) {
-                                            setMobileError("Enter a valid 10-digit mobile number");
-                                        } else {
-                                            setMobileError("");
-                                        }
+                                    size="small"
+                                    placeholder="Enter mobile number"
+                                    InputProps={{
+                                        sx: {
+                                            fontSize: { xs: "0.75rem", sm: "0.85rem" },
+                                        },
                                     }}
                                 />
-
                             </Stack>
-
-                            {/* NUMBER PREVIEW */}
-                            {mobile_number.length >
-                                0 && (
-                                    <Typography
-                                        variant="caption"
-                                        color="text.secondary"
-                                        sx={{
-                                            display:
-                                                "block",
-
-                                            mt: 0.75,
-                                        }}
-                                    >
-                                        SMS will be
-                                        sent to:{" "}
-                                        <strong>
-                                            {
-                                                countryCode
-                                            }
-                                            {
-                                                mobile_number
-                                            }
-                                        </strong>
-                                    </Typography>
-                                )}
-
-                            {/* BUTTONS */}
                             <Stack
                                 direction="row"
-                                spacing={{
-                                    xs: 1,
-                                    sm: 1,
-                                }}
-                                sx={{
-                                    mt: {
-                                        xs: 1.5,
-                                        sm: 2,
-                                    },
-                                }}
+                                spacing={{ xs: 1, sm: 1 }}
+                                sx={{ mt: { xs: 1.5, sm: 2 } }}
                             >
                                 <Button
                                     fullWidth
                                     variant="contained"
                                     size="small"
                                     sx={{
-                                        fontSize: {
-                                            xs: "0.75rem",
-                                            sm: "0.85rem",
-                                        },
-
-                                        py: {
-                                            xs: 0.5,
-                                            sm: 0.75,
-                                        },
-
-                                        textTransform:
-                                            "none",
-
-                                        bgcolor:
-                                            "#FF9933",
-
-                                        "&:hover":
-                                        {
-                                            bgcolor:
-                                                "#da9a3a",
-                                        },
+                                        color: "black",
+                                        fontSize: { xs: "0.75rem", sm: "0.85rem" },
+                                        py: { xs: 0.5, sm: 0.75 },
+                                        textTransform: "none",
+                                        bgcolor: "#b7b7b7ff",
+                                        "&:hover": { bgcolor: "#939393ff" },
                                     }}
-                                    onClick={() =>
-                                        setMobile_number("")
-                                    }
+                                    onClick={() => setMobile_number("")}
                                 >
                                     Clear
                                 </Button>
@@ -1756,35 +1051,15 @@ const MyReferrals = () => {
                                     variant="contained"
                                     size="small"
                                     sx={{
-                                        fontSize: {
-                                            xs: "0.75rem",
-                                            sm: "0.85rem",
-                                        },
-
-                                        py: {
-                                            xs: 0.5,
-                                            sm: 0.75,
-                                        },
-
-                                        textTransform:
-                                            "none",
-
-                                        bgcolor:
-                                            "#09710f",
-
-                                        "&:hover":
-                                        {
-                                            bgcolor:
-                                                "#065a0b",
-                                        },
+                                        fontSize: { xs: "0.75rem", sm: "0.85rem" },
+                                        py: { xs: 0.5, sm: 0.75 },
+                                        textTransform: "none",
+                                        bgcolor: "#FF9933",
+                                        "&:hover": { bgcolor: "#da9a3a" },
                                     }}
-                                    onClick={
-                                        handlelink
-                                    }
+                                    onClick={() => handlelink(mobile_number)}
                                 >
-                                    {inviteLoading
-                                        ? "Inviting..."
-                                        : " Invite"}
+                                    {inviteLoading ? "Inviting..." : "Invite"}
                                 </Button>
                             </Stack>
                         </Box>

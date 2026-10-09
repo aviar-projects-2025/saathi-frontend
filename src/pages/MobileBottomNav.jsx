@@ -47,11 +47,11 @@ export default function MobileBottomNav() {
         },
       ],
     },
-    {
-      label: "Community",
-      icon: <GroupsIcon />,
-      link: "/community",
-    },
+    // {
+    //   label: "Community",
+    //   icon: <GroupsIcon />,
+    //   link: "/community",
+    // },
     {
       label: "Post Ride",
       icon: <AddCircleIcon />,

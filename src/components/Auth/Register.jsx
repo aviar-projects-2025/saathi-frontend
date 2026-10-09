@@ -43,8 +43,6 @@ const Register = () => {
 
   const [searchParams] = useSearchParams();
   const referralFromUrl = searchParams.get("ref") || "";
-  const [countryCode, setCountryCode] =
-    useState("+1");
   // State for OTP flow
   const [activeStep, setActiveStep] = useState(0);
 
@@ -61,7 +59,8 @@ const Register = () => {
     referralCode: "",
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [mobileNumber, setMobileNumber] = useState();
+  const [countryCode, setCountryCode] = useState("+1");
+  const [mobileNumber, setMobileNumber] = useState("");
   const fullMobileNumber =
     `${countryCode}${mobileNumber}`;
 
@@ -92,25 +91,27 @@ const Register = () => {
   const validationSchema = Yup.object({
     firstName: Yup.string().required("First name is required"),
     lastName: Yup.string().required("Last name is required"),
-    email: Yup.string()
-      .required("Email is required")
-      .trim()
-      .lowercase()
-      .matches(
-        /^[a-z0-9]+(?:[._%+-][a-z0-9]+)*@[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z]{2,})+$/,
-        "Please enter a valid email address"
-      ),
+    // email: Yup.string()
+    //   .required("Email is required")
+    //   .trim()
+    //   .lowercase()
+    //   .matches(
+    //     /^[a-z0-9]+(?:[._%+-][a-z0-9]+)*@[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z]{2,})+$/,
+    //     "Please enter a valid email address"
+    //   ),
     referralCode: Yup.string().required("Referral Code is required"),
-    password: Yup.string()
-      .matches(/^[A-Z]/, "Password must start with an uppercase letter")
-      .matches(/[a-z]/, "Password must contain at least one lowercase letter")
-      .matches(/[0-9]/, "Password must contain at least one number")
-      .matches(
-        /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/,
-        "Password must contain at least one special character"
-      )
-      .min(8, "Password must be at least 8 characters")
-      .required("Password is required"),
+    city: Yup.string().required("City is required"),
+
+    // password: Yup.string()
+    //   .matches(/^[A-Z]/, "Password must start with an uppercase letter")
+    //   .matches(/[a-z]/, "Password must contain at least one lowercase letter")
+    //   .matches(/[0-9]/, "Password must contain at least one number")
+    //   .matches(
+    //     /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/,
+    //     "Password must contain at least one special character"
+    //   )
+    //   .min(8, "Password must be at least 8 characters")
+    //   .required("Password is required"),
   });
 
   // Send OTP
@@ -235,10 +236,10 @@ const Register = () => {
     }
   };
   const isProduction =
-    import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "Production";
+    import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "production";
 
   const isTesting =
-    import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "Testing";
+    import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "testing";
 
   // Registration submit
   const registerSubmit = async (values, { setSubmitting }) => {
@@ -250,7 +251,6 @@ const Register = () => {
     try {
       setServerError("");
       setFieldErrors({
-        email: "",
         referralCode: "",
       });
 
@@ -262,6 +262,7 @@ const Register = () => {
       };
 
       const res = await axios.post(`${Api}/users/`, payload);
+
 
       toast.success("Registration Success!", toasts);
 
@@ -316,43 +317,35 @@ const Register = () => {
         }}
       >
         {isProduction && (
-          <>
-            <TextField
-              size="small"
-              value="US +1"
-              disabled
-              sx={{
-                width: {
-                  xs: 105,
-                  sm: 115,
-                },
-                "& .MuiInputBase-input.Mui-disabled": {
-                  color: "#555",
-                  WebkitTextFillColor: "#555",
-                },
-              }}
-            />
-
-          </>
+          <TextField
+            size="small"
+            value="🇺🇸 +1"
+            disabled
+            sx={{
+              width: {
+                xs: 105,
+                sm: 115,
+              },
+              "& .MuiInputBase-input.Mui-disabled": {
+                color: "#555",
+                WebkitTextFillColor: "#555",
+              },
+            }}
+          />
         )}
+
         {isTesting && (
           <TextField
             select
             size="small"
-            value={
-              countryCode
-            }
-            onChange={(
-              e
-            ) => {
-              setCountryCode(
-                e
-                  .target
-                  .value
-              );
-
-
-              setMobileNumber("")
+            value={countryCode}
+            onChange={(e) => {
+              setCountryCode(e.target.value);
+              setMobileNumber("");
+              setOtp("");
+              setIsOtpSent(false);
+              setIsOtpVerified(false);
+              setOtpError("");
             }}
             sx={{
               width: {
@@ -361,13 +354,12 @@ const Register = () => {
               },
             }}
           >
+            <MenuItem value="+1">
+              🇺🇸 +1
+            </MenuItem>
 
             <MenuItem value="+91">
               🇮🇳 +91
-            </MenuItem>
-
-            <MenuItem value="+1">
-              🇺🇸 +1
             </MenuItem>
           </TextField>
         )}
@@ -378,11 +370,16 @@ const Register = () => {
           placeholder="Enter 10-digit mobile number"
           value={mobileNumber}
           onChange={(e) => {
-            const value = e.target.value.replace(/\D/g, "").slice(0, 10);
+            const value = e.target.value
+              .replace(/\D/g, "")
+              .slice(0, 10);
+
             setMobileNumber(value);
+
             if (isOtpSent) {
               setIsOtpSent(false);
               setOtp("");
+              setOtpError("");
             }
           }}
           disabled={isOtpSent}
@@ -395,7 +392,12 @@ const Register = () => {
             endAdornment: (
               <InputAdornment position="end">
                 {isOtpSent && (
-                  <CheckCircleIcon sx={{ color: "#4CAF50", fontSize: 20 }} />
+                  <CheckCircleIcon
+                    sx={{
+                      color: "#4CAF50",
+                      fontSize: 20,
+                    }}
+                  />
                 )}
               </InputAdornment>
             ),
@@ -549,8 +551,7 @@ const Register = () => {
       initialValues={{
         firstName: "",
         lastName: "",
-        email: "",
-        password: "",
+        city: "",
         mobile: fullMobileNumber,
         role: "USER",
         referralCode: referralFromUrl,
@@ -604,7 +605,7 @@ const Register = () => {
               />
             </Stack>
 
-            <TextField
+            {/* <TextField
               fullWidth
               label="Email"
               name="email"
@@ -627,9 +628,9 @@ const Register = () => {
               }
               size="small"
               sx={inputSx}
-            />
+            /> */}
 
-            <TextField
+            {/* <TextField
               fullWidth
               type={showPassword ? "text" : "password"}
               label="Password"
@@ -655,6 +656,21 @@ const Register = () => {
                   ),
                 },
               }}
+              sx={inputSx}
+            /> */}
+
+            <TextField
+              fullWidth
+              type="text"
+              label="Location"
+              name="city"
+              placeholder="e.g. Dallas, Dallas County, Texas"
+              value={values.city}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              error={touched.city && Boolean(errors.city)}
+              helperText={touched.city && errors.city}
+              size="small"
               sx={inputSx}
             />
 

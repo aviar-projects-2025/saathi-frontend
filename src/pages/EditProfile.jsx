@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
     Box,
     Typography,
@@ -9,12 +9,20 @@ import {
     useTheme,
     Modal,
     TextField,
+    FormControl,
+    Select,
+    InputLabel,
+    Chip,
+    FormHelperText,
+    FormControlLabel,
     Menu,
     ListItemText,
     MenuItem,
     IconButton,
     Slider,
 } from "@mui/material";
+
+import { Autocomplete, createFilterOptions } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -24,8 +32,59 @@ import { toast } from "react-toastify";
 import uploadToCloudinary from "../components/uploadToCloudinary.jsx";
 import { useUser } from "../context/userConetext";
 import Api from "../Api";
+import US_Cities from "../config/US_Cities.json"
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
+import Popper from "@mui/material/Popper";
+
+const CustomPopper = (props) => {
+    return (
+        <Popper
+            {...props}
+            placement="bottom-start"
+            modifiers={[
+                {
+                    name: "offset",
+                    options: {
+                        offset: [0, 4],
+                    },
+                },
+            ]}
+            sx={{
+                zIndex: 1500,
+
+                "& .MuiPaper-root": {
+                    width: "100%",
+                    borderRadius: 0,
+                    boxShadow: "0px 4px 12px rgba(0,0,0,0.15)",
+                },
+
+                "& .MuiAutocomplete-listbox": {
+                    padding: 0,
+                    maxHeight: "500px",
+                    overflowY: "auto",
+                },
+
+                "& .MuiAutocomplete-option": {
+                    minHeight: "50px",
+                    padding: "8px 22px !important",
+                    fontSize: "23px",
+                    display: "flex",
+                    alignItems: "center",
+                    borderRadius: 0,
+
+                    "&[aria-selected='true']": {
+                        backgroundColor: "#eaf3fb !important",
+                    },
+
+                    "&.Mui-focused": {
+                        backgroundColor: "#eaf3fb !important",
+                    },
+                },
+            }}
+        />
+    );
+};
 
 const CROP_BOX_SIZE = 260;
 const CROP_BOX_SIZE_MOBILE = 190;
@@ -37,14 +96,54 @@ const fieldFont = {
     },
 };
 
+const EXCLUDED = ["AS", "FM", "GU", "MH", "MP", "PW", "PR", "VI", "AE", "AP"];
+const tfSx = {
+    "& .MuiInputBase-input": { fontSize: { xs: "0.8rem", sm: "0.9rem" } },
+};
+const selectSx = { fontSize: { xs: "0.8rem", sm: "0.9rem" } };
+const ilSx = { fontSize: { xs: "0.8rem", sm: "0.9rem" } };
+// 1. Every city paired with its state (must come first)
+const OPTIONS = US_Cities.filter((s) => !EXCLUDED.includes(s.abbr)).flatMap((s) =>
+    s.cities.map((city) => ({
+        city,
+        state: s.state,
+        abbr: s.abbr,
+        label: `${city}, ${s.state}`,
+    }))
+);
+
+// 2. "Other" option, then the full list that uses OPTIONS
+const OTHER_OPTION = {
+    city: "Other",
+    state: "",
+    abbr: "OTHER",
+    label: "Other (my city is not listed)",
+};
+const AUTOCOMPLETE_OPTIONS = [...OPTIONS, OTHER_OPTION];
+
+const filterOptions = (options, { inputValue }) => {
+    const words = inputValue.toLowerCase().trim().split(/\s+/).filter(Boolean);
+    const matches = [];
+    for (const o of options) {
+        if (o.abbr === "OTHER") continue;
+        const hay = `${o.city} ${o.state} ${o.abbr}`.toLowerCase();
+        if (words.every((w) => hay.includes(w))) {
+            matches.push(o);
+            if (matches.length === 50) break;
+        }
+    }
+    return [...matches, OTHER_OPTION];
+};
 const buildFormData = (user) => ({
     firstName: user?.firstName || "",
     lastName: user?.lastName || "",
-    email: user?.email || "",
+    // email: user?.email || "",
+    language: user?.language || "",
     mobile: user?.mobile || "",
     dob: user?.dob ? dayjs(user.dob) : null,
     gender: user?.gender || "",
     bio: user?.bio || "",
+    city: user?.city || "",
     profileImage: user?.profileImage || "",
     zipcode: user?.zipcode || "",
 });
@@ -64,41 +163,17 @@ const validateForm = (formData) => {
         errors.lastName = "Last name is required";
     }
 
-    if (!formData.email) {
-        errors.email = "Email is required";
-    } else {
-        const emailRegex =
-            /^[a-z0-9]+(?:[._%+-][a-z0-9]+)*@[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z]{2,})+$/i;
-        if (!emailRegex.test(formData.email)) {
-            errors.email =
-                "Please enter a valid email address (e.g., name@domain.com)";
-        }
+
+    // First Name
+    if (!formData.city?.trim()) {
+        errors.city = "City is required";
     }
 
-    // Mobile
     const phone = formData.mobile?.trim();
     if (!phone) {
         errors.mobile = "Mobile number is required";
     } else if (!/^\+?\d{10,15}$/.test(phone)) {
         errors.mobile = "Please enter a valid mobile number (10–15 digits)";
-    }
-
-    // DOB (Age >= 18)
-    if (!formData.dob) {
-        errors.dob = "Date of birth is required";
-    } else {
-        const today = new Date();
-        const dob = new Date(formData.dob);
-        let age = today.getFullYear() - dob.getFullYear();
-
-        const m = today.getMonth() - dob.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
-            age--;
-        }
-
-        if (age < 18) {
-            errors.dob = "You must be at least 18 years old";
-        }
     }
 
 
@@ -142,17 +217,122 @@ const EditProfile = ({ open, onClose }) => {
         startY: 0,
         startOffset: { x: 0, y: 0 },
     });
+    const [changeMobile, setChangeMobile] = useState(false);
+    const [newMobile, setNewMobile] = useState("");
+    const [otp, setOtp] = useState("");
+    const [otpSent, setOtpSent] = useState(false);
+    const [mobileLoading, setMobileLoading] = useState(false);
+    const [otpLoading, setOtpLoading] = useState(false);
+    const [mobileError, setMobileError] = useState("");
+    const token = localStorage.getItem("token");
 
     useEffect(() => {
         if (currentUser) {
             setFormData(buildFormData(currentUser));
             setProfileImage(currentUser?.profileImage || "");
             setProfileFile(null);
+            syncCityUI(currentUser?.city);   // add
         }
     }, [currentUser]);
 
+    const resetForm = () => {
+        setFormData(buildFormData(currentUser));
+        syncCityUI(currentUser?.city);       // add
+    };
+
     const handleCloseProfile = () => {
         onClose?.();
+    };
+
+
+    const sendMobileOtp = async () => {
+        if (!/^\+?\d{10,15}$/.test(newMobile)) {
+            setMobileError("Enter a valid mobile number");
+            return;
+        }
+
+        if (newMobile === formData.mobile) {
+            setMobileError("Enter a different mobile number");
+            return;
+        }
+
+        try {
+            setMobileLoading(true);
+            setMobileError("");
+
+            await axios.post(
+                `${Api}/auth/send-change-mobile-otp`,
+                {
+                    mobileNumber: newMobile,
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            setOtpSent(true);
+            toast.success("OTP sent successfully");
+        } catch (error) {
+            setMobileError(
+                error?.response?.data?.message ||
+                "Failed to send OTP"
+            );
+        } finally {
+            setMobileLoading(false);
+        }
+    };
+
+    const [otherLanguage, setOtherLanguage] = useState("");
+    const verifyMobileOtp = async () => {
+        if (!otp || otp.length !== 6) {
+            setMobileError("Enter a valid 6-digit OTP");
+            return;
+        }
+
+        try {
+            setOtpLoading(true);
+            setMobileError("");
+
+            const response = await axios.post(
+                `${Api}/auth/verify-change-mobile-otp`,
+                {
+                    mobileNumber: newMobile,
+                    otp,
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            setFormData((prev) => ({
+                ...prev,
+                mobile: response?.data?.mobile || newMobile,
+            }));
+
+            setChangeMobile(false);
+            setOtpSent(false);
+            setNewMobile("");
+            setOtp("");
+
+            // Refresh user data
+            await getuserData();
+
+            toast.success(
+                response?.data?.message ||
+                "Mobile number updated successfully"
+            );
+        } catch (error) {
+            setMobileError(
+                error?.response?.data?.message ||
+                "Invalid or expired OTP"
+            );
+        } finally {
+            setOtpLoading(false);
+        }
     };
 
     const getBaseScale = (w, h) =>
@@ -343,9 +523,32 @@ const EditProfile = ({ open, onClose }) => {
         galleryFileRef.current?.click();
     };
 
-    const resetForm = () => {
-        setFormData(buildFormData(currentUser));
+    const update = (key, val) => {
+        setFormData((prev) => ({ ...prev, [key]: val }));
+        setErrors((prev) => {
+            const newErrors = { ...prev };
+
+            if (val && String(val).trim() !== "") {
+                delete newErrors[key];
+            }
+
+            return newErrors;
+        });
     };
+
+    const languages = [
+        "English",
+        "Tamil",
+        "Hindi",
+        "Bengali",
+        "Telugu",
+        "Marathi",
+        "Gujarati",
+        "Kannada",
+        "Malayalam",
+        "Punjabi",
+
+    ];
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -359,6 +562,38 @@ const EditProfile = ({ open, onClose }) => {
             ...prev,
             [name]: "",
         }));
+    };
+    const [value, setValue] = useState(null);
+    const [isOtherCity, setIsOtherCity] = useState(false);
+    const [otherCityState, setOtherCityState] = useState("");
+
+    // Fills the city field from a saved string like "Austin, Texas"
+    const syncCityUI = (saved = "") => {
+        const match = AUTOCOMPLETE_OPTIONS.find(
+            (o) => o.abbr !== "OTHER" && o.label === saved
+        );
+        if (match) {
+            setValue(match); setIsOtherCity(false); setOtherCityState("");
+        } else if (saved) {
+            setValue(OTHER_OPTION); setIsOtherCity(true); setOtherCityState(saved);
+        } else {
+            setValue(null); setIsOtherCity(false); setOtherCityState("");
+        }
+    };
+    const [languageOpen, setLanguageOpen] = useState(false);
+    const handleCitiesChange = (event, newValue) => {
+        const other = newValue?.abbr === "OTHER";
+        setValue(newValue);
+        setIsOtherCity(other);
+        setOtherCityState("");
+        setFormData((prev) => ({ ...prev, city: other ? "" : newValue?.label || "" }));
+        setErrors((prev) => ({ ...prev, city: "" }));
+    };
+
+    const handleOtherCityChange = (e) => {
+        setOtherCityState(e.target.value);
+        setFormData((prev) => ({ ...prev, city: e.target.value }));
+        setErrors((prev) => ({ ...prev, city: "" }));
     };
 
     const handleUpdateProfile = async () => {
@@ -382,15 +617,19 @@ const EditProfile = ({ open, onClose }) => {
             const data = {
                 firstName: formData.firstName,
                 lastName: formData.lastName,
-                mobile: formData.mobile,
-                dob: formData.dob ? formData.dob.format("YYYY-MM-DD") : "",
+                mobile: currentUser?.mobile,
+                dob: formData.dob
+                    ? formData.dob.format("YYYY-MM-DD")
+                    : "",
                 gender: formData.gender,
                 bio: formData.bio,
+                language: formData?.language,
+                city: formData.city,
                 zipcode: formData.zipcode,
 
                 ...(uploadedImage && {
-                    profileImage: uploadedImage?.url,
-                    profileImagePublicId: uploadedImage?.publicId,
+                    profileImage: uploadedImage.url,
+                    imagePublicId: uploadedImage.publicId,
                 }),
             };
 
@@ -748,65 +987,396 @@ const EditProfile = ({ open, onClose }) => {
                                 />
                             </Stack>
 
-                            {/* Email / Mobile */}
-                            <Stack
-                                direction={{
-                                    xs: "column",
-                                    sm: "row",
-                                }}
-                                spacing={{
-                                    xs: 1.5,
-                                    sm: 2,
-                                }}
-                                sx={{
-                                    width: "100%",
-                                }}
-                            >
-                                <TextField
-                                    label="Email"
-                                    name="email"
-                                    size="small"
-                                    fullWidth
-                                    value={formData?.email}
-                                    onChange={handleChange}
-                                    error={!!errors.email}
-                                    helperText={errors.email}
-                                    disabled
-                                    InputProps={fieldFont}
-                                    InputLabelProps={fieldFont}
-                                />
+                            {/* Mobile Number */}
+                            <Box>
+                                <Typography
+                                    sx={{
+                                        fontSize: "0.8rem",
+                                        fontWeight: 600,
+                                        color: "text.secondary",
+                                        mb: 0.7,
+                                    }}
+                                >
+                                    Mobile Number
+                                </Typography>
 
-                                <TextField
-                                    label="Mobile Number"
-                                    name="mobile"
-                                    disabled
-                                    size="small"
-                                    fullWidth
-                                    value={formData?.mobile || ""}
+                                {!changeMobile ? (
+                                    <Box
+                                        sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "space-between",
+                                            gap: 1,
+                                            px: 1.5,
+                                            py: 1,
+                                            border: "1px solid #E0E0E0",
+                                            borderRadius: 1.5,
+                                            bgcolor: "#FAFAFA",
+                                        }}
+                                    >
+                                        <Typography
+                                            sx={{
+                                                fontSize: "0.9rem",
+                                                color: "text.primary",
+                                                fontWeight: 500,
+                                            }}
+                                        >
+                                            {formData?.mobile || "No mobile number"}
+                                        </Typography>
+
+                                        <Button
+                                            size="small"
+                                            onClick={() => {
+                                                setChangeMobile(true);
+                                                setMobileError("");
+                                            }}
+                                            sx={{
+                                                minWidth: "auto",
+                                                px: 1,
+                                                textTransform: "none",
+                                                color: "#E8650A",
+                                                fontSize: "0.8rem",
+                                                fontWeight: 600,
+                                            }}
+                                        >
+                                            Change
+                                        </Button>
+                                    </Box>
+                                ) : (
+                                    <Box
+                                        sx={{
+                                            border: "1px solid #E8E8E8",
+                                            borderRadius: 2,
+                                            p: 1.5,
+                                            bgcolor: "#FFFDFB",
+                                        }}
+                                    >
+                                        {!otpSent ? (
+                                            <>
+                                                <Typography
+                                                    sx={{
+                                                        fontSize: "0.8rem",
+                                                        color: "text.secondary",
+                                                        mb: 1,
+                                                    }}
+                                                >
+                                                    Enter your new mobile number
+                                                </Typography>
+
+                                                <TextField
+                                                    fullWidth
+                                                    label="New Mobile Number"
+                                                    size="small"
+                                                    value={newMobile}
+                                                    onChange={(e) => {
+                                                        setNewMobile(
+                                                            e.target.value
+                                                                .replace(/[^\d+]/g, "")
+                                                                .replace(/(?!^)\+/g, "")
+                                                        );
+                                                        setMobileError("");
+                                                    }}
+                                                    error={!!mobileError}
+                                                    helperText={mobileError}
+                                                    InputProps={fieldFont}
+                                                    InputLabelProps={fieldFont}
+                                                />
+
+                                                <Stack
+                                                    direction="row"
+                                                    spacing={1}
+                                                    sx={{ mt: 1.2 }}
+                                                >
+                                                    <Button
+                                                        variant="contained"
+                                                        size="small"
+                                                        onClick={sendMobileOtp}
+                                                        disabled={mobileLoading}
+                                                        sx={{
+                                                            px: 2,
+                                                            textTransform: "none",
+                                                            bgcolor: "#E8650A",
+                                                            "&:hover": {
+                                                                bgcolor: "#D95D08",
+                                                            },
+                                                        }}
+                                                    >
+                                                        {mobileLoading ? "Sending..." : "Send OTP"}
+                                                    </Button>
+
+                                                    <Button
+                                                        size="small"
+                                                        onClick={() => {
+                                                            setChangeMobile(false);
+                                                            setNewMobile("");
+                                                            setMobileError("");
+                                                        }}
+                                                        sx={{
+                                                            px: 1.5,
+                                                            textTransform: "none",
+                                                            color: "text.secondary",
+                                                        }}
+                                                    >
+                                                        Cancel
+                                                    </Button>
+                                                </Stack>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Box
+                                                    sx={{
+                                                        mb: 1.2,
+                                                        p: 1,
+                                                        borderRadius: 1.5,
+                                                        bgcolor: "#FFF5EC",
+                                                    }}
+                                                >
+                                                    <Typography
+                                                        sx={{
+                                                            fontSize: "0.78rem",
+                                                            color: "#8A4B20",
+                                                        }}
+                                                    >
+                                                        OTP sent to{" "}
+                                                        <strong>{newMobile}</strong>
+                                                    </Typography>
+                                                </Box>
+
+                                                <TextField
+                                                    fullWidth
+                                                    label="Enter OTP"
+                                                    size="small"
+                                                    value={otp}
+                                                    onChange={(e) => {
+                                                        setOtp(
+                                                            e.target.value
+                                                                .replace(/\D/g, "")
+                                                                .slice(0, 6)
+                                                        );
+                                                        setMobileError("");
+                                                    }}
+                                                    error={!!mobileError}
+                                                    helperText={mobileError}
+                                                    inputProps={{
+                                                        maxLength: 6,
+                                                        inputMode: "numeric",
+                                                    }}
+                                                    InputProps={fieldFont}
+                                                    InputLabelProps={fieldFont}
+                                                />
+
+                                                <Stack
+                                                    direction="row"
+                                                    spacing={1}
+                                                    sx={{ mt: 1.2 }}
+                                                >
+                                                    <Button
+                                                        variant="contained"
+                                                        size="small"
+                                                        onClick={verifyMobileOtp}
+                                                        disabled={otpLoading}
+                                                        sx={{
+                                                            px: 2,
+                                                            textTransform: "none",
+                                                            bgcolor: "#E8650A",
+                                                            "&:hover": {
+                                                                bgcolor: "#D95D08",
+                                                            },
+                                                        }}
+                                                    >
+                                                        {otpLoading
+                                                            ? "Verifying..."
+                                                            : "Verify OTP"}
+                                                    </Button>
+
+                                                    <Button
+                                                        size="small"
+                                                        onClick={() => {
+                                                            setOtpSent(false);
+                                                            setOtp("");
+                                                            setMobileError("");
+                                                        }}
+                                                        sx={{
+                                                            px: 1.5,
+                                                            textTransform: "none",
+                                                            color: "#E8650A",
+                                                        }}
+                                                    >
+                                                        Change Number
+                                                    </Button>
+                                                </Stack>
+                                            </>
+                                        )}
+                                    </Box>
+                                )}
+                            </Box>
+                            <FormControl fullWidth>
+                                <InputLabel sx={ilSx}>
+                                    Languages I Speak
+                                </InputLabel>
+
+                                <Select
+
+                                    multiple
+                                    open={languageOpen}
+                                    onOpen={() => setLanguageOpen(true)}
+                                    onClose={() => setLanguageOpen(false)}
+                                    value={
+                                        Array.isArray(formData?.language)
+                                            ? formData.language
+                                            : []
+                                    }
+                                    label="Languages I Speak"
                                     onChange={(e) => {
-                                        const value = e.target.value
-                                            .replace(/[^\d+]/g, "")
-                                            .replace(/(?!^)\+/g, "")
-                                            .slice(0, 16);
+                                        const value = e.target.value;
 
-                                        handleChange({
-                                            target: {
-                                                name: "mobile",
-                                                value,
-                                            },
-                                        });
+                                        update(
+                                            "language",
+                                            typeof value === "string"
+                                                ? value.split(",")
+                                                : value
+                                        );
                                     }}
-                                    error={!!errors.mobile}
-                                    helperText={errors.mobile}
-                                    inputProps={{
-                                        maxLength: 16,
+                                    sx={selectSx}
+                                    renderValue={(selected) => (
+                                        <Box
+                                            sx={{
+                                                display: "flex",
+                                                flexWrap: "wrap",
+                                                gap: 0.5,
+                                                pr: 1,
+                                            }}
+                                        >
+                                            {selected.map((value) => (
+                                                <Chip
+                                                    key={value}
+                                                    label={value}
+                                                    size="small"
+                                                    onMouseDown={(e) => {
+                                                        e.stopPropagation();
+                                                    }}
+                                                    onDelete={(e) => {
+                                                        e.stopPropagation();
+
+                                                        update(
+                                                            "language",
+                                                            selected.filter(
+                                                                (item) => item !== value
+                                                            )
+                                                        );
+
+                                                        // Clear custom language
+                                                        if (value === otherLanguage) {
+                                                            setOtherLanguage("");
+                                                        }
+                                                    }}
+                                                />
+                                            ))}
+                                        </Box>
+                                    )}
+                                    MenuProps={{
+                                        disablePortal: true,
+                                        PaperProps: {
+                                            sx: {
+                                                maxHeight: 300,
+                                            },
+                                        },
+                                        MenuListProps: {
+                                            sx: {
+                                                pb: 0,
+                                            },
+                                        },
+                                    }}
+                                >
+                                    {languages.map((lang) => (
+                                        <MenuItem
+                                            key={lang}
+                                            value={lang}
+                                        >
+                                            {lang}
+                                        </MenuItem>
+                                    ))}
+
+                                    {/* Select Button */}
+                                    <Box
+                                        sx={{
+                                            position: "sticky",
+                                            bottom: 0,
+                                            backgroundColor: "#fff",
+                                            borderTop: "1px solid #e0e0e0",
+                                            p: 1,
+                                            display: "flex",
+                                            justifyContent: "flex-end",
+                                            zIndex: 2,
+                                        }}
+                                        onMouseDown={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                        }}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                        }}
+                                    >
+                                        <Button
+                                            variant="contained"
+                                            size="small"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                setLanguageOpen(false);
+                                            }}
+                                            sx={{
+                                                textTransform: "none",
+                                                borderRadius: 3,
+                                                minWidth: 80,
+                                                color: "#fff",
+                                                mt: 0.5,
+                                                bgcolor: "#E8650A",
+                                                "&:hover": {
+                                                    bgcolor: "#D95D08",
+                                                },
+                                            }}
+                                        >
+                                            Select
+                                        </Button>
+                                    </Box>
+                                </Select>
+                            </FormControl>
+                            {/* {formData?.language?.includes("Other") && (
+                                <TextField
+                                    fullWidth
+                                    size="small"
+                                    label="Other Language"
+                                    value={otherLanguage}
+                                    onChange={(e) => {
+                                        const value = e.target.value;
+
+                                        setOtherLanguage(value);
+
+                                        const existingLanguages = (
+                                            formData?.language || []
+                                        ).filter(
+                                            (lang) =>
+                                                languages.includes(lang) ||
+                                                lang === "Other"
+                                        );
+
+                                        if (value.trim()) {
+                                            update("language", [
+                                                ...existingLanguages.filter(
+                                                    (lang) => lang !== "Other"
+                                                ),
+                                                value.trim(),
+                                            ]);
+                                        }
+                                    }}
+                                    sx={{
+                                        mt: 1.5,
                                     }}
                                     InputProps={fieldFont}
                                     InputLabelProps={fieldFont}
                                 />
-                            </Stack>
-
-
+                            )} */}
                             <Stack
                                 direction={{
                                     xs: "column",
@@ -822,7 +1392,7 @@ const EditProfile = ({ open, onClose }) => {
                             >
                                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                                     <DatePicker
-                                        label="Date of Birth"
+                                        label="Date of Birth (Optional)"
                                         value={formData?.dob}
                                         onChange={(newValue) => {
                                             setFormData((prev) => ({
@@ -830,15 +1400,12 @@ const EditProfile = ({ open, onClose }) => {
                                                 dob: newValue,
                                             }));
 
-                                            setErrors((prev) => ({
-                                                ...prev,
-                                                dob: "",
-                                            }));
+
                                         }}
                                         slotProps={{
                                             textField: {
                                                 size: "small",
-                                                error: !!errors.dob,
+                                                // error: !!errors.dob,
                                                 helperText: errors.dob,
                                                 fullWidth: true,
                                                 InputProps: fieldFont,
@@ -902,7 +1469,67 @@ const EditProfile = ({ open, onClose }) => {
                                 InputLabelProps={fieldFont}
                             />
 
-                            {/* Zip Code */}
+                            <Autocomplete
+                                fullWidth
+                                size="small"
+
+                                options={AUTOCOMPLETE_OPTIONS}
+                                value={value}
+
+                                onChange={handleCitiesChange}
+                                filterOptions={filterOptions}
+
+                                getOptionLabel={(o) => o?.label || ""}
+
+                                getOptionKey={(o) => `${o.abbr}-${o.city}`}
+
+                                isOptionEqualToValue={(a, b) =>
+                                    a.abbr === b.abbr && a.city === b.city
+                                }
+
+                                noOptionsText="No matching city"
+
+                                slots={{
+                                    popper: CustomPopper,
+                                }}
+
+                                slotProps={{
+                                    listbox: {
+                                        sx: {
+                                            maxHeight: "200px",
+
+                                            "& .MuiAutocomplete-option": {
+                                                padding: "12px 20px",
+                                                fontSize: "16px",
+                                                textAlign: "left",
+                                            },
+                                        },
+                                    },
+                                }}
+
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        label="City, State"
+                                        placeholder="Type a city or state"
+                                        error={!isOtherCity && !!errors.city}
+                                        helperText={!isOtherCity ? errors.city : ""}
+                                    />
+                                )}
+                            />
+
+                            {isOtherCity && (
+                                <TextField
+                                    fullWidth
+                                    size="small"
+                                    label="Enter City, State"
+                                    placeholder="Enter your city and state"
+                                    value={otherCityState}
+                                    onChange={handleOtherCityChange}
+                                    error={!!errors.city}
+                                    helperText={errors.city}
+                                />
+                            )}
                             <TextField
                                 label="ZipCode"
                                 name="zipcode"

@@ -61,14 +61,14 @@ const ACCENT = "#FF9933";
 const ACCENT_DARK = "#CC7722";
 const ACCENT_TINT = "rgba(255,153,51,0.12)";
 
-const steps = ["Trip Details", "Preferences", "Review"];
+const steps = ["Trip Deta", "Preferences", "Review"];
 
 const TRAVELLER_TYPES = [
   "Regular",
   "First-time traveller",
   "Senior citizen support",
   "Student travel companion",
-  "Women-only companion",
+  // "Women-only companion",
   "Family companion",
 ];
 

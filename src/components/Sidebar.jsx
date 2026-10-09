@@ -67,12 +67,12 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
       icon: <RouteIcon />,
       link: "/myride",
     },
-    {
-      id: "community",
-      label: "Community",
-      icon: <DashboardIcon />,
-      link: "/community",
-    },
+    // {
+    //   id: "community",
+    //   label: "Community",
+    //   icon: <DashboardIcon />,
+    //   link: "/community",
+    // },
     {
       id: "referrals",
       label: (

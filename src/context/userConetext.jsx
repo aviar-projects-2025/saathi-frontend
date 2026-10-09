@@ -14,8 +14,9 @@ export const UserProvider = ({ children }) => {
     const requiredFields = [
         "firstName",
         "lastName",
-        "bio",
-        "email",
+        // "bio",
+        // "email",
+        "language",
         "mobile",
         "profileImage",
         "gender",

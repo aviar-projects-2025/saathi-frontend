@@ -373,7 +373,7 @@ const RequestRide = ({ ride }) => {
               color="text.secondary"
               sx={{ mt: 1, maxWidth: 320 }}
             >
-              "Your requested rides will appear here."
+              Your requested rides will appear here.
             </Typography>
           </Box>
         ) : (
