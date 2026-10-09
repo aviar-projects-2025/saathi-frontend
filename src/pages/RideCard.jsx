@@ -614,7 +614,7 @@ export default function RideCard({ ride }) {
           <Typography
             fontWeight={700}
             sx={{
-              marginLeft: { xs: "15%", sm: "12%" },
+              marginLeft: { xs: "15%", sm: "12%",md:"10%" },
               fontSize: { xs: "0.7rem", sm: "0.6rem" },
               position: "relative",
               top: { xs: "-18px", sm: "-30px" },

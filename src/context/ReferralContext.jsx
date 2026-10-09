@@ -8,7 +8,7 @@ const ReferralContext = createContext();
 export const ReferralProvider = ({ children }) => {
   const [pendingReferral, setPendingReferral] = useState([]); // store full list
   const [notificationLengthcount, setNotificationLengthcount] = useState(0);
-
+  const [profileImage, setProfileImage] = useState([]);
   const user = JSON.parse(localStorage.getItem("user"));
 
   const { notifications } = useNotifications();
@@ -17,11 +17,11 @@ export const ReferralProvider = ({ children }) => {
   const getPendingReferralCount = async () => {
     try {
       const res = await axios.get(`${Api}/referrals/${user?.id}`);
+      const profileImages = res.data.data.filter((item) => item?.profileImage);
+      setProfileImage(profileImages);
 
       const waitingList =
-        res?.data?.data?.filter(
-          (item) => item.refApprove === "Waiting"
-        ) || [];
+        res?.data?.data?.filter((item) => item.refApprove === "Waiting") || [];
 
       setPendingReferral(waitingList);
     } catch (error) {
@@ -35,11 +35,9 @@ export const ReferralProvider = ({ children }) => {
     }
   }, [user?.id]);
 
-
+  
   useEffect(() => {
-
     const waitingIds = pendingReferral.map((item) => item._id);
-
 
     const notificationIds =
       notifications
@@ -47,9 +45,7 @@ export const ReferralProvider = ({ children }) => {
         .map((n) => n.data?.userId || n.data?.user?._id)
         .filter(Boolean) || []; // remove undefined/null
 
-
     const uniqueIds = new Set([...waitingIds, ...notificationIds]);
-
 
     setNotificationLengthcount(uniqueIds?.size);
   }, [notifications, pendingReferral]);
@@ -58,6 +54,7 @@ export const ReferralProvider = ({ children }) => {
     <ReferralContext.Provider
       value={{
         pendingReferral,
+        profileImage,
         pendingReferralCount: pendingReferral.length,
         notificationLengthcount,
         getPendingReferralCount,
