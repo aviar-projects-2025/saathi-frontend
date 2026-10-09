@@ -49,6 +49,8 @@ import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import ToastConfig from '../components/ToastConfig.jsx';
 import ProfileModal from './Avatar.jsx';
 
+import ChatModal from "./ChatModal";
+
 const BREAKPOINTS = { xs: 0, sm: 600, md: 900, lg: 1200, xl: 1536 }; // MUI defaults
 
 function getTier(width) {
@@ -97,6 +99,8 @@ export default function Community() {
 
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null);
+  const [chatModalOpen, setChatModalOpen] = useState(false);
+  const [chatUser, setChatUser] = useState(null);
 
   const [expandedPosts, setExpandedPosts] = useState({});
 
@@ -1318,9 +1322,20 @@ export default function Community() {
                       </Avatar>
 
                       <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Typography fontWeight={700}
-                          sx={{ fontSize: { xs: "0.7rem", sm: "0.92rem" } }}
-                          noWrap>
+                        <Typography
+                          fontWeight={700}
+                          noWrap
+                          onClick={() => {
+                            setSelectedProfile(post?.authorId);
+                            setProfileModalOpen(true);
+                          }}
+                          sx={{
+                            cursor: "pointer",
+                            "&:hover": {
+                              textDecoration: "underline",
+                            },
+                          }}
+                        >
                           {post?.authorId?.firstName} {post?.authorId?.lastName}
                         </Typography>
                         <Typography variant="caption" color="text.secondary" fontSize={captionSize}
@@ -1837,8 +1852,24 @@ export default function Community() {
           <ProfileModal
             open={profileModalOpen}
             selectedProfile={selectedProfile}
+            currentUser={currentUser}
             onClose={() => {
               setProfileModalOpen(false);
+            }}
+            onMessage={(user) => {
+              setProfileModalOpen(false);
+
+              setChatUser(user);
+              setChatModalOpen(true);
+            }}
+          />
+
+          <ChatModal
+            open={chatModalOpen}
+            selectedUser={chatUser}
+            onClose={() => {
+              setChatModalOpen(false);
+              setChatUser(null);
             }}
           />
 

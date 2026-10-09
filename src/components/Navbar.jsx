@@ -36,8 +36,10 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import { useTheme, useMediaQuery } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlineOutlined';
 import axios from "axios";
 import Api from "../Api.jsx";
+import MessagesModal from "../pages/MessagesModal.jsx";
 
 const TopNav = ({ onMenuClick }) => {
   const theme = useTheme();
@@ -49,6 +51,10 @@ const TopNav = ({ onMenuClick }) => {
   const { tabNotification, notifications, fetchNotifications } = useNotifications();
 
   const [moreAnchorEl, setMoreAnchorEl] = useState(null);
+
+  const [messagesOpen, setMessagesOpen] = useState(false);
+
+  const [conversations, setConversations] = useState([]);
 
   const openMoreMenu = Boolean(moreAnchorEl);
 
@@ -262,6 +268,24 @@ const TopNav = ({ onMenuClick }) => {
               <EmojiEventsIcon />
             </IconButton>
           )}
+
+          <IconButton
+            onClick={() => setMessagesOpen(true)}
+            sx={{
+              color: "#5f4632",
+              transition: "color 0.2s ease",
+
+              "&:hover": {
+                color: "#f97316",
+              },
+            }}
+          >
+            <ChatBubbleOutlineIcon
+              sx={{
+                fontSize: "clamp(26px, 5vw, 28px)",
+              }}
+            />
+          </IconButton>
 
           <IconButton
             onClick={handleOpenNotifications}
@@ -560,6 +584,17 @@ const TopNav = ({ onMenuClick }) => {
             </Menu>
           </Stack>
         </Box>
+        <MessagesModal
+          open={messagesOpen}
+          onClose={() => setMessagesOpen(false)}
+          conversations={conversations}
+          onOpenChat={(user) => {
+            setMessagesOpen(false);
+
+            // Open your ChatModal here
+            console.log("Open chat with:", user);
+          }}
+        />
         <Dialog
           open={logoutDialogOpen}
           onClose={(event, reason) => {
