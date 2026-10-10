@@ -230,14 +230,34 @@ const TopNav = ({ onMenuClick }) => {
               style={{ marginRight: 5, objectFit: "contain" }}
             />
 
-            <Typography variant="h6" sx={{ fontWeight: 900 }}>
-              <Box component="span" sx={{ color: "#f97316" }}>
-                Saa
-              </Box>
-              <Box component="span" sx={{ color: "#15803d" }}>
-                thi
-              </Box>
-            </Typography>
+            <Box sx={{ display: "flex", flexDirection: "column" }}>
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: 900,
+                  lineHeight: 1.1,
+                }}
+              >
+                <Box component="span" sx={{ color: "#f97316" }}>
+                  Saa
+                </Box>
+                <Box component="span" sx={{ color: "#15803d" }}>
+                  thi
+                </Box>
+              </Typography>
+
+              <Typography
+                sx={{
+                  fontSize: "10px",
+                  color: "#666666",
+                  mt: 0.3,
+                  lineHeight: 1.2,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Community rides · By invite only
+              </Typography>
+            </Box>
           </Box>
         </Box>
 

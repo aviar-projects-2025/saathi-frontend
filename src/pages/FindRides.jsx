@@ -25,7 +25,7 @@ import {
   DialogActions,
   IconButton,
 } from "@mui/material";
-
+import WelcomeBanner from "./Welcome.jsx";
 import { useUser } from "../context/userConetext";
 
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
@@ -230,9 +230,7 @@ export default function FindRides() {
 
   const hasCheckedProfileGateRef = useRef(false);
 
-  // ─────────────────────────────────────────────
-  // Current user's GPS location
-  // ─────────────────────────────────────────────
+ 
 
   const [userLocation, setUserLocation] = useState(null);
   const [locationLoading, setLocationLoading] = useState(false);
@@ -241,12 +239,6 @@ export default function FindRides() {
   const token = localStorage.getItem('token')
   const resultsRef = useRef(null);
   const scrollStartRef = useRef(0);
-
-
-  // ─────────────────────────────────────────────
-  // Fetch rides
-  // ─────────────────────────────────────────────
-
 
 
   const {
@@ -391,12 +383,6 @@ export default function FindRides() {
     appliedLanguage,
   ]);
 
-
-
-  // ─────────────────────────────────────────────
-  // Distance calculation
-  // ─────────────────────────────────────────────
-
   const calculateDistanceKm = (lat1, lon1, lat2, lon2) => {
     if (
       lat1 == null ||
@@ -426,10 +412,6 @@ export default function FindRides() {
 
     return R * c;
   };
-
-  // ─────────────────────────────────────────────
-  // Request current location
-  // ─────────────────────────────────────────────
 
   const requestCurrentLocation = () => {
     if (!navigator.geolocation) {
@@ -501,23 +483,16 @@ export default function FindRides() {
     );
   };
 
-  // Request GPS once when Find Rides opens
+
   useEffect(() => {
     requestCurrentLocation();
   }, []);
 
-  // ─────────────────────────────────────────────
-  // NEW:
-  // Open People Near You page
-  // ─────────────────────────────────────────────
 
   const handlePeopleNearby = () => {
     navigate("/people-nearby");
   };
 
-  // ─────────────────────────────────────────────
-  // Get ride coordinates
-  // ─────────────────────────────────────────────
 
   const getRideCoordinates = (ride) => {
     const fromLatitude = Number(
@@ -600,9 +575,6 @@ export default function FindRides() {
     );
   };
 
-  // ─────────────────────────────────────────────
-  // Profile completion gate
-  // ─────────────────────────────────────────────
 
   useEffect(() => {
     if (hasCheckedProfileGateRef.current) {
@@ -626,9 +598,6 @@ export default function FindRides() {
     setProfileGateOpen(false);
   };
 
-  // ─────────────────────────────────────────────
-  // Filters
-  // ─────────────────────────────────────────────
 
   const openFilters = () => {
     scrollStartRef.current =
@@ -654,9 +623,6 @@ export default function FindRides() {
   const handleResultsScroll = (e) => {
     const element = e.currentTarget;
 
-    // ----------------------------------------
-    // Close filters when user starts scrolling
-    // ----------------------------------------
     if (filtersOpen) {
       const delta = Math.abs(
         element.scrollTop - scrollStartRef.current
@@ -667,9 +633,6 @@ export default function FindRides() {
       }
     }
 
-    // ----------------------------------------
-    // Infinite scroll
-    // ----------------------------------------
     const distanceFromBottom =
       element.scrollHeight -
       element.scrollTop -
@@ -790,18 +753,11 @@ export default function FindRides() {
     },
   ].filter(Boolean);
 
-  // ─────────────────────────────────────────────
-  // Filter rides
-  // ─────────────────────────────────────────────
-
+ 
   const now = new Date();
 
 
   const visibleRides = rides;
-
-  // ─────────────────────────────────────────────
-  // Sort rides by distance
-  // ─────────────────────────────────────────────
 
   const sortedVisibleRides =
     useMemo(() => {
@@ -902,7 +858,7 @@ export default function FindRides() {
 
   return (
     <>
-
+     
       <Dialog
         open={profileGateOpen}
         onClose={(event, reason) => {
@@ -1078,6 +1034,7 @@ export default function FindRides() {
           </Button>
         </DialogActions>
       </Dialog>
+      { completion !== 100 && (   <WelcomeBanner/>)}
 
       <Box
         sx={{
@@ -1090,9 +1047,7 @@ export default function FindRides() {
           p: 1,
         }}
       >
-        {/* ──────────────────────────────────────
-            Sticky header
-        ─────────────────────────────────────── */}
+    
         <Box
           sx={{
             position: "sticky",
@@ -1115,9 +1070,7 @@ export default function FindRides() {
             <Container
               disableGutters
             >
-              {/* ───────────────────────────────
-                  Page title
-              ─────────────────────────────── */}
+              
               <Typography
                 fontWeight={800}
                 sx={{
@@ -1134,9 +1087,7 @@ export default function FindRides() {
                 Find a Ride
               </Typography>
 
-              {/* ───────────────────────────────
-                  Location + People Near You
-              ─────────────────────────────── */}
+      
               <Box
                 sx={{
                   mt: 1,
@@ -1148,7 +1099,7 @@ export default function FindRides() {
                   flexWrap: "wrap",
                 }}
               >
-                {/* Enable Location */}
+          
                 <Button
                   onClick={requestCurrentLocation}
                   disabled={locationLoading}
@@ -1393,10 +1344,6 @@ export default function FindRides() {
                   }}
                 />
               </Box>
-
-              {/* ───────────────────────────────
-                  From / To / Filters / Requests
-              ─────────────────────────────── */}
 
               <Box
                 sx={{

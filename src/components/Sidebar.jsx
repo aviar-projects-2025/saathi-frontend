@@ -264,7 +264,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
               sx={{
                 fontSize: {
                   xs: "0.75rem",
-                  sm: "0.9rem",
+                  sm: "0.7rem",
                 },
                 color: "text.secondary",
                 overflow: "hidden",
@@ -273,9 +273,23 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
                 mt: 0.25,
               }}
             >
-              {currentUser?.email}
+              {currentUser?.city}
             </Typography>
-
+            <Typography
+              sx={{
+                fontSize: { xs: "0.75rem", sm: "0.7rem" },
+                color: "text.secondary",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                mt: 0.25,
+              }}
+            >
+              {Array.isArray(currentUser?.language)
+                ? currentUser.language.join(", ")
+                : currentUser?.language || ""}
+            </Typography>
+       
             <Typography
               sx={{
                 fontSize: {
