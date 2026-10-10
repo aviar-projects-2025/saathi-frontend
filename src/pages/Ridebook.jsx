@@ -969,7 +969,7 @@ export default function Ridebook({
           rows={isMobile ? 3 : 4}
           size={isMobile ? "small" : "medium"}
           label={
-            isFlight ? "Why do you need a companion?" : "Message to Driver"
+            "Message to Rider"
           }
           value={requestData.message}
           sx={{

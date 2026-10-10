@@ -585,6 +585,7 @@ function RideCard({
       // if (!window.confirm("Are you sure you want to approve this request?")) {
       //   return;
       // }
+      console.log(requestId,'requestId')
       setApproveLoading(requestId);
       const res = await axios.patch(
         `${Api}/bookride/${requestId}/status?type=Approve`,

@@ -226,6 +226,11 @@ const EditProfile = ({ open, onClose }) => {
     const [mobileError, setMobileError] = useState("");
     const token = localStorage.getItem("token");
 
+    const isTesting =
+        import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "testing";
+
+    const [countryCode, setCountryCode] = useState("+1");
+
     useEffect(() => {
         if (currentUser) {
             setFormData(buildFormData(currentUser));
@@ -246,12 +251,14 @@ const EditProfile = ({ open, onClose }) => {
 
 
     const sendMobileOtp = async () => {
-        if (!/^\+?\d{10,15}$/.test(newMobile)) {
-            setMobileError("Enter a valid mobile number");
+        if (!/^\d{10}$/.test(newMobile)) {
+            setMobileError("Enter a valid 10-digit mobile number");
             return;
         }
 
-        if (newMobile === formData.mobile) {
+        const fullMobileNumber = `${countryCode}${newMobile}`;
+
+        if (fullMobileNumber === formData.mobile) {
             setMobileError("Enter a different mobile number");
             return;
         }
@@ -263,7 +270,7 @@ const EditProfile = ({ open, onClose }) => {
             await axios.post(
                 `${Api}/auth/send-change-mobile-otp`,
                 {
-                    mobileNumber: newMobile,
+                    mobileNumber: fullMobileNumber,
                 },
                 {
                     headers: {
@@ -1063,24 +1070,59 @@ const EditProfile = ({ open, onClose }) => {
                                                     Enter your new mobile number
                                                 </Typography>
 
-                                                <TextField
-                                                    fullWidth
-                                                    label="New Mobile Number"
-                                                    size="small"
-                                                    value={newMobile}
-                                                    onChange={(e) => {
-                                                        setNewMobile(
-                                                            e.target.value
-                                                                .replace(/[^\d+]/g, "")
-                                                                .replace(/(?!^)\+/g, "")
-                                                        );
-                                                        setMobileError("");
-                                                    }}
-                                                    error={!!mobileError}
-                                                    helperText={mobileError}
-                                                    InputProps={fieldFont}
-                                                    InputLabelProps={fieldFont}
-                                                />
+                                                <Stack direction="row" spacing={1} sx={{ width: "100%" }}>
+                                                    {isTesting ? (
+                                                        <TextField
+                                                            select
+                                                            size="small"
+                                                            label="Code"
+                                                            value={countryCode}
+                                                            onChange={(e) => {
+                                                                setCountryCode(e.target.value);
+                                                                setNewMobile("");
+                                                                setMobileError("");
+                                                            }}
+                                                            sx={{ width: 115 }}
+                                                        >
+                                                            <MenuItem value="+91">🇮🇳 +91</MenuItem>
+                                                            <MenuItem value="+1">🇺🇸 +1</MenuItem>
+                                                        </TextField>
+                                                    ) : (
+                                                        <TextField
+                                                            size="small"
+                                                            value="US +1"
+                                                            disabled
+                                                            sx={{
+                                                                width: 115,
+                                                                "& .MuiInputBase-input.Mui-disabled": {
+                                                                    color: "#555",
+                                                                    WebkitTextFillColor: "#555",
+                                                                },
+                                                            }}
+                                                        />
+                                                    )}
+
+                                                    <TextField
+                                                        fullWidth
+                                                        label="New Mobile Number"
+                                                        size="small"
+                                                        value={newMobile}
+                                                        onChange={(e) => {
+                                                            setNewMobile(
+                                                                e.target.value.replace(/\D/g, "").slice(0, 10)
+                                                            );
+                                                            setMobileError("");
+                                                        }}
+                                                        error={!!mobileError}
+                                                        helperText={mobileError}
+                                                        inputProps={{
+                                                            maxLength: 10,
+                                                            inputMode: "numeric",
+                                                        }}
+                                                        InputProps={fieldFont}
+                                                        InputLabelProps={fieldFont}
+                                                    />
+                                                </Stack>
 
                                                 <Stack
                                                     direction="row"
