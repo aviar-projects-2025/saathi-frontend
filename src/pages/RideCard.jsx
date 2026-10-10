@@ -346,7 +346,7 @@ export default function RideCard({ ride }) {
 
 
   const remainingSeatsForUser = isFlight
-    ? null
+    ? 1
     : Math.max(Number(ride.availableSeats || 0) - pendingSeatsByMe, 0);
 
   const noSeats = !isFlight && remainingSeatsForUser <= 0;
@@ -614,7 +614,7 @@ export default function RideCard({ ride }) {
           <Typography
             fontWeight={700}
             sx={{
-              marginLeft: { xs: "15%", sm: "12%",md:"10%" },
+              marginLeft: { xs: "15%", sm: "12%", md: "10%" },
               fontSize: { xs: "0.7rem", sm: "0.6rem" },
               position: "relative",
               top: { xs: "-18px", sm: "-30px" },
@@ -939,6 +939,7 @@ export default function RideCard({ ride }) {
                         arrow
                       >
                         <Box component="span">
+                          {console.log(remainingSeatsForUser,'remainingSeatsForUser')}
                           <Button
                             disabled={
                               genderMismatch ||

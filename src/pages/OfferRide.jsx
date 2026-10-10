@@ -610,7 +610,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
 
     try {
       setIsSubmitted(true);
-
+      console.log(payload,'payload')
       await axios.post(`${Api}/rides/`, payload);
 
       toast.success("Ride Created Successfully...!", {
