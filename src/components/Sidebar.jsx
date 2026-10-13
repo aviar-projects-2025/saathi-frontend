@@ -13,7 +13,7 @@ import {
   DialogContent,
   DialogActions,
 } from "@mui/material";
-
+import TelegramIcon from "@mui/icons-material/Telegram";
 import SearchIcon from "@mui/icons-material/Search";
 import RouteIcon from "@mui/icons-material/Route";
 import SettingsIcon from "@mui/icons-material/Settings";
@@ -73,6 +73,12 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
     //   icon: <DashboardIcon />,
     //   link: "/community",
     // },
+    {
+      id: "travel-buddy",
+      label: "Travel Buddy",
+      icon: <TelegramIcon/>,
+      link: "/travelBuddy",
+    },
     {
       id: "referrals",
       label: (
