@@ -607,7 +607,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
 
   const createRide = async () => {
     const payload = buildPayload();
-
+     
     try {
       setIsSubmitted(true);
       console.log(payload,'payload')
@@ -948,7 +948,7 @@ export default function OfferRide({ ride, onSave, onClose, selectedRide, setOpen
                   <MenuItem value="Car" sx={menuItemSx}>Car</MenuItem>
                   <MenuItem value="Bus" sx={menuItemSx}>Bus</MenuItem>
                   <MenuItem value="Bike" sx={menuItemSx}>Bike</MenuItem>
-                  <MenuItem value="Flight" sx={menuItemSx}>Flight</MenuItem>
+                  {/* <MenuItem value="Flight" sx={menuItemSx}>Flight</MenuItem> */}
                   {/* <MenuItem value="Train" sx={menuItemSx} Train</MenuItem> */}
                 </Select>
                 <FormHelperText>{showErrors ? errors.modeOfTravel : ""}</FormHelperText>

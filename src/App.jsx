@@ -43,10 +43,13 @@ const UserProfile = React.lazy(() => import("./pages/UserProfile.jsx"));
 const OfferRide = React.lazy(() => import("./pages/OfferRide.jsx"));
 const MyRides = React.lazy(() => import("./pages/MyRides.jsx"));
 const PeopleNearYou = React.lazy(() => import("./pages/PeopleNearYou.jsx"));
-
+const TravelBuddy = React.lazy (()=> import ("./pages/TravelBuddy/index.jsx"));
+const TripMatches = React.lazy (()=> import ("./pages/TravelBuddy/TripMatches.jsx"));
+const InfoTripMatches = React.lazy (()=> import ("./pages/TravelBuddy/InfoTripMatches.jsx"))
 const MyReferrals = React.lazy(() =>
   import("./pages/referral/MyReferrals.jsx")
 );
+const PostTrip = React.lazy(()=> import ("./pages/TravelBuddy/PostTrip.jsx"))
 const Notifications = React.lazy(() => import("./pages/Notifications.jsx"))
 // const Settings = React.lazy(() => import("./pages/Settings.jsx"));
 const RequestRide = React.lazy(() => import("./pages/RequestRide.jsx"));
@@ -128,13 +131,17 @@ function App() {
               <Route path="/profile" element={<Profile />} />
               <Route path="/myprofile" element={<Myprofile />} />
               <Route path="/myride" element={<MyRides />} />
+              <Route path = "/travelBuddy" element ={<TravelBuddy/>}/>
+              <Route path ="/post-trip" element ={<PostTrip/>}/>
+              <Route path="/trip-matches" element ={<TripMatches/>}/>
+              <Route path ="/trip-matches/:id" element ={<InfoTripMatches/>}/>
               <Route path="/user-profile" element={<UserProfile />} />
               <Route path="/discover" element={<Discover />} />
               <Route path="/request-ride" element={<RequestRide />} />
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/optin" element={<SmsNotifications />} />
               <Route path="/people-nearby" element={<PeopleNearYou />} />
-
+      
             </Route>
           </Route>
           

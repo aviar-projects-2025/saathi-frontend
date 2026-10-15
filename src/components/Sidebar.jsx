@@ -13,7 +13,7 @@ import {
   DialogContent,
   DialogActions,
 } from "@mui/material";
-
+import TelegramIcon from "@mui/icons-material/Telegram";
 import SearchIcon from "@mui/icons-material/Search";
 import RouteIcon from "@mui/icons-material/Route";
 import SettingsIcon from "@mui/icons-material/Settings";
@@ -21,7 +21,6 @@ import DashboardIcon from "@mui/icons-material/Dashboard";
 import LogoutIcon from "@mui/icons-material/Logout";
 import HandshakeIcon from "@mui/icons-material/Handshake";
 import PersonIcon from "@mui/icons-material/Person";
-
 import { useUser } from "../context/userConetext";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useReferral } from "../context/ReferralContext";
@@ -73,6 +72,12 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
     //   icon: <DashboardIcon />,
     //   link: "/community",
     // },
+    {
+      id: "travel-buddy",
+      label: "Travel Buddy",
+      icon: <TelegramIcon/>,
+      link: "/travelBuddy",
+    },
     {
       id: "referrals",
       label: (
