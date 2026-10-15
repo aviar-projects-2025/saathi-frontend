@@ -12,7 +12,7 @@ import {
   Typography,
   createTheme,
 } from "@mui/material";
-
+import { useNavigate } from "react-router-dom";
 // Optional font: <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
 
 /* ---------- design tokens ---------- */
@@ -46,7 +46,7 @@ const theme = createTheme({
 
 /* ---------- data (replace with your API response) ---------- */
 
-// tone drives the colours of the avatar, tier chip and card border
+// tone drives the colours of the avatar and tier chip
 const TONES = {
   green: { avatarBg: c.greenBg, avatarText: c.green, chipBg: c.greenBg, chipText: c.green },
   blue: { avatarBg: c.blueBg, avatarText: c.blueText, chipBg: c.blueBg, chipText: c.blueText },
@@ -63,14 +63,15 @@ const DEFAULT_GROUPS = [
     title: "Same flight (best match)",
     tone: "green",
     best: true,
-    action: "accept", // Accept as companion + Not now
+    action: "accept",
     matches: [
       {
         id: "lakshmi",
         initials: "LV",
         name: "Lakshmi V.",
         tier: "Tier 1: same flights",
-        details: "Flying EK 544 and EK 235 · Tamil, English · 4.9 (6) · via Meena → Vijay · Chicago, IL",
+        details:
+          "Flying EK 544 and EK 235 · Tamil, English · 4.9 (6) · via Meena → Vijay · Chicago, IL",
         note: "\u201CTravelling with my husband, happy to walk with her through Dubai.\u201D",
       },
     ],
@@ -87,7 +88,8 @@ const DEFAULT_GROUPS = [
         initials: "RS",
         name: "Ramesh S.",
         tier: "Tier 2: arrives ORD 6:45 PM",
-        details: "Flying Qatar QR 725 via DOH · Telugu, Tamil, English · New member · via Anita → Vijay",
+        details:
+          "Flying Qatar QR 725 via DOH · Telugu, Tamil, English · New member · via Anita → Vijay",
         note: "Different flight: can meet at arrivals, not during the journey.",
       },
     ],
@@ -114,36 +116,70 @@ const SectionLabel = ({ children }) => (
 
 const buttonBase = { px: 2.5, py: 1.1, borderRadius: 2, fontSize: 14, whiteSpace: "nowrap" };
 
-const MatchActions = ({ action, match, onAccept, onNotNow, onAskHelp }) =>
-  action === "accept" ? (
-    <>
-      <Button
-        disableElevation
-        variant="contained"
-        onClick={() => onAccept?.(match)}
-        sx={{ ...buttonBase, bgcolor: c.green, "&:hover": { bgcolor: c.greenDark } }}
-      >
-        Accept as companion
-      </Button>
-      <Button
-        variant="outlined"
-        onClick={() => onNotNow?.(match)}
-        sx={{ ...buttonBase, color: "#111", borderColor: c.border, bgcolor: "#fff", "&:hover": { bgcolor: "#F3EFE6", borderColor: c.border } }}
-      >
-        Not now
-      </Button>
-    </>
-  ) : (
+const MatchActions = ({ action, match, onAccept, onNotNow, onAskHelp }) => {
+  // Hooks must be called at the top level of a component, not inside JSX
+  const navigate = useNavigate();
+
+  const handleAccept = () => {
+    onAccept?.(match);
+    navigate(`/trip-matches/${match.id}`); // real id instead of the literal ":id"
+  };
+
+  if (action === "accept") {
+    return (
+      <>
+        <Button
+          disableElevation
+          variant="contained"
+          onClick={handleAccept}
+          sx={{ ...buttonBase, bgcolor: c.green, "&:hover": { bgcolor: c.greenDark } }}
+        >
+          Accept as companion
+        </Button>
+        <Button
+          variant="outlined"
+          onClick={() => onNotNow?.(match)}
+          sx={{
+            ...buttonBase,
+            color: "#111",
+            borderColor: c.border,
+            bgcolor: "#fff",
+            "&:hover": { bgcolor: "#F3EFE6", borderColor: c.border },
+          }}
+        >
+          Not now
+        </Button>
+      </>
+    );
+  }
+
+  return (
     <Button
       variant="outlined"
       onClick={() => onAskHelp?.(match)}
-      sx={{ ...buttonBase, color: c.rust, borderColor: c.rust, borderWidth: 1.5, bgcolor: "#fff", "&:hover": { bgcolor: "#FFF4EE", borderColor: c.rustDark, borderWidth: 1.5 } }}
+      sx={{
+        ...buttonBase,
+        color: c.rust,
+        borderColor: c.rust,
+        borderWidth: 1.5,
+        bgcolor: "#fff",
+        "&:hover": { bgcolor: "#FFF4EE", borderColor: c.rustDark, borderWidth: 1.5 },
+      }}
     >
       Ask to help at arrival
     </Button>
   );
+};
 
-const MatchCard = memo(({ match, tone, best, action, onAccept, onNotNow, onAskHelp }) => {
+const MatchCard = memo(function MatchCard({
+  match,
+  tone,
+  best,
+  action,
+  onAccept,
+  onNotNow,
+  onAskHelp,
+}) {
   const t = TONES[tone];
   return (
     <Paper
@@ -158,7 +194,9 @@ const MatchCard = memo(({ match, tone, best, action, onAccept, onNotNow, onAskHe
     >
       <Stack direction={{ xs: "column", md: "row" }} spacing={2} alignItems={{ md: "center" }}>
         <Stack direction="row" spacing={2} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
-          <Avatar sx={{ width: 46, height: 46, bgcolor: t.avatarBg, color: t.avatarText, fontSize: 15, fontWeight: 700 }}>
+          <Avatar
+            sx={{ width: 46, height: 46, bgcolor: t.avatarBg, color: t.avatarText, fontSize: 15, fontWeight: 700 }}
+          >
             {match.initials}
           </Avatar>
 
@@ -207,6 +245,9 @@ export default function TripMatches({
   onAskHelp,
   onPreview,
 }) {
+  const navigate = useNavigate();
+  const handleBack = onBack ?? (() => navigate(-1));
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -216,7 +257,7 @@ export default function TripMatches({
             component="button"
             type="button"
             underline="none"
-            onClick={onBack}
+            onClick={handleBack}
             sx={{ color: c.rust, fontWeight: 700, fontSize: 14, mb: 1.5 }}
           >
             Back to Travel Buddy
