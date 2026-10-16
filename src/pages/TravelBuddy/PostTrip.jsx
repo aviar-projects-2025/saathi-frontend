@@ -58,6 +58,21 @@ const theme = createTheme({
     },
   },
 });
+
+/* One size for every button */
+const BTN = {
+  height: 46,
+  minHeight: 46,
+  px: 2,
+  py: 0,
+  borderRadius: 2.5,
+  fontSize: 15,
+  fontWeight: 700,
+  lineHeight: 1.2,
+  textAlign: "center",
+  boxShadow: "none",
+};
+
 const user = JSON.parse(localStorage.getItem("user"));
 const ROLES = [
   ["parent", "My parent needs a companion"],
@@ -223,7 +238,7 @@ const ErrorText = ({ children }) =>
   ) : null;
 
 const Field = memo(({ label, small, error, ...props }) => (
-  <Box sx={{ flex: 1, minWidth: 0 }}>
+  <Box sx={{ flex: 1, minWidth: 0, width: "100%" }}>
     <FieldLabel small={small}>{label}</FieldLabel>
     <TextField
       fullWidth
@@ -236,7 +251,7 @@ const Field = memo(({ label, small, error, ...props }) => (
 ));
 
 const SelectField = ({ label, options, error, ...props }) => (
-  <Box sx={{ flex: 1, minWidth: 0 }}>
+  <Box sx={{ flex: 1, minWidth: 0, width: "100%" }}>
     <FieldLabel>{label}</FieldLabel>
     <TextField select fullWidth error={Boolean(error)} helperText={error || " "} {...props}>
       {options.map((o) => (
@@ -249,7 +264,11 @@ const SelectField = ({ label, options, error, ...props }) => (
 );
 
 const Row = ({ children }) => (
-  <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 0.5 }}>
+  <Stack
+    direction={{ xs: "column", sm: "row" }}
+    spacing={{ xs: 0.5, sm: 2 }}
+    sx={{ mb: 0.5 }}
+  >
     {children}
   </Stack>
 );
@@ -265,9 +284,7 @@ const PrimaryButton = (props) => (
     disableElevation
     {...props}
     sx={{
-      py: 1.75,
-      borderRadius: 2.5,
-      fontSize: 16,
+      ...BTN,
       bgcolor: c.rust,
       "&:hover": { bgcolor: c.rustDark },
       "&.Mui-disabled": { bgcolor: "#E3C2B3", color: "#fff" },
@@ -284,11 +301,15 @@ const DonePaper = ({ onDone, children, ...props }) => (
       onMouseDown={(e) => e.preventDefault()}
     >
       <Button
-        size="small"
         variant="contained"
         disableElevation
         onClick={onDone}
-        sx={{ borderRadius: 3, minWidth: 80, bgcolor: c.rust, "&:hover": { bgcolor: c.rustDark } }}
+        sx={{
+          ...BTN,
+          width: { xs: "100%", sm: 140 },
+          bgcolor: c.rust,
+          "&:hover": { bgcolor: c.rustDark },
+        }}
       >
         Select
       </Button>
@@ -305,7 +326,7 @@ const MultiSelect = ({ label, options, value, onChange, error, placeholder }) =>
   );
 
   return (
-    <Box sx={{ flex: 1, minWidth: 0 }}>
+    <Box sx={{ flex: 1, minWidth: 0, width: "100%" }}>
       <FieldLabel>{label}</FieldLabel>
       <Autocomplete
         multiple
@@ -389,20 +410,38 @@ const ReviewSummary = ({ form, postedBy }) => {
   ];
 
   return (
-    <Paper variant="outlined" sx={{ p: 2, borderRadius: 3, borderColor: c.border, mb: 2 }}>
+    <Paper
+      variant="outlined"
+      sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: 3, borderColor: c.border, mb: 2 }}
+    >
       <Typography sx={{ fontWeight: 700, fontSize: 13, mb: 1 }}>
         Review: what others see before you accept anyone
       </Typography>
 
       {rows.map(([k, v]) => (
         <Stack key={k} direction="row" spacing={1.5} sx={{ mb: 0.5 }}>
-          <Typography sx={{ fontSize: 13, color: c.muted, width: 92, flexShrink: 0 }}>{k}</Typography>
-          <Typography sx={{ fontSize: 13, lineHeight: 1.5 }}>{v}</Typography>
+          <Typography
+            sx={{ fontSize: 13, color: c.muted, width: { xs: 76, sm: 92 }, flexShrink: 0 }}
+          >
+            {k}
+          </Typography>
+          <Typography sx={{ fontSize: 13, lineHeight: 1.5, minWidth: 0, wordBreak: "break-word" }}>
+            {v}
+          </Typography>
         </Stack>
       ))}
 
       {flights.map((f, i) => (
-        <Typography key={i} sx={{ fontSize: 12.5, color: c.muted, mt: i === 0 ? 1 : 0.25, lineHeight: 1.5 }}>
+        <Typography
+          key={i}
+          sx={{
+            fontSize: 12.5,
+            color: c.muted,
+            mt: i === 0 ? 1 : 0.25,
+            lineHeight: 1.5,
+            wordBreak: "break-word",
+          }}
+        >
           Flight {i + 1}: {f.airline.trim()} {f.flightNumber.trim().toUpperCase()} ·{" "}
           {airportCode(f.from)} {fmtTime(f.departure)} → {airportCode(f.to)} {fmtTime(f.arrival)}
           {f.arrival ? ` (${fmtDate(f.arrival)})` : ""}
@@ -418,25 +457,61 @@ const ReviewSummary = ({ form, postedBy }) => {
 };
 
 const Header = ({ leftLabel, onLeft, step }) => (
-  <Box sx={{ mb: 2 }}>
-    <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+  <Box sx={{ mb: 2, width: "100%" }}>
+    <Stack
+      direction="row"
+      justifyContent="space-between"
+      alignItems="center"
+      spacing={1}
+      sx={{ mb: 1.5, width: "100%" }}
+    >
+      <Typography
+        sx={{
+          fontSize: { xs: 12, sm: 13 },
+          color: c.muted,
+          textAlign: "left",
+          flex: 1,
+          minWidth: 0,
+        }}
+      >
+        Step {step} of 2: {step === 1 ? "Flights" : "Traveller and review"}
+      </Typography>
+
       <Button
         onClick={onLeft}
-        sx={{ p: 0, minWidth: 0, color: c.rust, fontSize: 15, "&:hover": { bgcolor: "transparent" } }}
+        sx={{
+          p: 0,
+          minWidth: 0,
+          minHeight: 40,
+          flexShrink: 0,
+          color: c.rust,
+          fontSize: { xs: 13, sm: 14, md: 15 },
+          whiteSpace: "nowrap",
+          textTransform: "none",
+          "&:hover": {
+            bgcolor: "transparent",
+          },
+        }}
       >
         {leftLabel}
       </Button>
-      <Box sx={{marginLeft:"70%"}}>
-      <Typography sx={{ fontSize: 13, color: c.muted }}>
-        Step {step} of 2: {step === 1 ? "Flights" : "Traveller and review"}
-      </Typography>
-      </Box>
     </Stack>
-    <Stack direction="row" spacing={1}>
+
+    <Stack
+      direction="row"
+      spacing={1}
+      sx={{ width: "100%" }}
+    >
       {[1, 2].map((i) => (
         <Box
           key={i}
-          sx={{ flex: 1, height: 5, borderRadius: 3, bgcolor: i <= step ? c.rust : "#E8E3DA" }}
+          sx={{
+            flex: 1,
+            height: 5,
+            borderRadius: 3,
+            bgcolor: i <= step ? c.rust : "#E8E3DA",
+            transition: "background-color 0.3s ease",
+          }}
         />
       ))}
     </Stack>
@@ -481,11 +556,21 @@ function StepFlights({ form, setForm, onNext, onCancel }) {
   return (
     <>
       <Header leftLabel="Cancel" onLeft={onCancel} step={1} />
-      <Typography component="h1" sx={{ fontWeight: 800, fontSize: 26, color: c.navy, mb: 1.5 }}>
+      <Typography
+        component="h1"
+        sx={{ fontWeight: 800, fontSize: { xs: 22, sm: 26 }, color: c.navy, mb: 1.5 }}
+      >
         Post a Travel Buddy trip
       </Typography>
 
-      <Stack direction="row" spacing={1.5} sx={{ mb: 2.5 }}>
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+          gap: 1.5,
+          mb: 2.5,
+        }}
+      >
         {ROLES.map(([val, text]) => {
           const on = role === val;
           return (
@@ -495,9 +580,7 @@ function StepFlights({ form, setForm, onNext, onCancel }) {
               disableElevation
               onClick={() => setRole(val)}
               sx={{
-                py: 1.4,
-                borderRadius: 2.5,
-                fontSize: 15,
+                ...BTN,
                 bgcolor: on ? c.rust : "#fff",
                 color: on ? "#fff" : "#111",
                 border: `1px solid ${on ? c.rust : c.border}`,
@@ -508,12 +591,15 @@ function StepFlights({ form, setForm, onNext, onCancel }) {
             </Button>
           );
         })}
-      </Stack>
+      </Box>
 
       {flights.map((f, i) => (
         <Box key={i} sx={{ mb: 2 }}>
           <SectionTitle>Flight {i + 1}</SectionTitle>
-          <Paper variant="outlined" sx={{ p: 2, borderRadius: 3, borderColor: c.border }}>
+          <Paper
+            variant="outlined"
+            sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: 3, borderColor: c.border }}
+          >
             <Row>
               <Field small label="Airline" placeholder="Emirates" {...bind(i, "airline")} />
               <Field small label="Flight number" placeholder="EK 544" {...bind(i, "flightNumber")} />
@@ -546,19 +632,19 @@ function StepFlights({ form, setForm, onNext, onCancel }) {
           type="button"
           underline="none"
           onClick={addFlight}
-          sx={{ color: c.rust, fontWeight: 700, fontSize: 14, mb: 2, display: "block" }}
+          sx={{ color: c.rust, fontWeight: 700, fontSize: 14, mb: 2, display: "block", textAlign: "left" }}
         >
           + Add another flight (up to {MAX_FLIGHTS})
         </Link>
       )}
 
-      <Stack spacing={1.25} sx={{ mb: 4 }}>
-        <Box sx={{ bgcolor: c.infoBg, color: c.infoText, borderRadius: 2, px: 2, py: 1.25, fontSize: 13.5, lineHeight: 1.55 }}>
+      <Stack spacing={1.25} sx={{ mb: { xs: 3, sm: 4 } }}>
+        <Box sx={{ bgcolor: c.infoBg, color: c.infoText, borderRadius: 2, px: 2, py: 1.25, fontSize: { xs: 12.5, sm: 13.5 }, lineHeight: 1.55 }}>
           Enter each time as shown on the ticket, in the local time of that airport. Chicago is on
           CDT until 11/01/2026 (not CST).
         </Box>
         {submitted && invalid && (
-          <Box role="alert" sx={{ bgcolor: c.errBg, color: c.errText, borderRadius: 2, px: 2, py: 1.25, fontSize: 13.5, lineHeight: 1.55 }}>
+          <Box role="alert" sx={{ bgcolor: c.errBg, color: c.errText, borderRadius: 2, px: 2, py: 1.25, fontSize: { xs: 12.5, sm: 13.5 }, lineHeight: 1.55 }}>
             Fix the highlighted fields to continue.
           </Box>
         )}
@@ -588,7 +674,10 @@ function StepTraveller({ form, setForm, onBack, onSubmit, postedBy, submitting }
   return (
     <>
       <Header leftLabel="Back" onLeft={onBack} step={2} />
-      <Typography component="h1" sx={{ fontWeight: 800, fontSize: 26, color: c.navy, mb: 1.5 }}>
+      <Typography
+        component="h1"
+        sx={{ fontWeight: 800, fontSize: { xs: 22, sm: 26 }, color: c.navy, mb: 1.5 }}
+      >
         {isCompanion ? "About you" : "About your traveller"}
       </Typography>
 
@@ -633,28 +722,32 @@ function StepTraveller({ form, setForm, onBack, onSubmit, postedBy, submitting }
         <FieldLabel>Who meets them in the US?</FieldLabel>
         <Paper
           variant="outlined"
-          sx={{ px: 2, py: 0.5, borderRadius: 3, borderColor: err("pickup") ? c.errText : c.border }}
+          sx={{ px: { xs: 1.5, sm: 2 }, py: 0.5, borderRadius: 3, borderColor: err("pickup") ? c.errText : c.border }}
         >
           <RadioGroup value={form.pickup} onChange={setFromEvent("pickup")}>
             <FormControlLabel
               value="family"
               control={<Radio sx={{ "&.Mui-checked": { color: c.rust } }} />}
-              label={PICKUP_LABELS.family(arrivalAirport)}
+              label={
+                <Typography sx={{ fontSize: { xs: 13.5, sm: 15 } }}>
+                  {PICKUP_LABELS.family(arrivalAirport)}
+                </Typography>
+              }
               sx={{ borderBottom: "1px solid #EEE9DF", m: 0, py: 0.5 }}
             />
             <FormControlLabel
               value="saathi"
               control={<Radio sx={{ "&.Mui-checked": { color: c.rust } }} />}
               label={
-                <span>
+                <Typography component="span" sx={{ fontSize: { xs: 13.5, sm: 15 } }}>
                   Arrange pickup through Saathi (
                   <Link href="#" underline="none" sx={{ color: c.rust, fontWeight: 700 }}>
                     post an airport-pickup ride
                   </Link>
                   )
-                </span>
+                </Typography>
               }
-              sx={{ m: 0, py: 0.5 }}
+              sx={{ m: 0, py: 0.5, alignItems: "flex-start" }}
             />
           </RadioGroup>
         </Paper>
@@ -668,7 +761,7 @@ function StepTraveller({ form, setForm, onBack, onSubmit, postedBy, submitting }
 
       <ReviewSummary form={form} postedBy={postedBy} />
 
-      <Box sx={{ mb: 6 }}>
+      <Box sx={{ mb: { xs: 4, sm: 6 } }}>
         <FormControlLabel
           sx={{ alignItems: "flex-start", mx: 0 }}
           control={
@@ -680,7 +773,7 @@ function StepTraveller({ form, setForm, onBack, onSubmit, postedBy, submitting }
             />
           }
           label={
-            <Typography sx={{ fontSize: 13, lineHeight: 1.55 }}>
+            <Typography sx={{ fontSize: { xs: 12.5, sm: 13 }, lineHeight: 1.55 }}>
               I understand companions are volunteers, not caregivers or escorts, and nobody should
               carry items for anyone. I will approve each companion myself and stay reachable during
               the trip.
@@ -735,7 +828,7 @@ export default function PostTrip({ onCancel, onClose, user, isTab = false, apiUr
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box sx={{ bgcolor: c.bg, minHeight: "100vh", py: 2.5, px: 2.5 }}>
+      <Box sx={{ bgcolor: c.bg, minHeight: "100vh", py: { xs: 2, sm: 2.5 }, px: { xs: 2, sm: 2.5 } }}>
         <Box sx={{ maxWidth: 680, mx: "auto" }}>
           {step === 1 ? (
             <StepFlights

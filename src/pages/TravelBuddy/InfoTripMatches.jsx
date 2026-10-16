@@ -41,6 +41,33 @@ const theme = createTheme({
   shape: { borderRadius: 8 },
 });
 
+/* One size for every button */
+const BTN = {
+  height: 46,
+  minHeight: 46,
+  px: 2,
+  py: 0,
+  borderRadius: 2,
+  fontSize: 15,
+  fontWeight: 700,
+  lineHeight: 1.2,
+  textAlign: "center",
+  boxShadow: "none",
+  width: "100%",
+};
+
+/* Equal-width button grids */
+const gridTwo = {
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr",
+  gap: 1.5,
+};
+const gridResponsive = (cols) => ({
+  display: "grid",
+  gridTemplateColumns: { xs: "1fr", sm: `repeat(${cols}, 1fr)` },
+  gap: 1.5,
+});
+
 /* ---------- Sample data (replace with props / API data) ---------- */
 const trip = {
   title: "Mother's trip",
@@ -78,7 +105,7 @@ const SectionLabel = ({ children, color = colors.muted }) => (
 );
 
 const cardSx = {
-  p: 2.5,
+  p: { xs: 2, sm: 2.5 },
   borderRadius: 2,
   border: `1px solid ${colors.border}`,
   bgcolor: "#fff",
@@ -99,8 +126,8 @@ export default function TripMatched({
   onCancel,
 }) {
   const [checkIn, setCheckIn] = useState(null); // null | "arrived" | "help"
-      const navigate = useNavigate();
-    const handleBack = onBack ?? (() => navigate(-1));
+  const navigate = useNavigate();
+  const handleBack = onBack ?? (() => navigate(-1));
   const handleArrived = () => {
     setCheckIn("arrived");
     onArrived?.();
@@ -113,7 +140,7 @@ export default function TripMatched({
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box sx={{ minHeight: "100vh", bgcolor: "background.default", p: 2.5 }}>
+      <Box sx={{ minHeight: "100vh", bgcolor: "background.default", p: { xs: 2, sm: 2.5 } }}>
         <Box sx={{ maxWidth: 860, mx: "auto" }}>
           {/* Back link */}
           <Link
@@ -127,18 +154,18 @@ export default function TripMatched({
 
           {/* Title row */}
           <Stack
-            direction="row"
+            direction={{ xs: "column", sm: "row" }}
             justifyContent="space-between"
-            alignItems="center"
+            alignItems={{ xs: "flex-start", sm: "center" }}
+            spacing={{ xs: 1, sm: 2 }}
             sx={{ mb: 2.5 }}
           >
             <Typography
               component="h1"
-              sx={{ fontSize: 26, fontWeight: 700, color: colors.navy }}
+              sx={{ fontSize: { xs: 22, sm: 26 }, fontWeight: 700, color: colors.navy }}
             >
               {data.title} · {data.status}
             </Typography>
-            <Box sx={{marginLeft:"40%"}}>
             <Chip
               label="COMPANION ACCEPTED"
               size="small"
@@ -148,9 +175,9 @@ export default function TripMatched({
                 fontWeight: 700,
                 fontSize: 11,
                 letterSpacing: 0.3,
+                flexShrink: 0,
               }}
             />
-            </Box>
           </Stack>
 
           {/* Journey + Companion */}
@@ -167,16 +194,16 @@ export default function TripMatched({
               <SectionLabel>Journey (local times)</SectionLabel>
 
               <Stack spacing={1.25}>
-                <Typography sx={{ fontSize: 14 }}>
+                <Typography sx={{ fontSize: { xs: 13.5, sm: 14 }, wordBreak: "break-word" }}>
                   <b>{data.legs[0].flight}</b>&nbsp;&nbsp;{data.legs[0].route}
                 </Typography>
-                <Typography sx={{ fontSize: 14, color: colors.muted }}>
+                <Typography sx={{ fontSize: { xs: 13.5, sm: 14 }, color: colors.muted }}>
                   {data.layover}
                 </Typography>
-                <Typography sx={{ fontSize: 14 }}>
+                <Typography sx={{ fontSize: { xs: 13.5, sm: 14 }, wordBreak: "break-word" }}>
                   <b>{data.legs[1].flight}</b>&nbsp;&nbsp;{data.legs[1].route}
                 </Typography>
-                <Typography sx={{ fontSize: 14, color: colors.muted }}>
+                <Typography sx={{ fontSize: { xs: 13.5, sm: 14 }, color: colors.muted }}>
                   Total {data.total} · {data.date}
                 </Typography>
               </Stack>
@@ -188,7 +215,8 @@ export default function TripMatched({
                   borderRadius: 1.5,
                   bgcolor: colors.blueTint,
                   color: colors.blueText,
-                  fontSize: 13,
+                  fontSize: { xs: 12.5, sm: 13 },
+                  lineHeight: 1.55,
                 }}
               >
                 {data.pickup}{" "}
@@ -198,7 +226,7 @@ export default function TripMatched({
                   sx={{
                     color: colors.blueText,
                     fontWeight: 700,
-                    fontSize: 13,
+                    fontSize: { xs: 12.5, sm: 13 },
                     textAlign: "left",
                     verticalAlign: "baseline",
                   }}
@@ -215,55 +243,53 @@ export default function TripMatched({
               <Stack direction="row" spacing={2} alignItems="center">
                 <Avatar
                   sx={{
-                    width: 60,
-                    height: 60,
+                    width: { xs: 48, sm: 60 },
+                    height: { xs: 48, sm: 60 },
                     bgcolor: colors.greenLight,
                     color: colors.green,
                     fontWeight: 700,
                     fontSize: 16,
+                    flexShrink: 0,
                   }}
                 >
                   {data.companion.initials}
                 </Avatar>
-                <Box>
+                <Box sx={{ minWidth: 0 }}>
                   <Typography sx={{ fontWeight: 700, fontSize: 16 }}>
                     {data.companion.name}
                   </Typography>
-                  <Typography sx={{ fontSize: 12, color: colors.muted }}>
+                  <Typography sx={{ fontSize: 12, color: colors.muted, wordBreak: "break-word" }}>
                     {data.companion.phone} · {data.companion.languages}
                   </Typography>
                 </Box>
               </Stack>
 
-              <Stack direction="row" spacing={1.5} sx={{ mt: 2.5 }}>
+              <Box sx={{ ...gridTwo, mt: 2.5 }}>
                 <Button
-                  fullWidth
                   variant="contained"
                   onClick={onCall}
                   sx={{
+                    ...BTN,
                     bgcolor: colors.green,
                     "&:hover": { bgcolor: "#0F4F2D" },
-                    boxShadow: "none",
-                    py: 1,
                   }}
                 >
                   Call
                 </Button>
                 <Button
-                  fullWidth
                   variant="outlined"
                   onClick={onText}
                   sx={{
+                    ...BTN,
                     color: colors.green,
                     borderColor: colors.green,
                     borderWidth: 2,
-                    py: 1,
                     "&:hover": { borderWidth: 2, borderColor: colors.green },
                   }}
                 >
                   Text
                 </Button>
-              </Stack>
+              </Box>
 
               <Typography sx={{ fontSize: 12, color: colors.muted, mt: 1.5 }}>
                 Contact visible only for this trip. Ends 7 days after arrival.
@@ -283,7 +309,7 @@ export default function TripMatched({
               Arrival check-in (text sent at arrival + 1 hour)
             </SectionLabel>
 
-            <Typography sx={{ fontSize: 15, mb: 1.5 }}>
+            <Typography sx={{ fontSize: { xs: 14, sm: 15 }, mb: 1.5 }}>
               {checkIn === "arrived"
                 ? "Thanks — Mother arrived safely. Please leave a rating."
                 : checkIn === "help"
@@ -291,17 +317,15 @@ export default function TripMatched({
                 : "Did Mother reach her pickup safely?"}
             </Typography>
 
-            <Stack direction="row" spacing={1.5} sx={{ mb: 1.5 }}>
+            <Box sx={{ ...gridResponsive(2), mb: 1.5 }}>
               <Button
                 variant="contained"
                 onClick={handleArrived}
                 disabled={checkIn !== null}
                 sx={{
+                  ...BTN,
                   bgcolor: colors.green,
                   "&:hover": { bgcolor: "#0F4F2D" },
-                  boxShadow: "none",
-                  px: 3,
-                  py: 1.1,
                 }}
               >
                 Arrived safely
@@ -311,16 +335,14 @@ export default function TripMatched({
                 onClick={handleHelp}
                 disabled={checkIn !== null}
                 sx={{
+                  ...BTN,
                   bgcolor: colors.red,
                   "&:hover": { bgcolor: "#9E1818" },
-                  boxShadow: "none",
-                  px: 3,
-                  py: 1.1,
                 }}
               >
                 Need help
               </Button>
-            </Stack>
+            </Box>
 
             <Typography sx={{ fontSize: 12, color: colors.muted }}>
               "Need help" creates an urgent moderator item and texts the family
@@ -330,14 +352,14 @@ export default function TripMatched({
           </Paper>
 
           {/* Footer actions */}
-          <Stack direction="row" spacing={1.5}>
+          <Box sx={gridResponsive(3)}>
             <Button
               variant="contained"
               onClick={onRate}
               sx={{
+                ...BTN,
                 bgcolor: colors.navy,
                 "&:hover": { bgcolor: "#0B1A42" },
-                boxShadow: "none",
               }}
             >
               Rate {data.companion.name.split(" ")[0]}
@@ -346,7 +368,11 @@ export default function TripMatched({
               variant="outlined"
               color="error"
               onClick={onReport}
-              sx={{ borderColor: colors.red, color: colors.red }}
+              sx={{
+                ...BTN,
+                borderColor: colors.red,
+                color: colors.red,
+              }}
             >
               Report
             </Button>
@@ -354,6 +380,7 @@ export default function TripMatched({
               variant="outlined"
               onClick={onCancel}
               sx={{
+                ...BTN,
                 color: "#333",
                 borderColor: colors.border,
                 bgcolor: "#F3F1EC",
@@ -362,7 +389,7 @@ export default function TripMatched({
             >
               Cancel match
             </Button>
-          </Stack>
+          </Box>
         </Box>
       </Box>
     </ThemeProvider>

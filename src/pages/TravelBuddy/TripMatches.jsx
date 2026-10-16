@@ -13,6 +13,7 @@ import {
   createTheme,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import { AlignJustify } from "lucide-react";
 // Optional font: <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
 
 /* ---------- design tokens ---------- */
@@ -43,6 +44,35 @@ const theme = createTheme({
   palette: { primary: { main: c.rust } },
   shape: { borderRadius: 12 },
 });
+
+/* One size for every button */
+const BTN_WIDTH = 210;
+const buttonBase = {
+  height: 46,
+  minHeight: 46,
+  px: 2,
+  py: 0,
+  borderRadius: 2,
+  fontSize: 14,
+  fontWeight: 700,
+  lineHeight: 1.2,
+  textAlign: "center",
+  boxShadow: "none",
+  width: "100%",
+};
+
+/* Equal-width button group: stacked full width on phones, fixed equal columns from sm up */
+const buttonGroupSx = {
+  display: "grid",
+  gridAutoFlow: { xs: "row", sm: "column" },
+  gridAutoColumns: { xs: "1fr", sm: `${BTN_WIDTH}px` },
+  gap: 1.25,
+  width: { xs: "100%", md: "auto" },
+  flexShrink: 0,
+  justifyContent: { xs: "stretch", sm: "end" },
+  alignItems: { xs: "stretch", sm: "center" },
+  ml: { xs: 0, sm: "auto" },
+};
 
 /* ---------- data (replace with your API response) ---------- */
 
@@ -114,8 +144,6 @@ const SectionLabel = ({ children }) => (
   </Typography>
 );
 
-const buttonBase = { px: 2.5, py: 1.1, borderRadius: 2, fontSize: 14, whiteSpace: "nowrap" };
-
 const MatchActions = ({ action, match, onAccept, onNotNow, onAskHelp }) => {
   // Hooks must be called at the top level of a component, not inside JSX
   const navigate = useNavigate();
@@ -185,7 +213,7 @@ const MatchCard = memo(function MatchCard({
     <Paper
       variant="outlined"
       sx={{
-        p: 2,
+        p: { xs: 1.5, sm: 2 },
         borderRadius: 3,
         bgcolor: "#fff",
         borderColor: best ? c.green : c.border,
@@ -193,28 +221,51 @@ const MatchCard = memo(function MatchCard({
       }}
     >
       <Stack direction={{ xs: "column", md: "row" }} spacing={2} alignItems={{ md: "center" }}>
-        <Stack direction="row" spacing={2} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
+        <Stack
+          direction="row"
+          spacing={{ xs: 1.5, sm: 2 }}
+          alignItems="center"
+          sx={{ flex: 1, minWidth: 0 }}
+        >
           <Avatar
-            sx={{ width: 46, height: 46, bgcolor: t.avatarBg, color: t.avatarText, fontSize: 15, fontWeight: 700 }}
+            sx={{
+              width: { xs: 40, sm: 46 },
+              height: { xs: 40, sm: 46 },
+              bgcolor: t.avatarBg,
+              color: t.avatarText,
+              fontSize: 15,
+              fontWeight: 700,
+              flexShrink: 0,
+            }}
           >
             {match.initials}
           </Avatar>
 
           <Box sx={{ minWidth: 0 }}>
             <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
-              <Typography sx={{ fontWeight: 800, fontSize: 16, color: c.navy }}>{match.name}</Typography>
+              <Typography sx={{ fontWeight: 800, fontSize: { xs: 15, sm: 16 }, color: c.navy }}>
+                {match.name}
+              </Typography>
               <Chip
                 label={match.tier}
                 size="small"
                 sx={{ height: 20, fontSize: 11, fontWeight: 700, bgcolor: t.chipBg, color: t.chipText }}
               />
             </Stack>
-            <Typography sx={{ fontSize: 12.5, color: c.muted, lineHeight: 1.5 }}>{match.details}</Typography>
-            <Typography sx={{ fontSize: 12.5, color: c.text, lineHeight: 1.5 }}>{match.note}</Typography>
+            <Typography
+              sx={{ fontSize: 12.5, color: c.muted, lineHeight: 1.5, wordBreak: "break-word" }}
+            >
+              {match.details}
+            </Typography>
+            <Typography
+              sx={{ fontSize: 12.5, color: c.text, lineHeight: 1.5, wordBreak: "break-word" }}
+            >
+              {match.note}
+            </Typography>
           </Box>
         </Stack>
 
-        <Stack direction="row" spacing={1.25} sx={{ flexShrink: 0 }}>
+        <Box sx={buttonGroupSx}>
           <MatchActions
             action={action}
             match={match}
@@ -222,14 +273,24 @@ const MatchCard = memo(function MatchCard({
             onNotNow={onNotNow}
             onAskHelp={onAskHelp}
           />
-        </Stack>
+        </Box>
       </Stack>
     </Paper>
   );
 });
 
 const Notice = ({ bg, color, children }) => (
-  <Box sx={{ bgcolor: bg, color, borderRadius: 2, px: 2, py: 1.5, fontSize: 13, lineHeight: 1.6 }}>
+  <Box
+    sx={{
+      bgcolor: bg,
+      color,
+      borderRadius: 2,
+      px: { xs: 1.75, sm: 2 },
+      py: 1.5,
+      fontSize: { xs: 12.5, sm: 13 },
+      lineHeight: 1.6,
+    }}
+  >
     {children}
   </Box>
 );
@@ -251,7 +312,7 @@ export default function TripMatches({
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box sx={{ bgcolor: c.bg, minHeight: "100vh", py: 2.5, px: 2.5 }}>
+      <Box sx={{ bgcolor: c.bg, minHeight: "100vh", py: { xs: 2, sm: 2.5 }, px: { xs: 2, sm: 2.5 } }}>
         <Box sx={{ maxWidth: 900, mx: "auto" }}>
           <Link
             component="button"
@@ -263,10 +324,15 @@ export default function TripMatches({
             Back to Travel Buddy
           </Link>
 
-          <Typography component="h1" sx={{ fontWeight: 800, fontSize: 26, color: c.navy }}>
+          <Typography
+            component="h1"
+            sx={{ fontWeight: 800, fontSize: { xs: 22, sm: 26 }, color: c.navy }}
+          >
             Matches for {trip.title}
           </Typography>
-          <Typography sx={{ fontSize: 13, color: c.muted }}>{trip.summary}</Typography>
+          <Typography sx={{ fontSize: { xs: 12.5, sm: 13 }, color: c.muted, wordBreak: "break-word" }}>
+            {trip.summary}
+          </Typography>
 
           {groups.map((g) => (
             <Box key={g.id}>
@@ -300,14 +366,27 @@ export default function TripMatches({
             </Notice>
           </Stack>
 
-          <Button
-            disableElevation
-            variant="contained"
-            onClick={onPreview}
-            sx={{ ...buttonBase, px: 3, py: 1.4, bgcolor: c.navy, "&:hover": { bgcolor: "#0D1E48" } }}
+          <Box
+            sx={{
+              width: { xs: "100%", sm: BTN_WIDTH },
+              display: "flex",
+              justifyContent: { xs: "stretch", sm: "flex-end" },
+              ml: { xs: 0, sm: "auto" },
+            }}
           >
-            Preview accepted-trip view
-          </Button>
+            <Button
+              disableElevation
+              variant="contained"
+              onClick={onPreview}
+              sx={{
+                ...buttonBase,
+                bgcolor: c.navy,
+                "&:hover": { bgcolor: "#0D1E48" },
+              }}
+            >
+              Preview accepted-trip view
+            </Button>
+          </Box>
         </Box>
       </Box>
     </ThemeProvider>

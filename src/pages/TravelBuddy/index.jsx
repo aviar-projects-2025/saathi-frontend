@@ -20,7 +20,7 @@ const colors = {
   navy: "#1B2A5C",
   rust: "#C2410C",
   rustDark: "#B83A0A",
-  //   bg: "#F7F5F1",
+  bg: "#F7F5F1",
   border: "#E4E0D8",
   muted: "#5F6368",
   amberBg: "#FDF1C7",
@@ -35,8 +35,23 @@ const theme = createTheme({
   palette: { primary: { main: colors.rust } },
   shape: { borderRadius: 12 },
 });
+
+/* One size for every button */
+const BTN = {
+  height: 46,
+  minHeight: 46,
+  px: 2,
+  py: 0,
+  borderRadius: 2,
+  fontSize: 15,
+  fontWeight: 700,
+  lineHeight: 1.2,
+  textAlign: "center",
+  boxShadow: "none",
+};
+
 const actionStyles = {
-  base: { px: 2.75, py: 1, borderRadius: 2, fontSize: 15, whiteSpace: "nowrap" },
+  base: { ...BTN, width: 170 },
   contained: {
     bgcolor: colors.rustDark,
     color: "#fff",
@@ -85,18 +100,18 @@ function RoleCard({ title, description, selected, onClick }) {
         bgcolor: "#fff",
       }}
     >
-      <CardActionArea onClick={onClick} sx={{ p: 2.25, height: "100%" }}>
+      <CardActionArea onClick={onClick} sx={{ p: { xs: 1.75, sm: 2.25 }, height: "100%" }}>
         <Typography
           sx={{
             fontWeight: 700,
-            fontSize: 18,
+            fontSize: { xs: 16, sm: 18 },
             color: selected ? colors.rust : colors.navy,
             mb: 0.75,
           }}
         >
           {title}
         </Typography>
-        <Typography sx={{ fontSize: 14, color: colors.muted, lineHeight: 1.5 }}>
+        <Typography sx={{ fontSize: { xs: 13, sm: 14 }, color: colors.muted, lineHeight: 1.5 }}>
           {description}
         </Typography>
       </CardActionArea>
@@ -124,7 +139,6 @@ function StatusChip({ status }) {
 }
 
 function TripRow({ trip }) {
-  const isContained = trip.action.variant === "contained";
   const navigate = useNavigate();
   const { action } = trip;
 
@@ -132,30 +146,57 @@ function TripRow({ trip }) {
     <Paper
       variant="outlined"
       sx={{
-        p: 2,
-        px: 2.5,
+        p: { xs: 1.75, sm: 2 },
+        px: { xs: 1.75, sm: 2.5 },
         borderRadius: 3,
         borderColor: colors.border,
         display: "flex",
-        alignItems: "center",
+        flexDirection: { xs: "column", md: "row" },
+        alignItems: { xs: "stretch", md: "center" },
         gap: 2,
-        flexWrap: { xs: "wrap", sm: "nowrap" },
       }}
     >
-      <Avatar sx={{ bgcolor: trip.iconBg, width: 44, height: 44 }}>
-        <FlightIcon sx={{ color: trip.iconColor, transform: "rotate(45deg)" }} />
-      </Avatar>
+      <Stack direction="row" spacing={2} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
+        <Avatar
+          sx={{
+            bgcolor: trip.iconBg,
+            width: { xs: 38, sm: 44 },
+            height: { xs: 38, sm: 44 },
+            flexShrink: 0,
+          }}
+        >
+          <FlightIcon sx={{ color: trip.iconColor, transform: "rotate(45deg)" }} />
+        </Avatar>
 
-      <Box sx={{ flex: 1, minWidth: 0 }}>
-        <Typography sx={{ fontWeight: 700, fontSize: 16, color: "#1F2937" }}>
-          {trip.person} · {trip.flights}
-        </Typography>
-        <Typography sx={{ fontSize: 12.5, color: colors.muted, mt: 0.25 }}>
-          {trip.meta}
-        </Typography>
-      </Box>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography
+            sx={{
+              fontWeight: 700,
+              fontSize: { xs: 14.5, sm: 16 },
+              color: "#1F2937",
+              wordBreak: "break-word",
+            }}
+          >
+            {trip.person} · {trip.flights}
+          </Typography>
+          <Typography
+            sx={{ fontSize: { xs: 12, sm: 12.5 }, color: colors.muted, mt: 0.25, wordBreak: "break-word" }}
+          >
+            {trip.meta}
+          </Typography>
+        </Box>
+      </Stack>
 
-      <Stack direction="row" spacing={2} alignItems="center">
+      <Stack
+        direction="row"
+        spacing={2}
+        sx={{
+          flexShrink: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: { xs: "space-between", md: "flex-end" },
+        }}
+      >
         <StatusChip status={trip.status} />
         <Button
           variant={action.variant}
@@ -166,7 +207,7 @@ function TripRow({ trip }) {
           {action.label}
         </Button>
       </Stack>
-    </Paper>
+    </Paper >
   );
 }
 
@@ -177,20 +218,28 @@ export default function TravelBuddy() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box sx={{ bgcolor: colors.bg, minHeight: "100vh", py: 3, px: 3 }}>
+      <Box
+        sx={{
+          bgcolor: colors.bg,
+          minHeight: "100vh",
+          py: { xs: 2, sm: 3 },
+          px: { xs: 2, sm: 3 },
+        }}
+      >
         <Box sx={{ maxWidth: 880, mx: "auto" }}>
           {/* Header */}
           <Typography
             component="h1"
-            sx={{ fontSize: 28, fontWeight: 800, color: colors.navy }}
+            sx={{ fontSize: { xs: 24, sm: 28 }, fontWeight: 800, color: colors.navy }}
           >
             Travel Buddy
           </Typography>
-          <Typography sx={{ fontSize: 14, color: colors.muted, mt: 0.5, mb: 2.5 }}>
+          <Typography
+            sx={{ fontSize: { xs: 13, sm: 14 }, color: colors.muted, mt: 0.5, mb: 2.5 }}
+          >
             Find a trusted community member on the same flight to help a parent
             travelling from India to the US.
           </Typography>
-
 
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 3 }}>
             <RoleCard
@@ -236,9 +285,9 @@ export default function TravelBuddy() {
               bgcolor: colors.amberBg,
               color: colors.amberText,
               borderRadius: 2.5,
-              px: 2.5,
+              px: { xs: 2, sm: 2.5 },
               py: 1.75,
-              fontSize: 13.5,
+              fontSize: { xs: 12.5, sm: 13.5 },
               lineHeight: 1.6,
               mb: 2,
             }}
