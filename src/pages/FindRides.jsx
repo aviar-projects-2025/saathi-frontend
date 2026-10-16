@@ -58,6 +58,54 @@ const RUST = "#C83F08";
 const RUST_DARK = "#A93205";
 const NAVY = "#1B2A4E";
 
+/* ─────────── Responsive UI helpers (UI only) ─────────── */
+// Section label used above each filter group
+const sectionLabelSx = {
+  fontSize: { xs: 10, sm: 10.5, md: 11 },
+  fontWeight: 700,
+  letterSpacing: 0.6,
+  color: "text.secondary",
+  mb: 0.75,
+  textTransform: "uppercase",
+};
+
+// Pill chip style (selected / unselected)
+const pillChipSx = (selected, extra = {}) => ({
+  borderRadius: 999,
+  fontWeight: 600,
+  fontSize: { xs: 11.5, sm: 12 },
+  height: { xs: 26, sm: 28 },
+  bgcolor: selected ? RUST : "#fff",
+  color: selected ? "#fff" : "#333",
+  border: `1px solid ${selected ? RUST : "#ddd"}`,
+  "&:hover": { bgcolor: selected ? RUST : "#f8f8f8" },
+  ...extra,
+});
+
+// Small date input style
+const dateInputSx = {
+  flex: 1,
+  minWidth: 0,
+  "& .MuiOutlinedInput-root": {
+    fontSize: { xs: 12, sm: 12.5 },
+    borderRadius: 1.5,
+    height: { xs: 34, sm: 36 },
+  },
+  "& input": { px: { xs: 1, sm: 1.5 } },
+};
+
+// Big search input style
+const searchInputSx = {
+  flex: 1,
+  minWidth: 0,
+  "& .MuiOutlinedInput-root": {
+    fontSize: { xs: 13, sm: 13.5 },
+    borderRadius: 1.5,
+    height: { xs: 40, sm: 42 },
+    bgcolor: "#fff",
+  },
+};
+
 const TRANSPORT_OPTIONS = [
   { label: "All", value: "", icon: null },
   { label: "Car", value: "Car", icon: <DirectionsCarIcon sx={{ fontSize: 14 }} /> },
@@ -254,8 +302,8 @@ export default function FindRides() {
     const a =
       Math.sin(dLat / 2) ** 2 +
       Math.cos((lat1 * Math.PI) / 180) *
-        Math.cos((lat2 * Math.PI) / 180) *
-        Math.sin(dLon / 2) ** 2;
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) ** 2;
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   };
 
@@ -451,8 +499,8 @@ export default function FindRides() {
         appliedDateFrom && appliedDateTo
           ? `${appliedDateFrom} → ${appliedDateTo}`
           : appliedDateFrom
-          ? `From ${appliedDateFrom}`
-          : `Until ${appliedDateTo}`,
+            ? `From ${appliedDateFrom}`
+            : `Until ${appliedDateTo}`,
       clear: () => {
         const next = { ...appliedFilters, dateFrom: "", dateTo: "" };
         setAppliedFilters(next);
@@ -483,10 +531,12 @@ export default function FindRides() {
     <Paper
       variant="outlined"
       sx={{
-        p: 2.5,
+        p: { xs: 1.75, sm: 2.25, md: 2.5 },
         borderRadius: 2.5,
         borderColor: "divider",
         bgcolor: "#fff",
+        width: "100%",
+        boxSizing: "border-box",
         position: isDesktop ? "sticky" : "static",
         top: NAVBAR_HEIGHT + 16,
         maxHeight: isDesktop
@@ -495,8 +545,20 @@ export default function FindRides() {
         overflowY: isDesktop ? "auto" : "visible",
       }}
     >
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-        <Typography sx={{ fontSize: 15, fontWeight: 700, color: "#1a1a1a" }}>
+      <Stack direction="row"
+        sx={{
+          mb: 2,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center"
+        }}>
+        <Typography
+          sx={{
+            fontSize: { xs: 14, sm: 15, md: 16 },
+            fontWeight: 700,
+            color: "#1a1a1a",
+          }}
+        >
           Filters
         </Typography>
         {!isDesktop && (
@@ -507,32 +569,14 @@ export default function FindRides() {
       </Stack>
 
       {/* ─── Date range ─── */}
-      <Typography
-        sx={{
-          fontSize: 10.5,
-          fontWeight: 700,
-          letterSpacing: 0.6,
-          color: "text.secondary",
-          mb: 0.75,
-          textTransform: "uppercase",
-        }}
-      >
-        Date range
-      </Typography>
+      <Typography sx={sectionLabelSx}>Date range</Typography>
       <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
         <TextField
           size="small"
           type="date"
           value={draftFilters.dateFrom}
           onChange={(e) => updateDraft("dateFrom", e.target.value)}
-          sx={{
-            flex: 1,
-            "& .MuiOutlinedInput-root": {
-              fontSize: 12.5,
-              borderRadius: 1.5,
-              height: 36,
-            },
-          }}
+          sx={dateInputSx}
           InputLabelProps={{ shrink: true }}
         />
         <TextField
@@ -540,31 +584,13 @@ export default function FindRides() {
           type="date"
           value={draftFilters.dateTo}
           onChange={(e) => updateDraft("dateTo", e.target.value)}
-          sx={{
-            flex: 1,
-            "& .MuiOutlinedInput-root": {
-              fontSize: 12.5,
-              borderRadius: 1.5,
-              height: 36,
-            },
-          }}
+          sx={dateInputSx}
           InputLabelProps={{ shrink: true }}
         />
       </Stack>
 
       {/* ─── Type ─── */}
-      <Typography
-        sx={{
-          fontSize: 10.5,
-          fontWeight: 700,
-          letterSpacing: 0.6,
-          color: "text.secondary",
-          mb: 0.75,
-          textTransform: "uppercase",
-        }}
-      >
-        Type
-      </Typography>
+      <Typography sx={sectionLabelSx}>Type</Typography>
       <Stack direction="row" spacing={0.75} sx={{ mb: 2, flexWrap: "wrap", gap: 0.75 }}>
         {[
           { label: "All", value: "" },
@@ -578,16 +604,7 @@ export default function FindRides() {
               label={t.label}
               clickable
               onClick={() => updateDraft("type", t.value)}
-              sx={{
-                borderRadius: 999,
-                fontWeight: 600,
-                fontSize: 12,
-                height: 28,
-                bgcolor: selected ? RUST : "#fff",
-                color: selected ? "#fff" : "#333",
-                border: `1px solid ${selected ? RUST : "#ddd"}`,
-                "&:hover": { bgcolor: selected ? RUST : "#f8f8f8" },
-              }}
+              sx={pillChipSx(selected)}
             />
           );
         })}
@@ -637,27 +654,24 @@ export default function FindRides() {
       </Stack> */}
 
       {/* ─── Category ─── */}
-      <Typography
-        sx={{
-          fontSize: 10.5,
-          fontWeight: 700,
-          letterSpacing: 0.6,
-          color: "text.secondary",
-          mb: 0.75,
-          textTransform: "uppercase",
-        }}
-      >
-        Category
-      </Typography>
+      <Typography sx={sectionLabelSx}>Category</Typography>
       <FormControl fullWidth size="small" sx={{ mb: 2 }}>
         <Select
           value={draftFilters.category}
           onChange={(e) => updateDraft("category", e.target.value)}
           displayEmpty
-          sx={{ fontSize: 13, borderRadius: 1.5, height: 36 }}
+          sx={{
+            fontSize: { xs: 12.5, sm: 13 },
+            borderRadius: 1.5,
+            height: { xs: 34, sm: 36 },
+          }}
         >
           {CATEGORY_OPTIONS.map((c) => (
-            <MenuItem key={c.value} value={c.value} sx={{ fontSize: 13 }}>
+            <MenuItem
+              key={c.value}
+              value={c.value}
+              sx={{ fontSize: { xs: 12.5, sm: 13 } }}
+            >
               {c.label}
             </MenuItem>
           ))}
@@ -665,18 +679,7 @@ export default function FindRides() {
       </FormControl>
 
       {/* ─── Language ─── */}
-      <Typography
-        sx={{
-          fontSize: 10.5,
-          fontWeight: 700,
-          letterSpacing: 0.6,
-          color: "text.secondary",
-          mb: 0.75,
-          textTransform: "uppercase",
-        }}
-      >
-        Language
-      </Typography>
+      <Typography sx={sectionLabelSx}>Language</Typography>
       <Stack direction="row" spacing={0.75} sx={{ mb: 2, flexWrap: "wrap", gap: 0.75 }}>
         {LANGUAGE_OPTIONS.map((lang) => {
           const selected = draftFilters.language === lang;
@@ -686,16 +689,7 @@ export default function FindRides() {
               label={lang}
               clickable
               onClick={() => updateDraft("language", selected ? "" : lang)}
-              sx={{
-                borderRadius: 999,
-                fontWeight: 600,
-                fontSize: 12,
-                height: 28,
-                bgcolor: selected ? RUST : "#fff",
-                color: selected ? "#fff" : "#333",
-                border: `1px solid ${selected ? RUST : "#ddd"}`,
-                "&:hover": { bgcolor: selected ? RUST : "#f8f8f8" },
-              }}
+              sx={pillChipSx(selected)}
             />
           );
         })}
@@ -712,7 +706,11 @@ export default function FindRides() {
               sx={{ color: "#bbb", "&.Mui-checked": { color: RUST }, py: 0.25 }}
             />
           }
-          label={<Typography sx={{ fontSize: 13, color: "#333" }}>Free rides only</Typography>}
+          label={
+            <Typography sx={{ fontSize: { xs: 12.5, sm: 13 }, color: "#333" }}>
+              Free rides only
+            </Typography>
+          }
         />
         <FormControlLabel
           control={
@@ -723,7 +721,11 @@ export default function FindRides() {
               sx={{ color: "#bbb", "&.Mui-checked": { color: RUST }, py: 0.25 }}
             />
           }
-          label={<Typography sx={{ fontSize: 13, color: "#333" }}>Child-friendly</Typography>}
+          label={
+            <Typography sx={{ fontSize: { xs: 12.5, sm: 13 }, color: "#333" }}>
+              Child-friendly
+            </Typography>
+          }
         />
         <FormControlLabel
           control={
@@ -735,9 +737,12 @@ export default function FindRides() {
             />
           }
           label={
-            <Typography sx={{ fontSize: 13, color: "#333" }}>
+            <Typography sx={{ fontSize: { xs: 12.5, sm: 13 }, color: "#333" }}>
               Women riders only{" "}
-              <Typography component="span" sx={{ fontSize: 11.5, color: "text.secondary" }}>
+              <Typography
+                component="span"
+                sx={{ fontSize: { xs: 11, sm: 11.5 }, color: "text.secondary" }}
+              >
                 (shown to women)
               </Typography>
             </Typography>
@@ -753,8 +758,8 @@ export default function FindRides() {
           color: "#fff",
           textTransform: "none",
           fontWeight: 700,
-          fontSize: 14,
-          py: 1.1,
+          fontSize: { xs: 13.5, sm: 14 },
+          py: { xs: 0.9, sm: 1.1 },
           borderRadius: 2,
           boxShadow: "none",
           "&:hover": { bgcolor: RUST_DARK, boxShadow: "none" },
@@ -773,7 +778,7 @@ export default function FindRides() {
             mt: 1,
             color: "text.secondary",
             textTransform: "none",
-            fontSize: 12.5,
+            fontSize: { xs: 12, sm: 12.5 },
             fontWeight: 600,
             "&:hover": { bgcolor: "#f5f5f5" },
           }}
@@ -788,6 +793,7 @@ export default function FindRides() {
   return (
     <>
       {/* ─── Profile gate dialog ─── */}
+
       <Dialog
         open={profileGateOpen}
         onClose={(event, reason) => {
@@ -798,11 +804,33 @@ export default function FindRides() {
         maxWidth="xs"
         PaperProps={{
           sx: {
-            borderRadius: { xs: 2, sm: 3 },
-            m: { xs: 1.5, sm: 2 },
-            width: { xs: "95%", sm: "100%" },
+            boxSizing: "border-box",
+            borderRadius: {
+              xs: 2,
+              sm: 2.5,
+              md: 3,
+            },
+            m: {
+              xs: 1,
+              sm: 2,
+              md: 3,
+            },
+            width: {
+              xs: "calc(100% - 16px)",
+              sm: "calc(100% - 32px)",
+              md: "100%",
+            },
+            maxWidth: {
+              xs: "450px",
+              sm: "450px",
+            },
             textAlign: "center",
-            p: { xs: 1, sm: 1.5 },
+            p: {
+              xs: 1,
+              sm: 1.3,
+              md: 1.6,
+            },
+            overflowX: "hidden",
           },
         }}
       >
@@ -813,16 +841,21 @@ export default function FindRides() {
             alignItems: "center",
             gap: 1,
             fontWeight: 700,
-            fontSize: { xs: "1rem", sm: "1.15rem" },
-            pt: 3,
+            fontSize: { xs: "1rem", sm: "1.15rem", md: "1.25rem" },
+            pt: { xs: 2, sm: 3 },
           }}
         >
-          <WarningAmberRoundedIcon sx={{ fontSize: 40, color: "#E8650A" }} />
+          <WarningAmberRoundedIcon
+            sx={{ fontSize: { xs: 34, sm: 40 }, color: "#E8650A" }}
+          />
           Complete Your Profile
         </DialogTitle>
         <DialogContent>
           <Typography
-            sx={{ fontSize: { xs: "0.85rem", sm: "0.95rem" }, color: "text.secondary" }}
+            sx={{
+              fontSize: { xs: "0.85rem", sm: "0.95rem" },
+              color: "text.secondary",
+            }}
           >
             Your profile is only {Number.isFinite(completion) ? completion : 0}%
             complete. Please complete your profile to 100% to unlock all features.
@@ -840,14 +873,23 @@ export default function FindRides() {
             />
           </Box>
         </DialogContent>
-        <DialogActions sx={{ justifyContent: "center", pb: 3, pt: 1, gap: 1.5 }}>
+        <DialogActions
+          sx={{
+            justifyContent: "center",
+            flexWrap: "wrap",
+            pb: { xs: 2, sm: 3 },
+            pt: 1,
+            gap: 1.5,
+          }}
+        >
           <Button
             variant="contained"
             onClick={handleCloseProfileGate}
             sx={{
               textTransform: "none",
               borderRadius: 999,
-              px: 3,
+              px: { xs: 2.5, sm: 3 },
+              fontSize: { xs: 13, sm: 14 },
               fontWeight: 600,
               bgcolor: "#FF9933",
               color: "#fff",
@@ -864,7 +906,8 @@ export default function FindRides() {
             sx={{
               textTransform: "none",
               borderRadius: 999,
-              px: 3,
+              px: { xs: 2.5, sm: 3 },
+              fontSize: { xs: 13, sm: 14 },
               fontWeight: 600,
               bgcolor: "#FF9933",
               color: "#fff",
@@ -878,29 +921,44 @@ export default function FindRides() {
 
       <Box
         sx={{
-          minHeight: `calc(100vh - ${NAVBAR_HEIGHT}px)`,
+          minHeight: {
+            xs: `calc(100dvh - ${NAVBAR_HEIGHT}px)`,
+            sm: `calc(100dvh - ${NAVBAR_HEIGHT}px)`,
+            md: `calc(100vh - ${NAVBAR_HEIGHT}px)`,
+            lg: `calc(100vh - ${NAVBAR_HEIGHT}px)`,
+          },
           width: "100%",
+          maxWidth: "100%",
           boxSizing: "border-box",
           bgcolor: "#FAF8F5",
+          p: {
+            xs: 0.5,
+            sm: 1.5,
+            md: 2.5,
+            lg: 3,
+          },
+          overflowX: "hidden",
         }}
       >
         <Container
           maxWidth="lg"
-          sx={{ px: { xs: 2, sm: 2.5, md: 3 }, py: { xs: 2, sm: 2.5 } }}
+          sx={{ px: { xs: 1.5, sm: 2.5, md: 3 }, py: { xs: 1.5, sm: 2.5 } }}
         >
           {/* ─── Title row ─── */}
           <Stack
             direction="row"
             alignItems="center"
             justifyContent="space-between"
-            sx={{ mb: 2 }}
+            sx={{ mb: { xs: 1.5, sm: 2 } }}
           >
             <Typography
+              component="h1"
               sx={{
-                fontSize: { xs: 22, sm: 28 },
+                fontSize: { xs: 20, sm: 26, md: 30 },
                 fontWeight: 800,
                 color: NAVY,
                 letterSpacing: -0.3,
+                lineHeight: 1.2,
               }}
             >
               Find a ride
@@ -930,8 +988,12 @@ export default function FindRides() {
           <Box
             sx={{
               display: "grid",
-              gridTemplateColumns: { xs: "1fr", md: "300px 1fr" },
-              gap: { xs: 2, md: 3 },
+              gridTemplateColumns: {
+                xs: "minmax(0, 1fr)",
+                md: "280px minmax(0, 1fr)",
+                lg: "300px minmax(0, 1fr)",
+              },
+              gap: { xs: 1.5, sm: 2, md: 3 },
               alignItems: "flex-start",
             }}
           >
@@ -945,7 +1007,7 @@ export default function FindRides() {
             )}
 
             {/* Right column */}
-            <Box sx={{ minWidth: 0 }}>
+            <Box sx={{ minWidth: 0, width: "100%" }}>
               {/* ─── Mobile filter trigger ─── */}
               {!isDesktop && (
                 <Button
@@ -959,8 +1021,8 @@ export default function FindRides() {
                     border: "1px solid #ddd",
                     textTransform: "none",
                     fontWeight: 600,
-                    fontSize: 13,
-                    py: 1,
+                    fontSize: { xs: 12.5, sm: 13.5 },
+                    py: { xs: 0.8, sm: 1 },
                     borderRadius: 2,
                     boxShadow: "none",
                     "&:hover": { bgcolor: "#f8f8f8", boxShadow: "none" },
@@ -975,47 +1037,33 @@ export default function FindRides() {
               <Paper
                 variant="outlined"
                 sx={{
-                  p: { xs: 1.5, sm: 2 },
+                  p: { xs: 1.25, sm: 2 },
                   mb: 2,
                   borderRadius: 2.5,
                   borderColor: "divider",
                   bgcolor: "#fff",
+                  boxSizing: "border-box",
+                  overflow: "hidden",
                 }}
               >
                 <Stack
                   direction={{ xs: "column", sm: "row" }}
                   spacing={1.25}
-                  sx={{ mb: 1.75 }}
+                  sx={{ mb: { xs: 1.25, sm: 1.75 } }}
                 >
                   <TextField
                     size="small"
                     placeholder="From (US city or airport)"
                     value={searchFrom}
                     onChange={(e) => setSearchFrom(e.target.value)}
-                    sx={{
-                      flex: 1,
-                      "& .MuiOutlinedInput-root": {
-                        fontSize: 13.5,
-                        borderRadius: 1.5,
-                        height: 42,
-                        bgcolor: "#fff",
-                      },
-                    }}
+                    sx={searchInputSx}
                   />
                   <TextField
                     size="small"
                     placeholder="To (US city or airport)"
                     value={searchDestination}
                     onChange={(e) => setSearchDestination(e.target.value)}
-                    sx={{
-                      flex: 1,
-                      "& .MuiOutlinedInput-root": {
-                        fontSize: 13.5,
-                        borderRadius: 1.5,
-                        height: 42,
-                        bgcolor: "#fff",
-                      },
-                    }}
+                    sx={searchInputSx}
                   />
                   <Button
                     variant="contained"
@@ -1026,9 +1074,11 @@ export default function FindRides() {
                       color: "#fff",
                       textTransform: "none",
                       fontWeight: 700,
-                      fontSize: 13.5,
-                      px: 3,
-                      height: 42,
+                      fontSize: { xs: 13, sm: 13.5 },
+                      px: { xs: 2, sm: 3 },
+                      height: { xs: 40, sm: 42 },
+                      width: { xs: "100%", sm: "auto" },
+                      flexShrink: 0,
                       borderRadius: 1.5,
                       boxShadow: "none",
                       "&:hover": { bgcolor: "#0F1E3D", boxShadow: "none" },
@@ -1038,13 +1088,14 @@ export default function FindRides() {
                   </Button>
                 </Stack>
 
-                <Divider sx={{ my: 1.75 }} />
+                <Divider sx={{ my: { xs: 1.25, sm: 1.75 } }} />
 
                 <Stack
-                  direction={{ xs: "column", sm: "row" }}
-                  spacing={1.5}
-                  alignItems={{ xs: "stretch", sm: "center" }}
+                  direction={{ xs: "column", md: "row" }}
+                  spacing={{ xs: 1.25, md: 1.5 }}
+                  alignItems={{ xs: "stretch", md: "center" }}
                   flexWrap="wrap"
+                  useFlexGap
                 >
                   <Button
                     onClick={requestCurrentLocation}
@@ -1052,7 +1103,7 @@ export default function FindRides() {
                     startIcon={
                       <LocationOnIcon
                         sx={{
-                          fontSize: 18,
+                          fontSize: { xs: 16, sm: 18, md: 15 },
                           color: userLocation ? "#2E7D32" : RUST,
                         }}
                       />
@@ -1060,24 +1111,39 @@ export default function FindRides() {
                     sx={{
                       textTransform: "none",
                       fontWeight: 700,
-                      fontSize: 13,
+                      fontSize: { xs: 12.5, sm: 13, md: 10.5 },
                       borderRadius: 999,
-                      px: 2,
+                      px: { xs: 2, sm: 2, md: 1 },
                       py: 0.75,
                       border: `1.5px solid ${userLocation ? "#A5D6A7" : RUST}`,
-                      color: userLocation ? "#2E7D32" : RUST,
                       bgcolor: userLocation ? "#EAF6EC" : "#fff",
                       whiteSpace: "nowrap",
+                      alignSelf: { xs: "stretch", md: "center" },
                       "&:hover": {
                         bgcolor: userLocation ? "#E0F2E3" : "#FFF5EC",
                         borderColor: userLocation ? "#A5D6A7" : RUST,
                       },
                     }}
                   >
-                    {locationLoading ? "Getting location..." : "Use my location"}
+                    <Typography
+                      sx={{
+                        fontSize: { xs: 12.5, sm: 13, md: 10.5 },
+                        color: userLocation ? "#2E7D32" : RUST,
+                        textAlign: { xs: "center", md: "left" },
+                        fontWeight: 600
+                      }}
+                    >
+                      {locationLoading ? "Getting location..." : "Use my location"}
+                    </Typography>
                   </Button>
 
-                  <Typography sx={{ fontSize: 13, color: "text.secondary" }}>
+                  <Typography
+                    sx={{
+                      fontSize: { xs: 12, sm: 13 },
+                      color: "text.secondary",
+                      textAlign: { xs: "center", md: "left" },
+                    }}
+                  >
                     or type a location
                   </Typography>
 
@@ -1088,53 +1154,70 @@ export default function FindRides() {
                     onChange={(e) => setSearchFrom(e.target.value)}
                     sx={{
                       flex: 1,
-                      minWidth: 160,
+                      minWidth: { xs: 0, md: 160 },
+                      width: { xs: "100%", md: "auto" },
                       "& .MuiOutlinedInput-root": {
-                        fontSize: 13,
+                        fontSize: { xs: 12.5, sm: 13 },
                         borderRadius: 1.5,
-                        height: 38,
+                        height: { xs: 36, sm: 38 },
                         bgcolor: "#fff",
                       },
                     }}
                   />
 
-                  <Typography sx={{ fontSize: 13, color: "text.secondary" }}>
-                    within
-                  </Typography>
+                  <Stack
+                    direction="row"
+                    alignItems="center"
+                    spacing={1}
+                    flexWrap="wrap"
+                    useFlexGap
+                    sx={{ justifyContent: { xs: "flex-start", md: "flex-start" } }}
+                  >
+                    <Typography
+                      sx={{ fontSize: { xs: 12, sm: 13 }, color: "text.secondary" }}
+                    >
+                      within
+                    </Typography>
 
-                  <Stack direction="row" spacing={0.5}>
-                    {[
-                      { label: "10 mi", value: 10 },
-                      { label: "25 mi", value: 25 },
-                      { label: "50 mi", value: 50 },
-                    ].map((r) => {
-                      const isActive = draftFilters.radiusMi === r.value;
-                      return (
-                        <Chip
-                          key={r.value}
-                          label={r.label}
-                          clickable
-                          onClick={() => updateDraft("radiusMi", r.value)}
-                          sx={{
-                            borderRadius: 999,
-                            fontWeight: 700,
-                            fontSize: 12,
-                            height: 30,
-                            bgcolor: isActive ? RUST : "#fff",
-                            color: isActive ? "#fff" : "#333",
-                            border: `1px solid ${isActive ? RUST : "#ddd"}`,
-                            "&:hover": {
-                              bgcolor: isActive ? RUST : "#f8f8f8",
-                            },
-                          }}
-                        />
-                      );
-                    })}
+                    <Stack direction="row" spacing={0.5}>
+                      {[
+                        { label: "10 mi", value: 10 },
+                        { label: "25 mi", value: 25 },
+                        { label: "50 mi", value: 50 },
+                      ].map((r) => {
+                        const isActive = draftFilters.radiusMi === r.value;
+                        return (
+                          <Chip
+                            key={r.value}
+                            label={r.label}
+                            clickable
+                            onClick={() => updateDraft("radiusMi", r.value)}
+                            sx={{
+                              borderRadius: 999,
+                              fontWeight: 700,
+                              fontSize: { xs: 11.5, sm: 12 },
+                              height: { xs: 28, sm: 30 },
+                              bgcolor: isActive ? RUST : "#fff",
+                              color: isActive ? "#fff" : "#333",
+                              border: `1px solid ${isActive ? RUST : "#ddd"}`,
+                              "&:hover": {
+                                bgcolor: isActive ? RUST : "#f8f8f8",
+                              },
+                            }}
+                          />
+                        );
+                      })}
+                    </Stack>
                   </Stack>
                 </Stack>
 
                 <Typography
-                  sx={{ fontSize: 12.5, color: "text.secondary", mt: 1.75 }}
+                  sx={{
+                    fontSize: { xs: 11.5, sm: 12.5 },
+                    color: "text.secondary",
+                    mt: { xs: 1.25, sm: 1.75 },
+                    lineHeight: 1.5,
+                  }}
                 >
                   {sortedVisibleRides.length} ride
                   {sortedVisibleRides.length === 1 ? "" : "s"} near{" "}
@@ -1144,7 +1227,11 @@ export default function FindRides() {
 
                 {locationError && (
                   <Typography
-                    sx={{ fontSize: 12, color: "#B00020", mt: 0.75 }}
+                    sx={{
+                      fontSize: { xs: 11.5, sm: 12 },
+                      color: "#B00020",
+                      mt: 0.75,
+                    }}
                   >
                     {locationError}
                   </Typography>
@@ -1171,8 +1258,9 @@ export default function FindRides() {
                         border: `1px solid ${RUST}`,
                         color: RUST,
                         fontWeight: 600,
-                        fontSize: 11.5,
-                        height: 26,
+                        fontSize: { xs: 11, sm: 11.5 },
+                        height: { xs: 24, sm: 26 },
+                        maxWidth: "100%",
                         "& .MuiChip-deleteIcon": {
                           color: RUST,
                           fontSize: 16,
@@ -1190,6 +1278,7 @@ export default function FindRides() {
                 sx={{
                   maxHeight: { xs: "none", md: "calc(100vh - 320px)" },
                   overflowY: { xs: "visible", md: "auto" },
+                  overflowX: "hidden",
                   pr: { xs: 0, md: 0.5 },
                   "&::-webkit-scrollbar": { width: 6 },
                   "&::-webkit-scrollbar-thumb": {
@@ -1199,12 +1288,12 @@ export default function FindRides() {
                 }}
               >
                 {loading ? (
-                  <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
+                  <Box sx={{ display: "flex", justifyContent: "center", py: { xs: 5, sm: 8 } }}>
                     <CircularProgress sx={{ color: saffron[500] }} />
                   </Box>
                 ) : sortedVisibleRides.length > 0 ? (
                   <>
-                    <Stack spacing={1.5}>
+                    <Stack spacing={{ xs: 1.25, sm: 1.5 }}>
                       {sortedVisibleRides.map((ride) => (
                         <RideCard key={ride._id} ride={ride} />
                       ))}
@@ -1226,7 +1315,7 @@ export default function FindRides() {
                         sx={{
                           textAlign: "center",
                           color: "text.secondary",
-                          fontSize: "0.8rem",
+                          fontSize: { xs: "0.75rem", sm: "0.8rem" },
                           py: 2,
                         }}
                       >
@@ -1241,7 +1330,7 @@ export default function FindRides() {
                       borderRadius: 2.5,
                       borderColor: "divider",
                       textAlign: "center",
-                      py: { xs: 4, sm: 5 },
+                      py: { xs: 3.5, sm: 5 },
                       px: { xs: 2, sm: 4 },
                     }}
                   >
@@ -1249,14 +1338,14 @@ export default function FindRides() {
                       variant="h6"
                       fontWeight={700}
                       color="text.primary"
-                      sx={{ fontSize: 16 }}
+                      sx={{ fontSize: { xs: 15, sm: 16, md: 17 } }}
                     >
                       No rides match your search.
                     </Typography>
                     <Typography
                       variant="body2"
                       color="text.secondary"
-                      sx={{ mt: 1 }}
+                      sx={{ mt: 1, fontSize: { xs: 12.5, sm: 14 } }}
                     >
                       Try a wider radius or post a request so drivers can find
                       you.
@@ -1267,11 +1356,12 @@ export default function FindRides() {
                       sx={{
                         mt: 2.5,
                         px: 3,
-                        py: 1,
+                        py: { xs: 0.8, sm: 1 },
                         borderRadius: 999,
                         backgroundColor: RUST,
                         color: "#fff",
                         fontWeight: 700,
+                        fontSize: { xs: 13, sm: 14 },
                         textTransform: "none",
                         boxShadow: "none",
                         "&:hover": {
@@ -1290,14 +1380,18 @@ export default function FindRides() {
               <Box
                 sx={{
                   mt: 2,
-                  p: 1.75,
+                  p: { xs: 1.25, sm: 1.75 },
                   borderRadius: 2,
                   bgcolor: "#EAF3FB",
                   border: "1px solid #CFE2F3",
                 }}
               >
                 <Typography
-                  sx={{ fontSize: 12.5, color: "#1A3E8A", lineHeight: 1.55 }}
+                  sx={{
+                    fontSize: { xs: 11.5, sm: 12.5 },
+                    color: "#1A3E8A",
+                    lineHeight: 1.55,
+                  }}
                 >
                   Cards show city or airport only. The exact pickup address and
                   phone number are shared after the driver accepts your request.
@@ -1329,7 +1423,13 @@ export default function FindRides() {
         }}
       >
         <DialogTitle
-          sx={{ position: "relative", fontWeight: 700, py: 2, pr: 6 }}
+          sx={{
+            position: "relative",
+            fontWeight: 700,
+            fontSize: { xs: "1.05rem", sm: "1.25rem" },
+            py: 2,
+            pr: 6,
+          }}
         >
           Offer Ride
           <IconButton
