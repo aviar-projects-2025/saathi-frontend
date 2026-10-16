@@ -368,6 +368,7 @@ const MyReferrals = () => {
   const [mobile_number, setMobile_number] = useState("");
   const [countryCode, setCountryCode] = useState("+1");
   const [shareLink, setShareLink] = useState("");
+  const [shareLinkLoading, setShareLinkLoading] = useState(false);
 
   const { notifications } = useNotifications();
   const { getPendingReferralCount } = useReferral();
@@ -386,13 +387,43 @@ const MyReferrals = () => {
 
   const user = getUser();
 
-  useEffect(() => {
-    if (user?.referralCode) {
-      setShareLink(
-        `${window.location.origin}/register?ref=${user.referralCode}`
+  /* -----------------------------------------------------------
+     Generate a fresh tokenized invite link from the backend.
+     Always returns the raw URL so callers can use it immediately.
+  ----------------------------------------------------------- */
+  const generateShareLink = async () => {
+    if (!user?.id) return null;
+    setShareLinkLoading(true);
+    try {
+      const res = await axios.post(`${Api}/referralInvite/link`, {
+        referredBy: user.id,
+      });
+      if (res.data?.status && res.data?.link) {
+        setShareLink(res.data.link);
+        return res.data.link;
+      } else {
+        toast.error("Unable to generate invite link", toasts);
+        return null;
+      }
+    } catch (error) {
+      console.error("Generate invite link error:", error);
+      toast.error(
+        error.response?.data?.message || "Unable to generate invite link",
+        toasts
       );
+      return null;
+    } finally {
+      setShareLinkLoading(false);
     }
-  }, [user]);
+  };
+
+  /* Pre-generate on mount so the link text isn't empty */
+  useEffect(() => {
+    if (user?.id) {
+      generateShareLink();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   const handleCopy = (value) => {
     if (!value) return;
@@ -604,7 +635,6 @@ const MyReferrals = () => {
     },
   };
 
-  /* ---------- Build dynamic title for the combined accordion ---------- */
   const approvedCount = approvedReferrals.length;
   const rejectedCount = rejectedReferrals.length;
   const totalHistory = approvedCount + rejectedCount;
@@ -668,7 +698,7 @@ const MyReferrals = () => {
               >
                 <LinkIcon sx={{ fontSize: 18, color: SAFFRON }} />
               </Box>
-              <Box>
+              <Box sx={{ minWidth: 0, flex: 1 }}>
                 <Typography
                   variant="caption"
                   fontWeight={700}
@@ -684,9 +714,12 @@ const MyReferrals = () => {
                     fontSize: { xs: "0.82rem", sm: "0.9rem" },
                     color: "text.primary",
                     lineHeight: 1.4,
+                    wordBreak: "break-all",
                   }}
                 >
-                  {shareLink || "Preparing your referral link..."}
+                  {shareLinkLoading
+                    ? "Generating your invite link..."
+                    : shareLink || "Unable to load invite link"}
                 </Typography>
               </Box>
             </Stack>
@@ -700,8 +733,11 @@ const MyReferrals = () => {
               <Button
                 variant="contained"
                 size="small"
-                onClick={() => handleCopy(shareLink)}
-                disabled={!shareLink}
+                disabled={shareLinkLoading}
+                onClick={async () => {
+                  const link = await generateShareLink();
+                  if (link) handleCopy(link);
+                }}
                 sx={{
                   bgcolor: SAFFRON,
                   color: "#fff",
@@ -714,24 +750,31 @@ const MyReferrals = () => {
                   boxShadow: "none",
                   whiteSpace: "nowrap",
                   "&:hover": { bgcolor: SAFFRON_DARK, boxShadow: "none" },
+                  "&.Mui-disabled": { bgcolor: "#E3C9BE", color: "#fff" },
                 }}
               >
-                Copy link
+                {shareLinkLoading ? "Generating..." : "Copy link"}
               </Button>
               <Button
                 variant="outlined"
                 size="small"
                 startIcon={<WhatsAppIcon sx={{ fontSize: 16 }} />}
-                disabled={!shareLink}
-                onClick={() =>
+                disabled={shareLinkLoading}
+                onClick={async () => {
+                  const link = await generateShareLink();
+                  if (!link) return;
+
+                  const message = `Hi! Join me on Saathi Rides — a trusted community for rides and travel companionship.
+
+Sign up with my invite link:
+${link}`;
+
                   window.open(
-                    `https://wa.me/?text=${encodeURIComponent(
-                      `Join Saathi using my referral link: ${shareLink}`
-                    )}`,
+                    `https://wa.me/?text=${encodeURIComponent(message)}`,
                     "_blank",
                     "noopener,noreferrer"
-                  )
-                }
+                  );
+                }}
                 sx={{
                   color: SAFFRON,
                   borderColor: `${SAFFRON}55`,
@@ -745,6 +788,10 @@ const MyReferrals = () => {
                   "&:hover": {
                     borderColor: SAFFRON,
                     bgcolor: SAFFRON_LIGHT,
+                  },
+                  "&.Mui-disabled": {
+                    color: "#B99A8E",
+                    borderColor: "#E3C9BE",
                   },
                 }}
               >
@@ -909,7 +956,6 @@ const MyReferrals = () => {
               />
             ) : (
               <Stack spacing={2.5}>
-                {/* Approved section */}
                 {approvedCount > 0 && (
                   <Box>
                     <Typography
@@ -936,7 +982,6 @@ const MyReferrals = () => {
                   </Box>
                 )}
 
-                {/* Rejected section */}
                 {rejectedCount > 0 && (
                   <Box>
                     <Typography
@@ -1046,12 +1091,16 @@ const MyReferrals = () => {
                     color: "text.secondary",
                   }}
                 >
-                  {shareLink}
+                  {shareLinkLoading ? "Generating link..." : shareLink}
                 </Typography>
                 <Tooltip title="Copy link">
                   <IconButton
                     size="small"
-                    onClick={() => handleCopy(shareLink)}
+                    disabled={shareLinkLoading}
+                    onClick={async () => {
+                      const link = await generateShareLink();
+                      if (link) handleCopy(link);
+                    }}
                     sx={{ flexShrink: 0, color: SAFFRON }}
                   >
                     <ContentCopyIcon sx={{ fontSize: 16 }} />

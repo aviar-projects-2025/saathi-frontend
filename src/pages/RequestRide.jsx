@@ -611,12 +611,22 @@ const RequestRide = ({ ride }) => {
                                 },
                               }}
                             />
+                            {console.log(request?.rideId?.travelStatus)}
+                            {console.log(request?.status)}
 
-                            {request?.status !== "CANCELLED" &&
-                              request?.status !== "REJECTED" &&
-                              request?.rideId?.travelStatus !== "CANCELLED" &&
-                              request?.rideId?.travelStatus !== "Cancelled" &&
-                              new Date() <= new Date(request?.rideId?.startTime) && (
+                            {(
+                              (
+                                request?.status === "ACCEPTED" &&
+                                request?.rideId?.travelStatus === "Waiting"
+                              ) ||
+                              (
+                                request?.status !== "CANCELLED" &&
+                                request?.status !== "REJECTED" &&
+                                request?.rideId?.travelStatus !== "CANCELLED" &&
+                                request?.rideId?.travelStatus !== "Cancelled" &&
+                                new Date() <= new Date(request?.rideId?.startTime)
+                              )
+                            ) && (
                                 <IconButton
                                   onClick={(event) => handleMenuOpen(event, request)}
                                   sx={{
@@ -632,10 +642,9 @@ const RequestRide = ({ ride }) => {
                                       fontSize: { xs: 18, sm: 20, md: 22 },
                                     }}
                                   />
-                                 
                                 </IconButton>
                               )}
-                              
+
                           </Box>
                         </Box>
 

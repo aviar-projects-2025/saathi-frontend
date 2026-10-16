@@ -7,15 +7,11 @@ import {
   Typography,
   CircularProgress,
   Box,
-  Grid,
   TextField,
-  FormControl,
-  Select,
   MenuItem,
   Button,
   Chip,
   Collapse,
-  InputAdornment,
   useMediaQuery,
   useTheme,
   Dialog,
@@ -24,321 +20,188 @@ import {
   LinearProgress,
   DialogActions,
   IconButton,
+  Checkbox,
+  FormControlLabel,
+  FormGroup,
+  Paper,
+  Divider,
+  Stack,
+  Select,
+  FormControl,
 } from "@mui/material";
-import WelcomeBanner from "./Welcome.jsx";
-import { useUser } from "../context/userConetext";
 
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
-import SearchIcon from "@mui/icons-material/Search";
-import TuneIcon from "@mui/icons-material/Tune";
 import CloseIcon from "@mui/icons-material/Close";
-import FlightIcon from "@mui/icons-material/Flight";
+import FilterListOffIcon from "@mui/icons-material/FilterListOff";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
+import SearchIcon from "@mui/icons-material/Search";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import TrainIcon from "@mui/icons-material/Train";
-import FilterListOffIcon from "@mui/icons-material/FilterListOff";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import LocationOnIcon from "@mui/icons-material/LocationOn";
-import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
+import FlightIcon from "@mui/icons-material/Flight";
 
 import RideCard from "./RideCard.jsx";
 import Api from "../Api";
 import OfferRide from "./OfferRide.jsx";
+import { useUser } from "../context/userConetext.jsx";
 
-// ─────────────────────────────────────────────
-// Saffron design tokens
-// ─────────────────────────────────────────────
-
+/* ─────────── Design tokens ─────────── */
 const saffron = {
   50: "#FFF8EE",
-  100: "#FFE9C2",
   200: "#FFD492",
-  300: "#FFC05C",
-  400: "#FFAB28",
   500: "#F59300",
-  600: "#D47A00",
   700: "#A85F00",
-  800: "#7C4500",
-  900: "#502C00",
 };
 
-const ORANGE = "#FF9933";
-
-const inputFieldSx = {
-  "& .MuiOutlinedInput-root": {
-    borderRadius: "10px",
-    fontSize: "0.82rem",
-    background: saffron[50],
-
-    "& fieldset": {
-      borderColor: saffron[200],
-    },
-
-    "&:hover fieldset": {
-      borderColor: saffron[400],
-    },
-
-    "&.Mui-focused fieldset": {
-      borderColor: saffron[500],
-      borderWidth: 2,
-    },
-  },
-
-  "& .MuiInputLabel-root": {
-    fontSize: "0.8rem",
-    color: saffron[600],
-  },
-
-  "& .MuiInputLabel-root.Mui-focused": {
-    color: saffron[600],
-  },
-};
-
-const selectSx = {
-  borderRadius: "10px",
-  fontSize: "0.82rem",
-  background: saffron[50],
-
-  "& .MuiOutlinedInput-notchedOutline": {
-    borderColor: saffron[200],
-  },
-
-  "&:hover .MuiOutlinedInput-notchedOutline": {
-    borderColor: saffron[400],
-  },
-
-  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-    borderColor: saffron[500],
-    borderWidth: 2,
-  },
-};
+const RUST = "#C83F08";
+const RUST_DARK = "#A93205";
+const NAVY = "#1B2A4E";
 
 const TRANSPORT_OPTIONS = [
-  {
-    label: "All",
-    value: "",
-    icon: null,
-  },
-  {
-    label: "Car",
-    value: "Car",
-    icon: <DirectionsCarIcon sx={{ fontSize: 14 }} />,
-  },
-  {
-    label: "Bike",
-    value: "Bike",
-    icon: <TwoWheelerIcon sx={{ fontSize: 14 }} />,
-  },
-  {
-    label: "Bus",
-    value: "Bus",
-    icon: <DirectionsBusIcon sx={{ fontSize: 14 }} />,
-  },
-  {
-    label: "Train",
-    value: "Train",
-    icon: <TrainIcon sx={{ fontSize: 14 }} />,
-  },
-  {
-    label: "Flight",
-    value: "Flight",
-    icon: <FlightIcon sx={{ fontSize: 14 }} />,
-  },
+  { label: "All", value: "", icon: null },
+  { label: "Car", value: "Car", icon: <DirectionsCarIcon sx={{ fontSize: 14 }} /> },
+  { label: "Bike", value: "Bike", icon: <TwoWheelerIcon sx={{ fontSize: 14 }} /> },
+  { label: "Bus", value: "Bus", icon: <DirectionsBusIcon sx={{ fontSize: 14 }} /> },
+  { label: "Train", value: "Train", icon: <TrainIcon sx={{ fontSize: 14 }} /> },
+  { label: "Flight", value: "Flight", icon: <FlightIcon sx={{ fontSize: 14 }} /> },
 ];
 
-const GENDER_OPTIONS = [
-  {
-    label: "All",
-    value: "",
-  },
-  {
-    label: "Male",
-    value: "Male",
-  },
-  {
-    label: "Female",
-    value: "Female",
-  },
-  {
-    label: "Any",
-    value: "Any",
-  },
+const CATEGORY_OPTIONS = [
+  { label: "All categories", value: "" },
+  { label: "Airport pickup / drop", value: "Airport pickup / drop" },
+  { label: "Temple / event", value: "Temple / event" },
+  { label: "Ride request", value: "Ride request" },
 ];
 
-const FUEL_OPTIONS = [
-  {
-    label: "All",
-    value: "",
-  },
-  {
-    label: "Yes",
-    value: "true",
-  },
-  {
-    label: "No",
-    value: "false",
-  },
-];
+const LANGUAGE_OPTIONS = ["Tamil", "Hindi", "Telugu", "English"];
 
 const NAVBAR_HEIGHT = 64;
-
 const SCROLL_COLLAPSE_THRESHOLD = 24;
 
 const emptyFilters = {
-  transportMode: "",
-  gender: "",
-  fuelSharing: "",
+  type: "", // Offers | Requests | ""
+  transportMode: "", // Car | Bike | ...
+  category: "",
   language: "",
+  freeRidesOnly: false,
+  childFriendly: false,
+  womenRidersOnly: false,
+  dateFrom: "",
+  dateTo: "",
+  radiusMi: 25,
 };
 
 export default function FindRides() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
+  const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
   const { currentUser, completion } = useUser();
-
   const navigate = useNavigate();
 
   const [rides, setRides] = useState([]);
   const [open, setOpen] = useState(false);
-
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-
   const LIMIT = 10;
-
   const loadingMoreRef = useRef(false);
 
   const [filtersOpen, setFiltersOpen] = useState(false);
-
   const [searchFrom, setSearchFrom] = useState("");
   const [searchDestination, setSearchDestination] = useState("");
-  const [search, setSearch] = useState("");
 
   const [draftFilters, setDraftFilters] = useState(emptyFilters);
   const [appliedFilters, setAppliedFilters] = useState(emptyFilters);
 
-  const isProfileComplete = completion === 100;
-
-  const SIDEBAR_SCROLL_HEIGHT = "calc(100vh - 120px)";
-
   const [profileGateOpen, setProfileGateOpen] = useState(false);
-
   const hasCheckedProfileGateRef = useRef(false);
-
- 
 
   const [userLocation, setUserLocation] = useState(null);
   const [locationLoading, setLocationLoading] = useState(false);
   const [locationError, setLocationError] = useState("");
 
-  const token = localStorage.getItem('token')
+  const token = localStorage.getItem("token");
   const resultsRef = useRef(null);
   const scrollStartRef = useRef(0);
 
-
+  /* Applied filter shortcuts */
   const {
-    transportMode,
-    gender,
-    fuelSharing,
-    language,
-  } = draftFilters;
-
-  const {
+    type: appliedType,
     transportMode: appliedTransportMode,
-    gender: appliedGender,
-    fuelSharing: appliedFuelSharing,
+    category: appliedCategory,
     language: appliedLanguage,
+    freeRidesOnly: appliedFreeRidesOnly,
+    childFriendly: appliedChildFriendly,
+    womenRidersOnly: appliedWomenRidersOnly,
+    dateFrom: appliedDateFrom,
+    dateTo: appliedDateTo,
+    radiusMi: appliedRadiusMi,
   } = appliedFilters;
 
+  /* ─────────── Fetch rides ─────────── */
   const fetchRides = async ({
     pageNumber = 1,
     reset = false,
     searchFromValue = searchFrom,
     searchDestinationValue = searchDestination,
-    searchValue = search,
+    typeValue = appliedType,
     transportModeValue = appliedTransportMode,
-    genderValue = appliedGender,
-    fuelSharingValue = appliedFuelSharing,
+    categoryValue = appliedCategory,
     languageValue = appliedLanguage,
+    freeRidesOnlyValue = appliedFreeRidesOnly,
+    childFriendlyValue = appliedChildFriendly,
+    womenRidersOnlyValue = appliedWomenRidersOnly,
+    dateFromValue = appliedDateFrom,
+    dateToValue = appliedDateTo,
+    radiusMiValue = appliedRadiusMi,
   } = {}) => {
-    if (loadingMoreRef.current) {
-      return;
-    }
+    if (loadingMoreRef.current) return;
 
     try {
-      if (reset) {
-        setLoading(true);
-      } else {
-        setLoadingMore(true);
-      }
-
+      if (reset) setLoading(true);
+      else setLoadingMore(true);
       loadingMoreRef.current = true;
 
       const res = await axios.get(`${Api}/rides/get`, {
         params: {
           type: "find",
-
           page: pageNumber,
           limit: LIMIT,
-
           searchFrom: searchFromValue,
           searchDestination: searchDestinationValue,
-          search: searchValue,
-
+          typeFilter: typeValue,
           transportMode: transportModeValue,
-          gender: genderValue,
-          fuelSharing: fuelSharingValue,
+          category: categoryValue,
           language: languageValue,
+          freeRidesOnly: freeRidesOnlyValue,
+          childFriendly: childFriendlyValue,
+          womenRidersOnly: womenRidersOnlyValue,
+          dateFrom: dateFromValue,
+          dateTo: dateToValue,
+          radiusMi: radiusMiValue,
         },
-
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       const body = res?.data || {};
-
-      const newRides = Array.isArray(body.data)
-        ? body.data
-        : [];
-
-   
+      const newRides = Array.isArray(body.data) ? body.data : [];
 
       setRides((prev) => {
-        if (reset) {
-          return newRides;
-        }
-
-        const existingIds = new Set(
-          prev.map((ride) => String(ride?._id))
-        );
-
-        const uniqueRides = newRides.filter(
-          (ride) =>
-            !existingIds.has(String(ride?._id))
-        );
-
-        return [...prev, ...uniqueRides];
+        if (reset) return newRides;
+        const existingIds = new Set(prev.map((r) => String(r?._id)));
+        return [...prev, ...newRides.filter((r) => !existingIds.has(String(r?._id)))];
       });
 
       setPage(pageNumber);
-
       setHasMore(
         typeof body.hasMore === "boolean"
           ? body.hasMore
           : newRides.length === LIMIT
       );
-
     } catch (error) {
-      console.error(
-        "Find rides error:",
-        error?.response?.data || error
-      );
+      console.error("Find rides error:", error?.response?.data || error);
     } finally {
       loadingMoreRef.current = false;
       setLoading(false);
@@ -347,308 +210,160 @@ export default function FindRides() {
   };
 
   useEffect(() => {
-    fetchRides({
-      pageNumber: 1,
-      reset: true,
-    });
+    fetchRides({ pageNumber: 1, reset: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const isFirstFilterRender = useRef(true);
-
   useEffect(() => {
     if (isFirstFilterRender.current) {
       isFirstFilterRender.current = false;
       return;
     }
-
     const timer = setTimeout(() => {
       setRides([]);
       setPage(1);
       setHasMore(true);
-
-      fetchRides({
-        pageNumber: 1,
-        reset: true,
-      });
+      fetchRides({ pageNumber: 1, reset: true });
     }, 400);
-
     return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     searchFrom,
     searchDestination,
-    search,
+    appliedType,
     appliedTransportMode,
-    appliedGender,
-    appliedFuelSharing,
+    appliedCategory,
     appliedLanguage,
+    appliedFreeRidesOnly,
+    appliedChildFriendly,
+    appliedWomenRidersOnly,
+    appliedDateFrom,
+    appliedDateTo,
+    appliedRadiusMi,
   ]);
 
+  /* ─────────── Location ─────────── */
   const calculateDistanceKm = (lat1, lon1, lat2, lon2) => {
-    if (
-      lat1 == null ||
-      lon1 == null ||
-      lat2 == null ||
-      lon2 == null
-    ) {
+    if (lat1 == null || lon1 == null || lat2 == null || lon2 == null) {
       return Infinity;
     }
-
     const R = 6371;
-
     const dLat = ((lat2 - lat1) * Math.PI) / 180;
     const dLon = ((lon2 - lon1) * Math.PI) / 180;
-
     const a =
       Math.sin(dLat / 2) ** 2 +
       Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) ** 2;
-
-    const c =
-      2 * Math.atan2(
-        Math.sqrt(a),
-        Math.sqrt(1 - a)
-      );
-
-    return R * c;
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   };
 
   const requestCurrentLocation = () => {
     if (!navigator.geolocation) {
-      setUserLocation(null);
-      setLocationLoading(false);
-      setLocationError(
-        "Location is not supported by this browser."
-      );
-
+      setLocationError("Location is not supported by this browser.");
       return;
     }
-
     setLocationLoading(true);
     setLocationError("");
-
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        const location = {
+        setUserLocation({
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
           accuracy: position.coords.accuracy,
-        };
-
-        setUserLocation(location);
+        });
         setLocationLoading(false);
-        setLocationError("");
       },
-
       (error) => {
-        console.error(
-          "GPS LOCATION ERROR:",
-          error
-        );
-
+        console.error("GPS LOCATION ERROR:", error);
         setUserLocation(null);
         setLocationLoading(false);
-
         switch (error.code) {
           case error.PERMISSION_DENIED:
-            setLocationError(
-              "Location permission is denied. Please allow location access."
-            );
+            setLocationError("Location permission is denied. Please allow location access.");
             break;
-
           case error.POSITION_UNAVAILABLE:
-            setLocationError(
-              "Please turn on your location to find rides nearby."
-            );
+            setLocationError("Please turn on your location to find rides nearby.");
             break;
-
           case error.TIMEOUT:
-            setLocationError(
-              "Location request timed out. Please try again."
-            );
+            setLocationError("Location request timed out. Please try again.");
             break;
-
           default:
-            setLocationError(
-              "Unable to get your current location."
-            );
+            setLocationError("Unable to get your current location.");
         }
       },
-
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 60000,
-      }
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
     );
   };
-
 
   useEffect(() => {
     requestCurrentLocation();
   }, []);
 
-
-  const handlePeopleNearby = () => {
-    navigate("/people-nearby");
-  };
-
-
   const getRideCoordinates = (ride) => {
-    const fromLatitude = Number(
-      ride?.fromLocation?.latitude
-    );
-
-    const fromLongitude = Number(
-      ride?.fromLocation?.longitude
-    );
-
-    if (
-      Number.isFinite(fromLatitude) &&
-      Number.isFinite(fromLongitude)
-    ) {
-      return {
-        latitude: fromLatitude,
-        longitude: fromLongitude,
-      };
+    const fromLatitude = Number(ride?.fromLocation?.latitude);
+    const fromLongitude = Number(ride?.fromLocation?.longitude);
+    if (Number.isFinite(fromLatitude) && Number.isFinite(fromLongitude)) {
+      return { latitude: fromLatitude, longitude: fromLongitude };
     }
-
-    const directLatitude = Number(
-      ride?.fromLatitude
-    );
-
-    const directLongitude = Number(
-      ride?.fromLongitude
-    );
-
-    if (
-      Number.isFinite(directLatitude) &&
-      Number.isFinite(directLongitude)
-    ) {
-      return {
-        latitude: directLatitude,
-        longitude: directLongitude,
-      };
+    const directLatitude = Number(ride?.fromLatitude);
+    const directLongitude = Number(ride?.fromLongitude);
+    if (Number.isFinite(directLatitude) && Number.isFinite(directLongitude)) {
+      return { latitude: directLatitude, longitude: directLongitude };
     }
-
-    const coordinates =
-      ride?.fromLocation?.coordinates;
-
-    if (
-      Array.isArray(coordinates) &&
-      coordinates.length >= 2
-    ) {
+    const coordinates = ride?.fromLocation?.coordinates;
+    if (Array.isArray(coordinates) && coordinates.length >= 2) {
       const longitude = Number(coordinates[0]);
       const latitude = Number(coordinates[1]);
-
-      if (
-        Number.isFinite(latitude) &&
-        Number.isFinite(longitude)
-      ) {
-        return {
-          latitude,
-          longitude,
-        };
+      if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
+        return { latitude, longitude };
       }
     }
-
     return null;
   };
 
   const getRideDistanceKm = (ride) => {
-    if (!userLocation) {
-      return Infinity;
-    }
-
-    const rideCoordinates =
-      getRideCoordinates(ride);
-
-    if (!rideCoordinates) {
-      return Infinity;
-    }
-
+    if (!userLocation) return Infinity;
+    const c = getRideCoordinates(ride);
+    if (!c) return Infinity;
     return calculateDistanceKm(
       userLocation.latitude,
       userLocation.longitude,
-      rideCoordinates.latitude,
-      rideCoordinates.longitude
+      c.latitude,
+      c.longitude
     );
   };
 
-
+  /* ─────────── Profile gate ─────────── */
   useEffect(() => {
-    if (hasCheckedProfileGateRef.current) {
-      return;
-    }
-
-    if (
-      currentUser &&
-      currentUser._id &&
-      typeof completion === "number"
-    ) {
+    if (hasCheckedProfileGateRef.current) return;
+    if (currentUser && currentUser._id && typeof completion === "number") {
       hasCheckedProfileGateRef.current = true;
-
-      setProfileGateOpen(
-        completion !== 100
-      );
+      setProfileGateOpen(completion !== 100);
     }
   }, [currentUser, completion]);
 
-  const handleCloseProfileGate = () => {
-    setProfileGateOpen(false);
-  };
+  const handleCloseProfileGate = () => setProfileGateOpen(false);
 
-
+  /* ─────────── Filters ─────────── */
   const openFilters = () => {
-    scrollStartRef.current =
-      resultsRef.current
-        ? resultsRef.current.scrollTop
-        : 0;
-
+    scrollStartRef.current = resultsRef.current ? resultsRef.current.scrollTop : 0;
     setFiltersOpen(true);
   };
-
-  const closeFilters = () => {
-    setFiltersOpen(false);
-  };
-
-  const toggleFilters = () => {
-    if (filtersOpen) {
-      closeFilters();
-    } else {
-      openFilters();
-    }
-  };
+  const closeFilters = () => setFiltersOpen(false);
+  const toggleFilters = () => (filtersOpen ? closeFilters() : openFilters());
 
   const handleResultsScroll = (e) => {
     const element = e.currentTarget;
-
     if (filtersOpen) {
-      const delta = Math.abs(
-        element.scrollTop - scrollStartRef.current
-      );
-
-      if (delta > SCROLL_COLLAPSE_THRESHOLD) {
-        closeFilters();
-      }
+      const delta = Math.abs(element.scrollTop - scrollStartRef.current);
+      if (delta > SCROLL_COLLAPSE_THRESHOLD) closeFilters();
     }
-
     const distanceFromBottom =
-      element.scrollHeight -
-      element.scrollTop -
-      element.clientHeight;
-
-    if (
-      distanceFromBottom <= 300 &&
-      hasMore &&
-      !loadingMoreRef.current
-    ) {
-   
-
-      fetchRides({
-        pageNumber: page + 1,
-        reset: false,
-      });
+      element.scrollHeight - element.scrollTop - element.clientHeight;
+    if (distanceFromBottom <= 300 && hasMore && !loadingMoreRef.current) {
+      fetchRides({ pageNumber: page + 1, reset: false });
     }
   };
 
@@ -662,239 +377,432 @@ export default function FindRides() {
     setAppliedFilters(emptyFilters);
   };
 
-  const updateDraft = (
-    key,
-    value
-  ) => {
-    setDraftFilters((prev) => {
-      const next = {
-        ...prev,
-        [key]: value,
-      };
-
-      if (
-        key === "transportMode" &&
-        value !== "Flight"
-      ) {
-        next.language = "";
-      }
-
-      return next;
-    });
+  const updateDraft = (key, value) => {
+    setDraftFilters((prev) => ({ ...prev, [key]: value }));
   };
 
   const activeFilters = [
+    appliedType && {
+      key: "type",
+      label: appliedType,
+      clear: () => {
+        const next = { ...appliedFilters, type: "" };
+        setAppliedFilters(next);
+        setDraftFilters(next);
+      },
+    },
     appliedTransportMode && {
       key: "transport",
-
       label: appliedTransportMode,
-
       clear: () => {
-        const next = {
-          ...appliedFilters,
-          transportMode: "",
-          language: "",
-        };
-
+        const next = { ...appliedFilters, transportMode: "", language: "" };
         setAppliedFilters(next);
         setDraftFilters(next);
       },
     },
-
-    appliedGender && {
-      key: "gender",
-
-      label: appliedGender,
-
+    appliedCategory && {
+      key: "category",
+      label: appliedCategory,
       clear: () => {
-        const next = {
-          ...appliedFilters,
-          gender: "",
-        };
-
+        const next = { ...appliedFilters, category: "" };
         setAppliedFilters(next);
         setDraftFilters(next);
       },
     },
-
-    appliedFuelSharing !== "" && {
-      key: "fuel",
-
-      label: `Fuel: ${appliedFuelSharing === "true"
-        ? "Yes"
-        : "No"
-        }`,
-
-      clear: () => {
-        const next = {
-          ...appliedFilters,
-          fuelSharing: "",
-        };
-
-        setAppliedFilters(next);
-        setDraftFilters(next);
-      },
-    },
-
     appliedLanguage && {
       key: "lang",
-
       label: `Lang: ${appliedLanguage}`,
-
       clear: () => {
-        const next = {
-          ...appliedFilters,
-          language: "",
-        };
-
+        const next = { ...appliedFilters, language: "" };
+        setAppliedFilters(next);
+        setDraftFilters(next);
+      },
+    },
+    appliedFreeRidesOnly && {
+      key: "free",
+      label: "Free rides only",
+      clear: () => {
+        const next = { ...appliedFilters, freeRidesOnly: false };
+        setAppliedFilters(next);
+        setDraftFilters(next);
+      },
+    },
+    appliedChildFriendly && {
+      key: "child",
+      label: "Child-friendly",
+      clear: () => {
+        const next = { ...appliedFilters, childFriendly: false };
+        setAppliedFilters(next);
+        setDraftFilters(next);
+      },
+    },
+    appliedWomenRidersOnly && {
+      key: "women",
+      label: "Women riders only",
+      clear: () => {
+        const next = { ...appliedFilters, womenRidersOnly: false };
+        setAppliedFilters(next);
+        setDraftFilters(next);
+      },
+    },
+    (appliedDateFrom || appliedDateTo) && {
+      key: "dates",
+      label:
+        appliedDateFrom && appliedDateTo
+          ? `${appliedDateFrom} → ${appliedDateTo}`
+          : appliedDateFrom
+          ? `From ${appliedDateFrom}`
+          : `Until ${appliedDateTo}`,
+      clear: () => {
+        const next = { ...appliedFilters, dateFrom: "", dateTo: "" };
         setAppliedFilters(next);
         setDraftFilters(next);
       },
     },
   ].filter(Boolean);
 
- 
-  const now = new Date();
+  /* ─────────── Sort rides ─────────── */
+  const sortedVisibleRides = useMemo(() => {
+    return [...rides].sort((a, b) => {
+      if (userLocation) {
+        const dA = getRideDistanceKm(a);
+        const dB = getRideDistanceKm(b);
+        const vA = Number.isFinite(dA);
+        const vB = Number.isFinite(dB);
+        if (vA && !vB) return -1;
+        if (!vA && vB) return 1;
+        if (vA && vB && dA !== dB) return dA - dB;
+      }
+      return new Date(a.startTime).getTime() - new Date(b.startTime).getTime();
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rides, userLocation]);
 
+  /* ─────────── Filter Panel ─────────── */
+  const FilterPanel = () => (
+    <Paper
+      variant="outlined"
+      sx={{
+        p: 2.5,
+        borderRadius: 2.5,
+        borderColor: "divider",
+        bgcolor: "#fff",
+        position: isDesktop ? "sticky" : "static",
+        top: NAVBAR_HEIGHT + 16,
+        maxHeight: isDesktop
+          ? `calc(100vh - ${NAVBAR_HEIGHT}px - 32px)`
+          : "none",
+        overflowY: isDesktop ? "auto" : "visible",
+      }}
+    >
+      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+        <Typography sx={{ fontSize: 15, fontWeight: 700, color: "#1a1a1a" }}>
+          Filters
+        </Typography>
+        {!isDesktop && (
+          <IconButton size="small" onClick={closeFilters}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        )}
+      </Stack>
 
-  const visibleRides = rides;
+      {/* ─── Date range ─── */}
+      <Typography
+        sx={{
+          fontSize: 10.5,
+          fontWeight: 700,
+          letterSpacing: 0.6,
+          color: "text.secondary",
+          mb: 0.75,
+          textTransform: "uppercase",
+        }}
+      >
+        Date range
+      </Typography>
+      <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
+        <TextField
+          size="small"
+          type="date"
+          value={draftFilters.dateFrom}
+          onChange={(e) => updateDraft("dateFrom", e.target.value)}
+          sx={{
+            flex: 1,
+            "& .MuiOutlinedInput-root": {
+              fontSize: 12.5,
+              borderRadius: 1.5,
+              height: 36,
+            },
+          }}
+          InputLabelProps={{ shrink: true }}
+        />
+        <TextField
+          size="small"
+          type="date"
+          value={draftFilters.dateTo}
+          onChange={(e) => updateDraft("dateTo", e.target.value)}
+          sx={{
+            flex: 1,
+            "& .MuiOutlinedInput-root": {
+              fontSize: 12.5,
+              borderRadius: 1.5,
+              height: 36,
+            },
+          }}
+          InputLabelProps={{ shrink: true }}
+        />
+      </Stack>
 
-  const sortedVisibleRides =
-    useMemo(() => {
-      return [...visibleRides].sort(
-        (a, b) => {
-          if (userLocation) {
-            const distanceA =
-              getRideDistanceKm(a);
-
-            const distanceB =
-              getRideDistanceKm(b);
-
-            const validA =
-              Number.isFinite(
-                distanceA
-              );
-
-            const validB =
-              Number.isFinite(
-                distanceB
-              );
-
-            if (
-              validA &&
-              !validB
-            ) {
-              return -1;
-            }
-
-            if (
-              !validA &&
-              validB
-            ) {
-              return 1;
-            }
-
-            if (
-              validA &&
-              validB &&
-              distanceA !== distanceB
-            ) {
-              return (
-                distanceA - distanceB
-              );
-            }
-          }
-
+      {/* ─── Type ─── */}
+      <Typography
+        sx={{
+          fontSize: 10.5,
+          fontWeight: 700,
+          letterSpacing: 0.6,
+          color: "text.secondary",
+          mb: 0.75,
+          textTransform: "uppercase",
+        }}
+      >
+        Type
+      </Typography>
+      <Stack direction="row" spacing={0.75} sx={{ mb: 2, flexWrap: "wrap", gap: 0.75 }}>
+        {[
+          { label: "All", value: "" },
+          { label: "Offers", value: "Offers" },
+          { label: "Requests", value: "Requests" },
+        ].map((t) => {
+          const selected = (draftFilters.type || "") === t.value;
           return (
-            new Date(a.startTime).getTime() -
-            new Date(b.startTime).getTime()
+            <Chip
+              key={t.value || "all"}
+              label={t.label}
+              clickable
+              onClick={() => updateDraft("type", t.value)}
+              sx={{
+                borderRadius: 999,
+                fontWeight: 600,
+                fontSize: 12,
+                height: 28,
+                bgcolor: selected ? RUST : "#fff",
+                color: selected ? "#fff" : "#333",
+                border: `1px solid ${selected ? RUST : "#ddd"}`,
+                "&:hover": { bgcolor: selected ? RUST : "#f8f8f8" },
+              }}
+            />
           );
-        }
-      );
-    }, [
-      visibleRides,
-      userLocation,
-    ]);
+        })}
+      </Stack>
 
-  const formatDistance = (
-    distanceKm
-  ) => {
-    if (
-      !Number.isFinite(distanceKm)
-    ) {
-      return null;
-    }
+      {/* ─── Mode of travel ─── */}
+      {/* <Typography
+        sx={{
+          fontSize: 10.5,
+          fontWeight: 700,
+          letterSpacing: 0.6,
+          color: "text.secondary",
+          mb: 0.75,
+          textTransform: "uppercase",
+        }}
+      >
+        Mode of travel
+      </Typography>
+      <Stack direction="row" spacing={0.75} sx={{ mb: 2, flexWrap: "wrap", gap: 0.75 }}>
+        {TRANSPORT_OPTIONS.map((opt) => {
+          const selected = draftFilters.transportMode === opt.value;
+          return (
+            <Chip
+              key={opt.value || "all-t"}
+              label={opt.label}
+              icon={opt.icon}
+              clickable
+              onClick={() => updateDraft("transportMode", opt.value)}
+              sx={{
+                borderRadius: 999,
+                fontWeight: 600,
+                fontSize: 12,
+                height: 28,
+                bgcolor: selected ? RUST : "#fff",
+                color: selected ? "#fff" : "#333",
+                border: `1px solid ${selected ? RUST : "#ddd"}`,
+                "& .MuiChip-icon": {
+                  color: selected ? "#fff" : "#666",
+                  ml: 0.5,
+                  mr: -0.25,
+                },
+                "&:hover": { bgcolor: selected ? RUST : "#f8f8f8" },
+              }}
+            />
+          );
+        })}
+      </Stack> */}
 
-    if (distanceKm < 1) {
-      return `${Math.round(
-        distanceKm * 1000
-      )} m`;
-    }
+      {/* ─── Category ─── */}
+      <Typography
+        sx={{
+          fontSize: 10.5,
+          fontWeight: 700,
+          letterSpacing: 0.6,
+          color: "text.secondary",
+          mb: 0.75,
+          textTransform: "uppercase",
+        }}
+      >
+        Category
+      </Typography>
+      <FormControl fullWidth size="small" sx={{ mb: 2 }}>
+        <Select
+          value={draftFilters.category}
+          onChange={(e) => updateDraft("category", e.target.value)}
+          displayEmpty
+          sx={{ fontSize: 13, borderRadius: 1.5, height: 36 }}
+        >
+          {CATEGORY_OPTIONS.map((c) => (
+            <MenuItem key={c.value} value={c.value} sx={{ fontSize: 13 }}>
+              {c.label}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
 
-    return `${distanceKm.toFixed(
-      1
-    )} km`;
-  };
+      {/* ─── Language ─── */}
+      <Typography
+        sx={{
+          fontSize: 10.5,
+          fontWeight: 700,
+          letterSpacing: 0.6,
+          color: "text.secondary",
+          mb: 0.75,
+          textTransform: "uppercase",
+        }}
+      >
+        Language
+      </Typography>
+      <Stack direction="row" spacing={0.75} sx={{ mb: 2, flexWrap: "wrap", gap: 0.75 }}>
+        {LANGUAGE_OPTIONS.map((lang) => {
+          const selected = draftFilters.language === lang;
+          return (
+            <Chip
+              key={lang}
+              label={lang}
+              clickable
+              onClick={() => updateDraft("language", selected ? "" : lang)}
+              sx={{
+                borderRadius: 999,
+                fontWeight: 600,
+                fontSize: 12,
+                height: 28,
+                bgcolor: selected ? RUST : "#fff",
+                color: selected ? "#fff" : "#333",
+                border: `1px solid ${selected ? RUST : "#ddd"}`,
+                "&:hover": { bgcolor: selected ? RUST : "#f8f8f8" },
+              }}
+            />
+          );
+        })}
+      </Stack>
 
+      {/* ─── Toggles ─── */}
+      <FormGroup sx={{ mb: 2 }}>
+        <FormControlLabel
+          control={
+            <Checkbox
+              size="small"
+              checked={draftFilters.freeRidesOnly}
+              onChange={(e) => updateDraft("freeRidesOnly", e.target.checked)}
+              sx={{ color: "#bbb", "&.Mui-checked": { color: RUST }, py: 0.25 }}
+            />
+          }
+          label={<Typography sx={{ fontSize: 13, color: "#333" }}>Free rides only</Typography>}
+        />
+        <FormControlLabel
+          control={
+            <Checkbox
+              size="small"
+              checked={draftFilters.childFriendly}
+              onChange={(e) => updateDraft("childFriendly", e.target.checked)}
+              sx={{ color: "#bbb", "&.Mui-checked": { color: RUST }, py: 0.25 }}
+            />
+          }
+          label={<Typography sx={{ fontSize: 13, color: "#333" }}>Child-friendly</Typography>}
+        />
+        <FormControlLabel
+          control={
+            <Checkbox
+              size="small"
+              checked={draftFilters.womenRidersOnly}
+              onChange={(e) => updateDraft("womenRidersOnly", e.target.checked)}
+              sx={{ color: "#bbb", "&.Mui-checked": { color: RUST }, py: 0.25 }}
+            />
+          }
+          label={
+            <Typography sx={{ fontSize: 13, color: "#333" }}>
+              Women riders only{" "}
+              <Typography component="span" sx={{ fontSize: 11.5, color: "text.secondary" }}>
+                (shown to women)
+              </Typography>
+            </Typography>
+          }
+        />
+      </FormGroup>
 
-  // if (loading) {
-  //   return (
-  //     <Box
-  //       sx={{
-  //         minHeight: "100vh",
-  //         display: "flex",
-  //         alignItems: "center",
-  //         justifyContent: "center",
-  //       }}
-  //     >
-  //       <CircularProgress
-  //         sx={{
-  //           color: saffron[500],
-  //         }}
-  //       />
-  //     </Box>
-  //   );
-  // }
+      <Button
+        fullWidth
+        onClick={applyFilters}
+        sx={{
+          bgcolor: RUST,
+          color: "#fff",
+          textTransform: "none",
+          fontWeight: 700,
+          fontSize: 14,
+          py: 1.1,
+          borderRadius: 2,
+          boxShadow: "none",
+          "&:hover": { bgcolor: RUST_DARK, boxShadow: "none" },
+        }}
+      >
+        Apply filters
+      </Button>
 
+      {activeFilters.length > 0 && (
+        <Button
+          fullWidth
+          size="small"
+          startIcon={<FilterListOffIcon sx={{ fontSize: 15 }} />}
+          onClick={clearFilters}
+          sx={{
+            mt: 1,
+            color: "text.secondary",
+            textTransform: "none",
+            fontSize: 12.5,
+            fontWeight: 600,
+            "&:hover": { bgcolor: "#f5f5f5" },
+          }}
+        >
+          Clear all
+        </Button>
+      )}
+    </Paper>
+  );
+
+  /* ─────────── Main render ─────────── */
   return (
     <>
-     
+      {/* ─── Profile gate dialog ─── */}
       <Dialog
         open={profileGateOpen}
         onClose={(event, reason) => {
-          if (
-            reason === "backdropClick"
-          ) {
-            return;
-          }
-
+          if (reason === "backdropClick") return;
           handleCloseProfileGate();
         }}
         fullWidth
         maxWidth="xs"
         PaperProps={{
           sx: {
-            borderRadius: {
-              xs: 2,
-              sm: 3,
-            },
-
-            m: {
-              xs: 1.5,
-              sm: 2,
-            },
-
-            width: {
-              xs: "95%",
-              sm: "100%",
-            },
-
+            borderRadius: { xs: 2, sm: 3 },
+            m: { xs: 1.5, sm: 2 },
+            width: { xs: "95%", sm: "100%" },
             textAlign: "center",
-
-            p: {
-              xs: 1,
-              sm: 1.5,
-            },
+            p: { xs: 1, sm: 1.5 },
           },
         }}
       >
@@ -905,87 +813,53 @@ export default function FindRides() {
             alignItems: "center",
             gap: 1,
             fontWeight: 700,
-            fontSize: {
-              xs: "1rem",
-              sm: "1.15rem",
-            },
+            fontSize: { xs: "1rem", sm: "1.15rem" },
             pt: 3,
           }}
         >
-          <WarningAmberRoundedIcon
-            sx={{
-              fontSize: 40,
-              color: "#E8650A",
-            }}
-          />
-
+          <WarningAmberRoundedIcon sx={{ fontSize: 40, color: "#E8650A" }} />
           Complete Your Profile
         </DialogTitle>
-
         <DialogContent>
           <Typography
-            sx={{
-              fontSize: {
-                xs: "0.85rem",
-                sm: "0.95rem",
-              },
-
-              color: "text.secondary",
-            }}
+            sx={{ fontSize: { xs: "0.85rem", sm: "0.95rem" }, color: "text.secondary" }}
           >
-            Your profile is only{" "}
-            {Number.isFinite(completion)
-              ? completion
-              : 0}
-            % complete. Please complete
-            your profile to 100% to unlock
-            all features, including
-            posting, liking, commenting and
-            saving in the Community.
+            Your profile is only {Number.isFinite(completion) ? completion : 0}%
+            complete. Please complete your profile to 100% to unlock all features.
           </Typography>
-
-          <Box
-            sx={{
-              mt: 2.5,
-              px: {
-                xs: 1,
-                sm: 3,
-              },
-            }}
-          >
+          <Box sx={{ mt: 2.5, px: { xs: 1, sm: 3 } }}>
             <LinearProgress
               variant="determinate"
-              value={
-                Number.isFinite(completion)
-                  ? completion
-                  : 0
-              }
+              value={Number.isFinite(completion) ? completion : 0}
               sx={{
                 height: 8,
                 borderRadius: 5,
                 bgcolor: "#F0E6DC",
-
-                "& .MuiLinearProgress-bar":
-                {
-                  bgcolor: "#FF9933",
-                },
+                "& .MuiLinearProgress-bar": { bgcolor: "#FF9933" },
               }}
             />
           </Box>
         </DialogContent>
-
-        <DialogActions
-          sx={{
-            justifyContent: "center",
-            pb: 3,
-            pt: 1,
-            gap: 1.5,
-          }}
-        >
+        <DialogActions sx={{ justifyContent: "center", pb: 3, pt: 1, gap: 1.5 }}>
           <Button
             variant="contained"
-            onClick={
-              handleCloseProfileGate
+            onClick={handleCloseProfileGate}
+            sx={{
+              textTransform: "none",
+              borderRadius: 999,
+              px: 3,
+              fontWeight: 600,
+              bgcolor: "#FF9933",
+              color: "#fff",
+              "&:hover": { bgcolor: "#FF9933", color: "#fff" },
+            }}
+          >
+            OK
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() =>
+              navigate("/user-profile", { state: { openEditProfile: true } })
             }
             sx={{
               textTransform: "none",
@@ -994,1629 +868,399 @@ export default function FindRides() {
               fontWeight: 600,
               bgcolor: "#FF9933",
               color: "#fff",
-
-              "&:hover": {
-                bgcolor: "#FF9933",
-                color: "#fff",
-              },
-            }}
-          >
-            OK
-          </Button>
-
-          <Button
-            variant="contained"
-            onClick={() => {
-              navigate(
-                "/user-profile",
-                {
-                  state: {
-                    openEditProfile: true,
-                  },
-                }
-              );
-            }}
-            sx={{
-              textTransform: "none",
-              borderRadius: 999,
-              px: 3,
-              fontWeight: 600,
-              bgcolor: "#FF9933",
-              color: "#fff",
-
-              "&:hover": {
-                bgcolor: "#FF9933",
-                color: "#fff",
-              },
+              "&:hover": { bgcolor: "#FF9933", color: "#fff" },
             }}
           >
             Update profile
           </Button>
         </DialogActions>
       </Dialog>
-      { completion !== 100 && (   <WelcomeBanner/>)}
 
       <Box
         sx={{
-          height: `calc(100vh - ${NAVBAR_HEIGHT}px)`,
-          display: "flex",
-          flexDirection: "column",
+          minHeight: `calc(100vh - ${NAVBAR_HEIGHT}px)`,
           width: "100%",
           boxSizing: "border-box",
-          overflowX: "hidden",
-          p: 1,
+          bgcolor: "#FAF8F5",
         }}
       >
-    
-        <Box
-          sx={{
-            position: "sticky",
-            top: 0,
-            zIndex: 100,
-            flexShrink: 0,
-          }}
+        <Container
+          maxWidth="lg"
+          sx={{ px: { xs: 2, sm: 2.5, md: 3 }, py: { xs: 2, sm: 2.5 } }}
         >
+          {/* ─── Title row ─── */}
+          <Stack
+            direction="row"
+            alignItems="center"
+            justifyContent="space-between"
+            sx={{ mb: 2 }}
+          >
+            <Typography
+              sx={{
+                fontSize: { xs: 22, sm: 28 },
+                fontWeight: 800,
+                color: NAVY,
+                letterSpacing: -0.3,
+              }}
+            >
+              Find a ride
+            </Typography>
+
+            {/* <Button
+              variant="contained"
+              onClick={() => setOpen(true)}
+              sx={{
+                bgcolor: RUST,
+                color: "#fff",
+                textTransform: "none",
+                fontWeight: 700,
+                fontSize: 13.5,
+                px: 2.5,
+                py: 0.9,
+                borderRadius: 2,
+                boxShadow: "none",
+                "&:hover": { bgcolor: RUST_DARK, boxShadow: "none" },
+              }}
+            >
+              + Post a ride
+            </Button> */}
+          </Stack>
+
+          {/* ─── 2-column layout ─── */}
           <Box
             sx={{
-              color: "#000000",
-              pt: 1,
-              pb: {
-                xs: 0,
-                sm: 2,
-                md: 3,
-              },
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr", md: "300px 1fr" },
+              gap: { xs: 2, md: 3 },
+              alignItems: "flex-start",
             }}
           >
-            <Container
-              disableGutters
-            >
-              
-              <Typography
-                fontWeight={800}
-                sx={{
-                  fontSize: {
-                    xs: "1rem",
-                    sm: "1.45rem",
-                    md: "1.8rem",
-                  },
-                  letterSpacing:
-                    "0.3px",
-                  lineHeight: 1.2,
-                }}
-              >
-                Find a Ride
-              </Typography>
+            {/* Filters column */}
+            {isDesktop ? (
+              <FilterPanel />
+            ) : (
+              <Collapse in={filtersOpen} timeout="auto">
+                <FilterPanel />
+              </Collapse>
+            )}
 
-      
-              <Box
-                sx={{
-                  mt: 1,
-                  mb: 0.5,
-                  display: "flex",
-                  alignItems:
-                    "center",
-                  gap: 1,
-                  flexWrap: "wrap",
-                }}
-              >
-          
+            {/* Right column */}
+            <Box sx={{ minWidth: 0 }}>
+              {/* ─── Mobile filter trigger ─── */}
+              {!isDesktop && (
                 <Button
-                  onClick={requestCurrentLocation}
-                  disabled={locationLoading}
-                  startIcon={
-                    <LocationOnIcon
-                      sx={{
-                        fontSize: {
-                          xs: "15px !important",
-                          sm: "17px !important",
-                          md: "18px !important",
-                        },
-                        color: userLocation ? "#2E7D32" : "#E8650A",
-                      }}
-                    />
-                  }
+                  fullWidth
+                  onClick={toggleFilters}
+                  startIcon={<FilterListOffIcon />}
                   sx={{
-                    minHeight: {
-                      xs: 26,
-                      sm: 28,
-                      md: 30,
-                    },
-                    height: {
-                      xs: 28,
-                      sm: 30,
-                      md: 32,
-                    },
-                    px: {
-                      xs: 1,
-                      sm: 1.25,
-                      md: 1.5,
-                    },
-                    borderRadius: 999,
+                    mb: 1.5,
+                    bgcolor: "#fff",
+                    color: "#333",
+                    border: "1px solid #ddd",
                     textTransform: "none",
-                    fontSize: {
-                      xs: "0.62rem",
-                      sm: "0.70rem",
-                      md: "0.78rem",
-                    },
                     fontWeight: 600,
-                    lineHeight: 1,
-                    whiteSpace: "nowrap",
-                    color: userLocation ? "#2E7D32" : "#E8650A",
-                    background: userLocation ? "#EAF6EC" : "#FFF4E8",
-                    border: `1px solid ${userLocation ? "#A5D6A7" : "#FFD09B"
-                      }`,
+                    fontSize: 13,
+                    py: 1,
+                    borderRadius: 2,
                     boxShadow: "none",
-                    "& .MuiButton-startIcon": {
-                      marginRight: {
-                        xs: "3px",
-                        sm: "4px",
-                        md: "5px",
-                      },
-                      marginLeft: 0,
-                    },
-                    "&:hover": {
-                      background: userLocation ? "#E0F2E3" : "#FFEBD7",
-                      boxShadow: "none",
-                    },
+                    "&:hover": { bgcolor: "#f8f8f8", boxShadow: "none" },
                   }}
                 >
-                  {locationLoading
-                    ? "Getting location..."
-                    : userLocation
-                      ? "Location Enabled"
-                      : "Enable Location"}
+                  {filtersOpen ? "Hide filters" : "Show filters"}
+                  {activeFilters.length > 0 ? ` (${activeFilters.length})` : ""}
                 </Button>
+              )}
 
-                {/* People Near You */}
-
-                <Button
-                  onClick={handlePeopleNearby}
-                  startIcon={
-                    <PeopleAltIcon
-                      sx={{
-                        fontSize: {
-                          xs: "14px !important",
-                          sm: "16px !important",
-                          md: "17px !important",
-                        },
-                      }}
-                    />
-                  }
-                  sx={{
-                    minHeight: {
-                      xs: 26,
-                      sm: 28,
-                      md: 30,
-                    },
-                    height: {
-                      xs: 28,
-                      sm: 30,
-                      md: 32,
-                    },
-                    px: {
-                      xs: 1,
-                      sm: 1.25,
-                      md: 1.5,
-                    },
-                    borderRadius: 999,
-                    textTransform: "none",
-                    fontSize: {
-                      xs: "0.62rem",
-                      sm: "0.70rem",
-                      md: "0.78rem",
-                    },
-                    fontWeight: 700,
-                    lineHeight: 1,
-                    whiteSpace: "nowrap",
-                    color: "#E8650A",
-                    background: "#FFF",
-                    border: "1px solid #FFD09B",
-                    boxShadow: "none",
-                    "& .MuiButton-startIcon": {
-                      marginRight: {
-                        xs: "3px",
-                        sm: "4px",
-                        md: "5px",
-                      },
-                      marginLeft: 0,
-                    },
-                    "&:hover": {
-                      background: "#FFF4E8",
-                      borderColor: "#FFAB28",
-                      boxShadow: "none",
-                    },
-                  }}
+              {/* ─── Search card ─── */}
+              <Paper
+                variant="outlined"
+                sx={{
+                  p: { xs: 1.5, sm: 2 },
+                  mb: 2,
+                  borderRadius: 2.5,
+                  borderColor: "divider",
+                  bgcolor: "#fff",
+                }}
+              >
+                <Stack
+                  direction={{ xs: "column", sm: "row" }}
+                  spacing={1.25}
+                  sx={{ mb: 1.75 }}
                 >
-                  People Near You
-                </Button>
-
-                {/* Location error */}
-
-                {!userLocation && !locationLoading && (
-                  <Typography
+                  <TextField
+                    size="small"
+                    placeholder="From (US city or airport)"
+                    value={searchFrom}
+                    onChange={(e) => setSearchFrom(e.target.value)}
                     sx={{
-                      mt: 0.75,
-                      fontSize: {
-                        xs: "0.68rem",
-                        sm: "0.75rem",
+                      flex: 1,
+                      "& .MuiOutlinedInput-root": {
+                        fontSize: 13.5,
+                        borderRadius: 1.5,
+                        height: 42,
+                        bgcolor: "#fff",
                       },
-                      color: "text.secondary",
+                    }}
+                  />
+                  <TextField
+                    size="small"
+                    placeholder="To (US city or airport)"
+                    value={searchDestination}
+                    onChange={(e) => setSearchDestination(e.target.value)}
+                    sx={{
+                      flex: 1,
+                      "& .MuiOutlinedInput-root": {
+                        fontSize: 13.5,
+                        borderRadius: 1.5,
+                        height: 42,
+                        bgcolor: "#fff",
+                      },
+                    }}
+                  />
+                  <Button
+                    variant="contained"
+                    startIcon={<SearchIcon sx={{ fontSize: 18 }} />}
+                    onClick={() => fetchRides({ pageNumber: 1, reset: true })}
+                    sx={{
+                      bgcolor: NAVY,
+                      color: "#fff",
+                      textTransform: "none",
+                      fontWeight: 700,
+                      fontSize: 13.5,
+                      px: 3,
+                      height: 42,
+                      borderRadius: 1.5,
+                      boxShadow: "none",
+                      "&:hover": { bgcolor: "#0F1E3D", boxShadow: "none" },
                     }}
                   >
-                    Enable location to see rides near you (optional)
-                  </Typography>
-                )}
-              </Box>
-
-              {/* ───────────────────────────────
-                  General search
-              ─────────────────────────────── */}
-              <Box
-                sx={{
-                  display: "flex",
-                  gap: {
-                    xs: 0.7,
-                    sm: 1.25,
-                  },
-                  alignItems:
-                    "center",
-                  flexDirection: "row",
-                  mt: {
-                    xs: 2.3,
-                    sm: 1.5,
-                  },
-                }}
-              >
-                <TextField
-                  size="small"
-                  placeholder="Search by From / To / Airport / City..."
-                  value={search}
-                  onChange={(e) =>
-                    setSearch(
-                      e.target.value
-                    )
-                  }
-
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <SearchIcon
-                          sx={{
-                            color:
-                              saffron[500],
-
-                            fontSize: 20,
-                          }}
-                        />
-                      </InputAdornment>
-                    ),
-                  }}
-
-                  sx={{
-                    flex: 1,
-
-                    minWidth: 0,
-
-                    "& .MuiOutlinedInput-root":
-                    {
-                      borderRadius:
-                        "12px",
-
-                      background:
-                        "rgba(255,255,255,0.96)",
-
-                      fontSize: {
-                        xs: "0.65rem",
-                        sm: "0.84rem",
-                      },
-
-                      height: {
-                        xs: 32,
-                        sm: 40,
-                      },
-
-                      "& fieldset": {
-                        border: "none",
-                      },
-
-                      "& input": {
-                        py: 0,
-
-                        px: {
-                          xs: 1,
-                          sm: 1,
-                        },
-                      },
-
-                      "& .MuiInputAdornment-root":
-                      {
-                        ml: {
-                          xs: 0.75,
-                          sm: 1,
-                        },
-
-                        mr: {
-                          xs: 0.25,
-                          sm: 0.5,
-                        },
-                      },
-                    },
-                  }}
-                />
-              </Box>
-
-              <Box
-                sx={{
-                  display: "flex",
-
-                  gap: {
-                    xs: 1,
-                    sm: 1.25,
-                  },
-
-                  alignItems:
-                    "center",
-
-                  flexDirection: "row",
-
-                  mt: {
-                    xs: 2,
-                    sm: 1.5,
-                  },
-
-                  mb: {
-                    xs: 1,
-                    sm: 1,
-                  },
-                }}
-              >
-                {/* From */}
-
-                <TextField
-                  size="small"
-
-                  placeholder={
-                    isMobile
-                      ? "From"
-                      : "From / City / Airport"
-                  }
-
-                  value={searchFrom}
-
-                  onChange={(e) =>
-                    setSearchFrom(
-                      e.target.value
-                    )
-                  }
-
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <SearchIcon
-                          sx={{
-                            color:
-                              saffron[500],
-
-                            fontSize: {
-                              xs: 14,
-                              sm: 17,
-                            },
-                          }}
-                        />
-                      </InputAdornment>
-                    ),
-                  }}
-
-                  sx={{
-                    flex: 1,
-
-                    minWidth: 0,
-
-                    "& .MuiOutlinedInput-root":
-                    {
-                      borderRadius:
-                        "12px",
-
-                      background:
-                        "rgba(255,255,255,0.96)",
-
-                      fontSize: {
-                        xs: "0.65rem",
-                        sm: "0.84rem",
-                      },
-
-                      height: {
-                        xs: 34,
-                        sm: 40,
-                      },
-
-                      "& fieldset": {
-                        border: "none",
-                      },
-
-                      "& input": {
-                        py: 0,
-
-                        px: {
-                          xs: 1,
-                          sm: 1,
-                        },
-                      },
-
-                      "& .MuiInputAdornment-root":
-                      {
-                        ml: {
-                          xs: 0.75,
-                          sm: 1,
-                        },
-
-                        mr: {
-                          xs: 0.25,
-                          sm: 0.5,
-                        },
-                      },
-                    },
-                  }}
-                />
-
-                {/* To */}
-
-                <TextField
-                  size="small"
-
-                  placeholder={
-                    isMobile
-                      ? "To"
-                      : "To / City / Airport"
-                  }
-
-                  value={
-                    searchDestination
-                  }
-
-                  onChange={(e) =>
-                    setSearchDestination(
-                      e.target.value
-                    )
-                  }
-
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <SearchIcon
-                          sx={{
-                            color:
-                              saffron[500],
-
-                            fontSize: {
-                              xs: 12,
-                              sm: 17,
-                            },
-                          }}
-                        />
-                      </InputAdornment>
-                    ),
-                  }}
-
-                  sx={{
-                    flex: 1,
-
-                    minWidth: 0,
-
-                    "& .MuiOutlinedInput-root":
-                    {
-                      borderRadius:
-                        "12px",
-
-                      background:
-                        "rgba(255,255,255,0.96)",
-
-                      fontSize: {
-                        xs: "0.65rem",
-                        sm: "0.84rem",
-                      },
-
-                      height: {
-                        xs: 34,
-                        sm: 40,
-                      },
-
-                      pr: 0.5,
-
-                      "& fieldset": {
-                        border: "none",
-                      },
-
-                      "& input": {
-                        py: 0,
-
-                        px: {
-                          xs: 1,
-                          sm: 1,
-                        },
-                      },
-
-                      "& .MuiInputAdornment-root":
-                      {
-                        ml: {
-                          xs: 0.75,
-                          sm: 1,
-                        },
-
-                        mr: {
-                          xs: 0.25,
-                          sm: 0.5,
-                        },
-                      },
-                    },
-                  }}
-                />
-
-                {/* Filters */}
-
-                <Button
-                  onClick={
-                    toggleFilters
-                  }
-                  sx={{
-                    flexShrink: 0,
-
-                    borderRadius:
-                      "50px",
-
-                    background:
-                      "#ffff",
-
-                    backdropFilter:
-                      "blur(6px)",
-
-                    border: "none",
-
-                    color: "#100f0f",
-
-                    fontWeight: 700,
-
-                    textTransform:
-                      "none",
-
-                    fontSize: {
-                      xs: "0.7rem",
-                      sm: "0.82rem",
-                    },
-
-                    height: {
-                      xs: 34,
-                      sm: 40,
-                    },
-
-                    minWidth: {
-                      xs: "auto",
-                      sm: 100,
-                    },
-
-                    px: {
-                      xs: 1.25,
-                      sm: 2,
-                    },
-
-                    gap: {
-                      xs: 0.4,
-                      sm: 0.75,
-                    },
-
-                    boxShadow: "none",
-
-                    whiteSpace:
-                      "nowrap",
-
-                    display: "flex",
-
-                    alignItems:
-                      "center",
-
-                    "&:hover": {
-                      background:
-                        saffron[500],
-
-                      boxShadow: "none",
-
-                      color: "#ffff",
-                    },
-                  }}
+                    Search
+                  </Button>
+                </Stack>
+
+                <Divider sx={{ my: 1.75 }} />
+
+                <Stack
+                  direction={{ xs: "column", sm: "row" }}
+                  spacing={1.5}
+                  alignItems={{ xs: "stretch", sm: "center" }}
+                  flexWrap="wrap"
                 >
-                  <TuneIcon
+                  <Button
+                    onClick={requestCurrentLocation}
+                    disabled={locationLoading}
+                    startIcon={
+                      <LocationOnIcon
+                        sx={{
+                          fontSize: 18,
+                          color: userLocation ? "#2E7D32" : RUST,
+                        }}
+                      />
+                    }
                     sx={{
-                      fontSize: {
-                        xs: 14,
-                        sm: 17,
+                      textTransform: "none",
+                      fontWeight: 700,
+                      fontSize: 13,
+                      borderRadius: 999,
+                      px: 2,
+                      py: 0.75,
+                      border: `1.5px solid ${userLocation ? "#A5D6A7" : RUST}`,
+                      color: userLocation ? "#2E7D32" : RUST,
+                      bgcolor: userLocation ? "#EAF6EC" : "#fff",
+                      whiteSpace: "nowrap",
+                      "&:hover": {
+                        bgcolor: userLocation ? "#E0F2E3" : "#FFF5EC",
+                        borderColor: userLocation ? "#A5D6A7" : RUST,
+                      },
+                    }}
+                  >
+                    {locationLoading ? "Getting location..." : "Use my location"}
+                  </Button>
+
+                  <Typography sx={{ fontSize: 13, color: "text.secondary" }}>
+                    or type a location
+                  </Typography>
+
+                  <TextField
+                    size="small"
+                    placeholder="City or zip"
+                    value={searchFrom}
+                    onChange={(e) => setSearchFrom(e.target.value)}
+                    sx={{
+                      flex: 1,
+                      minWidth: 160,
+                      "& .MuiOutlinedInput-root": {
+                        fontSize: 13,
+                        borderRadius: 1.5,
+                        height: 38,
+                        bgcolor: "#fff",
                       },
                     }}
                   />
 
-                  <Box
-                    component="span"
-                    sx={{
-                      display: {
-                        xs: "none",
-                        sm: "inline",
-                      },
-                    }}
-                  >
-                    Filters
-                    {activeFilters.length >
-                      0
-                      ? ` (${activeFilters.length})`
-                      : ""}
-                  </Box>
-
-                  {isMobile &&
-                    activeFilters.length >
-                    0 && (
-                      <Box
-                        sx={{
-                          width: 6,
-                          height: 6,
-                          borderRadius:
-                            "50%",
-
-                          background:
-                            "#fff",
-
-                          flexShrink: 0,
-                        }}
-                      />
-                    )}
-                </Button>
-
-                {/* Requests */}
-
-                <Button
-                  variant="contained"
-                  size="small"
-                  startIcon={
-                    <VisibilityIcon />
-                  }
-                  onClick={() =>
-                    navigate(
-                      "/request-ride"
-                    )
-                  }
-                  sx={{
-                    bgcolor: ORANGE,
-
-                    color: "#ffffff",
-
-                    "&:hover": {
-                      bgcolor:
-                        "#e68a00",
-                    },
-
-                    "&.Mui-disabled":
-                    {
-                      bgcolor:
-                        "#e0e0e0",
-                    },
-
-                    fontWeight: 700,
-
-                    fontSize: {
-                      xs: "0.7rem",
-                      sm: "0.875rem",
-                    },
-
-                    px: {
-                      xs: 1.5,
-                      sm: 3,
-                    },
-
-                    py: {
-                      xs: 0.5,
-                      sm: 1,
-                    },
-
-                    borderRadius: 2,
-
-                    whiteSpace:
-                      "nowrap",
-
-                    boxShadow: "none",
-
-                    textTransform:
-                      "none",
-                  }}
-                >
-                  View Your Requests
-                </Button>
-              </Box>
-
-              {/* Active filter chips */}
-
-              {activeFilters.length >
-                0 && (
-                  <Box
-                    sx={{
-                      display: "flex",
-
-                      flexWrap:
-                        "wrap",
-
-                      gap: {
-                        xs: 0.5,
-                        sm: 0.75,
-                      },
-
-                      mt: 1.25,
-                    }}
-                  >
-                    {activeFilters.map(
-                      (f) => (
-                        <Chip
-                          key={f.key}
-                          label={f.label}
-                          onDelete={
-                            f.clear
-                          }
-                          deleteIcon={
-                            <CloseIcon />
-                          }
-                          size="small"
-                          sx={{
-                            background:
-                              "rgba(255,255,255,0.9)",
-
-                            border: `1px solid ${saffron[300]}`,
-
-                            color:
-                              saffron[800],
-
-                            fontWeight: 600,
-
-                            fontSize: {
-                              xs: "0.65rem",
-                              sm: "0.75rem",
-                            },
-
-                            height: {
-                              xs: 22,
-                              sm: 26,
-                            },
-
-                            "& .MuiChip-deleteIcon":
-                            {
-                              color:
-                                saffron[500],
-
-                              fontSize: {
-                                xs: "0.8rem",
-                                sm: "0.95rem",
-                              },
-                            },
-
-                            "& .MuiChip-label":
-                            {
-                              px: {
-                                xs: 0.75,
-                                sm: 1,
-                              },
-                            },
-                          }}
-                        />
-                      )
-                    )}
-                  </Box>
-                )}
-            </Container>
-          </Box>
-        </Box>
-
-        {/* ──────────────────────────────────────
-            Results
-        ─────────────────────────────────────── */}
-
-        <Box
-          ref={resultsRef}
-          onScroll={
-            handleResultsScroll
-          }
-          sx={{
-            flex: 1,
-
-            overflowY: "auto",
-
-            overflowX: "hidden",
-
-            pb: {
-              xs: 4,
-              sm: 6,
-            },
-
-            "&::-webkit-scrollbar":
-            {
-              width: 5,
-            },
-
-            "&::-webkit-scrollbar-track":
-            {
-              background:
-                saffron[50],
-            },
-
-            "&::-webkit-scrollbar-thumb":
-            {
-              background:
-                saffron[300],
-
-              borderRadius: 4,
-            },
-          }}
-        >
-          <Container
-            maxWidth="md"
-            disableGutters
-            sx={{
-              px: {
-                xs: 0,
-                sm: 3,
-              },
-            }}
-          >
-            {/* ───────────────────────────────
-                Filter panel
-            ─────────────────────────────── */}
-
-            <Collapse
-              in={filtersOpen}
-            >
-              <Box
-                sx={{
-                  background:
-                    "#fff",
-
-                  borderRadius: {
-                    xs: 3,
-                    md: 4,
-                  },
-
-                  border: `1.5px solid ${saffron[100]}`,
-
-                  p: {
-                    xs: 1.75,
-                    sm: 3,
-                  },
-
-                  mt: {
-                    xs: 1.5,
-                    sm: 2,
-                  },
-
-                  mb: {
-                    xs: 1.5,
-                    sm: 2,
-                  },
-                }}
-              >
-                {/* Transport */}
-
-                <Box mb={2}>
-                  <Typography
-                    component="span"
-                    sx={{
-                      fontSize: {
-                        xs: "0.65rem",
-                        sm: "0.7rem",
-                      },
-
-                      fontWeight: 700,
-
-                      textTransform:
-                        "uppercase",
-
-                      letterSpacing:
-                        "0.08em",
-
-                      color:
-                        saffron[700],
-
-                      display:
-                        "block",
-
-                      mb: 1,
-                    }}
-                  >
-                    Mode of Travel
+                  <Typography sx={{ fontSize: 13, color: "text.secondary" }}>
+                    within
                   </Typography>
 
-                  <Box
-                    sx={{
-                      display: "flex",
-
-                      flexWrap:
-                        "wrap",
-
-                      gap: {
-                        xs: 0.6,
-                        sm: 1,
-                      },
-                    }}
-                  >
-                    {TRANSPORT_OPTIONS.map(
-                      (opt) => {
-                        const selected =
-                          transportMode ===
-                          opt.value;
-
-                        return (
-                          <Chip
-                            key={
-                              opt.value
-                            }
-                            label={
-                              opt.label
-                            }
-                            icon={
-                              opt.icon
-                            }
-                            onClick={() =>
-                              updateDraft(
-                                "transportMode",
-                                opt.value
-                              )
-                            }
-                            sx={{
-                              borderRadius:
-                                "20px",
-
-                              border: `1.5px solid ${selected
-                                ? saffron[500]
-                                : saffron[200]
-                                }`,
-
-                              background:
-                                selected
-                                  ? saffron[500]
-                                  : "#fff",
-
-                              color:
-                                selected
-                                  ? "#fff"
-                                  : saffron[700],
-
-                              fontWeight: 600,
-
-                              fontSize: {
-                                xs: "0.68rem",
-                                sm: "0.86rem",
-                              },
-
-                              height: {
-                                xs: 24,
-                                sm: 30,
-                              },
-
-                              cursor:
-                                "pointer",
-
-                              "& .MuiChip-label":
-                              {
-                                px: {
-                                  xs: 1,
-                                  sm: 1.8,
-                                },
-                              },
-
-                              "&:hover":
-                              {
-                                background:
-                                  selected
-                                    ? saffron[600]
-                                    : saffron[50],
-
-                                borderColor:
-                                  saffron[400],
-                              },
-
-                              "& .MuiChip-icon":
-                              {
-                                color:
-                                  selected
-                                    ? "#fff"
-                                    : saffron[500],
-
-                                ml: {
-                                  xs: 0.5,
-                                  sm: 0.75,
-                                },
-
-                                mr: {
-                                  xs: "-4px",
-                                  sm: "-2px",
-                                },
-                              },
-                            }}
-                          />
-                        );
-                      }
-                    )}
-                  </Box>
-                </Box>
-
-                {/* Dropdowns */}
-
-                <Grid
-                  container
-                  spacing={{
-                    xs: 1,
-                    sm: 2,
-                  }}
-                  alignItems="flex-end"
-                >
-                  {/* Gender */}
-
-                  <Grid
-                    item
-                    xs={6}
-                    sm={4}
-                    md={3}
-                  >
-                    <Typography
-                      component="span"
-                      sx={{
-                        fontSize: {
-                          xs: "0.65rem",
-                          sm: "0.7rem",
-                        },
-
-                        fontWeight: 600,
-
-                        textTransform:
-                          "uppercase",
-
-                        letterSpacing:
-                          "0.08em",
-
-                        color:
-                          saffron[700],
-
-                        display:
-                          "block",
-
-                        mt: 1,
-
-                        mb: 1,
-                      }}
-                    >
-                      Gender
-                    </Typography>
-
-                    <FormControl
-                      fullWidth
-                      size="small"
-                    >
-                      <Select
-                        value={gender}
-                        displayEmpty
-                        onChange={(e) =>
-                          updateDraft(
-                            "gender",
-                            e.target.value
-                          )
-                        }
-                        sx={{
-                          ...selectSx,
-
-                          fontSize: {
-                            xs: "0.7rem",
-                            sm: "0.82rem",
-                          },
-
-                          height: {
-                            xs: 30,
-                            sm: 36,
-                          },
-                        }}
-                      >
-                        {GENDER_OPTIONS.map(
-                          (g) => (
-                            <MenuItem
-                              key={
-                                g.value
-                              }
-                              value={
-                                g.value
-                              }
-                              sx={{
-                                fontSize: {
-                                  xs: "0.7rem",
-                                  sm: "0.85rem",
-                                },
-                              }}
-                            >
-                              {g.label}
-                            </MenuItem>
-                          )
-                        )}
-                      </Select>
-                    </FormControl>
-                  </Grid>
-
-                  {/* Fuel */}
-
-                  <Grid
-                    item
-                    xs={6}
-                    sm={4}
-                    md={3}
-                  >
-                    <Typography
-                      component="span"
-                      sx={{
-                        fontSize: {
-                          xs: "0.65rem",
-                          sm: "0.7rem",
-                        },
-
-                        fontWeight: 600,
-
-                        textTransform:
-                          "uppercase",
-
-                        letterSpacing:
-                          "0.08em",
-
-                        color:
-                          saffron[700],
-
-                        display:
-                          "block",
-
-                        mt: 1,
-
-                        mb: 1,
-                      }}
-                    >
-                      Fuel Sharing
-                    </Typography>
-
-                    <FormControl
-                      fullWidth
-                      size="small"
-                    >
-                      <Select
-                        value={
-                          fuelSharing
-                        }
-                        displayEmpty
-                        onChange={(e) =>
-                          updateDraft(
-                            "fuelSharing",
-                            e.target.value
-                          )
-                        }
-                        sx={{
-                          ...selectSx,
-
-                          fontSize: {
-                            xs: "0.7rem",
-                            sm: "0.82rem",
-                          },
-
-                          height: {
-                            xs: 30,
-                            sm: 36,
-                          },
-                        }}
-                      >
-                        {FUEL_OPTIONS.map(
-                          (f) => (
-                            <MenuItem
-                              key={
-                                f.value
-                              }
-                              value={
-                                f.value
-                              }
-                              sx={{
-                                fontSize: {
-                                  xs: "0.7rem",
-                                  sm: "0.85rem",
-                                },
-                              }}
-                            >
-                              {f.label}
-                            </MenuItem>
-                          )
-                        )}
-                      </Select>
-                    </FormControl>
-                  </Grid>
-
-                  {/* Language */}
-
-                  {transportMode ===
-                    "Flight" && (
-                      <Grid
-                        item
-                        xs={12}
-                        sm={4}
-                        md={6}
-                      >
-                        <Typography
-                          component="span"
+                  <Stack direction="row" spacing={0.5}>
+                    {[
+                      { label: "10 mi", value: 10 },
+                      { label: "25 mi", value: 25 },
+                      { label: "50 mi", value: 50 },
+                    ].map((r) => {
+                      const isActive = draftFilters.radiusMi === r.value;
+                      return (
+                        <Chip
+                          key={r.value}
+                          label={r.label}
+                          clickable
+                          onClick={() => updateDraft("radiusMi", r.value)}
                           sx={{
-                            fontSize: {
-                              xs: "0.6rem",
-                              sm: "0.7rem",
-                            },
-
-                            fontWeight: 600,
-
-                            textTransform:
-                              "uppercase",
-
-                            letterSpacing:
-                              "0.08em",
-
-                            color:
-                              saffron[700],
-
-                            display:
-                              "block",
-
-                            mt: 1,
-                          }}
-                        >
-                          Language
-                        </Typography>
-
-                        <TextField
-                          fullWidth
-                          size="small"
-
-                          placeholder="Tamil, English, Hindi…"
-
-                          value={
-                            language
-                          }
-
-                          onChange={(e) =>
-                            updateDraft(
-                              "language",
-                              e.target
-                                .value
-                            )
-                          }
-
-                          sx={{
-                            ...inputFieldSx,
-
-                            "& .MuiOutlinedInput-root":
-                            {
-                              ...inputFieldSx[
-                              "& .MuiOutlinedInput-root"
-                              ],
-
-                              fontSize: {
-                                xs: "0.7rem",
-                                sm: "0.82rem",
-                              },
-
-                              height: {
-                                xs: 30,
-                                sm: 36,
-                              },
-
-                              mt: 1,
+                            borderRadius: 999,
+                            fontWeight: 700,
+                            fontSize: 12,
+                            height: 30,
+                            bgcolor: isActive ? RUST : "#fff",
+                            color: isActive ? "#fff" : "#333",
+                            border: `1px solid ${isActive ? RUST : "#ddd"}`,
+                            "&:hover": {
+                              bgcolor: isActive ? RUST : "#f8f8f8",
                             },
                           }}
                         />
-                      </Grid>
-                    )}
-                </Grid>
+                      );
+                    })}
+                  </Stack>
+                </Stack>
 
-                {/* Filter actions */}
-
-                <Box
-                  sx={{
-                    display: "flex",
-
-                    alignItems:
-                      "center",
-
-                    justifyContent:
-                      "space-between",
-
-                    gap: 1,
-
-                    mt: {
-                      xs: 1.5,
-                      sm: 2.5,
-                    },
-                  }}
+                <Typography
+                  sx={{ fontSize: 12.5, color: "text.secondary", mt: 1.75 }}
                 >
-                  <Button
-                    startIcon={
-                      <FilterListOffIcon
-                        sx={{
-                          fontSize: {
-                            xs: 12,
-                            sm: 16,
-                          },
-                        }}
-                      />
-                    }
-                    onClick={
-                      clearFilters
-                    }
-                    variant="contained"
-                    sx={{
-                      borderRadius:
-                        "50px",
+                  {sortedVisibleRides.length} ride
+                  {sortedVisibleRides.length === 1 ? "" : "s"} near{" "}
+                  {searchFrom || "your area"}. Your location is used only for
+                  this search and is not stored.
+                </Typography>
 
-                      color: "#ffff",
-
-                      bgcolor:
-                        "#757575",
-
-                      fontWeight: 600,
-
-                      fontSize: {
-                        xs: "0.7rem",
-                        sm: "0.82rem",
-                      },
-
-                      px: {
-                        xs: 1.5,
-                        sm: 2.5,
-                      },
-
-                      height: {
-                        xs: 30,
-                        sm: 36,
-                      },
-
-                      textTransform:
-                        "none",
-                    }}
+                {locationError && (
+                  <Typography
+                    sx={{ fontSize: 12, color: "#B00020", mt: 0.75 }}
                   >
-                    Clear all
-                  </Button>
+                    {locationError}
+                  </Typography>
+                )}
+              </Paper>
 
-                  <Button
-                    onClick={
-                      applyFilters
-                    }
-                    sx={{
-                      borderRadius:
-                        "50px",
+              {/* ─── Active filter chips ─── */}
+              {activeFilters.length > 0 && (
+                <Stack
+                  direction="row"
+                  spacing={0.75}
+                  flexWrap="wrap"
+                  useFlexGap
+                  sx={{ mb: 1.5 }}
+                >
+                  {activeFilters.map((f) => (
+                    <Chip
+                      key={f.key}
+                      label={f.label}
+                      onDelete={f.clear}
+                      size="small"
+                      sx={{
+                        bgcolor: "#fff",
+                        border: `1px solid ${RUST}`,
+                        color: RUST,
+                        fontWeight: 600,
+                        fontSize: 11.5,
+                        height: 26,
+                        "& .MuiChip-deleteIcon": {
+                          color: RUST,
+                          fontSize: 16,
+                        },
+                      }}
+                    />
+                  ))}
+                </Stack>
+              )}
 
-                      border: "none",
-
-                      background:
-                        saffron[500],
-
-                      color: "#fff",
-
-                      fontWeight: 700,
-
-                      fontSize: {
-                        xs: "0.72rem",
-                        sm: "0.85rem",
-                      },
-
-                      px: {
-                        xs: 2,
-                        sm: 3,
-                      },
-
-                      height: {
-                        xs: 32,
-                        sm: 38,
-                      },
-
-                      textTransform:
-                        "none",
-
-                      boxShadow: "none",
-
-                      "&:hover": {
-                        background:
-                          saffron[600],
-                      },
-                    }}
-                  >
-                    Apply
-                  </Button>
-                </Box>
-              </Box>
-            </Collapse>
-
-            <Box
-              sx={{
-                display: "flex",
-                mb: {
-                  xs: 1.5,
-                  sm: 2,
-                },
-
-                mt: {
-                  xs: 2,
-                  sm: 1.5,
-                },
-              }}
-            >
-              {/* <Typography
-                fontWeight={700}
+              {/* ─── Ride list ─── */}
+              <Box
+                ref={resultsRef}
+                onScroll={handleResultsScroll}
                 sx={{
-                  color:
-                    saffron[800],
-
-                  fontSize: {
-                    xs: "0.83rem",
-                    sm: "1rem",
+                  maxHeight: { xs: "none", md: "calc(100vh - 320px)" },
+                  overflowY: { xs: "visible", md: "auto" },
+                  pr: { xs: 0, md: 0.5 },
+                  "&::-webkit-scrollbar": { width: 6 },
+                  "&::-webkit-scrollbar-thumb": {
+                    bgcolor: "#ddd",
+                    borderRadius: 4,
                   },
                 }}
               >
-                {visibleRides.length}{" "}
-                <Typography
-                  component="span"
-                  fontWeight={400}
-                  color="text.secondary"
-                >
-                  {visibleRides.length ===
-                    1
-                    ? "result"
-                    : "results"}{" "}
-                  found
-                </Typography>
-              </Typography> */}
-            </Box>
+                {loading ? (
+                  <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
+                    <CircularProgress sx={{ color: saffron[500] }} />
+                  </Box>
+                ) : sortedVisibleRides.length > 0 ? (
+                  <>
+                    <Stack spacing={1.5}>
+                      {sortedVisibleRides.map((ride) => (
+                        <RideCard key={ride._id} ride={ride} />
+                      ))}
+                    </Stack>
 
-            {/* ───────────────────────────────
-                Ride cards
-            ─────────────────────────────── */}
-
-            {loading ?
-
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <CircularProgress
-                  sx={{
-                    color: saffron[500],
-                  }}
-                />
-              </Box>
-              :
-
-              sortedVisibleRides.length >
-                0 ? (
-                <>
-                  <Grid
-                    spacing={{
-                      xs: 1,
-                      sm: 2,
-                    }}
-                  >
-                    {sortedVisibleRides.map(
-                      (ride) => {
-                        const isOwnRide =
-                          ride.createdBy?._id ===
-                          currentUser?._id;
-
-                        const distanceKm =
-                          getRideDistanceKm(
-                            ride
-                          );
-
-                        return (
-                          <Grid
-                            item
-                            xs={12}
-                            sm={6}
-                            md={4}
-                            key={
-                              ride._id
-                            }
-                          >
-                            <RideCard
-                              ride={ride}
-                              isOwnRide={
-                                isOwnRide
-                              }
-                              distanceKm={
-                                distanceKm
-                              }
-                              distanceLabel={formatDistance(
-                                distanceKm
-                              )}
-                            />
-                          </Grid>
-                        );
-                      }
+                    {loadingMore && (
+                      <Box
+                        sx={{ display: "flex", justifyContent: "center", py: 2 }}
+                      >
+                        <CircularProgress
+                          size={26}
+                          sx={{ color: saffron[500] }}
+                        />
+                      </Box>
                     )}
-                  </Grid>
 
-                  {loadingMore && (
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "center",
-                        py: 2,
-                      }}
-                    >
-                      <CircularProgress
-                        size={26}
+                    {!hasMore && (
+                      <Typography
                         sx={{
-                          color: saffron[500],
+                          textAlign: "center",
+                          color: "text.secondary",
+                          fontSize: "0.8rem",
+                          py: 2,
                         }}
-                      />
-                    </Box>
-                  )}
-
-                  {!hasMore && (
-                    <Typography
-                      sx={{
-                        textAlign: "center",
-                        color: "text.secondary",
-                        fontSize: "0.8rem",
-                        py: 2,
-                      }}
-                    >
-                      No more rides
-                    </Typography>
-                  )}
-                </>
-
-              ) : (
-                <>
-                  <Box
+                      >
+                        No more rides
+                      </Typography>
+                    )}
+                  </>
+                ) : (
+                  <Paper
+                    variant="outlined"
                     sx={{
-                      borderRadius: {
-                        xs: 3,
-                        sm: 4,
-                      },
-
-                      textAlign:
-                        "center",
-
-                      py: {
-                        xs: 3,
-                        sm: 5,
-                      },
-
-                      px: {
-                        xs: 2,
-                        sm: 4,
-                      },
-
-                      mt: {
-                        xs: "40%",
-                        sm: "10%",
-                      },
+                      borderRadius: 2.5,
+                      borderColor: "divider",
+                      textAlign: "center",
+                      py: { xs: 4, sm: 5 },
+                      px: { xs: 2, sm: 4 },
                     }}
                   >
                     <Typography
                       variant="h6"
-                      fontWeight={600}
+                      fontWeight={700}
                       color="text.primary"
+                      sx={{ fontSize: 16 }}
                     >
-                      No rides posted yet in your area.
+                      No rides match your search.
                     </Typography>
-
                     <Typography
                       variant="body2"
                       color="text.secondary"
-                      sx={{
-                        mt: 1,
-                      }}
+                      sx={{ mt: 1 }}
                     >
-                      Be the first to post a ride for your community!
+                      Try a wider radius or post a request so drivers can find
+                      you.
                     </Typography>
-
                     <Button
                       variant="contained"
                       onClick={() => setOpen(true)}
@@ -2625,99 +1269,93 @@ export default function FindRides() {
                         px: 3,
                         py: 1,
                         borderRadius: 999,
-                        backgroundColor: "#FF9933",
+                        backgroundColor: RUST,
                         color: "#fff",
                         fontWeight: 700,
                         textTransform: "none",
                         boxShadow: "none",
                         "&:hover": {
-                          backgroundColor: "#E68A00",
+                          backgroundColor: RUST_DARK,
                           boxShadow: "none",
                         },
                       }}
                     >
                       Post a Ride
                     </Button>
-                    <Dialog
-                      open={open}
-                      onClose={(event, reason) => {
-                        if (reason === "backdropClick") return;
-                        setOpen(false);
-                      }}
-                      fullWidth
-                      maxWidth="sm"
-                      fullScreen={isMobile}
-                      PaperProps={{
-                        sx: {
-                          width: {
-                            xs: "100%",
-                            sm: "80%",
-                            md: "90%",
-                          },
-                          maxWidth: {
-                            sm: 600,
-                            md: 800,
-                          },
-                          borderRadius: {
-                            xs: 0,
-                            sm: 3,
-                          },
-                          m: {
-                            xs: 0,
-                            sm: 3,
-                          },
-                          overflow: "hidden",
-                        },
-                      }}
-                    >
-                      <DialogTitle
-                        sx={{
-                          position: "relative",
-                          fontWeight: 700,
-                          py: 2,
-                          pr: 6,
-                        }}
-                      >
-                        Offer Ride
+                  </Paper>
+                )}
+              </Box>
 
-                        <IconButton
-                          aria-label="close"
-                          onClick={() => setOpen(false)}
-                          sx={{
-                            position: "absolute",
-                            top: 12,
-                            right: 12,
-                            color: "text.secondary",
-                          }}
-                        >
-                          <CloseIcon />
-                        </IconButton>
-                      </DialogTitle>
-
-                      <DialogContent
-                        dividers
-                        sx={{
-                          p: {
-                            xs: 1,
-                            sm: 2,
-                          },
-                          overflowY: "auto",
-                          maxHeight: {
-                            xs: "100vh",
-                            sm: "75vh",
-                          },
-                        }}
-                      >
-                        <OfferRide setOpen={setOpen} />
-                      </DialogContent>
-                    </Dialog>
-                  </Box>
-                </>
-              )
-            }
-          </Container>
-        </Box>
+              {/* ─── Info footer ─── */}
+              <Box
+                sx={{
+                  mt: 2,
+                  p: 1.75,
+                  borderRadius: 2,
+                  bgcolor: "#EAF3FB",
+                  border: "1px solid #CFE2F3",
+                }}
+              >
+                <Typography
+                  sx={{ fontSize: 12.5, color: "#1A3E8A", lineHeight: 1.55 }}
+                >
+                  Cards show city or airport only. The exact pickup address and
+                  phone number are shared after the driver accepts your request.
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
+        </Container>
       </Box>
+
+      {/* ─── Post ride dialog ─── */}
+      <Dialog
+        open={open}
+        onClose={(event, reason) => {
+          if (reason === "backdropClick") return;
+          setOpen(false);
+        }}
+        fullWidth
+        maxWidth="sm"
+        fullScreen={isMobile}
+        PaperProps={{
+          sx: {
+            width: { xs: "100%", sm: "80%", md: "90%" },
+            maxWidth: { sm: 600, md: 800 },
+            borderRadius: { xs: 0, sm: 3 },
+            m: { xs: 0, sm: 3 },
+            overflow: "hidden",
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{ position: "relative", fontWeight: 700, py: 2, pr: 6 }}
+        >
+          Offer Ride
+          <IconButton
+            aria-label="close"
+            onClick={() => setOpen(false)}
+            sx={{
+              position: "absolute",
+              top: 12,
+              right: 12,
+              color: "text.secondary",
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent
+          dividers
+          sx={{
+            p: { xs: 1, sm: 2 },
+            overflowY: "auto",
+            maxHeight: { xs: "100vh", sm: "75vh" },
+          }}
+        >
+          <OfferRide setOpen={setOpen} />
+        </DialogContent>
+      </Dialog>
     </>
   );
-} 
+}
