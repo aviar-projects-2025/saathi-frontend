@@ -707,7 +707,7 @@ const MyReferrals = () => {
                 >
                   YOUR INVITE LINK
                 </Typography>
-                <Typography
+                {/* <Typography
                   fontWeight={600}
                   sx={{
                     overflowWrap: "anywhere",
@@ -720,7 +720,7 @@ const MyReferrals = () => {
                   {shareLinkLoading
                     ? "Generating your invite link..."
                     : shareLink || "Unable to load invite link"}
-                </Typography>
+                </Typography> */}
               </Box>
             </Stack>
 
