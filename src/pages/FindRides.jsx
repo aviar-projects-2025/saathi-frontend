@@ -42,6 +42,7 @@ import TrainIcon from "@mui/icons-material/Train";
 import FlightIcon from "@mui/icons-material/Flight";
 
 import RideCard from "./RideCard.jsx";
+import RideList from "./RideCard2.jsx";
 import Api from "../Api";
 import OfferRide from "./OfferRide.jsx";
 import { useUser } from "../context/userConetext.jsx";
@@ -124,7 +125,7 @@ const CATEGORY_OPTIONS = [
 
 const LANGUAGE_OPTIONS = ["Tamil", "Hindi", "Telugu", "English"];
 
-const NAVBAR_HEIGHT = 64;
+const NAVBAR_HEIGHT = 35;
 const SCROLL_COLLAPSE_THRESHOLD = 24;
 
 const emptyFilters = {
@@ -173,6 +174,8 @@ export default function FindRides() {
   const token = localStorage.getItem("token");
   const resultsRef = useRef(null);
   const scrollStartRef = useRef(0);
+  // Always holds the latest window-scroll handler (used by the window listener below)
+  const windowScrollHandlerRef = useRef(() => { });
 
   /* Applied filter shortcuts */
   const {
@@ -397,6 +400,10 @@ export default function FindRides() {
   /* ─────────── Filters ─────────── */
   const openFilters = () => {
     scrollStartRef.current = resultsRef.current ? resultsRef.current.scrollTop : 0;
+    // UI: page now scrolls on the window, so also remember the window position
+    if (typeof window !== "undefined" && window.scrollY) {
+      scrollStartRef.current = window.scrollY;
+    }
     setFiltersOpen(true);
   };
   const closeFilters = () => setFiltersOpen(false);
@@ -414,6 +421,29 @@ export default function FindRides() {
       fetchRides({ pageNumber: page + 1, reset: false });
     }
   };
+
+  /* ─────────── Window scroll (page scrolls on Y axis, filters stay sticky) ─────────── */
+  // Updated on every render so it always sees the latest state
+  windowScrollHandlerRef.current = () => {
+    const scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
+
+    if (filtersOpen) {
+      const delta = Math.abs(scrollTop - scrollStartRef.current);
+      if (delta > SCROLL_COLLAPSE_THRESHOLD) closeFilters();
+    }
+
+    const distanceFromBottom =
+      document.documentElement.scrollHeight - scrollTop - window.innerHeight;
+    if (distanceFromBottom <= 300 && hasMore && !loadingMoreRef.current) {
+      fetchRides({ pageNumber: page + 1, reset: false });
+    }
+  };
+
+  useEffect(() => {
+    const onWindowScroll = () => windowScrollHandlerRef.current();
+    window.addEventListener("scroll", onWindowScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onWindowScroll);
+  }, []);
 
   const applyFilters = () => {
     setAppliedFilters(draftFilters);
@@ -537,12 +567,18 @@ export default function FindRides() {
         bgcolor: "#fff",
         width: "100%",
         boxSizing: "border-box",
+
         position: isDesktop ? "sticky" : "static",
-        top: NAVBAR_HEIGHT + 16,
+        top: NAVBAR_HEIGHT + 8, // Move Paper 8px closer to the navbar
+        alignSelf: "flex-start",
+        zIndex: 2,
+
         maxHeight: isDesktop
-          ? `calc(100vh - ${NAVBAR_HEIGHT}px - 32px)`
+          ? `calc(100vh - ${NAVBAR_HEIGHT}px - 48px)`
           : "none",
+
         overflowY: isDesktop ? "auto" : "visible",
+        overflowX: "hidden",
       }}
     >
       <Stack direction="row"
@@ -937,7 +973,10 @@ export default function FindRides() {
             md: 2.5,
             lg: 3,
           },
-          overflowX: "hidden",
+          // "clip" prevents horizontal overflow WITHOUT creating a scroll container,
+          // so position: sticky on the filter panel keeps working.
+          // (overflowX: "hidden" would break sticky)
+          overflowX: "clip",
         }}
       >
         <Container
@@ -994,6 +1033,7 @@ export default function FindRides() {
                 lg: "300px minmax(0, 1fr)",
               },
               gap: { xs: 1.5, sm: 2, md: 3 },
+              // flex-start is required so the sticky filter column doesn't stretch
               alignItems: "flex-start",
             }}
           >
@@ -1090,12 +1130,14 @@ export default function FindRides() {
 
                 <Divider sx={{ my: { xs: 1.25, sm: 1.75 } }} />
 
-                <Stack
-                  direction={{ xs: "column", md: "row" }}
-                  spacing={{ xs: 1.25, md: 1.5 }}
-                  alignItems={{ xs: "stretch", md: "center" }}
-                  flexWrap="wrap"
-                  useFlexGap
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: { xs: "column", md: "row" },
+                    alignItems: { xs: "stretch", md: "center" },
+                    flexWrap: "wrap",
+                    gap: { xs: 1.25, md: 1.5 },
+                  }}
                 >
                   <Button
                     onClick={requestCurrentLocation}
@@ -1130,7 +1172,7 @@ export default function FindRides() {
                         fontSize: { xs: 12.5, sm: 13, md: 10.5 },
                         color: userLocation ? "#2E7D32" : RUST,
                         textAlign: { xs: "center", md: "left" },
-                        fontWeight: 600
+                        fontWeight: 600,
                       }}
                     >
                       {locationLoading ? "Getting location..." : "Use my location"}
@@ -1165,13 +1207,15 @@ export default function FindRides() {
                     }}
                   />
 
-                  <Stack
-                    direction="row"
-                    alignItems="center"
-                    spacing={1}
-                    flexWrap="wrap"
-                    useFlexGap
-                    sx={{ justifyContent: { xs: "flex-start", md: "flex-start" } }}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "row",
+                      alignItems: "center",
+                      flexWrap: "wrap",
+                      gap: 1,
+                      justifyContent: "flex-start",
+                    }}
                   >
                     <Typography
                       sx={{ fontSize: { xs: 12, sm: 13 }, color: "text.secondary" }}
@@ -1179,7 +1223,7 @@ export default function FindRides() {
                       within
                     </Typography>
 
-                    <Stack direction="row" spacing={0.5}>
+                    <Box sx={{ display: "flex", flexDirection: "row", gap: 0.5 }}>
                       {[
                         { label: "10 mi", value: 10 },
                         { label: "25 mi", value: 25 },
@@ -1207,9 +1251,9 @@ export default function FindRides() {
                           />
                         );
                       })}
-                    </Stack>
-                  </Stack>
-                </Stack>
+                    </Box>
+                  </Box>
+                </Box>
 
                 <Typography
                   sx={{
@@ -1272,19 +1316,16 @@ export default function FindRides() {
               )}
 
               {/* ─── Ride list ─── */}
+              {/* No inner scroll now: the whole page scrolls on the Y axis
+                  while the filter panel stays sticky. */}
               <Box
                 ref={resultsRef}
                 onScroll={handleResultsScroll}
                 sx={{
-                  maxHeight: { xs: "none", md: "calc(100vh - 320px)" },
-                  overflowY: { xs: "visible", md: "auto" },
-                  overflowX: "hidden",
-                  pr: { xs: 0, md: 0.5 },
-                  "&::-webkit-scrollbar": { width: 6 },
-                  "&::-webkit-scrollbar-thumb": {
-                    bgcolor: "#ddd",
-                    borderRadius: 4,
-                  },
+                  maxHeight: "none",
+                  overflowY: "visible",
+                  overflowX: "clip",
+                  pr: 0,
                 }}
               >
                 {loading ? (
@@ -1295,7 +1336,8 @@ export default function FindRides() {
                   <>
                     <Stack spacing={{ xs: 1.25, sm: 1.5 }}>
                       {sortedVisibleRides.map((ride) => (
-                        <RideCard key={ride._id} ride={ride} />
+                        // <RideCard key={ride._id} ride={ride} />
+                        <RideList key={ride._id} ride={ride} />
                       ))}
                     </Stack>
 
