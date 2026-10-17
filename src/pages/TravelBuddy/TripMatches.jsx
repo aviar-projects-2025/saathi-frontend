@@ -1,4 +1,9 @@
-import React, { memo } from "react";
+import React, { memo, useState, useEffect } from "react";
+import { useParams, useNavigate, Link as RouterLink } from "react-router-dom";
+import axios from "axios";
+import { toast } from "react-toastify";
+import Api from "../../Api"; // Adjust path if needed
+
 import {
   Avatar,
   Box,
@@ -11,13 +16,11 @@ import {
   ThemeProvider,
   Typography,
   createTheme,
+  CircularProgress,
+  Alert,
 } from "@mui/material";
-import { useNavigate } from "react-router-dom";
-import { AlignJustify } from "lucide-react";
-// Optional font: <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
 
-/* ---------- design tokens ---------- */
-
+/* ─────────── Design Tokens ─────────── */
 const c = {
   rust: "#C4410C",
   rustDark: "#A8360A",
@@ -74,59 +77,10 @@ const buttonGroupSx = {
   ml: { xs: 0, sm: "auto" },
 };
 
-/* ---------- data (replace with your API response) ---------- */
-
-// tone drives the colours of the avatar and tier chip
 const TONES = {
   green: { avatarBg: c.greenBg, avatarText: c.green, chipBg: c.greenBg, chipText: c.green },
   blue: { avatarBg: c.blueBg, avatarText: c.blueText, chipBg: c.blueBg, chipText: c.blueText },
 };
-
-const DEFAULT_TRIP = {
-  title: "Mother's trip",
-  summary: "EK 544 / EK 235 · MAA → DXB → ORD · Sat 10/17/2026",
-};
-
-const DEFAULT_GROUPS = [
-  {
-    id: "same-flight",
-    title: "Same flight (best match)",
-    tone: "green",
-    best: true,
-    action: "accept",
-    matches: [
-      {
-        id: "lakshmi",
-        initials: "LV",
-        name: "Lakshmi V.",
-        tier: "Tier 1: same flights",
-        details:
-          "Flying EK 544 and EK 235 · Tamil, English · 4.9 (6) · via Meena → Vijay · Chicago, IL",
-        note: "\u201CTravelling with my husband, happy to walk with her through Dubai.\u201D",
-      },
-    ],
-  },
-  {
-    id: "same-arrival",
-    title: "Same US arrival airport, within 4 hours",
-    tone: "blue",
-    best: false,
-    action: "arrival", // Ask to help at arrival
-    matches: [
-      {
-        id: "ramesh",
-        initials: "RS",
-        name: "Ramesh S.",
-        tier: "Tier 2: arrives ORD 6:45 PM",
-        details:
-          "Flying Qatar QR 725 via DOH · Telugu, Tamil, English · New member · via Anita → Vijay",
-        note: "Different flight: can meet at arrivals, not during the journey.",
-      },
-    ],
-  },
-];
-
-/* ---------- small components ---------- */
 
 const SectionLabel = ({ children }) => (
   <Typography
@@ -136,37 +90,31 @@ const SectionLabel = ({ children }) => (
       letterSpacing: 0.3,
       textTransform: "uppercase",
       color: c.muted,
-      mt: 2.5,
-      mb: 1,
+      mt: 3,
+      mb: 1.5,
     }}
   >
     {children}
   </Typography>
 );
 
-const MatchActions = ({ action, match, onAccept, onNotNow, onAskHelp }) => {
-  // Hooks must be called at the top level of a component, not inside JSX
-  const navigate = useNavigate();
-
-  const handleAccept = () => {
-    onAccept?.(match);
-    navigate(`/trip-matches/${match.id}`); // real id instead of the literal ":id"
-  };
-
+/* ─────────── Match Actions ─────────── */
+const MatchActions = ({ action, match, onAccept, onNotNow, onAskHelp, isAccepting }) => {
   if (action === "accept") {
     return (
       <>
         <Button
           disableElevation
           variant="contained"
-          onClick={handleAccept}
+          onClick={() => onAccept(match)}
+          disabled={isAccepting}
           sx={{ ...buttonBase, bgcolor: c.green, "&:hover": { bgcolor: c.greenDark } }}
         >
-          Accept as companion
+          {isAccepting ? "Accepting..." : "Accept as companion"}
         </Button>
         <Button
           variant="outlined"
-          onClick={() => onNotNow?.(match)}
+          onClick={() => onNotNow(match)}
           sx={{
             ...buttonBase,
             color: "#111",
@@ -184,7 +132,7 @@ const MatchActions = ({ action, match, onAccept, onNotNow, onAskHelp }) => {
   return (
     <Button
       variant="outlined"
-      onClick={() => onAskHelp?.(match)}
+      onClick={() => onAskHelp(match)}
       sx={{
         ...buttonBase,
         color: c.rust,
@@ -199,6 +147,7 @@ const MatchActions = ({ action, match, onAccept, onNotNow, onAskHelp }) => {
   );
 };
 
+/* ─────────── Match Card ─────────── */
 const MatchCard = memo(function MatchCard({
   match,
   tone,
@@ -207,6 +156,7 @@ const MatchCard = memo(function MatchCard({
   onAccept,
   onNotNow,
   onAskHelp,
+  isAccepting,
 }) {
   const t = TONES[tone];
   return (
@@ -253,12 +203,12 @@ const MatchCard = memo(function MatchCard({
               />
             </Stack>
             <Typography
-              sx={{ fontSize: 12.5, color: c.muted, lineHeight: 1.5, wordBreak: "break-word" }}
+              sx={{ fontSize: 12.5, color: c.muted, lineHeight: 1.5, wordBreak: "break-word", mt: 0.5 }}
             >
               {match.details}
             </Typography>
             <Typography
-              sx={{ fontSize: 12.5, color: c.text, lineHeight: 1.5, wordBreak: "break-word" }}
+              sx={{ fontSize: 12.5, color: c.text, lineHeight: 1.5, wordBreak: "break-word", mt: 0.5 }}
             >
               {match.note}
             </Typography>
@@ -272,6 +222,7 @@ const MatchCard = memo(function MatchCard({
             onAccept={onAccept}
             onNotNow={onNotNow}
             onAskHelp={onAskHelp}
+            isAccepting={isAccepting}
           />
         </Box>
       </Stack>
@@ -295,98 +246,147 @@ const Notice = ({ bg, color, children }) => (
   </Box>
 );
 
-/* ---------- page ---------- */
-
-export default function TripMatches({
-  trip = DEFAULT_TRIP,
-  groups = DEFAULT_GROUPS,
-  onBack,
-  onAccept,
-  onNotNow,
-  onAskHelp,
-  onPreview,
-}) {
+/* ─────────── Main Page ─────────── */
+export default function TripMatches() {
+  const { id } = useParams();
   const navigate = useNavigate();
-  const handleBack = onBack ?? (() => navigate(-1));
+
+  const [trip, setTrip] = useState(null);
+  const [matches, setMatches] = useState({ tier1: [], tier2: [] });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [acceptingId, setAcceptingId] = useState(null);
+
+  useEffect(() => {
+    const fetchMatches = async () => {
+      try {
+        setLoading(true);
+        // Fetch trip and matches in parallel
+        const [tripRes, matchRes] = await Promise.all([
+          axios.get(`${Api}/travel-buddy/${id}`), // You may need to create this GET single trip endpoint
+          axios.get(`${Api}/travel-buddy/${id}/matches`),
+        ]);
+        
+        setTrip(tripRes.data.data);
+        setMatches(matchRes.data.data || { tier1: [], tier2: [] });
+      } catch (err) {
+        setError(err.response?.data?.message || "Failed to load matches.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (id) fetchMatches();
+  }, [id]);
+
+  const handleAccept = async (match) => {
+    try {
+      setAcceptingId(match.id);
+      await axios.post(`${Api}/travel-buddy/${id}/accept`, { matchId: match.id });
+      toast.success("Companion accepted successfully!");
+      navigate(`/trip-accepted/${id}`);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to accept. Please try again.");
+    } finally {
+      setAcceptingId(null);
+    }
+  };
+
+  const groups = [
+    {
+      id: "tier1",
+      title: "Same flight (best match)",
+      tone: "green",
+      best: true,
+      action: "accept",
+      matches: matches.tier1,
+    },
+    {
+      id: "tier2",
+      title: "Same US arrival airport, within 4 hours",
+      tone: "blue",
+      best: false,
+      action: "arrival",
+      matches: matches.tier2,
+    },
+  ].filter((g) => g.matches.length > 0);
+
+  // Format summary text
+  const route = trip?.flights?.length > 0 
+    ? [trip.flights[0].fromCode, ...trip.flights.map(f => f.toCode)].join(" → ")
+    : "";
+  const flightNos = trip?.flights?.map(f => f.flightNumber).join(" / ") || "";
+  const dateStr = trip?.flights?.[0]?.departureTime ? new Date(trip.flights[0].departureTime).toLocaleDateString("en-US", { weekday: 'short', month: '2-digit', day: '2-digit', year: 'numeric' }) : "";
 
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Box sx={{ bgcolor: c.bg, minHeight: "100vh", py: { xs: 2, sm: 2.5 }, px: { xs: 2, sm: 2.5 } }}>
         <Box sx={{ maxWidth: 900, mx: "auto" }}>
+          
           <Link
             component="button"
             type="button"
             underline="none"
-            onClick={handleBack}
-            sx={{ color: c.rust, fontWeight: 700, fontSize: 14, mb: 1.5 }}
+            onClick={() => navigate("/travel-buddy")}
+            sx={{ color: c.rust, fontWeight: 700, fontSize: 14, mb: 2, display: "inline-block" }}
           >
             Back to Travel Buddy
           </Link>
 
-          <Typography
-            component="h1"
-            sx={{ fontWeight: 800, fontSize: { xs: 22, sm: 26 }, color: c.navy }}
-          >
-            Matches for {trip.title}
-          </Typography>
-          <Typography sx={{ fontSize: { xs: 12.5, sm: 13 }, color: c.muted, wordBreak: "break-word" }}>
-            {trip.summary}
-          </Typography>
-
-          {groups.map((g) => (
-            <Box key={g.id}>
-              <SectionLabel>{g.title}</SectionLabel>
-              <Stack spacing={1.5}>
-                {g.matches.map((m) => (
-                  <MatchCard
-                    key={m.id}
-                    match={m}
-                    tone={g.tone}
-                    best={g.best}
-                    action={g.action}
-                    onAccept={onAccept}
-                    onNotNow={onNotNow}
-                    onAskHelp={onAskHelp}
-                  />
-                ))}
-              </Stack>
+          {loading ? (
+            <Box display="flex" justifyContent="center" py={8}>
+              <CircularProgress sx={{ color: c.rust }} />
             </Box>
-          ))}
+          ) : error ? (
+            <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>
+          ) : (
+            <>
+              <Typography component="h1" sx={{ fontWeight: 800, fontSize: { xs: 22, sm: 26 }, color: c.navy }}>
+                Matches for {trip?.relationship ? `${trip.relationship}'s trip` : "your trip"}
+              </Typography>
+              <Typography sx={{ fontSize: { xs: 13, sm: 14 }, color: c.muted, wordBreak: "break-word", mt: 0.5, mb: 2 }}>
+                {flightNos} · {route} · {dateStr}
+              </Typography>
 
-          <Stack spacing={1.5} sx={{ mt: 2.5, mb: 2.5 }}>
-            <Notice bg={c.noteBg} color={c.text}>
-              <b>Not matched yet?</b> We text you when a member posts the same flight. Phase 2 adds
-              Tier 3: overlapping layover in the same transit airport.
-            </Notice>
-            <Notice bg={c.warnBg} color={c.warnText}>
-              When you accept: your phone numbers are shared with each other only for this trip, and
-              a check-in text is sent at arrival + 1 hour. Accepting is the only way a companion sees
-              your contact details.
-            </Notice>
-          </Stack>
+              {groups.length === 0 ? (
+                <Box sx={{ mt: 4, p: 4, textAlign: "center", bgcolor: "#fff", borderRadius: 3, border: `1px dashed ${c.border}` }}>
+                  <Typography sx={{ color: c.muted, fontSize: 15 }}>
+                    No matches found yet. We will text you when a member posts the same flight.
+                  </Typography>
+                </Box>
+              ) : (
+                groups.map((g) => (
+                  <Box key={g.id}>
+                    <SectionLabel>{g.title}</SectionLabel>
+                    <Stack spacing={1.5}>
+                      {g.matches.map((m) => (
+                        <MatchCard
+                          key={m.id}
+                          match={m}
+                          tone={g.tone}
+                          best={g.best}
+                          action={g.action}
+                          onAccept={handleAccept}
+                          onNotNow={(match) => toast.info("Dismissed " + match.name)}
+                          onAskHelp={(match) => toast.info("Request sent to " + match.name)}
+                          isAccepting={acceptingId === m.id}
+                        />
+                      ))}
+                    </Stack>
+                  </Box>
+                ))
+              )}
 
-          <Box
-            sx={{
-              width: { xs: "100%", sm: BTN_WIDTH },
-              display: "flex",
-              justifyContent: { xs: "stretch", sm: "flex-end" },
-              ml: { xs: 0, sm: "auto" },
-            }}
-          >
-            <Button
-              disableElevation
-              variant="contained"
-              onClick={onPreview}
-              sx={{
-                ...buttonBase,
-                bgcolor: c.navy,
-                "&:hover": { bgcolor: "#0D1E48" },
-              }}
-            >
-              Preview accepted-trip view
-            </Button>
-          </Box>
+              <Stack spacing={1.5} sx={{ mt: 3, mb: 2.5 }}>
+                <Notice bg={c.noteBg} color={c.text}>
+                  <b>Not matched yet?</b> We text you when a member posts the same flight. Phase 2 adds Tier 3: overlapping layover in the same transit airport.
+                </Notice>
+                <Notice bg={c.warnBg} color={c.warnText}>
+                  When you accept: your phone numbers are shared with each other only for this trip, and a check-in text is sent at arrival + 1 hour. Accepting is the only way a companion sees your contact details.
+                </Notice>
+              </Stack>
+            </>
+          )}
         </Box>
       </Box>
     </ThemeProvider>

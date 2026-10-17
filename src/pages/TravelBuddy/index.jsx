@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -12,10 +12,15 @@ import {
   createTheme,
   ThemeProvider,
   CssBaseline,
+  CircularProgress,
 } from "@mui/material";
-import { useUser } from "../../context/userConetext";
 import FlightIcon from "@mui/icons-material/Flight";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import Api from "../../Api"; // Adjust this path if necessary
+import { format } from "date-fns";
+
+/* ---------- Design Tokens ---------- */
 const colors = {
   navy: "#1B2A5C",
   rust: "#C2410C",
@@ -65,28 +70,8 @@ const actionStyles = {
     "&:hover": { borderWidth: 1.5, borderColor: "#9A2F06", bgcolor: "#FFF4EE" },
   },
 };
-const trips = [
-  {
-    id: 1,
-    person: "Mother",
-    flights: "Emirates EK 544 · MAA → DXB, EK 235 DXB → ORD",
-    meta: "Departs Sat 10/17/2026 5:00 AM IST · Arrives 8:00 PM CDT 10/17 · 2 segments",
-    status: { type: "matches", label: "2 matches" },
-    action: { label: "View matches", variant: "contained", to: "/trip-matches" },
-    iconBg: "#DCEBFA",
-    iconColor: "#1E293B",
-  },
-  {
-    id: 2,
-    person: "Father",
-    flights: "Qatar QR 1260 · HYD → DOH, QR 725 DOH → DFW",
-    meta: "Mon 11/02/2026 · companion accepted: Lakshmi V.",
-    status: { type: "matched", label: "MATCHED" },
-    action: { label: "Open trip", variant: "outlined" },
-    iconBg: "#DDF4E4",
-    iconColor: "#1E293B",
-  },
-];
+
+/* ---------- Components ---------- */
 
 function RoleCard({ title, description, selected, onClick }) {
   return (
@@ -98,6 +83,8 @@ function RoleCard({ title, description, selected, onClick }) {
         borderWidth: selected ? 2 : 1,
         borderColor: selected ? colors.rust : colors.border,
         bgcolor: "#fff",
+        transition: "border-color 0.2s",
+        "&:hover": { borderColor: selected ? colors.rust : colors.muted },
       }}
     >
       <CardActionArea onClick={onClick} sx={{ p: { xs: 1.75, sm: 2.25 }, height: "100%" }}>
@@ -120,19 +107,35 @@ function RoleCard({ title, description, selected, onClick }) {
 }
 
 function StatusChip({ status }) {
-  const isMatched = status.type === "matched";
+  const isMatched = status === "MATCHED";
+  const isCancelled = status === "CANCELLED";
+
+  let label = "OPEN";
+  let bg = "#FCE9B8";
+  let color = "#8A4B08";
+
+  if (isMatched) {
+    label = "MATCHED";
+    bg = "#D6F0DF";
+    color = "#166534";
+  } else if (isCancelled) {
+    label = "CANCELLED";
+    bg = "#FEE2E2";
+    color = "#991B1B";
+  }
+
   return (
     <Chip
-      label={status.label}
+      label={label}
       size="small"
       sx={{
         fontWeight: 700,
-        fontSize: 12,
-        height: 26,
+        fontSize: 11,
+        height: 24,
         borderRadius: "14px",
-        bgcolor: isMatched ? "#D6F0DF" : "#FCE9B8",
-        color: isMatched ? "#166534" : "#8A4B08",
-        letterSpacing: isMatched ? 0.4 : 0,
+        bgcolor: bg,
+        color: color,
+        letterSpacing: 0.4,
       }}
     />
   );
@@ -140,7 +143,22 @@ function StatusChip({ status }) {
 
 function TripRow({ trip }) {
   const navigate = useNavigate();
-  const { action } = trip;
+
+  // Determine action based on status
+  const action =
+    trip.status === "MATCHED"
+      ? { label: "Open trip", variant: "outlined", to: `/trip-accepted/${trip._id}` }
+      : { label: "View matches", variant: "contained", to: `/trip-matches/${trip._id}` };
+
+  // Safely extract flight details
+  const flightNos = trip.flights?.map((f) => f.flightNumber).join(" · ") || "No flights";
+  const route = trip.flights?.length > 0 
+    ? [trip.flights[0].fromCode, ...trip.flights.map((f) => f.toCode)].join(" → ")
+    : "Unknown route";
+
+  // Format start time safely
+  const startTime = trip.flights?.[0]?.departureTime;
+  const dateStr = startTime ? format(new Date(startTime), "eee MM/dd/yyyy h:mm a") : "Date TBD";
 
   return (
     <Paper
@@ -154,18 +172,20 @@ function TripRow({ trip }) {
         flexDirection: { xs: "column", md: "row" },
         alignItems: { xs: "stretch", md: "center" },
         gap: 2,
+        transition: "box-shadow 0.2s",
+        "&:hover": { boxShadow: "0px 4px 12px rgba(0,0,0,0.05)" },
       }}
     >
       <Stack direction="row" spacing={2} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
         <Avatar
           sx={{
-            bgcolor: trip.iconBg,
+            bgcolor: trip.status === "MATCHED" ? "#DDF4E4" : "#DCEBFA",
             width: { xs: 38, sm: 44 },
             height: { xs: 38, sm: 44 },
             flexShrink: 0,
           }}
         >
-          <FlightIcon sx={{ color: trip.iconColor, transform: "rotate(45deg)" }} />
+          <FlightIcon sx={{ color: "#1E293B", transform: "rotate(45deg)", fontSize: 20 }} />
         </Avatar>
 
         <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -177,12 +197,18 @@ function TripRow({ trip }) {
               wordBreak: "break-word",
             }}
           >
-            {trip.person} · {trip.flights}
+            {trip.relationship || "Traveller"} · {flightNos} · {route}
           </Typography>
           <Typography
-            sx={{ fontSize: { xs: 12, sm: 12.5 }, color: colors.muted, mt: 0.25, wordBreak: "break-word" }}
+            sx={{
+              fontSize: { xs: 12, sm: 12.5 },
+              color: colors.muted,
+              mt: 0.25,
+              wordBreak: "break-word",
+            }}
           >
-            {trip.meta}
+            {dateStr} · {trip.flights?.length || 0} segment{trip.flights?.length > 1 ? "s" : ""}
+            {trip.status === "MATCHED" && " · companion accepted"}
           </Typography>
         </Box>
       </Stack>
@@ -201,20 +227,40 @@ function TripRow({ trip }) {
         <Button
           variant={action.variant}
           disableElevation
-          onClick={() => action.to && navigate(action.to, { state: { tripId: trip.id } })}
+          onClick={() => navigate(action.to)}
           sx={{ ...actionStyles.base, ...actionStyles[action.variant] }}
         >
           {action.label}
         </Button>
       </Stack>
-    </Paper >
+    </Paper>
   );
 }
 
+/* ---------- Main Page ---------- */
+
 export default function TravelBuddy() {
-  const [role, setRole] = useState("parent"); // "parent" | "volunteer"
-  const hasTrips = trips.length > 0;
   const navigate = useNavigate();
+  const [trips, setTrips] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTrips = async () => {
+      try {
+        const res = await axios.get(`${Api}/travel-buddy/my-trips`);
+        setTrips(res.data.data || []);
+      } catch (err) {
+        console.error("Failed to fetch trips", err);
+        // Optional: Add toast.error("Failed to load trips") here if you have react-toastify
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTrips();
+  }, []);
+
+  const hasTrips = trips.length > 0;
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -241,21 +287,23 @@ export default function TravelBuddy() {
             travelling from India to the US.
           </Typography>
 
+          {/* Role Cards */}
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 3 }}>
             <RoleCard
               title="My parent needs a companion"
               description="Post your parent's flight. Members on the same flight can offer to look out for them."
-              selected={role === "parent"}
+              selected={false} // Set to true if you want to default highlight one
               onClick={() => navigate("/post-trip")}
             />
             <RoleCard
               title="I'm flying and can help"
               description="Volunteer to be a companion for a senior on your flight. You never carry items for anyone."
-              selected={role === "volunteer"}
+              selected={false}
               onClick={() => navigate("/post-trip", { state: { role: "companion" } })}
             />
           </Stack>
 
+          {/* My Trips Section */}
           <Typography
             sx={{
               fontSize: 11,
@@ -269,17 +317,23 @@ export default function TravelBuddy() {
           </Typography>
 
           <Stack spacing={1.75} sx={{ mb: 2.5 }}>
-            {hasTrips ? (
-              trips.map((t) => <TripRow key={t.id} trip={t} />)
+            {loading ? (
+              <Box display="flex" justifyContent="center" py={4}>
+                <CircularProgress size={30} sx={{ color: colors.rust }} />
+              </Box>
+            ) : hasTrips ? (
+              trips.map((t) => <TripRow key={t._id} trip={t} />)
             ) : (
-              <Typography sx={{ color: colors.muted, fontSize: 14 }}>
-                No trips yet. Post your parent's flight at least 7 days ahead for
-                the best chance of a match.
-              </Typography>
+              <Paper variant="outlined" sx={{ p: 3, borderRadius: 3, borderColor: colors.border, textAlign: "center" }}>
+                <Typography sx={{ color: colors.muted, fontSize: 14 }}>
+                  No trips yet. Post your parent's flight at least 7 days ahead for
+                  the best chance of a match.
+                </Typography>
+              </Paper>
             )}
           </Stack>
 
-          {/* Safety basics */}
+          {/* Safety Basics Info */}
           <Box
             sx={{
               bgcolor: colors.amberBg,
@@ -300,11 +354,6 @@ export default function TravelBuddy() {
             approval, others see only flights, dates, route, "traveller 60+",
             languages and your first name.
           </Box>
-
-          <Typography sx={{ fontSize: 12, color: colors.muted }}>
-            Empty state: "No trips yet. Post your parent's flight at least 7 days
-            ahead for the best chance of a match."
-          </Typography>
         </Box>
       </Box>
     </ThemeProvider>
