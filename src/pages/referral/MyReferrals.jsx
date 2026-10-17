@@ -22,7 +22,6 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import PeopleAltOutlinedIcon from "@mui/icons-material/PeopleAltOutlined";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import LinkIcon from "@mui/icons-material/Link";
 import PageLayout from "../../components/PageLayout";
@@ -56,6 +55,7 @@ const AVATAR_COLORS = [
   { bg: "#F3E8FD", color: "#8430CE" },
   { bg: "#FEF7E0", color: "#B06000" },
 ];
+
 const colorFor = (name = "") => {
   const sum = name.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
   return AVATAR_COLORS[sum % AVATAR_COLORS.length];
@@ -132,7 +132,7 @@ const PendingCard = memo(
                   overflowWrap: "anywhere",
                 }}
               >
-                {[city, language, "phone verified", "requested 2 days ago", "expires in 12 days"]
+                {[city, language, "phone verified"]
                   .filter(Boolean)
                   .join(" · ")}
               </Typography>
@@ -367,6 +367,8 @@ const MyReferrals = () => {
   const [actionState, setActionState] = useState({ id: null, type: null });
   const [mobile_number, setMobile_number] = useState("");
   const [countryCode, setCountryCode] = useState("+1");
+  
+  // Permanent Link State
   const [shareLink, setShareLink] = useState("");
   const [shareLinkLoading, setShareLinkLoading] = useState(false);
 
@@ -388,27 +390,38 @@ const MyReferrals = () => {
   const user = getUser();
 
   /* -----------------------------------------------------------
-     Generate a fresh tokenized invite link from the backend.
-     Always returns the raw URL so callers can use it immediately.
+     Fetch the PERMANENT tokenized invite link from the backend.
+     This runs once on mount. The token does not change.
   ----------------------------------------------------------- */
-  const generateShareLink = async () => {
+  const fetchShareLink = async () => {
     if (!user?.id) return null;
+
+    const token = localStorage.getItem("token");
+    if (!token) return null;
+
     setShareLinkLoading(true);
     try {
-      const res = await axios.post(`${Api}/referralInvite/link`, {
-        referredBy: user.id,
-      });
+      const res = await axios.post(
+        `${Api}/referralInvite/link`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
       if (res.data?.status && res.data?.link) {
         setShareLink(res.data.link);
         return res.data.link;
       } else {
-        toast.error("Unable to generate invite link", toasts);
+        toast.error("Unable to load invite link", toasts);
         return null;
       }
     } catch (error) {
-      console.error("Generate invite link error:", error);
+      console.error("Fetch invite link error:", error);
       toast.error(
-        error.response?.data?.message || "Unable to generate invite link",
+        error.response?.data?.message || "Unable to load invite link",
         toasts
       );
       return null;
@@ -417,10 +430,10 @@ const MyReferrals = () => {
     }
   };
 
-  /* Pre-generate on mount so the link text isn't empty */
+  // Fetch permanent link on mount
   useEffect(() => {
     if (user?.id) {
-      generateShareLink();
+      fetchShareLink();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
@@ -683,7 +696,7 @@ const MyReferrals = () => {
           }}
         >
           <Stack spacing={2}>
-            <Stack direction="row" alignItems="center" spacing={1}>
+            <Stack direction="row" alignItems="flex-start" spacing={1.5}>
               <Box
                 sx={{
                   width: 36,
@@ -694,6 +707,7 @@ const MyReferrals = () => {
                   alignItems: "center",
                   justifyContent: "center",
                   flexShrink: 0,
+                  mt: 0.25,
                 }}
               >
                 <LinkIcon sx={{ fontSize: 18, color: SAFFRON }} />
@@ -705,9 +719,9 @@ const MyReferrals = () => {
                   color="text.secondary"
                   sx={{ letterSpacing: 0.6, fontSize: 10.5 }}
                 >
-                  YOUR INVITE LINK
+                  YOUR PERMANENT INVITE LINK
                 </Typography>
-                {/* <Typography
+                <Typography
                   fontWeight={600}
                   sx={{
                     overflowWrap: "anywhere",
@@ -715,12 +729,39 @@ const MyReferrals = () => {
                     color: "text.primary",
                     lineHeight: 1.4,
                     wordBreak: "break-all",
+                    mb: 0.5,
                   }}
                 >
                   {shareLinkLoading
                     ? "Generating your invite link..."
                     : shareLink || "Unable to load invite link"}
-                </Typography> */}
+                </Typography>
+
+                {/* Referral Code Display */}
+                {user?.referralCode && (
+                  <Stack direction="row" alignItems="center" spacing={1}>
+                    <Typography
+                      variant="caption"
+                      sx={{ color: "text.secondary", fontSize: 11.5 }}
+                    >
+                      Your Referral Code:
+                    </Typography>
+                    <Typography
+                      sx={{
+                        fontSize: 12.5,
+                        fontWeight: 800,
+                        color: SAFFRON_DARK,
+                        letterSpacing: 0.5,
+                        bgcolor: SAFFRON_LIGHT,
+                        px: 1,
+                        py: 0.2,
+                        borderRadius: 1,
+                      }}
+                    >
+                      {user.referralCode}
+                    </Typography>
+                  </Stack>
+                )}
               </Box>
             </Stack>
 
@@ -733,11 +774,8 @@ const MyReferrals = () => {
               <Button
                 variant="contained"
                 size="small"
-                disabled={shareLinkLoading}
-                onClick={async () => {
-                  const link = await generateShareLink();
-                  if (link) handleCopy(link);
-                }}
+                onClick={() => handleCopy(shareLink)}
+                disabled={!shareLink || shareLinkLoading}
                 sx={{
                   bgcolor: SAFFRON,
                   color: "#fff",
@@ -753,21 +791,19 @@ const MyReferrals = () => {
                   "&.Mui-disabled": { bgcolor: "#E3C9BE", color: "#fff" },
                 }}
               >
-                {shareLinkLoading ? "Generating..." : "Copy link"}
+                Copy link
               </Button>
               <Button
                 variant="outlined"
                 size="small"
                 startIcon={<WhatsAppIcon sx={{ fontSize: 16 }} />}
-                disabled={shareLinkLoading}
-                onClick={async () => {
-                  const link = await generateShareLink();
-                  if (!link) return;
-
+                disabled={!shareLink || shareLinkLoading}
+                onClick={() => {
+                  if (!shareLink) return;
                   const message = `Hi! Join me on Saathi Rides — a trusted community for rides and travel companionship.
 
 Sign up with my invite link:
-${link}`;
+${shareLink}`;
 
                   window.open(
                     `https://wa.me/?text=${encodeURIComponent(message)}`,
@@ -884,7 +920,7 @@ ${link}`;
           </AccordionDetails>
         </Accordion>
 
-        {/* ---------- APPROVED + REJECTED (single accordion) ---------- */}
+        {/* ---------- APPROVED + REJECTED ---------- */}
         <Accordion
           defaultExpanded
           {...accordionSx}
@@ -1058,13 +1094,13 @@ ${link}`;
                 fontWeight={700}
                 sx={{ fontSize: "1rem", mb: 0.5, pr: 3 }}
               >
-                Invite your friends
+                Invite by phone
               </Typography>
               <Typography
                 color="text.secondary"
                 sx={{ fontSize: 12.5, mb: 2.5 }}
               >
-                Send a referral link directly to their phone
+                Send an SMS invite directly to their phone
               </Typography>
 
               <Paper
@@ -1091,16 +1127,13 @@ ${link}`;
                     color: "text.secondary",
                   }}
                 >
-                  {shareLinkLoading ? "Generating link..." : shareLink}
+                  {shareLinkLoading ? "Loading link..." : shareLink}
                 </Typography>
                 <Tooltip title="Copy link">
                   <IconButton
                     size="small"
-                    disabled={shareLinkLoading}
-                    onClick={async () => {
-                      const link = await generateShareLink();
-                      if (link) handleCopy(link);
-                    }}
+                    disabled={shareLinkLoading || !shareLink}
+                    onClick={() => handleCopy(shareLink)}
                     sx={{ flexShrink: 0, color: SAFFRON }}
                   >
                     <ContentCopyIcon sx={{ fontSize: 16 }} />
