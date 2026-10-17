@@ -61,6 +61,12 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
       ],
     },
     {
+      id: "travel-buddy",
+      label: "Travel Buddy",
+      icon: <TelegramIcon/>,
+      link: "/travelBuddy",
+    },
+    {
       id: "my-rides",
       label: "My Rides",
       icon: <RouteIcon />,
@@ -72,12 +78,6 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
     //   icon: <DashboardIcon />,
     //   link: "/community",
     // },
-    {
-      id: "travel-buddy",
-      label: "Travel Buddy",
-      icon: <TelegramIcon/>,
-      link: "/travelBuddy",
-    },
     {
       id: "referrals",
       label: (
