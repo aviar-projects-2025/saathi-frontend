@@ -47,6 +47,21 @@ const isProduction =
   import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "production";
 const isTesting = import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "testing";
 
+/* ----------------------------------------------------------------
+   Fluid font sizes — scale smoothly from 320px phones to large
+   desktops. clamp(min, preferred, max)
+---------------------------------------------------------------- */
+const FS = {
+  title: "clamp(1.25rem, 1.05rem + 1vw, 1.75rem)", // page heading
+  h2: "clamp(0.9rem, 0.85rem + 0.3vw, 1.05rem)", // accordion titles
+  name: "clamp(0.88rem, 0.82rem + 0.35vw, 1rem)", // user names
+  body: "clamp(0.8rem, 0.76rem + 0.25vw, 0.9rem)", // body text
+  small: "clamp(0.72rem, 0.7rem + 0.18vw, 0.82rem)", // sub text
+  tiny: "clamp(0.64rem, 0.62rem + 0.12vw, 0.72rem)", // badges, captions
+  btn: "clamp(0.78rem, 0.75rem + 0.25vw, 0.88rem)", // buttons
+  input: "clamp(0.85rem, 0.8rem + 0.25vw, 0.95rem)", // inputs (>=14px avoids iOS zoom)
+};
+
 /* ---------- Avatar color palette (deterministic per name) ---------- */
 const AVATAR_COLORS = [
   { bg: "#FCE8E6", color: "#C5221F" },
@@ -60,6 +75,46 @@ const colorFor = (name = "") => {
   const sum = name.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
   return AVATAR_COLORS[sum % AVATAR_COLORS.length];
 };
+
+/* ---------- Shared sx helpers ---------- */
+const countBadgeSx = (bg) => ({
+  bgcolor: bg,
+  color: "#fff",
+  fontSize: FS.tiny,
+  fontWeight: 700,
+  minWidth: 22,
+  height: 22,
+  borderRadius: "11px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  px: 0.75,
+  flexShrink: 0,
+});
+
+/* ================================================================
+   SMALL SHARED COMPONENTS (defined outside the page so they are
+   not re-created on every render)
+   ================================================================ */
+const LoadingSpinner = () => (
+  <Box sx={{ display: "flex", justifyContent: "center", py: { xs: 4, sm: 6 } }}>
+    <CircularProgress size={32} thickness={4} sx={{ color: "#FF9933" }} />
+  </Box>
+);
+
+const EmptyState = ({ title, subtitle }) => (
+  <Box sx={{ py: { xs: 4, sm: 6, md: 7 }, px: 1, textAlign: "center" }}>
+    <PeopleAltOutlinedIcon
+      sx={{ fontSize: { xs: 36, sm: 44 }, color: "text.disabled", mb: 1.5 }}
+    />
+    <Typography fontWeight={600} color="text.primary" sx={{ fontSize: FS.name }}>
+      {title}
+    </Typography>
+    <Typography color="text.secondary" sx={{ mt: 0.75, fontSize: FS.small }}>
+      {subtitle}
+    </Typography>
+  </Box>
+);
 
 /* ================================================================
    PENDING CARD
@@ -90,27 +145,27 @@ const PendingCard = memo(
         }}
       >
         <Stack
-          direction={{ xs: "column", sm: "row" }}
-          alignItems={{ xs: "stretch", sm: "center" }}
+          direction={{ xs: "column", md: "row" }}
+          alignItems={{ xs: "stretch", md: "center" }}
           justifyContent="space-between"
-          spacing={1.5}
-          sx={{ p: { xs: 1.75, sm: 2 } }}
+          spacing={{ xs: 1.5, md: 2 }}
+          sx={{ p: { xs: 1.5, sm: 2 } }}
         >
           <Stack
             direction="row"
-            spacing={1.5}
+            spacing={{ xs: 1.25, sm: 1.5 }}
             alignItems="center"
             sx={{ minWidth: 0, flex: 1 }}
           >
             <Avatar
               src={profileImage || undefined}
               sx={{
-                width: 44,
-                height: 44,
+                width: { xs: 40, sm: 44 },
+                height: { xs: 40, sm: 44 },
                 bgcolor: bg,
                 color: color,
                 fontWeight: 700,
-                fontSize: 14,
+                fontSize: FS.body,
                 flexShrink: 0,
               }}
             >
@@ -120,16 +175,22 @@ const PendingCard = memo(
             <Box sx={{ minWidth: 0 }}>
               <Typography
                 fontWeight={700}
-                sx={{ fontSize: { xs: 14.5, sm: 15.5 }, color: "#1a1a1a" }}
+                sx={{
+                  fontSize: FS.name,
+                  color: "#1a1a1a",
+                  overflowWrap: "anywhere",
+                  lineHeight: 1.3,
+                }}
               >
                 {firstName} {lastName}
               </Typography>
               <Typography
                 sx={{
-                  fontSize: 12.5,
+                  fontSize: FS.small,
                   color: "text.secondary",
                   mt: 0.25,
                   overflowWrap: "anywhere",
+                  lineHeight: 1.4,
                 }}
               >
                 {[city, language, "phone verified"]
@@ -139,7 +200,15 @@ const PendingCard = memo(
             </Box>
           </Stack>
 
-          <Stack direction="row" spacing={1.25} sx={{ flexShrink: 0 }}>
+          {/* Buttons: equal-width row on mobile, natural width on desktop */}
+          <Stack
+            direction="row"
+            spacing={1.25}
+            sx={{
+              flexShrink: 0,
+              width: { xs: "100%", md: "auto" },
+            }}
+          >
             <Button
               variant="contained"
               size="small"
@@ -151,13 +220,15 @@ const PendingCard = memo(
                 ) : null
               }
               sx={{
+                flex: { xs: 1, md: "none" },
                 bgcolor: GREEN,
                 color: "#fff",
                 textTransform: "none",
                 fontWeight: 700,
-                fontSize: 13.5,
-                px: 2.5,
+                fontSize: FS.btn,
+                px: { xs: 1.5, sm: 2.5 },
                 py: 0.85,
+                minHeight: 38,
                 borderRadius: 2,
                 boxShadow: "none",
                 "&:hover": { bgcolor: GREEN_DARK, boxShadow: "none" },
@@ -172,13 +243,15 @@ const PendingCard = memo(
               disabled={loading}
               onClick={() => onReject?.(userId)}
               sx={{
+                flex: { xs: 1, md: "none" },
                 color: RED,
                 borderColor: RED,
                 textTransform: "none",
                 fontWeight: 700,
-                fontSize: 13.5,
-                px: 2.5,
+                fontSize: FS.btn,
+                px: { xs: 1.5, sm: 2.5 },
                 py: 0.85,
+                minHeight: 38,
                 borderRadius: 2,
                 borderWidth: 1.5,
                 "&:hover": {
@@ -201,12 +274,12 @@ const PendingCard = memo(
           sx={{
             bgcolor: "#FFF8E1",
             borderTop: `1px solid ${SAFFRON}33`,
-            px: { xs: 1.75, sm: 2 },
-            py: 1.25,
+            px: { xs: 1.5, sm: 2 },
+            py: { xs: 1, sm: 1.25 },
           }}
         >
           <Typography
-            sx={{ fontSize: 12.5, color: "#6B4E00", lineHeight: 1.5 }}
+            sx={{ fontSize: FS.small, color: "#6B4E00", lineHeight: 1.5 }}
           >
             By approving, you are vouching for{" "}
             <Box component="span" sx={{ fontWeight: 700, color: SAFFRON_DARK }}>
@@ -265,11 +338,11 @@ const StatusRow = memo(({ user: u, status }) => {
         direction="row"
         alignItems="center"
         justifyContent="space-between"
-        spacing={1.5}
+        spacing={{ xs: 1, sm: 1.5 }}
       >
         <Stack
           direction="row"
-          spacing={1.5}
+          spacing={{ xs: 1.25, sm: 1.5 }}
           alignItems="center"
           sx={{ minWidth: 0, flex: 1 }}
         >
@@ -282,13 +355,14 @@ const StatusRow = memo(({ user: u, status }) => {
               setProfileModalOpen(true);
             }}
             sx={{
-              width: { xs: 38, sm: 42 },
-              height: { xs: 38, sm: 42 },
+              width: { xs: 36, sm: 42 },
+              height: { xs: 36, sm: 42 },
               cursor: users ? "pointer" : "default",
               bgcolor: bg,
               color: color,
               fontWeight: 700,
-              fontSize: { xs: 14, sm: 15 },
+              fontSize: FS.body,
+              flexShrink: 0,
             }}
           >
             {!profileImage && (
@@ -303,14 +377,14 @@ const StatusRow = memo(({ user: u, status }) => {
             <Typography
               fontWeight={600}
               noWrap
-              sx={{ fontSize: { xs: 13, sm: 14.5 }, color: "text.primary" }}
+              sx={{ fontSize: FS.name, color: "text.primary" }}
             >
               {firstName} {lastName}
             </Typography>
             <Typography
               color="text.secondary"
               noWrap
-              sx={{ fontSize: { xs: 11, sm: 12.5 }, mt: 0.25 }}
+              sx={{ fontSize: FS.small, mt: 0.25 }}
             >
               {formatMaskedPhone(phone)}
             </Typography>
@@ -324,19 +398,19 @@ const StatusRow = memo(({ user: u, status }) => {
             gap: 0.5,
             bgcolor: isApproved ? GREEN_LIGHT : RED_LIGHT,
             color: isApproved ? GREEN : RED,
-            fontSize: 10.5,
+            fontSize: FS.tiny,
             fontWeight: 700,
             letterSpacing: 0.3,
-            px: 1.25,
+            px: { xs: 1, sm: 1.25 },
             py: 0.4,
             borderRadius: 5,
             flexShrink: 0,
           }}
         >
           {isApproved ? (
-            <CheckCircleIcon sx={{ fontSize: 13 }} />
+            <CheckCircleIcon sx={{ fontSize: { xs: 12, sm: 14 } }} />
           ) : (
-            <CancelIcon sx={{ fontSize: 13 }} />
+            <CancelIcon sx={{ fontSize: { xs: 12, sm: 14 } }} />
           )}
           {isApproved ? "Approved" : "Rejected"}
         </Box>
@@ -367,7 +441,7 @@ const MyReferrals = () => {
   const [actionState, setActionState] = useState({ id: null, type: null });
   const [mobile_number, setMobile_number] = useState("");
   const [countryCode, setCountryCode] = useState("+1");
-  
+
   // Permanent Link State
   const [shareLink, setShareLink] = useState("");
   const [shareLinkLoading, setShareLinkLoading] = useState(false);
@@ -594,33 +668,6 @@ const MyReferrals = () => {
   const handleOpenShare = () => setOpenShare(true);
   const handleCloseShare = () => setOpenShare(false);
 
-  const LoadingSpinner = () => (
-    <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
-      <CircularProgress size={32} thickness={4} sx={{ color: "#FF9933" }} />
-    </Box>
-  );
-
-  const EmptyState = ({ title, subtitle }) => (
-    <Box sx={{ py: { xs: 5, sm: 7 }, textAlign: "center" }}>
-      <PeopleAltOutlinedIcon
-        sx={{ fontSize: 44, color: "text.disabled", mb: 1.5 }}
-      />
-      <Typography
-        fontWeight={600}
-        color="text.primary"
-        sx={{ fontSize: { xs: "0.9rem", sm: "1rem" } }}
-      >
-        {title}
-      </Typography>
-      <Typography
-        color="text.secondary"
-        sx={{ mt: 0.75, fontSize: { xs: "0.78rem", sm: "0.85rem" } }}
-      >
-        {subtitle}
-      </Typography>
-    </Box>
-  );
-
   const accordionSx = {
     disableGutters: true,
     elevation: 0,
@@ -631,16 +678,17 @@ const MyReferrals = () => {
       border: "1px solid",
       borderColor: "divider",
       "& .MuiAccordionSummary-root": {
-        minHeight: 56,
-        px: 2,
-        "&.Mui-expanded": { minHeight: 56 },
+        minHeight: { xs: 50, sm: 56 },
+        px: { xs: 1.5, sm: 2 },
+        "&.Mui-expanded": { minHeight: { xs: 50, sm: 56 } },
       },
       "& .MuiAccordionSummary-content": {
-        my: 1.5,
+        my: { xs: 1, sm: 1.5 },
+        minWidth: 0,
         alignItems: "center",
         justifyContent: "space-between",
         gap: 1,
-        "&.Mui-expanded": { my: 1.5 },
+        "&.Mui-expanded": { my: { xs: 1, sm: 1.5 } },
       },
       "& .MuiAccordionSummary-expandIconWrapper": {
         color: "text.secondary",
@@ -661,23 +709,42 @@ const MyReferrals = () => {
       ? historyTitleParts.join(" · ")
       : "Referral history";
 
+  /* Shared styles for the three invite-link action buttons */
+  const actionBtnBase = {
+    textTransform: "none",
+    fontWeight: 600,
+    fontSize: FS.btn,
+    px: 2,
+    py: 0.75,
+    minHeight: 38,
+    borderRadius: 2,
+    whiteSpace: "nowrap",
+    width: { xs: "100%", sm: "auto" },
+  };
+
   return (
     <PageLayout>
       <Box
         sx={{
-          px: { xs: 1.5, sm: 2, md: 3 },
+          px: { xs: 1.25, sm: 2, md: 3 },
           py: { xs: 2, sm: 3 },
-          pb: 6,
+          pb: { xs: 5, sm: 6 },
           width: "100%",
           maxWidth: 980,
           mx: "auto",
+          boxSizing: "border-box",
+          overflowX: "hidden",
         }}
       >
         {/* Header */}
         <Typography
           variant="h5"
           fontWeight={700}
-          sx={{ color: "text.primary", mb: 2.5, fontSize: { xs: 20, sm: 24 } }}
+          sx={{
+            color: "text.primary",
+            mb: { xs: 2, sm: 2.5 },
+            fontSize: FS.title,
+          }}
         >
           My Referrals
         </Typography>
@@ -686,8 +753,8 @@ const MyReferrals = () => {
         <Paper
           variant="outlined"
           sx={{
-            p: { xs: 2, sm: 2.5 },
-            mb: 3,
+            p: { xs: 1.5, sm: 2.5 },
+            mb: { xs: 2, sm: 3 },
             borderRadius: 3,
             borderColor: "divider",
             bgcolor: "#FFFDF9",
@@ -695,12 +762,16 @@ const MyReferrals = () => {
               "linear-gradient(135deg, #FFFDF9 0%, #FFF9F2 100%)",
           }}
         >
-          <Stack spacing={2}>
-            <Stack direction="row" alignItems="flex-start" spacing={1.5}>
+          <Stack spacing={{ xs: 1.5, sm: 2 }}>
+            <Stack
+              direction="row"
+              alignItems="flex-start"
+              spacing={{ xs: 1.25, sm: 1.5 }}
+            >
               <Box
                 sx={{
-                  width: 36,
-                  height: 36,
+                  width: { xs: 32, sm: 36 },
+                  height: { xs: 32, sm: 36 },
                   borderRadius: 2,
                   bgcolor: SAFFRON_LIGHT,
                   display: "flex",
@@ -710,25 +781,29 @@ const MyReferrals = () => {
                   mt: 0.25,
                 }}
               >
-                <LinkIcon sx={{ fontSize: 18, color: SAFFRON }} />
+                <LinkIcon sx={{ fontSize: { xs: 16, sm: 18 }, color: SAFFRON }} />
               </Box>
               <Box sx={{ minWidth: 0, flex: 1 }}>
                 <Typography
                   variant="caption"
                   fontWeight={700}
                   color="text.secondary"
-                  sx={{ letterSpacing: 0.6, fontSize: 10.5 }}
+                  sx={{
+                    display: "block",
+                    letterSpacing: 0.6,
+                    fontSize: FS.tiny,
+                  }}
                 >
                   YOUR PERMANENT INVITE LINK
                 </Typography>
                 <Typography
                   fontWeight={600}
                   sx={{
-                    overflowWrap: "anywhere",
-                    fontSize: { xs: "0.82rem", sm: "0.9rem" },
+                    fontSize: FS.body,
                     color: "text.primary",
                     lineHeight: 1.4,
                     wordBreak: "break-all",
+                    overflowWrap: "anywhere",
                     mb: 0.5,
                   }}
                 >
@@ -739,16 +814,22 @@ const MyReferrals = () => {
 
                 {/* Referral Code Display */}
                 {user?.referralCode && (
-                  <Stack direction="row" alignItems="center" spacing={1}>
+                  <Stack
+                    direction="row"
+                    alignItems="center"
+                    spacing={1}
+                    flexWrap="wrap"
+                    useFlexGap
+                  >
                     <Typography
                       variant="caption"
-                      sx={{ color: "text.secondary", fontSize: 11.5 }}
+                      sx={{ color: "text.secondary", fontSize: FS.tiny }}
                     >
                       Your Referral Code:
                     </Typography>
                     <Typography
                       sx={{
-                        fontSize: 12.5,
+                        fontSize: FS.small,
                         fontWeight: 800,
                         color: SAFFRON_DARK,
                         letterSpacing: 0.5,
@@ -756,6 +837,7 @@ const MyReferrals = () => {
                         px: 1,
                         py: 0.2,
                         borderRadius: 1,
+                        wordBreak: "break-all",
                       }}
                     >
                       {user.referralCode}
@@ -777,16 +859,10 @@ const MyReferrals = () => {
                 onClick={() => handleCopy(shareLink)}
                 disabled={!shareLink || shareLinkLoading}
                 sx={{
+                  ...actionBtnBase,
                   bgcolor: SAFFRON,
                   color: "#fff",
-                  textTransform: "none",
-                  fontWeight: 600,
-                  fontSize: 13,
-                  px: 2,
-                  py: 0.75,
-                  borderRadius: 2,
                   boxShadow: "none",
-                  whiteSpace: "nowrap",
                   "&:hover": { bgcolor: SAFFRON_DARK, boxShadow: "none" },
                   "&.Mui-disabled": { bgcolor: "#E3C9BE", color: "#fff" },
                 }}
@@ -812,15 +888,9 @@ ${shareLink}`;
                   );
                 }}
                 sx={{
+                  ...actionBtnBase,
                   color: SAFFRON,
                   borderColor: `${SAFFRON}55`,
-                  textTransform: "none",
-                  fontWeight: 600,
-                  fontSize: 13,
-                  px: 2,
-                  py: 0.75,
-                  borderRadius: 2,
-                  whiteSpace: "nowrap",
                   "&:hover": {
                     borderColor: SAFFRON,
                     bgcolor: SAFFRON_LIGHT,
@@ -839,14 +909,8 @@ ${shareLink}`;
                 onClick={handleOpenShare}
                 disabled={completion !== 100}
                 sx={{
+                  ...actionBtnBase,
                   color: SAFFRON,
-                  textTransform: "none",
-                  fontWeight: 600,
-                  fontSize: 13,
-                  px: 2,
-                  py: 0.75,
-                  borderRadius: 2,
-                  whiteSpace: "nowrap",
                   "&:hover": { bgcolor: SAFFRON_LIGHT },
                 }}
               >
@@ -869,33 +933,21 @@ ${shareLink}`;
           <AccordionSummary
             expandIcon={<ExpandMoreIcon sx={{ fontSize: 20 }} />}
           >
-            <Stack direction="row" alignItems="center" spacing={1}>
-              <Typography
-                fontWeight={700}
-                sx={{ fontSize: { xs: "0.9rem", sm: "0.95rem" } }}
-              >
+            <Stack
+              direction="row"
+              alignItems="center"
+              spacing={1}
+              sx={{ minWidth: 0 }}
+            >
+              <Typography fontWeight={700} sx={{ fontSize: FS.h2 }}>
                 Pending your approval
               </Typography>
-              <Box
-                sx={{
-                  bgcolor: referrals.length ? SAFFRON : "#e0e0e0",
-                  color: "#fff",
-                  fontSize: 11,
-                  fontWeight: 700,
-                  minWidth: 22,
-                  height: 22,
-                  borderRadius: "11px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  px: 0.75,
-                }}
-              >
+              <Box sx={countBadgeSx(referrals.length ? SAFFRON : "#e0e0e0")}>
                 {referrals.length}
               </Box>
             </Stack>
           </AccordionSummary>
-          <AccordionDetails sx={{ px: { xs: 1.5, sm: 2 }, pt: 0, pb: 2 }}>
+          <AccordionDetails sx={{ px: { xs: 1, sm: 2 }, pt: 0, pb: 2 }}>
             {loading ? (
               <LoadingSpinner />
             ) : referrals.length === 0 ? (
@@ -932,57 +984,29 @@ ${shareLink}`;
           <AccordionSummary
             expandIcon={<ExpandMoreIcon sx={{ fontSize: 20 }} />}
           >
-            <Stack direction="row" alignItems="center" spacing={1.25}>
-              <Typography
-                fontWeight={700}
-                sx={{ fontSize: { xs: "0.9rem", sm: "0.95rem" } }}
-              >
+            <Stack
+              direction="row"
+              alignItems="center"
+              spacing={1.25}
+              flexWrap="wrap"
+              useFlexGap
+              sx={{ minWidth: 0 }}
+            >
+              <Typography fontWeight={700} sx={{ fontSize: FS.h2 }}>
                 {historyTitle}
               </Typography>
 
               {approvedCount > 0 && (
-                <Box
-                  sx={{
-                    bgcolor: GREEN,
-                    color: "#fff",
-                    fontSize: 11,
-                    fontWeight: 700,
-                    minWidth: 22,
-                    height: 22,
-                    borderRadius: "11px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    px: 0.75,
-                  }}
-                >
-                  {approvedCount}
-                </Box>
+                <Box sx={countBadgeSx(GREEN)}>{approvedCount}</Box>
               )}
 
               {rejectedCount > 0 && (
-                <Box
-                  sx={{
-                    bgcolor: RED,
-                    color: "#fff",
-                    fontSize: 11,
-                    fontWeight: 700,
-                    minWidth: 22,
-                    height: 22,
-                    borderRadius: "11px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    px: 0.75,
-                  }}
-                >
-                  {rejectedCount}
-                </Box>
+                <Box sx={countBadgeSx(RED)}>{rejectedCount}</Box>
               )}
             </Stack>
           </AccordionSummary>
 
-          <AccordionDetails sx={{ px: { xs: 1.5, sm: 2 }, pt: 0, pb: 2 }}>
+          <AccordionDetails sx={{ px: { xs: 1, sm: 2 }, pt: 0, pb: 2 }}>
             {loading ? (
               <LoadingSpinner />
             ) : totalHistory === 0 ? (
@@ -996,7 +1020,7 @@ ${shareLink}`;
                   <Box>
                     <Typography
                       sx={{
-                        fontSize: 11,
+                        fontSize: FS.tiny,
                         fontWeight: 700,
                         color: GREEN,
                         letterSpacing: 0.8,
@@ -1022,7 +1046,7 @@ ${shareLink}`;
                   <Box>
                     <Typography
                       sx={{
-                        fontSize: 11,
+                        fontSize: FS.tiny,
                         fontWeight: 700,
                         color: RED,
                         letterSpacing: 0.8,
@@ -1062,23 +1086,31 @@ ${shareLink}`;
               top: "50%",
               left: "50%",
               transform: "translate(-50%, -50%)",
-              width: { xs: "92%", sm: "auto" },
+              width: { xs: "calc(100% - 24px)", sm: "auto" },
+              maxHeight: "calc(100dvh - 24px)",
+              display: "flex",
+              justifyContent: "center",
+              outline: "none",
             }}
           >
             <Box
               sx={{
                 position: "relative",
                 bgcolor: "white",
-                width: { xs: "100%", sm: 400 },
-                maxWidth: 400,
+                width: { xs: "100%", sm: 420 },
+                maxWidth: 420,
+                maxHeight: "calc(100dvh - 24px)",
+                overflowY: "auto",
+                boxSizing: "border-box",
                 borderRadius: 3,
-                p: { xs: 2.5, sm: 3 },
+                p: { xs: 2, sm: 3 },
                 boxShadow: 24,
               }}
             >
               <IconButton
                 onClick={handleCloseShare}
                 size="small"
+                aria-label="Close"
                 sx={{
                   position: "absolute",
                   top: 10,
@@ -1092,13 +1124,13 @@ ${shareLink}`;
 
               <Typography
                 fontWeight={700}
-                sx={{ fontSize: "1rem", mb: 0.5, pr: 3 }}
+                sx={{ fontSize: FS.name, mb: 0.5, pr: 4 }}
               >
                 Invite by phone
               </Typography>
               <Typography
                 color="text.secondary"
-                sx={{ fontSize: 12.5, mb: 2.5 }}
+                sx={{ fontSize: FS.small, mb: { xs: 2, sm: 2.5 } }}
               >
                 Send an SMS invite directly to their phone
               </Typography>
@@ -1107,7 +1139,7 @@ ${shareLink}`;
                 variant="outlined"
                 sx={{
                   p: 1.25,
-                  mb: 2.5,
+                  mb: { xs: 2, sm: 2.5 },
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
@@ -1118,11 +1150,12 @@ ${shareLink}`;
               >
                 <Typography
                   sx={{
-                    fontSize: 12,
+                    fontSize: FS.small,
                     overflow: "hidden",
                     textOverflow: "ellipsis",
                     whiteSpace: "nowrap",
                     flex: 1,
+                    minWidth: 0,
                     mr: 1,
                     color: "text.secondary",
                   }}
@@ -1130,21 +1163,24 @@ ${shareLink}`;
                   {shareLinkLoading ? "Loading link..." : shareLink}
                 </Typography>
                 <Tooltip title="Copy link">
-                  <IconButton
-                    size="small"
-                    disabled={shareLinkLoading || !shareLink}
-                    onClick={() => handleCopy(shareLink)}
-                    sx={{ flexShrink: 0, color: SAFFRON }}
-                  >
-                    <ContentCopyIcon sx={{ fontSize: 16 }} />
-                  </IconButton>
+                  <span>
+                    <IconButton
+                      size="small"
+                      aria-label="Copy link"
+                      disabled={shareLinkLoading || !shareLink}
+                      onClick={() => handleCopy(shareLink)}
+                      sx={{ flexShrink: 0, color: SAFFRON }}
+                    >
+                      <ContentCopyIcon sx={{ fontSize: 16 }} />
+                    </IconButton>
+                  </span>
                 </Tooltip>
               </Paper>
 
               <Stack
                 direction="row"
                 spacing={1}
-                sx={{ width: "100%", mb: 2.5 }}
+                sx={{ width: "100%", mb: { xs: 2, sm: 2.5 } }}
               >
                 {isProduction && (
                   <TextField
@@ -1152,7 +1188,9 @@ ${shareLink}`;
                     value="US +1"
                     disabled
                     sx={{
-                      width: 100,
+                      width: { xs: 84, sm: 100 },
+                      flexShrink: 0,
+                      "& .MuiInputBase-input": { fontSize: FS.input },
                       "& .MuiInputBase-input.Mui-disabled": {
                         color: "#555",
                         WebkitTextFillColor: "#555",
@@ -1170,10 +1208,18 @@ ${shareLink}`;
                       setCountryCode(e.target.value);
                       setMobile_number("");
                     }}
-                    sx={{ width: 100 }}
+                    sx={{
+                      width: { xs: 94, sm: 108 },
+                      flexShrink: 0,
+                      "& .MuiInputBase-input": { fontSize: FS.input },
+                    }}
                   >
-                    <MenuItem value="+91">🇮🇳 +91</MenuItem>
-                    <MenuItem value="+1">🇺🇸 +1</MenuItem>
+                    <MenuItem value="+91" sx={{ fontSize: FS.input }}>
+                      🇮🇳 +91
+                    </MenuItem>
+                    <MenuItem value="+1" sx={{ fontSize: FS.input }}>
+                      🇺🇸 +1
+                    </MenuItem>
                   </TextField>
                 )}
 
@@ -1190,7 +1236,8 @@ ${shareLink}`;
                   }}
                   size="small"
                   placeholder="Mobile number"
-                  InputProps={{ sx: { fontSize: 13.5 } }}
+                  InputProps={{ sx: { fontSize: FS.input } }}
+                  sx={{ minWidth: 0 }}
                 />
               </Stack>
 
@@ -1202,8 +1249,9 @@ ${shareLink}`;
                   sx={{
                     color: "text.secondary",
                     borderColor: "divider",
-                    fontSize: 13,
+                    fontSize: FS.btn,
                     py: 0.85,
+                    minHeight: 38,
                     textTransform: "none",
                     fontWeight: 600,
                     borderRadius: 2,
@@ -1221,8 +1269,9 @@ ${shareLink}`;
                   variant="contained"
                   size="small"
                   sx={{
-                    fontSize: 13,
+                    fontSize: FS.btn,
                     py: 0.85,
+                    minHeight: 38,
                     textTransform: "none",
                     fontWeight: 600,
                     borderRadius: 2,

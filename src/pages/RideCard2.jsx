@@ -110,8 +110,6 @@ export default function RideList({ ride }) {
         })
         : "";
 
-    console.log("ride", ride);
-
     const languages = Array.isArray(ride?.language)
         ? ride.language.join(", ")
         : "";
