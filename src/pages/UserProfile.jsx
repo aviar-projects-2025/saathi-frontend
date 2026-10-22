@@ -24,46 +24,38 @@ import {
   Tooltip,
   DialogActions,
   Slider,
+  Tabs,
+  Tab,
+  IconButton,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
-
 import PageLayout from "../components/PageLayout";
-
 import axios from "axios";
 import Api from "../Api";
 import { toast } from "react-toastify";
 import { useUser } from "../context/userConetext";
-
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
-
-import { Tabs, Tab, IconButton, Collapse } from "@mui/material";
 import GridOnIcon from "@mui/icons-material/GridOn";
 import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
-
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import ToastConfig from "../components/ToastConfig.jsx";
 import CircularProgress from "@mui/material/CircularProgress";
-
 import ProfileModal from "./Avatar.jsx";
+import CloseIcon from "@mui/icons-material/Close";
+import { useNavigate, useLocation } from "react-router-dom";
+import EditProfile from "./EditProfile.jsx";
 
+// --- Constants ---
 const SAFFRON = "#E8650A";
 const SAFFRON_LIGHT = "#FDF0E8";
 const CARD_BORDER = "1px solid #F0E6DC";
-
-import CloseIcon from "@mui/icons-material/Close";
-
-import { useNavigate, useLocation } from "react-router-dom";
-
-import EditProfile from "./EditProfile.jsx";
-
-// Size (px) of the square adjust/crop box
-const CROP_BOX_SIZE = 260;
-// Output resolution of the final cropped image
-const OUTPUT_SIZE = 500;
+const TEXT_DARK = "#1A1A1A";
+const TEXT_GRAY = "#666666";
+const GREEN = "#2E7D32";
+const BLUE = "#1976D2";
 
 const pillBtn = {
   textTransform: "none",
@@ -72,18 +64,40 @@ const pillBtn = {
   color: SAFFRON,
   fontWeight: 600,
 };
+
 const SectionCard = ({ children, sx = {} }) => (
   <Paper
     elevation={0}
     sx={{
-      p: { xs: "12px 14px", sm: "16px 18px", md: "20px 24px" },
+      p: { xs: "12px 14px", sm: "16px 18px", md: "24px" },
       borderRadius: { xs: 2, sm: 3 },
       border: CARD_BORDER,
+      bgcolor: "#fff",
       ...sx,
     }}
   >
     {children}
   </Paper>
+);
+
+// Custom Tag Component
+const Tag = ({ label, color, bg }) => (
+  <Box
+    sx={{
+      px: 1.5,
+      py: 0.5,
+      borderRadius: 1,
+      bgcolor: bg,
+      color: color,
+      fontSize: "0.75rem",
+      fontWeight: 600,
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+    }}
+  >
+    {label}
+  </Box>
 );
 
 const UserProfile = () => {
@@ -103,46 +117,32 @@ const UserProfile = () => {
     userLoading,
     savedHasNextPage,
     savedLoading,
-    removeLoading
+    removeLoading,
   } = useUser();
+  
   const savedPostObserverRef = useRef(null);
-  const onImageSelected = (e) => {
-    const selectedFile = e.target.files[0];
-    if (selectedFile) {
-      setEditImage(selectedFile);
-      setPreviewImage(URL.createObjectURL(selectedFile));
-    }
-    closeImageMenu();
-    e.target.value = null; // allow re-selecting same file next time
-  };
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const location = useLocation();
 
   const [editProfile, setEditProfile] = useState(
     location.state?.openEditProfile || false
   );
-
   const [errors, setErrors] = useState({});
   const user = JSON.parse(localStorage.getItem("user"));
-
   const navigate = useNavigate();
+
   const [imagePostLoading, setImagePostLoading] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null);
   const [selectedPost, setSelectedPost] = useState(null);
 
-
-  // const theme = useTheme();
   const isTab = useMediaQuery(theme.breakpoints.down("sm"));
 
   const [openImage, setOpenImage] = useState(false);
   const [selectedImage, setSelectedImage] = useState("");
-
   const [communityLoading, setCommunityLoading] = useState(false);
-
   const [showAdjustModal, setShowAdjustModal] = useState(false);
   const [rawImage, setRawImage] = useState("");
-
   const [zoom, setZoom] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const dragState = useRef({
@@ -156,44 +156,31 @@ const UserProfile = () => {
     if (selectedPost) {
       setTimeout(() => {
         const element = document.getElementById(`post-${selectedPost._id}`);
-
         if (element) {
-          element.scrollIntoView({
-            behavior: "smooth",
-            block: "center",
-          });
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
         }
       }, 100);
     }
   }, [selectedPost]);
 
-
   const [anchorEl, setAnchorEl] = useState(null);
-  // const [selectedPost, setSelectedPost] = useState(null);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-
-    setErrors((prev) => ({
-      ...prev,
-      [name]: "",
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   const [communityPosts, setCommunityPosts] = useState([]);
   const [communityPage, setCommunityPage] = useState(1);
   const [hasMorePosts, setHasMorePosts] = useState(true);
   const [loadingMorePosts, setLoadingMorePosts] = useState(false);
-
   const isFetchingRef = useRef(false);
   const hasMoreRef = useRef(true);
   const pageRef = useRef(1);
   const observerRef = useRef(null);
   const [totalPostCount, setTotalPostCount] = useState(0);
+
   useEffect(() => {
     hasMoreRef.current = hasMorePosts;
   }, [hasMorePosts]);
@@ -210,81 +197,53 @@ const UserProfile = () => {
       pageRef.current = 1;
       hasMoreRef.current = true;
       isFetchingRef.current = false;
-
       getCommunityPost(1);
     }
   }, [currentUser]);
-
 
   const setLoadMoreRef = useCallback((node) => {
     if (observerRef.current) {
       observerRef.current.disconnect();
       observerRef.current = null;
     }
-
     if (!node) return;
-
     const observer = new IntersectionObserver(
       (entries) => {
         if (!entries[0].isIntersecting) return;
         if (isFetchingRef.current) return;
         if (!hasMoreRef.current) return;
-
         isFetchingRef.current = true;
         getCommunityPost(pageRef.current + 1).finally(() => {
           isFetchingRef.current = false;
         });
       },
-      {
-        root: null,
-        rootMargin: "200px",
-        threshold: 0,
-      }
+      { root: null, rootMargin: "200px", threshold: 0 }
     );
-
     observer.observe(node);
     observerRef.current = observer;
   }, []);
 
   const getCommunityPost = async (page = 1) => {
     try {
-      if (page === 1) {
-        setCommunityLoading(true);
-      } else {
-        setLoadingMorePosts(true);
-      }
+      if (page === 1) setCommunityLoading(true);
+      else setLoadingMorePosts(true);
 
       const postsRes = await axios.get(
         `${Api}/post-images/profile/${currentUser?._id}?page=${page}&limit=12`
       );
-
       const newPosts = postsRes.data.data || [];
       const pagination = postsRes.data.pagination;
-
-
       const totalCount = pagination?.totalCount ?? 0;
-
       setTotalPostCount(totalCount);
 
-      if (page === 1) {
-        // First 12 posts
-        setCommunityPosts(newPosts);
-      } else {
-        // Add next 12 posts
-        setCommunityPosts((prev) => [
-          ...prev,
-          ...newPosts,
-        ]);
-      }
+      if (page === 1) setCommunityPosts(newPosts);
+      else setCommunityPosts((prev) => [...prev, ...newPosts]);
 
       setCommunityPage(page);
       pageRef.current = page;
-
       const hasMore = pagination?.hasMore ?? false;
-
       setHasMorePosts(hasMore);
       hasMoreRef.current = hasMore;
-
     } catch (error) {
       console.error("Get community posts error:", error);
     } finally {
@@ -297,35 +256,43 @@ const UserProfile = () => {
   const [editDescription, setEditDescription] = useState("");
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
-  const [tab, setTab] = useState(0);
+  
+  // New Tab State for About, Reviews, Rides, Route Alerts
+  const [mainTab, setMainTab] = useState(0);
+
   const handleMenuOpen = (event, post) => {
     setAnchorEl(event.currentTarget);
     setSelectedPost(post);
   };
+  
   const [imageMenuAnchor, setImageMenuAnchor] = useState(null);
   const isImageMenuOpen = Boolean(imageMenuAnchor);
-
   const openImageMenu = (e) => setImageMenuAnchor(e.currentTarget);
   const closeImageMenu = () => setImageMenuAnchor(null);
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
+  const handleMenuClose = () => setAnchorEl(null);
+
   const handleEdit = (post) => {
     if (!post) return;
-
     setSelectedPost(post);
-
     setPreviewImage(
       Array.isArray(post.postImage) ? post.postImage[0] : post.postImage || ""
     );
-
     setOriginalImage(
       Array.isArray(post.postImage) ? post.postImage[0] : post.postImage || ""
     );
-
     setEditDescription(post.description || "");
     setEditImage(null);
     setEditOpen(true);
+  };
+
+  const onImageSelected = (e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+      setEditImage(selectedFile);
+      setPreviewImage(URL.createObjectURL(selectedFile));
+    }
+    closeImageMenu();
+    e.target.value = null;
   };
 
   const handleReset = () => {
@@ -335,75 +302,49 @@ const UserProfile = () => {
   };
 
   const handleDelete = async (postId) => {
-
     try {
-
       setImageDeleteLoading(true);
-
       const user = JSON.parse(localStorage.getItem("user"));
-
       const res = await axios.delete(`${Api}/community/${postId}`, {
-        data: {
-          userId: user.id,
-        },
+        data: { userId: user.id },
       });
-
-      setCommunityPosts((prev) =>
-        prev.filter((post) => post._id !== postId)
-      );
-
+      setCommunityPosts((prev) => prev.filter((post) => post._id !== postId));
       toast.success(res.data.message, toasts);
-
       setDeleteOpen(false);
-
     } catch (error) {
-      toast.error(
-        error.response?.data?.message || "Failed to delete post", toasts);
+      toast.error(error.response?.data?.message || "Failed to delete post", toasts);
     } finally {
       setImageDeleteLoading(false);
     }
   };
+
   const handleUpdate = async () => {
     try {
       setImagePostLoading(true);
-
       const user = JSON.parse(localStorage.getItem("user"));
-
       const formData = new FormData();
       formData.append("userId", user.id);
       formData.append("description", editDescription);
+      if (editImage) formData.append("postImage", editImage);
 
-      if (editImage) {
-        formData.append("postImage", editImage);
-      }
-
-      const res = await axios.put(
-        `${Api}/community/${selectedPost._id}`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      const res = await axios.put(`${Api}/community/${selectedPost._id}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
       const updatedPost = res.data?.data || {};
-
       setCommunityPosts((prev) =>
         prev.map((post) =>
           post._id === selectedPost._id
             ? {
-              ...post,
-              ...updatedPost,
-              postImage: updatedPost.postImage ?? post.postImage,
-              description: updatedPost.description ?? editDescription,
-            }
+                ...post,
+                ...updatedPost,
+                postImage: updatedPost.postImage ?? post.postImage,
+                description: updatedPost.description ?? editDescription,
+              }
             : post
         )
       );
-
       toast.success(res.data.message, toasts);
-
       setEditOpen(false);
       setOpenImage(false);
       setSelectedPost(null);
@@ -415,1678 +356,328 @@ const UserProfile = () => {
       setImagePostLoading(false);
     }
   };
+
   const [dropDown, setDropDown] = useState(null);
-
   const isdropdownMenuOpen = Boolean(dropDown);
+  const handleDropdownMenuOpen = (event) => setDropDown(event.currentTarget);
+  const handleDropdownMenuClose = () => setDropDown(null);
 
-  const handleDropdownMenuOpen = (event) => {
-    setDropDown(event.currentTarget);
-  };
-
-  const handleDropdownMenuClose = () => {
-    setDropDown(null);
-  };
   useEffect(() => {
-    if (tab !== 1) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (
-          entries[0].isIntersecting &&
-          !savedLoading &&
-          savedHasNextPage
-        ) {
-          getSavedPost(savedPage + 1);
-        }
-      },
-      {
-        threshold: 0.1,
-      }
-    );
-
-    const currentRef = savedPostObserverRef.current;
-
-    if (currentRef) {
-      observer.observe(currentRef);
-    }
-
-    return () => {
-      if (currentRef) {
-        observer.unobserve(currentRef);
-      }
-    };
-  }, [
-    tab,
-    savedPage,
-    savedLoading,
-    savedHasNextPage,
-    getSavedPost,
-  ]);
+    if (mainTab !== 2) return; // Only trigger for Posts tab if needed, but for now adjusting for UI
+    // Logic for infinite scroll might need to be adapted based on new tab structure
+  }, [mainTab, savedPage, savedLoading, savedHasNextPage, getSavedPost]);
 
   const handleSettingClick = () => {
     handleDropdownMenuClose();
     navigate("/myprofile");
   };
 
+  // --- RENDER HELPERS ---
+  
+  // Render Route Alerts Tab Content
+  const renderRouteAlerts = () => (
+    <Stack spacing={2.5}>
+       {/* Add Alert Button Top Right */}
+       <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
+            <Button 
+                variant="text" 
+                sx={{ 
+                    color: SAFFRON, 
+                    fontWeight: 600, 
+                    textTransform: 'none',
+                    fontSize: '0.9rem',
+                    '&:hover': { bgcolor: 'transparent', textDecoration: 'underline' }
+                }}
+            >
+                + Add alert
+            </Button>
+       </Box>
+
+      <SectionCard>
+        <Typography variant="h6" fontWeight={700} sx={{ mb: 1, fontSize: '1.1rem' }}>
+          Route alerts
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+          Get a text when a new ride is posted on a route you care about. Only visible to you.
+        </Typography>
+
+        <Stack spacing={2}>
+            {/* Alert Item 1 */}
+            <Box sx={{ 
+                border: '1px solid #E0E0E0', 
+                borderRadius: 1, 
+                p: 2, 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center' 
+            }}>
+                <Typography variant="body1" fontSize="0.95rem">
+                    Bloomington, IL → O'Hare (ORD), weekdays
+                </Typography>
+                <Button 
+                    variant="text" 
+                    size="small" 
+                    sx={{ 
+                        color: SAFFRON, 
+                        textTransform: 'none', 
+                        fontWeight: 600,
+                        minWidth: 'auto'
+                    }}
+                >
+                    Remove
+                </Button>
+            </Box>
+
+            {/* Alert Item 2 */}
+            <Box sx={{ 
+                border: '1px solid #E0E0E0', 
+                borderRadius: 1, 
+                p: 2, 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center' 
+            }}>
+                <Typography variant="body1" fontSize="0.95rem">
+                    Normal, IL → Chicago, IL, any day
+                </Typography>
+                <Button 
+                    variant="text" 
+                    size="small" 
+                    sx={{ 
+                        color: SAFFRON, 
+                        textTransform: 'none', 
+                        fontWeight: 600,
+                        minWidth: 'auto'
+                    }}
+                >
+                    Remove
+                </Button>
+            </Box>
+        </Stack>
+      </SectionCard>
+      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1, fontSize: '0.75rem' }}>
+          Replaces the old post grid. Others see the same layout (without Route alerts, email or phone) on the Public Profile screen.
+      </Typography>
+    </Stack>
+  );
+
+  // Render About Tab Content
+  const renderAbout = () => (
+    <Stack spacing={3}>
+       {/* About Me Card */}
+      <SectionCard>
+        <Typography variant="h6" fontWeight={700} sx={{ mb: 1.5, fontSize: '1rem', color: TEXT_DARK }}>
+          About me
+        </Typography>
+        <Typography variant="body1" sx={{ fontSize: '0.95rem', color: '#333', lineHeight: 1.6 }}>
+          Software program manager and community volunteer. Happy to help new arrivals with airport pickups around Bloomington–Normal and Chicago.
+        </Typography>
+        <Typography variant="body2" sx={{ mt: 2, color: '#666' }}>
+            Gender (private, only used for women-only rides): Prefer not to say
+        </Typography>
+      </SectionCard>
+
+      {/* Spacer to push footer text down */}
+      <Box sx={{ pt: 4 }}>
+          <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+              Replaces the old post grid. Others see the same layout (without Route alerts, email or phone) on the Public Profile screen.
+          </Typography>
+      </Box>
+    </Stack>
+  );
 
   return (
     <PageLayout>
-      <Box sx={{ mx: "auto", px: { xs: 0, sm: 2, md: 0 } }}>
-        {/* Page heading */}
-        <Box sx={{ pt: { xs: 2, sm: 0 }, mb: 1, flexShrink: 0 }}>
-          <Typography
-            variant="h5"
-            fontWeight={800}
-            sx={{ fontSize: { xs: "1.1rem", sm: "1.35rem", md: "1.5rem" } }}
-          >
+      <Box sx={{ mx: "auto", px: { xs: 0, sm: 2, md: 0 }, pb: 5 }}>
+        
+        {/* Header Title */}
+        <Box sx={{ pt: { xs: 2, sm: 0 }, mb: 1 }}>
+          <Typography variant="h5" fontWeight={800} sx={{ fontSize: { xs: "1.1rem", sm: "1.35rem", md: "1.5rem" } }}>
             My Profile
+          </Typography>
+          <Typography color="text.secondary" sx={{ mt: 1, fontSize: { xs: "0.72rem", sm: "0.9rem" } }}>
+            Manage your Saathi account, referrals, and preferences.
           </Typography>
         </Box>
 
-        <Typography
-          color="text.secondary"
-          sx={{
-            mt: { xs: 1, sm: 1 },
-            fontSize: { xs: "0.72rem", sm: "1rem", md: "1rem" },
-          }}
-        >
-          Manage your Saathi account, referrals, and preferences.
-        </Typography>
-
-        <Stack spacing={{ xs: 1.25, sm: 1.75, md: 3 }} sx={{ mt: 2 }}>
-          {/* ── Profile (Instagram-style header) ── */}
-          <SectionCard>
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "flex-start",
-              }}
-            >
-              <Stack
-                direction="row"
-                spacing={{ xs: 2, sm: 3 }}
-                alignItems="center"
-                sx={{ flex: 1 }}
-              >
+        <Stack spacing={3} sx={{ mt: 2 }}>
+          
+          {/* --- PROFILE CARD --- */}
+          <SectionCard sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
+              
+              {/* Avatar Section */}
+              <Box sx={{ flexShrink: 0 }}>
                 <Avatar
                   src={currentUser?.profileImage || ""}
-                  alt={`${currentUser?.firstName || ""} ${currentUser?.lastName || ""
-                    }`}
                   onClick={() => {
                     setSelectedProfile(currentUser);
                     setProfileModalOpen(true);
                   }}
                   sx={{
-                    width: { xs: 64, sm: 84, md: 96 },
-                    height: { xs: 64, sm: 84, md: 96 },
-                    bgcolor: SAFFRON,
-                    color: "#fff",
-                    fontWeight: 800,
-                    fontSize: { xs: "1rem", sm: "1.3rem", md: "1.5rem" },
-                    flexShrink: 0,
+                    width: { xs: 80, sm: 100, md: 120 },
+                    height: { xs: 80, sm: 100, md: 120 },
+                    bgcolor: "#FAD7C5", // Light peach background
+                    color: "#8B4513", // Brown text
+                    fontWeight: 700,
+                    fontSize: { xs: "1.5rem", sm: "2rem" },
+                    border: "2px solid #2E7D32", // Green border
                     cursor: "pointer",
-                    transition: "all 0.2s ease",
-
-                    "&:hover": {
-                      transform: "scale(1.05)",
-                      boxShadow: "0 0 0 4px rgba(232, 101, 10, 0.25)",
-                    },
+                    "&:hover": { opacity: 0.9 },
                   }}
                 >
-                  {!currentUser?.profileImage &&
-                    `${currentUser?.firstName?.[0] || ""}${currentUser?.lastName?.[0] || ""
-                    }`}
+                  {!currentUser?.profileImage && (
+                    <>
+                      {currentUser?.firstName?.[0] || ""}
+                      {currentUser?.lastName?.[0] || ""}
+                    </>
+                  )}
                 </Avatar>
+              </Box>
 
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography
-                    fontWeight={700}
+              {/* Info Section */}
+              <Box sx={{ flex: 1 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 2 }}>
+                  <Box>
+                    <Typography variant="h5" fontWeight={700} sx={{ color: "#003366", mb: 0.5, fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
+                      {currentUser?.firstName} {currentUser?.lastName}
+                    </Typography>
+                    
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5, fontSize: '0.9rem' }}>
+                      {currentUser?.city || "Normal, IL"} • Tamil, English, Hindi • Member since Oct 2026
+                    </Typography>
+
+                    <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
+                      <Tag label="Founding member" bg="#FEF3C7" color="#92400E" />
+                      <Tag label="Phone verified" bg="#D1FAE5" color="#065F46" />
+                      <Tag label="Super Admin" bg="#DBEAFE" color="#1E40AF" />
+                    </Stack>
+                  </Box>
+
+                  <Button
+                    variant="outlined"
+                    onClick={() => setEditProfile(true)}
                     sx={{
-                      fontSize: { xs: "0.82rem", sm: "0.9rem", md: "1rem" },
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
+                      textTransform: 'none',
+                      color: SAFFRON,
+                      borderColor: SAFFRON,
+                      borderRadius: 2,
+                      px: 3,
+                      py: 0.75,
+                      fontWeight: 600,
+                      "&:hover": {
+                        borderColor: SAFFRON,
+                        bgcolor: SAFFRON_LIGHT,
+                      }
                     }}
                   >
-                    {currentUser?.firstName} {currentUser?.lastName}
-                  </Typography>
+                    Edit profile
+                  </Button>
+                </Box>
+              </Box>
+            </Box>
 
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{
-                      fontSize: { xs: "0.68rem", sm: "0.75rem", md: "0.8rem" },
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      mb: { xs: 1, sm: 1.5 },
-                    }}
-                  >
-                    {currentUser?.email}
+            {/* --- TRUST & ACTIVITY CARDS --- */}
+            <Grid container spacing={2.5} sx={{ mt: 1 }}>
+              {/* Trust Card */}
+              <Grid item xs={12} md={6}>
+                <Box sx={{ p: 2.5, border: '1px solid #E0E0E0', borderRadius: 2 }}>
+                  <Typography variant="caption" fontWeight={700} sx={{ letterSpacing: 1, color: TEXT_GRAY, mb: 2, display: 'block' }}>
+                    TRUST
                   </Typography>
-
-                  <Stack direction="row" spacing={{ xs: 2, sm: 3.5 }}>
-                    <Typography
-                      sx={{
-                        fontSize: {
-                          xs: "12px",
-                          sm: "14px",
-                          md: "15px",
-                          lg: "16px",
-                        },
-                      }}
-                    >
-                      Posts: {totalPostCount}
+                  <Stack spacing={1}>
+                    <Typography variant="body2">
+                      <strong>Invited by:</strong> Founder (root of the chain)
+                    </Typography>
+                    <Typography variant="body2">
+                      <strong>Vouched for:</strong> 14 members
+                    </Typography>
+                    <Typography variant="body2">
+                      <strong>Reports against:</strong> 0
+                    </Typography>
+                    <Typography variant="body2">
+                      <strong>Profile:</strong> 100% complete
                     </Typography>
                   </Stack>
                 </Box>
-              </Stack>
+              </Grid>
 
-              <IconButton
-                onClick={handleDropdownMenuOpen}
-                sx={{
-                  color: "#555",
-                  ml: 1,
-                }}
-              >
-                <MoreVertIcon />
-              </IconButton>
-
-              <Menu
-                anchorEl={dropDown}
-                open={isdropdownMenuOpen}
-                onClose={handleDropdownMenuClose}
-                anchorOrigin={{
-                  vertical: "bottom",
-                  horizontal: "left",
-                }}
-                transformOrigin={{
-                  vertical: "top",
-                  horizontal: "left",
-                }}
-              >
-                <MenuItem
-                  onClick={handleSettingClick}
-                  sx={{
-                    "&:hover": {
-                      // backgroundColor: "#FFF3E0",
-                      color: "#E8650A",
-                    },
-                  }}
-                >
-                  <ListItemText primary="Settings" />
-                </MenuItem>
-              </Menu>
-            </Box>
-
-            {currentUser?.bio && (
-              <Typography
-                sx={{
-                  mt: { xs: 1.25, sm: 1.5 },
-                  fontSize: { xs: "0.72rem", sm: "0.8rem", md: "0.85rem" },
-                  color: "text.primary",
-                }}
-              >
-                {currentUser.bio}
-              </Typography>
-            )}
-
-            <Stack
-              direction="row"
-              spacing={{ xs: 1, sm: 1.5 }}
-              sx={{
-                mt: { xs: 0.5, sm: 1 },
-                display: "flex",
-                justifyContent: "flex-end",
-              }}
-            >
-              <Button
-                variant="outlined"
-                onClick={() => {
-                  setEditProfile(true);
-                }}
-                sx={{ ...pillBtn, borderColor: "#EADFD3" }}
-              >
-                Edit Profile
-              </Button>
-              {editProfile && (
-                <EditProfile
-                  open={editProfile}
-                  onClose={() => setEditProfile(false)}
-                />
-
-              )}
-
-            </Stack>
+              {/* Activity Card */}
+              <Grid item xs={12} md={6}>
+                <Box sx={{ p: 2.5, border: '1px solid #E0E0E0', borderRadius: 2, height: '100%' }}>
+                  <Typography variant="caption" fontWeight={700} sx={{ letterSpacing: 1, color: TEXT_GRAY, mb: 2, display: 'block' }}>
+                    ACTIVITY
+                  </Typography>
+                  <Stack direction="row" spacing={4} alignItems="center" sx={{ height: '80%' }}>
+                    <Box>
+                      <Typography variant="h4" fontWeight={700} sx={{ color: "#003366" }}>12</Typography>
+                      <Typography variant="caption" color="text.secondary">Rides given</Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="h4" fontWeight={700} sx={{ color: "#003366" }}>5</Typography>
+                      <Typography variant="caption" color="text.secondary">Rides taken</Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="h4" fontWeight={700} sx={{ color: "#003366" }}>4.9</Typography>
+                      <Typography variant="caption" color="text.secondary">Rating (9)</Typography>
+                    </Box>
+                  </Stack>
+                </Box>
+              </Grid>
+            </Grid>
           </SectionCard>
 
-          {/* <SectionCard> */}
-          <Box>
-
+          {/* --- MAIN TABS --- */}
+          <Box sx={{ width: '100%' }}>
             <Tabs
-              value={tab}
-              onChange={(e, value) => {
-                setTab(value);
-                setSelectedPost(null);
-              }}
-              centered
+              value={mainTab}
+              onChange={(e, val) => setMainTab(val)}
               sx={{
-                minHeight: { xs: 36, sm: 44 },
-                "& .MuiTab-root": { minHeight: { xs: 36, sm: 44 }, py: 0 },
-                "& .MuiTabs-indicator": { backgroundColor: SAFFRON },
-                "& .Mui-selected": { color: `${SAFFRON} !important` },
-                mb: 3,
-              }}
-            >
-              <Tab icon={<GridOnIcon fontSize="small" />} />
-              <Tab icon={<BookmarkBorderIcon fontSize="small" />} />
-            </Tabs>
-
-            {tab === 0 && (
-              <>
-                <Grid
-                  container
-                  spacing={{
-                    xs: "12px",
-                    sm: "15px",
-                    md: "20px",
-                  }}
-                  sx={{
-                    display: "flex",
-                    justifyContent: "center",
-                    alignContent: "center",
-                    alignItems: "center",
-                  }}
-                >
-
-
-                  {communityLoading ? (
-                    <>
-                      {Array.from({ length: 12 }).map((_, index) => (
-                        <Grid
-                          item
-                          xs={4}
-                          key={index}
-                          sx={{
-                            mt: 1,
-                            display: "flex",
-                            justifyContent: "center",
-                          }}
-                        >
-                          <Skeleton
-                            variant="rectangular"
-                            animation="wave"
-                            sx={{
-                              width: {
-                                xs: 108,
-                                sm: 125,
-                                md: 150,
-                                lg: 175,
-                              },
-                              height: {
-                                xs: 150,
-                                sm: 200,
-                                md: 225,
-                                lg: 250,
-                              },
-                              borderRadius: {
-                                xs: 0.5,
-                                sm: 1,
-                              },
-                            }}
-                          />
-                        </Grid>
-                      ))}
-                    </>
-                  ) : communityPosts.length === 0 ? (
-
-
-                    <Box
-                      sx={{
-                        width: "100%",
-                        maxWidth: {
-                          xs: "100%",
-                          sm: 440,
-                          md: 480,
-                        },
-
-                        textAlign: "center",
-
-                        flexDirection: "column",
-
-                        mx: "auto",
-
-                        display: "flex",
-
-                        justifyContent: "center",
-
-                        alignItems: "center",
-
-                        mt: {
-                          xs: "35%",
-                          sm: "7%",
-                        },
-                      }}
-                    >
-
-                      <Typography
-                        variant="h6"
-                        fontWeight={600}
-                        color="text.primary"
-                        sx={{
-                          fontSize: {
-                            xs: "0.95rem",
-                            sm: "1.05rem",
-                            md: "1.15rem",
-                          },
-                        }}
-                      >
-                        No Community Posts Yet
-                      </Typography>
-
-
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{
-                          mt: 1,
-
-                          fontSize: {
-                            xs: "0.75rem",
-                            sm: "0.85rem",
-                            md: "0.95rem",
-                          },
-                        }}
-                      >
-                        Community posts will appear here when available.
-                      </Typography>
-
-                    </Box>
-
-                  ) : (
-                    communityPosts.map((post) => (
-
-                      <Grid
-                        item
-                        xs={4}
-                        key={post._id}
-                        sx={{
-                          mt: 1,
-                        }}
-                      >
-
-                        {post.postImage && (
-                          <>
-                            <Box
-                              onClick={() => {
-                                setSelectedPost(
-                                  post
-                                );
-
-                                setSelectedImage(
-                                  Array.isArray(
-                                    post.postImage
-                                  )
-                                    ? post
-                                      .postImage[0]
-                                    : post.postImage
-                                );
-
-                                setOpenImage(
-                                  true
-                                );
-                              }}
-                              sx={{
-                                position:
-                                  "relative",
-                                cursor:
-                                  "pointer",
-                                width: { xs: 108, sm: 125, md: 150, lg: 175 },
-                                height: { xs: 150, sm: 200, md: 225, lg: 250 },
-                                overflow:
-                                  "hidden",
-                                borderRadius:
-                                {
-                                  xs: 0.5,
-                                  sm: 1,
-                                },
-                              }}
-                            >
-                              <IconButton
-                                onClick={(
-                                  e
-                                ) => {
-                                  e.stopPropagation();
-
-                                  handleMenuOpen(
-                                    e,
-                                    post
-                                  );
-                                }}
-                                sx={{
-                                  position:
-                                    "absolute",
-                                  top: 5,
-                                  right: 5,
-                                  zIndex: 2,
-                                  width: 24,
-                                  height: 24,
-                                  padding: 0,
-                                  color:
-                                    "#fff",
-                                  backgroundColor:
-                                    "rgba(0,0,0,0.5)",
-
-                                  "&:hover":
-                                  {
-                                    backgroundColor:
-                                      "rgba(0,0,0,0.7)",
-                                  },
-
-                                  "& .MuiSvgIcon-root":
-                                  {
-                                    fontSize: 16,
-                                  },
-                                }}
-                              >
-                                <MoreVertIcon />
-                              </IconButton>
-
-                              <img
-                                src={
-                                  Array.isArray(
-                                    post.postImage
-                                  )
-                                    ? post
-                                      .postImage[0]
-                                    : post.postImage
-                                }
-                                alt=""
-                                style={{
-                                  width:
-                                    "100%",
-                                  height:
-                                    "100%",
-                                  objectFit:
-                                    "cover",
-                                  display:
-                                    "block",
-                                }}
-                              />
-                            </Box>
-
-                            <Menu
-                              anchorEl={
-                                anchorEl
-                              }
-                              open={Boolean(
-                                anchorEl
-                              )}
-                              onClose={
-                                handleMenuClose
-                              }
-                            >
-                              <MenuItem
-                                onClick={() => {
-                                  handleMenuClose();
-                                  handleEdit(
-                                    selectedPost
-                                  );
-                                }}
-                              >
-                                <ListItemIcon>
-                                  <EditIcon fontSize="small" />
-                                </ListItemIcon>
-
-                                <ListItemText>
-                                  Edit
-                                </ListItemText>
-                              </MenuItem>
-
-                              <MenuItem
-                                onClick={() => {
-                                  handleMenuClose();
-                                  setDeleteOpen(
-                                    true
-                                  );
-                                }}
-                              >
-                                <ListItemIcon>
-                                  <DeleteIcon
-                                    fontSize="small"
-                                    color="error"
-                                  />
-                                </ListItemIcon>
-
-                                <ListItemText>
-                                  Delete
-                                </ListItemText>
-                              </MenuItem>
-                            </Menu>
-
-                            <Dialog
-                              open={
-                                deleteOpen
-                              }
-                              onClose={(
-                                event,
-                                reason
-                              ) => {
-                                if (
-                                  reason ===
-                                  "backdropClick"
-                                ) {
-                                  return;
-                                }
-
-                                setDeleteOpen(
-                                  false
-                                );
-                              }}
-                              fullWidth
-                              maxWidth="xs"
-                              PaperProps={{
-                                sx: {
-                                  width: {
-                                    xs: "95%",
-                                    sm: "100%",
-                                  },
-                                  m: {
-                                    xs: 1.5,
-                                    sm: 2,
-                                  },
-                                  borderRadius:
-                                  {
-                                    xs: 2,
-                                    sm: 3,
-                                  },
-                                },
-                              }}
-                            >
-                              <DialogTitle
-                                sx={{
-                                  display:
-                                    "flex",
-                                  alignItems:
-                                    "center",
-                                  gap: 1,
-                                  fontWeight:
-                                    600,
-                                }}
-                              >
-                                <WarningAmberRoundedIcon color="error" />
-
-                                Delete Post ?
-                              </DialogTitle>
-
-                              <DialogContent
-                                sx={{
-                                  pt: 1,
-                                }}
-                              >
-                                <Typography
-                                  sx={{
-                                    fontSize:
-                                    {
-                                      xs: "0.9rem",
-                                      sm: "1rem",
-                                    },
-                                    color:
-                                      "text.secondary",
-                                  }}
-                                >
-                                  Are you
-                                  sure you
-                                  want to
-                                  delete
-                                  this
-                                  post?
-                                </Typography>
-                              </DialogContent>
-
-                              <DialogActions
-                                sx={{
-                                  px: {
-                                    xs: 2,
-                                    sm: 3,
-                                  },
-                                  pb: {
-                                    xs: 2,
-                                    sm: 3,
-                                  },
-                                  gap: 1,
-                                }}
-                              >
-                                <Button
-                                  variant="contained"
-                                  onClick={() =>
-                                    setDeleteOpen(
-                                      false
-                                    )
-                                  }
-                                  sx={{
-                                    flex: 1,
-                                    py: 1,
-                                    fontSize:
-                                    {
-                                      xs: "0.8rem",
-                                      sm: "0.9rem",
-                                    },
-                                    fontWeight:
-                                      600,
-                                    color:
-                                      "#ffff",
-                                    bgcolor:
-                                      "grey.700",
-                                    textTransform:
-                                      "none",
-                                  }}
-                                >
-                                  Cancel
-                                </Button>
-
-                                <Button
-                                  variant="contained"
-                                  color="error"
-                                  disabled={
-                                    imageDeleteLoading
-                                  }
-                                  onClick={() => {
-                                    const postId =
-                                      selectedPost._id;
-
-                                    handleMenuClose();
-
-                                    handleDelete(
-                                      postId
-                                    );
-                                  }}
-                                  sx={{
-                                    flex: 1,
-                                    py: 1,
-                                    fontSize:
-                                    {
-                                      xs: "0.8rem",
-                                      sm: "0.9rem",
-                                    },
-                                    fontWeight:
-                                      600,
-                                    textTransform:
-                                      "none",
-                                  }}
-                                >
-                                  {imageDeleteLoading
-                                    ? "Deleting..."
-                                    : "Delete"}
-                                </Button>
-                              </DialogActions>
-                            </Dialog>
-
-                            <Dialog
-                              open={
-                                editOpen
-                              }
-                              onClose={(
-                                event,
-                                reason
-                              ) => {
-                                if (
-                                  reason ===
-                                  "backdropClick"
-                                ) {
-                                  return;
-                                }
-
-                                setEditOpen(
-                                  false
-                                );
-                              }}
-                              fullWidth
-                              maxWidth="sm"
-                              PaperProps={{
-                                sx: {
-                                  borderRadius:
-                                  {
-                                    xs: 0,
-                                    sm: 3,
-                                  },
-                                  m: {
-                                    xs: 0,
-                                    sm: 2,
-                                  },
-                                },
-                              }}
-                            >
-                              <DialogTitle
-                                sx={{
-                                  display:
-                                    "flex",
-                                  alignItems:
-                                    "center",
-                                  justifyContent:
-                                    "space-between",
-                                  fontWeight:
-                                    600,
-                                  fontSize:
-                                  {
-                                    xs: "1rem",
-                                    sm: "1.15rem",
-                                  },
-                                  py: 1.5,
-                                  px: 2,
-                                }}
-                              >
-                                Edit Post
-
-                                <IconButton
-                                  onClick={() =>
-                                    setEditOpen(
-                                      false
-                                    )
-                                  }
-                                  size="small"
-                                  sx={{
-                                    color:
-                                      "#666",
-                                    "&:hover":
-                                    {
-                                      bgcolor:
-                                        "#f5f5f5",
-                                    },
-                                  }}
-                                >
-                                  <CloseIcon fontSize="small" />
-                                </IconButton>
-                              </DialogTitle>
-
-                              <DialogContent
-                                dividers
-                                sx={{
-                                  px: {
-                                    xs: 1.5,
-                                    sm: 3,
-                                  },
-                                  py: 2,
-                                }}
-                              >
-                                <TextField
-                                  fullWidth
-                                  multiline
-                                  minRows={3}
-                                  maxRows={6}
-                                  label="Description"
-                                  placeholder="Write something about this post..."
-                                  value={editDescription}
-                                  onChange={(e) =>
-                                    setEditDescription(e.target.value)
-                                  }
-                                  sx={{
-                                    mt: 2,
-                                    "& .MuiOutlinedInput-root": {
-                                      borderRadius: 2,
-                                    },
-                                  }}
-                                />
-                                <Box
-                                  sx={{
-                                    mt: 2,
-                                  }}
-                                >
-                                  {previewImage && (
-                                    <Box
-                                      component="img"
-                                      src={
-                                        editImage
-                                          ? URL.createObjectURL(
-                                            editImage
-                                          )
-                                          : previewImage
-                                      }
-                                      alt="Preview"
-                                      sx={{
-                                        width:
-                                          "100%",
-                                        height:
-                                        {
-                                          xs: 160,
-                                          sm: 220,
-                                          md: 280,
-                                        },
-                                        objectFit:
-                                          "contain",
-                                        borderRadius: 2,
-                                        mb: 1.5,
-                                      }}
-                                    />
-                                  )}
-                                  <Box sx={{ display: "flex", justifyContent: "end", mb: 1.5 }}>
-                                    <Button
-                                      variant="contained"
-                                      size="small"
-                                      onClick={
-                                        openImageMenu
-                                      }
-                                      sx={{
-                                        width:
-                                          "fit-content",
-                                        minWidth:
-                                          "unset",
-                                        height: 36,
-                                        bgcolor:
-                                          "#FF9933",
-                                        color:
-                                          "#fff",
-                                        fontWeight:
-                                          600,
-                                        fontSize:
-                                          "0.8rem",
-                                        textTransform:
-                                          "none",
-                                        borderRadius: 2,
-                                        px: 2,
-
-                                        "&:hover":
-                                        {
-                                          bgcolor:
-                                            "#E68A00",
-                                        },
-                                      }}
-                                    >
-                                      {!previewImage
-                                        ? "Add Image"
-                                        : "Change Image"}
-                                    </Button>
-                                  </Box>
-
-
-                                  <Menu
-                                    anchorEl={
-                                      imageMenuAnchor
-                                    }
-                                    open={
-                                      isImageMenuOpen
-                                    }
-                                    onClose={
-                                      closeImageMenu
-                                    }
-                                    anchorOrigin={{
-                                      vertical:
-                                        "top",
-                                      horizontal:
-                                        "center",
-                                    }}
-                                    transformOrigin={{
-                                      vertical:
-                                        "bottom",
-                                      horizontal:
-                                        "center",
-                                    }}
-                                  >
-                                    <MenuItem
-                                      component="label"
-                                      dense
-                                    >
-                                      <ListItemIcon>
-                                        <CameraAltIcon
-                                          fontSize="small"
-                                          sx={{
-                                            color:
-                                              "#FF9933",
-                                          }}
-                                        />
-                                      </ListItemIcon>
-
-                                      <ListItemText
-                                        primaryTypographyProps={{
-                                          fontSize:
-                                            "0.85rem",
-                                        }}
-                                      >
-                                        Camera
-                                      </ListItemText>
-
-                                      <input
-                                        hidden
-                                        type="file"
-                                        accept="image/*"
-                                        capture="environment"
-                                        onChange={
-                                          onImageSelected
-                                        }
-                                      />
-                                    </MenuItem>
-
-                                    <MenuItem
-                                      component="label"
-                                      dense
-                                    >
-                                      <ListItemIcon>
-                                        <InsertDriveFileIcon
-                                          fontSize="small"
-                                          sx={{
-                                            color:
-                                              "#FF9933",
-                                          }}
-                                        />
-                                      </ListItemIcon>
-
-                                      <ListItemText
-                                        primaryTypographyProps={{
-                                          fontSize:
-                                            "0.85rem",
-                                        }}
-                                      >
-                                        Gallery
-                                      </ListItemText>
-
-                                      <input
-                                        hidden
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={
-                                          onImageSelected
-                                        }
-                                      />
-                                    </MenuItem>
-                                  </Menu>
-                                </Box>
-
-                              </DialogContent>
-
-                              <DialogActions
-                                sx={{
-                                  p: {
-                                    xs: 1.5,
-                                    sm: 2,
-                                  },
-                                  display:
-                                    "flex",
-                                  flexDirection:
-                                  {
-                                    xs: "column",
-                                    sm: "row",
-                                  },
-                                  gap: 1,
-                                }}
-                              >
-                                <Stack
-                                  direction="row"
-                                  spacing={2}
-                                  justifyContent="flex-end"
-                                  sx={{
-                                    pt: 2,
-                                  }}
-                                >
-                                  <Button
-                                    variant="contained"
-                                    size="small"
-                                    onClick={
-                                      handleReset
-                                    }
-                                    sx={{
-                                      width:
-                                        "fit-content",
-                                      minWidth:
-                                        "unset",
-                                      px: 2,
-                                      height: 36,
-                                      backgroundColor:
-                                        "#838282",
-                                      color:
-                                        "#fff",
-                                      fontWeight:
-                                        600,
-                                      fontSize:
-                                        "0.8rem",
-                                      textTransform:
-                                        "none",
-                                      borderRadius: 2,
-                                    }}
-                                  >
-                                    Reset
-                                  </Button>
-
-                                  <Button
-                                    variant="contained"
-                                    size="small"
-                                    disabled={
-                                      imagePostLoading
-                                    }
-                                    onClick={
-                                      handleUpdate
-                                    }
-                                    sx={{
-                                      width:
-                                        "fit-content",
-                                      minWidth:
-                                        "unset",
-                                      px: 2,
-                                      height: 36,
-                                      bgcolor:
-                                        "#FF9933",
-                                      color:
-                                        "#fff",
-                                      fontWeight:
-                                        600,
-                                      fontSize:
-                                        "0.8rem",
-                                      textTransform:
-                                        "none",
-                                      borderRadius: 2,
-
-                                      "&:hover":
-                                      {
-                                        bgcolor:
-                                          "#E68A00",
-                                      },
-                                    }}
-                                  >
-                                    {imagePostLoading
-                                      ? "Saving..."
-                                      : "Save"}
-                                  </Button>
-                                </Stack>
-                              </DialogActions>
-                            </Dialog>
-
-                            {editImage && (
-                              <img
-                                src={URL.createObjectURL(
-                                  editImage
-                                )}
-                                alt="Preview"
-                                width={150}
-                                style={{
-                                  marginTop: 10,
-                                  borderRadius: 8,
-                                }}
-                              />
-                            )}
-                          </>
-                        )}
-
-                      </Grid>
-
-                    ))
-
-                  )}
-
-                </Grid>
-
-                {communityPosts.length > 0 && (
-                  <Box
-                    ref={setLoadMoreRef}
-
-                    sx={{
-                      width: "100%",
-
-                      minHeight: 70,
-
-                      display: "flex",
-
-                      justifyContent: "center",
-
-                      alignItems: "center",
-
-                      py: 3,
-                    }}
-                  >
-
-                    {loadingMorePosts && (
-                      <CircularProgress
-                        size={28}
-                        thickness={4}
-                        sx={{
-                          color: "#FF9933",
-                        }}
-                      />
-                    )}
-
-
-                    {!loadingMorePosts &&
-                      !hasMorePosts && (
-                        <Typography
-                          color="text.secondary"
-                          sx={{
-                            fontSize: "0.8rem",
-                          }}
-                        >
-                          No more posts
-                        </Typography>
-                      )}
-
-                  </Box>
-                )}
-
-              </>
-            )}
-            {tab === 1 && (
-              <Grid
-                container
-                spacing={{
-                  xs: "12px",
-                  sm: "15px",
-                  md: "20px",
-                }}
-                sx={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                {/* Initial loading - show skeletons */}
-                {savedLoading && savedPost?.length === 0 ? (
-                  <>
-                    {Array.from({ length: 12 }).map((_, index) => (
-                      <Grid
-                        item
-                        xs={4}
-                        key={`saved-skeleton-${index}`}
-                        sx={{ mt: 0.2 }}
-                      >
-                        <Skeleton
-                          variant="rectangular"
-                          animation="wave"
-                          sx={{
-                            width: {
-                              xs: 108,
-                              sm: 125,
-                              md: 150,
-                              lg: 175,
-                            },
-                            height: {
-                              xs: 150,
-                              sm: 200,
-                              md: 225,
-                              lg: 250,
-                            },
-                            borderRadius: {
-                              xs: 0.5,
-                              sm: 1,
-                            },
-                          }}
-                        />
-                      </Grid>
-                    ))}
-                  </>
-                ) : savedPost?.length === 0 ? (
-                  /* No saved posts */
-                  <Box
-                    sx={{
-                      width: "100%",
-                      maxWidth: {
-                        xs: "100%",
-                        sm: 440,
-                        md: 480,
-                      },
-                      textAlign: "center",
-                      flexDirection: "column",
-                      mx: "auto",
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      mt: {
-                        xs: "35%",
-                        sm: "7%",
-                      },
-                    }}
-                  >
-                    <Typography
-                      variant="h6"
-                      fontWeight={600}
-                      color="text.primary"
-                      sx={{
-                        fontSize: {
-                          xs: "0.95rem",
-                          sm: "1.05rem",
-                          md: "1.15rem",
-                        },
-                      }}
-                    >
-                      No Saved Posts Yet
-                    </Typography>
-
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{
-                        mt: 1,
-                        fontSize: {
-                          xs: "0.75rem",
-                          sm: "0.85rem",
-                          md: "0.95rem",
-                        },
-                      }}
-                    >
-                      Saved posts will appear here when available.
-                    </Typography>
-                  </Box>
-                ) : (
-                  <>
-                    {/* Saved Posts */}
-                    {savedPost?.map((post) => (
-                      <Grid
-                        item
-                        xs={4}
-                        key={post._id}
-                        sx={{ mt: 0.2 }}
-                      >
-                        {post.postId?.postImage && (
-                          <Box
-                            onClick={() => {
-                              setSelectedPost(post);
-
-                              setSelectedImage(
-                                Array.isArray(
-                                  post.postId.postImage
-                                )
-                                  ? post.postId.postImage[0]
-                                  : post.postId.postImage
-                              );
-
-                              setOpenImage(true);
-                            }}
-                            sx={{
-                              position: "relative",
-                              cursor: "pointer",
-                              width: {
-                                xs: 108,
-                                sm: 125,
-                                md: 150,
-                                lg: 175,
-                              },
-                              height: {
-                                xs: 150,
-                                sm: 200,
-                                md: 225,
-                                lg: 250,
-                              },
-                              overflow: "hidden",
-                              borderRadius: {
-                                xs: 0.5,
-                                sm: 1,
-                              },
-                              display: "flex",
-                              justifyContent: "center",
-                              alignItems: "center",
-                            }}
-                          >
-                            <img
-                              src={
-                                Array.isArray(
-                                  post.postId.postImage
-                                )
-                                  ? post.postId.postImage[0]
-                                  : post.postId.postImage
-                              }
-                              alt=""
-                              style={{
-                                width: "100%",
-                                height: "100%",
-                                objectFit: "cover",
-                                display: "block",
-                              }}
-                            />
-                          </Box>
-                        )}
-                      </Grid>
-                    ))}
-
-                    {/* Loading next page */}
-                    {savedLoading && savedPost?.length > 0 && (
-                      <>
-                        {Array.from({ length: 3 }).map((_, index) => (
-                          <Grid
-                            item
-                            xs={4}
-                            key={`next-skeleton-${index}`}
-                            sx={{ mt: 0.2 }}
-                          >
-                            <Skeleton
-                              variant="rectangular"
-                              animation="wave"
-                              sx={{
-                                width: {
-                                  xs: 108,
-                                  sm: 125,
-                                  md: 150,
-                                  lg: 175,
-                                },
-                                height: {
-                                  xs: 150,
-                                  sm: 200,
-                                  md: 225,
-                                  lg: 250,
-                                },
-                                borderRadius: {
-                                  xs: 0.5,
-                                  sm: 1,
-                                },
-                              }}
-                            />
-                          </Grid>
-                        ))}
-                      </>
-                    )}
-
-                    {/* Scroll detection element */}
-                    {savedHasNextPage && (
-                      <Box
-                        ref={savedPostObserverRef}
-                        sx={{
-                          width: "100%",
-                          height: "30px",
-                        }}
-                      />
-                    )}
-                  </>
-                )}
-              </Grid>
-            )}
-            <Dialog
-              open={openImage}
-              onClose={(event, reason) => {
-                if (reason === "backdropClick") return;
-
-                setOpenImage(false);
-                setSelectedPost(null);
-              }}
-              maxWidth="lg"
-              fullWidth
-              PaperProps={{
-                sx: {
-                  borderRadius: { xs: 2, sm: 3 },
-                  overflow: "hidden",
-                  bgcolor: "#111",
-                  m: { xs: 1.5, sm: 2 },
-                  width: { xs: "calc(100% - 24px)", sm: "calc(100% - 32px)" },
-                  maxWidth: 1100,
-                  maxHeight: { xs: "calc(100dvh - 24px)", sm: "calc(100dvh - 32px)" },
-                  display: "flex",
-                  flexDirection: "column",
+                minHeight: 48,
+                borderBottom: '1px solid #E0E0E0',
+                '& .MuiTabs-indicator': { backgroundColor: SAFFRON, height: 3 },
+                '& .MuiTab-root': {
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  fontSize: '0.95rem',
+                  color: TEXT_GRAY,
+                  minWidth: 'auto',
+                  mr: 4,
+                  px: 0,
+                  '&.Mui-selected': { color: SAFFRON },
                 },
               }}
             >
-              {(() => {
-                const viewerPost = tab === 1 ? selectedPost?.postId : selectedPost;
+              <Tab label="About" />
+              <Tab label="Reviews (9)" />
+              <Tab label="Rides (17)" />
+              <Tab label="Route alerts (2)" />
+            </Tabs>
 
-                const viewerAuthorId =
-                  viewerPost?.authorId?._id ||
-                  viewerPost?.authorId ||
-                  viewerPost?.userId?._id ||
-                  viewerPost?.userId;
-
-                const currentUserId = currentUser?._id || currentUser?.id || user?.id;
-
-                const isPostOwner =
-                  viewerAuthorId &&
-                  currentUserId &&
-                  String(viewerAuthorId) === String(currentUserId);
-
-                return (
-                  <Box
-                    sx={{
-                      display: "flex",
-                      flexDirection: { xs: "column", md: "row" },
-                      flex: "1 1 auto",
-                      minHeight: 0,
-                      height: { xs: "auto", md: "min(85dvh, 760px)" },
-                    }}
-                  >
-                    {/* IMAGE BOX */}
-                    <Box
-                      sx={{
-                        position: "relative",
-                        flex: { xs: "0 0 auto", md: "1 1 0" },
-                        height: {
-                          xs: "min(50dvh, 360px)",
-                          sm: "min(60dvh, 480px)",
-                          md: "auto",
-                        },
-                        minWidth: 0,
-                        minHeight: 0,
-                        bgcolor: "#000",
-                        overflow: "hidden",
-                      }}
-                    >
-                      {tab === 1 && (
-                        <Tooltip title="Remove from saved">
-                          <IconButton
-                            aria-label="Remove from saved"
-                            size="small"
-                            onClick={async () => {
-                              if (!selectedPost?.postId?._id) return;
-
-                              await removeSavedPost(selectedPost.postId._id);
-                              setOpenImage(false);
-                              setSelectedPost(null);
-                            }}
-                            sx={{
-                              position: "absolute",
-                              top: 10,
-                              left: 10,
-                              width: 34,
-                              height: 34,
-                              bgcolor: "rgba(0,0,0,0.55)",
-                              zIndex: 3,
-                              "&:hover": { bgcolor: "rgba(255,255,255,0.9)" },
-                            }}
-                          >
-                            {removeLoading ? (
-                              <CircularProgress
-                                size={18}
-                                sx={{ color: "#ff5e00" }}
-                              />
-                            ) : (
-                              <BookmarkBorderIcon
-                                fontSize="small"
-                                sx={{ color: "#ff5e00" }}
-                              />
-                            )}
-                          </IconButton>
-                        </Tooltip>
-                      )}
-
-                      <IconButton
-                        aria-label="Close"
-                        size="small"
-                        onClick={() => {
-                          setOpenImage(false);
-                          setSelectedPost(null);
-                        }}
-                        sx={{
-                          position: "absolute",
-                          top: 10,
-                          right: 10,
-                          width: 34,
-                          height: 34,
-                          color: "#fff",
-                          bgcolor: "rgba(0,0,0,0.55)",
-                          zIndex: 3,
-                          "&:hover": {
-                            color: "#111",
-                            bgcolor: "#fff",
-                          },
-                        }}
-                      >
-                        <CloseIcon fontSize="small" />
-                      </IconButton>
-
-                      <Box
-                        component="img"
-                        src={selectedImage}
-                        alt="Post"
-                        sx={{
-                          position: "absolute",
-                          inset: 0,
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "contain",
-                        }}
-                      />
-                    </Box>
-
-                    {/* DESCRIPTION BOX */}
-                    <Box
-                      sx={{
-                        flex: { xs: "1 1 auto", md: "0 0 360px", lg: "0 0 380px" },
-                        width: { xs: "100%", md: 360, lg: 380 },
-                        maxWidth: { xs: "100%", md: 380 },
-                        minWidth: 0,
-                        minHeight: { xs: 150, sm: 160, md: 0 },
-                        maxHeight: { xs: "45vh", md: "none" },
-                        bgcolor: "#fff",
-                        color: "#222",
-                        p: {
-                          xs: 1.75,
-                          sm: 2.25,
-                          md: 2.75,
-                          lg: 3,
-                        },
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: {
-                          xs: 1.5,
-                          sm: 2,
-                          md: 2.5,
-                        },
-                        overflow: "hidden",
-                        boxSizing: "border-box",
-                      }}
-                    >
-                      {/* Description Section */}
-                      <Box
-                        sx={{
-                          flex: 1,
-                          minHeight: 0,
-                          width: "100%",
-                          overflowY: "auto",
-                          overflowX: "hidden",
-                          overscrollBehavior: "contain",
-                          WebkitOverflowScrolling: "touch",
-                          overflowWrap: "anywhere",
-                          wordBreak: "break-word",
-                          pr: { xs: 0.5, sm: 1 },
-                        }}
-                      >
-                        <Typography
-                          variant="subtitle1"
-                          sx={{
-                            fontWeight: 700,
-                            mb: {
-                              xs: 0.75,
-                              sm: 1,
-                            },
-                            fontSize: {
-                              xs: "0.95rem",
-                              sm: "1rem",
-                            },
-                            color: "#333",
-                          }}
-                        >
-                          Description
-                        </Typography>
-
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            whiteSpace: "pre-wrap",
-                            overflowWrap: "anywhere",
-                            wordBreak: "break-word",
-                            color: viewerPost?.description ? "#444" : "#999",
-                            lineHeight: {
-                              xs: 1.55,
-                              sm: 1.65,
-                              md: 1.7,
-                            },
-                            fontSize: {
-                              xs: "0.85rem",
-                              sm: "0.9rem",
-                              md: "0.95rem",
-                            },
-                            maxWidth: "100%",
-                          }}
-                        >
-                          {viewerPost?.description || "No description added."}
-                        </Typography>
-                      </Box>
-
-                      {/* Edit Button */}
-                      <Box
-                        sx={{
-                          display: "flex",
-                          justifyContent: "flex-end",
-                          flexShrink: 0,
-                          width: "100%",
-                        }}
-                      >
-                        {isPostOwner && tab !== 1 && (
-                          <Button
-                            variant="contained"
-                            startIcon={<EditIcon />}
-                            onClick={() => {
-                              setOpenImage(false);
-                              handleEdit(viewerPost);
-                            }}
-                            fullWidth={false}
-                            sx={{
-                              alignSelf: {
-                                xs: "stretch",
-                                sm: "flex-start",
-                              },
-                              width: {
-                                xs: "100%",
-                                sm: "auto",
-                              },
-                              minHeight: {
-                                xs: 42,
-                                sm: 44,
-                              },
-                              px: {
-                                xs: 2,
-                                sm: 2.5,
-                              },
-                              bgcolor: SAFFRON,
-                              color: "#fff",
-                              textTransform: "none",
-                              fontWeight: 600,
-                              fontSize: {
-                                xs: "0.85rem",
-                                sm: "0.9rem",
-                              },
-                              borderRadius: 2,
-                              flexShrink: 0,
-                              boxShadow: "none",
-                              "&:hover": {
-                                bgcolor: "#d95706",
-                                boxShadow: "none",
-                              },
-                              "&:active": {
-                                transform: "scale(0.98)",
-                              },
-                            }}
-                          >
-                            Edit Post
-                          </Button>
-                        )}
-                      </Box>
-                    </Box>
-                  </Box>
-                );
-              })()}
-            </Dialog>
+            {/* Tab Content Area */}
+            <Box sx={{ mt: 3 }}>
+              {mainTab === 0 && renderAbout()}
+              {mainTab === 1 && <Typography sx={{ p: 3, textAlign: 'center', color: TEXT_GRAY }}>Reviews content coming soon...</Typography>}
+              {mainTab === 2 && <Typography sx={{ p: 3, textAlign: 'center', color: TEXT_GRAY }}>Rides content coming soon...</Typography>}
+              {mainTab === 3 && renderRouteAlerts()}
+            </Box>
           </Box>
+
         </Stack>
 
+        {/* --- Modals & Dialogs (Keeping existing logic) --- */}
         <ProfileModal
           open={profileModalOpen}
           selectedProfile={selectedProfile}
-          onClose={() => {
-            setProfileModalOpen(false);
-          }}
+          onClose={() => setProfileModalOpen(false)}
         />
+        
+        {editProfile && (
+            <EditProfile open={editProfile} onClose={() => setEditProfile(false)} />
+        )}
+        
+        {/* Post Edit/Delete Dialogs and other logic can remain hidden or reused as needed, 
+            but visually are removed from the main screen as per new design */}
       </Box>
     </PageLayout>
   );

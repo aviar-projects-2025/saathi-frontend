@@ -325,7 +325,7 @@ function StepProgress({ steps, step }) {
 /* ═══════════════════════════════════════════════════════
    MAIN COMPONENT
    ═══════════════════════════════════════════════════════ */
-export default function OfferRide({ ride, onSave, onClose }) {
+export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen }) {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -375,6 +375,62 @@ export default function OfferRide({ ride, onSave, onClose }) {
       confirmCostSharing: !!ride.confirmCostSharing,
     });
   }, [ride, mode]);
+
+  /*
+   * When a member clicks "I can drive" on a ride request, prefill the offer
+   * form with that request's route, requested departure time, and location data.
+   * This is separate from the edit-ride hydration above so normal Offer Ride
+   * creation and editing keep their existing behaviour.
+   */
+  useEffect(() => {
+    if (!requestRide) return;
+
+    const start = requestRide.startTime ? new Date(requestRide.startTime) : null;
+    const pad = (n) => String(n).padStart(2, "0");
+    const validDate = start && !Number.isNaN(start.getTime());
+
+    setMode("offer");
+    setStep(0);
+    setSubmitted(false);
+    setShowErrors(false);
+    setErrors({});
+    setServerError("");
+    setOfferForm({
+      ...INITIAL_OFFER,
+      from: requestRide.from || requestRide.fromLocation?.address || "",
+      destination:
+        requestRide.destination || requestRide.destinationLocation?.address || "",
+      fromLocation: requestRide.fromLocation || {
+        address: requestRide.from || "",
+        latitude: null,
+        longitude: null,
+      },
+      destinationLocation: requestRide.destinationLocation || {
+        address: requestRide.destination || "",
+        latitude: null,
+        longitude: null,
+      },
+      distanceKm: requestRide.distanceKm ?? null,
+      date: validDate
+        ? `${start.getFullYear()}-${pad(start.getMonth() + 1)}-${pad(start.getDate())}`
+        : "",
+      time: validDate ? `${pad(start.getHours())}:${pad(start.getMinutes())}` : "",
+      category: REQUEST_CATEGORIES.includes(requestRide.category)
+        ? requestRide.category
+        : requestRide.category
+          ? "Other"
+          : "",
+      customCategory:
+        requestRide.category && !REQUEST_CATEGORIES.includes(requestRide.category)
+          ? requestRide.category
+          : "",
+      description: requestRide.description || requestRide.notes || "",
+      availableSeats: Math.max(1, Number(requestRide.passengers || requestRide.seatsRequested || 1)),
+      timeZone: requestRide.timeZone || INITIAL_OFFER.timeZone,
+      notes: requestRide.notes || "",
+      status: "OPEN",
+    });
+  }, [requestRide]);
 
   /* Update helpers */
   const updateOffer = (key, value) => {
@@ -528,24 +584,59 @@ export default function OfferRide({ ride, onSave, onClose }) {
   };
 
   /* ─────── SUBMIT ─────── */
+
   const createOffer = async () => {
+    // Keep your existing form validation before this point.
     try {
-      setSaving(true);
-      setServerError("");
-      await axios.post(`${Api}/rides/`, buildOfferPayload());
-      toast.success("Ride posted. We'll text you when someone requests a seat.", TOASTS);
-      setSubmitted(true);
-      setTimeout(() => {
-        if (onClose) onClose();
-        else navigate("/myride", { state: { tab: 2, refresh: true, refreshKey: Date.now() } });
-      }, 1400);
-    } catch (err) {
-      setServerError(err.response?.data?.message || "Failed to create ride");
-      toast.error(err.response?.data?.message || "Failed to create ride", TOASTS);
-    } finally {
-      setSaving(false);
+      const payload = buildOfferPayload();
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        toast.error("Please log in to continue");
+        return;
+      }
+
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      if (requestRide) {
+        // I Can Help: send a proposal, not a public Ride.
+        const response = await axios.post(
+          `${Api}/help-proposals`,
+          {
+            requestRideId: requestRide._id,
+            offerDetails: payload,
+          },
+          config
+        );
+
+        toast.success(
+          response.data?.message ||
+          "Your offer has been sent to the passenger"
+        );
+
+        onClose();
+        return;
+      }
+
+      // Normal offer posting remains unchanged.
+      await axios.post(`${Api}/rides/`, payload, config);
+
+      toast.success("Ride posted successfully");
+      onClose();
+    } catch (error) {
+      console.error("Unable to submit offer:", error);
+
+      toast.error(
+        error.response?.data?.message ||
+        "Unable to submit your offer"
+      );
     }
   };
+
 
   const updateOfferRide = async () => {
     try {
@@ -694,73 +785,76 @@ export default function OfferRide({ ride, onSave, onClose }) {
         >
           {mode === "offer"
             ? step === 0
-              ? "Post a ride"
+              ? requestRide ? "Offer a ride for this request" : "Post a ride"
               : step === 1
-              ? "Ride options"
-              : "Review your ride"
+                ? "Ride options"
+                : "Review your ride"
             : "Post a ride"}
         </Typography>
         <Typography sx={{ color: MUTED, fontSize: { xs: 13.5, sm: 14.5 }, mb: 3 }}>
           {mode === "offer"
             ? step === 0
-              ? "Share your journey with the community."
+              ? requestRide ? "Review the requested trip details and add your ride options." : "Share your journey with the community."
               : step === 1
-              ? "Tell riders what to expect."
-              : "This is how members will see it in Find Ride."
+                ? "Tell riders what to expect."
+                : "This is how members will see it in Find Ride."
             : "Tell drivers where you need to go."}
         </Typography>
 
-        {/* ─── Mode toggle ─── */}
-        <Stack direction="row" spacing={1} sx={{ mb: 3 }}>
-          <Button
-            fullWidth
-            onClick={() => {
-              setMode("offer");
-              formReset();
-            }}
-            sx={{
-              textTransform: "none",
-              fontWeight: 700,
-              fontSize: { xs: 13.5, sm: 14 },
-              py: 1.25,
-              borderRadius: 2,
-              bgcolor: mode === "offer" ? RUST : "#fff",
-              color: mode === "offer" ? "#fff" : INK,
-              border: `1px solid ${mode === "offer" ? RUST : BORDER}`,
-              boxShadow: "none",
-              "&:hover": {
-                bgcolor: mode === "offer" ? RUST_DARK : "#F4F0EA",
+        {/* When opened from "I can drive", the user has already chosen to offer a ride.
+            Hide the request/offer switch to avoid an accidental switch to "I need a ride". */}
+        {!requestRide && (
+          <Stack direction="row" spacing={1} sx={{ mb: 3 }}>
+            <Button
+              fullWidth
+              onClick={() => {
+                setMode("offer");
+                formReset();
+              }}
+              sx={{
+                textTransform: "none",
+                fontWeight: 700,
+                fontSize: { xs: 13.5, sm: 14 },
+                py: 1.25,
+                borderRadius: 2,
+                bgcolor: mode === "offer" ? RUST : "#fff",
+                color: mode === "offer" ? "#fff" : INK,
+                border: `1px solid ${mode === "offer" ? RUST : BORDER}`,
                 boxShadow: "none",
-              },
-            }}
-          >
-            I'm offering a ride
-          </Button>
-          <Button
-            fullWidth
-            onClick={() => {
-              setMode("request");
-              formReset();
-            }}
-            sx={{
-              textTransform: "none",
-              fontWeight: 700,
-              fontSize: { xs: 13.5, sm: 14 },
-              py: 1.25,
-              borderRadius: 2,
-              bgcolor: mode === "request" ? RUST : "#fff",
-              color: mode === "request" ? "#fff" : INK,
-              border: `1px solid ${mode === "request" ? RUST : BORDER}`,
-              boxShadow: "none",
-              "&:hover": {
-                bgcolor: mode === "request" ? RUST_DARK : "#F4F0EA",
+                "&:hover": {
+                  bgcolor: mode === "offer" ? RUST_DARK : "#F4F0EA",
+                  boxShadow: "none",
+                },
+              }}
+            >
+              I'm offering a ride
+            </Button>
+            <Button
+              fullWidth
+              onClick={() => {
+                setMode("request");
+                formReset();
+              }}
+              sx={{
+                textTransform: "none",
+                fontWeight: 700,
+                fontSize: { xs: 13.5, sm: 14 },
+                py: 1.25,
+                borderRadius: 2,
+                bgcolor: mode === "request" ? RUST : "#fff",
+                color: mode === "request" ? "#fff" : INK,
+                border: `1px solid ${mode === "request" ? RUST : BORDER}`,
                 boxShadow: "none",
-              },
-            }}
-          >
-            I need a ride
-          </Button>
-        </Stack>
+                "&:hover": {
+                  bgcolor: mode === "request" ? RUST_DARK : "#F4F0EA",
+                  boxShadow: "none",
+                },
+              }}
+            >
+              I need a ride
+            </Button>
+          </Stack>
+        )}
 
         {/* ══════════════════════════════════════════════════════
            REQUEST FLOW (single page)
@@ -1564,8 +1658,8 @@ export default function OfferRide({ ride, onSave, onClose }) {
                   ? "Updating..."
                   : "Posting..."
                 : isEditMode
-                ? "Update ride"
-                : "Post ride"}
+                  ? "Update ride"
+                  : "Post ride"}
             </Button>
           </Stack>
         )}

@@ -3,31 +3,10 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 import {
-  Container,
-  Typography,
-  CircularProgress,
-  Box,
-  TextField,
-  MenuItem,
-  Button,
-  Chip,
-  Collapse,
-  useMediaQuery,
-  useTheme,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  LinearProgress,
-  DialogActions,
-  IconButton,
-  Checkbox,
-  FormControlLabel,
-  FormGroup,
-  Paper,
-  Divider,
-  Stack,
-  Select,
-  FormControl,
+  Container, Typography, CircularProgress, Box, TextField, MenuItem,
+  Button, Chip, Collapse, useMediaQuery, useTheme, Dialog, DialogTitle,
+  DialogContent, LinearProgress, DialogActions, IconButton, Checkbox,
+  FormControlLabel, FormGroup, Paper, Divider, Stack, Select, FormControl,
 } from "@mui/material";
 
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
@@ -35,32 +14,19 @@ import CloseIcon from "@mui/icons-material/Close";
 import FilterListOffIcon from "@mui/icons-material/FilterListOff";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import SearchIcon from "@mui/icons-material/Search";
-import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
-import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
-import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
-import TrainIcon from "@mui/icons-material/Train";
-import FlightIcon from "@mui/icons-material/Flight";
 
-import RideCard from "./RideCard.jsx";
 import RideList from "./RideCard2.jsx";
 import Api from "../Api";
 import OfferRide from "./OfferRide.jsx";
 import { useUser } from "../context/userConetext.jsx";
 
 /* ─────────── Design tokens ─────────── */
-const saffron = {
-  50: "#FFF8EE",
-  200: "#FFD492",
-  500: "#F59300",
-  700: "#A85F00",
-};
-
+const saffron = { 50: "#FFF8EE", 200: "#FFD492", 500: "#F59300", 700: "#A85F00" };
 const RUST = "#C83F08";
 const RUST_DARK = "#A93205";
 const NAVY = "#1B2A4E";
 
-/* ─────────── Responsive UI helpers (UI only) ─────────── */
-// Section label used above each filter group
+/* ─────────── Style helpers ─────────── */
 const sectionLabelSx = {
   fontSize: { xs: 10, sm: 10.5, md: 11 },
   fontWeight: 700,
@@ -70,7 +36,6 @@ const sectionLabelSx = {
   textTransform: "uppercase",
 };
 
-// Pill chip style (selected / unselected)
 const pillChipSx = (selected, extra = {}) => ({
   borderRadius: 999,
   fontWeight: 600,
@@ -83,7 +48,6 @@ const pillChipSx = (selected, extra = {}) => ({
   ...extra,
 });
 
-// Small date input style
 const dateInputSx = {
   flex: 1,
   minWidth: 0,
@@ -95,7 +59,6 @@ const dateInputSx = {
   "& input": { px: { xs: 1, sm: 1.5 } },
 };
 
-// Big search input style
 const searchInputSx = {
   flex: 1,
   minWidth: 0,
@@ -106,15 +69,6 @@ const searchInputSx = {
     bgcolor: "#fff",
   },
 };
-
-const TRANSPORT_OPTIONS = [
-  { label: "All", value: "", icon: null },
-  { label: "Car", value: "Car", icon: <DirectionsCarIcon sx={{ fontSize: 14 }} /> },
-  { label: "Bike", value: "Bike", icon: <TwoWheelerIcon sx={{ fontSize: 14 }} /> },
-  { label: "Bus", value: "Bus", icon: <DirectionsBusIcon sx={{ fontSize: 14 }} /> },
-  { label: "Train", value: "Train", icon: <TrainIcon sx={{ fontSize: 14 }} /> },
-  { label: "Flight", value: "Flight", icon: <FlightIcon sx={{ fontSize: 14 }} /> },
-];
 
 const CATEGORY_OPTIONS = [
   { label: "All categories", value: "" },
@@ -129,8 +83,8 @@ const NAVBAR_HEIGHT = 35;
 const SCROLL_COLLAPSE_THRESHOLD = 24;
 
 const emptyFilters = {
-  type: "", // Offers | Requests | ""
-  transportMode: "", // Car | Bike | ...
+  type: "",
+  transportMode: "",
   category: "",
   language: "",
   freeRidesOnly: false,
@@ -139,6 +93,80 @@ const emptyFilters = {
   dateFrom: "",
   dateTo: "",
   radiusMi: 25,
+};
+
+/* ─────────── Filtering logic (client-side, matches JSON) ─────────── */
+const normalizeRide = (ride) => {
+  if (!ride) return null;
+
+  const kind = (ride.kind || ride.type || ride.intent || "").toLowerCase();
+
+  const fromText = (ride.from || ride.fromLocation?.address || "").toLowerCase();
+  const toText = (ride.destination || ride.destinationLocation?.address || "").toLowerCase();
+
+  const languages = Array.isArray(ride.language)
+    ? ride.language.map((l) => String(l).toLowerCase())
+    : ride.language
+    ? [String(ride.language).toLowerCase()]
+    : [];
+
+  return {
+    kind,
+    fromText,
+    toText,
+    languages,
+    freeRides: Number(ride.costPerSeat || 0) === 0 && Number(ride.fuelSharing || 0) === 0,
+    childFriendly: Boolean(ride.childFriendly) || Boolean(ride.travelingWithChild),
+    womenOnly: Boolean(ride.womenOnly) || Boolean(ride.womenDriversOnly) || ride.genderPreference === "Female",
+    category: (ride.category || "").toLowerCase(),
+    transportMode: (ride.modeOfTravel || "").toLowerCase(),
+    startTime: ride.startTime ? new Date(ride.startTime) : null,
+    lat: Number(ride.fromLocation?.latitude),
+    lng: Number(ride.fromLocation?.longitude),
+  };
+};
+
+const matchesFilters = (ride, filters, searchFrom, searchDestination, userLocation) => {
+  const n = normalizeRide(ride);
+  if (!n) return false;
+
+  // ✅ Type filter: "Offers" -> "offer", "Requests" -> "request"
+  if (filters.type) {
+    const wantedKind = filters.type === "Offers" ? "offer" : "request";
+    if (n.kind !== wantedKind) return false;
+  }
+
+  if (filters.transportMode && n.transportMode !== filters.transportMode.toLowerCase()) return false;
+  if (filters.category && n.category !== filters.category.toLowerCase()) return false;
+  if (filters.language && !n.languages.includes(filters.language.toLowerCase())) return false;
+
+  if (filters.freeRidesOnly && !n.freeRides) return false;
+  if (filters.childFriendly && !n.childFriendly) return false;
+  if (filters.womenRidersOnly && !n.womenOnly) return false;
+
+  if (n.startTime) {
+    if (filters.dateFrom && n.startTime < new Date(filters.dateFrom + "T00:00:00")) return false;
+    if (filters.dateTo && n.startTime > new Date(filters.dateTo + "T23:59:59")) return false;
+  }
+
+  if (searchFrom && !n.fromText.includes(searchFrom.toLowerCase())) return false;
+  if (searchDestination && !n.toText.includes(searchDestination.toLowerCase())) return false;
+
+  if (userLocation && Number.isFinite(n.lat) && Number.isFinite(n.lng)) {
+    const R = 6371;
+    const dLat = ((n.lat - userLocation.latitude) * Math.PI) / 180;
+    const dLon = ((n.lng - userLocation.longitude) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos((userLocation.latitude * Math.PI) / 180) *
+        Math.cos((n.lat * Math.PI) / 180) *
+        Math.sin(dLon / 2) ** 2;
+    const km = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const miles = km * 0.621371;
+    if (filters.radiusMi && miles > filters.radiusMi) return false;
+  }
+
+  return true;
 };
 
 export default function FindRides() {
@@ -150,6 +178,7 @@ export default function FindRides() {
 
   const [rides, setRides] = useState([]);
   const [open, setOpen] = useState(false);
+  const [requestRideToHelp, setRequestRideToHelp] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(1);
@@ -174,40 +203,10 @@ export default function FindRides() {
   const token = localStorage.getItem("token");
   const resultsRef = useRef(null);
   const scrollStartRef = useRef(0);
-  // Always holds the latest window-scroll handler (used by the window listener below)
-  const windowScrollHandlerRef = useRef(() => { });
-
-  /* Applied filter shortcuts */
-  const {
-    type: appliedType,
-    transportMode: appliedTransportMode,
-    category: appliedCategory,
-    language: appliedLanguage,
-    freeRidesOnly: appliedFreeRidesOnly,
-    childFriendly: appliedChildFriendly,
-    womenRidersOnly: appliedWomenRidersOnly,
-    dateFrom: appliedDateFrom,
-    dateTo: appliedDateTo,
-    radiusMi: appliedRadiusMi,
-  } = appliedFilters;
+  const windowScrollHandlerRef = useRef(() => {});
 
   /* ─────────── Fetch rides ─────────── */
-  const fetchRides = async ({
-    pageNumber = 1,
-    reset = false,
-    searchFromValue = searchFrom,
-    searchDestinationValue = searchDestination,
-    typeValue = appliedType,
-    transportModeValue = appliedTransportMode,
-    categoryValue = appliedCategory,
-    languageValue = appliedLanguage,
-    freeRidesOnlyValue = appliedFreeRidesOnly,
-    childFriendlyValue = appliedChildFriendly,
-    womenRidersOnlyValue = appliedWomenRidersOnly,
-    dateFromValue = appliedDateFrom,
-    dateToValue = appliedDateTo,
-    radiusMiValue = appliedRadiusMi,
-  } = {}) => {
+  const fetchRides = async ({ pageNumber = 1, reset = false } = {}) => {
     if (loadingMoreRef.current) return;
 
     try {
@@ -215,24 +214,9 @@ export default function FindRides() {
       else setLoadingMore(true);
       loadingMoreRef.current = true;
 
+      // Backend is only responsible for pagination. All filtering is client-side.
       const res = await axios.get(`${Api}/rides/get`, {
-        params: {
-          type: "find",
-          page: pageNumber,
-          limit: LIMIT,
-          searchFrom: searchFromValue,
-          searchDestination: searchDestinationValue,
-          typeFilter: typeValue,
-          transportMode: transportModeValue,
-          category: categoryValue,
-          language: languageValue,
-          freeRidesOnly: freeRidesOnlyValue,
-          childFriendly: childFriendlyValue,
-          womenRidersOnly: womenRidersOnlyValue,
-          dateFrom: dateFromValue,
-          dateTo: dateToValue,
-          radiusMi: radiusMiValue,
-        },
+        params: { type: "find", page: pageNumber, limit: LIMIT },
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -247,9 +231,7 @@ export default function FindRides() {
 
       setPage(pageNumber);
       setHasMore(
-        typeof body.hasMore === "boolean"
-          ? body.hasMore
-          : newRides.length === LIMIT
+        typeof body.hasMore === "boolean" ? body.hasMore : newRides.length === LIMIT
       );
     } catch (error) {
       console.error("Find rides error:", error?.response?.data || error);
@@ -265,48 +247,17 @@ export default function FindRides() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const isFirstFilterRender = useRef(true);
-  useEffect(() => {
-    if (isFirstFilterRender.current) {
-      isFirstFilterRender.current = false;
-      return;
-    }
-    const timer = setTimeout(() => {
-      setRides([]);
-      setPage(1);
-      setHasMore(true);
-      fetchRides({ pageNumber: 1, reset: true });
-    }, 400);
-    return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    searchFrom,
-    searchDestination,
-    appliedType,
-    appliedTransportMode,
-    appliedCategory,
-    appliedLanguage,
-    appliedFreeRidesOnly,
-    appliedChildFriendly,
-    appliedWomenRidersOnly,
-    appliedDateFrom,
-    appliedDateTo,
-    appliedRadiusMi,
-  ]);
-
   /* ─────────── Location ─────────── */
   const calculateDistanceKm = (lat1, lon1, lat2, lon2) => {
-    if (lat1 == null || lon1 == null || lat2 == null || lon2 == null) {
-      return Infinity;
-    }
+    if (lat1 == null || lon1 == null || lat2 == null || lon2 == null) return Infinity;
     const R = 6371;
     const dLat = ((lat2 - lat1) * Math.PI) / 180;
     const dLon = ((lon2 - lon1) * Math.PI) / 180;
     const a =
       Math.sin(dLat / 2) ** 2 +
       Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) ** 2;
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) ** 2;
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   };
 
@@ -358,19 +309,6 @@ export default function FindRides() {
     if (Number.isFinite(fromLatitude) && Number.isFinite(fromLongitude)) {
       return { latitude: fromLatitude, longitude: fromLongitude };
     }
-    const directLatitude = Number(ride?.fromLatitude);
-    const directLongitude = Number(ride?.fromLongitude);
-    if (Number.isFinite(directLatitude) && Number.isFinite(directLongitude)) {
-      return { latitude: directLatitude, longitude: directLongitude };
-    }
-    const coordinates = ride?.fromLocation?.coordinates;
-    if (Array.isArray(coordinates) && coordinates.length >= 2) {
-      const longitude = Number(coordinates[0]);
-      const latitude = Number(coordinates[1]);
-      if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
-        return { latitude, longitude };
-      }
-    }
     return null;
   };
 
@@ -400,7 +338,6 @@ export default function FindRides() {
   /* ─────────── Filters ─────────── */
   const openFilters = () => {
     scrollStartRef.current = resultsRef.current ? resultsRef.current.scrollTop : 0;
-    // UI: page now scrolls on the window, so also remember the window position
     if (typeof window !== "undefined" && window.scrollY) {
       scrollStartRef.current = window.scrollY;
     }
@@ -415,23 +352,18 @@ export default function FindRides() {
       const delta = Math.abs(element.scrollTop - scrollStartRef.current);
       if (delta > SCROLL_COLLAPSE_THRESHOLD) closeFilters();
     }
-    const distanceFromBottom =
-      element.scrollHeight - element.scrollTop - element.clientHeight;
+    const distanceFromBottom = element.scrollHeight - element.scrollTop - element.clientHeight;
     if (distanceFromBottom <= 300 && hasMore && !loadingMoreRef.current) {
       fetchRides({ pageNumber: page + 1, reset: false });
     }
   };
 
-  /* ─────────── Window scroll (page scrolls on Y axis, filters stay sticky) ─────────── */
-  // Updated on every render so it always sees the latest state
   windowScrollHandlerRef.current = () => {
     const scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
-
     if (filtersOpen) {
       const delta = Math.abs(scrollTop - scrollStartRef.current);
       if (delta > SCROLL_COLLAPSE_THRESHOLD) closeFilters();
     }
-
     const distanceFromBottom =
       document.documentElement.scrollHeight - scrollTop - window.innerHeight;
     if (distanceFromBottom <= 300 && hasMore && !loadingMoreRef.current) {
@@ -445,9 +377,13 @@ export default function FindRides() {
     return () => window.removeEventListener("scroll", onWindowScroll);
   }, []);
 
-  const applyFilters = () => {
-    setAppliedFilters(draftFilters);
-    closeFilters();
+  /* ✅ Update BOTH draft and applied so the list re-filters immediately */
+  const updateFilterAndApply = (key, value) => {
+    setDraftFilters((prev) => {
+      const next = { ...prev, [key]: value };
+      setAppliedFilters(next);
+      return next;
+    });
   };
 
   const clearFilters = () => {
@@ -455,48 +391,45 @@ export default function FindRides() {
     setAppliedFilters(emptyFilters);
   };
 
-  const updateDraft = (key, value) => {
-    setDraftFilters((prev) => ({ ...prev, [key]: value }));
-  };
-
+  /* Active chips reflect what is actually applied */
   const activeFilters = [
-    appliedType && {
+    appliedFilters.type && {
       key: "type",
-      label: appliedType,
+      label: appliedFilters.type,
       clear: () => {
         const next = { ...appliedFilters, type: "" };
         setAppliedFilters(next);
         setDraftFilters(next);
       },
     },
-    appliedTransportMode && {
+    appliedFilters.transportMode && {
       key: "transport",
-      label: appliedTransportMode,
+      label: appliedFilters.transportMode,
       clear: () => {
-        const next = { ...appliedFilters, transportMode: "", language: "" };
+        const next = { ...appliedFilters, transportMode: "" };
         setAppliedFilters(next);
         setDraftFilters(next);
       },
     },
-    appliedCategory && {
+    appliedFilters.category && {
       key: "category",
-      label: appliedCategory,
+      label: appliedFilters.category,
       clear: () => {
         const next = { ...appliedFilters, category: "" };
         setAppliedFilters(next);
         setDraftFilters(next);
       },
     },
-    appliedLanguage && {
+    appliedFilters.language && {
       key: "lang",
-      label: `Lang: ${appliedLanguage}`,
+      label: `Lang: ${appliedFilters.language}`,
       clear: () => {
         const next = { ...appliedFilters, language: "" };
         setAppliedFilters(next);
         setDraftFilters(next);
       },
     },
-    appliedFreeRidesOnly && {
+    appliedFilters.freeRidesOnly && {
       key: "free",
       label: "Free rides only",
       clear: () => {
@@ -505,7 +438,7 @@ export default function FindRides() {
         setDraftFilters(next);
       },
     },
-    appliedChildFriendly && {
+    appliedFilters.childFriendly && {
       key: "child",
       label: "Child-friendly",
       clear: () => {
@@ -514,7 +447,7 @@ export default function FindRides() {
         setDraftFilters(next);
       },
     },
-    appliedWomenRidersOnly && {
+    appliedFilters.womenRidersOnly && {
       key: "women",
       label: "Women riders only",
       clear: () => {
@@ -523,25 +456,38 @@ export default function FindRides() {
         setDraftFilters(next);
       },
     },
-    (appliedDateFrom || appliedDateTo) && {
+    (appliedFilters.dateFrom || appliedFilters.dateTo) && {
       key: "dates",
       label:
-        appliedDateFrom && appliedDateTo
-          ? `${appliedDateFrom} → ${appliedDateTo}`
-          : appliedDateFrom
-            ? `From ${appliedDateFrom}`
-            : `Until ${appliedDateTo}`,
+        appliedFilters.dateFrom && appliedFilters.dateTo
+          ? `${appliedFilters.dateFrom} → ${appliedFilters.dateTo}`
+          : appliedFilters.dateFrom
+            ? `From ${appliedFilters.dateFrom}`
+            : `Until ${appliedFilters.dateTo}`,
       clear: () => {
         const next = { ...appliedFilters, dateFrom: "", dateTo: "" };
         setAppliedFilters(next);
         setDraftFilters(next);
       },
     },
+    appliedFilters.radiusMi !== 25 && {
+      key: "radius",
+      label: `Within ${appliedFilters.radiusMi} mi`,
+      clear: () => {
+        const next = { ...appliedFilters, radiusMi: 25 };
+        setAppliedFilters(next);
+        setDraftFilters(next);
+      },
+    },
   ].filter(Boolean);
 
-  /* ─────────── Sort rides ─────────── */
+  /* ─────────── Sort + filter rides ─────────── */
   const sortedVisibleRides = useMemo(() => {
-    return [...rides].sort((a, b) => {
+    const filtered = rides.filter((ride) =>
+      matchesFilters(ride, appliedFilters, searchFrom, searchDestination, userLocation)
+    );
+
+    return [...filtered].sort((a, b) => {
       if (userLocation) {
         const dA = getRideDistanceKm(a);
         const dB = getRideDistanceKm(b);
@@ -554,7 +500,7 @@ export default function FindRides() {
       return new Date(a.startTime).getTime() - new Date(b.startTime).getTime();
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rides, userLocation]);
+  }, [rides, userLocation, appliedFilters, searchFrom, searchDestination]);
 
   /* ─────────── Filter Panel ─────────── */
   const FilterPanel = () => (
@@ -567,34 +513,20 @@ export default function FindRides() {
         bgcolor: "#fff",
         width: "100%",
         boxSizing: "border-box",
-
         position: isDesktop ? "sticky" : "static",
-        top: NAVBAR_HEIGHT + 8, // Move Paper 8px closer to the navbar
+        top: NAVBAR_HEIGHT + 8,
         alignSelf: "flex-start",
         zIndex: 2,
-
-        maxHeight: isDesktop
-          ? `calc(100vh - ${NAVBAR_HEIGHT}px - 48px)`
-          : "none",
-
+        maxHeight: isDesktop ? `calc(100vh - ${NAVBAR_HEIGHT}px - 48px)` : "none",
         overflowY: isDesktop ? "auto" : "visible",
         overflowX: "hidden",
       }}
     >
-      <Stack direction="row"
-        sx={{
-          mb: 2,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center"
-        }}>
-        <Typography
-          sx={{
-            fontSize: { xs: 14, sm: 15, md: 16 },
-            fontWeight: 700,
-            color: "#1a1a1a",
-          }}
-        >
+      <Stack
+        direction="row"
+        sx={{ mb: 2, display: "flex", justifyContent: "space-between", alignItems: "center" }}
+      >
+        <Typography sx={{ fontSize: { xs: 14, sm: 15, md: 16 }, fontWeight: 700, color: "#1a1a1a" }}>
           Filters
         </Typography>
         {!isDesktop && (
@@ -611,7 +543,7 @@ export default function FindRides() {
           size="small"
           type="date"
           value={draftFilters.dateFrom}
-          onChange={(e) => updateDraft("dateFrom", e.target.value)}
+          onChange={(e) => updateFilterAndApply("dateFrom", e.target.value)}
           sx={dateInputSx}
           InputLabelProps={{ shrink: true }}
         />
@@ -619,7 +551,7 @@ export default function FindRides() {
           size="small"
           type="date"
           value={draftFilters.dateTo}
-          onChange={(e) => updateDraft("dateTo", e.target.value)}
+          onChange={(e) => updateFilterAndApply("dateTo", e.target.value)}
           sx={dateInputSx}
           InputLabelProps={{ shrink: true }}
         />
@@ -639,75 +571,24 @@ export default function FindRides() {
               key={t.value || "all"}
               label={t.label}
               clickable
-              onClick={() => updateDraft("type", t.value)}
+              onClick={() => updateFilterAndApply("type", t.value)}  /* ✅ immediate */
               sx={pillChipSx(selected)}
             />
           );
         })}
       </Stack>
 
-      {/* ─── Mode of travel ─── */}
-      {/* <Typography
-        sx={{
-          fontSize: 10.5,
-          fontWeight: 700,
-          letterSpacing: 0.6,
-          color: "text.secondary",
-          mb: 0.75,
-          textTransform: "uppercase",
-        }}
-      >
-        Mode of travel
-      </Typography>
-      <Stack direction="row" spacing={0.75} sx={{ mb: 2, flexWrap: "wrap", gap: 0.75 }}>
-        {TRANSPORT_OPTIONS.map((opt) => {
-          const selected = draftFilters.transportMode === opt.value;
-          return (
-            <Chip
-              key={opt.value || "all-t"}
-              label={opt.label}
-              icon={opt.icon}
-              clickable
-              onClick={() => updateDraft("transportMode", opt.value)}
-              sx={{
-                borderRadius: 999,
-                fontWeight: 600,
-                fontSize: 12,
-                height: 28,
-                bgcolor: selected ? RUST : "#fff",
-                color: selected ? "#fff" : "#333",
-                border: `1px solid ${selected ? RUST : "#ddd"}`,
-                "& .MuiChip-icon": {
-                  color: selected ? "#fff" : "#666",
-                  ml: 0.5,
-                  mr: -0.25,
-                },
-                "&:hover": { bgcolor: selected ? RUST : "#f8f8f8" },
-              }}
-            />
-          );
-        })}
-      </Stack> */}
-
       {/* ─── Category ─── */}
       <Typography sx={sectionLabelSx}>Category</Typography>
       <FormControl fullWidth size="small" sx={{ mb: 2 }}>
         <Select
           value={draftFilters.category}
-          onChange={(e) => updateDraft("category", e.target.value)}
+          onChange={(e) => updateFilterAndApply("category", e.target.value)}  /* ✅ immediate */
           displayEmpty
-          sx={{
-            fontSize: { xs: 12.5, sm: 13 },
-            borderRadius: 1.5,
-            height: { xs: 34, sm: 36 },
-          }}
+          sx={{ fontSize: { xs: 12.5, sm: 13 }, borderRadius: 1.5, height: { xs: 34, sm: 36 } }}
         >
           {CATEGORY_OPTIONS.map((c) => (
-            <MenuItem
-              key={c.value}
-              value={c.value}
-              sx={{ fontSize: { xs: 12.5, sm: 13 } }}
-            >
+            <MenuItem key={c.value} value={c.value} sx={{ fontSize: { xs: 12.5, sm: 13 } }}>
               {c.label}
             </MenuItem>
           ))}
@@ -724,7 +605,7 @@ export default function FindRides() {
               key={lang}
               label={lang}
               clickable
-              onClick={() => updateDraft("language", selected ? "" : lang)}
+              onClick={() => updateFilterAndApply("language", selected ? "" : lang)}  /* ✅ */
               sx={pillChipSx(selected)}
             />
           );
@@ -738,71 +619,42 @@ export default function FindRides() {
             <Checkbox
               size="small"
               checked={draftFilters.freeRidesOnly}
-              onChange={(e) => updateDraft("freeRidesOnly", e.target.checked)}
+              onChange={(e) => updateFilterAndApply("freeRidesOnly", e.target.checked)}  /* ✅ */
               sx={{ color: "#bbb", "&.Mui-checked": { color: RUST }, py: 0.25 }}
             />
           }
-          label={
-            <Typography sx={{ fontSize: { xs: 12.5, sm: 13 }, color: "#333" }}>
-              Free rides only
-            </Typography>
-          }
+          label={<Typography sx={{ fontSize: { xs: 12.5, sm: 13 }, color: "#333" }}>Free rides only</Typography>}
         />
         <FormControlLabel
           control={
             <Checkbox
               size="small"
               checked={draftFilters.childFriendly}
-              onChange={(e) => updateDraft("childFriendly", e.target.checked)}
+              onChange={(e) => updateFilterAndApply("childFriendly", e.target.checked)}  /* ✅ */
               sx={{ color: "#bbb", "&.Mui-checked": { color: RUST }, py: 0.25 }}
             />
           }
-          label={
-            <Typography sx={{ fontSize: { xs: 12.5, sm: 13 }, color: "#333" }}>
-              Child-friendly
-            </Typography>
-          }
+          label={<Typography sx={{ fontSize: { xs: 12.5, sm: 13 }, color: "#333" }}>Child-friendly</Typography>}
         />
         <FormControlLabel
           control={
             <Checkbox
               size="small"
               checked={draftFilters.womenRidersOnly}
-              onChange={(e) => updateDraft("womenRidersOnly", e.target.checked)}
+              onChange={(e) => updateFilterAndApply("womenRidersOnly", e.target.checked)}  /* ✅ */
               sx={{ color: "#bbb", "&.Mui-checked": { color: RUST }, py: 0.25 }}
             />
           }
           label={
             <Typography sx={{ fontSize: { xs: 12.5, sm: 13 }, color: "#333" }}>
               Women riders only{" "}
-              <Typography
-                component="span"
-                sx={{ fontSize: { xs: 11, sm: 11.5 }, color: "text.secondary" }}
-              >
+              <Typography component="span" sx={{ fontSize: { xs: 11, sm: 11.5 }, color: "text.secondary" }}>
                 (shown to women)
               </Typography>
             </Typography>
           }
         />
       </FormGroup>
-
-      <Button
-        fullWidth
-        onClick={applyFilters}
-        sx={{
-          bgcolor: RUST,
-          color: "#fff",
-          textTransform: "none",
-          fontWeight: 700,
-          fontSize: { xs: 13.5, sm: 14 },
-          py: { xs: 0.9, sm: 1.1 },
-          borderRadius: 2,
-          boxShadow: "none",
-          "&:hover": { bgcolor: RUST_DARK, boxShadow: "none" },
-        }}
-      >
-        Apply filters
-      </Button>
 
       {activeFilters.length > 0 && (
         <Button
@@ -828,8 +680,7 @@ export default function FindRides() {
   /* ─────────── Main render ─────────── */
   return (
     <>
-      {/* ─── Profile gate dialog ─── */}
-
+      {/* Profile gate dialog */}
       <Dialog
         open={profileGateOpen}
         onClose={(event, reason) => {
@@ -840,33 +691,11 @@ export default function FindRides() {
         maxWidth="xs"
         PaperProps={{
           sx: {
-            boxSizing: "border-box",
-            borderRadius: {
-              xs: 2,
-              sm: 2.5,
-              md: 3,
-            },
-            m: {
-              xs: 1,
-              sm: 2,
-              md: 3,
-            },
-            width: {
-              xs: "calc(100% - 16px)",
-              sm: "calc(100% - 32px)",
-              md: "100%",
-            },
-            maxWidth: {
-              xs: "450px",
-              sm: "450px",
-            },
+            borderRadius: { xs: 2, sm: 2.5, md: 3 },
+            m: { xs: 1, sm: 2, md: 3 },
+            maxWidth: { xs: "450px", sm: "450px" },
             textAlign: "center",
-            p: {
-              xs: 1,
-              sm: 1.3,
-              md: 1.6,
-            },
-            overflowX: "hidden",
+            p: { xs: 1, sm: 1.3, md: 1.6 },
           },
         }}
       >
@@ -881,43 +710,22 @@ export default function FindRides() {
             pt: { xs: 2, sm: 3 },
           }}
         >
-          <WarningAmberRoundedIcon
-            sx={{ fontSize: { xs: 34, sm: 40 }, color: "#E8650A" }}
-          />
+          <WarningAmberRoundedIcon sx={{ fontSize: { xs: 34, sm: 40 }, color: "#E8650A" }} />
           Complete Your Profile
         </DialogTitle>
         <DialogContent>
-          <Typography
-            sx={{
-              fontSize: { xs: "0.85rem", sm: "0.95rem" },
-              color: "text.secondary",
-            }}
-          >
-            Your profile is only {Number.isFinite(completion) ? completion : 0}%
-            complete. Please complete your profile to 100% to unlock all features.
+          <Typography sx={{ fontSize: { xs: "0.85rem", sm: "0.95rem" }, color: "text.secondary" }}>
+            Your profile is only {Number.isFinite(completion) ? completion : 0}% complete. Please complete your profile to 100% to unlock all features.
           </Typography>
           <Box sx={{ mt: 2.5, px: { xs: 1, sm: 3 } }}>
             <LinearProgress
               variant="determinate"
               value={Number.isFinite(completion) ? completion : 0}
-              sx={{
-                height: 8,
-                borderRadius: 5,
-                bgcolor: "#F0E6DC",
-                "& .MuiLinearProgress-bar": { bgcolor: "#FF9933" },
-              }}
+              sx={{ height: 8, borderRadius: 5, bgcolor: "#F0E6DC", "& .MuiLinearProgress-bar": { bgcolor: "#FF9933" } }}
             />
           </Box>
         </DialogContent>
-        <DialogActions
-          sx={{
-            justifyContent: "center",
-            flexWrap: "wrap",
-            pb: { xs: 2, sm: 3 },
-            pt: 1,
-            gap: 1.5,
-          }}
-        >
+        <DialogActions sx={{ justifyContent: "center", flexWrap: "wrap", pb: { xs: 2, sm: 3 }, pt: 1, gap: 1.5 }}>
           <Button
             variant="contained"
             onClick={handleCloseProfileGate}
@@ -936,9 +744,7 @@ export default function FindRides() {
           </Button>
           <Button
             variant="contained"
-            onClick={() =>
-              navigate("/user-profile", { state: { openEditProfile: true } })
-            }
+            onClick={() => navigate("/user-profile", { state: { openEditProfile: true } })}
             sx={{
               textTransform: "none",
               borderRadius: 999,
@@ -967,29 +773,12 @@ export default function FindRides() {
           maxWidth: "100%",
           boxSizing: "border-box",
           bgcolor: "#FAF8F5",
-          p: {
-            xs: 0.5,
-            sm: 1.5,
-            md: 2.5,
-            lg: 3,
-          },
-          // "clip" prevents horizontal overflow WITHOUT creating a scroll container,
-          // so position: sticky on the filter panel keeps working.
-          // (overflowX: "hidden" would break sticky)
+          p: { xs: 0.5, sm: 1.5, md: 2.5, lg: 3 },
           overflowX: "clip",
         }}
       >
-        <Container
-          maxWidth="lg"
-          sx={{ px: { xs: 1.5, sm: 2.5, md: 3 }, py: { xs: 1.5, sm: 2.5 } }}
-        >
-          {/* ─── Title row ─── */}
-          <Stack
-            direction="row"
-            alignItems="center"
-            justifyContent="space-between"
-            sx={{ mb: { xs: 1.5, sm: 2 } }}
-          >
+        <Container maxWidth="lg" sx={{ px: { xs: 1.5, sm: 2.5, md: 3 }, py: { xs: 1.5, sm: 2.5 } }}>
+          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: { xs: 1.5, sm: 2 } }}>
             <Typography
               component="h1"
               sx={{
@@ -1002,28 +791,8 @@ export default function FindRides() {
             >
               Find a ride
             </Typography>
-
-            {/* <Button
-              variant="contained"
-              onClick={() => setOpen(true)}
-              sx={{
-                bgcolor: RUST,
-                color: "#fff",
-                textTransform: "none",
-                fontWeight: 700,
-                fontSize: 13.5,
-                px: 2.5,
-                py: 0.9,
-                borderRadius: 2,
-                boxShadow: "none",
-                "&:hover": { bgcolor: RUST_DARK, boxShadow: "none" },
-              }}
-            >
-              + Post a ride
-            </Button> */}
           </Stack>
 
-          {/* ─── 2-column layout ─── */}
           <Box
             sx={{
               display: "grid",
@@ -1033,11 +802,9 @@ export default function FindRides() {
                 lg: "300px minmax(0, 1fr)",
               },
               gap: { xs: 1.5, sm: 2, md: 3 },
-              // flex-start is required so the sticky filter column doesn't stretch
               alignItems: "flex-start",
             }}
           >
-            {/* Filters column */}
             {isDesktop ? (
               <FilterPanel />
             ) : (
@@ -1046,9 +813,7 @@ export default function FindRides() {
               </Collapse>
             )}
 
-            {/* Right column */}
             <Box sx={{ minWidth: 0, width: "100%" }}>
-              {/* ─── Mobile filter trigger ─── */}
               {!isDesktop && (
                 <Button
                   fullWidth
@@ -1073,7 +838,6 @@ export default function FindRides() {
                 </Button>
               )}
 
-              {/* ─── Search card ─── */}
               <Paper
                 variant="outlined"
                 sx={{
@@ -1086,11 +850,7 @@ export default function FindRides() {
                   overflow: "hidden",
                 }}
               >
-                <Stack
-                  direction={{ xs: "column", sm: "row" }}
-                  spacing={1.25}
-                  sx={{ mb: { xs: 1.25, sm: 1.75 } }}
-                >
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={1.25} sx={{ mb: { xs: 1.25, sm: 1.75 } }}>
                   <TextField
                     size="small"
                     placeholder="From (US city or airport)"
@@ -1144,10 +904,7 @@ export default function FindRides() {
                     disabled={locationLoading}
                     startIcon={
                       <LocationOnIcon
-                        sx={{
-                          fontSize: { xs: 16, sm: 18, md: 15 },
-                          color: userLocation ? "#2E7D32" : RUST,
-                        }}
+                        sx={{ fontSize: { xs: 16, sm: 18, md: 15 }, color: userLocation ? "#2E7D32" : RUST }}
                       />
                     }
                     sx={{
@@ -1161,17 +918,13 @@ export default function FindRides() {
                       bgcolor: userLocation ? "#EAF6EC" : "#fff",
                       whiteSpace: "nowrap",
                       alignSelf: { xs: "stretch", md: "center" },
-                      "&:hover": {
-                        bgcolor: userLocation ? "#E0F2E3" : "#FFF5EC",
-                        borderColor: userLocation ? "#A5D6A7" : RUST,
-                      },
+                      "&:hover": { bgcolor: userLocation ? "#E0F2E3" : "#FFF5EC" },
                     }}
                   >
                     <Typography
                       sx={{
                         fontSize: { xs: 12.5, sm: 13, md: 10.5 },
                         color: userLocation ? "#2E7D32" : RUST,
-                        textAlign: { xs: "center", md: "left" },
                         fontWeight: 600,
                       }}
                     >
@@ -1179,15 +932,7 @@ export default function FindRides() {
                     </Typography>
                   </Button>
 
-                  <Typography
-                    sx={{
-                      fontSize: { xs: 12, sm: 13 },
-                      color: "text.secondary",
-                      textAlign: { xs: "center", md: "left" },
-                    }}
-                  >
-                    or type a location
-                  </Typography>
+                  <Typography sx={{ fontSize: { xs: 12, sm: 13 }, color: "text.secondary" }}>or type a location</Typography>
 
                   <TextField
                     size="small"
@@ -1207,35 +952,21 @@ export default function FindRides() {
                     }}
                   />
 
-                  <Box
-                    sx={{
-                      display: "flex",
-                      flexDirection: "row",
-                      alignItems: "center",
-                      flexWrap: "wrap",
-                      gap: 1,
-                      justifyContent: "flex-start",
-                    }}
-                  >
-                    <Typography
-                      sx={{ fontSize: { xs: 12, sm: 13 }, color: "text.secondary" }}
-                    >
-                      within
-                    </Typography>
-
+                  <Box sx={{ display: "flex", flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 1 }}>
+                    <Typography sx={{ fontSize: { xs: 12, sm: 13 }, color: "text.secondary" }}>within</Typography>
                     <Box sx={{ display: "flex", flexDirection: "row", gap: 0.5 }}>
                       {[
                         { label: "10 mi", value: 10 },
                         { label: "25 mi", value: 25 },
                         { label: "50 mi", value: 50 },
                       ].map((r) => {
-                        const isActive = draftFilters.radiusMi === r.value;
+                        const isActive = appliedFilters.radiusMi === r.value;
                         return (
                           <Chip
                             key={r.value}
                             label={r.label}
                             clickable
-                            onClick={() => updateDraft("radiusMi", r.value)}
+                            onClick={() => updateFilterAndApply("radiusMi", r.value)}  /* ✅ immediate */
                             sx={{
                               borderRadius: 999,
                               fontWeight: 700,
@@ -1244,9 +975,7 @@ export default function FindRides() {
                               bgcolor: isActive ? RUST : "#fff",
                               color: isActive ? "#fff" : "#333",
                               border: `1px solid ${isActive ? RUST : "#ddd"}`,
-                              "&:hover": {
-                                bgcolor: isActive ? RUST : "#f8f8f8",
-                              },
+                              "&:hover": { bgcolor: isActive ? RUST : "#f8f8f8" },
                             }}
                           />
                         );
@@ -1255,42 +984,19 @@ export default function FindRides() {
                   </Box>
                 </Box>
 
-                <Typography
-                  sx={{
-                    fontSize: { xs: 11.5, sm: 12.5 },
-                    color: "text.secondary",
-                    mt: { xs: 1.25, sm: 1.75 },
-                    lineHeight: 1.5,
-                  }}
-                >
-                  {sortedVisibleRides.length} ride
-                  {sortedVisibleRides.length === 1 ? "" : "s"} near{" "}
-                  {searchFrom || "your area"}. Your location is used only for
-                  this search and is not stored.
+                <Typography sx={{ fontSize: { xs: 11.5, sm: 12.5 }, color: "text.secondary", mt: { xs: 1.25, sm: 1.75 }, lineHeight: 1.5 }}>
+                  {sortedVisibleRides.length} ride{sortedVisibleRides.length === 1 ? "" : "s"} near {searchFrom || "your area"}. Your location is used only for this search and is not stored.
                 </Typography>
 
                 {locationError && (
-                  <Typography
-                    sx={{
-                      fontSize: { xs: 11.5, sm: 12 },
-                      color: "#B00020",
-                      mt: 0.75,
-                    }}
-                  >
+                  <Typography sx={{ fontSize: { xs: 11.5, sm: 12 }, color: "#B00020", mt: 0.75 }}>
                     {locationError}
                   </Typography>
                 )}
               </Paper>
 
-              {/* ─── Active filter chips ─── */}
               {activeFilters.length > 0 && (
-                <Stack
-                  direction="row"
-                  spacing={0.75}
-                  flexWrap="wrap"
-                  useFlexGap
-                  sx={{ mb: 1.5 }}
-                >
+                <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap sx={{ mb: 1.5 }}>
                   {activeFilters.map((f) => (
                     <Chip
                       key={f.key}
@@ -1305,29 +1011,14 @@ export default function FindRides() {
                         fontSize: { xs: 11, sm: 11.5 },
                         height: { xs: 24, sm: 26 },
                         maxWidth: "100%",
-                        "& .MuiChip-deleteIcon": {
-                          color: RUST,
-                          fontSize: 16,
-                        },
+                        "& .MuiChip-deleteIcon": { color: RUST, fontSize: 16 },
                       }}
                     />
                   ))}
                 </Stack>
               )}
 
-              {/* ─── Ride list ─── */}
-              {/* No inner scroll now: the whole page scrolls on the Y axis
-                  while the filter panel stays sticky. */}
-              <Box
-                ref={resultsRef}
-                onScroll={handleResultsScroll}
-                sx={{
-                  maxHeight: "none",
-                  overflowY: "visible",
-                  overflowX: "clip",
-                  pr: 0,
-                }}
-              >
+              <Box ref={resultsRef} onScroll={handleResultsScroll} sx={{ maxHeight: "none", overflowY: "visible", overflowX: "clip" }}>
                 {loading ? (
                   <Box sx={{ display: "flex", justifyContent: "center", py: { xs: 5, sm: 8 } }}>
                     <CircularProgress sx={{ color: saffron[500] }} />
@@ -1336,19 +1027,13 @@ export default function FindRides() {
                   <>
                     <Stack spacing={{ xs: 1.25, sm: 1.5 }}>
                       {sortedVisibleRides.map((ride) => (
-                        // <RideCard key={ride._id} ride={ride} />
-                        <RideList key={ride._id} ride={ride} />
+                        <RideList key={ride._id} ride={ride} onIcanHelp={(requestRide) => { setRequestRideToHelp(requestRide); setOpen(true); }} />
                       ))}
                     </Stack>
 
                     {loadingMore && (
-                      <Box
-                        sx={{ display: "flex", justifyContent: "center", py: 2 }}
-                      >
-                        <CircularProgress
-                          size={26}
-                          sx={{ color: saffron[500] }}
-                        />
+                      <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+                        <CircularProgress size={26} sx={{ color: saffron[500] }} />
                       </Box>
                     )}
 
@@ -1368,29 +1053,13 @@ export default function FindRides() {
                 ) : (
                   <Paper
                     variant="outlined"
-                    sx={{
-                      borderRadius: 2.5,
-                      borderColor: "divider",
-                      textAlign: "center",
-                      py: { xs: 3.5, sm: 5 },
-                      px: { xs: 2, sm: 4 },
-                    }}
+                    sx={{ borderRadius: 2.5, borderColor: "divider", textAlign: "center", py: { xs: 3.5, sm: 5 }, px: { xs: 2, sm: 4 } }}
                   >
-                    <Typography
-                      variant="h6"
-                      fontWeight={700}
-                      color="text.primary"
-                      sx={{ fontSize: { xs: 15, sm: 16, md: 17 } }}
-                    >
+                    <Typography variant="h6" fontWeight={700} color="text.primary" sx={{ fontSize: { xs: 15, sm: 16, md: 17 } }}>
                       No rides match your search.
                     </Typography>
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ mt: 1, fontSize: { xs: 12.5, sm: 14 } }}
-                    >
-                      Try a wider radius or post a request so drivers can find
-                      you.
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontSize: { xs: 12.5, sm: 14 } }}>
+                      Try a wider radius or post a request so drivers can find you.
                     </Typography>
                     <Button
                       variant="contained"
@@ -1406,10 +1075,7 @@ export default function FindRides() {
                         fontSize: { xs: 13, sm: 14 },
                         textTransform: "none",
                         boxShadow: "none",
-                        "&:hover": {
-                          backgroundColor: RUST_DARK,
-                          boxShadow: "none",
-                        },
+                        "&:hover": { backgroundColor: RUST_DARK, boxShadow: "none" },
                       }}
                     >
                       Post a Ride
@@ -1418,25 +1084,9 @@ export default function FindRides() {
                 )}
               </Box>
 
-              {/* ─── Info footer ─── */}
-              <Box
-                sx={{
-                  mt: 2,
-                  p: { xs: 1.25, sm: 1.75 },
-                  borderRadius: 2,
-                  bgcolor: "#EAF3FB",
-                  border: "1px solid #CFE2F3",
-                }}
-              >
-                <Typography
-                  sx={{
-                    fontSize: { xs: 11.5, sm: 12.5 },
-                    color: "#1A3E8A",
-                    lineHeight: 1.55,
-                  }}
-                >
-                  Cards show city or airport only. The exact pickup address and
-                  phone number are shared after the driver accepts your request.
+              <Box sx={{ mt: 2, p: { xs: 1.25, sm: 1.75 }, borderRadius: 2, bgcolor: "#EAF3FB", border: "1px solid #CFE2F3" }}>
+                <Typography sx={{ fontSize: { xs: 11.5, sm: 12.5 }, color: "#1A3E8A", lineHeight: 1.55 }}>
+                  Cards show city or airport only. The exact pickup address and phone number are shared after the driver accepts your request.
                 </Typography>
               </Box>
             </Box>
@@ -1444,12 +1094,12 @@ export default function FindRides() {
         </Container>
       </Box>
 
-      {/* ─── Post ride dialog ─── */}
       <Dialog
         open={open}
         onClose={(event, reason) => {
           if (reason === "backdropClick") return;
           setOpen(false);
+          setRequestRideToHelp(null);
         }}
         fullWidth
         maxWidth="sm"
@@ -1464,38 +1114,26 @@ export default function FindRides() {
           },
         }}
       >
-        <DialogTitle
-          sx={{
-            position: "relative",
-            fontWeight: 700,
-            fontSize: { xs: "1.05rem", sm: "1.25rem" },
-            py: 2,
-            pr: 6,
-          }}
-        >
-          Offer Ride
+        <DialogTitle sx={{ position: "relative", fontWeight: 700, fontSize: { xs: "1.05rem", sm: "1.25rem" }, py: 2, pr: 6 }}>
+          {requestRideToHelp ? "Offer Ride — Help with Request" : "Offer Ride"}
           <IconButton
             aria-label="close"
-            onClick={() => setOpen(false)}
-            sx={{
-              position: "absolute",
-              top: 12,
-              right: 12,
-              color: "text.secondary",
-            }}
+            onClick={() => { setOpen(false); setRequestRideToHelp(null); }}
+            sx={{ position: "absolute", top: 12, right: 12, color: "text.secondary" }}
           >
             <CloseIcon />
           </IconButton>
         </DialogTitle>
-        <DialogContent
-          dividers
-          sx={{
-            p: { xs: 1, sm: 2 },
-            overflowY: "auto",
-            maxHeight: { xs: "100vh", sm: "75vh" },
-          }}
-        >
-          <OfferRide setOpen={setOpen} />
+        <DialogContent dividers sx={{ p: { xs: 1, sm: 2 }, overflowY: "auto", maxHeight: { xs: "100vh", sm: "75vh" } }}>
+          <OfferRide
+            setOpen={setOpen}
+            requestRide={requestRideToHelp}
+            onClose={() => {
+              setOpen(false);
+              setRequestRideToHelp(null);
+              fetchRides({ pageNumber: 1, reset: true });
+            }}
+          />
         </DialogContent>
       </Dialog>
     </>

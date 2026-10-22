@@ -1,1310 +1,388 @@
-import React, { useState, useEffect, useRef } from "react";
-import axios from "axios";
-import Api from "../Api.jsx";
+import React, { useState } from "react";
 import {
   Box,
   Typography,
   Paper,
-  Avatar,
   Button,
   Divider,
-  FormControlLabel,
-  useMediaQuery,
   Stack,
   Switch,
-  Modal,
-  MenuItem,
-  TextField,
-  Chip,
-  Tooltip,
-  useTheme,
-  Grid,
-  CircularProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
 } from "@mui/material";
-import Close from "@mui/icons-material/Close";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import LockIcon from "@mui/icons-material/Lock";
-import ThumbUpOffAltIcon from "@mui/icons-material/ThumbUpOffAlt";
-import ChatIcon from "@mui/icons-material/Chat";
-import ShareIcon from "@mui/icons-material/Share";
 import { useUser } from "../context/userConetext.jsx";
-import CommunityComments from "./CommunityComments.jsx";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ExpandLessIcon from "@mui/icons-material/ExpandLess";
-import IconButton from "@mui/material/IconButton";
-import Collapse from "@mui/material/Collapse";
-import PersonIcon from "@mui/icons-material/Person";
-import LogoutIcon from "@mui/icons-material/Logout";
-import DeleteIcon from "@mui/icons-material/Delete";
-import SettingsIcon from "@mui/icons-material/Settings";
-import NotificationsIcon from "@mui/icons-material/Notifications";
-import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
 import { toast } from "react-toastify";
-import Visibility from "@mui/icons-material/Visibility";
-import VisibilityOff from "@mui/icons-material/VisibilityOff";
-import CloseIcon from "@mui/icons-material/Close";
-import { InputAdornment } from "@mui/material";
-import { useNavigate } from "react-router-dom";
 import ToastConfig from "../components/ToastConfig.jsx";
-import ProfileModal from './Avatar.jsx'
+import { useNavigate } from "react-router-dom";
 
-const SAFFRON = "#E8650A";
-const SAFFRON_LIGHT = "#FDF0E8";
-const CARD_BORDER = "1px solid #F0E6DC";
-const compactBtn = {
-  textTransform: "none",
-  fontSize: { xs: "0.75rem", sm: "0.8rem", md: "0.875rem" },
-  minHeight: { xs: 12, sm: 36, md: 40 },
-  px: { xs: 1.5, sm: 2, md: 2.5 },
-  py: { xs: 0.5, sm: 0.75 },
-  borderRadius: 2,
-};
-const user = JSON.parse(localStorage.getItem("user"));
-// Pill outlined style (mobile) matching the reference button
-const pillBtn = {
-  textTransform: "none",
-  border: "none",
-  fontSize: { xs: "0.72rem", sm: "0.8rem", md: "0.875rem" },
-  color: SAFFRON,
-  fontWeight: 600,
+/* ── Design Tokens ── */
+const RUST = "#C83F08";
+const RUST_DARK = "#A93205";
+const NAVY = "#1B2A4E";
+const BG = "#FAF8F5";
+const BORDER = "#E7E0D8";
+const TEXT_PRIMARY = "#1F2937";
+const TEXT_MUTED = "#6B7280";
 
-  "&.Mui-disabled": {
-    opacity: 1,
-    cursor: "not-allowed",
-    border: "none"
-  },
-
-  "&.Mui-disabled .MuiSvgIcon-root": {
-    opacity: 1,
-  },
-};
-const SectionCard = ({ children, sx = {} }) => (
+/* ── Reusable Section Wrapper ── */
+const Section = ({ title, children, sx = {} }) => (
   <Paper
     elevation={0}
     sx={{
-      p: { xs: "12px 14px", sm: "16px 18px", md: "20px 24px" },
-      borderRadius: { xs: 2, sm: 3 },
-      border: CARD_BORDER,
+      width: "100%",
+      p: { xs: 2.5, sm: 3.5 },
+      mb: 2.5,
+      borderRadius: 2.5,
+      border: `1px solid ${BORDER}`,
+      bgcolor: "#fff",
+      boxSizing: "border-box",
+      ...sx,
+    }}
+  >
+    {title && (
+      <Typography sx={{ fontSize: 16, fontWeight: 700, color: TEXT_PRIMARY, mb: 2.5 }}>
+        {title}
+      </Typography>
+    )}
+    {children}
+  </Paper>
+);
+
+/* ── Row: text left, control right (FULL WIDTH) ── */
+const Row = ({ children, sx = {} }) => (
+  <Box
+    sx={{
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      width: "100%",
+      gap: 2,
       ...sx,
     }}
   >
     {children}
-  </Paper>
-);
-const SectionHeader = ({ icon, label }) => (
-  <Stack
-    direction="row"
-    spacing={1}
-    alignItems="center"
-    mb={{ xs: 1, sm: 1.5 }}
-  >
-    {React.cloneElement(icon, {
-      sx: { color: SAFFRON, fontSize: { xs: 18, sm: 20 } },
-    })}
-    <Typography
-      fontWeight={700}
-      sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" } }}
-    >
-      {label}
-    </Typography>
-  </Stack>
+  </Box>
 );
 
-const Myprofile = () => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const { currentUser, getuserData, completion } = useUser();
-  const [mobile_number, setMobile_number] = useState("");
-  const [openShare, setOpenShare] = useState(false);
-  const handleOpenShare = () => setOpenShare(true);
-  const handleCloseShare = () => setOpenShare(false);
-  const [inviteLoading, setInviteLoading] = useState(false);
-  const feedRef = useRef(null);
-  const [countryCode, setCountryCode] =
-    useState("+1");
-  const [profileModalOpen, setProfileModalOpen] = useState(false);
-  const [selectedProfile, setSelectedProfile] = useState(null);
-
+const MyProfileSettings = () => {
   const navigate = useNavigate();
-  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
-  const [passwordModel, setPasswordModel] = useState("");
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
-  });
-  const [showPassword, setShowPassword] = useState({
-    current: false,
-    new: false,
-    confirm: false,
-  });
-  const [errors, setErrors] = useState({
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
-  });
-
-  const [passwordLoading, setPasswordLoading] = useState(false);
-
   const toasts = ToastConfig();
+  const { currentUser } = useUser();
 
-  const isProfileComplete = completion !== 100;
+  /* ── SMS Preferences State ── */
+  const [smsPrefs, setSmsPrefs] = useState({
+    rideRequests: true,
+    referralApprovals: true,
+    routeAlerts: true,
+    communityNews: false,
+  });
 
-  // const theme = useTheme();
-  const isTab = useMediaQuery(theme.breakpoints.down("sm"));
-
-  const handlePasswordChange = (e) => {
-    const { name, value } = e.target;
-
-    setPasswordData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-
-    setErrors((prev) => ({
-      ...prev,
-      [name]: "",
-    }));
+  const handlePrefChange = (key) => (event) => {
+    setSmsPrefs((prev) => ({ ...prev, [key]: event.target.checked }));
   };
-
-  const logout = () => {
-    localStorage.clear();
-    window.location.replace("/login");
-  };
-
-  const [communityPosts, setCommunityPosts] = useState([]);
 
   const handleCopy = (value) => {
+    if (!value) return;
     navigator.clipboard.writeText(value);
-    toast.success("Copied to Clipboard!", toasts);
+    toast.success("Copied to clipboard!", toasts);
   };
 
-  useEffect(() => {
-    if (currentUser?._id) {
-      getCommunityPost();
-    }
-  }, [currentUser]);
-
-  const handleLogout = () => {
-    setLogoutDialogOpen(true);
-    handleCloseProfileMenu();
-  };
-
-  const handleSelect = (option) => {
-    setSelectedMenu(option.label);
-    handleCloseProfileMenu();
-    if (option.label === "Log out") {
-      handleLogout();
-    } else if (option.link) {
-      navigate(option.link);
+  const handleShare = () => {
+    const message = `Join me on Saathi Rides using my invite code: ${currentUser?.referralCode || ""}`;
+    if (navigator.share) {
+      navigator.share({ title: "Saathi Invite", text: message }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(message);
+      toast.success("Invite message copied!", toasts);
     }
   };
 
-  const confirmLogout = () => {
-    localStorage.clear();
-    setLogoutDialogOpen(false);
-    navigate("/login");
-  };
-
-  const cancelLogout = () => {
-    setLogoutDialogOpen(false);
-  };
-
-  const handleChangePassword = async () => {
-    const validatePassword = () => {
-      const newErrors = {};
-
-      if (!passwordData.currentPassword.trim()) {
-        newErrors.currentPassword = "Current password is required";
-      }
-
-      if (!passwordData.newPassword.trim()) {
-        newErrors.newPassword = "New password is required";
-      }
-
-      if (!passwordData.confirmPassword.trim()) {
-        newErrors.confirmPassword = "Confirm password is required";
-      } else if (passwordData.newPassword !== passwordData.confirmPassword) {
-        newErrors.confirmPassword = "Passwords do not match to New Password";
-      }
-
-      setErrors(newErrors);
-      return Object.keys(newErrors).length === 0;
-    };
-
-
-
-    if (!validatePassword()) return;
-
-    try {
-      setPasswordLoading(true);
-
-      const res = await axios.patch(
-        `${Api}/users/change-password/${currentUser?._id}`,
-        {
-          currentPassword: passwordData.currentPassword,
-          newPassword: passwordData.newPassword,
-          confirmPassword: passwordData.confirmPassword,
-        },
-      );
-
-      toast.success(res.data.message, toasts);
-
-      setPasswordModel(false);
-      setPasswordData({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      });
-
-      setErrors({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      });
-
-    } catch (error) {
-      console.error(error);
-      toast.error(
-        error.response?.data?.message || "Something went wrong",
-        toasts,
-      );
-    } finally {
-      setPasswordLoading(false);
+  const handleDeleteAccount = () => {
+    if (window.confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
+      toast.error("Account deletion requested. Support will contact you.", toasts);
     }
   };
-  const handlelink = async () => {
-    if (!mobile_number || mobile_number.length !== 10) {
-      alert("Enter a valid 10-digit mobile number");
-      return;
-    }
-    const fullMobileNumber =
-      `${countryCode}${mobile_number}`;
-    setInviteLoading(true);
-    try {
 
-      const stored = await axios.post(
-        `${Api}/referralInvite/`,
-        {
-          referredBy: user.id,
-          mobile: fullMobileNumber,
-          status: 'Waiting',
-        }
-      )
-
-      if (stored.data.status == true) {
-
-        const response = await axios.post(
-          `${Api}/referrals/send`,
-          {
-            mobile_number,
-            shareLink,
-            referrerId: user?.referralCode,
-          },
-          {
-            withCredentials: true,
-          }
-        );
-
-        console.log(response.data);
-        setInviteLoading(false);
-        setMobile_number('');
-        handleCloseShare();
-        alert("Referral link sent successfully!");
-      }
-
-    } catch (error) {
-      console.error(
-        "Referral SMS error:",
-        error.response?.data || error.message
-      );
-
-      alert(
-        error.response?.data?.message ||
-        "Failed to send referral SMS"
-      );
-    }
+  /* ── Switch styling ── */
+  const switchSx = {
+    flexShrink: 0,
+    "& .MuiSwitch-switchBase.Mui-checked": { color: RUST },
+    "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": { bgcolor: RUST },
+    "& .MuiSwitch-track": { bgcolor: "#D1D5DB" },
   };
-  const isProduction =
-    import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "production";
 
-  const isTesting =
-    import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "testing";
-
-  const getCommunityPost = async () => {
-    try {
-      const postsRes = await axios.get(Api + `/post-images/profile/${currentUser?._id}`);
-
-      console.log("postsRes...", postsRes)
-      const myPosts = postsRes.data.data.filter(
-        (item) => item.authorId?._id === currentUser?._id,
-      );
-      setCommunityPosts(myPosts);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-  const StatBlock = ({ value, label }) => (
-    <Box sx={{ textAlign: "center", minWidth: { xs: 52, sm: 64 } }}>
-      <Typography
-        fontWeight={800}
-        sx={{
-          fontSize: { xs: "0.85rem", sm: "0.95rem", md: "1.05rem" },
-          lineHeight: 1.2,
-        }}
-      >
-        {value}
-      </Typography>
-      <Typography
-        color="text.secondary"
-        sx={{ fontSize: { xs: "0.62rem", sm: "0.7rem", md: "0.75rem" } }}
-      >
-        {label}
-      </Typography>
-    </Box>
-  );
-  const shareLink = `${window.location.origin}/register?ref=${user?.referralCode}`;
   return (
-    <Box
-      sx={{
-        // maxWidth: 1000,
-        // mx: "auto",
-        // px: 1.5,
-        py: 1,
-        pb: 3,
-      }}
-    >
-      <Typography
-        variant="h5"
-        sx={{
-          // color: '#E8650A',
-          color: "#000000",
-          fontWeight: 500,
-          fontSize: { xs: "1.2rem", sm: "1.2rem", md: "1.35rem", lg: "1.5rem" },
-          mb: { xs: "1.2rem", sm: "1.2rem", md: "1.35rem", lg: "1.5rem" },
-        }}
-      >
-        Settings
-        {/* <span style={{ color: '#138808' }}>Profile</span> */}
-      </Typography>
+    <Box sx={{ bgcolor: BG, minHeight: "100vh", py: { xs: 3, sm: 4 }, px: { xs: 2, sm: 4 } }}>
+      <Box sx={{ maxWidth: 900, mx: "auto", width: "100%" }}>
+        
+        {/* ─── Page Header ─── */}
+        <Typography sx={{ fontSize: { xs: 24, sm: 28 }, fontWeight: 800, color: NAVY, mb: 3 }}>
+          Settings
+        </Typography>
 
-      <SectionCard
-        sx={{
-          p: { xs: 1, sm: 2 },
-          border: "1px solid",
-          borderColor: "divider",
-          borderRadius: 3,
-          boxShadow: "0 6px 20px rgba(0,0,0,0.06)",
-          transition: "0.3s",
-          "&:hover": {
-            boxShadow: "0 10px 28px rgba(0,0,0,0.10)",
-          },
-        }}
-      >
-        <Stack
-          direction={{ xs: "column", sm: "row" }}
-          spacing={3}
-          alignItems={{ xs: "center", sm: "center" }}
-          justifyContent="space-between"
-        >
-          <Stack
-            direction="row"
-            spacing={2}
-            alignItems="center"
-            sx={{ flex: 1, width: "100%" }}
-          >
-            <Avatar
-              src={currentUser?.profileImage || ""}
-              sx={{
-                width: { xs: 60, sm: 90, md: 100 },
-                height: { xs: 60, sm: 90, md: 100 },
-                bgcolor: SAFFRON,
-                color: "#fff",
-                fontWeight: 700,
-                fontSize: "2rem",
-                border: "4px solid #fff",
-                boxShadow: "0 6px 18px rgba(0,0,0,0.15)",
-                flexShrink: 0,
-                cursor: "pointer",
-                transition: "all 0.2s ease",
-
-                "&:hover": {
-                  transform: "scale(1.08)",
-                  boxShadow: "0 0 0 3px rgba(255,255,255,0.3)",
-                },
-              }}
-              onClick={() => {
-                setSelectedProfile(currentUser);
-                setProfileModalOpen(true);
-              }}
-            >
-              {`${currentUser?.firstName?.[0] || ""}${currentUser?.lastName?.[0] || ""}`}
-            </Avatar>
-
-            <Box sx={{ minWidth: 0, flex: 1 }}>
-              <Typography
-                sx={{
-                  fontWeight: 700,
-                  fontSize: { xs: "1rem", sm: "1.3rem" },
-                  color: "text.primary",
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  mt: 1,
-                }}
-              >
-                {currentUser?.firstName} {currentUser?.lastName}
+        {/* ─── 1. Account ─── */}
+        <Section title="Account">
+          <Stack spacing={0}>
+            {/* Mobile Row */}
+            <Row sx={{ py: 1.5 }}>
+              <Typography sx={{ fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>
+                Mobile number
               </Typography>
-
-              <Typography
-                sx={{
-                  mt: 0.5,
-                  color: "text.secondary",
-                  fontSize: { xs: "0.9rem", sm: "1rem" },
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                }}
-              >
-                {currentUser?.email}
-              </Typography>
-            </Box>
-          </Stack>
-
-          <Button
-            variant="outlined"
-            onClick={() => navigate("/user-profile")}
-            sx={{
-              ...pillBtn,
-              // width: { xs: "auto", sm: "auto" },
-              display: "flex",
-              justifyContent: { xs: "flex-end" },
-            }}
-          >
-            View Profile
-          </Button>
-        </Stack>
-      </SectionCard>
-
-      <ProfileModal
-        open={profileModalOpen}
-        selectedProfile={selectedProfile}
-        onClose={() => {
-          setProfileModalOpen(false);
-        }}
-      />
-
-      {/* <SectionCard sx={{ mt: 3 }}>
-        <SectionHeader icon={<PersonIcon />} label="Account" />
-        <Divider sx={{ mt: 1 }} />
-        <Stack>
-          <Button
-            variant="text"
-            sx={{
-              ...compactBtn,
-              justifyContent: "flex-start",
-              color: SAFFRON,
-              px: 0,
-              minHeight: { xs: 34, sm: 40 },
-              mt: 1.2
-            }}
-          >
-            Update profile information
-          </Button>
-          <Button
-            variant="text"
-            sx={{
-              ...compactBtn,
-              justifyContent: "flex-start",
-              color: SAFFRON,
-              px: 0,
-              minHeight: { xs: 34, sm: 40 },
-            }}
-          >
-            Manage ride preferences
-          </Button>
-        </Stack>
-      </SectionCard> */}
-
-      {/* ── Security ── */}
-
-      {/* <SectionCard sx={{ mt: 3 }}>
-        <SectionHeader icon={<LockIcon />} label="Security" />
-        <Divider sx={{ mt: 1 }} />
-        <Grid
-          sx={{
-            display: "flex",
-            justifyContent: "flex-end",
-          }}
-        >
-          <Button
-            variant="outlined"
-            onClick={() => {
-              setPasswordModel(true);
-            }}
-            sx={{
-              ...pillBtn,
-              width: { xs: "auto", sm: "auto" },
-              mt: 1.5,
-            }}
-          >
-            Change Password
-          </Button>
-        </Grid>
-      </SectionCard> */}
-
-      <Modal open={passwordModel} onClose={() => setPasswordModel(false)}>
-        <Box
-          sx={{
-            position: "fixed",
-            inset: 0,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            bgcolor: "rgba(0,0,0,0.45)",
-            p: 2,
-          }}
-        >
-          <Box
-            sx={{
-              bgcolor: "#fff",
-              width: {
-                xs: "100%",
-                sm: "90%",
-                md: 430,
-              },
-              maxWidth: 430,
-              borderRadius: 3,
-              boxShadow: 10,
-              overflow: "hidden",
-            }}
-          >
-            {/* Header */}
-            <Box
-              sx={{
-                px: 3,
-                py: 2,
-                borderBottom: "1px solid #EAEAEA",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
-              <Typography
-                // variant={{xs:"h1", sm:"h9"}}
-                sx={{
-                  fontWeight: 700,
-                  color: "#333",
-                }}
-              >
-                Change Password
-              </Typography>
-
-              <IconButton onClick={() => setPasswordModel(false)} size="small">
-                <Close />
-              </IconButton>
-            </Box>
-
-            {/* Body */}
-            <Box
-              sx={{
-                p: {
-                  xs: 2,
-                  sm: 3,
-                },
-              }}
-            >
-              <Stack spacing={2.5}>
-                {/* Current Password */}
-                <TextField
-                  fullWidth
-                  label="Current Password"
-                  type={showPassword.current ? "text" : "password"}
-                  name="currentPassword"
-                  value={passwordData.currentPassword}
-                  onChange={handlePasswordChange}
-                  error={!!errors.currentPassword}
-                  helperText={errors.currentPassword}
-                  slotProps={{
-                    input: {
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <IconButton
-                            edge="end"
-                            onClick={() =>
-                              setShowPassword((prev) => ({
-                                ...prev,
-                                current: !prev.current,
-                              }))
-                            }
-                          >
-                            {showPassword.current ? (
-                              <VisibilityOff />
-                            ) : (
-                              <Visibility />
-                            )}
-                          </IconButton>
-                        </InputAdornment>
-                      ),
-                    },
-                  }}
-                />
-
-                {/* New Password */}
-                <TextField
-                  fullWidth
-                  label="New Password"
-                  type={showPassword.new ? "text" : "password"}
-                  name="newPassword"
-                  value={passwordData.newPassword}
-                  onChange={handlePasswordChange}
-                  error={!!errors.newPassword}
-                  helperText={errors.newPassword}
-                  slotProps={{
-                    input: {
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <IconButton
-                            edge="end"
-                            onClick={() =>
-                              setShowPassword((prev) => ({
-                                ...prev,
-                                new: !prev.new,
-                              }))
-                            }
-                          >
-                            {showPassword.new ? (
-                              <VisibilityOff />
-                            ) : (
-                              <Visibility />
-                            )}
-                          </IconButton>
-                        </InputAdornment>
-                      ),
-                    },
-                  }}
-                />
-
-                {/* Confirm Password */}
-                <TextField
-                  fullWidth
-                  label="Confirm Password"
-                  type={showPassword.confirm ? "text" : "password"}
-                  name="confirmPassword"
-                  value={passwordData.confirmPassword}
-                  onChange={handlePasswordChange}
-                  error={!!errors.confirmPassword}
-                  helperText={errors.confirmPassword}
-                  slotProps={{
-                    input: {
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <IconButton
-                            edge="end"
-                            onClick={() =>
-                              setShowPassword((prev) => ({
-                                ...prev,
-                                confirm: !prev.confirm,
-                              }))
-                            }
-                          >
-                            {showPassword.confirm ? (
-                              <VisibilityOff />
-                            ) : (
-                              <Visibility />
-                            )}
-                          </IconButton>
-                        </InputAdornment>
-                      ),
-                    },
-                  }}
-                />
-
-                {/* Buttons */}
-                <Stack
-                  direction={{ xs: "row", sm: "row" }}
-                  spacing={2}
-                  sx={{
-                    pt: 2,
-                    display: "flex",
-                    justifyContent: "center"
-                  }}
-                >
-                  <Button
-                    variant="contained"
-                    onClick={() => {
-                      // setPasswordModel(false);
-                      setPasswordData({
-                        currentPassword: "",
-                        newPassword: "",
-                        confirmPassword: "",
-                      });
-                    }}
-                    sx={{
-                      width: { xs: "100%", sm: "auto" },
-                      minWidth: { sm: 140 },
-                      bgcolor: "#757575",
-                      color: "#ffff",
-                      textTransform: "none",
-                      fontWeight: 600,
-
-                    }}
-                  >
-                    Reset
-                  </Button>
-
-                  <Button
-                    variant="contained"
-                    onClick={handleChangePassword}
-                    disabled={passwordLoading}
-                    sx={{
-                      width: { xs: "100%", sm: "auto" },
-                      minWidth: { sm: 180 },
-                      bgcolor: "#FF9933",
-                      textTransform: "none",
-                      fontWeight: 600,
-                      "&:hover": {
-                        bgcolor: "#e66a12",
-                      },
-                    }}
-                  >
-                    {passwordLoading
-                      ? " Updating... "
-                      : " Update "}
-                  </Button>
-                </Stack>
-              </Stack>
-            </Box>
-          </Box>
-        </Box>
-      </Modal>
-
-
-      <Modal
-        open={openShare}
-        onClose={(event, reason) => {
-          if (reason === "backdropClick") {
-            return;
-          }
-
-          handleCloseShare();
-        }}
-      >
-        <Box
-          sx={{
-            position: "fixed",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: { xs: "92%", sm: "100%" },
-            px: { xs: 2, sm: 0 },
-          }}
-        >
-          <Box
-            sx={{
-              position: "relative",
-              bgcolor: "white",
-              width: { xs: "100%", sm: 380 },
-              maxWidth: 380,
-              borderRadius: { xs: 2, sm: 2 },
-              p: { xs: 2, sm: 3 },
-              boxShadow: 24,
-            }}
-          >
-            <IconButton
-              onClick={handleCloseShare}
-              size="small"
-              sx={{
-                position: "absolute",
-                top: 8,
-                right: 8,
-                color: "grey.500",
-              }}
-            >
-              <CloseIcon fontSize="small" />
-            </IconButton>
-
-            <Typography
-              fontWeight={600}
-              sx={{
-                fontSize: { xs: "0.9rem", sm: "1rem" },
-                mb: { xs: 1.5, sm: 2 },
-                pr: 3,
-              }}
-            >
-              Invite your friends
-            </Typography>
-
-            {/* Referral Link - Copyable */}
-            <Paper
-              variant="outlined"
-              sx={{
-                p: 1.5,
-                mb: 2,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                bgcolor: "#f5f5f5",
-                borderRadius: 1,
-              }}
-            >
-              <Typography
-                sx={{
-                  fontSize: { xs: "0.7rem", sm: "0.8rem" },
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                  flex: 1,
-                  mr: 1,
-                }}
-              >
-                {shareLink}
-              </Typography>
-              <Tooltip title="Copy link">
-                <IconButton
-                  size="small"
-                  onClick={() => handleCopy(shareLink)}
-                  sx={{ flexShrink: 0 }}
-                >
-                  <ContentCopyIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
-            </Paper>
-            <Stack
-              direction="row"
-              spacing={1}
-              sx={{
-                width: "100%",
-              }}
-            >
-              {isProduction && (
-                <>
-                  <TextField
-                    size="small"
-                    value="US +1"
-                    disabled
-                    sx={{
-                      width: {
-                        xs: 105,
-                        sm: 115,
-                      },
-                      "& .MuiInputBase-input.Mui-disabled": {
-                        color: "#555",
-                        WebkitTextFillColor: "#555",
-                      },
-                    }}
-                  />
-
-                </>
-              )}
-              {isTesting && (
-                <TextField
-                  select
-                  size="small"
-                  value={
-                    countryCode
-                  }
-                  onChange={(
-                    e
-                  ) => {
-                    setCountryCode(
-                      e
-                        .target
-                        .value
-                    );
-
-                    /* 
-                     * Clear the 
-                     * previous number 
-                     * when country 
-                     * changes. 
-                     */
-                    setMobile_number("")
-                  }}
-                  sx={{
-                    width: {
-                      xs: 105,
-                      sm: 115,
-                    },
-                  }}
-                >
-
-                  <MenuItem value="+91">
-                    🇮🇳 +91
-                  </MenuItem>
-
-                  <MenuItem value="+1">
-                    🇺🇸 +1
-                  </MenuItem>
-                </TextField>
-              )}
-
-              <TextField
-                fullWidth
-                value={mobile_number}
-                type="text"
-                inputMode="numeric"
-                onChange={(e) => {
-                  const value = e.target.value.replace(/\D/g, "").slice(0, 10);
-                  setMobile_number(value);
-                }}
-                size="small"
-                placeholder="Enter mobile number"
-                InputProps={{
-                  sx: {
-                    fontSize: { xs: "0.75rem", sm: "0.85rem" },
-                  },
-                }}
-              />
-            </Stack>
-            <Stack
-              direction="row"
-              spacing={{ xs: 1, sm: 1 }}
-              sx={{ mt: { xs: 1.5, sm: 2 } }}
-            >
-              <Button
-                fullWidth
-                variant="contained"
-                size="small"
-                sx={{
-                  color: 'black',
-                  fontSize: { xs: "0.75rem", sm: "0.85rem" },
-                  py: { xs: 0.5, sm: 0.75 },
-                  textTransform: "none",
-                  bgcolor: "#b7b7b7ff",
-                  "&:hover": { bgcolor: "#939393ff" },
-                }}
-                onClick={() => setMobile_number('')}
-              >
-                Clear
-              </Button>
-
-              <Button
-                fullWidth
-                variant="contained"
-                size="small"
-                sx={{
-                  fontSize: { xs: "0.75rem", sm: "0.85rem" },
-                  py: { xs: 0.5, sm: 0.75 },
-                  textTransform: "none",
-                  bgcolor: "#FF9933",
-                  "&:hover": { bgcolor: "#da9a3a" },
-                }}
-                onClick={() => handlelink(mobile_number)}
-              >
-                {inviteLoading ? "Inviting..." : "Invite"}
-              </Button>
-            </Stack>
-          </Box>
-        </Box>
-      </Modal>
-      {/* ── Notifications ── */}
-      {/* <SectionCard sx={{ mt: 3 }}>
-        <SectionHeader icon={<NotificationsIcon />} label="Notifications" />
-        <Divider sx={{ mt: 1 }} />
-        <Stack spacing={0} divider={<Divider />}>
-          {[
-            { label: "Ride updates", checked: true },
-            { label: "Referral requests", checked: true },
-            { label: "Community likes and comments", checked: false },
-          ].map(({ label, checked }) => (
-            <FormControlLabel
-              key={label}
-              control={
-                <Switch
-                  defaultChecked={checked}
-                  size={isMobile ? "small" : "medium"}
-                  sx={{
-                    "& .MuiSwitch-switchBase.Mui-checked": { color: SAFFRON },
-                    "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                      bgcolor: SAFFRON,
-                    },
-                  }}
-                />
-              }
-              label={
-                <Typography sx={{ fontSize: { xs: "0.75rem", sm: "0.82rem", md: "0.875rem" } }}>
-                  {label}
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flexShrink: 0 }}>
+                <Typography sx={{ fontSize: 14, color: TEXT_MUTED }}>
+                  {currentUser?.mobile ? `+1 (***) ***-${currentUser.mobile.slice(-4)}` : "+1 (***) ***-XXXX"}
                 </Typography>
-              }
-              labelPlacement="start"
-              sx={{
-                mx: 0,
-                justifyContent: "space-between",
-                py: { xs: 0.75, sm: 1 },
-              }}
-            />
-          ))}
-        </Stack>
-      </SectionCard> */}
-
-      {/* ── Referral ── */}
-      <SectionCard sx={{ mt: 3 }}>
-        <SectionHeader icon={<CardGiftcardIcon />} label="Referral" />
-        <Divider sx={{ mt: 1.5 }} />
-
-        <Grid
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            mt: 2,
-          }}
-        >
-          <Grid>
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{ fontSize: { xs: "0.68rem", sm: "0.8rem" }, mt: 1.5 }}
-            >
-              Your referral code
-            </Typography>
-
-            {!isProfileComplete && (<Chip
-              label={currentUser?.referralCode || "SAATHI-CODE"}
-              sx={{
-                fontWeight: 700,
-                mt: 1,
-                fontSize: { xs: "0.72rem", sm: "0.75rem" },
-                height: { xs: 26, sm: 30 },
-                color: SAFFRON,
-                bgcolor: SAFFRON_LIGHT,
-              }}
-            />
-            )}
-          </Grid>
-
-          <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-            <Button
-              variant="outlined"
-              onClick={() => handleCopy(user?.referralCode)}
-              startIcon={
-                <ContentCopyIcon sx={{ fontSize: { xs: 14, sm: 16 } }} />
-              }
-              sx={{
-                ...pillBtn,
-                width: { xs: "100%", sm: "auto" },
-              }}
-              disabled={isProfileComplete}
-            >
-              Copy Code
-            </Button>
-            <Button
-              variant="outlined"
-              onClick={handleOpenShare}
-              startIcon={<ShareIcon sx={{ fontSize: { xs: 14, sm: 16 } }} />}
-              sx={{
-                ...pillBtn,
-                width: { xs: "100%", sm: "auto" },
-              }}
-              disabled={isProfileComplete}
-            >
-              Share Invite
-            </Button>
-          </Stack>
-        </Grid>
-      </SectionCard>
-
-      {/* ── Account Actions ── */}
-      <SectionCard sx={{ mt: 3 }}>
-        <SectionHeader icon={<SettingsIcon />} label="Account Actions" />
-        <Divider sx={{ mt: 1 }} />
-        <Grid
-          sx={{
-            display: "flex",
-            justifyContent: { xs: "end", sm: "end" },
-            mt: 2,
-            mx: 1,
-          }}
-        >
-          <Stack direction={{ xs: "row", sm: "row" }} spacing={2}>
-            <Button
-              variant="outlined"
-              startIcon={<LogoutIcon sx={{ fontSize: { xs: 15, sm: 17 } }} />}
-              onClick={handleLogout}
-              sx={{
-                ...pillBtn,
-                width: { xs: "auto", sm: "auto" },
-              }}
-            >
-              Logout
-            </Button>
-            <Dialog
-              open={logoutDialogOpen}
-              onClose={(event, reason) => {
-                if (reason === "backdropClick") {
-                  return;
-                }
-
-                cancelLogout();
-              }}
-              fullWidth
-              maxWidth="xs"
-              PaperProps={{
-                sx: {
-                  borderRadius: { xs: 3, sm: 4 },
-                  mx: { xs: 2, sm: "auto" },
-                  width: { xs: "calc(100% - 24px)", sm: "100%" },
-                  maxWidth: { xs: 320, sm: 400 },
-                  overflow: "hidden",
-                  position: "relative",
-                  background: "linear-gradient(145deg, #ffffff, #faf5f0)",
-                  boxShadow: "0 20px 60px rgba(0,0,0,0.15)",
-                  my: { xs: 2, sm: "auto" },
-                  maxHeight: { xs: "90vh", sm: "auto" },
-                },
-              }}
-            >
-              {/* Decorative Top Bar */}
-              <Box
-                sx={{
-                  height: { xs: 3, sm: 4 },
-                  background: "linear-gradient(90deg, #f97316, #dc2626)",
-                  width: "100%",
-                  flexShrink: 0,
-                }}
-              />
-
-              {/* Close Button
-              <IconButton
-                onClick={cancelLogout}
-                aria-label="Close"
-                sx={{
-                  position: "absolute",
-                  right: { xs: 8, sm: 12 },
-                  top: { xs: 8, sm: 12 },
-                  color: "#E85D26",
-                  zIndex: 10,
-                  bgcolor: "#f3f4f6",
-                  "&:hover": {
-                    bgcolor: "#fee2e2",
-                    color: "#E85D26",
-                  },
-                  width: { xs: 28, sm: 36 },
-                  height: { xs: 28, sm: 36 },
-                  p: 0,
-                }}
-              >
-                <CloseIcon sx={{ fontSize: { xs: 14, sm: 20 } }} />
-              </IconButton> */}
-
-              <DialogTitle
-                sx={{
-                  fontWeight: 800,
-                  fontSize: { xs: "0.95rem", sm: "1.25rem" },
-                  pt: { xs: 2.5, sm: 4 },
-                  pb: 0,
-                  textAlign: "center",
-                  color: "#1F2430",
-                  px: { xs: 2, sm: 3 },
-                }}
-              />
-
-              <DialogContent
-                sx={{
-                  pt: { xs: 1.5, sm: 2.5 },
-                  pb: { xs: 0.5, sm: 1.5 },
-                  px: { xs: 2, sm: 3 },
-                }}
-              >
-                <Box sx={{ textAlign: "center", px: { xs: 0.5, sm: 1 } }}>
-                  <Typography
-                    sx={{
-                      fontSize: { xs: "0.85rem", sm: "1rem" },
-                      fontWeight: 600,
-                      color: "#1F2430",
-                      mb: { xs: 0.5, sm: 1 },
-                    }}
-                  >
-                    Are you sure you want to logout ?
-                  </Typography>
-                </Box>
-              </DialogContent>
-
-              <DialogActions
-                sx={{
-                  px: { xs: 1.5, sm: 3 },
-                  pb: { xs: 2, sm: 3.5 },
-                  pt: { xs: 1, sm: 2 },
-                  gap: { xs: 0.75, sm: 1.5 },
-                  justifyContent: "center",
-                  flexDirection: "row", // Always in row
-                }}
-              >
                 <Button
-                  onClick={cancelLogout}
-                  variant="outlined"
+                  onClick={() => navigate("/user-profile")}
+                  disableRipple
                   sx={{
-                    borderRadius: 2,
-                    textTransform: "none",
-                    fontWeight: 600,
-                    flex: { xs: 1, sm: "0 0 auto" },
-                    minWidth: { xs: "auto", sm: 110 },
-                    minHeight: { xs: 32, sm: 46 },
-                    height: { xs: 32, sm: 46 },
-                    borderColor: "#6b7280",
-                    color: "#ffffff",
-                    bgcolor: "#6b7280",
-                    "&:hover": {
-                      borderColor: "#6b7280",
-                      bgcolor: "#6b7280",
-                    },
-                    px: { xs: 1, sm: 3 },
-                    fontSize: { xs: "0.7rem", sm: "0.9rem" },
-                    py: { xs: 0.5, sm: 1 },
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={confirmLogout}
-                  variant="contained"
-                  sx={{
-                    borderRadius: 2,
                     textTransform: "none",
                     fontWeight: 700,
-                    flex: { xs: 1, sm: "0 0 auto" },
-                    minWidth: { xs: "auto", sm: 110 },
-                    minHeight: { xs: 32, sm: 46 },
-                    height: { xs: 32, sm: 46 },
-                    background: "linear-gradient(135deg, #E85D26, #E85D26)",
-                    color: "#ffffff",
-                    "&:hover": {
-                      background: "linear-gradient(135deg, #D65A00, #D65A00)",
-                    },
-                    boxShadow: "0 4px 15px rgba(232, 93, 38, 0.3)",
-                    px: { xs: 1, sm: 3 },
-                    fontSize: { xs: "0.7rem", sm: "0.9rem" },
-                    py: { xs: 0.5, sm: 1 },
+                    color: RUST,
+                    fontSize: 14,
+                    minWidth: 0,
+                    p: 0,
+                    "&:hover": { bgcolor: "transparent", textDecoration: "underline" },
                   }}
-                  startIcon={
-                    <LogoutIcon sx={{ fontSize: { xs: 14, sm: 20 } }} />
-                  }
                 >
-                  Logout
+                  Change
                 </Button>
-              </DialogActions>
-            </Dialog>
-            {/* <Button
-              startIcon={<DeleteIcon sx={{ fontSize: { xs: 5, sm: 17 } }} />}
+              </Box>
+            </Row>
+
+            <Divider sx={{ borderColor: BORDER }} />
+
+            {/* Email Row */}
+            <Row sx={{ py: 1.5 }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 0 }}>
+                <Typography sx={{ fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>
+                  Email
+                </Typography>
+                <Typography sx={{ fontSize: 13, color: TEXT_MUTED }}>
+                  (optional, never shown)
+                </Typography>
+              </Box>
+              <Typography sx={{ fontSize: 14, color: TEXT_MUTED, flexShrink: 0 }}>
+                {currentUser?.email || "Not provided"}
+              </Typography>
+            </Row>
+          </Stack>
+        </Section>
+
+        {/* ─── 2. Your Invite Code ─── */}
+        <Section title="Your invite code">
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: { xs: "column", sm: "row" },
+              alignItems: { xs: "stretch", sm: "center" },
+              gap: 2,
+              width: "100%",
+            }}
+          >
+            {/* The Code Input */}
+            <Box
               sx={{
-                ...pillBtn,
-                width: { xs: "100%", sm: "auto" },
+                flex: 1,
+                minWidth: 0,
+                px: 2.5,
+                py: 1.75,
+                bgcolor: "#fff",
+                border: `1px solid ${BORDER}`,
+                borderRadius: 1.5,
+                display: "flex",
+                alignItems: "center",
+                fontSize: 15,
+                fontWeight: 700,
+                color: TEXT_PRIMARY,
+                letterSpacing: 0.5,
+                fontFamily: "monospace",
+                boxShadow: "inset 0 1px 2px rgba(0,0,0,0.02)",
               }}
             >
-              Hide Account From Users
-            </Button> */}
+              {currentUser?.referralCode || "NOT_SET"}
+            </Box>
+
+            {/* Action Buttons */}
+            <Box sx={{ display: "flex", gap: 2, flexShrink: 0 }}>
+              <Button
+                variant="contained"
+                disableElevation
+                onClick={() => handleCopy(currentUser?.referralCode)}
+                sx={{
+                  bgcolor: RUST,
+                  color: "#fff",
+                  textTransform: "none",
+                  fontWeight: 700,
+                  px: 3,
+                  height: 48,
+                  borderRadius: 1.5,
+                  minWidth: 100,
+                  "&:hover": { bgcolor: RUST_DARK },
+                }}
+              >
+                Copy
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={handleShare}
+                sx={{
+                  color: RUST,
+                  borderColor: RUST,
+                  borderWidth: 1.5,
+                  textTransform: "none",
+                  fontWeight: 700,
+                  px: 3,
+                  height: 48,
+                  borderRadius: 1.5,
+                  minWidth: 100,
+                  "&:hover": { borderWidth: 1.5, bgcolor: "#FFF5EC" },
+                }}
+              >
+                Share
+              </Button>
+            </Box>
+          </Box>
+        </Section>
+
+        {/* ─── 3. SMS Preferences ─── */}
+        <Section title="Text message (SMS) preferences">
+          <Stack spacing={0}>
+            {/* Row 1 */}
+            <Row sx={{ py: 2 }}>
+              <Box sx={{ minWidth: 0 }}>
+                <Typography sx={{ fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>
+                  Ride requests and acceptances
+                </Typography>
+                <Typography sx={{ fontSize: 13, color: TEXT_MUTED, mt: 0.25 }}>
+                  Needed for rides to work
+                </Typography>
+              </Box>
+              <Switch
+                checked={smsPrefs.rideRequests}
+                onChange={handlePrefChange("rideRequests")}
+                sx={switchSx}
+              />
+            </Row>
+            <Divider sx={{ borderColor: BORDER }} />
+
+            {/* Row 2 */}
+            <Row sx={{ py: 2 }}>
+              <Typography sx={{ fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>
+                Referral approval requests
+              </Typography>
+              <Switch
+                checked={smsPrefs.referralApprovals}
+                onChange={handlePrefChange("referralApprovals")}
+                sx={switchSx}
+              />
+            </Row>
+            <Divider sx={{ borderColor: BORDER }} />
+
+            {/* Row 3 */}
+            <Row sx={{ py: 2 }}>
+              <Typography sx={{ fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>
+                Route alerts
+              </Typography>
+              <Switch
+                checked={smsPrefs.routeAlerts}
+                onChange={handlePrefChange("routeAlerts")}
+                sx={switchSx}
+              />
+            </Row>
+            <Divider sx={{ borderColor: BORDER }} />
+
+            {/* Row 4 */}
+            <Row sx={{ py: 2 }}>
+              <Typography sx={{ fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>
+                Community news and tips
+              </Typography>
+              <Switch
+                checked={smsPrefs.communityNews}
+                onChange={handlePrefChange("communityNews")}
+                sx={switchSx}
+              />
+            </Row>
           </Stack>
-        </Grid>
-      </SectionCard>
+
+          <Typography sx={{ fontSize: 12.5, color: TEXT_MUTED, mt: 2, lineHeight: 1.6 }}>
+            Message and data rates may apply. Reply STOP to opt out, HELP for help. Verification codes are always sent.
+          </Typography>
+        </Section>
+
+        {/* ─── 4. Legal Links ─── */}
+        <Paper
+          elevation={0}
+          sx={{
+            width: "100%",
+            p: { xs: 2, sm: 2.5 },
+            mb: 2.5,
+            borderRadius: 2.5,
+            border: `1px solid ${BORDER}`,
+            bgcolor: "#fff",
+            boxSizing: "border-box",
+          }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: { xs: 2, sm: 4 },
+            }}
+          >
+            <Typography component="a" href="/terms" sx={{ fontSize: 13.5, color: RUST, fontWeight: 700, textDecoration: "none", "&:hover": { textDecoration: "underline" } }}>
+              Terms of Service
+            </Typography>
+            <Typography component="a" href="/privacy" sx={{ fontSize: 13.5, color: RUST, fontWeight: 700, textDecoration: "none", "&:hover": { textDecoration: "underline" } }}>
+              Privacy Policy
+            </Typography>
+            <Typography component="a" href="/sms-terms" sx={{ fontSize: 13.5, color: RUST, fontWeight: 700, textDecoration: "none", "&:hover": { textDecoration: "underline" } }}>
+              SMS terms
+            </Typography>
+            <Typography component="a" href="/guidelines" sx={{ fontSize: 13.5, color: RUST, fontWeight: 700, textDecoration: "none", "&:hover": { textDecoration: "underline" } }}>
+              Community guidelines
+            </Typography>
+          </Box>
+        </Paper>
+
+        {/* ─── 5. Delete Account ─── */}
+        <Paper
+          elevation={0}
+          sx={{
+            width: "100%",
+            p: { xs: 2.5, sm: 3.5 },
+            borderRadius: 2.5,
+            border: `1px solid #F4C7C3`,
+            bgcolor: "#FDF2F2",
+            boxSizing: "border-box",
+          }}
+        >
+          <Typography sx={{ fontSize: 16, fontWeight: 700, color: "#991B1B", mb: 1 }}>
+            Delete my account
+          </Typography>
+          <Typography sx={{ fontSize: 13.5, color: "#7A1F1A", mb: 3, lineHeight: 1.6 }}>
+            Removes your profile and posts. Reviews you wrote stay anonymously. Members you vouched for keep their access. This can't be undone.
+          </Typography>
+          <Button
+            variant="contained"
+            disableElevation
+            onClick={handleDeleteAccount}
+            sx={{
+              bgcolor: "#991B1B",
+              color: "#fff",
+              textTransform: "none",
+              fontWeight: 700,
+              px: 3.5,
+              py: 1.25,
+              borderRadius: 1.5,
+              "&:hover": { bgcolor: "#7A1F1A" },
+            }}
+          >
+            Delete account
+          </Button>
+        </Paper>
+
+      </Box>
     </Box>
   );
 };
 
-export default Myprofile;
+export default MyProfileSettings;

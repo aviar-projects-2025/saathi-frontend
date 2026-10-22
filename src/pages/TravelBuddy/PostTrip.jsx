@@ -118,7 +118,7 @@ const validateFlights = (flights) =>
 
     if (!f.departure) e.departure = "Enter departure time.";
     if (!f.arrival) e.arrival = "Enter arrival time.";
-    
+
     if (f.departure && f.arrival && new Date(f.arrival) <= new Date(f.departure)) {
       e.arrival = "Arrival must be after departure.";
     }
@@ -479,7 +479,7 @@ export default function PostTrip() {
   const createTrip = async () => {
     if (submitting) return;
     setSubmitting(true);
-    
+
     try {
       // Format payload for backend
       const payload = {
@@ -498,11 +498,18 @@ export default function PostTrip() {
           arrivalTime: f.arrival,
         })),
       };
+      const token = localStorage.getItem("token");
+      await axios.post(`${Api}/travel-buddy`, payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // <--- MUST ADD THIS
+          }
+        }
 
-      await axios.post(`${Api}/travel-buddy`, payload);
+      );
 
       toast.success("Trip posted! We will notify you when we find matches.");
-      navigate("/travel-buddy"); // Redirect back to hub
+      navigate("/travelbuddy"); // Redirect back to hub
     } catch (error) {
       console.error(error);
       toast.error(error.response?.data?.message || "Failed to post trip");
