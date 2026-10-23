@@ -148,19 +148,32 @@ const INITIAL_REQUEST = {
 };
 
 /* ═══════════════════════════════════════════════════════
-   SHARED STYLES
+   SHARED STYLES  (RESPONSIVE)
    ═══════════════════════════════════════════════════════ */
+
+/* RESPONSIVE: inputs use 16px on phones (prevents iOS auto-zoom on focus),
+   and a slightly smaller size on larger screens. */
 const tfSx = {
-  "& .MuiInputBase-input": { fontSize: { xs: "0.9rem", sm: "0.95rem" } },
+  "& .MuiInputBase-input": {
+    fontSize: { xs: "1rem", sm: "0.95rem" },
+    minWidth: 0,
+  },
   "& .MuiOutlinedInput-root": { borderRadius: 2, bgcolor: "#fff" },
+  /* RESPONSIVE: date/time inputs can overflow on narrow Android/iOS screens */
+  "& input[type='date'], & input[type='time']": {
+    minWidth: 0,
+    WebkitAppearance: "none",
+    appearance: "none",
+  },
 };
 const selectSx = {
-  fontSize: { xs: "0.9rem", sm: "0.95rem" },
+  fontSize: { xs: "1rem", sm: "0.95rem" },
   borderRadius: 2,
   bgcolor: "#fff",
+  minWidth: 0,
 };
 const labelSx = {
-  fontSize: { xs: "0.72rem", sm: "0.78rem" },
+  fontSize: { xs: "0.7rem", sm: "0.76rem", md: "0.78rem" },
   fontWeight: 700,
   letterSpacing: 0.6,
   textTransform: "uppercase",
@@ -172,14 +185,56 @@ const primaryBtn = {
   color: "#fff",
   textTransform: "none",
   fontWeight: 700,
-  fontSize: { xs: 14.5, sm: 15.5 },
-  py: { xs: 1.4, sm: 1.55 },
+  fontSize: { xs: 14.5, sm: 15, md: 15.5 },
+  py: { xs: 1.4, sm: 1.5, md: 1.6 },
+  /* RESPONSIVE: comfortable touch target */
+  minHeight: 48,
   borderRadius: 2,
   boxShadow: "none",
   width: "100%",
   "&:hover": { bgcolor: RUST_DARK, boxShadow: "none" },
   "&.Mui-disabled": { bgcolor: "#E3C9BE", color: "#fff" },
 };
+
+/* RESPONSIVE: auto-fitting grid for side-by-side fields.
+   - phones: 1 column
+   - tablets: 2 columns
+   - desktop: as many columns as fit (min ~150px each)
+   Replaces the old Stack direction={{ xs: "column", sm: "row" }} which got cramped at sm. */
+const fieldGridSx = {
+  display: "grid",
+  gap: { xs: 1.75, sm: 2 },
+  gridTemplateColumns: {
+    xs: "minmax(0, 1fr)",
+    sm: "repeat(auto-fit, minmax(min(100%, 170px), 1fr))",
+  },
+  width: "100%",
+  minWidth: 0,
+};
+
+/* RESPONSIVE: two-up grid that stays 2 columns even on phones (short numeric fields) */
+const pairGridSx = {
+  display: "grid",
+  gap: { xs: 1.5, sm: 2 },
+  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+  width: "100%",
+  minWidth: 0,
+};
+
+/* RESPONSIVE: info callout shared style */
+const infoAlertSx = {
+  borderRadius: 2,
+  bgcolor: "#EAF3FB",
+  color: "#1A3E8A",
+  "& .MuiAlert-icon": { color: "#1A3E8A", mr: { xs: 1, sm: 1.5 } },
+  "& .MuiAlert-message": { minWidth: 0, overflowWrap: "anywhere" },
+  fontSize: { xs: 12.5, sm: 13 },
+  lineHeight: 1.55,
+  alignItems: "flex-start",
+};
+
+/* RESPONSIVE: inline error text */
+const errTextSx = { fontSize: { xs: 11.5, sm: 12 }, color: "#C5221F", mt: 0.5 };
 
 /* ═══════════════════════════════════════════════════════
    SMALL COMPONENTS
@@ -194,11 +249,19 @@ function ChipToggle({ label, active, onClick }) {
         borderRadius: 999,
         fontWeight: 600,
         fontSize: { xs: 12.5, sm: 13 },
-        height: { xs: 30, sm: 34 },
+        /* RESPONSIVE: taller touch target on phones */
+        height: { xs: 34, sm: 34, md: 36 },
+        maxWidth: "100%",
         bgcolor: active ? RUST : "#fff",
         color: active ? "#fff" : INK,
         border: `1px solid ${active ? RUST : BORDER}`,
         "&:hover": { bgcolor: active ? RUST_DARK : "#F4F0EA" },
+        /* RESPONSIVE: long labels wrap/truncate instead of overflowing */
+        "& .MuiChip-label": {
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          px: { xs: 1.4, sm: 1.6 },
+        },
       }}
     />
   );
@@ -210,18 +273,25 @@ function ToggleRow({ icon: Icon, title, subtitle, checked, onChange }) {
       direction="row"
       alignItems="center"
       justifyContent="space-between"
+      spacing={1}
       sx={{
-        py: { xs: 1.5, sm: 1.75 },
+        py: { xs: 1.25, sm: 1.5, md: 1.75 },
         borderBottom: `1px solid ${BORDER}`,
         "&:last-of-type": { borderBottom: "none" },
+        minWidth: 0,
       }}
     >
-      <Stack direction="row" spacing={1.25} alignItems="flex-start" sx={{ pr: 2, minWidth: 0 }}>
+      <Stack
+        direction="row"
+        spacing={{ xs: 1, sm: 1.25 }}
+        alignItems="flex-start"
+        sx={{ pr: { xs: 0.5, sm: 2 }, minWidth: 0, flex: 1 }}
+      >
         {Icon && (
           <Box
             sx={{
-              width: 30,
-              height: 30,
+              width: { xs: 28, sm: 30 },
+              height: { xs: 28, sm: 30 },
               borderRadius: "8px",
               bgcolor: "rgba(200,63,8,0.08)",
               display: "grid",
@@ -235,16 +305,24 @@ function ToggleRow({ icon: Icon, title, subtitle, checked, onChange }) {
           </Box>
         )}
         <Box sx={{ minWidth: 0 }}>
-          <Typography sx={{ fontSize: { xs: "0.9rem", sm: "0.95rem" }, fontWeight: 600, color: INK }}>
+          <Typography
+            sx={{
+              fontSize: { xs: "0.88rem", sm: "0.95rem" },
+              fontWeight: 600,
+              color: INK,
+              overflowWrap: "anywhere",
+            }}
+          >
             {title}
           </Typography>
           {subtitle && (
             <Typography
               sx={{
-                fontSize: { xs: "0.75rem", sm: "0.78rem" },
+                fontSize: { xs: "0.72rem", sm: "0.78rem" },
                 color: MUTED,
                 mt: 0.25,
                 lineHeight: 1.4,
+                overflowWrap: "anywhere",
               }}
             >
               {subtitle}
@@ -270,8 +348,9 @@ function SeatStepper({ value, onChange, min = 1, max = 7 }) {
   const inc = () => onChange(Math.min(max, value + 1));
 
   const btnSx = {
-    width: { xs: 40, sm: 44 },
-    height: { xs: 40, sm: 44 },
+    /* RESPONSIVE: ≥44px touch targets everywhere */
+    width: { xs: 44, sm: 46, md: 48 },
+    height: { xs: 44, sm: 46, md: 48 },
     border: `1px solid ${BORDER}`,
     borderRadius: 999,
     bgcolor: "#fff",
@@ -287,7 +366,7 @@ function SeatStepper({ value, onChange, min = 1, max = 7 }) {
       </IconButton>
       <Typography
         sx={{
-          fontSize: { xs: 22, sm: 24 },
+          fontSize: { xs: 22, sm: 24, md: 26 },
           fontWeight: 800,
           color: INK,
           minWidth: 32,
@@ -305,13 +384,13 @@ function SeatStepper({ value, onChange, min = 1, max = 7 }) {
 
 function StepProgress({ steps, step }) {
   return (
-    <Stack direction="row" spacing={1} sx={{ mb: { xs: 3, sm: 3.5 } }}>
+    <Stack direction="row" spacing={1} sx={{ mb: { xs: 2.5, sm: 3, md: 3.5 } }}>
       {steps.map((_, i) => (
         <Box
           key={i}
           sx={{
             flex: 1,
-            height: 4,
+            height: { xs: 4, md: 5 },
             borderRadius: 999,
             bgcolor: i <= step ? RUST : "#E8E1D8",
             transition: "background-color 0.25s ease",
@@ -328,7 +407,9 @@ function StepProgress({ steps, step }) {
 export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen }) {
   const navigate = useNavigate();
   const theme = useTheme();
+  /* RESPONSIVE: extra breakpoints available if needed later */
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md")); // eslint-disable-line no-unused-vars
   const inputSize = isMobile ? "small" : "medium";
   const isEditMode = Boolean(ride);
 
@@ -696,30 +777,34 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
       <PageLayout>
         <Box
           sx={{
-            minHeight: { xs: "60dvh", sm: "50dvh" },
+            /* RESPONSIVE: 100vh fallback first, then dvh for mobile browser bars */
+            minHeight: { xs: "60vh", sm: "50vh" },
+            "@supports (height: 100dvh)": {
+              minHeight: { xs: "60dvh", sm: "50dvh" },
+            },
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            px: 2,
+            px: { xs: 2, sm: 3 },
           }}
         >
-          <Box sx={{ textAlign: "center", maxWidth: 460 }}>
+          <Box sx={{ textAlign: "center", maxWidth: { xs: 320, sm: 420, md: 480 }, width: "100%" }}>
             <Box
               sx={{
-                width: { xs: 72, sm: 88 },
-                height: { xs: 72, sm: 88 },
+                width: { xs: 72, sm: 88, md: 96 },
+                height: { xs: 72, sm: 88, md: 96 },
                 borderRadius: "50%",
                 bgcolor: "rgba(82,183,136,0.14)",
                 display: "grid",
                 placeItems: "center",
                 mx: "auto",
-                mb: 2.5,
+                mb: { xs: 2, sm: 2.5 },
               }}
             >
               <CheckCircle2 size={isMobile ? 38 : 46} color="#52B788" strokeWidth={2.4} />
             </Box>
             <Typography
-              sx={{ fontSize: { xs: 20, sm: 24 }, fontWeight: 800, color: NAVY, mb: 1 }}
+              sx={{ fontSize: { xs: 20, sm: 24, md: 26 }, fontWeight: 800, color: NAVY, mb: 1 }}
             >
               {mode === "offer"
                 ? isEditMode
@@ -727,7 +812,9 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                   : "Ride posted!"
                 : "Request posted!"}
             </Typography>
-            <Typography sx={{ color: MUTED, fontSize: { xs: 14, sm: 15 }, lineHeight: 1.55 }}>
+            <Typography
+              sx={{ color: MUTED, fontSize: { xs: 14, sm: 15 }, lineHeight: 1.55 }}
+            >
               {mode === "offer"
                 ? "We'll text you when someone requests a seat."
                 : "Drivers going your way will see your request and can offer to drive."}
@@ -746,14 +833,28 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
       <Box
         sx={{
           width: "100%",
-          maxWidth: { xs: "100%", sm: 640, md: 720 },
+          /* RESPONSIVE: container grows with the screen (phone → tablet → laptop → large desktop) */
+          maxWidth: { xs: "100%", sm: 600, md: 720, lg: 780, xl: 840 },
           mx: "auto",
-          px: { xs: 2, sm: 3, md: 3 },
-          pt: { xs: 1.5, sm: 2.5 },
-          pb: { xs: 5, sm: 8 },
+          /* RESPONSIVE: side padding scales + respects iPhone notch/landscape safe-area */
+          px: {
+            xs: "max(16px, env(safe-area-inset-left))",
+            sm: 3,
+            md: 4,
+          },
+          pt: { xs: 1.5, sm: 2.5, md: 3.5 },
+          pb: {
+            xs: "calc(40px + env(safe-area-inset-bottom))",
+            sm: 8,
+            md: 10,
+          },
           bgcolor: BG,
-          minHeight: "100dvh",
+          /* RESPONSIVE: 100vh fallback, then 100dvh so mobile address-bar doesn't cause jump */
+          minHeight: "100vh",
+          "@supports (height: 100dvh)": { minHeight: "100dvh" },
           boxSizing: "border-box",
+          /* RESPONSIVE: prevent any child from creating horizontal scroll */
+          overflowX: "hidden",
         }}
       >
         {/* ─── Header ─── */}
@@ -764,7 +865,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
           sx={{ mb: 1.5 }}
         >
           {mode === "offer" && (
-            <Typography sx={{ fontSize: 13, color: MUTED, fontWeight: 600 }}>
+            <Typography sx={{ fontSize: { xs: 12.5, sm: 13 }, color: MUTED, fontWeight: 600 }}>
               Step {step + 1} of {OFFER_STEPS.length}
             </Typography>
           )}
@@ -776,11 +877,14 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
         {/* ─── Title ─── */}
         <Typography
           sx={{
-            fontSize: { xs: 26, sm: 32 },
+            /* RESPONSIVE: fluid heading size */
+            fontSize: { xs: 24, sm: 30, md: 34 },
             fontWeight: 800,
             color: NAVY,
             letterSpacing: -0.4,
+            lineHeight: 1.2,
             mb: 0.5,
+            overflowWrap: "anywhere",
           }}
         >
           {mode === "offer"
@@ -791,7 +895,13 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                 : "Review your ride"
             : "Post a ride"}
         </Typography>
-        <Typography sx={{ color: MUTED, fontSize: { xs: 13.5, sm: 14.5 }, mb: 3 }}>
+        <Typography
+          sx={{
+            color: MUTED,
+            fontSize: { xs: 13.5, sm: 14.5, md: 15 },
+            mb: { xs: 2.5, sm: 3 },
+          }}
+        >
           {mode === "offer"
             ? step === 0
               ? requestRide ? "Review the requested trip details and add your ride options." : "Share your journey with the community."
@@ -860,8 +970,8 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
            REQUEST FLOW (single page)
         ══════════════════════════════════════════════════════ */}
         {mode === "request" && (
-          <Stack spacing={2.5}>
-            <Box>
+          <Stack spacing={{ xs: 2.25, sm: 2.5, md: 3 }}>
+            <Box sx={{ minWidth: 0 }}>
               <Typography sx={labelSx}>From (US city or airport)</Typography>
               <RideLocationPicker
                 fromLocation={requestForm.fromLocation}
@@ -891,21 +1001,16 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                 }}
                 ride={null}
               />
-              {requestErrors.from && (
-                <Typography sx={{ fontSize: 12, color: "#C5221F", mt: 0.5 }}>
-                  {requestErrors.from}
-                </Typography>
-              )}
+              {requestErrors.from && <Typography sx={errTextSx}>{requestErrors.from}</Typography>}
               {requestErrors.destination && (
-                <Typography sx={{ fontSize: 12, color: "#C5221F", mt: 0.5 }}>
-                  {requestErrors.destination}
-                </Typography>
+                <Typography sx={errTextSx}>{requestErrors.destination}</Typography>
               )}
             </Box>
 
             {/* Date / Needed by / Flexible by */}
-            <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
-              <Box sx={{ flex: 1 }}>
+            {/* RESPONSIVE: auto-fit grid instead of rigid row/column */}
+            <Box sx={fieldGridSx}>
+              <Box sx={{ minWidth: 0 }}>
                 <Typography sx={labelSx}>Date</Typography>
                 <TextField
                   fullWidth
@@ -919,7 +1024,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                   sx={tfSx}
                 />
               </Box>
-              <Box sx={{ flex: 1 }}>
+              <Box sx={{ minWidth: 0 }}>
                 <Typography sx={labelSx}>Needed by</Typography>
                 <TextField
                   fullWidth
@@ -933,7 +1038,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                   sx={tfSx}
                 />
               </Box>
-              <Box sx={{ flex: 1 }}>
+              <Box sx={{ minWidth: 0 }}>
                 <Typography sx={labelSx}>Flexible by</Typography>
                 <FormControl fullWidth size={inputSize}>
                   <Select
@@ -949,11 +1054,12 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                   </Select>
                 </FormControl>
               </Box>
-            </Stack>
+            </Box>
 
             {/* Passengers / Bags */}
-            <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
-              <Box sx={{ flex: 1 }}>
+            {/* RESPONSIVE: always 2 columns (short numeric fields fit on phones) */}
+            <Box sx={pairGridSx}>
+              <Box sx={{ minWidth: 0 }}>
                 <Typography sx={labelSx}>Passengers</Typography>
                 <TextField
                   fullWidth
@@ -966,11 +1072,11 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                   }}
                   error={!!requestErrors.passengers}
                   helperText={requestErrors.passengers}
-                  inputProps={{ min: 1, max: 7 }}
+                  inputProps={{ min: 1, max: 7, inputMode: "numeric" }}
                   sx={tfSx}
                 />
               </Box>
-              <Box sx={{ flex: 1 }}>
+              <Box sx={{ minWidth: 0 }}>
                 <Typography sx={labelSx}>Bags</Typography>
                 <TextField
                   fullWidth
@@ -983,16 +1089,22 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                   }}
                   error={!!requestErrors.bags}
                   helperText={requestErrors.bags}
-                  inputProps={{ min: 0, max: 10 }}
+                  inputProps={{ min: 0, max: 10, inputMode: "numeric" }}
                   sx={tfSx}
                 />
               </Box>
-            </Stack>
+            </Box>
 
             {/* Category */}
             <Box>
               <Typography sx={labelSx}>Category</Typography>
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 1,
+                }}
+              >
                 {REQUEST_CATEGORIES.map((c) => (
                   <ChipToggle
                     key={c}
@@ -1001,7 +1113,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                     onClick={() => updateRequest("category", c)}
                   />
                 ))}
-              </Stack>
+              </Box>
               {requestForm.category === "Other" && (
                 <TextField
                   fullWidth
@@ -1013,9 +1125,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                 />
               )}
               {requestErrors.category && (
-                <Typography sx={{ fontSize: 12, color: "#C5221F", mt: 0.5 }}>
-                  {requestErrors.category}
-                </Typography>
+                <Typography sx={errTextSx}>{requestErrors.category}</Typography>
               )}
             </Box>
 
@@ -1024,7 +1134,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
               variant="outlined"
               sx={{ borderRadius: 2, borderColor: BORDER, bgcolor: CARD, overflow: "hidden" }}
             >
-              <Box sx={{ px: { xs: 2, sm: 2.5 } }}>
+              <Box sx={{ px: { xs: 1.75, sm: 2.5 } }}>
                 <ToggleRow
                   icon={ShieldCheck}
                   title="Women drivers only"
@@ -1048,7 +1158,8 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
               <TextField
                 fullWidth
                 multiline
-                rows={3}
+                minRows={3}
+                maxRows={8}
                 size={inputSize}
                 placeholder="Anything drivers should know?"
                 value={requestForm.notes}
@@ -1058,24 +1169,13 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
             </Box>
 
             {/* Info callout */}
-            <Alert
-              icon={<Info size={18} />}
-              severity="info"
-              sx={{
-                borderRadius: 2,
-                bgcolor: "#EAF3FB",
-                color: "#1A3E8A",
-                "& .MuiAlert-icon": { color: "#1A3E8A" },
-                fontSize: 13,
-                lineHeight: 1.55,
-              }}
-            >
+            <Alert icon={<Info size={18} />} severity="info" sx={infoAlertSx}>
               Drivers going your way will see this request and can offer to drive. You choose who
               to accept. Your exact address and phone are shared only after you accept.
             </Alert>
 
             {serverError && (
-              <Alert severity="error" sx={{ borderRadius: 2 }}>
+              <Alert severity="error" sx={{ borderRadius: 2, overflowWrap: "anywhere" }}>
                 {serverError}
               </Alert>
             )}
@@ -1095,16 +1195,17 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
            OFFER FLOW — STEP 0
         ══════════════════════════════════════════════════════ */}
         {mode === "offer" && step === 0 && (
-          <Stack spacing={2.5}>
-            <Typography sx={{ ...labelSx, fontSize: 13, color: NAVY, mt: 0.5 }}>
+          <Stack spacing={{ xs: 2.25, sm: 2.5, md: 3 }}>
+            <Typography sx={{ ...labelSx, fontSize: { xs: 12.5, sm: 13 }, color: NAVY, mt: 0.5 }}>
               Trip details
             </Typography>
 
+            {/* RESPONSIVE: info strip wraps instead of overflowing on narrow screens */}
             <Stack
               direction="row"
               spacing={1.25}
               alignItems="center"
-              sx={{ p: 1.5, borderRadius: 2, bgcolor: "#EAF3FB" }}
+              sx={{ p: { xs: 1.25, sm: 1.5 }, borderRadius: 2, bgcolor: "#EAF3FB", minWidth: 0 }}
             >
               <Box
                 sx={{
@@ -1115,16 +1216,29 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                   fontSize: 12,
                   fontWeight: 700,
                   color: "#1A3E8A",
+                  flexShrink: 0,
+                  alignItems: "center",
+                  display: "flex",
+                  justifyContent: "center",
+                  minWidth: 0,
                 }}
               >
                 Car
               </Box>
-              <Typography sx={{ fontSize: 12.5, color: "#1A3E8A", lineHeight: 1.5 }}>
+              <Typography
+                sx={{
+                  fontSize: { xs: 12, sm: 12.5 },
+                  color: "#1A3E8A",
+                  lineHeight: 1.5,
+                  minWidth: 0,
+                  overflowWrap: "anywhere",
+                }}
+              >
                 Rides are car-only and within the US. Flying with a parent? Use Travel Buddy.
               </Typography>
             </Stack>
 
-            <Box>
+            <Box sx={{ minWidth: 0 }}>
               <Typography sx={labelSx}>From (US address, city or airport)</Typography>
               <RideLocationPicker
                 fromLocation={offerForm.fromLocation}
@@ -1158,20 +1272,16 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                 }}
                 ride={ride}
               />
-              {showErrors && errors.from && (
-                <Typography sx={{ fontSize: 12, color: "#C5221F", mt: 0.5 }}>
-                  {errors.from}
-                </Typography>
-              )}
+              {showErrors && errors.from && <Typography sx={errTextSx}>{errors.from}</Typography>}
               {showErrors && errors.destination && (
-                <Typography sx={{ fontSize: 12, color: "#C5221F", mt: 0.5 }}>
-                  {errors.destination}
-                </Typography>
+                <Typography sx={errTextSx}>{errors.destination}</Typography>
               )}
             </Box>
 
-            <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
-              <Box sx={{ flex: 1 }}>
+            {/* Date / Time / Time zone */}
+            {/* RESPONSIVE: auto-fit grid */}
+            <Box sx={fieldGridSx}>
+              <Box sx={{ minWidth: 0 }}>
                 <Typography sx={labelSx}>Date</Typography>
                 <TextField
                   fullWidth
@@ -1185,7 +1295,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                   sx={tfSx}
                 />
               </Box>
-              <Box sx={{ flex: 1 }}>
+              <Box sx={{ minWidth: 0 }}>
                 <Typography sx={labelSx}>Departure time</Typography>
                 <TextField
                   fullWidth
@@ -1199,7 +1309,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                   sx={tfSx}
                 />
               </Box>
-              <Box sx={{ flex: 1 }}>
+              <Box sx={{ minWidth: 0 }}>
                 <Typography sx={labelSx}>Time zone</Typography>
                 <FormControl
                   fullWidth
@@ -1219,11 +1329,17 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                   </Select>
                 </FormControl>
               </Box>
-            </Stack>
+            </Box>
 
             <Box>
               <Typography sx={labelSx}>Category</Typography>
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 1,
+                }}
+              >
                 {OFFER_CATEGORIES.map((c) => (
                   <ChipToggle
                     key={c}
@@ -1232,7 +1348,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                     onClick={() => updateOffer("category", c)}
                   />
                 ))}
-              </Stack>
+              </Box>
               {offerForm.category === "Other" && (
                 <TextField
                   fullWidth
@@ -1244,9 +1360,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                 />
               )}
               {showErrors && errors.category && (
-                <Typography sx={{ fontSize: 12, color: "#C5221F", mt: 0.5 }}>
-                  {errors.category}
-                </Typography>
+                <Typography sx={errTextSx}>{errors.category}</Typography>
               )}
             </Box>
 
@@ -1265,7 +1379,8 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
               <TextField
                 fullWidth
                 multiline
-                rows={3}
+                minRows={3}
+                maxRows={8}
                 size={inputSize}
                 placeholder="Add details — pickup spot, what you're offering, etc."
                 value={offerForm.description}
@@ -1275,7 +1390,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
             </Box>
 
             {showErrors && Object.keys(errors).length > 0 && (
-              <Alert severity="error" sx={{ borderRadius: 2, fontSize: 13 }}>
+              <Alert severity="error" sx={{ borderRadius: 2, fontSize: { xs: 12.5, sm: 13 } }}>
                 Please fill the highlighted fields before continuing.
               </Alert>
             )}
@@ -1298,13 +1413,19 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
            OFFER FLOW — STEP 1
         ══════════════════════════════════════════════════════ */}
         {mode === "offer" && step === 1 && (
-          <Stack spacing={3}>
+          <Stack spacing={{ xs: 2.5, sm: 3, md: 3.5 }}>
             <Box>
-              <Stack direction="row" spacing={1} alignItems="baseline" sx={{ mb: 0.9 }}>
-                <Typography sx={{ ...labelSx, mb: 0 }}>
-                  Cost share per passenger
-                </Typography>
-                <Typography sx={{ fontSize: 12.5, color: MUTED }}>
+              {/* RESPONSIVE: label + hint wrap onto two lines on narrow screens */}
+              <Stack
+                direction="row"
+                spacing={1}
+                alignItems="baseline"
+                flexWrap="wrap"
+                useFlexGap
+                sx={{ mb: 0.9, columnGap: 1, rowGap: 0.25 }}
+              >
+                <Typography sx={{ ...labelSx, mb: 0 }}>Cost share per passenger</Typography>
+                <Typography sx={{ fontSize: { xs: 12, sm: 12.5 }, color: MUTED }}>
                   (optional, leave blank for free)
                 </Typography>
               </Stack>
@@ -1323,12 +1444,22 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                 }}
                 sx={{
                   ...tfSx,
-                  width: { xs: "100%", sm: 220 },
+                  /* RESPONSIVE: full width on phones, fixed on larger screens */
+                  width: { xs: "100%", sm: 240 },
+                  maxWidth: "100%",
                   "& input": { fontSize: 16, fontWeight: 700 },
                 }}
-                inputProps={{ min: 0, step: "0.5" }}
+                inputProps={{ min: 0, step: "0.5", inputMode: "decimal" }}
               />
-              <Typography sx={{ fontSize: 12.5, color: MUTED, mt: 0.9, lineHeight: 1.5 }}>
+              <Typography
+                sx={{
+                  fontSize: { xs: 12, sm: 12.5 },
+                  color: MUTED,
+                  mt: 0.9,
+                  lineHeight: 1.5,
+                  overflowWrap: "anywhere",
+                }}
+              >
                 Max for this trip: <strong>${costCap}</strong>{" "}
                 {distanceMiles > 0 && (
                   <>
@@ -1338,7 +1469,10 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                 )}
               </Typography>
               {costExceedsCap && (
-                <Alert severity="error" sx={{ mt: 1.25, borderRadius: 2, fontSize: 12.5 }}>
+                <Alert
+                  severity="error"
+                  sx={{ mt: 1.25, borderRadius: 2, fontSize: { xs: 12, sm: 12.5 } }}
+                >
                   ${costEntered} is above the ${costCap} cap for this distance. Saathi is for
                   sharing costs, not for profit.
                 </Alert>
@@ -1347,7 +1481,13 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
 
             <Box>
               <Typography sx={labelSx}>Luggage space</Typography>
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 1,
+                }}
+              >
                 {LUGGAGE_OPTIONS.map((l) => (
                   <ChipToggle
                     key={l}
@@ -1356,7 +1496,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                     onClick={() => updateOffer("luggageSpace", l)}
                   />
                 ))}
-              </Stack>
+              </Box>
             </Box>
 
             <Box>
@@ -1365,7 +1505,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                 variant="outlined"
                 sx={{ borderRadius: 2, borderColor: BORDER, bgcolor: CARD, overflow: "hidden" }}
               >
-                <Box sx={{ px: { xs: 2, sm: 2.5 } }}>
+                <Box sx={{ px: { xs: 1.75, sm: 2.5 } }}>
                   <ToggleRow
                     icon={Baby}
                     title="Child-friendly"
@@ -1390,11 +1530,26 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
             </Box>
 
             <Box>
-              <Stack direction="row" spacing={1} alignItems="baseline" sx={{ mb: 0.9 }}>
+              <Stack
+                direction="row"
+                spacing={1}
+                alignItems="baseline"
+                flexWrap="wrap"
+                useFlexGap
+                sx={{ mb: 0.9, columnGap: 1, rowGap: 0.25 }}
+              >
                 <Typography sx={{ ...labelSx, mb: 0 }}>Help I can offer</Typography>
-                <Typography sx={{ fontSize: 12.5, color: MUTED }}>(optional)</Typography>
+                <Typography sx={{ fontSize: { xs: 12, sm: 12.5 }, color: MUTED }}>
+                  (optional)
+                </Typography>
               </Stack>
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 1,
+                }}
+              >
                 {HELP_OPTIONS.map((h) => (
                   <ChipToggle
                     key={h}
@@ -1403,20 +1558,28 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                     onClick={() => toggleHelp(h)}
                   />
                 ))}
-              </Stack>
+              </Box>
             </Box>
 
             <Box>
-              <Stack direction="row" spacing={1} alignItems="baseline" sx={{ mb: 0.9 }}>
+              <Stack
+                direction="row"
+                spacing={1}
+                alignItems="baseline"
+                flexWrap="wrap"
+                useFlexGap
+                sx={{ mb: 0.9, columnGap: 1, rowGap: 0.25 }}
+              >
                 <Typography sx={{ ...labelSx, mb: 0 }}>Notes</Typography>
-                <Typography sx={{ fontSize: 12.5, color: MUTED }}>
+                <Typography sx={{ fontSize: { xs: 12, sm: 12.5 }, color: MUTED }}>
                   (optional, no phone numbers)
                 </Typography>
               </Stack>
               <TextField
                 fullWidth
                 multiline
-                rows={3}
+                minRows={3}
+                maxRows={8}
                 size={inputSize}
                 placeholder="Leaving from the Metro station lot."
                 value={offerForm.notes}
@@ -1443,9 +1606,9 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
            OFFER FLOW — STEP 2 (Review)
         ══════════════════════════════════════════════════════ */}
         {mode === "offer" && step === 2 && (
-          <Stack spacing={2.5}>
+          <Stack spacing={{ xs: 2.25, sm: 2.5, md: 3 }}>
             {serverError && (
-              <Alert severity="error" sx={{ borderRadius: 2 }}>
+              <Alert severity="error" sx={{ borderRadius: 2, overflowWrap: "anywhere" }}>
                 {serverError}
               </Alert>
             )}
@@ -1453,24 +1616,29 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
             <Paper
               variant="outlined"
               sx={{
-                p: { xs: 2, sm: 2.5 },
+                p: { xs: 1.75, sm: 2.5 },
                 borderRadius: 2.5,
                 borderColor: BORDER,
                 bgcolor: CARD,
               }}
             >
-              <Stack direction="row" spacing={2} alignItems="flex-start">
+              <Stack
+                direction="row"
+                spacing={{ xs: 1.5, sm: 2 }}
+                alignItems="flex-start"
+                sx={{ minWidth: 0 }}
+              >
                 <Box
                   sx={{
-                    width: { xs: 44, sm: 48 },
-                    height: { xs: 44, sm: 48 },
+                    width: { xs: 40, sm: 48 },
+                    height: { xs: 40, sm: 48 },
                     borderRadius: "50%",
                     bgcolor: "#FEF7E0",
                     color: "#B06000",
                     display: "grid",
                     placeItems: "center",
                     fontWeight: 800,
-                    fontSize: { xs: 14, sm: 15 },
+                    fontSize: { xs: 13, sm: 15 },
                     flexShrink: 0,
                   }}
                 >
@@ -1479,28 +1647,39 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                 </Box>
 
                 <Box sx={{ flex: 1, minWidth: 0 }}>
+                  {/* RESPONSIVE: long addresses wrap instead of pushing the layout wider */}
                   <Typography
                     sx={{
-                      fontSize: { xs: 15, sm: 16 },
+                      fontSize: { xs: 14.5, sm: 16 },
                       fontWeight: 700,
                       lineHeight: 1.35,
                       color: INK,
+                      overflowWrap: "anywhere",
+                      wordBreak: "break-word",
                     }}
                   >
                     {offerForm.from || "—"} → {offerForm.destination || "—"}
                   </Typography>
-                  <Typography sx={{ fontSize: { xs: 12, sm: 12.5 }, color: MUTED, mt: 0.4 }}>
+                  <Typography
+                    sx={{
+                      fontSize: { xs: 12, sm: 12.5 },
+                      color: MUTED,
+                      mt: 0.4,
+                      overflowWrap: "anywhere",
+                    }}
+                  >
                     {offerForm.date} · {offerForm.time} {offerForm.timeZone} ·{" "}
                     {offerForm.availableSeats} seat
                     {offerForm.availableSeats === 1 ? "" : "s"}
                   </Typography>
 
-                  <Stack
-                    direction="row"
-                    spacing={0.75}
-                    flexWrap="wrap"
-                    useFlexGap
-                    sx={{ mt: 1.25 }}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: 0.75,
+                      mt: 1.25,
+                    }}
                   >
                     {offerForm.category && (
                       <Chip
@@ -1513,11 +1692,13 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                         sx={{
                           borderRadius: 999,
                           fontSize: 11.5,
+                          maxWidth: "100%",
                           bgcolor: "#EAF3FB",
                           color: "#1A3E8A",
                         }}
                       />
                     )}
+
                     {offerForm.costPerSeat && (
                       <Chip
                         size="small"
@@ -1530,6 +1711,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                         }}
                       />
                     )}
+
                     {offerForm.childFriendly && (
                       <Chip
                         size="small"
@@ -1542,18 +1724,21 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                         }}
                       />
                     )}
-                    {offerForm.luggageSpace && offerForm.luggageSpace !== "None" && (
-                      <Chip
-                        size="small"
-                        label={offerForm.luggageSpace}
-                        sx={{
-                          borderRadius: 999,
-                          fontSize: 11.5,
-                          bgcolor: "#EAF3FB",
-                          color: "#1A3E8A",
-                        }}
-                      />
-                    )}
+
+                    {offerForm.luggageSpace &&
+                      offerForm.luggageSpace !== "None" && (
+                        <Chip
+                          size="small"
+                          label={offerForm.luggageSpace}
+                          sx={{
+                            borderRadius: 999,
+                            fontSize: 11.5,
+                            bgcolor: "#EAF3FB",
+                            color: "#1A3E8A",
+                          }}
+                        />
+                      )}
+
                     {(offerForm.helpCanOffer || []).map((h) => (
                       <Chip
                         key={h}
@@ -1567,19 +1752,27 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                         }}
                       />
                     ))}
-                  </Stack>
+                  </Box>
                 </Box>
               </Stack>
             </Paper>
 
             <Paper
               variant="outlined"
-              sx={{ p: { xs: 2, sm: 2.25 }, borderRadius: 2, borderColor: BORDER, bgcolor: CARD }}
+              sx={{ p: { xs: 1.75, sm: 2.25 }, borderRadius: 2, borderColor: BORDER, bgcolor: CARD }}
             >
-              <Typography sx={{ fontSize: 14, fontWeight: 700, color: INK, mb: 0.5 }}>
+              <Typography sx={{ fontSize: { xs: 13.5, sm: 14 }, fontWeight: 700, color: INK, mb: 0.5 }}>
                 Exact pickup address (private)
               </Typography>
-              <Typography sx={{ fontSize: 13.5, color: MUTED, mb: 1.5, lineHeight: 1.5 }}>
+              <Typography
+                sx={{
+                  fontSize: { xs: 13, sm: 13.5 },
+                  color: MUTED,
+                  mb: 1.5,
+                  lineHeight: 1.5,
+                  overflowWrap: "anywhere",
+                }}
+              >
                 {offerForm.exactPickup ||
                   offerForm.fromLocation?.address ||
                   "Will be shared after you accept"}
@@ -1587,21 +1780,34 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
 
               {offerForm.notes && (
                 <>
-                  <Typography sx={{ fontSize: 14, fontWeight: 700, color: INK, mb: 0.5 }}>
+                  <Typography
+                    sx={{ fontSize: { xs: 13.5, sm: 14 }, fontWeight: 700, color: INK, mb: 0.5 }}
+                  >
                     Notes
                   </Typography>
-                  <Typography sx={{ fontSize: 13.5, color: MUTED, mb: 1.5, lineHeight: 1.5 }}>
+                  <Typography
+                    sx={{
+                      fontSize: { xs: 13, sm: 13.5 },
+                      color: MUTED,
+                      mb: 1.5,
+                      lineHeight: 1.5,
+                      overflowWrap: "anywhere",
+                      whiteSpace: "pre-wrap",
+                    }}
+                  >
                     {offerForm.notes}
                   </Typography>
                 </>
               )}
 
-              <Typography sx={{ fontSize: 12.5, color: MUTED }}>
+              <Typography sx={{ fontSize: { xs: 12, sm: 12.5 }, color: MUTED }}>
                 The exact address and your phone number are shown only to passengers you accept.
               </Typography>
             </Paper>
 
+            {/* RESPONSIVE: checkbox aligned to the top of multi-line label on small screens */}
             <FormControlLabel
+              sx={{ alignItems: "flex-start", mr: 0, ml: { xs: -0.5, sm: -1 } }}
               control={
                 <Checkbox
                   checked={offerForm.confirmCostSharing}
@@ -1609,34 +1815,29 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                   sx={{
                     "&.Mui-checked": { color: RUST },
                     color: "#BBB",
+                    pt: 0.5,
                   }}
                 />
               }
               label={
-                <Typography sx={{ fontSize: { xs: 13, sm: 13.5 }, lineHeight: 1.5, color: INK }}>
+                <Typography
+                  sx={{
+                    fontSize: { xs: 12.5, sm: 13.5 },
+                    lineHeight: 1.5,
+                    color: INK,
+                    pt: 0.5,
+                  }}
+                >
                   I confirm this is a cost-sharing trip I am already making. I hold a valid
                   license and insurance for this vehicle.
                 </Typography>
               }
             />
             {showErrors && errors.confirmCostSharing && (
-              <Typography sx={{ fontSize: 12, color: "#C5221F", mt: -1.5 }}>
-                {errors.confirmCostSharing}
-              </Typography>
+              <Typography sx={{ ...errTextSx, mt: -1.5 }}>{errors.confirmCostSharing}</Typography>
             )}
 
-            <Alert
-              icon={<Info size={18} />}
-              severity="info"
-              sx={{
-                borderRadius: 2,
-                bgcolor: "#EAF3FB",
-                color: "#1A3E8A",
-                "& .MuiAlert-icon": { color: "#1A3E8A" },
-                fontSize: 13,
-                lineHeight: 1.55,
-              }}
-            >
+            <Alert icon={<Info size={18} />} severity="info" sx={infoAlertSx}>
               What happens next: members request seats, you Accept or Decline in My Rides, and we
               share phone numbers once you accept. If nobody is accepted, the ride moves to
               Expired after departure; if at least one was accepted, it moves to Completed.

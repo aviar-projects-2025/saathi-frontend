@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -61,9 +61,21 @@ import TransferWithinAStationIcon from "@mui/icons-material/TransferWithinAStati
 import Api from "../Api";
 import { toast } from "react-toastify";
 
+import LocationOnIcon from "@mui/icons-material/LocationOn";
+import RouteIcon from "@mui/icons-material/Route";
+import CategoryIcon from "@mui/icons-material/Category";
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import PeopleIcon from "@mui/icons-material/People";
+import SupportAgentIcon from "@mui/icons-material/SupportAgent";
+import ChildCareIcon from "@mui/icons-material/ChildCare";
+import ScheduleIcon from "@mui/icons-material/Schedule";
+import PhoneIcon from "@mui/icons-material/Phone";
+import FlagIcon from "@mui/icons-material/Flag";
+import FemaleIcon from "@mui/icons-material/Female";
+
 // ── Design tokens ────────────────────────────────────────────────────────
 const TOKENS = {
-  paper: "#ffff",
+  paper: "#ffffff",
   paperDim: "#fdfcfb",
   ink: "#1C2B33",
   inkSoft: "#5B6B72",
@@ -176,13 +188,14 @@ const requestVisual = (request) => {
     };
   }
 
-  if (status === "AUTO_REJECTED") {
-    return {
-      label: "Auto Rejected",
-      color: TOKENS.red,
-      bg: TOKENS.redSoft,
-    };
-  }
+  // if (status === "AUTO_REJECTED") {
+  //   return {
+  //     label: "Auto Rejected",
+  //     color: TOKENS.red,
+  //     bg: TOKENS.redSoft,
+  //   };
+  // }
+
   return {
     label: "",
     color: "transparent",
@@ -291,7 +304,8 @@ function PassengerStub({
   const [selectedPost, setSelectedPost] = useState(null);
   const firstName =
     request.requestedBy?.firstName ||
-    request?.data?.requestBy?.requestedBy?.firstName || "U";
+    request?.data?.requestBy?.requestedBy?.firstName ||
+    "U";
   const lastName = request.requestedBy?.lastName || "";
   const profilePic = request.requestedBy?.profileImage;
   const rejectedReq = Number(request?.rejectedSeats ?? 0);
@@ -314,22 +328,42 @@ function PassengerStub({
   const [approvalRejectionLoading, setApprovalRejectionLoading] =
     useState(false);
 
+  const hasStartedBusyRef = useRef(false);
+
+  const [rejectApprovedLoading, setRejectApprovedLoading] = useState(false);
+
   useEffect(() => {
-    if (!approvalRejectionLoading) return;
-
-    if (confirmState.action === "approve" && !isApproveBusy) {
-      setConfirmState({ open: false, action: null });
-      setApprovalRejectionLoading(false);
+    if (!approvalRejectionLoading) {
+      hasStartedBusyRef.current = false;
+      return;
     }
 
-    if (confirmState.action === "reject" && !isRejectBusy) {
+    if (isBusy) {
+      hasStartedBusyRef.current = true;
+      return;
+    }
+
+    if (hasStartedBusyRef.current) {
       setConfirmState({ open: false, action: null });
       setApprovalRejectionLoading(false);
+      hasStartedBusyRef.current = false;
     }
+
+
+    // if (confirmState.action === "approve" && !isApproveBusy) {
+    //   setConfirmState({ open: false, action: null });
+    //   setApprovalRejectionLoading(false);
+    // }
+    // if (confirmState.action === "reject" && !isRejectBusy) {
+    //   setConfirmState({ open: false, action: null });
+    //   setApprovalRejectionLoading(false);
+    // }
+
   }, [
     approvalRejectionLoading,
     isApproveBusy,
     isRejectBusy,
+    isBusy,
     confirmState.action,
   ]);
 
@@ -351,7 +385,11 @@ function PassengerStub({
     handleMenuClose();
   };
   const handleRejectApproved = async () => {
+
+    if (!selectedRequest || rejectApprovedLoading) return;
+
     const prevSnapshot = { ...selectedRequest };
+    setRejectApprovedLoading(true);
 
     onRequestUpdated?.(selectedRequest._id, {
       status: "REJECTED",
@@ -380,6 +418,8 @@ function PassengerStub({
       toast.error(
         error?.response?.data?.message || "Failed to reject ride request",
       );
+    } finally {
+      setRejectApprovedLoading(false);
     }
   };
 
@@ -698,15 +738,16 @@ function PassengerStub({
             Reject
           </MenuItem>
         </Menu>
-        <Dialog open={editApproval}>
+
+        <Dialog open={editApproval} onClose={() => setEditApproval(false)}>
           <DialogTitle>Approved Seat Rejection</DialogTitle>
-          <DialogContent>Do you want to reject the appoved seat?</DialogContent>
+          <DialogContent>Do you want to reject the approved seat?</DialogContent>
           <DialogActions
             sx={{ px: { xs: 2, sm: 3 }, pb: { xs: 2, sm: 2.5 }, gap: 1 }}
           >
             <Button
               onClick={() => setEditApproval(false)}
-              disabled={isBusy}
+              disabled={isBusy || rejectApprovedLoading}
               sx={{
                 fontFamily: TOKENS.bodyFont,
                 textTransform: "none",
@@ -718,31 +759,21 @@ function PassengerStub({
             </Button>
             <Button
               onClick={handleRejectApproved}
-              disabled={isBusy}
+              disabled={isBusy || rejectApprovedLoading}
               variant="contained"
               sx={{
                 fontFamily: TOKENS.bodyFont,
                 textTransform: "none",
                 fontWeight: 700,
                 minWidth: 96,
-                bgcolor:
-                  confirmState.action === "approve" ? TOKENS.green : TOKENS.red,
+                bgcolor: TOKENS.red,
                 "&:hover": {
-                  bgcolor:
-                    confirmState.action === "approve"
-                      ? TOKENS.green
-                      : TOKENS.red,
+                  bgcolor: TOKENS.red,
                   opacity: 0.9,
                 },
               }}
             >
-              {isApproveBusy
-                ? "Approving..."
-                : isRejectBusy
-                  ? "Rejecting..."
-                  : confirmState.action === "approve"
-                    ? "Approve"
-                    : "Reject"}
+              {rejectApprovedLoading ? "Rejecting..." : "Reject"}
             </Button>
           </DialogActions>
         </Dialog>
@@ -1002,30 +1033,31 @@ export default function RideDetailsModal({
   onDelete,
   onClose,
   onRequestUpdated,
-  onApprove = () => {},
-  onReject = () => {},
+  onApprove = () => { },
+  onReject = () => { },
   approveLoading,
   rejectLoading,
 }) {
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down("sm"));
   const isMd = useMediaQuery(theme.breakpoints.up("md"));
-  const pendingMember = requests.map((item) => item.pendingMembers);
+
+  const pendingMember = requests.flatMap((item) => item?.pendingMembers || []);
   const isStarted = ride?.travelStatus === "Started";
   const startDate = new Date(ride?.startTime);
   const dateLabel = !isNaN(startDate)
     ? startDate.toLocaleDateString("en-IN", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    })
     : "—";
   const timeLabel = !isNaN(startDate)
     ? startDate.toLocaleTimeString("en-IN", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      })
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    })
     : "—";
 
   const stamp = statusStamp[ride?.status];
@@ -1038,6 +1070,8 @@ export default function RideDetailsModal({
   const pendingCount = requests.filter(
     (r) => r?.status?.toUpperCase() === "PENDING",
   ).length;
+
+  console.log("Ride Details : ", ride);
 
   return (
     <Dialog
@@ -1302,24 +1336,26 @@ export default function RideDetailsModal({
           </Box>
         </Box>
 
-        <Chip
-          label={stamp?.label}
-          size="small"
-          sx={{
-            position: "absolute",
-            right: { xs: 14, sm: 20 },
-            bottom: { xs: -12, sm: -14 },
-            bgcolor: stamp?.bg,
-            color: stamp?.color,
-            fontFamily: TOKENS.monoFont,
-            fontWeight: 700,
-            fontSize: "0.68rem",
-            letterSpacing: "0.05em",
-            border: `1.5px solid ${stamp?.color}`,
-            transform: "rotate(-4deg)",
-            boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
-          }}
-        />
+        {stamp && (
+          <Chip
+            label={stamp?.label}
+            size="small"
+            sx={{
+              position: "absolute",
+              right: { xs: 14, sm: 20 },
+              bottom: { xs: -12, sm: -14 },
+              bgcolor: stamp?.bg,
+              color: stamp?.color,
+              fontFamily: TOKENS.monoFont,
+              fontWeight: 700,
+              fontSize: "0.68rem",
+              letterSpacing: "0.05em",
+              border: `1.5px solid ${stamp?.color}`,
+              transform: "rotate(-4deg)",
+              boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
+            }}
+          />
+        )}
       </Box>
 
       <DialogContent
@@ -1406,7 +1442,6 @@ export default function RideDetailsModal({
                       overflowX: "hidden",
                       pr: 0.5,
 
-                      // Optional scrollbar styling
                       "&::-webkit-scrollbar": {
                         width: "5px",
                       },
@@ -1444,11 +1479,16 @@ export default function RideDetailsModal({
         )}
 
         {/* ── Ticket data fields ── */}
+
         <Box
           sx={{
             display: "grid",
-            gridTemplateColumns: { xs: "1fr 1fr", sm: "1fr 1fr 1fr" },
-            gap: { xs: 2, sm: 2.5 },
+            gridTemplateColumns: {
+              xs: "1fr",
+              sm: "repeat(2, minmax(0, 1fr))",
+              md: "repeat(3, minmax(0, 1fr))",
+            },
+            gap: 2,
           }}
         >
           <Field
@@ -1456,132 +1496,323 @@ export default function RideDetailsModal({
             label="Date"
             value={dateLabel || "—"}
           />
+
           <Field icon={AccessTimeIcon} label="Time" value={timeLabel || "—"} />
+
           <Field
             icon={TravelIcon}
-            label="Mode"
+            label="Mode of Travel"
             value={ride?.modeOfTravel || "—"}
           />
-          {ride?.duration && (
-            <Field
-              icon={AccessTimeIcon}
-              label="Travel Duration"
-              value={
-                ride.duration != null
-                  ? ride.duration >= 60
-                    ? `${Math.floor(ride.duration / 60)} hr ${
-                        ride.duration % 60
-                      } min`
-                    : `${ride.duration} min`
-                  : "" || "—"
-              }
-            />
-          )}
+
+          <Field
+            icon={AccessTimeIcon}
+            label="Travel Duration"
+            value={
+              ride?.duration != null
+                ? ride.duration >= 60
+                  ? `${Math.floor(ride.duration / 60)} hr ${ride.duration % 60
+                  } min`
+                  : `${ride.duration} min`
+                : "—"
+            }
+          />
+
           <Field
             icon={BadgeIcon}
-            label="Age Group Pref."
+            label="Age Group Preference"
             value={ride?.ageGroupPreference || "—"}
           />
-          {ride?.availableSeats !== null &&
-            ride?.availableSeats !== undefined && (
-              <Field
-                icon={EventSeatIcon}
-                label="Seats avail."
-                value={
-                  Number(ride?.availableSeats) === 0
-                    ? "Seats Filled"
-                    : ride?.availableSeats
-                }
-              />
-            )}
+
+          <Field
+            icon={EventSeatIcon}
+            label="Available Seats"
+            value={
+              ride?.availableSeats === 0
+                ? "Seats Filled"
+                : (ride?.availableSeats ?? "—")
+            }
+          />
+
+          <Field
+            icon={EventSeatIcon}
+            label="Total Seats"
+            value={ride?.totalSeats ?? "—"}
+          />
+
+          <Field
+            icon={PeopleIcon}
+            label="Passengers"
+            value={ride?.passengers ?? "—"}
+          />
+
           <Field
             icon={GenderIcon}
-            label="Gender Pref."
-            value={ride?.genderPreference || "Any"}
+            label="Gender Preference"
+            value={ride?.genderPreference || "—"}
           />
-          {ride?.airlineName && (
-            <Field
-              icon={FlightIcon}
-              label="Airline Name"
-              value={ride?.airlineName || "—"}
-            />
-          )}
-          {ride?.flightNumber && (
-            <Field
-              icon={ConfirmationNumberIcon}
-              label="Flight Number"
-              value={ride?.flightNumber || "—"}
-            />
-          )}
 
-          {ride?.modeOfTravel !== "Bike" ? (
-            <>
-              <Field
-                icon={MedicalServicesIcon}
-                label="Medical Assistance"
-                value={ride?.medicalAssistance ? "Yes" : "No"}
-              />
-              <Field
-                icon={LanguageIcon}
-                label="Language Support"
-                value={ride?.languageSupport ? "Yes" : "No"}
-              />
-              <Field
-                icon={LuggageIcon}
-                label="Baggage Help"
-                value={ride?.baggageHelp ? "Yes" : "No"}
-              />
-              <Field
-                icon={TransferWithinAStationIcon}
-                label="Transit Help"
-                value={ride?.transitHelp ? "Yes" : "No"}
-              />
-            </>
-          ) : null}
-
-          {ride?.totalSeats && (
-            <Field
-              icon={EventSeatIcon}
-              label="Total Seats"
-              value={ride?.totalSeats || "—"}
-            />
-          )}
-          {ride?.modeOfTravel !== "Flight" &&
-            ride?.modeOfTravel !== "Bus" &&
-            ride?.fuelSharing >= 0 && (
-              <Field
-                icon={LocalGasStationIcon}
-                label="Fuel Cost"
-                value={
-                  `${ride?.fuelSharing === null ? "—" : `$ ${ride?.fuelSharing}/Person`} ` ||
-                  "—"
-                }
-              />
-            )}
           <Field
-            icon={TravellerTypeIcon}
-            label="Traveller Type"
-            value={ride?.travellerType || "—"}
+            icon={LocationOnIcon}
+            label="From"
+            value={ride?.from || "—"}
+            span
           />
 
-          <Stack direction="column" alignItems="center">
-            <Field icon={TranslateIcon} label="Languages" />
-            <Typography
-              sx={{
-                fontFamily: TOKENS.monoFont,
-                fontWeight: 600,
-                fontSize: { xs: "0.85rem", sm: "0.95rem" },
-                color: TOKENS.ink,
-                // wordBreak: 'break-word',
-              }}
-            >
-              {ride?.language?.join(", ") || "—"}
-            </Typography>
-          </Stack>
+          <Field
+            icon={LocationOnIcon}
+            label="Destination"
+            value={ride?.destination || "—"}
+            span
+          />
+
+          <Field
+            icon={LocationOnIcon}
+            label="Pickup Latitude"
+            value={ride?.fromLocation?.latitude ?? "—"}
+          />
+
+          <Field
+            icon={LocationOnIcon}
+            label="Pickup Longitude"
+            value={ride?.fromLocation?.longitude ?? "—"}
+          />
+
+          <Field
+            icon={LocationOnIcon}
+            label="Pickup Address"
+            value={ride?.fromLocation?.address || "—"}
+            span
+          />
+
+          <Field
+            icon={LocationOnIcon}
+            label="Destination Latitude"
+            value={ride?.destinationLocation?.latitude ?? "—"}
+          />
+
+          <Field
+            icon={LocationOnIcon}
+            label="Destination Longitude"
+            value={ride?.destinationLocation?.longitude ?? "—"}
+          />
+
+          <Field
+            icon={LocationOnIcon}
+            label="Destination Address"
+            value={ride?.destinationLocation?.address || "—"}
+            span
+          />
+
+          <Field
+            icon={RouteIcon}
+            label="Distance"
+            value={ride?.distanceKm != null ? `${ride.distanceKm} km` : "—"}
+          />
+
+          <Field
+            icon={CategoryIcon}
+            label="Category"
+            value={ride?.category || "—"}
+          />
+
+          <Field
+            icon={DescriptionIcon}
+            label="Ride Kind"
+            value={ride?.kind || "—"}
+          />
+
+          <Field
+            icon={AttachMoneyIcon}
+            label="Cost Per Seat"
+            value={ride?.costPerSeat != null ? `₹ ${ride.costPerSeat}` : "—"}
+          />
+
+          <Field
+            icon={LocalGasStationIcon}
+            label="Fuel Sharing"
+            value={
+              ride?.fuelSharing != null ? `₹ ${ride.fuelSharing} / Person` : "—"
+            }
+          />
+
+          <Field
+            icon={CheckCircleIcon}
+            label="Cost Sharing Confirmed"
+            value={ride?.confirmCostSharing ? "Yes" : "No"}
+          />
+
+          <Field icon={LuggageIcon} label="Bags" value={ride?.bags ?? "—"} />
+
+          <Field
+            icon={LuggageIcon}
+            label="Luggage Space"
+            value={ride?.luggageSpace || "—"}
+          />
+
+          <Field
+            icon={SupportAgentIcon}
+            label="Baggage Help"
+            value={ride?.baggageHelp ? "Yes" : "No"}
+          />
+
+          <Field
+            icon={ChildCareIcon}
+            label="Child Friendly"
+            value={ride?.childFriendly ? "Yes" : "No"}
+          />
+
+          <Field
+            icon={ChildCareIcon}
+            label="Traveling With Child"
+            value={ride?.travelingWithChild ? "Yes" : "No"}
+          />
+
+          <Field
+            icon={MedicalServicesIcon}
+            label="Medical Assistance"
+            value={ride?.medicalAssistance ? "Yes" : "No"}
+          />
+
+          <Field
+            icon={LanguageIcon}
+            label="Language Support"
+            value={ride?.languageSupport ? "Yes" : "No"}
+          />
+
+          <Field
+            icon={TransferWithinAStationIcon}
+            label="Transit Help"
+            value={ride?.transitHelp ? "Yes" : "No"}
+          />
+
+          <Field
+            icon={TranslateIcon}
+            label="Languages"
+            value={
+              Array.isArray(ride?.language) && ride.language.length
+                ? ride.language.join(", ")
+                : "—"
+            }
+            span
+          />
+
+          <Field
+            icon={TranslateIcon}
+            label="Help Offered"
+            value={
+              Array.isArray(ride?.helpCanOffer) && ride.helpCanOffer.length
+                ? ride.helpCanOffer.join(", ")
+                : "—"
+            }
+            span
+          />
+
+          <Field
+            icon={CalendarTodayIcon}
+            label="Recurring Ride"
+            value={ride?.recurringRide ? "Yes" : "No"}
+          />
+
+          <Field
+            icon={ScheduleIcon}
+            label="Flexibility"
+            value={ride?.flexibility || "—"}
+          />
+
+          <Field
+            icon={LocationOnIcon}
+            label="Exact Pickup"
+            value={ride?.exactPickup || "—"}
+            span
+          />
+
+          <Field
+            icon={PhoneIcon}
+            label="Contact / Notes"
+            value={ride?.notes || "—"}
+            span
+          />
+
+          <Field
+            icon={FlagIcon}
+            label="Ride Status"
+            value={ride?.status || "—"}
+          />
+
+          <Field
+            icon={DirectionsCarIcon}
+            label="Travel Status"
+            value={ride?.travelStatus || "—"}
+          />
+
+          <Field
+            icon={FemaleIcon}
+            label="Women Only"
+            value={ride?.womenOnly ? "Yes" : "No"}
+          />
+
+          <Field
+            icon={FemaleIcon}
+            label="Women Drivers Only"
+            value={ride?.womenDriversOnly ? "Yes" : "No"}
+          />
+
+          <Field
+            icon={AccessTimeIcon}
+            label="Start Time (ISO)"
+            value={ride?.startTime || "—"}
+            span
+          />
+
+          <Field
+            icon={AccessTimeIcon}
+            label="Last Started Notification"
+            value={ride?.lastRideStartedNotificationAt || "—"}
+            span
+          />
+
+          <Field
+            icon={PersonIcon}
+            label="Created By Zipcode"
+            value={ride?.createdBy?.zipcode || "—"}
+          />
+
+          <Field
+            icon={ScheduleIcon}
+            label="Time Zone"
+            value={ride?.timeZone || "—"}
+          />
+
+          <Field
+            icon={CalendarTodayIcon}
+            label="Created At"
+            value={
+              ride?.createdAt ? new Date(ride.createdAt).toLocaleString() : "—"
+            }
+            span
+          />
+
+          <Field
+            icon={CalendarTodayIcon}
+            label="Updated At"
+            value={
+              ride?.updatedAt ? new Date(ride.updatedAt).toLocaleString() : "—"
+            }
+            span
+          />
+
+          <Field
+            icon={DescriptionIcon}
+            label="Description"
+            value={ride?.description || "—"}
+            span
+          />
         </Box>
 
         <br />
 
+        {/*
         {ride?.description && (
           <Field
             icon={DescriptionIcon}
@@ -1589,9 +1820,9 @@ export default function RideDetailsModal({
             value={ride?.description || "—"}
             span
           />
-        )}
+        )} */}
       </DialogContent>
-      {/* ── Actions ── */}
+
       <Box
         sx={{
           display: "flex",
@@ -1632,9 +1863,9 @@ export default function RideDetailsModal({
 
         {showDelete &&
           ride?.travelStatus !== "Started" &&
-          (ride.createdBy?._id === user?.id ||
-            (typeof ride.createdBy === "string" &&
-              ride.createdBy === user?.id)) && (
+          (ride?.createdBy?._id === user?.id ||
+            (typeof ride?.createdBy === "string" &&
+              ride?.createdBy === user?.id)) && (
             <Button
               onClick={() => onDelete(ride)}
               startIcon={<DeleteIcon sx={{ fontSize: { xs: 16, sm: 18 } }} />}

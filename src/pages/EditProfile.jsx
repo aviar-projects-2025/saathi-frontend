@@ -1514,32 +1514,27 @@ const EditProfile = ({ open, onClose }) => {
                             <Autocomplete
                                 fullWidth
                                 size="small"
-
                                 options={AUTOCOMPLETE_OPTIONS}
                                 value={value}
-
                                 onChange={handleCitiesChange}
                                 filterOptions={filterOptions}
-
-                                getOptionLabel={(o) => o?.label || ""}
-
-                                getOptionKey={(o) => `${o.abbr}-${o.city}`}
-
-                                isOptionEqualToValue={(a, b) =>
-                                    a.abbr === b.abbr && a.city === b.city
+                                getOptionLabel={(option) => option?.label || ""}
+                                getOptionKey={(option) => `${option.abbr}-${option.city}`}
+                                isOptionEqualToValue={(option, selectedValue) =>
+                                    option.abbr === selectedValue.abbr &&
+                                    option.city === selectedValue.city
                                 }
-
                                 noOptionsText="No matching city"
-
-                                slots={{
-                                    popper: CustomPopper,
-                                }}
-
                                 slotProps={{
+                                    popper: {
+                                        sx: {
+                                            zIndex: 9999,
+                                        },
+                                    },
                                     listbox: {
                                         sx: {
                                             maxHeight: "200px",
-
+                                            overflowY: "auto",
                                             "& .MuiAutocomplete-option": {
                                                 padding: "12px 20px",
                                                 fontSize: "16px",
@@ -1548,7 +1543,6 @@ const EditProfile = ({ open, onClose }) => {
                                         },
                                     },
                                 }}
-
                                 renderInput={(params) => (
                                     <TextField
                                         {...params}
