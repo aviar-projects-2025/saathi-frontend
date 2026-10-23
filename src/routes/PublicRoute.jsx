@@ -10,8 +10,12 @@ const PublicRoute = () => {
       return <Navigate to="/admin/dashboard" replace />;
     }
 
+    console.log(ROLES.USER,'ROLES.USER')
+    console.log(role,'role')
+
+
     if (role === ROLES.USER) {
-      return <Navigate to="/community" replace />;
+      return <Navigate to="/login" replace />;
     }
   }
 

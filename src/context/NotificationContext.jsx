@@ -1,118 +1,212 @@
-import { createContext, useContext, useEffect, useRef, useState } from "react";
-import notificationSound from "../sounds/notifysound.wav";
-import { toast } from "react-toastify";
-import socket from "../socket";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import axios from "axios";
+import { toast } from "react-toastify";
 import Api from "../Api";
-import { useTheme, useMediaQuery } from '@mui/material';
-import ToastConfig from "../components/ToastConfig";
+import socket from "../socket";
+import notificationSound from "../sounds/notifysound.wav";
 
-const NotificationContext = createContext();
+const NotificationContext = createContext(null);
 
-
-export const NotificationProvider = ({ children }) => {
-    const [allRequests, setAllRequests] = useState([]);
-    const [allMyRequests, setAllMyRequests] = useState([]);
-    const [notifications, setNotifications] = useState([]);
-    const user = JSON.parse(localStorage.getItem('user'))
-    const [tabNotification, setTabNotification] = useState([]);
-
-    const toastedNotifications = useRef(new Set());
-
-    const toasts = ToastConfig();
-
-    const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
-    const fetchNotifications = async () => {
-        try {
-            const res = await axios.get(Api + `/notification/${user.id}/`)
-            setTabNotification(res?.data?.data)
-        } catch (error) {
-            toast.error(error.message, toasts);
-            console.log(error)
-        }
-    }
-
-    useEffect(() => {
-        if (user?.id) {
-            fetchNotifications();
-        }
-    }, [user?.id])
-
-
-    useEffect(() => {
-        if (!user?.id) return;
-        socket.emit("join", user.id);
-        socket.emit("rides_room");
-
-        // console.log('joined ', user.id)
-        const handleEvent = (payload) => {
-            const { type, data, message, category } = payload;
-
-            const audio = new Audio(notificationSound);
-            audio.currentTime = 0;
-            audio.play();
-
-            // Sound only when app is visible
-            // if (document.visibilityState === "visible") {
-            //     const audio = new Audio(notificationSound);
-            //     audio.currentTime = 0;
-            //     audio.play().catch(() => { });
-            // }
-
-            console.log(payload, 'payload')
-
-            const newNotification = {
-                _id: data._id || Date.now(),
-                type,
-                category: category || "general",
-                data,
-                message,
-                isRead: type == "ride_started" ? true : false,
-                createdAt: new Date()
-            };
-
-
-
-            setNotifications((prev) => [newNotification, ...prev]);
-            setTabNotification((prev) => [newNotification, ...prev]);
-
-            // toast.info(message || "New notification", toasts);
-
-            // Prevent duplicate toast
-            if (toastedNotifications.current.has(newNotification._id)) {
-                return;
-            }
-
-            toastedNotifications.current.add(newNotification._id);
-
-            // Show toast only once
-            toast.info(message || "New notification", toasts);
-
-        };
-        console.log(notifications, 'notifications')
-        socket.on("notification", handleEvent);
-        return () => {
-            socket.off("notification", handleEvent);
-        };
-    }, [user?.id]);
-
-    return (
-        <NotificationContext.Provider
-            value={{
-                allRequests,
-                setAllRequests,
-                allMyRequests,
-                setAllMyRequests,
-                notifications,
-                tabNotification,
-                fetchNotifications,
-            }}
-        >
-            {children}
-        </NotificationContext.Provider>
-    );
+const getStoredUser = () => {
+  try {
+    return JSON.parse(localStorage.getItem("user") || "null");
+  } catch {
+    return null;
+  }
 };
 
-export const useNotifications = () => useContext(NotificationContext);
+const getUserId = (user) => user?.id || user?._id || user?.userId || null;
+const getNotificationId = (item) => String(item?._id || item?.id || "");
+
+function normalizeList(payload) {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.notifications)) return payload.notifications;
+  if (Array.isArray(payload?.results)) return payload.results;
+  return [];
+}
+
+function mergeNotifications(existing, incoming) {
+  const byId = new Map();
+  [...incoming, ...existing].forEach((item) => {
+    const id = getNotificationId(item);
+    if (id) byId.set(id, { ...byId.get(id), ...item });
+  });
+  return [...byId.values()].sort(
+    (a, b) => new Date(b.createdAt || b.updatedAt || 0) - new Date(a.createdAt || a.updatedAt || 0)
+  );
+}
+
+export function NotificationProvider({ children }) {
+  const [user, setUser] = useState(getStoredUser);
+  const userId = getUserId(user);
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [notificationError, setNotificationError] = useState(null);
+  const handledRealtimeIds = useRef(new Set());
+  const audioRef = useRef(null);
+
+  useEffect(() => {
+    try {
+      audioRef.current = new Audio(notificationSound);
+      audioRef.current.preload = "auto";
+    } catch (error) {
+      console.debug("[NOTIFICATIONS] Audio unavailable", error?.message);
+    }
+  }, []);
+
+  const fetchNotifications = useCallback(async () => {
+    const latestUser = getStoredUser();
+    const id = getUserId(latestUser) || userId;
+    if (!id) {
+      setNotifications([]);
+      return [];
+    }
+
+    setLoading(true);
+    setNotificationError(null);
+    try {
+      const token = localStorage.getItem("token") || localStorage.getItem("accessToken");
+      const response = await axios.get(`${Api}/notification/${id}/`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+      const list = normalizeList(response.data);
+      setNotifications((previous) => mergeNotifications(previous, list));
+      console.debug("[NOTIFICATIONS][FETCH]", { userId: id, count: list.length });
+      return list;
+    } catch (error) {
+      setNotificationError(error?.response?.data?.message || error.message || "Unable to load notifications");
+      console.error("[NOTIFICATIONS][FETCH][ERROR]", error?.response?.data || error.message);
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  }, [userId]);
+
+  const playNotificationSound = useCallback(() => {
+    if (!audioRef.current) return;
+    audioRef.current.currentTime = 0;
+    audioRef.current.play().catch(() => {
+      // Browsers may block sound until the user interacts with the page.
+    });
+  }, []);
+
+  const handleIncomingNotification = useCallback((incoming) => {
+    if (!incoming || typeof incoming !== "object") return;
+    const id = getNotificationId(incoming);
+    if (id && handledRealtimeIds.current.has(id)) return;
+    if (id) handledRealtimeIds.current.add(id);
+
+    setNotifications((previous) => mergeNotifications(previous, [incoming]));
+    if (incoming?.isSilent !== true) {
+      playNotificationSound();
+      const message = incoming.message || incoming.title;
+      if (message) toast.info(message, { toastId: id || undefined, autoClose: 4500 });
+    }
+    console.debug("[NOTIFICATIONS][SOCKET] received", { id, type: incoming.type });
+  }, [playNotificationSound]);
+
+  useEffect(() => {
+    const refreshStoredUser = () => setUser(getStoredUser());
+    window.addEventListener("storage", refreshStoredUser);
+    window.addEventListener("authChanged", refreshStoredUser);
+    return () => {
+      window.removeEventListener("storage", refreshStoredUser);
+      window.removeEventListener("authChanged", refreshStoredUser);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!userId) {
+      setNotifications([]);
+      return undefined;
+    }
+
+    const joinUserRoom = () => {
+      console.debug("[NOTIFICATIONS][SOCKET] joining user room", userId);
+      socket.emit("join", userId);
+      // Compatibility with the current Saathi Rides socket room event.
+      socket.emit("join_room", userId);
+    };
+
+    joinUserRoom();
+    socket.on("connect", joinUserRoom);
+    socket.on("notification", handleIncomingNotification);
+    fetchNotifications();
+
+    return () => {
+      socket.off("connect", joinUserRoom);
+      socket.off("notification", handleIncomingNotification);
+    };
+  }, [userId, fetchNotifications, handleIncomingNotification]);
+
+  const markNotificationRead = useCallback(async (notification) => {
+    const id = getNotificationId(notification);
+    if (!id || notification?.isRead) return;
+    // Optimistic update keeps the badge responsive; roll back on API failure.
+    setNotifications((previous) => previous.map((item) =>
+      getNotificationId(item) === id ? { ...item, isRead: true } : item
+    ));
+    try {
+      const token = localStorage.getItem("token") || localStorage.getItem("accessToken");
+      await axios.patch(`${Api}/notification/${id}`, {}, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+    } catch (error) {
+      setNotifications((previous) => previous.map((item) =>
+        getNotificationId(item) === id ? { ...item, isRead: false } : item
+      ));
+      console.error("[NOTIFICATIONS][MARK_READ][ERROR]", error?.response?.data || error.message);
+      throw error;
+    }
+  }, []);
+
+  const markAllNotificationsRead = useCallback(async () => {
+    if (!userId) return;
+    const unread = notifications.filter((item) => !item.isRead);
+    if (!unread.length) return;
+    setNotifications((previous) => previous.map((item) => ({ ...item, isRead: true })));
+    try {
+      const token = localStorage.getItem("token") || localStorage.getItem("accessToken");
+      await axios.patch(`${Api}/notification/read-all/${userId}`, {}, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+    } catch (error) {
+      setNotifications((previous) => previous.map((item) => ({ ...item, isRead: false })));
+      console.error("[NOTIFICATIONS][MARK_ALL_READ][ERROR]", error?.response?.data || error.message);
+      throw error;
+    }
+  }, [notifications, userId]);
+
+  const unreadCount = useMemo(
+    () => notifications.filter((item) => !item.isRead && item.type !== "ride_started").length,
+    [notifications]
+  );
+
+  const value = useMemo(() => ({
+    notifications,
+    tabNotification: notifications,
+    unreadCount,
+    loading,
+    notificationError,
+    fetchNotifications,
+    markNotificationRead,
+    markAllNotificationsRead,
+  }), [notifications, unreadCount, loading, notificationError, fetchNotifications, markNotificationRead, markAllNotificationsRead]);
+
+  return <NotificationContext.Provider value={value}>{children}</NotificationContext.Provider>;
+}
+
+export function useNotifications() {
+  const context = useContext(NotificationContext);
+  if (!context) throw new Error("useNotifications must be used inside NotificationProvider");
+  return context;
+}

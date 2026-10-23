@@ -33,7 +33,6 @@ const FS = {
     avatar: { xs: 10, sm: 11, md: 12 },
 };
 
-
 // chip palettes
 const CHIP = {
     blue: { bg: "#C9E2FA", color: "#134F85" }, // mode of travel / flight companion
@@ -48,7 +47,8 @@ const CHIP = {
 const getRideId = (rideId) =>
     rideId && typeof rideId === "object" ? rideId._id : rideId;
 
-export default function RideList({ ride }) {
+export default function RideList({ ride, onIcanHelp }) {
+    console.log(ride,'ride')
     const { completion, currentUser } = useUser();
     const { refreshRide } = useRide();
 
@@ -66,6 +66,12 @@ export default function RideList({ ride }) {
     const totalSeat = ride?.totalSeats;
     const isFlight = ride?.modeOfTravel === "Flight";
     const isProfileComplete = completion === 100;
+
+    // Determine if this is an Offer (driving) or Request (needs a ride)
+    // Checks standard 'type' field, common alternative 'intent' field, or defaults to Offer
+    const rideType = (ride?.kind || "").toLowerCase();
+    const isOffer = rideType === "offer";
+    const isRequest = rideType === "request";
 
     /* ───────────── API ───────────── */
     const myReqRides = async () => {
@@ -106,7 +112,6 @@ export default function RideList({ ride }) {
         ? dateObj.toLocaleTimeString("en-US", {
             hour: "numeric",
             minute: "2-digit",
-            // timeZoneName: "short",
         })
         : "";
 
@@ -228,7 +233,7 @@ export default function RideList({ ride }) {
         });
     }
 
-    /* ───────────── Button ───────────── */
+    /* ───────────── Button Logic ───────────── */
     const isDanger = isRejected || isBlocked;
 
     const buttonDisabled =
@@ -237,28 +242,68 @@ export default function RideList({ ride }) {
         isBlocked ||
         !isProfileComplete ||
         isFlightBookingClosed ||
-        (!isFlight && !alreadyRequested && remainingSeatsForUser <= 0);
+        // Only check seat availability for Offers, not Requests
+        (isOffer && !isFlight && !alreadyRequested && remainingSeatsForUser <= 0) ||
+        (isRequest && alreadyRequested);
 
-    const buttonLabel = genderMismatch
-        ? `Only ${ride.genderPreference} allowed`
-        : isRejected
-            ? "Rejected"
-            : isBlocked
-                ? "You cancelled too many times"
-                : isFlightBookingClosed
-                    ? "Booking closed"
-                    : alreadyRequested
-                        ? remainingSeatsForUser > 0
-                            ? `Edit request (${remainingSeatsForUser} left)`
-                            : "View request"
-                        : isFlight
-                            ? "Request companion"
-                            : remainingSeatsForUser > 0
-                                ? "Request seat"
-                                : "No seats available";
+    // console.log(
+    //     genderMismatch, "genderMismatch",
+    //     isRejected, "isRejected",
+    //     isBlocked, "isBlocked",
+    //     isProfileComplete, "isProfileComplete",
+    //     isFlightBookingClosed, "isFlightBookingClosed",
+    //     isFlight, "isFlight",
+    //     alreadyRequested, "alreadyRequested",
+    //     remainingSeatsForUser, "remainingSeatsForUser",
+    //     isRequest, "isRequest",
+    //     isOffer, "isOffer",              // <- add this for clarity
+    //     buttonDisabled, "buttonDisabled" // <- add this to verify the result
+    // );
+
+    // Base label based on type
+    let baseLabel = isOffer ? "Request seat" : "I can drive";
+
+    let buttonLabel;
+    if (genderMismatch) {
+        buttonLabel = `Only ${ride.genderPreference} allowed`;
+    } else if (isRejected) {
+        buttonLabel = "Rejected";
+    } else if (isBlocked) {
+        buttonLabel = "You cancelled too many times";
+    } else if (isFlightBookingClosed) {
+        buttonLabel = "Booking closed";
+    } else if (alreadyRequested) {
+        if (isOffer) {
+            buttonLabel = remainingSeatsForUser > 0
+                ? `Edit request (${remainingSeatsForUser} left)`
+                : "View request";
+        } else {
+            buttonLabel = "View request";
+        }
+    } else if (isFlight) {
+        buttonLabel = "Request companion";
+    } else if (!isOffer && !isRequest) {
+        // fallback
+        buttonLabel = "Request seat";
+    } else if (isOffer && remainingSeatsForUser <= 0) {
+        buttonLabel = "No seats available";
+    } else {
+        buttonLabel = baseLabel;
+    }
 
     const handleButtonClick = (event) => {
         event.stopPropagation();
+
+        // A request card's action means "I can help", so open the parent
+        // Offer Ride flow with this request prefilled. Keep Request seat on
+        // offer cards routed through the existing Ridebook modal.
+        if (isRequest) {
+            if (typeof onIcanHelp === "function") {
+                onIcanHelp(ride);
+            }
+            return;
+        }
+
         setSelectedRide(ride);
         setSelectedRequest(alreadyRequested ? currentRequest : null);
         setOpenEditModal(true);
@@ -336,6 +381,7 @@ export default function RideList({ ride }) {
                                 wordBreak: "break-word",
                             }}
                         >
+                            {isRequest && "Looking for : "}
                             {`${routeFrom || "—"} → ${routeTo || "—"}`}
                         </Typography>
 
@@ -352,7 +398,6 @@ export default function RideList({ ride }) {
                         </Typography>
 
                         {/* chips: single row, overflow hidden */}
-                        {/* Chips: responsive Box layout */}
                         <Box
                             sx={{
                                 display: "flex",
@@ -457,12 +502,20 @@ export default function RideList({ ride }) {
                                         fontWeight: 600,
                                         lineHeight: 1.4,
                                         whiteSpace: "nowrap",
-                                        color: "#fff",
-                                        bgcolor: isDanger ? "#D32F2F" : BRAND,
-                                        "&:hover": { bgcolor: isDanger ? "#D32F2F" : BRAND_HOVER },
+                                        color: isDanger || isOffer ? "#fff" : BRAND,
+                                        border: isOffer ? "none" : `1px solid ${BRAND}`,
+                                        bgcolor: isDanger ? "#D32F2F" : isOffer ? BRAND : "#ffffffff",
+
+                                        "&:hover": {
+                                            bgcolor: isDanger ? "#D32F2F" : isOffer ? BRAND_HOVER : "#FDF0E8",
+                                            // Ensure text remains visible on hover
+                                            color: isDanger || isOffer ? "#fff" : BRAND,
+                                        },
+
                                         "&.Mui-disabled": {
-                                            bgcolor: isDanger ? "#EF9A9A" : "#E0E0E0",
-                                            color: "#fff",
+                                            bgcolor: isDanger ? "#EF9A9A" : isOffer ? "#E0E0E0" : "#F5F5F5",
+                                            color: isDanger || isOffer ? "#fff" : "#A0A0A0",
+                                            border: isOffer ? "none" : "1px solid #E0E0E0",
                                         },
                                     }}
                                 >

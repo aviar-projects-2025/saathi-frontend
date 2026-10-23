@@ -585,7 +585,7 @@ function RideCard({
       // if (!window.confirm("Are you sure you want to approve this request?")) {
       //   return;
       // }
-      console.log(requestId,'requestId')
+      console.log(requestId, 'requestId')
       setApproveLoading(requestId);
       const res = await axios.patch(
         `${Api}/bookride/${requestId}/status?type=Approve`,
@@ -660,22 +660,35 @@ function RideCard({
   const handleEdit = async (rideId, status) => {
 
     try {
+      const tokenNow = localStorage.getItem("token") || "";
+      const isAcceptedHelpRide = Boolean(ride?.helpProposalId) && isActualDriver;
+      const statusUrl = isAcceptedHelpRide
+        ? `${Api}/help-proposals/ride/${rideId}/status`
+        : `${Api}/rides/edit/${rideId}`;
+      console.debug("[I_CAN_HELP][RIDE_STATUS] request", {
+        rideId,
+        status,
+        isAcceptedHelpRide,
+        statusUrl,
+        currentUserId,
+        actualDriverId,
+      });
+
       if (status === "Waiting") {
 
         setStartRideLoading(true);
 
         const response = await axios.patch(
-          `${Api}/rides/edit/${rideId}`,
+          statusUrl,
           {
             travelStatus: "Started",
-            startTime: new Date().toISOString(),
+            ...(isAcceptedHelpRide ? {} : { startTime: new Date().toISOString() }),
           },
           {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-            },
+            headers: { Authorization: `Bearer ${tokenNow}` },
           }
         );
+        console.debug("[I_CAN_HELP][RIDE_STATUS] start response", response.status, response.data);
 
         setConfirmRide(null);
         fetchRides();
@@ -686,17 +699,16 @@ function RideCard({
         setCompleteRideLoading(true);
 
         const response = await axios.patch(
-          `${Api}/rides/edit/${rideId}`,
+          statusUrl,
           {
             travelStatus: "Completed",
             endTime: new Date().toISOString(),
           },
           {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-            },
+            headers: { Authorization: `Bearer ${tokenNow}` },
           }
         );
+        console.debug("[I_CAN_HELP][RIDE_STATUS] complete response", response.status, response.data);
 
         setConfirmRide(null);
         fetchRides();
@@ -704,7 +716,17 @@ function RideCard({
         toast.success("Ride Completed", toasts);
       }
     } catch (error) {
-      toast.error("Failed", toasts);
+      console.error("[I_CAN_HELP][RIDE_STATUS] failed", {
+        message: error?.message,
+        status: error?.response?.status,
+        data: error?.response?.data,
+        rideId,
+        travelStatus: status,
+      });
+      toast.error(error?.response?.data?.message || "Failed to update ride status", toasts);
+    } finally {
+      setStartRideLoading(false);
+      setCompleteRideLoading(false);
     }
   };
 
@@ -720,8 +742,15 @@ function RideCard({
     }
   }, [notificationRide, ride]);
 
-  const isOwner =
-    String(ride?.createdBy?._id || ride?.createdBy?.id) === String(user?.id);
+  const getRefId = (value) => value?._id || value?.id || value;
+  const rideOwnerId = getRefId(ride?.createdBy);
+  const actualDriverId = getRefId(ride?.actualDriver);
+  const currentUserId = user?.id || user?._id;
+  const isOwner = String(rideOwnerId || "") === String(currentUserId || "");
+  const isActualDriver = String(actualDriverId || "") === String(currentUserId || "");
+  // The requester owns the request/ride record, but the helper is the driver.
+  // Only allow the helper to manage travel status, not edit/cancel the owner's ride.
+  const canManageTravel = isOwner || (Boolean(ride?.helpProposalId) && isActualDriver);
   const isStarted = ride?.travelStatus === "Started";
   const isCancelled = ride?.travelStatus === "Cancelled";
   const isCompleted = ride?.travelStatus === "Completed";
@@ -811,6 +840,53 @@ function RideCard({
             >
               {ride?.createdBy?.firstName} {ride?.createdBy?.lastName}
             </Typography>
+
+            {/* Ride type labels */}
+            {ride?.kind === "request" && ride?.status === "CLOSED" && (
+              <Chip
+                label="Closed Request"
+                size="small"
+                variant="outlined"
+                sx={{
+                  color: "#777783",
+                  borderColor: "#D6D3D1",
+                  bgcolor: "#F5F5F4",
+                  fontWeight: 700,
+                  fontSize: "0.68rem",
+                  flexShrink: 0,
+                }}
+              />
+            )}
+
+            {ride?.kind === "offer" && ride?.helpProposalId && (
+              <Chip
+                label={isActualDriver ? "Accepted Help Ride" : "Your Requested Ride"}
+                size="small"
+                sx={{
+                  bgcolor: isActualDriver ? "#E8F5E9" : "#FFF0E3",
+                  color: isActualDriver ? "#2E7D32" : "#C65B00",
+                  fontWeight: 700,
+                  fontSize: "0.68rem",
+                  flexShrink: 0,
+                }}
+              />
+            )}
+
+            {ride?.kind === "request" && ride?.status !== "CLOSED" && (
+              <Chip
+                label="Your Request"
+                size="small"
+                variant="outlined"
+                sx={{
+                  color: "#FF9933",
+                  borderColor: "#FF9933",
+                  fontWeight: 700,
+                  fontSize: "0.68rem",
+                  flexShrink: 0,
+                }}
+              />
+            )}
+
           </Box>
 
           {/* Actions */}
@@ -896,7 +972,7 @@ function RideCard({
             {/* Start / Complete Ride */}
             {isCurrentRide && (
               <>
-                {isOwner && !isCompleted ? (
+                {canManageTravel && !isCompleted ? (
                   <Button
                     size="small"
                     onClick={() => handleEdit(ride._id, ride?.travelStatus)}
@@ -948,9 +1024,9 @@ function RideCard({
         <Card
           elevation={0}
           sx={{
-            borderRadius: "0 0 18px 18px",
+            borderRadius: "0 0 15px 15px",
             backgroundColor: "#fff",
-            border: "1px solid #FFE2C2",
+            border: "1px solid #E8DED4",
             overflow: "visible",
             width: "100%",
             height: "auto",
@@ -1407,6 +1483,8 @@ const MyRides = () => {
   const { refreshRide } = useRide();
   const token = localStorage.getItem("token");
   const currentUser = JSON.parse(localStorage.getItem("user") || "null");
+  // Support both API/user-storage shapes: { id } and { _id }.
+  const currentUserId = currentUser?.id || currentUser?._id;
   const ITEMS_PER_PAGE = 10;
   const [rideCounts, setRideCounts] = useState({
     current: 0,
@@ -1442,14 +1520,117 @@ const MyRides = () => {
 
   const active = tabs[tab];
   const activeData = data[active.key];
-  const authConfig = () => token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+  // Read the token at request time so a login/token refresh does not leave stale auth headers.
+  const authConfig = () => {
+    const liveToken = localStorage.getItem("token");
+    return liveToken ? { headers: { Authorization: `Bearer ${liveToken}` } } : {};
+  };
 
   const setCategory = (category, patch) => {
     setData(prev => ({ ...prev, [category]: { ...prev[category], ...patch } }));
   };
 
+
+  // Help proposals are separate from normal BookRide seat requests.
+  const [helpProposals, setHelpProposals] = useState([]);
+  const [loadingHelpProposals, setLoadingHelpProposals] = useState(false);
+  const [respondingProposalId, setRespondingProposalId] = useState(null);
+
+  const fetchHelpProposals = async () => {
+    const requesterId = currentUser?.id || currentUser?._id;
+    const url = `${Api}/help-proposals/received`;
+
+    console.log("[I_CAN_HELP][FETCH] Function called", {
+      requesterId,
+      url,
+      hasToken: Boolean(localStorage.getItem("token")),
+    });
+
+    if (!requesterId) {
+      console.error(
+        "[I_CAN_HELP][FETCH] Aborted: logged-in user ID is missing",
+        currentUser
+      );
+      setHelpProposals([]);
+      return;
+    }
+
+    console.groupCollapsed("[I_CAN_HELP][FETCH] GET received proposals");
+    try {
+      setLoadingHelpProposals(true);
+      const response = await axios.get(url, authConfig());
+      const body = response?.data;
+      const proposals = Array.isArray(body?.data)
+        ? body.data
+        : Array.isArray(body?.proposals)
+          ? body.proposals
+          : Array.isArray(body)
+            ? body
+            : [];
+
+      console.log("[I_CAN_HELP][FETCH] API response", {
+        status: response.status,
+        count: proposals.length,
+        proposals,
+      });
+      console.log(response, 'response')
+      setHelpProposals(proposals);
+    } catch (error) {
+      console.error("[I_CAN_HELP][FETCH] API failed", {
+        url,
+        message: error?.message,
+        status: error?.response?.status,
+        response: error?.response?.data,
+      });
+      toast.error(
+        error?.response?.data?.message || "Unable to load help proposals",
+        toastss
+      );
+    } finally {
+      setLoadingHelpProposals(false);
+      console.groupEnd();
+    }
+  };
+
+  const respondToHelpProposal = async (proposalId, action) => {
+    if (!proposalId || !["accept", "reject"].includes(action)) {
+      console.warn("[I_CAN_HELP][RESPOND] invalid arguments", { proposalId, action });
+      return;
+    }
+    const url = `${Api}/help-proposals/${proposalId}/respond`;
+    console.groupCollapsed(`[I_CAN_HELP][RESPOND] ${action.toUpperCase()} ${proposalId}`);
+    console.debug("request", { url, proposalId, action, hasToken: Boolean(localStorage.getItem("token")) });
+    try {
+      setRespondingProposalId(proposalId);
+      const response = await axios.patch(url, { action }, authConfig());
+      console.debug("response", { status: response.status, data: response.data });
+      toast.success(
+        response?.data?.message || (action === "accept" ? "Offer accepted" : "Offer rejected"),
+        toastss
+      );
+      await Promise.all([fetchHelpProposals(), refreshAllCategories()]);
+    } catch (error) {
+      console.error("[I_CAN_HELP][RESPOND] failed", {
+        url,
+        proposalId,
+        action,
+        message: error?.message,
+        status: error?.response?.status,
+        response: error?.response?.data,
+      });
+      toast.error(error?.response?.data?.message || "Unable to process this proposal", toastss);
+    } finally {
+      setRespondingProposalId(null);
+      console.groupEnd();
+    }
+  };
+
   const fetchCategory = async (category, { reset = false } = {}) => {
-    if (!currentUser?.id) return;
+    if (!currentUserId) {
+      console.error("[MY_RIDES][CATEGORY] Missing user ID", currentUser);
+      setInitialLoading(false);
+      return;
+    }
     const state = data[category];
     if (categoryLoadingRef.current[category]) return;
     if (!reset && state.loaded && !state.hasMore) return;
@@ -1491,39 +1672,46 @@ const MyRides = () => {
   const fetchRides = () => refreshCategory(active.key);
 
   const fetchAllRequests = async () => {
-    if (!currentUser?.id) return;
+    if (!currentUserId) {
+      console.error("[MY_RIDES][REQUESTS] Missing user ID", currentUser);
+      setRequestsLoaded(true);
+      return;
+    }
+
+    const url = `${Api}/bookride/${currentUserId}?type=received`;
+    console.log("[MY_RIDES][REQUESTS] Fetching seat requests", { url, currentUserId });
+
     try {
-      const res = await axios.get(`${Api}/bookride/${currentUser.id}?type=received`, authConfig());
+      const res = await axios.get(url, authConfig());
       setAllRequests(res?.data?.data || []);
     } catch (error) {
-      console.error("Error fetching requests:", error?.response?.data || error);
+      console.error("[MY_RIDES][REQUESTS] Failed", {
+        status: error?.response?.status,
+        response: error?.response?.data,
+        message: error?.message,
+      });
     } finally {
       setRequestsLoaded(true);
     }
   };
 
   const fetchRideCounts = async () => {
-    console.log('count')
     try {
-      const res = await axios.get(
-        `${Api}/rides/my/counts`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const url = `${Api}/rides/my/counts`;
+      console.debug("[MY_RIDES][COUNTS] request", { url, hasToken: Boolean(localStorage.getItem("token")) });
+      const res = await axios.get(url, authConfig());
 
-      console.log('res : ', res)
+      console.debug("[MY_RIDES][COUNTS] response", { status: res.status, data: res.data });
 
       if (res.data?.success) {
         setRideCounts(res.data.data);
       }
     } catch (error) {
-      console.error(
-        "Failed to fetch ride counts:",
-        error
-      );
+      console.error("[MY_RIDES][COUNTS] failed", {
+        message: error?.message,
+        status: error?.response?.status,
+        response: error?.response?.data,
+      });
     }
   };
 
@@ -1535,14 +1723,32 @@ const MyRides = () => {
       fetchCategory("history", { reset: true }),
       fetchAllRequests(),
       fetchRideCounts(),
+      fetchHelpProposals(),
     ]);
   };
 
   useEffect(() => {
-    if (!currentUser?.id) { setInitialLoading(false); return; }
+    console.log("[MY_RIDES][INIT] MyRides mounted", {
+      currentUserId,
+      user: currentUser,
+      hasToken: Boolean(localStorage.getItem("token")),
+      apiBase: Api,
+    });
+
+    if (!currentUserId) {
+      console.error(
+        "[MY_RIDES][INIT] Missing user ID; initial fetch skipped",
+        currentUser
+      );
+      setInitialLoading(false);
+      return;
+    }
+
+    console.log("[MY_RIDES][INIT] Loading rides, seat requests and help proposals");
     fetchCategory("current", { reset: true });
     fetchAllRequests();
     fetchRideCounts();
+    fetchHelpProposals();
   }, []);
 
   useEffect(() => {
@@ -1653,7 +1859,7 @@ const MyRides = () => {
         const start = new Date(ride?.startTime);
         if (Number.isNaN(start.getTime()) || now < start || processedRideIds.current.has(id)) return;
         const owner = String(ride?.createdBy?._id || ride?.createdBy || "");
-        if (owner === String(currentUser?.id || "")) {
+        if (owner === String(currentUserId || "")) {
           toast.info("Your ride is starting now 🚗", toastss);
           setConfirmRide(ride);
         }
@@ -1663,7 +1869,7 @@ const MyRides = () => {
     check();
     const timer = setInterval(check, 1000);
     return () => clearInterval(timer);
-  }, [active.key, data.current.rides, currentUser?.id]);
+  }, [active.key, data.current.rides, currentUserId]);
 
   useEffect(() => {
     const node = sentinelRef.current;
@@ -1748,17 +1954,294 @@ const MyRides = () => {
   const countFor = category => typeof data[category].total === "number" ? data[category].total : data[category].rides.length;
 
   return (
-    <Box sx={{ display: "flex", gap: { xs: 1, sm: 2.5, md: 3 }, alignItems: "flex-start", flexDirection: { xs: "column", md: "row" }, width: "100%", maxWidth: "100%", minWidth: 0, boxSizing: "border-box", overflowX: "hidden" }}>
-      <Box sx={{ flex: 1, width: "100%", minWidth: 0, maxWidth: "100%", mx: { md: "auto", lg: 0 }, boxSizing: "border-box", display: "flex", flexDirection: "column", height: { xs: "100dvh", sm: "auto" }, overflowX: "hidden" }}>
+    <Box sx={{ display: "flex", gap: { xs: 1, sm: 2.5, md: 3 }, alignItems: "flex-start", flexDirection: { xs: "column", md: "row" }, width: "100%", maxWidth: "100%", minWidth: 0, boxSizing: "border-box", overflowX: "hidden", bgcolor: "#FAF8F5", color: "#242424", fontFamily: '"Inter", "Roboto", sans-serif', "& .MuiPaper-root": { boxShadow: "none" }, "& .MuiButton-root": { textTransform: "none", fontWeight: 600, borderRadius: "10px" } }}>
+      <Box sx={{ flex: 1, width: "100%", minWidth: 0, maxWidth: "100%", mx: { md: "auto", lg: 0 }, boxSizing: "border-box", display: "flex", flexDirection: "column", height: { xs: "100dvh", sm: "auto" }, overflowX: "hidden", bgcolor: "#FAF8F5", px: { xs: 1.5, sm: 2, md: 3 }, py: { xs: 2, sm: 2.5, md: 3 } }}>
         <Box sx={{ px: { xs: 1.5, sm: 0 }, pt: { xs: 2, sm: 0 }, mb: 2, flexShrink: 0 }}>
-          <Typography variant="h5" fontWeight={800} sx={{ fontSize: { xs: "1.1rem", sm: "1.35rem", md: "1.5rem" } }}>My Rides</Typography>
+          <Typography variant="h5" fontWeight={800} sx={{ color: "#142958", fontSize: { xs: "1.35rem", sm: "1.55rem", md: "1.7rem" }, letterSpacing: "-0.4px" }}>My Rides</Typography>
         </Box>
 
-        <Box sx={{ width: "100%", minWidth: 0, borderBottom: "1px solid", borderColor: "divider", flexShrink: 0, position: "sticky", top: -3, zIndex: 10, bgcolor: "background.paper" }}>
-          <Tabs value={tab} onChange={handleTabChange} variant="fullWidth" sx={{ width: "100%", minHeight: { xs: 40, sm: 48, md: 50 }, "& .MuiTabs-flexContainer": { width: "100%" }, "& .MuiTab-root": { minWidth: 0, flex: 1, padding: { xs: "4px 2px", sm: "8px 12px", md: "12px 16px" }, fontSize: { xs: "0.68rem", sm: "0.78rem", md: "0.82rem" }, fontWeight: 600, textTransform: "none", minHeight: { xs: 36, sm: 44, md: 48 }, lineHeight: 1.1, color: "#666", "&.Mui-selected": { color: "#FF9933" } }, "& .MuiTabs-indicator": { height: 3, backgroundColor: "#FF9933" } }}>
+
+        {/* Offers to Help: separate from the existing seat-request workflow */}
+        <Box sx={{ px: { xs: 1.5, sm: 0 }, mt: 2 }}>
+          <Paper elevation={0} sx={{ border: "1px solid #E8DED4", borderRadius: "15px", overflow: "hidden", bgcolor: "#fff" }}>
+            <Box sx={{ p: { xs: 1.5, sm: 2 }, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1, background: "#FFFFFF" }}>
+              <Box>
+                <Typography sx={{ fontWeight: 800, fontSize: { xs: "0.95rem", sm: "1.05rem" }, color: "#24243E" }}>Offers to Help</Typography>
+                <Typography variant="body2" color="text.secondary">Review people offering to help with your ride request.</Typography>
+              </Box>
+              <Chip label={helpProposals.filter((proposal) => proposal?.status === "PENDING").length} size="small" sx={{ fontWeight: 800, color: "#C65B00", bgcolor: "#FFF0DF" }} />
+            </Box>
+            <Divider />
+            {loadingHelpProposals ? (
+              <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}><CircularProgress size={28} sx={{ color: "#FF9933" }} /></Box>
+            ) : helpProposals.filter((proposal) => proposal?.status === "PENDING").length === 0 ? (
+              <Box sx={{ p: 2.5, textAlign: "center" }}>
+                <Typography fontWeight={600} color="text.secondary">No pending offers to help</Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>When someone offers to help with your request, their proposal will appear here.</Typography>
+              </Box>
+            ) : (
+              <Stack spacing={0} divider={<Divider />}>
+                {helpProposals.filter((proposal) => proposal?.status === "PENDING").map((proposal) => {
+                  const helper = proposal?.helperId && typeof proposal.helperId === "object" ? proposal.helperId : {};
+                  const requestRide = proposal?.requestRideId && typeof proposal.requestRideId === "object" ? proposal.requestRideId : {};
+                  const offer = proposal?.offerDetails && typeof proposal.offerDetails === "object" ? proposal.offerDetails : {};
+                  const helperName = [helper.firstName, helper.lastName].filter(Boolean).join(" ") || "Community member";
+                  const from = offer.from || requestRide.from || "—";
+                  const destination = offer.destination || requestRide.destination || "—";
+                  const mode = offer.modeOfTravel || requestRide.modeOfTravel || "Travel mode not specified";
+                  const startTime = offer.startTime || requestRide.startTime;
+                  const dateLabel = startTime ? moment(startTime).format("DD MMM YYYY, hh:mm A") : "Time not specified";
+                  const isResponding = respondingProposalId === proposal._id;
+
+                  return (
+                    < Box
+                      key={proposal._id}
+                      sx={{
+                        p: { xs: 1.5, sm: 2 },
+                        transition: "background-color 0.2s ease",
+                        "&:hover": { bgcolor: "#FFFCF9" },
+                      }}
+                    >
+                      {/* Helper information */}
+                      <Stack
+                        direction="row"
+                        spacing={1.25}
+                        alignItems="center"
+                        sx={{ mb: 1.5 }}
+                      >
+                        <Avatar
+                          src={helper.profileImage || ""}
+                          sx={{
+                            width: 44,
+                            height: 44,
+                            bgcolor: "#FFF0E3",
+                            color: "#C65B00",
+                            fontWeight: 800,
+                            border: "1px solid #F4D8C0",
+                          }}
+                        >
+                          {`${helper.firstName?.[0] || ""}${helper.lastName?.[0] || ""}` || "U"}
+                        </Avatar>
+
+                        <Box sx={{ minWidth: 0, flex: 1 }}>
+                          <Typography
+                            sx={{
+                              fontWeight: 750,
+                              fontSize: "0.95rem",
+                              color: "#24243E",
+                            }}
+                            noWrap
+                          >
+                            {helperName}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Offered to help with your request
+                          </Typography>
+                        </Box>
+
+                        <Chip
+                          label="Pending"
+                          size="small"
+                          sx={{
+                            bgcolor: "#FFF3E0",
+                            color: "#A85B00",
+                            fontWeight: 700,
+                            fontSize: "0.72rem",
+                            height: 25,
+                            borderRadius: "7px",
+                          }}
+                        />
+                      </Stack>
+
+                      {/* Ride details */}
+                      <Paper
+                        variant="outlined"
+                        sx={{
+                          p: { xs: 1.25, sm: 1.75 },
+                          borderRadius: "12px",
+                          borderColor: "#EFE5DC",
+                          bgcolor: "#FFFCF9",
+                        }}
+                      >
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          alignItems="flex-start"
+                        >
+                          <Box
+                            sx={{
+                              width: 32,
+                              height: 32,
+                              flexShrink: 0,
+                              borderRadius: "9px",
+                              bgcolor: "#FFF0E3",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                          >
+                            <ArrowForwardIcon sx={{ color: "#E8650A", fontSize: 19 }} />
+                          </Box>
+
+                          <Box sx={{ minWidth: 0, flex: 1 }}>
+                            <Typography
+                              sx={{
+                                fontWeight: 750,
+                                fontSize: "0.9rem",
+                                lineHeight: 1.6,
+                                color: "#24243E",
+                                overflowWrap: "anywhere",
+                              }}
+                            >
+                              {from} → {destination}
+                            </Typography>
+
+                            <Typography
+                              sx={{ mt: 0.4, fontSize: "0.8rem", color: "#777783" }}
+                            >
+                              {dateLabel}
+                            </Typography>
+                          </Box>
+                        </Stack>
+
+                        <Stack
+                          direction="row"
+                          spacing={0.75}
+                          useFlexGap
+                          flexWrap="wrap"
+                          sx={{ mt: 1.5 }}
+                        >
+                          <Chip
+                            size="small"
+                            label={mode}
+                            sx={{
+                              bgcolor: "#FFFFFF",
+                              border: "1px solid #E8DED4",
+                              borderRadius: "7px",
+                              fontSize: "0.75rem",
+                            }}
+                          />
+
+                          {offer.availableSeats != null && (
+                            <Chip
+                              size="small"
+                              label={`${offer.availableSeats} seat(s)`}
+                              sx={{
+                                bgcolor: "#FFFFFF",
+                                border: "1px solid #E8DED4",
+                                borderRadius: "7px",
+                                fontSize: "0.75rem",
+                              }}
+                            />
+                          )}
+
+                          {offer.costPerSeat != null && (
+                            <Chip
+                              size="small"
+                              label={`₹${offer.costPerSeat} / seat`}
+                              sx={{
+                                bgcolor: "#FFFFFF",
+                                border: "1px solid #E8DED4",
+                                borderRadius: "7px",
+                                fontSize: "0.75rem",
+                              }}
+                            />
+                          )}
+                        </Stack>
+
+                        {offer.description && (
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              mt: 1.25,
+                              color: "#6B6B78",
+                              lineHeight: 1.6,
+                              overflowWrap: "anywhere",
+                            }}
+                          >
+                            {offer.description}
+                          </Typography>
+                        )}
+                      </Paper>
+
+                      {/* Actions: aligned to the right on desktop */}
+                      <Stack
+                        direction="row"
+                        spacing={1}
+                        justifyContent="flex-end"
+                        sx={{
+                          mt: 1.5,
+                          width: "100%",
+                          "& .MuiButton-root": {
+                            minHeight: 40,
+                            px: { xs: 1.5, sm: 2 },
+                            borderRadius: "9px",
+                            textTransform: "none",
+                            fontSize: "0.84rem",
+                            fontWeight: 750,
+                            whiteSpace: "nowrap",
+                          },
+                        }}
+                      >
+                        <Button
+                          variant="outlined"
+                          startIcon={<CancelIcon />}
+                          disabled={Boolean(respondingProposalId)}
+                          onClick={() => respondToHelpProposal(proposal._id, "reject")}
+                          sx={{
+                            flex: { xs: 1, sm: "0 0 auto" },
+                            color: "#A83D36",
+                            borderColor: "#E8C6C3",
+                            bgcolor: "#FFFFFF",
+                            "&:hover": {
+                              borderColor: "#B42318",
+                              bgcolor: "#FFF5F4",
+                            },
+                          }}
+                        >
+                          Decline
+                        </Button>
+
+                        <Button
+                          variant="contained"
+                          startIcon={
+                            isResponding ? (
+                              <CircularProgress size={16} color="inherit" />
+                            ) : (
+                              <CheckCircleIcon />
+                            )
+                          }
+                          disabled={Boolean(respondingProposalId)}
+                          onClick={() => respondToHelpProposal(proposal._id, "accept")}
+                          sx={{
+                            flex: { xs: 1, sm: "0 0 auto" },
+                            bgcolor: "#2D6A4F",
+                            color: "#FFFFFF",
+                            boxShadow: "none",
+                            "&:hover": {
+                              bgcolor: "#245640",
+                              boxShadow: "none",
+                            },
+                          }}
+                        >
+                          {isResponding ? "Processing…" : "Accept Offer"}
+                        </Button>
+                      </Stack>
+                    </Box>
+
+                  );
+                })}
+              </Stack>
+            )}
+          </Paper>
+        </Box>
+
+        <Box sx={{ width: "100%", marginTop: 3, minWidth: 0, flexShrink: 0, position: "sticky", top: -3, zIndex: 10, bgcolor: "#FAF8F5", pb: 1, mb: 0.5 }}>
+          <Tabs value={tab} onChange={handleTabChange} variant="scrollable" scrollButtons={false} sx={{ width: "100%", minHeight: 42, "& .MuiTabs-flexContainer": { width: "max-content", gap: "8px" }, "& .MuiTab-root": { minWidth: "auto", flex: "0 0 auto", px: { xs: 2, sm: 2.25 }, py: 0.75, border: "1px solid #DCD4CB", borderRadius: "24px", bgcolor: "#FFFFFF", fontSize: { xs: "0.78rem", sm: "0.84rem" }, fontWeight: 500, textTransform: "none", minHeight: 38, marginRight: 1, lineHeight: 1.2, color: "#292929", "&.Mui-selected": { color: "#FFFFFF", bgcolor: "#C83D08", borderColor: "#C83D08" } }, "& .MuiTabs-indicator": { display: "none" } }}>
             {tabs.map(item => <Tab key={item.key} label={<Typography component="span" noWrap sx={{ fontSize: { xs: "0.62rem", sm: "0.72rem", md: "0.8rem" }, fontWeight: "bold", lineHeight: 1.5 }}>{`${item.label}`}</Typography>} />)}
           </Tabs>
         </Box>
+
 
         <Box>
           {(initialLoading && active.key === "current" && !activeData.loaded) ||
@@ -1784,7 +2267,7 @@ const MyRides = () => {
           ) : (
             <>
               {renderList(activeData.rides)}
-
+              {console.log(activeData.rides)}
               <Box
                 ref={sentinelRef}
                 sx={{
@@ -1843,7 +2326,7 @@ const MyRides = () => {
           </DialogActions>
         </Dialog>
       </Box>
-    </Box>
+    </Box >
   );
 };
 

@@ -13,11 +13,15 @@ import {
   ThemeProvider,
   CssBaseline,
   CircularProgress,
+  TextField,
+  InputAdornment,
+  Fade,
 } from "@mui/material";
 import FlightIcon from "@mui/icons-material/Flight";
+import SearchIcon from "@mui/icons-material/Search";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import Api from "../../Api"; // Adjust this path if necessary
+import Api from "../../Api";
 import { format } from "date-fns";
 
 /* ---------- Design Tokens ---------- */
@@ -30,6 +34,7 @@ const colors = {
   muted: "#5F6368",
   amberBg: "#FDF1C7",
   amberText: "#7A3E0A",
+  activeChip: "#1B2A5C",
 };
 
 const theme = createTheme({
@@ -41,7 +46,6 @@ const theme = createTheme({
   shape: { borderRadius: 12 },
 });
 
-/* One size for every button */
 const BTN = {
   height: 46,
   minHeight: 46,
@@ -71,31 +75,22 @@ const actionStyles = {
   },
 };
 
-/* ---------- Components ---------- */
+/* ---------- Shared Components ---------- */
 
-function RoleCard({ title, description, selected, onClick }) {
+function RoleCard({ title, description, onClick }) {
   return (
     <Card
       variant="outlined"
       sx={{
         flex: 1,
         borderRadius: 3,
-        borderWidth: selected ? 2 : 1,
-        borderColor: selected ? colors.rust : colors.border,
         bgcolor: "#fff",
         transition: "border-color 0.2s",
-        "&:hover": { borderColor: selected ? colors.rust : colors.muted },
+        "&:hover": { borderColor: colors.rust },
       }}
     >
       <CardActionArea onClick={onClick} sx={{ p: { xs: 1.75, sm: 2.25 }, height: "100%" }}>
-        <Typography
-          sx={{
-            fontWeight: 700,
-            fontSize: { xs: 16, sm: 18 },
-            color: selected ? colors.rust : colors.navy,
-            mb: 0.75,
-          }}
-        >
+        <Typography sx={{ fontWeight: 700, fontSize: { xs: 16, sm: 18 }, color: colors.navy, mb: 0.75 }}>
           {title}
         </Typography>
         <Typography sx={{ fontSize: { xs: 13, sm: 14 }, color: colors.muted, lineHeight: 1.5 }}>
@@ -108,64 +103,32 @@ function RoleCard({ title, description, selected, onClick }) {
 
 function StatusChip({ status }) {
   const isMatched = status === "MATCHED";
-  const isCancelled = status === "CANCELLED";
-
-  let label = "OPEN";
-  let bg = "#FCE9B8";
-  let color = "#8A4B08";
-
-  if (isMatched) {
-    label = "MATCHED";
-    bg = "#D6F0DF";
-    color = "#166534";
-  } else if (isCancelled) {
-    label = "CANCELLED";
-    bg = "#FEE2E2";
-    color = "#991B1B";
-  }
+  let label = isMatched ? "MATCHED" : "OPEN";
+  let bg = isMatched ? "#D6F0DF" : "#FCE9B8";
+  let color = isMatched ? "#166534" : "#8A4B08";
 
   return (
     <Chip
       label={label}
       size="small"
-      sx={{
-        fontWeight: 700,
-        fontSize: 11,
-        height: 24,
-        borderRadius: "14px",
-        bgcolor: bg,
-        color: color,
-        letterSpacing: 0.4,
-      }}
+      sx={{ fontWeight: 700, fontSize: 11, height: 24, borderRadius: "14px", bgcolor: bg, color: color, letterSpacing: 0.4 }}
     />
   );
 }
 
-function TripRow({ trip }) {
-  const navigate = useNavigate();
+/* ---------- Trip Cards ---------- */
 
-  // Determine action based on status
-  const action =
-    trip.status === "MATCHED"
-      ? { label: "Open trip", variant: "outlined", to: `/trip-accepted/${trip._id}` }
-      : { label: "View matches", variant: "contained", to: `/trip-matches/${trip._id}` };
-
-  // Safely extract flight details
+function MyTripRow({ trip, onViewMatches }) {
+  const isMatched = trip.status === "MATCHED";
   const flightNos = trip.flights?.map((f) => f.flightNumber).join(" · ") || "No flights";
-  const route = trip.flights?.length > 0 
-    ? [trip.flights[0].fromCode, ...trip.flights.map((f) => f.toCode)].join(" → ")
-    : "Unknown route";
-
-  // Format start time safely
-  const startTime = trip.flights?.[0]?.departureTime;
-  const dateStr = startTime ? format(new Date(startTime), "eee MM/dd/yyyy h:mm a") : "Date TBD";
+  const route = trip.flights?.length > 0 ? [trip.flights[0].fromCode, ...trip.flights.map((f) => f.toCode)].join(" → ") : "Unknown route";
+  const dateStr = trip.flights?.[0]?.departureTime ? format(new Date(trip.flights[0].departureTime), "eee MM/dd/yyyy h:mm a") : "Date TBD";
 
   return (
     <Paper
       variant="outlined"
       sx={{
         p: { xs: 1.75, sm: 2 },
-        px: { xs: 1.75, sm: 2.5 },
         borderRadius: 3,
         borderColor: colors.border,
         display: "flex",
@@ -177,60 +140,76 @@ function TripRow({ trip }) {
       }}
     >
       <Stack direction="row" spacing={2} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
-        <Avatar
-          sx={{
-            bgcolor: trip.status === "MATCHED" ? "#DDF4E4" : "#DCEBFA",
-            width: { xs: 38, sm: 44 },
-            height: { xs: 38, sm: 44 },
-            flexShrink: 0,
-          }}
-        >
+        <Avatar sx={{ bgcolor: isMatched ? "#DDF4E4" : "#DCEBFA", width: 44, height: 44, flexShrink: 0 }}>
           <FlightIcon sx={{ color: "#1E293B", transform: "rotate(45deg)", fontSize: 20 }} />
         </Avatar>
-
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography
-            sx={{
-              fontWeight: 700,
-              fontSize: { xs: 14.5, sm: 16 },
-              color: "#1F2937",
-              wordBreak: "break-word",
-            }}
-          >
+          <Typography sx={{ fontWeight: 700, fontSize: { xs: 14.5, sm: 16 }, color: "#1F2937", wordBreak: "break-word" }}>
             {trip.relationship || "Traveller"} · {flightNos} · {route}
           </Typography>
-          <Typography
-            sx={{
-              fontSize: { xs: 12, sm: 12.5 },
-              color: colors.muted,
-              mt: 0.25,
-              wordBreak: "break-word",
-            }}
-          >
+          <Typography sx={{ fontSize: { xs: 12, sm: 12.5 }, color: colors.muted, mt: 0.25 }}>
             {dateStr} · {trip.flights?.length || 0} segment{trip.flights?.length > 1 ? "s" : ""}
-            {trip.status === "MATCHED" && " · companion accepted"}
           </Typography>
         </Box>
       </Stack>
-
-      <Stack
-        direction="row"
-        spacing={2}
-        sx={{
-          flexShrink: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: { xs: "space-between", md: "flex-end" },
-        }}
-      >
+      <Stack direction="row" spacing={2} sx={{ flexShrink: 0, alignItems: "center", justifyContent: "flex-end" }}>
         <StatusChip status={trip.status} />
         <Button
-          variant={action.variant}
+          variant={isMatched ? "outlined" : "contained"}
           disableElevation
-          onClick={() => navigate(action.to)}
-          sx={{ ...actionStyles.base, ...actionStyles[action.variant] }}
+          onClick={() => onViewMatches(trip._id, isMatched)}
+          sx={{ ...actionStyles.base, ...(isMatched ? actionStyles.outlined : actionStyles.contained) }}
         >
-          {action.label}
+          {isMatched ? "Open trip" : "View matches"}
+        </Button>
+      </Stack>
+    </Paper>
+  );
+}
+
+function GlobalTripRow({ trip, onAction }) {
+  const isParent = trip.role === "parent";
+  const flightNos = trip.flights?.map((f) => f.flightNumber).join(" · ") || "No flights";
+  const route = trip.flights?.length > 0 ? [trip.flights[0].fromCode, ...trip.flights.map((f) => f.toCode)].join(" → ") : "Unknown route";
+  const dateStr = trip.flights?.[0]?.departureTime ? format(new Date(trip.flights[0].departureTime), "eee MM/dd/yyyy") : "Date TBD";
+  const userName = trip.createdBy ? `${trip.createdBy.firstName} ${trip.createdBy.lastName}` : "User";
+
+  return (
+    <Paper
+      variant="outlined"
+      sx={{
+        p: { xs: 1.75, sm: 2 },
+        borderRadius: 3,
+        borderColor: colors.border,
+        display: "flex",
+        flexDirection: { xs: "column", md: "row" },
+        alignItems: { xs: "stretch", md: "center" },
+        gap: 2,
+        transition: "box-shadow 0.2s",
+        "&:hover": { boxShadow: "0px 4px 12px rgba(0,0,0,0.05)" },
+      }}
+    >
+      <Stack direction="row" spacing={2} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
+        <Avatar sx={{ bgcolor: isParent ? "#DCEBFA" : "#DDF4E4", width: 44, height: 44, flexShrink: 0 }}>
+          <FlightIcon sx={{ color: "#1E293B", transform: "rotate(45deg)", fontSize: 20 }} />
+        </Avatar>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography sx={{ fontWeight: 700, fontSize: { xs: 14.5, sm: 16 }, color: "#1F2937", wordBreak: "break-word" }}>
+            {userName} · <span style={{ color: isParent ? colors.navy : "#14653A" }}>{isParent ? "Needs Help" : "Can Help"}</span>
+          </Typography>
+          <Typography sx={{ fontSize: { xs: 12, sm: 12.5 }, color: colors.muted, mt: 0.25 }}>
+            {flightNos} · {route} · {dateStr}
+          </Typography>
+        </Box>
+      </Stack>
+      <Stack direction="row" spacing={2} sx={{ flexShrink: 0, alignItems: "center", justifyContent: "flex-end" }}>
+        <Button
+          variant="outlined"
+          disableElevation
+          onClick={() => onAction(trip)}
+          sx={{ ...actionStyles.base, ...actionStyles.outlined }}
+        >
+          {isParent ? "Offer to help" : "Ask for help"}
         </Button>
       </Stack>
     </Paper>
@@ -241,118 +220,190 @@ function TripRow({ trip }) {
 
 export default function TravelBuddy() {
   const navigate = useNavigate();
-  const [trips, setTrips] = useState([]);
+  const [myTrips, setMyTrips] = useState([]);
+  const [globalTrips, setGlobalTrips] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [activeTab, setActiveTab] = useState("browse"); // "browse" | "mine"
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
-    const fetchTrips = async () => {
+    const fetchData = async () => {
       try {
-        const res = await axios.get(`${Api}/travel-buddy/my-trips`);
-        setTrips(res.data.data || []);
+        setLoading(true);
+        const headers = { Authorization: `Bearer ${token}` };
+
+        // Fetch both my trips and the global feed in parallel
+        const [myTripsRes, globalRes] = await Promise.all([
+          axios.get(`${Api}/travel-buddy/my-trips`, { headers }),
+          axios.get(`${Api}/travel-buddy`, { 
+            headers,
+            params: { search: search } 
+          })
+        ]);
+
+        setMyTrips(myTripsRes.data.data || []);
+        setGlobalTrips(globalRes.data.data || []);
       } catch (err) {
         console.error("Failed to fetch trips", err);
-        // Optional: Add toast.error("Failed to load trips") here if you have react-toastify
       } finally {
         setLoading(false);
       }
     };
-    fetchTrips();
-  }, []);
 
-  const hasTrips = trips.length > 0;
+    // Debounce search so it doesn't spam the API on every keystroke
+    const timer = setTimeout(fetchData, 300);
+    return () => clearTimeout(timer);
+  }, [search, token]);
+
+  const handleGlobalAction = (trip) => {
+    // If I click "Offer to help", I should go post a companion trip
+    const targetRole = trip.role === "parent" ? "companion" : "parent";
+    navigate("/post-trip", { state: { role: targetRole } });
+  };
 
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box
-        sx={{
-          bgcolor: colors.bg,
-          minHeight: "100vh",
-          py: { xs: 2, sm: 3 },
-          px: { xs: 2, sm: 3 },
-        }}
-      >
+      <Box sx={{ bgcolor: colors.bg, minHeight: "100vh", py: { xs: 2, sm: 3 }, px: { xs: 2, sm: 3 } }}>
         <Box sx={{ maxWidth: 880, mx: "auto" }}>
+          
           {/* Header */}
-          <Typography
-            component="h1"
-            sx={{ fontSize: { xs: 24, sm: 28 }, fontWeight: 800, color: colors.navy }}
-          >
+          <Typography component="h1" sx={{ fontSize: { xs: 24, sm: 28 }, fontWeight: 800, color: colors.navy }}>
             Travel Buddy
           </Typography>
-          <Typography
-            sx={{ fontSize: { xs: 13, sm: 14 }, color: colors.muted, mt: 0.5, mb: 2.5 }}
-          >
-            Find a trusted community member on the same flight to help a parent
-            travelling from India to the US.
+          <Typography sx={{ fontSize: { xs: 13, sm: 14 }, color: colors.muted, mt: 0.5, mb: 2.5 }}>
+            Find a trusted community member on the same flight to help a parent travelling from India to the US.
           </Typography>
 
-          {/* Role Cards */}
-          <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 3 }}>
+          {/* Role Selection */}
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 4 }}>
             <RoleCard
               title="My parent needs a companion"
               description="Post your parent's flight. Members on the same flight can offer to look out for them."
-              selected={false} // Set to true if you want to default highlight one
               onClick={() => navigate("/post-trip")}
             />
             <RoleCard
               title="I'm flying and can help"
               description="Volunteer to be a companion for a senior on your flight. You never carry items for anyone."
-              selected={false}
               onClick={() => navigate("/post-trip", { state: { role: "companion" } })}
             />
           </Stack>
 
-          {/* My Trips Section */}
-          <Typography
-            sx={{
-              fontSize: 11,
-              fontWeight: 700,
-              letterSpacing: 0.8,
-              color: colors.muted,
-              mb: 1,
-            }}
-          >
-            MY TRIPS
-          </Typography>
-
-          <Stack spacing={1.75} sx={{ mb: 2.5 }}>
-            {loading ? (
-              <Box display="flex" justifyContent="center" py={4}>
-                <CircularProgress size={30} sx={{ color: colors.rust }} />
-              </Box>
-            ) : hasTrips ? (
-              trips.map((t) => <TripRow key={t._id} trip={t} />)
-            ) : (
-              <Paper variant="outlined" sx={{ p: 3, borderRadius: 3, borderColor: colors.border, textAlign: "center" }}>
-                <Typography sx={{ color: colors.muted, fontSize: 14 }}>
-                  No trips yet. Post your parent's flight at least 7 days ahead for
-                  the best chance of a match.
-                </Typography>
-              </Paper>
-            )}
+          {/* 🌟 Beautiful Chip Tabs */}
+          <Stack direction="row" spacing={1.5} sx={{ mb: 3, justifyContent: "center" }}>
+            <Chip
+              label="Browse All Trips"
+              onClick={() => setActiveTab("browse")}
+              sx={{
+                height: 42,
+                px: 2,
+                fontSize: 14,
+                fontWeight: 700,
+                borderRadius: "21px",
+                bgcolor: activeTab === "browse" ? colors.activeChip : "#fff",
+                color: activeTab === "browse" ? "#fff" : colors.navy,
+                border: `1.5px solid ${activeTab === "browse" ? colors.activeChip : colors.border}`,
+                "&:hover": { bgcolor: activeTab === "browse" ? colors.activeChip : "#F3EFE6" },
+                transition: "all 0.2s ease",
+                boxShadow: activeTab === "browse" ? "0 4px 12px rgba(27,42,92,0.2)" : "none",
+              }}
+            />
+            <Chip
+              label={`My Trips ${myTrips.length > 0 ? `(${myTrips.length})` : ""}`}
+              onClick={() => setActiveTab("mine")}
+              sx={{
+                height: 42,
+                px: 2,
+                fontSize: 14,
+                fontWeight: 700,
+                borderRadius: "21px",
+                bgcolor: activeTab === "mine" ? colors.activeChip : "#fff",
+                color: activeTab === "mine" ? "#fff" : colors.navy,
+                border: `1.5px solid ${activeTab === "mine" ? colors.activeChip : colors.border}`,
+                "&:hover": { bgcolor: activeTab === "mine" ? colors.activeChip : "#F3EFE6" },
+                transition: "all 0.2s ease",
+                boxShadow: activeTab === "mine" ? "0 4px 12px rgba(27,42,92,0.2)" : "none",
+              }}
+            />
           </Stack>
 
-          {/* Safety Basics Info */}
-          <Box
-            sx={{
-              bgcolor: colors.amberBg,
-              color: colors.amberText,
-              borderRadius: 2.5,
-              px: { xs: 2, sm: 2.5 },
-              py: 1.75,
-              fontSize: { xs: 12.5, sm: 13.5 },
-              lineHeight: 1.6,
-              mb: 2,
-            }}
-          >
-            <Box component="span" sx={{ fontWeight: 700 }}>
-              Safety basics:
-            </Box>{" "}
-            companions are volunteers, not caregivers or escorts. Nobody should
-            carry items for anyone else. The family approves every helper. Before
-            approval, others see only flights, dates, route, "traveller 60+",
-            languages and your first name.
+          {/* Content Area with Fade Animation */}
+          {loading ? (
+            <Box display="flex" justifyContent="center" py={8}>
+              <CircularProgress size={32} sx={{ color: colors.rust }} />
+            </Box>
+          ) : activeTab === "browse" ? (
+            <Fade in={true} timeout={400}>
+              <Box>
+                {/* Search Bar */}
+                <Paper sx={{ p: 2, borderRadius: 3, border: `1px solid ${colors.border}`, mb: 3 }}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    placeholder="Search by flight number (EK 544), airline, or airport code (MAA, ORD)"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    InputProps={{
+                      startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment>,
+                      sx: { borderRadius: 2, bgcolor: "#FAFAFA" }
+                    }}
+                  />
+                </Paper>
+
+                {/* Global Trips List */}
+                <Stack spacing={1.75} sx={{ mb: 2.5 }}>
+                  {globalTrips.length > 0 ? (
+                    globalTrips.map((t) => (
+                      <GlobalTripRow key={t._id} trip={t} onAction={handleGlobalAction} />
+                    ))
+                  ) : (
+                    <Paper variant="outlined" sx={{ p: 4, borderRadius: 3, borderColor: colors.border, textAlign: "center", bgcolor: "#fff" }}>
+                      <Typography sx={{ color: colors.muted, fontSize: 14 }}>
+                        No other trips found matching your search.
+                      </Typography>
+                    </Paper>
+                  )}
+                </Stack>
+              </Box>
+            </Fade>
+          ) : (
+            <Fade in={true} timeout={400}>
+              <Box>
+                {/* My Trips List */}
+                <Stack spacing={1.75} sx={{ mb: 2.5 }}>
+                  {myTrips.length > 0 ? (
+                    myTrips.map((t) => (
+                      <MyTripRow
+                        key={t._id}
+                        trip={t}
+                        onViewMatches={(id, isMatched) => navigate(isMatched ? `/trip-accepted/${id}` : `/trip-matches/${id}`)}
+                      />
+                    ))
+                  ) : (
+                    <Paper variant="outlined" sx={{ p: 4, borderRadius: 3, borderColor: colors.border, textAlign: "center", bgcolor: "#fff" }}>
+                      <Typography sx={{ color: colors.muted, fontSize: 14, mb: 2 }}>
+                        You haven't posted any trips yet.
+                      </Typography>
+                      <Button
+                        variant="contained"
+                        disableElevation
+                        onClick={() => navigate("/post-trip")}
+                        sx={{ ...actionStyles.base, ...actionStyles.contained, width: "auto", px: 3 }}
+                      >
+                        Post your first trip
+                      </Button>
+                    </Paper>
+                  )}
+                </Stack>
+              </Box>
+            </Fade>
+          )}
+
+          {/* Safety Info */}
+          <Box sx={{ bgcolor: colors.amberBg, color: colors.amberText, borderRadius: 2.5, px: 2.5, py: 1.75, fontSize: 13.5, lineHeight: 1.6 }}>
+            <Box component="span" sx={{ fontWeight: 700 }}>Safety basics:</Box>{" "}
+            companions are volunteers, not caregivers or escorts. Nobody should carry items for anyone else. The family approves every helper.
           </Box>
         </Box>
       </Box>

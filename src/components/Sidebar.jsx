@@ -64,7 +64,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
       id: "travel-buddy",
       label: "Travel Buddy",
       icon: <TelegramIcon/>,
-      link: "/travelBuddy",
+      link: "/travelbuddy",
     },
     {
       id: "my-rides",
