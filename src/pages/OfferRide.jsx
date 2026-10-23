@@ -669,6 +669,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
   const createOffer = async () => {
     // Keep your existing form validation before this point.
     try {
+      setSaving(true);
       const payload = buildOfferPayload();
       const token = localStorage.getItem("token");
 
@@ -707,7 +708,8 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
       await axios.post(`${Api}/rides/`, payload, config);
 
       toast.success("Ride posted successfully");
-      onClose();
+      if (onClose) onClose();
+      navigate("/myride", { state: { tab: 2, refresh: true, refreshKey: Date.now() } });
     } catch (error) {
       console.error("Unable to submit offer:", error);
 
@@ -715,6 +717,9 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
         error.response?.data?.message ||
         "Unable to submit your offer"
       );
+    }
+    finally {
+      setSaving(false);
     }
   };
 

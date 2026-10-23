@@ -48,7 +48,6 @@ const getRideId = (rideId) =>
     rideId && typeof rideId === "object" ? rideId._id : rideId;
 
 export default function RideList({ ride, onIcanHelp }) {
-    console.log(ride,'ride')
     const { completion, currentUser } = useUser();
     const { refreshRide } = useRide();
 

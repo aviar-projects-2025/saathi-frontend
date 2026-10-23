@@ -585,7 +585,7 @@ function RideCard({
       // if (!window.confirm("Are you sure you want to approve this request?")) {
       //   return;
       // }
-      console.log(requestId, 'requestId')
+
       setApproveLoading(requestId);
       const res = await axios.patch(
         `${Api}/bookride/${requestId}/status?type=Approve`,
@@ -665,14 +665,6 @@ function RideCard({
       const statusUrl = isAcceptedHelpRide
         ? `${Api}/help-proposals/ride/${rideId}/status`
         : `${Api}/rides/edit/${rideId}`;
-      console.debug("[I_CAN_HELP][RIDE_STATUS] request", {
-        rideId,
-        status,
-        isAcceptedHelpRide,
-        statusUrl,
-        currentUserId,
-        actualDriverId,
-      });
 
       if (status === "Waiting") {
 
@@ -688,7 +680,6 @@ function RideCard({
             headers: { Authorization: `Bearer ${tokenNow}` },
           }
         );
-        console.debug("[I_CAN_HELP][RIDE_STATUS] start response", response.status, response.data);
 
         setConfirmRide(null);
         fetchRides();
@@ -708,7 +699,6 @@ function RideCard({
             headers: { Authorization: `Bearer ${tokenNow}` },
           }
         );
-        console.debug("[I_CAN_HELP][RIDE_STATUS] complete response", response.status, response.data);
 
         setConfirmRide(null);
         fetchRides();
@@ -1493,8 +1483,6 @@ const MyRides = () => {
     history: 0,
   });
 
-  console.log(notifications, 'notifications')
-
   const tabs = [
     { key: "current", label: `Current (${rideCounts.current})`, empty1: "No Rides in Progress", empty2: "You don't have any rides currently in progress.", current: true, edit: true, del: true },
     { key: "upcoming", label: `Upcoming (${rideCounts.upcoming})`, empty1: "No Upcoming Rides", empty2: "You don't have any upcoming rides scheduled.", current: false, edit: true, del: true },
@@ -1540,11 +1528,6 @@ const MyRides = () => {
     const requesterId = currentUser?.id || currentUser?._id;
     const url = `${Api}/help-proposals/received`;
 
-    console.log("[I_CAN_HELP][FETCH] Function called", {
-      requesterId,
-      url,
-      hasToken: Boolean(localStorage.getItem("token")),
-    });
 
     if (!requesterId) {
       console.error(
@@ -1555,7 +1538,6 @@ const MyRides = () => {
       return;
     }
 
-    console.groupCollapsed("[I_CAN_HELP][FETCH] GET received proposals");
     try {
       setLoadingHelpProposals(true);
       const response = await axios.get(url, authConfig());
@@ -1567,13 +1549,6 @@ const MyRides = () => {
           : Array.isArray(body)
             ? body
             : [];
-
-      console.log("[I_CAN_HELP][FETCH] API response", {
-        status: response.status,
-        count: proposals.length,
-        proposals,
-      });
-      console.log(response, 'response')
       setHelpProposals(proposals);
     } catch (error) {
       console.error("[I_CAN_HELP][FETCH] API failed", {
@@ -1598,12 +1573,9 @@ const MyRides = () => {
       return;
     }
     const url = `${Api}/help-proposals/${proposalId}/respond`;
-    console.groupCollapsed(`[I_CAN_HELP][RESPOND] ${action.toUpperCase()} ${proposalId}`);
-    console.debug("request", { url, proposalId, action, hasToken: Boolean(localStorage.getItem("token")) });
     try {
       setRespondingProposalId(proposalId);
       const response = await axios.patch(url, { action }, authConfig());
-      console.debug("response", { status: response.status, data: response.data });
       toast.success(
         response?.data?.message || (action === "accept" ? "Offer accepted" : "Offer rejected"),
         toastss
@@ -1621,13 +1593,12 @@ const MyRides = () => {
       toast.error(error?.response?.data?.message || "Unable to process this proposal", toastss);
     } finally {
       setRespondingProposalId(null);
-      console.groupEnd();
+
     }
   };
 
   const fetchCategory = async (category, { reset = false } = {}) => {
     if (!currentUserId) {
-      console.error("[MY_RIDES][CATEGORY] Missing user ID", currentUser);
       setInitialLoading(false);
       return;
     }
@@ -1673,13 +1644,11 @@ const MyRides = () => {
 
   const fetchAllRequests = async () => {
     if (!currentUserId) {
-      console.error("[MY_RIDES][REQUESTS] Missing user ID", currentUser);
       setRequestsLoaded(true);
       return;
     }
 
     const url = `${Api}/bookride/${currentUserId}?type=received`;
-    console.log("[MY_RIDES][REQUESTS] Fetching seat requests", { url, currentUserId });
 
     try {
       const res = await axios.get(url, authConfig());
@@ -1698,10 +1667,9 @@ const MyRides = () => {
   const fetchRideCounts = async () => {
     try {
       const url = `${Api}/rides/my/counts`;
-      console.debug("[MY_RIDES][COUNTS] request", { url, hasToken: Boolean(localStorage.getItem("token")) });
+
       const res = await axios.get(url, authConfig());
 
-      console.debug("[MY_RIDES][COUNTS] response", { status: res.status, data: res.data });
 
       if (res.data?.success) {
         setRideCounts(res.data.data);
@@ -1728,13 +1696,6 @@ const MyRides = () => {
   };
 
   useEffect(() => {
-    console.log("[MY_RIDES][INIT] MyRides mounted", {
-      currentUserId,
-      user: currentUser,
-      hasToken: Boolean(localStorage.getItem("token")),
-      apiBase: Api,
-    });
-
     if (!currentUserId) {
       console.error(
         "[MY_RIDES][INIT] Missing user ID; initial fetch skipped",
@@ -1744,7 +1705,6 @@ const MyRides = () => {
       return;
     }
 
-    console.log("[MY_RIDES][INIT] Loading rides, seat requests and help proposals");
     fetchCategory("current", { reset: true });
     fetchAllRequests();
     fetchRideCounts();
@@ -1842,8 +1802,6 @@ const MyRides = () => {
 
   useEffect(() => {
     if (location.state?.refresh) {
-
-      console.log("Refreshing all categories due to location state refresh");
 
       refreshAllCategories();
     }
@@ -2267,7 +2225,6 @@ const MyRides = () => {
           ) : (
             <>
               {renderList(activeData.rides)}
-              {console.log(activeData.rides)}
               <Box
                 ref={sentinelRef}
                 sx={{

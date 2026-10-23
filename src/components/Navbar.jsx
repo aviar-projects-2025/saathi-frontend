@@ -109,7 +109,7 @@ const TopNav = ({ onMenuClick }) => {
     try {
       await axios.patch(`${Api}/notification/${currentUser?._id}`)
         .then((res) => {
-          console.log(res, 'res')
+
           if (res?.data?.success === true) {
             fetchNotifications()
           }
@@ -504,7 +504,7 @@ const TopNav = ({ onMenuClick }) => {
                 },
               }}
             >
-              <OfferRide setOpen={setOpen} />
+              <OfferRide setOpen={setOpen} onClose={() => { setOpen(false) }} />
             </DialogContent>
           </Dialog>
 
