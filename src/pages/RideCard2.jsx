@@ -38,7 +38,7 @@ const CHIP = {
     blue: { bg: "#C9E2FA", color: "#134F85" }, // mode of travel / flight companion
     green: { bg: "#C8EFD2", color: "#176128" }, // cost share / accepted
     slate: { bg: "#D3DEE9", color: "#2B4258" }, // seats, duration, airline, flight no.
-    pink: { bg: "#F6C9E0", color: "#9A1F63" }, // women riders only
+    pink: { bg: "#F6C9E0", color: "#9A1F63" }, // women-only rides
     amber: { bg: "#F5DDB3", color: "#7A4200" }, // no seats
     red: { bg: "#F7C8C3", color: "#A82219" }, // rejected
     info: { bg: "#C6DDF5", color: "#0B54A8" }, // you requested / applied
@@ -114,8 +114,8 @@ export default function RideList({ ride, onIcanHelp }) {
         })
         : "";
 
-    const languages = Array.isArray(ride?.language)
-        ? ride.language.join(", ")
+    const languages = Array.isArray(ride?.createdBy?.language)
+        ? ride.createdBy?.language.join(", ")
         : "";
 
     /* ───────────── Request state ───────────── */
@@ -182,37 +182,127 @@ export default function RideList({ ride, onIcanHelp }) {
                 ? `${Math.floor(ride.duration / 60)} hr ${ride.duration % 60} min`
                 : `${ride.duration} min`
             : null;
-
     const chips = [];
 
     if (isFlight) {
-        chips.push({ label: "Flight companion", ...CHIP.blue });
-        if (ride.airlineName) chips.push({ label: ride.airlineName, ...CHIP.slate });
-        if (ride.flightNumber)
-            chips.push({ label: `Flight ${ride.flightNumber}`, ...CHIP.slate });
+        chips.push({
+            label: "Flight companion",
+            ...CHIP.blue,
+        });
+
+        if (ride.airlineName) {
+            chips.push({
+                label: ride.airlineName,
+                ...CHIP.slate,
+            });
+        }
+
+        if (ride.flightNumber) {
+            chips.push({
+                label: `Flight ${ride.flightNumber}`,
+                ...CHIP.slate,
+            });
+        }
     } else {
-        if (ride.modeOfTravel) chips.push({ label: ride.modeOfTravel, ...CHIP.blue });
-        if (Number(ride.fuelSharing) > 0)
-            chips.push({ label: `Cost share $${ride.fuelSharing}`, ...CHIP.green });
+
+        if (ride.kind === "offer") {
+            chips.push({
+                label: "Offer",
+                ...CHIP.green,
+            });
+        } else if (ride.kind === "request") {
+            chips.push({
+                label: "Request",
+                ...CHIP.amber,
+            });
+        }
+
+        if (ride.modeOfTravel) {
+            chips.push({
+                label: ride.modeOfTravel,
+                ...CHIP.blue,
+            });
+        }
+
+        if (ride.category) {
+            chips.push({
+                label: ride.category,
+                ...CHIP.blue,
+            });
+        }
+
+        // Show Women Only chip only when womenOnly is true
+        if (ride.womenOnly === true) {
+            chips.push({
+                label: "Women riders only",
+                ...CHIP.pink,
+            });
+        }
+
+        if (ride.childFriendly === true) {
+            chips.push({
+                label: "Child Friendly",
+                ...CHIP.amber,
+            });
+        }
+
+        if (Number(ride.costPerSeat) === 0) {
+            chips.push({
+                label: "Free",
+                ...CHIP.green,
+            });
+        } else if (Number(ride.costPerSeat) > 0) {
+            chips.push({
+                label: `Cost share $${ride.costPerSeat}`,
+                ...CHIP.green,
+            });
+        }
+
         chips.push(
             noSeats
-                ? { label: "No seats", ...CHIP.amber }
+                ? {
+                    label: "No seats",
+                    ...CHIP.amber,
+                }
                 : {
-                    label: `${remainingSeatsForUser} seat${remainingSeatsForUser > 1 ? "s" : ""}${totalSeat ? ` of ${totalSeat}` : ""
-                        }`,
+                    label: `${remainingSeatsForUser} seat${remainingSeatsForUser > 1 ? "s" : ""}${totalSeat ? ` of ${totalSeat}` : ""}`,
                     ...CHIP.slate,
                 },
         );
+
+        if (ride.luggageSpace) {
+            chips.push({
+                label: ride.luggageSpace,
+                ...CHIP.blue,
+            });
+        }
     }
 
-    if (durationText) chips.push({ label: durationText, ...CHIP.slate });
+    if (durationText) {
+        chips.push({
+            label: durationText,
+            ...CHIP.slate,
+        });
+    }
 
-    if (ride.genderPreference === "Female")
-        chips.push({ label: "Women riders only", ...CHIP.pink });
-    else if (ride.genderPreference === "Male")
-        chips.push({ label: "Men riders only", ...CHIP.slate });
+    // if (ride.genderPreference === "Female") {
+    //     chips.push({
+    //         label: "Women riders only",
+    //         ...CHIP.pink,
+    //     });
+    // } else if (ride.genderPreference === "Male") {
+    //     chips.push({
+    //         label: "Men riders only",
+    //         ...CHIP.slate,
+    //     });
+    // }
 
-    if (isRejected) chips.push({ label: "Rejected", ...CHIP.red });
+    if (isRejected) {
+        chips.push({
+            label: "Rejected",
+            ...CHIP.red,
+        });
+    }
 
     if (myRequest && !isRejected) {
         const mainText = isFlight
@@ -222,10 +312,12 @@ export default function RideList({ ride, onIcanHelp }) {
             : isAccepted
                 ? `You have ${approvedSeats} approved seat${approvedSeats > 1 ? "s" : ""}`
                 : `You applied for ${requestedByMe} seat${requestedByMe > 1 ? "s" : ""}`;
+
         const pendingText =
             !isFlight && isAccepted && pendingReqSeats > 0
                 ? ` and ${pendingReqSeats} pending`
                 : "";
+
         chips.push({
             label: `${mainText}${pendingText}`,
             ...(isAccepted ? CHIP.green : CHIP.info),
@@ -471,7 +563,7 @@ export default function RideList({ ride, onIcanHelp }) {
                                     lineHeight: 1.3,
                                 }}
                             >
-                                {timeStr}
+                                {timeStr} {ride?.timeZone?.match(/\(([^)]+)\)/)?.[1]}
                             </Typography>
                         </Box>
 
