@@ -504,8 +504,9 @@ const RequestRide = ({ ride }) => {
                             spacing={1.25}
                             sx={{ minWidth: 0 }}
                           >
+                            {console.log(request,'request')}
                             <Avatar
-                              src={request?.rideId?.createdBy?.profileImage || ""}
+                              src={request?.rideId?.createdBy?.profileImageUrl || ""}
                               alt={
                                 request?.rideId?.createdBy?.firstName
                                   ? `${request.rideId.createdBy.firstName} ${request.rideId.createdBy.lastName || ""

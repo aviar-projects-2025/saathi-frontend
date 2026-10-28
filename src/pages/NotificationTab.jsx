@@ -320,7 +320,7 @@ export default function NotificationTab({
       }}
     >
       {/* Notification header */}
-      <Box
+      {/* <Box
         sx={{
           display: "flex",
           alignItems: "center",
@@ -353,7 +353,7 @@ export default function NotificationTab({
             </span>
           </Tooltip>
         )}
-      </Box>
+      </Box> */}
 
       <List
         sx={{

@@ -145,7 +145,7 @@ const buildFormData = (user) => ({
     gender: user?.gender || "",
     bio: user?.bio || "",
     city: user?.city || "",
-    profileImage: user?.profileImage || "",
+    profileImage: user?.profileImageUrl || "",
     zipcode: user?.zipcode || "",
 });
 

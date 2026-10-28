@@ -553,9 +553,9 @@ const UserProfile = () => {
     "About",
     `Reviews${ratingCount ? ` (${ratingCount})` : ""}`,
     `Rides${completedRideItems.length ? ` (${completedRideItems.length})` : ""}`,
-    `Referrals${referralCounts.total ? ` (${referralCounts.total})` : ""}`,
-    "Route alerts",
-    `Posts${totalPosts ? ` (${totalPosts})` : ""}`,
+    // `Referrals${referralCounts.total ? ` (${referralCounts.total})` : ""}`,
+    // "Route alerts",
+    // `Posts${totalPosts ? ` (${totalPosts})` : ""}`,
   ];
 
   return (

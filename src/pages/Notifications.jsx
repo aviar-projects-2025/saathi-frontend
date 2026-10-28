@@ -144,7 +144,7 @@ const Notifications = () => {
                                 >
                                     <ListItemAvatar>
                                         <Avatar
-                                            src={item?.actorId?.profileImage || item?.data?.profileImage}
+                                            src={item?.actorId?.profileImageUrl || item?.data?.profileImage}
                                             onClick={(event) => {
                                                 event.stopPropagation();
                                                 setSelectedProfile(item?.actorId || item?.data);

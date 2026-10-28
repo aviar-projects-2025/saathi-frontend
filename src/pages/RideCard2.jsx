@@ -93,7 +93,7 @@ export default function RideList({ ride, onIcanHelp }) {
     const userName =
         `${user.firstName || ""} ${user.lastName || ""}`.trim() || "Saathi User";
     const initials = `${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`;
-    const userProfile = user?.profileImage;
+    const userProfile = user?.profileImageUrl;
 
     const routeFrom = isFlight ? ride.fromAirport || ride.from : ride.from;
     const routeTo = isFlight ? ride.toAirport || ride.destination : ride.destination;

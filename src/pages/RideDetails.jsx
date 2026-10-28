@@ -307,7 +307,7 @@ function PassengerStub({
     request?.data?.requestBy?.requestedBy?.firstName ||
     "U";
   const lastName = request.requestedBy?.lastName || "";
-  const profilePic = request.requestedBy?.profileImage;
+  const profilePic = request.requestedBy?.profileImageUrl;
   const rejectedReq = Number(request?.rejectedSeats ?? 0);
   const pendingReq = Number(request?.pendingReqSeats ?? 0);
   const approvedSeats = Number(request?.approvedSeats ?? 0);
@@ -1042,6 +1042,7 @@ export default function RideDetailsModal({
   const isXs = useMediaQuery(theme.breakpoints.down("sm"));
   const isMd = useMediaQuery(theme.breakpoints.up("md"));
 
+  console.log(requests,'requests')
   const pendingMember = requests.flatMap((item) => item?.pendingMembers || []);
   const isStarted = ride?.travelStatus === "Started";
   const startDate = new Date(ride?.startTime);

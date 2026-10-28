@@ -63,7 +63,7 @@ const ProfileModal = ({
                 }}
             >
                 <Avatar
-                    src={selectedProfile?.profileImage || ""}
+                    src={selectedProfile?.profileImageUrl || ""}
                     alt={`${selectedProfile?.firstName || ""} ${selectedProfile?.lastName || ""} ${selectedProfile?.name || ""}
           }`}
                     sx={{
@@ -79,7 +79,7 @@ const ProfileModal = ({
                         boxShadow: "0 8px 30px rgba(0,0,0,0.35)",
                     }}
                 >
-                    {!selectedProfile?.profileImage &&
+                    {!selectedProfile?.profileImageUrl &&
                         `${selectedProfile?.firstName?.[0] || ""} ${selectedProfile?.lastName?.[0] || ""
                         } ${selectedProfile?.name?.[0] || ""}`}
                 </Avatar>

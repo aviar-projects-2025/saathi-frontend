@@ -576,6 +576,7 @@ function RideCard({
       (req) => req.rideId?._id?.toString() === ride._id?.toString(),
     ) || [];
 
+    console.log(rideRequests,'rideRequests')
   const pendingCount = rideRequests.filter(
     (r) => r.status?.toUpperCase() === "PENDING",
   ).length;
@@ -791,7 +792,7 @@ function RideCard({
             }}
           >
             <Avatar
-              src={ride?.createdBy?.profileImage || ""}
+              src={ride?.createdBy?.profileImageUrl || ""}
               // alt={`${ride?.createdBy?.firstName[0]}${ride?.createdBy?.lastName[0]}`.toUpperCase()}
               onClick={() => {
                 setSelectedProfile(ride?.createdBy);
@@ -1968,7 +1969,7 @@ const MyRides = () => {
                         sx={{ mb: 1.5 }}
                       >
                         <Avatar
-                          src={helper.profileImage || ""}
+                          src={helper.profileImageUrl || ""}
                           sx={{
                             width: 44,
                             height: 44,
