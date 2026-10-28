@@ -124,7 +124,9 @@ const PendingCard = memo(
     const firstName = u?.firstName || u?.data?.user?.firstName || "";
     const lastName = u?.lastName || u?.data?.user?.lastName || "";
     const userId = u?._id || u?.id || u?.data?.userId;
-    const profileImage = u?.profileImage || u?.data?.profileImage || "";
+    const profileImage = u?.profileImageUrl || "";
+
+    console.log(u,'u')
     const city = u?.city || "";
     const language = Array.isArray(u?.language)
       ? u.language.join(", ")
@@ -552,6 +554,7 @@ const MyReferrals = () => {
       } = res.data?.data || {};
 
       setMyReferrals(pending);
+      console.log(pending,'pending')
       setApprovedReferrals(approved);
       setRejectedReferrals(rejected);
 

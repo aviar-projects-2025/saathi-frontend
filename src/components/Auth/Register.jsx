@@ -35,6 +35,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import Api from "../../Api";
 import ToastConfig from "../ToastConfig";
 import uploadToCloudinary from "../uploadToCloudinary";
+import { uploadImageToS3 } from "../../utils/s3Upload";
 
 const ORANGE = "#C83F08";
 const NAVY = "#132858";
@@ -79,6 +80,8 @@ const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [otpError, setOtpError] = useState("");
   const [otpTimer, setOtpTimer] = useState(0);
+
+  const [registrationCredential, setRegistrationCredential] = useState("");
 
   const [serverError, setServerError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -147,7 +150,7 @@ const Register = () => {
         if (!cancelled) {
           setInvitationError(
             error.response?.data?.message ||
-              "This invitation is invalid or has expired."
+            "This invitation is invalid or has expired."
           );
         }
       } finally {
@@ -277,12 +280,16 @@ const Register = () => {
         invitationToken,
       });
 
-      if (!response.data?.success) {
-        throw new Error(response.data?.message || "Invalid OTP");
+      if (!response.data?.success || !response.data?.registrationCredential) {
+        throw new Error(
+          response.data?.message || "Could not establish a registration session"
+        );
       }
 
+      setRegistrationCredential(response.data.registrationCredential);
       setIsOtpVerified(true);
       setStep(2);
+
       toast.success("Mobile number verified successfully!", toasts);
     } catch (error) {
       const message =
@@ -524,9 +531,10 @@ const Register = () => {
   });
 
   /* ================= Submit ================= */
+
   const registerSubmit = async (values, { setSubmitting }) => {
-    if (!isOtpVerified) {
-      toast.error("Please verify your mobile number first.", toasts);
+    if (!isOtpVerified || !registrationCredential) {
+      setServerError("Please verify your mobile number again.");
       setSubmitting(false);
       return;
     }
@@ -547,10 +555,14 @@ const Register = () => {
     setSubmitting(true);
 
     try {
-      // 1. Upload cropped photo to Cloudinary (same helper as EditProfile)
-      const uploaded = await uploadToCloudinary(profileFile);
+      // Upload using the OTP-verified registration credential.
+      const uploaded = await uploadImageToS3(
+        profileFile,
+        "profiles",
+        registrationCredential
+      );
 
-      // 2. Send plain JSON with Cloudinary URL
+      // The server derives mobile and referrer from the session.
       const payload = {
         firstName: values.firstName.trim(),
         lastName: values.lastName.trim(),
@@ -561,29 +573,43 @@ const Register = () => {
         language: values.languages || [],
         referralCode: invitation.referralCode,
         invitationToken,
-        profileImage: uploaded.url,
-        imagePublicId: uploaded.publicId,
+        registrationCredential,
+        profileImage: uploaded.key,
+        profileImageKey: uploaded.key,
       };
 
-      const response = await axios.post(`${Api}/users/`, payload, {
-        headers: { "Content-Type": "application/json" },
-      });
+      const response = await axios.post(
+        `${Api}/users/`,
+        payload,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${registrationCredential}`,
+          },
+        }
+      );
 
       if (!response.data?.success) {
-        throw new Error(response.data?.message || "Registration failed.");
+        throw new Error(
+          response.data?.message || "Registration failed."
+        );
       }
 
+      // Prevent accidental reuse from this component.
+      setRegistrationCredential("");
       setStep(3);
     } catch (error) {
       const message =
         error.response?.data?.message ||
         error.message ||
         "Registration failed. Please try again.";
+
       setServerError(message);
     } finally {
       setSubmitting(false);
     }
   };
+
 
   /* ================= Shared brand ================= */
   const renderBrand = () => (
@@ -1099,8 +1125,8 @@ const Register = () => {
                           onClick={() => {
                             const nextLanguages = selected
                               ? values.languages.filter(
-                                  (item) => item !== language
-                                )
+                                (item) => item !== language
+                              )
                               : [...values.languages, language];
                             setFieldValue("languages", nextLanguages);
                           }}
@@ -1364,9 +1390,8 @@ const Register = () => {
           { label: "Phone verified", sub: null },
           { label: "Profile submitted", sub: null },
           {
-            label: `Approval from ${
-              invitation?.referrerName || "your referrer"
-            }`,
+            label: `Approval from ${invitation?.referrerName || "your referrer"
+              }`,
             sub: "Reminder sent after 48 hours. Expires in 14 days.",
           },
         ].map((item, index) => {
@@ -1390,13 +1415,13 @@ const Register = () => {
                   backgroundColor: isDone
                     ? "#176B3A"
                     : isCurrent
-                    ? "#FFF1C2"
-                    : "#EFEFEF",
+                      ? "#FFF1C2"
+                      : "#EFEFEF",
                   color: isDone
                     ? "#FFFFFF"
                     : isCurrent
-                    ? "#9C4A0A"
-                    : "#666",
+                      ? "#9C4A0A"
+                      : "#666",
                   border: isCurrent ? "2px solid #C65B11" : "none",
                 }}
               >

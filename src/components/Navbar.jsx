@@ -524,7 +524,7 @@ const TopNav = ({ onMenuClick }) => {
               />
 
               <Avatar
-                src={currentUser?.profileImage || ""}
+                src={currentUser?.profileImageUrl || ""}
                 onClick={handleOpenProfileMenu}
                 sx={{
                   bgcolor: "#f97316",

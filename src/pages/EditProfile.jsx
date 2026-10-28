@@ -36,6 +36,7 @@ import US_Cities from "../config/US_Cities.json"
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import Popper from "@mui/material/Popper";
+import uploadImageToS3 from "../utils/s3Upload.js";
 
 const CustomPopper = (props) => {
     return (
@@ -189,13 +190,14 @@ const validateForm = (formData) => {
 
 const EditProfile = ({ open, onClose }) => {
     const { currentUser, getuserData } = useUser();
+    console.log(currentUser, 'currentUser')
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
     const cropSize = isMobile ? CROP_BOX_SIZE_MOBILE : CROP_BOX_SIZE;
     const [submitLoading, setSubmitLoading] = useState(false);
     const [errors, setErrors] = useState({});
     const [profileImage, setProfileImage] = useState(
-        currentUser?.profileImage || ""
+        currentUser?.profileImageUrl || ""
     );
     const [profileFile, setProfileFile] = useState(null);
     const [formData, setFormData] = useState(buildFormData(currentUser));
@@ -234,7 +236,7 @@ const EditProfile = ({ open, onClose }) => {
     useEffect(() => {
         if (currentUser) {
             setFormData(buildFormData(currentUser));
-            setProfileImage(currentUser?.profileImage || "");
+            setProfileImage(currentUser?.profileImageUrl || "");
             setProfileFile(null);
             syncCityUI(currentUser?.city);   // add
         }
@@ -603,6 +605,7 @@ const EditProfile = ({ open, onClose }) => {
         setErrors((prev) => ({ ...prev, city: "" }));
     };
 
+
     const handleUpdateProfile = async () => {
         try {
             setSubmitLoading(true);
@@ -616,9 +619,14 @@ const EditProfile = ({ open, onClose }) => {
 
             let uploadedImage = null;
 
-
             if (profileFile) {
-                uploadedImage = await uploadToCloudinary(profileFile);
+                const uploaded = await uploadImageToS3(
+                    profileFile,
+                    "profiles"
+                );
+
+                // Save the S3 object key
+                uploadedImage = uploaded.key;
             }
 
             const data = {
@@ -634,25 +642,35 @@ const EditProfile = ({ open, onClose }) => {
                 city: formData.city,
                 zipcode: formData.zipcode,
 
+                // Send the S3 key to your backend
                 ...(uploadedImage && {
-                    profileImage: uploadedImage.url,
-                    imagePublicId: uploadedImage.publicId,
+                    profileImage: uploadedImage,
                 }),
             };
 
-            await axios.post(`${Api}/users/update/${currentUser?._id}`, data);
+            await axios.post(
+                `${Api}/users/update/${currentUser?._id}`,
+                data
+            );
 
-            getuserData();
+            await getuserData();
 
             toast.success("Profile Updated", toast);
 
             handleCloseProfile();
         } catch (error) {
-            console.log(error.response);
+            console.error(
+                "Profile update failed:",
+                error.response?.data || error.message
+            );
+            toast.error(
+                error.response?.data?.message || "Failed to update profile"
+            );
         } finally {
             setSubmitLoading(false);
         }
     };
+
 
     const displayed = getDisplayedSize();
 
@@ -1627,7 +1645,7 @@ const EditProfile = ({ open, onClose }) => {
                                         textTransform: "none",
                                     }}
                                     onClick={() => {
-                                        setProfileImage(currentUser?.profileImage || "");
+                                        setProfileImage(currentUser?.profileImageUrl || "");
                                         setProfileFile(null);
                                         resetForm();
                                         setErrors({});
