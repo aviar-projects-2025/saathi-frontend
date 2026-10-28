@@ -225,7 +225,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
             />
 
             <Avatar
-              src={currentUser?.profileImage}
+              src={currentUser?.profileImageUrl}
               sx={{
                 width: 52,
                 height: 52,

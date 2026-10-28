@@ -439,7 +439,7 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
                   sx={{ py: 0.75 }}
                 >
                   <Avatar
-                    src={item.userId?.profileImage}
+                    src={item.userId?.profileImageurl}
                     onClick={() => {
                       setSelectedProfile(item.userId);
                       setProfileModalOpen(true);
@@ -455,7 +455,7 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
                       mt: { xs: 0.4, sm: 0.5 },
                     }}
                   >
-                    {!currentUser?.profileImage &&
+                    {!currentUser?.profileImageUrl &&
                       `${currentUser?.firstName?.[0] || ""}${currentUser?.lastName?.[0] || ""}`}
                   </Avatar>
                   <Box sx={{ flex: 1, minWidth: 0 }}>

@@ -40,7 +40,7 @@ export default function UserAvatar({ name, profile, firstName, lastName, initial
       </Avatar> */}
 
             <Avatar
-                src={profile || currentUser?.profileImage || ""}
+                src={profile || currentUser?.profileImageUrl || ""}
                 sx={{
                     width: { xs: 30, sm: 50, md: 50 },
                     height: { xs: 30, sm: 50, md: 50 },
@@ -51,7 +51,7 @@ export default function UserAvatar({ name, profile, firstName, lastName, initial
                     flexShrink: 0,
                 }}
             >
-                {!currentUser?.profileImage &&
+                {!currentUser?.profileImageUrl &&
                     `${currentUser?.firstName?.[0] || ""}${currentUser?.lastName?.[0] || ""}`}
 
             </Avatar>

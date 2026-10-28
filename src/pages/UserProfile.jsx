@@ -569,7 +569,7 @@ const UserProfile = () => {
             <Stack direction={{ xs: "column", sm: "row" }} sx={{ alignItems: { xs: "flex-start", sm: "center" }, justifyContent: "space-between",  gap: { xs: 2.5, sm: 3 } }}>
               <Stack direction="row" sx={{ alignItems: "center",  gap: { xs: 2, sm: 3 }, minWidth: 0, width: "100%" }}>
                 <Avatar
-                  src={profile?.profileImage || ""}
+                  src={profile?.profileImageUrl || ""}
                   onClick={() => { setSelectedProfile(profile); setProfileModalOpen(true); }}
                   sx={{
                     width: { xs: 72, sm: 104 }, height: { xs: 72, sm: 104 }, flexShrink: 0,
