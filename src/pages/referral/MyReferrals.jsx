@@ -285,7 +285,7 @@ const PendingCard = memo(
             <Box component="span" sx={{ fontWeight: 700, color: SAFFRON_DARK }}>
               {firstName}
             </Box>
-            . If she breaks community rules, your own standing is affected.
+            . If He/she breaks community rules, your own standing is affected.
             Only approve people you know personally.
           </Typography>
         </Box>

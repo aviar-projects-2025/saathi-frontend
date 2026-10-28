@@ -68,25 +68,6 @@ const gridResponsive = (cols) => ({
   gap: 1.5,
 });
 
-/* ---------- Sample data (replace with props / API data) ---------- */
-const trip = {
-  title: "Mother's trip",
-  status: "Matched",
-  date: "Sat 10/17/2026",
-  total: "25 h 30 m",
-  layover: "Layover 2 h 10 m in Dubai",
-  legs: [
-    { flight: "EK 544", route: "MAA 5:00 AM IST → DXB 7:30 AM GST" },
-    { flight: "EK 235", route: "DXB 9:40 AM GST → ORD 8:00 PM CDT" },
-  ],
-  pickup: "Pickup: family member meeting at ORD arrivals.",
-  companion: {
-    name: "Lakshmi V.",
-    initials: "LV",
-    phone: "+1 (555) 010-0188",
-    languages: "Tamil, English",
-  },
-};
 
 /* ---------- Small helpers ---------- */
 const SectionLabel = ({ children, color = colors.muted }) => (
@@ -114,7 +95,7 @@ const cardSx = {
 
 /* ---------- Component ---------- */
 export default function TripMatched({
-  data = trip,
+  data,
   onBack,
   onCall,
   onText,
@@ -136,6 +117,23 @@ export default function TripMatched({
     setCheckIn("help");
     onNeedHelp?.();
   };
+
+  if (!data) {
+    return (
+      <Box sx={{ minHeight: "100vh", p: 3, bgcolor: "#FAF8F4" }}>
+        <Typography variant="h6">
+          No confirmed companion details available
+        </Typography>
+        <Typography sx={{ mt: 1, color: "text.secondary" }}>
+          Companion details will appear here after the trip owner approves
+          a Travel Buddy request.
+        </Typography>
+        <Button onClick={() => navigate("/travelbuddy")} sx={{ mt: 2 }}>
+          Back to Travel Buddy
+        </Button>
+      </Box>
+    );
+  }
 
   return (
     <ThemeProvider theme={theme}>
@@ -313,8 +311,8 @@ export default function TripMatched({
               {checkIn === "arrived"
                 ? "Thanks — Mother arrived safely. Please leave a rating."
                 : checkIn === "help"
-                ? "Help is on the way. A moderator and the family contact have been notified."
-                : "Did Mother reach her pickup safely?"}
+                  ? "Help is on the way. A moderator and the family contact have been notified."
+                  : "Did Mother reach her pickup safely?"}
             </Typography>
 
             <Box sx={{ ...gridResponsive(2), mb: 1.5 }}>

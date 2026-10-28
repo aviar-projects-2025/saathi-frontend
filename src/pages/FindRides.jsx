@@ -740,7 +740,7 @@ export default function FindRides() {
               "&:hover": { bgcolor: "#FF9933", color: "#fff" },
             }}
           >
-            OK
+            Not now
           </Button>
           <Button
             variant="contained"

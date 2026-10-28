@@ -24,30 +24,65 @@ const Notifications = () => {
 
     const navigate = useNavigate();
 
+
     const handleNavigation = (item) => {
+        console.log("Clicked notification:", {
+            type: item.type,
+            data: item.data,
+        });
+
         switch (item.type) {
             case "new_request":
             case "request_rejected":
-                navigate("/myride", { state: { tab: 2, rideId: item.data?.rideId }, });
+                navigate("/myride", {
+                    state: { tab: 2, rideId: item.data?.rideId },
+                });
                 break;
+
             case "request_accepted":
-                navigate("/request-ride", { state: { rideId: item.data?.rideId }, });
+                navigate("/request-ride", {
+                    state: { rideId: item.data?.rideId },
+                });
                 break;
+
             case "referral_approved":
             case "request_cancelled":
-                break
+                break;
+
             case "referral_pending":
             case "referral_rejected":
                 navigate("/my-referalls");
                 break;
+
             case "ride_started":
-                navigate("/myride")
+                navigate("/myride");
+                break;
+
+            case "travel_buddy_request":
+                navigate("/travelbuddy/requests", {
+                    state: {
+                        requestId: item.data?.requestId,
+                        tab: "received",
+                    },
+                });
+                break;
+
+            case "travel_buddy_request_accepted":
+            case "travel_buddy_request_rejected":
+                navigate("/travelbuddy/requests", {
+                    state: {
+                        requestId: item.data?.requestId,
+                        tab: "sent",
+                    },
+                });
                 break;
 
             default:
+                console.warn("Unhandled notification type:", item.type);
                 navigate("/");
         }
-    }
+    };
+
 
     const handleIsRead = (id, item) => {
 

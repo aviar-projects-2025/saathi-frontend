@@ -5,11 +5,17 @@ import { toast } from "react-toastify";
 import Api from "../../Api"; // Adjust path if needed
 
 import {
+  Alert,
   Box,
   Button,
   Checkbox,
   Chip,
   CssBaseline,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   FormControlLabel,
   Link,
   MenuItem,
@@ -88,6 +94,27 @@ const INITIAL_FORM = {
   help: [],
   pickup: "family",
   agreed: false,
+};
+
+// Convert an API date into the local value expected by datetime-local inputs.
+const toDateTimeLocal = (value) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const pad = (number) => String(number).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+};
+
+const mapTripFlightsToForm = (trip) => {
+  if (!Array.isArray(trip?.flights) || trip.flights.length === 0) return [{ ...EMPTY_FLIGHT }];
+  return trip.flights.slice(0, MAX_FLIGHTS).map((flight) => ({
+    airline: flight.airline || "",
+    flightNumber: flight.flightNumber || "",
+    from: flight.fromCode || "",
+    to: flight.toCode || "",
+    departure: toDateTimeLocal(flight.departureTime),
+    arrival: toDateTimeLocal(flight.arrivalTime),
+  }));
 };
 
 /* ─────────── Validation ─────────── */
@@ -381,7 +408,7 @@ function StepFlights({ form, setForm, onNext, onCancel }) {
 }
 
 /* ─────────── Step 2: Traveller ─────────── */
-function StepTraveller({ form, setForm, onBack, onSubmit, submitting }) {
+function StepTraveller({ form, setForm, onBack, onSubmit, submitting, requestMode, publishOnReject, setPublishOnReject }) {
   const isCompanion = form.role === "companion";
   const [submitted, setSubmitted] = useState(false);
 
@@ -442,6 +469,17 @@ function StepTraveller({ form, setForm, onBack, onSubmit, submitting }) {
         </Typography>
       </Paper>
 
+      {requestMode && (
+        <Paper variant="outlined" sx={{ p: 2, mb: 3, borderRadius: 2.5, borderColor: c.border, bgcolor: "#fff" }}>
+          <FormControlLabel
+            sx={{ alignItems: "flex-start", mx: 0 }}
+            control={<Checkbox size="small" checked={publishOnReject} onChange={(e) => setPublishOnReject(e.target.checked)} sx={{ p: 0.5, mr: 1, "&.Mui-checked": { color: c.rust } }} />}
+            label={<Typography sx={{ fontSize: 13, lineHeight: 1.55, fontWeight: 700 }}>If my offer is rejected, publish my submitted trip as a normal trip.</Typography>}
+          />
+          <Typography sx={{ fontSize: 12, color: c.muted, ml: 4, mt: 0.5 }}>If unchecked, your submitted trip stays private and is visible only to you and in the related request history.</Typography>
+        </Paper>
+      )}
+
       <Box sx={{ mb: 4 }}>
         <FormControlLabel
           sx={{ alignItems: "flex-start", mx: 0 }}
@@ -470,11 +508,24 @@ export default function PostTrip() {
   const location = useLocation();
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
+  const [publishOnReject, setPublishOnReject] = useState(false);
+  const [contactConsentOpen, setContactConsentOpen] = useState(false);
 
   const requestedRole = location.state?.role;
   const initialRole = ROLES.some(([value]) => value === requestedRole) ? requestedRole : "parent";
+  const prefillTrip = location.state?.prefillTrip;
 
-  const [form, setForm] = useState({ ...INITIAL_FORM, role: initialRole });
+  const [form, setForm] = useState(() => ({
+    ...INITIAL_FORM,
+    role: initialRole,
+    flights: prefillTrip ? mapTripFlightsToForm(prefillTrip) : [{ ...EMPTY_FLIGHT }],
+    relationship: initialRole === "parent" ? (prefillTrip?.relationship || INITIAL_FORM.relationship) : INITIAL_FORM.relationship,
+    ageBand: initialRole === "parent" ? (prefillTrip?.ageBand || "") : "",
+    languages: prefillTrip?.languages?.length ? [...prefillTrip.languages] : [...INITIAL_FORM.languages],
+    help: prefillTrip?.help?.length ? [...prefillTrip.help] : [],
+    pickup: prefillTrip?.pickup || INITIAL_FORM.pickup,
+    agreed: false,
+  }));
 
   const createTrip = async () => {
     if (submitting) return;
@@ -499,17 +550,26 @@ export default function PostTrip() {
         })),
       };
       const token = localStorage.getItem("token");
-      await axios.post(`${Api}/travel-buddy`, payload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`, // <--- MUST ADD THIS
-          }
-        }
+      if (!token) {
+        toast.error("Please log in to continue.");
+        return;
+      }
+      const config = { headers: { Authorization: `Bearer ${token}` } };
 
-      );
-
-      toast.success("Trip posted! We will notify you when we find matches.");
-      navigate("/travelbuddy"); // Redirect back to hub
+      if (prefillTrip?._id) {
+        await axios.post(`${Api}/travel-buddy/requests`, {
+          targetTripId: prefillTrip._id,
+          trip: payload,
+          publishOnReject,
+          contactConsent: true,
+        }, config);
+        toast.success("Request sent! The trip owner must approve it.");
+        setContactConsentOpen(false);
+      } else {
+        await axios.post(`${Api}/travel-buddy`, payload, config);
+        toast.success("Trip posted successfully!");
+      }
+      navigate("/travelbuddy");
     } catch (error) {
       console.error(error);
       toast.error(error.response?.data?.message || "Failed to post trip");
@@ -526,10 +586,50 @@ export default function PostTrip() {
           {step === 1 ? (
             <StepFlights form={form} setForm={setForm} onCancel={() => navigate(-1)} onNext={() => setStep(2)} />
           ) : (
-            <StepTraveller form={form} setForm={setForm} onBack={() => setStep(1)} onSubmit={createTrip} submitting={submitting} />
+            <StepTraveller form={form} setForm={setForm} onBack={() => setStep(1)} onSubmit={() => { if (prefillTrip?._id) setContactConsentOpen(true); else createTrip(); }} submitting={submitting} requestMode={Boolean(prefillTrip?._id)} publishOnReject={publishOnReject} setPublishOnReject={setPublishOnReject} />
           )}
         </Box>
       </Box>
+
+      <Dialog
+        open={contactConsentOpen}
+        onClose={() => {
+          if (!submitting) setContactConsentOpen(false);
+        }}
+        fullWidth
+        maxWidth="xs"
+      >
+        <DialogTitle sx={{ fontWeight: 800, color: c.navy }}>
+          Share contact details?
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            By sending this Travel Buddy request, you agree that your registered
+            contact details may be shared with the trip owner if they approve
+            the request and both of you consent to the connection.
+          </DialogContentText>
+          <Alert severity="info" sx={{ mt: 2 }}>
+            Your contact details will not be unlocked just by sending the request.
+            The trip owner must approve it and agree to contact sharing too.
+          </Alert>
+        </DialogContent>
+        <DialogActions sx={{ p: 2, pt: 0 }}>
+          <Button
+            color="inherit"
+            disabled={submitting}
+            onClick={() => setContactConsentOpen(false)}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            disabled={submitting}
+            onClick={createTrip}
+          >
+            {submitting ? "Sending..." : "Agree & Send Request"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </ThemeProvider>
   );
 }

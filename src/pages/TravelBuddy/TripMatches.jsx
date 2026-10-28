@@ -259,33 +259,87 @@ export default function TripMatches() {
 
   useEffect(() => {
     const fetchMatches = async () => {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        setError("Please sign in to view your trips.");
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
-        // Fetch trip and matches in parallel
+        setError("");
+
+        const config = {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        };
+
         const [tripRes, matchRes] = await Promise.all([
-          axios.get(`${Api}/travel-buddy/${id}`), // You may need to create this GET single trip endpoint
-          axios.get(`${Api}/travel-buddy/${id}/matches`),
+          axios.get(`${Api}/travel-buddy/${id}`, config),
+          axios.get(`${Api}/travel-buddy/${id}/matches`, config),
         ]);
-        
-        setTrip(tripRes.data.data);
-        setMatches(matchRes.data.data || { tier1: [], tier2: [] });
+
+        setTrip(tripRes.data?.data ?? null);
+
+        const result = matchRes.data?.data ?? {};
+
+        setMatches({
+          tier1: Array.isArray(result.tier1) ? result.tier1 : [],
+          tier2: Array.isArray(result.tier2) ? result.tier2 : [],
+        });
       } catch (err) {
-        setError(err.response?.data?.message || "Failed to load matches.");
+        console.error("Travel Buddy matches failed:", err);
+        setError(
+          err.response?.data?.message || "Failed to load real matches."
+        );
       } finally {
         setLoading(false);
       }
     };
-    if (id) fetchMatches();
+
+    if (id) {
+      fetchMatches();
+    }
+
+    // Refresh if the route changes; prevent updates after unmount.
+    // Existing loading/error rendering should remain below.
   }, [id]);
 
   const handleAccept = async (match) => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      toast.error("Your session has expired. Please sign in again.");
+      navigate("/login");
+      return;
+    }
+
     try {
       setAcceptingId(match.id);
-      await axios.post(`${Api}/travel-buddy/${id}/accept`, { matchId: match.id });
+
+      await axios.post(
+        `${Api}/travel-buddy/${id}/accept`,
+        { matchId: match.id },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
       toast.success("Companion accepted successfully!");
+
       navigate(`/trip-accepted/${id}`);
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to accept. Please try again.");
+      console.error("Accept companion failed:", err);
+
+      toast.error(
+        err.response?.data?.message ||
+        "Failed to accept. Please try again."
+      );
     } finally {
       setAcceptingId(null);
     }
@@ -311,7 +365,7 @@ export default function TripMatches() {
   ].filter((g) => g.matches.length > 0);
 
   // Format summary text
-  const route = trip?.flights?.length > 0 
+  const route = trip?.flights?.length > 0
     ? [trip.flights[0].fromCode, ...trip.flights.map(f => f.toCode)].join(" → ")
     : "";
   const flightNos = trip?.flights?.map(f => f.flightNumber).join(" / ") || "";
@@ -322,7 +376,7 @@ export default function TripMatches() {
       <CssBaseline />
       <Box sx={{ bgcolor: c.bg, minHeight: "100vh", py: { xs: 2, sm: 2.5 }, px: { xs: 2, sm: 2.5 } }}>
         <Box sx={{ maxWidth: 900, mx: "auto" }}>
-          
+
           <Link
             component="button"
             type="button"

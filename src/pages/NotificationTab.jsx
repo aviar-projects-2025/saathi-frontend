@@ -158,6 +158,28 @@ export default function NotificationTab({
         case "referral_rejected":
           navigate("/my-referalls");
           break;
+        
+        // Travel Buddy: incoming request for the original trip owner
+        case "travel_buddy_request":
+          navigate("/travelbuddy/requests", {
+            state: {
+              requestId: item?.data?.requestId,
+              tab: "received",
+            },
+          });
+          break;
+
+        // Travel Buddy: updates for the person who sent the request
+        case "travel_buddy_request_accepted":
+        case "travel_buddy_request_rejected":
+          navigate("/travelbuddy/requests", {
+            state: {
+              requestId: item?.data?.requestId,
+              tab: "sent",
+            },
+          });
+          break;
+
 
         default:
           navigate("/");

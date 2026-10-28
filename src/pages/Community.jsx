@@ -826,7 +826,7 @@ export default function Community() {
               },
             }}
           >
-            OK
+            Not now
           </Button>
           <Button
             variant="contained"
