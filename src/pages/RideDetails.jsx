@@ -1519,12 +1519,6 @@ export default function RideDetailsModal({
           />
 
           <Field
-            icon={BadgeIcon}
-            label="Age Group Preference"
-            value={ride?.ageGroupPreference || "—"}
-          />
-
-          <Field
             icon={EventSeatIcon}
             label="Available Seats"
             value={
@@ -1544,64 +1538,6 @@ export default function RideDetailsModal({
             icon={PeopleIcon}
             label="Passengers"
             value={ride?.passengers ?? "—"}
-          />
-
-          <Field
-            icon={GenderIcon}
-            label="Gender Preference"
-            value={ride?.genderPreference || "—"}
-          />
-
-          <Field
-            icon={LocationOnIcon}
-            label="From"
-            value={ride?.from || "—"}
-            span
-          />
-
-          <Field
-            icon={LocationOnIcon}
-            label="Destination"
-            value={ride?.destination || "—"}
-            span
-          />
-
-          <Field
-            icon={LocationOnIcon}
-            label="Pickup Latitude"
-            value={ride?.fromLocation?.latitude ?? "—"}
-          />
-
-          <Field
-            icon={LocationOnIcon}
-            label="Pickup Longitude"
-            value={ride?.fromLocation?.longitude ?? "—"}
-          />
-
-          <Field
-            icon={LocationOnIcon}
-            label="Pickup Address"
-            value={ride?.fromLocation?.address || "—"}
-            span
-          />
-
-          <Field
-            icon={LocationOnIcon}
-            label="Destination Latitude"
-            value={ride?.destinationLocation?.latitude ?? "—"}
-          />
-
-          <Field
-            icon={LocationOnIcon}
-            label="Destination Longitude"
-            value={ride?.destinationLocation?.longitude ?? "—"}
-          />
-
-          <Field
-            icon={LocationOnIcon}
-            label="Destination Address"
-            value={ride?.destinationLocation?.address || "—"}
-            span
           />
 
           <Field
@@ -1629,14 +1565,6 @@ export default function RideDetailsModal({
           />
 
           <Field
-            icon={LocalGasStationIcon}
-            label="Fuel Sharing"
-            value={
-              ride?.fuelSharing != null ? `₹ ${ride.fuelSharing} / Person` : "—"
-            }
-          />
-
-          <Field
             icon={CheckCircleIcon}
             label="Cost Sharing Confirmed"
             value={ride?.confirmCostSharing ? "Yes" : "No"}
@@ -1651,12 +1579,6 @@ export default function RideDetailsModal({
           />
 
           <Field
-            icon={SupportAgentIcon}
-            label="Baggage Help"
-            value={ride?.baggageHelp ? "Yes" : "No"}
-          />
-
-          <Field
             icon={ChildCareIcon}
             label="Child Friendly"
             value={ride?.childFriendly ? "Yes" : "No"}
@@ -1668,25 +1590,7 @@ export default function RideDetailsModal({
             value={ride?.travelingWithChild ? "Yes" : "No"}
           />
 
-          <Field
-            icon={MedicalServicesIcon}
-            label="Medical Assistance"
-            value={ride?.medicalAssistance ? "Yes" : "No"}
-          />
-
-          <Field
-            icon={LanguageIcon}
-            label="Language Support"
-            value={ride?.languageSupport ? "Yes" : "No"}
-          />
-
-          <Field
-            icon={TransferWithinAStationIcon}
-            label="Transit Help"
-            value={ride?.transitHelp ? "Yes" : "No"}
-          />
-
-          <Field
+          {/* <Field
             icon={TranslateIcon}
             label="Languages"
             value={
@@ -1695,7 +1599,7 @@ export default function RideDetailsModal({
                 : "—"
             }
             span
-          />
+          /> */}
 
           <Field
             icon={TranslateIcon}
@@ -1721,30 +1625,23 @@ export default function RideDetailsModal({
           />
 
           <Field
-            icon={LocationOnIcon}
-            label="Exact Pickup"
-            value={ride?.exactPickup || "—"}
-            span
-          />
-
-          <Field
             icon={PhoneIcon}
             label="Contact / Notes"
             value={ride?.notes || "—"}
             span
           />
 
-          <Field
+          {/* <Field
             icon={FlagIcon}
             label="Ride Status"
             value={ride?.status || "—"}
-          />
+          /> */}
 
-          <Field
+          {/* <Field
             icon={DirectionsCarIcon}
             label="Travel Status"
             value={ride?.travelStatus || "—"}
-          />
+          /> */}
 
           <Field
             icon={FemaleIcon}
@@ -1759,47 +1656,9 @@ export default function RideDetailsModal({
           />
 
           <Field
-            icon={AccessTimeIcon}
-            label="Start Time (ISO)"
-            value={ride?.startTime || "—"}
-            span
-          />
-
-          <Field
-            icon={AccessTimeIcon}
-            label="Last Started Notification"
-            value={ride?.lastRideStartedNotificationAt || "—"}
-            span
-          />
-
-          <Field
-            icon={PersonIcon}
-            label="Created By Zipcode"
-            value={ride?.createdBy?.zipcode || "—"}
-          />
-
-          <Field
             icon={ScheduleIcon}
             label="Time Zone"
             value={ride?.timeZone || "—"}
-          />
-
-          <Field
-            icon={CalendarTodayIcon}
-            label="Created At"
-            value={
-              ride?.createdAt ? new Date(ride.createdAt).toLocaleString() : "—"
-            }
-            span
-          />
-
-          <Field
-            icon={CalendarTodayIcon}
-            label="Updated At"
-            value={
-              ride?.updatedAt ? new Date(ride.updatedAt).toLocaleString() : "—"
-            }
-            span
           />
 
           <Field
