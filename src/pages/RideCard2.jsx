@@ -16,6 +16,7 @@ import RideDetailsModal from "./RideDetails.jsx";
 import { useUser } from "../context/userConetext.jsx";
 import { useRide } from "../context/RideContext";
 import Api from "../Api";
+import ProtectedAvatar from "../components/ProtectedAvatar.jsx";
 
 const FONT = '"DM Sans", "Inter", "Segoe UI", Roboto, Arial, sans-serif';
 
@@ -346,7 +347,7 @@ export default function RideList({ ride, onIcanHelp }) {
                         overflow: "hidden",
                     }}
                 >
-                    <Avatar
+                    <ProtectedAvatar
                         src={userProfile || ""}
                         alt={userName}
                         onClick={(event) => {
@@ -367,7 +368,7 @@ export default function RideList({ ride, onIcanHelp }) {
                         }}
                     >
                         {initials}
-                    </Avatar>
+                    </ProtectedAvatar>
 
                     <Box
                         sx={{

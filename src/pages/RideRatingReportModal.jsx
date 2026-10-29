@@ -12,6 +12,7 @@ import axios from "axios";
 import Api from "../Api";
 import { toast } from "react-toastify";
 import ToastConfig from "../components/ToastConfig.jsx";
+import ProtectedAvatar from "../components/ProtectedAvatar.jsx";
 
 export default function RideRatingReportModal({
     open,
@@ -200,7 +201,7 @@ export default function RideRatingReportModal({
 
                     <DialogContent sx={{ pb: 1 }}>
                         <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 3 }}>
-                            <Avatar sx={{ bgcolor: "#E3F2FD", color: "#1565C0", fontWeight: 700 }}>{userInitials}</Avatar>
+                            <ProtectedAvatar sx={{ bgcolor: "#E3F2FD", color: "#1565C0", fontWeight: 700 }}>{userInitials}</ProtectedAvatar>
                             <Box>
                                 <Typography fontWeight={700} fontSize="0.95rem">{userName}</Typography>
                                 <Typography variant="body2" color="text.secondary" fontSize="0.8rem">

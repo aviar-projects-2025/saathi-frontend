@@ -33,6 +33,7 @@ import { useNotifications } from "../../context/NotificationContext";
 import { useReferral } from "../../context/ReferralContext";
 import ToastConfig from "../../components/ToastConfig";
 import ProfileModal from "../Avatar.jsx";
+import ProtectedAvatar from "../../components/ProtectedAvatar.jsx";
 
 const SAFFRON = "#E8650A";
 const SAFFRON_LIGHT = "#FFF3E8";
@@ -159,7 +160,7 @@ const PendingCard = memo(
             alignItems="center"
             sx={{ minWidth: 0, flex: 1 }}
           >
-            <Avatar
+            <ProtectedAvatar
               src={profileImage || undefined}
               sx={{
                 width: { xs: 40, sm: 44 },
@@ -173,7 +174,7 @@ const PendingCard = memo(
             >
               {!profileImage &&
                 `${firstName?.[0] || ""}${lastName?.[0] || ""}`.toUpperCase()}
-            </Avatar>
+            </ProtectedAvatar>
             <Box sx={{ minWidth: 0 }}>
               <Typography
                 fontWeight={700}
@@ -349,7 +350,7 @@ const StatusRow = memo(({ user: u, status }) => {
           alignItems="center"
           sx={{ minWidth: 0, flex: 1 }}
         >
-          <Avatar
+          <ProtectedAvatar
             src={profileImage || undefined}
             alt={`${firstName} ${lastName}`}
             onClick={() => {
@@ -374,7 +375,7 @@ const StatusRow = memo(({ user: u, status }) => {
                 {lastName?.[0]?.toUpperCase()}
               </>
             )}
-          </Avatar>
+          </ProtectedAvatar>
 
           <Box sx={{ minWidth: 0 }}>
             <Typography

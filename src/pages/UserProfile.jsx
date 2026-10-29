@@ -22,6 +22,7 @@ import { useUser } from "../context/userConetext";
 import ProfileModal from "./Avatar.jsx";
 import EditProfile from "./EditProfile.jsx";
 import { useLocation } from "react-router-dom";
+import ProtectedAvatar from "../components/ProtectedAvatar.jsx";
 
 /* ---------- design tokens ---------- */
 const C = {
@@ -516,9 +517,9 @@ const UserProfile = () => {
           return (
             <Box key={review._id || review.id || index}>
               <Stack direction="row" sx={{ py: 2.5, gap: 2 }}>
-                <Avatar src={authorAvatar} sx={{ width: 40, height: 40, flexShrink: 0, bgcolor: C.tint, color: C.saffron, fontWeight: 700, fontSize: "0.9rem" }}>
+                <ProtectedAvatar src={authorAvatar} sx={{ width: 40, height: 40, flexShrink: 0, bgcolor: C.tint, color: C.saffron, fontWeight: 700, fontSize: "0.9rem" }}>
                   {initials(author)}
-                </Avatar>
+                </ProtectedAvatar>
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "flex-start", gap: 1.5, flexWrap: "wrap" }}>
                     <Box sx={{ minWidth: 0 }}>
@@ -673,7 +674,7 @@ const UserProfile = () => {
           <Surface sx={{ p: { xs: 2.5, sm: 4 } }}>
             <Stack direction={{ xs: "column", sm: "row" }} sx={{ alignItems: { xs: "flex-start", sm: "center" }, justifyContent: "space-between", gap: { xs: 2.5, sm: 3 } }}>
               <Stack direction="row" sx={{ alignItems: "center", gap: { xs: 2, sm: 3 }, minWidth: 0, width: "100%" }}>
-                <Avatar
+                <ProtectedAvatar
                   src={profile?.profileImageUrl || ""}
                   onClick={() => { setSelectedProfile(profile); setProfileModalOpen(true); }}
                   sx={{
@@ -683,7 +684,7 @@ const UserProfile = () => {
                   }}
                 >
                   {initials(profile)}
-                </Avatar>
+                </ProtectedAvatar>
                 <Box sx={{ minWidth: 0 }}>
                   <Typography component="h1" sx={{ fontFamily: SERIF, fontWeight: 600, color: C.ink, fontSize: { xs: "1.45rem", sm: "2rem" }, lineHeight: 1.2, overflowWrap: "anywhere" }}>
                     {name}

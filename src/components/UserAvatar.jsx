@@ -1,6 +1,7 @@
 import React from 'react';
 import { Avatar, Box, Tooltip } from '@mui/material';
 import VerifiedIcon from '@mui/icons-material/Verified';
+import ProtectedAvatar from './ProtectedAvatar';
 
 const colorMap = {
     A: '#E8650A', B: '#4361EE', C: '#2D6A4F', D: '#9B2226', E: '#AE2012',
@@ -39,7 +40,7 @@ export default function UserAvatar({ name, profile, firstName, lastName, initial
       >
       </Avatar> */}
 
-            <Avatar
+            <ProtectedAvatar
                 src={profile || currentUser?.profileImageUrl || ""}
                 sx={{
                     width: { xs: 30, sm: 50, md: 50 },
@@ -54,7 +55,7 @@ export default function UserAvatar({ name, profile, firstName, lastName, initial
                 {!currentUser?.profileImageUrl &&
                     `${currentUser?.firstName?.[0] || ""}${currentUser?.lastName?.[0] || ""}`}
 
-            </Avatar>
+            </ProtectedAvatar>
 
 
 

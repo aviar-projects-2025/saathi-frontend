@@ -29,6 +29,7 @@ import { useRide } from "../context/RideContext";
 import { useNotifications } from "../context/NotificationContext";
 import { useRating } from "../context/RatingContext";
 import socket from "../socket"; // ★ IMPORT
+import ProtectedAvatar from "../components/ProtectedAvatar.jsx";
 
 /* ───────────── design tokens ───────────── */
 const BRAND = "#E8650A";
@@ -709,9 +710,9 @@ const MyRides = () => {
                 return (
                   <Box key={proposal._id} sx={{ p: { xs: 1.5, sm: 2 } }}>
                     <Stack direction="row" spacing={1.25} alignItems="center" sx={{ mb: 1.25 }}>
-                      <Avatar src={helper.profileImageUrl || ""} sx={{ width: 40, height: 40, bgcolor: "#FFF0E3", color: "#C65B00", fontWeight: 800 }}>
+                      <ProtectedAvatar src={helper.profileImageUrl || ""} sx={{ width: 40, height: 40, bgcolor: "#FFF0E3", color: "#C65B00", fontWeight: 800 }}>
                         {`${helper.firstName?.[0] || ""}${helper.lastName?.[0] || ""}` || "U"}
-                      </Avatar>
+                      </ProtectedAvatar>
                       <Box sx={{ minWidth: 0, flex: 1 }}>
                         <Typography sx={{ fontWeight: 700, fontSize: "0.92rem" }} noWrap>{name}</Typography>
                         <Typography variant="caption" color="text.secondary">can help with your request</Typography>

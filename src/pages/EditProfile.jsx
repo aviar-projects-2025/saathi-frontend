@@ -37,6 +37,7 @@ import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import Popper from "@mui/material/Popper";
 import uploadImageToS3 from "../utils/s3Upload.js";
+import ProtectedAvatar from "../components/ProtectedAvatar.jsx";
 
 const CustomPopper = (props) => {
     return (
@@ -832,7 +833,7 @@ const EditProfile = ({ open, onClose }) => {
                                     alignItems: "center",
                                 }}
                             >
-                                <Avatar
+                                <ProtectedAvatar
                                     src={profileImage || formData.profileImage || ""}
                                     sx={{
                                         width: {
@@ -854,7 +855,7 @@ const EditProfile = ({ open, onClose }) => {
                                     }}
                                 >
                                     {formData?.firstName?.[0]}{formData?.lastName?.[0]}
-                                </Avatar>
+                                </ProtectedAvatar>
 
                                 <Button
                                     variant="contained"

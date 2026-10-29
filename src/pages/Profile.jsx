@@ -20,6 +20,7 @@ import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 
 import { rideHistory } from "../data/mockData.jsx";
+import ProtectedAvatar from "../components/ProtectedAvatar.jsx";
 
 export default function Profile() {
   const { user } = useApp();
@@ -62,7 +63,7 @@ export default function Profile() {
           }}
         >
           <Box display="flex" alignItems="center" gap={2}>
-            <Avatar
+            <ProtectedAvatar
               sx={{
                 width: 82,
                 height: 82,
@@ -73,7 +74,7 @@ export default function Profile() {
               }}
             >
               {user.avatar}
-            </Avatar>
+            </ProtectedAvatar>
 
             <Box>
               <Typography variant="h4" fontWeight={900} color="white">

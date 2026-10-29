@@ -40,7 +40,7 @@ export default function WaitingApproval() {
           border: "1px solid #F0E6DC",
         }}
       >
-        <Avatar
+        <ProtectedAvatar
           sx={{
             width: 76,
             height: 76,
@@ -51,7 +51,7 @@ export default function WaitingApproval() {
           }}
         >
           <HourglassTopIcon fontSize="large" />
-        </Avatar>
+        </ProtectedAvatar>
 
         <Typography variant="h5" fontWeight={800} mb={1}>
           Waiting for Approval
