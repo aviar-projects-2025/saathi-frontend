@@ -13,6 +13,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import AddPhotoAlternateOutlinedIcon from "@mui/icons-material/AddPhotoAlternateOutlined";
 import VerifiedOutlinedIcon from "@mui/icons-material/VerifiedOutlined";
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
+import StarIcon from "@mui/icons-material/Star";
 import PageLayout from "../components/PageLayout";
 import Api from "../Api";
 import { toast } from "react-toastify";
@@ -45,8 +46,8 @@ const Surface = ({ children, sx = {} }) => (
 );
 
 const SectionTitle = ({ title, count, action }) => (
-  <Stack direction="row" sx={{ alignItems: "baseline", justifyContent: "space-between",  mb: 2.5 }}>
-    <Stack direction="row" sx={{ alignItems: "baseline",  gap: 1.25 }}>
+  <Stack direction="row" sx={{ alignItems: "baseline", justifyContent: "space-between", mb: 2.5 }}>
+    <Stack direction="row" sx={{ alignItems: "baseline", gap: 1.25 }}>
       <Typography sx={{ fontFamily: SERIF, fontWeight: 600, fontSize: { xs: "1.25rem", sm: "1.4rem" }, color: C.ink }}>{title}</Typography>
       {count != null && <Typography sx={{ color: C.muted, fontSize: "0.9rem" }}>{count}</Typography>}
     </Stack>
@@ -73,7 +74,7 @@ const Stat = ({ value, label }) => (
 );
 
 const Fact = ({ label, value }) => (
-  <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "baseline", gap: 2,  py: 1.25 }}>
+  <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "baseline", gap: 2, py: 1.25 }}>
     <Typography sx={{ color: C.muted, fontSize: "0.85rem" }}>{label}</Typography>
     <Typography sx={{ color: C.ink, fontSize: "0.9rem", fontWeight: 600, textAlign: "right", overflowWrap: "anywhere" }}>{value}</Typography>
   </Stack>
@@ -85,7 +86,7 @@ const displayNameOf = (user) => [user?.firstName, user?.lastName].filter(Boolean
 const unwrap = (response) => response?.data?.data?.user || response?.data?.data || response?.data?.user || response?.data || null;
 const toArray = (value) => Array.isArray(value) ? value : Array.isArray(value?.data) ? value.data : [];
 const idOf = (value) => String(value?._id || value?.id || value || "");
-const isCompleted = (ride) => String(ride?.travelStatus || ride?.status || ride?.rideId?.travelStatus || ride?.rideId?.status || "").toLowerCase() === "completed";
+const isCompleted = (ride) => String(ride?.travelStatus || ride?.status || "").toLowerCase() === "completed";
 const placeLabel = (value) => typeof value === "object" ? value?.address || value?.name || "—" : value;
 const routeParts = (ride) => {
   const item = ride?.rideId && typeof ride.rideId === "object" ? ride.rideId : ride;
@@ -106,6 +107,7 @@ const UserProfile = () => {
     try { return JSON.parse(localStorage.getItem("user") || "null"); } catch { return null; }
   }, []);
   const userId = idOf(currentUser?._id || currentUser?.id || storedUser?.id || storedUser?._id);
+
   const authConfig = useCallback(() => ({
     headers: { Authorization: `Bearer ${localStorage.getItem("token") || ""}` },
   }), []);
@@ -122,6 +124,11 @@ const UserProfile = () => {
   const [editProfileOpen, setEditProfileOpen] = useState(Boolean(location.state?.openEditProfile));
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null);
+
+  // Reviews state
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewsError, setReviewsError] = useState("");
 
   const [posts, setPosts] = useState([]);
   const [postsLoading, setPostsLoading] = useState(false);
@@ -142,33 +149,57 @@ const UserProfile = () => {
   const loadMoreRef = useRef(null);
   const fetchingRef = useRef(false);
 
-  /* ---------- data loading (unchanged logic) ---------- */
+  /* ---------- data loading ---------- */
   const loadProfileData = useCallback(async () => {
     if (!userId) return;
     let cancelled = false;
     setProfileLoading(true);
     setProfileError("");
 
-    const [userResult, ridesResult, requestsResult, referralsResult] = await Promise.allSettled([
+    const [
+      userResult,
+      ridesGivenResult,
+      ridesTakenResult,
+      referralsResult,
+    ] = await Promise.allSettled([
       axios.get(`${Api}/users/${userId}`, authConfig()),
-      axios.get(`${Api}/rides/get`, { ...authConfig(), params: { page: 1, limit: 100 } }),
+
+      // Rides created by the user (offers + requests)
+      axios.get(`${Api}/rides/get`, {
+        ...authConfig(),
+        params: { type: "my", category: "posts", page: 1, limit: 100 },
+      }),
+
+      // Bookings the user made (sent requests)
       axios.get(`${Api}/bookride/send/${userId}`, authConfig()),
+
       axios.get(`${Api}/users/${userId}/referrals`, authConfig()),
     ]);
+
     if (cancelled) return;
 
+    // 1. Profile
     let fetchedProfile = currentUser || null;
     if (userResult.status === "fulfilled") {
       fetchedProfile = unwrap(userResult.value) || fetchedProfile;
       setProfile(fetchedProfile);
     } else {
-      setProfileError(userResult.reason?.response?.data?.message || "Some profile details could not be loaded.");
+      if (userResult.reason?.response?.status === 404) {
+        setProfileError("This profile could not be found.");
+      } else {
+        setProfileError(userResult.reason?.response?.data?.message || "Some profile details could not be loaded.");
+      }
     }
 
+    // 2. Inviter
     const referrer = fetchedProfile?.referredBy;
-    if (referrer && typeof referrer === "object") {
+    if (
+      referrer &&
+      typeof referrer === "object" &&
+      (referrer.firstName || referrer.lastName)
+    ) {
       setInviter(referrer);
-    } else if (referrer) {
+    } else if (referrer && typeof referrer === "string") {
       try {
         const referrerResponse = await axios.get(`${Api}/users/${idOf(referrer)}`, authConfig());
         if (!cancelled) setInviter(unwrap(referrerResponse));
@@ -179,25 +210,41 @@ const UserProfile = () => {
       setInviter(null);
     }
 
-    if (ridesResult.status === "fulfilled") {
-      const payload = ridesResult.value?.data;
+    // 3. Rides GIVEN
+    if (ridesGivenResult.status === "fulfilled") {
+      const payload = ridesGivenResult.value?.data;
       const ridesList = toArray(payload?.data ?? payload?.rides ?? payload);
-      const ownCompleted = ridesList.filter((ride) => {
-        const owner = ride?.createdBy?._id || ride?.createdBy?.id || ride?.createdBy || ride?.userId?._id || ride?.userId || ride?.owner?._id || ride?.owner;
-        return (!owner || idOf(owner) === userId) && isCompleted(ride);
-      });
-      setOfferedRides(ownCompleted);
+      const completedGiven = ridesList.filter((ride) => isCompleted(ride));
+      console.log("[PROFILE] rides given (raw):", ridesList.length, "completed:", completedGiven.length);
+      setOfferedRides(completedGiven);
     } else {
+      console.warn("[PROFILE] rides given failed:", ridesGivenResult.reason?.response?.data || ridesGivenResult.reason?.message);
       setOfferedRides([]);
     }
 
-    if (requestsResult.status === "fulfilled") {
-      const requests = toArray(requestsResult.value?.data?.data ?? requestsResult.value?.data);
-      setTakenRides(requests.filter((request) => String(request?.status || "").toUpperCase() === "ACCEPTED" && isCompleted(request?.rideId || request)));
+    // 4. Rides TAKEN
+    if (ridesTakenResult.status === "fulfilled") {
+      const requests = toArray(ridesTakenResult.value?.data?.data ?? ridesTakenResult.value?.data);
+      console.log("[PROFILE] ride bookings raw:", requests.length);
+
+      const completedTaken = requests.filter((request) => {
+        if (String(request?.status || "").toUpperCase() !== "ACCEPTED") return false;
+        const ride = request?.rideId;
+        if (!ride || typeof ride !== "object") return false;
+        if (!isCompleted(ride)) return false;
+        const ownerId = String(ride?.createdBy?._id || ride?.createdBy || "");
+        if (ownerId === String(userId)) return false;
+        return true;
+      });
+
+      console.log("[PROFILE] rides taken (completed, deduped):", completedTaken.length);
+      setTakenRides(completedTaken);
     } else {
+      console.warn("[PROFILE] rides taken failed:", ridesTakenResult.reason?.response?.data || ridesTakenResult.reason?.message);
       setTakenRides([]);
     }
 
+    // 5. Referrals
     if (referralsResult.status === "fulfilled") {
       const body = referralsResult.value?.data?.data ?? referralsResult.value?.data;
       const all = Array.isArray(body) ? body : [...(body?.pending || []), ...(body?.approved || []), ...(body?.rejected || [])];
@@ -213,12 +260,38 @@ const UserProfile = () => {
       setReferrals([]);
       setReferralCounts({ pending: 0, approved: 0, rejected: 0, total: 0 });
     }
+
     setProfileLoading(false);
     return () => { cancelled = true; };
   }, [userId, currentUser, authConfig]);
 
   useEffect(() => { loadProfileData(); }, [loadProfileData]);
 
+  /* ---------- reviews ---------- */
+  const loadReviews = useCallback(async () => {
+    if (!userId) return;
+    setReviewsLoading(true);
+    setReviewsError("");
+    try {
+      const res = await axios.get(`${Api}/reviews/user/${userId}`, authConfig());
+      const body = res?.data || {};
+      const list = Array.isArray(body.data) ? body.data : Array.isArray(body) ? body : [];
+      const publicReviews = list.filter((r) => !r.autoRated);
+      setReviews(publicReviews);
+    } catch (err) {
+      if (err?.response?.status !== 404) {
+        console.warn("[REVIEWS] load failed:", err?.response?.data || err?.message);
+        setReviewsError(err?.response?.data?.message || "Could not load reviews");
+      }
+      setReviews([]);
+    } finally {
+      setReviewsLoading(false);
+    }
+  }, [userId, authConfig]);
+
+  useEffect(() => { loadReviews(); }, [loadReviews]);
+
+  /* ---------- posts ---------- */
   const loadPosts = useCallback(async (page = 1) => {
     if (!userId) return;
     if (page === 1) setPostsLoading(true); else setPostsLoadingMore(true);
@@ -263,36 +336,80 @@ const UserProfile = () => {
 
   /* ---------- derived values ---------- */
   const completedRideItems = useMemo(() => {
-    const given = offeredRides.map((ride) => ({ ...ride, _kind: "Ride given" }));
-    const taken = takenRides.map((request) => ({ ...(request.rideId && typeof request.rideId === "object" ? request.rideId : request), _kind: "Ride taken", _requestId: request._id || request.id }));
+    const given = offeredRides.map((ride) => ({
+      ...ride,
+      _kind: "Ride given",
+    }));
+
+    const taken = takenRides
+      .map((request) => {
+        const ride = request?.rideId && typeof request.rideId === "object" ? request.rideId : null;
+        if (!ride) return null;
+        return {
+          ...ride,
+          _kind: "Ride taken",
+          _requestId: request._id || request.id,
+        };
+      })
+      .filter(Boolean);
+
     const combined = [...given, ...taken];
-    return combined.filter((ride, index) => {
+    const seen = new Set();
+    return combined.filter((ride) => {
       const id = idOf(ride?._id || ride?.id);
-      return !id || combined.findIndex((other) => idOf(other?._id || other?.id) === id) === index;
+      if (!id) return true;
+      if (seen.has(id)) return false;
+      seen.add(id);
+      return true;
     });
   }, [offeredRides, takenRides]);
 
   const profileCompletion = Math.max(0, Math.min(100, Number(completion ?? profile?.profileCompletion ?? 0) || 0));
-  const rating = profile?.averageRating ?? profile?.rating;
-  const reviews = Array.isArray(profile?.reviews) ? profile.reviews : [];
+
+  const averageRating = useMemo(() => {
+    if (!reviews.length) return profile?.averageRating ?? profile?.rating ?? null;
+    const sum = reviews.reduce((acc, r) => acc + (Number(r.rating) || 0), 0);
+    return sum / reviews.length;
+  }, [reviews, profile]);
+
+  const ratingCount = reviews.length;
   const routeAlerts = Array.isArray(profile?.routeAlerts) ? profile.routeAlerts : [];
   const languageValue = profile?.languages ?? profile?.language ?? profile?.preferredLanguages;
   const languages = Array.isArray(languageValue) ? languageValue.join(", ") : languageValue || "Not added";
   const city = profile?.city || profile?.location?.city || "Location not added";
+
+  // ★ Member since — with ObjectId fallback
   const memberDate = profile?.createdAt || profile?.created_at || profile?.joinedAt;
-  const memberSince = memberDate ? new Date(memberDate).toLocaleDateString(undefined, { month: "short", year: "numeric" }) : "—";
+  let memberSince = "—";
+  if (memberDate) {
+    const d = new Date(memberDate);
+    if (!isNaN(d.getTime())) {
+      memberSince = d.toLocaleDateString(undefined, { month: "short", year: "numeric" });
+    }
+  }
+  if (memberSince === "—" && profile?._id) {
+    try {
+      const ts = parseInt(String(profile._id).substring(0, 8), 16) * 1000;
+      if (!isNaN(ts)) {
+        memberSince = new Date(ts).toLocaleDateString(undefined, { month: "short", year: "numeric" });
+      }
+    } catch {}
+  }
+
   const name = displayNameOf(profile || currentUser);
-  const inviterName = inviter ? displayNameOf(inviter) : (profile?.referredBy ? "Details unavailable" : "Not recorded");
+  const inviterName = inviter
+    ? displayNameOf(inviter)
+    : (profile?.referredBy ? "Details unavailable" : "Not recorded");
   const phoneVerified = Boolean(profile?.isPhoneVerified ?? profile?.phoneVerified ?? profile?.isVerified);
   const admin = ["admin", "superadmin", "super_admin"].includes(String(profile?.role || "").toLowerCase());
   const vouchedCount = Number(profile?.vouchedForCount ?? profile?.vouchedMembers?.length ?? 0) || 0;
   const reportsCount = Number(profile?.reportsAgainstCount ?? profile?.reportCount ?? 0) || 0;
   const foundingMember = Boolean(profile?.isFoundingMember);
+
   const ridesGiven = offeredRides.length;
   const ridesTaken = takenRides.length;
-  const ratingCount = Number(profile?.ratingCount ?? profile?.reviewCount ?? reviews.length) || 0;
 
-  /* ---------- post actions (unchanged logic) ---------- */
+  /* ---------- post actions ---------- */
   const openPostMenu = (event, post) => { setPostMenuAnchor(event.currentTarget); setSelectedPost(post); };
   const closePostMenu = () => setPostMenuAnchor(null);
   const startEditPost = () => {
@@ -370,32 +487,68 @@ const UserProfile = () => {
   const renderReviews = () => (
     <Surface sx={{ p: { xs: 2.5, sm: 4 } }}>
       <SectionTitle title="Reviews" count={ratingCount} />
-      {reviews.length ? reviews.map((review, index) => {
-        const author = review.reviewer || review;
-        return (
-          <Box key={review._id || review.id || index}>
-            <Stack direction="row" sx={{ py: 2.5, gap: 2 }}>
-              <Avatar src={author?.profileImage} sx={{ width: 40, height: 40, bgcolor: C.tint, color: C.saffron, fontWeight: 700, fontSize: "0.9rem" }}>
-                {initials(author)}
-              </Avatar>
-              <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "center", gap: 1.5 }}>
-                  <Typography sx={{ fontWeight: 650, fontSize: "0.92rem", color: C.ink }}>
-                    {displayNameOf(author) || review.reviewerName || "Community member"}
-                  </Typography>
-                  {review.rating != null && (
-                    <Typography sx={{ fontFamily: SERIF, fontWeight: 600, color: C.saffron, fontSize: "0.95rem" }}>{review.rating}/5</Typography>
-                  )}
-                </Stack>
-                <Typography sx={{ mt: 0.75, color: C.body, lineHeight: 1.7, fontSize: "0.92rem" }}>
-                  {review.comment || review.message || "No written review."}
-                </Typography>
+      {reviewsLoading ? (
+        <Stack spacing={2}>
+          {[1, 2, 3].map((n) => (
+            <Stack key={n} direction="row" spacing={2}>
+              <Skeleton variant="circular" width={40} height={40} />
+              <Box sx={{ flex: 1 }}>
+                <Skeleton variant="text" width="40%" height={20} />
+                <Skeleton variant="text" width="90%" height={18} sx={{ mt: 0.5 }} />
+                <Skeleton variant="text" width="60%" height={18} />
               </Box>
             </Stack>
-            {index < reviews.length - 1 && <Divider sx={{ borderColor: C.line }} />}
-          </Box>
-        );
-      }) : <EmptyState title="No reviews yet" hint="Reviews from riders and drivers will appear here after your first completed ride." />}
+          ))}
+        </Stack>
+      ) : reviewsError ? (
+        <Alert severity="warning" sx={{ borderRadius: RADIUS.control }}>{reviewsError}</Alert>
+      ) : reviews.length === 0 ? (
+        <EmptyState title="No reviews yet" hint="Reviews from riders and drivers will appear here after your first completed ride." />
+      ) : (
+        reviews.map((review, index) => {
+          const author = review.reviewerId || review.reviewer || {};
+          const authorName = displayNameOf(author) || review.reviewerName || "Community member";
+          const authorAvatar = author?.profileImageUrl || author?.profileImage || "";
+          const tags = Array.isArray(review.tags) ? review.tags : [];
+          const ratingValue = Number(review.rating) || 0;
+          const reviewDate = review.createdAt ? new Date(review.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "";
+
+          return (
+            <Box key={review._id || review.id || index}>
+              <Stack direction="row" sx={{ py: 2.5, gap: 2 }}>
+                <Avatar src={authorAvatar} sx={{ width: 40, height: 40, flexShrink: 0, bgcolor: C.tint, color: C.saffron, fontWeight: 700, fontSize: "0.9rem" }}>
+                  {initials(author)}
+                </Avatar>
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "flex-start", gap: 1.5, flexWrap: "wrap" }}>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography sx={{ fontWeight: 650, fontSize: "0.92rem", color: C.ink }}>{authorName}</Typography>
+                      {reviewDate && <Typography sx={{ fontSize: "0.75rem", color: C.muted, mt: 0.25 }}>{reviewDate}</Typography>}
+                    </Box>
+                    {ratingValue > 0 && (
+                      <Stack direction="row" sx={{ alignItems: "center", gap: 0.5, flexShrink: 0 }}>
+                        <StarIcon sx={{ fontSize: 16, color: C.saffron }} />
+                        <Typography sx={{ fontFamily: SERIF, fontWeight: 600, color: C.ink, fontSize: "0.95rem" }}>{ratingValue}/5</Typography>
+                      </Stack>
+                    )}
+                  </Stack>
+                  {tags.length > 0 && (
+                    <Stack direction="row" spacing={0.75} sx={{ mt: 1.25, flexWrap: "wrap", gap: 0.75 }}>
+                      {tags.map((tag) => (
+                        <Chip key={tag} label={tag} size="small" sx={{ bgcolor: C.canvas, color: C.body, fontSize: "0.72rem", height: 22, borderRadius: "6px", fontWeight: 500 }} />
+                      ))}
+                    </Stack>
+                  )}
+                  {review.comment && (
+                    <Typography sx={{ mt: 1.25, color: C.body, lineHeight: 1.7, fontSize: "0.92rem" }}>{review.comment}</Typography>
+                  )}
+                </Box>
+              </Stack>
+              {index < reviews.length - 1 && <Divider sx={{ borderColor: C.line }} />}
+            </Box>
+          );
+        })
+      )}
     </Surface>
   );
 
@@ -411,9 +564,8 @@ const UserProfile = () => {
             const date = ride.startTime || ride.rideId?.startTime;
             return (
               <Box key={ride._id || ride.id || ride._requestId || index}>
-                <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between",  py: 2, gap: 2 }}>
-                  {/* route line */}
-                  <Stack sx={{ alignItems: "center",  width: 14, flexShrink: 0, alignSelf: "stretch", py: 0.5 }}>
+                <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between", py: 2, gap: 2 }}>
+                  <Stack sx={{ alignItems: "center", width: 14, flexShrink: 0, alignSelf: "stretch", py: 0.5 }}>
                     <Box sx={{ width: 9, height: 9, borderRadius: "50%", border: `2px solid ${C.saffron}` }} />
                     <Box sx={{ flex: 1, width: "1.5px", bgcolor: C.line, my: 0.25 }} />
                     <Box sx={{ width: 9, height: 9, borderRadius: "50%", bgcolor: C.saffron }} />
@@ -438,50 +590,13 @@ const UserProfile = () => {
     </Surface>
   );
 
-  const renderReferrals = () => (
-    <Surface sx={{ p: { xs: 2.5, sm: 4 } }}>
-      <SectionTitle title="Referrals" count={referralCounts.total} />
-      <Stack direction="row" divider={<Divider orientation="vertical" flexItem sx={{ borderColor: C.line }} />} sx={{ mb: 3, p: 2, bgcolor: C.canvas, borderRadius: RADIUS.control }}>
-        {[
-          ["Approved", referralCounts.approved, "#2E7D32"],
-          ["Pending", referralCounts.pending, "#B45309"],
-          ["Rejected", referralCounts.rejected, "#B91C1C"],
-        ].map(([label, value, color]) => (
-          <Box key={label} sx={{ flex: 1, textAlign: "center" }}>
-            <Typography sx={{ fontFamily: SERIF, fontWeight: 600, fontSize: "1.5rem", color }}>{value}</Typography>
-            <Typography sx={{ fontSize: "0.78rem", color: C.muted }}>{label}</Typography>
-          </Box>
-        ))}
-      </Stack>
-      {referrals.length ? (
-        <Box>
-          {referrals.map((person, index) => (
-            <Box key={person._id || person.id || index}>
-              <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between",  py: 1.75, gap: 2 }}>
-                <Avatar src={person.profileImage || person.user?.profileImage} sx={{ bgcolor: C.tint, color: C.saffron, fontWeight: 700, width: 42, height: 42, fontSize: "0.9rem" }}>
-                  {initials(person.user || person)}
-                </Avatar>
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography sx={{ fontWeight: 650, fontSize: "0.92rem", color: C.ink, overflowWrap: "anywhere" }}>{displayNameOf(person.user || person)}</Typography>
-                  <Typography noWrap sx={{ fontSize: "0.8rem", color: C.muted }}>{person.email || person.user?.email || "Community member"}</Typography>
-                </Box>
-                <Chip size="small" label={person.status || person.referralStatus || "Registered"} sx={{ bgcolor: C.canvas, color: C.body, fontWeight: 600, fontSize: "0.74rem", textTransform: "capitalize" }} />
-              </Stack>
-              {index < referrals.length - 1 && <Divider sx={{ borderColor: C.line }} />}
-            </Box>
-          ))}
-        </Box>
-      ) : <EmptyState title="No referrals yet" hint="Members you invite to Saathi will show up here with their approval status." />}
-    </Surface>
-  );
-
   const renderRouteAlerts = () => (
     <Surface sx={{ p: { xs: 2.5, sm: 4 } }}>
       <SectionTitle title="Route alerts" count={routeAlerts.length} />
       {routeAlerts.length ? (
         <Stack spacing={1.5}>
           {routeAlerts.map((alert, index) => (
-            <Stack key={alert._id || alert.id || index} direction="row" sx={{ justifyContent: "space-between", alignItems: "center", gap: 2,  p: 2, bgcolor: C.canvas, borderRadius: RADIUS.control }}>
+            <Stack key={alert._id || alert.id || index} direction="row" sx={{ justifyContent: "space-between", alignItems: "center", gap: 2, p: 2, bgcolor: C.canvas, borderRadius: RADIUS.control }}>
               <Typography sx={{ fontWeight: 650, fontSize: "0.92rem", color: C.ink, overflowWrap: "anywhere" }}>
                 {alert.from || alert.origin || alert.source || "Origin"} → {alert.to || alert.destination || alert.target || "Destination"}
               </Typography>
@@ -506,35 +621,27 @@ const UserProfile = () => {
             const image = Array.isArray(post.postImage) ? post.postImage[0] : post.postImage;
             return (
               <Surface key={post._id} sx={{ overflow: "hidden", display: "flex", flexDirection: "column", minWidth: 0 }}>
-                  <Box sx={{ position: "relative" }}>
-                    {image ? (
-                      <Box component="img" src={image} alt="Community post" loading="lazy" sx={{ width: "100%", aspectRatio: "1 / 1", objectFit: "cover", display: "block", bgcolor: C.canvas }} />
-                    ) : (
-                      <Box sx={{ aspectRatio: "1 / 1", bgcolor: C.tint }} />
-                    )}
-                    <IconButton
-                      size="small"
-                      aria-label="Post actions"
-                      onClick={(event) => openPostMenu(event, post)}
-                      sx={{ position: "absolute", top: 8, right: 8, bgcolor: "rgba(255,255,255,0.92)", "&:hover": { bgcolor: "#fff" } }}
-                    >
-                      <MoreHorizIcon fontSize="small" />
-                    </IconButton>
-                  </Box>
-                  <Box sx={{ p: 1.75, flex: 1, display: "flex", flexDirection: "column" }}>
-                    <Typography sx={{
-                      color: C.body, fontSize: "0.86rem", lineHeight: 1.55, overflowWrap: "anywhere",
-                      display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden",
-                    }}>
-                      {post.description || "Community post"}
+                <Box sx={{ position: "relative" }}>
+                  {image ? (
+                    <Box component="img" src={image} alt="Community post" loading="lazy" sx={{ width: "100%", aspectRatio: "1 / 1", objectFit: "cover", display: "block", bgcolor: C.canvas }} />
+                  ) : (
+                    <Box sx={{ aspectRatio: "1 / 1", bgcolor: C.tint }} />
+                  )}
+                  <IconButton size="small" aria-label="Post actions" onClick={(event) => openPostMenu(event, post)} sx={{ position: "absolute", top: 8, right: 8, bgcolor: "rgba(255,255,255,0.92)", "&:hover": { bgcolor: "#fff" } }}>
+                    <MoreHorizIcon fontSize="small" />
+                  </IconButton>
+                </Box>
+                <Box sx={{ p: 1.75, flex: 1, display: "flex", flexDirection: "column" }}>
+                  <Typography sx={{ color: C.body, fontSize: "0.86rem", lineHeight: 1.55, overflowWrap: "anywhere", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                    {post.description || "Community post"}
+                  </Typography>
+                  {post.createdAt && (
+                    <Typography sx={{ mt: "auto", pt: 1, fontSize: "0.75rem", color: C.muted }}>
+                      {new Date(post.createdAt).toLocaleDateString()}
                     </Typography>
-                    {post.createdAt && (
-                      <Typography sx={{ mt: "auto", pt: 1, fontSize: "0.75rem", color: C.muted }}>
-                        {new Date(post.createdAt).toLocaleDateString()}
-                      </Typography>
-                    )}
-                  </Box>
-</Surface>
+                  )}
+                </Box>
+              </Surface>
             );
           })}
         </Box>
@@ -553,9 +660,7 @@ const UserProfile = () => {
     "About",
     `Reviews${ratingCount ? ` (${ratingCount})` : ""}`,
     `Rides${completedRideItems.length ? ` (${completedRideItems.length})` : ""}`,
-    // `Referrals${referralCounts.total ? ` (${referralCounts.total})` : ""}`,
-    // "Route alerts",
-    // `Posts${totalPosts ? ` (${totalPosts})` : ""}`,
+    `Posts${totalPosts ? ` (${totalPosts})` : ""}`,
   ];
 
   return (
@@ -564,10 +669,10 @@ const UserProfile = () => {
         <Box sx={{ maxWidth: 1120, mx: "auto", px: { xs: 1.5, sm: 3 }, pt: { xs: 2, sm: 3 }, pb: 8 }}>
           {profileError && <Alert severity="warning" sx={{ mb: 2.5, borderRadius: RADIUS.control }}>{profileError}</Alert>}
 
-          {/* ---------- Identity header ---------- */}
+          {/* Identity header */}
           <Surface sx={{ p: { xs: 2.5, sm: 4 } }}>
-            <Stack direction={{ xs: "column", sm: "row" }} sx={{ alignItems: { xs: "flex-start", sm: "center" }, justifyContent: "space-between",  gap: { xs: 2.5, sm: 3 } }}>
-              <Stack direction="row" sx={{ alignItems: "center",  gap: { xs: 2, sm: 3 }, minWidth: 0, width: "100%" }}>
+            <Stack direction={{ xs: "column", sm: "row" }} sx={{ alignItems: { xs: "flex-start", sm: "center" }, justifyContent: "space-between", gap: { xs: 2.5, sm: 3 } }}>
+              <Stack direction="row" sx={{ alignItems: "center", gap: { xs: 2, sm: 3 }, minWidth: 0, width: "100%" }}>
                 <Avatar
                   src={profile?.profileImageUrl || ""}
                   onClick={() => { setSelectedProfile(profile); setProfileModalOpen(true); }}
@@ -583,7 +688,7 @@ const UserProfile = () => {
                   <Typography component="h1" sx={{ fontFamily: SERIF, fontWeight: 600, color: C.ink, fontSize: { xs: "1.45rem", sm: "2rem" }, lineHeight: 1.2, overflowWrap: "anywhere" }}>
                     {name}
                   </Typography>
-                  <Stack direction="row" sx={{ alignItems: "center",  mt: 0.75, gap: 0.5, color: C.muted, flexWrap: "wrap" }}>
+                  <Stack direction="row" sx={{ alignItems: "center", mt: 0.75, gap: 0.5, color: C.muted, flexWrap: "wrap" }}>
                     <PlaceOutlinedIcon sx={{ fontSize: 17 }} />
                     <Typography sx={{ fontSize: "0.88rem", mr: 1 }}>{city}</Typography>
                     <Typography sx={{ fontSize: "0.88rem" }}>Joined {memberSince}</Typography>
@@ -613,48 +718,29 @@ const UserProfile = () => {
               </Button>
             </Stack>
 
-            {/* activity strip */}
-            <Box sx={{
-              display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-              mt: { xs: 3, sm: 4 }, pt: { xs: 2.5, sm: 3 }, borderTop: `1px solid ${C.line}`,
-            }}>
+            <Box sx={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", mt: { xs: 3, sm: 4 }, pt: { xs: 2.5, sm: 3 }, borderTop: `1px solid ${C.line}` }}>
               <Stat value={ridesGiven} label="Rides given" />
               <Stat value={ridesTaken} label="Rides taken" />
-              <Stat value={rating == null ? "—" : Number(rating).toFixed(1)} label={`Rating (${ratingCount})`} />
+              <Stat value={averageRating == null ? "—" : Number(averageRating).toFixed(1)} label={`Rating (${ratingCount})`} />
               <Stat value={referralCounts.total} label="Referrals" />
             </Box>
           </Surface>
 
-          {/* ---------- Body: content + trust rail ---------- */}
-          <Box sx={{
-            display: "grid", mt: 3, gap: 3, alignItems: "start",
-            gridTemplateColumns: { xs: "minmax(0, 1fr)", md: "minmax(0, 1fr) 320px" },
-          }}>
+          {/* Body */}
+          <Box sx={{ display: "grid", mt: 3, gap: 3, alignItems: "start", gridTemplateColumns: { xs: "minmax(0, 1fr)", md: "minmax(0, 1fr) 320px" } }}>
             <Box sx={{ minWidth: 0, order: { xs: 2, md: 1 } }}>
-              <Tabs
-                value={tab}
-                onChange={(_, value) => setTab(value)}
-                variant="scrollable"
-                scrollButtons={isSmall ? "auto" : false}
-                allowScrollButtonsMobile
+              <Tabs value={tab} onChange={(_, value) => setTab(value)} variant="scrollable" scrollButtons={isSmall ? "auto" : false} allowScrollButtonsMobile
                 sx={{
                   mb: 3, minHeight: 44, borderBottom: `1px solid ${C.line}`,
                   "& .MuiTabs-indicator": { bgcolor: C.saffron, height: 2.5 },
-                  "& .MuiTab-root": {
-                    textTransform: "none", fontWeight: 600, fontSize: "0.92rem", color: C.muted,
-                    minWidth: "auto", minHeight: 44, px: { xs: 1.5, sm: 2 },
-                    "&.Mui-selected": { color: C.ink },
-                  },
-                }}
-              >
+                  "& .MuiTab-root": { textTransform: "none", fontWeight: 600, fontSize: "0.92rem", color: C.muted, minWidth: "auto", minHeight: 44, px: { xs: 1.5, sm: 2 }, "&.Mui-selected": { color: C.ink } },
+                }}>
                 {tabLabels.map((label) => <Tab key={label} label={label} disableRipple />)}
               </Tabs>
               {tab === 0 && renderAbout()}
               {tab === 1 && renderReviews()}
               {tab === 2 && renderRides()}
-              {tab === 3 && renderReferrals()}
-              {tab === 4 && renderRouteAlerts()}
-              {tab === 5 && renderPosts()}
+              {tab === 3 && renderPosts()}
             </Box>
 
             <Box sx={{ order: { xs: 1, md: 2 }, position: { md: "sticky" }, top: { md: 88 } }}>
@@ -667,19 +753,13 @@ const UserProfile = () => {
                   <Fact label="Languages" value={languages} />
                 </Stack>
                 <Box sx={{ mt: 2.5, p: 2, bgcolor: C.canvas, borderRadius: RADIUS.control }}>
-                  <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "baseline",  mb: 1.25 }}>
+                  <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "baseline", mb: 1.25 }}>
                     <Typography sx={{ fontSize: "0.85rem", fontWeight: 650, color: C.ink }}>Profile completion</Typography>
                     <Typography sx={{ fontFamily: SERIF, fontWeight: 600, color: C.saffron }}>{profileCompletion}%</Typography>
                   </Stack>
-                  <LinearProgress
-                    variant="determinate"
-                    value={profileCompletion}
-                    sx={{ height: 6, borderRadius: 6, bgcolor: "#F3DFCF", "& .MuiLinearProgress-bar": { bgcolor: C.saffron, borderRadius: 6 } }}
-                  />
+                  <LinearProgress variant="determinate" value={profileCompletion} sx={{ height: 6, borderRadius: 6, bgcolor: "#F3DFCF", "& .MuiLinearProgress-bar": { bgcolor: C.saffron, borderRadius: 6 } }} />
                   {profileCompletion < 100 && (
-                    <Typography sx={{ mt: 1.25, fontSize: "0.78rem", color: C.muted, lineHeight: 1.5 }}>
-                      A complete profile helps other members trust you.
-                    </Typography>
+                    <Typography sx={{ mt: 1.25, fontSize: "0.78rem", color: C.muted, lineHeight: 1.5 }}>A complete profile helps other members trust you.</Typography>
                   )}
                 </Box>
               </Surface>
@@ -687,21 +767,13 @@ const UserProfile = () => {
           </Box>
         </Box>
 
-        {/* ---------- Modals ---------- */}
         <ProfileModal open={profileModalOpen} selectedProfile={selectedProfile} onClose={() => setProfileModalOpen(false)} />
         {editProfileOpen && (
-          <EditProfile
-            open={editProfileOpen}
-            onClose={() => { setEditProfileOpen(false); getuserData?.(); loadProfileData(); }}
-          />
+          <EditProfile open={editProfileOpen} onClose={() => { setEditProfileOpen(false); getuserData?.(); loadProfileData(); loadReviews(); }} />
         )}
 
-        <Menu
-          anchorEl={postMenuAnchor}
-          open={Boolean(postMenuAnchor)}
-          onClose={closePostMenu}
-          slotProps={{ paper: { sx: { borderRadius: RADIUS.control, border: `1px solid ${C.line}`, boxShadow: "0 8px 24px rgba(31,26,23,0.08)", minWidth: 170 } } }}
-        >
+        <Menu anchorEl={postMenuAnchor} open={Boolean(postMenuAnchor)} onClose={closePostMenu}
+          slotProps={{ paper: { sx: { borderRadius: RADIUS.control, border: `1px solid ${C.line}`, boxShadow: "0 8px 24px rgba(31,26,23,0.08)", minWidth: 170 } } }}>
           <MenuItem onClick={startEditPost}><EditOutlinedIcon fontSize="small" sx={{ mr: 1.25 }} /> Edit post</MenuItem>
           <MenuItem onClick={startDeletePost} sx={{ color: "error.main" }}><DeleteOutlineIcon fontSize="small" sx={{ mr: 1.25 }} /> Delete post</MenuItem>
         </Menu>
@@ -713,9 +785,7 @@ const UserProfile = () => {
           </DialogTitle>
           <DialogContent>
             <Stack spacing={2} sx={{ pt: 1 }}>
-              {editPreview && (
-                <Box component="img" src={editPreview} alt="Post preview" sx={{ width: "100%", maxHeight: 300, objectFit: "contain", borderRadius: RADIUS.control, bgcolor: C.canvas }} />
-              )}
+              {editPreview && <Box component="img" src={editPreview} alt="Post preview" sx={{ width: "100%", maxHeight: 300, objectFit: "contain", borderRadius: RADIUS.control, bgcolor: C.canvas }} />}
               <Button component="label" variant="outlined" startIcon={<AddPhotoAlternateOutlinedIcon />} sx={{ alignSelf: "flex-start", textTransform: "none", borderRadius: "999px", color: C.ink, borderColor: C.line }}>
                 Change image
                 <input hidden type="file" accept="image/*" onChange={onEditFileChange} />
@@ -725,10 +795,8 @@ const UserProfile = () => {
           </DialogContent>
           <DialogActions sx={{ p: 2.5 }}>
             <Button onClick={() => setEditPostOpen(false)} disabled={postSaving} sx={{ textTransform: "none", color: C.muted }}>Cancel</Button>
-            <Button
-              variant="contained" disableElevation onClick={savePost} disabled={postSaving}
-              sx={{ bgcolor: C.saffron, textTransform: "none", borderRadius: "999px", px: 3, fontWeight: 650, "&:hover": { bgcolor: C.saffronDark } }}
-            >
+            <Button variant="contained" disableElevation onClick={savePost} disabled={postSaving}
+              sx={{ bgcolor: C.saffron, textTransform: "none", borderRadius: "999px", px: 3, fontWeight: 650, "&:hover": { bgcolor: C.saffronDark } }}>
               {postSaving ? <CircularProgress size={20} color="inherit" /> : "Save changes"}
             </Button>
           </DialogActions>

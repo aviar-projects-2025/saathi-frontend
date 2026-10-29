@@ -306,9 +306,10 @@ const StatusRow = memo(({ user: u, status }) => {
 
   const firstName = u?.data?.user?.firstName || u?.firstName || "";
   const lastName = u?.data?.user?.lastName || u?.lastName || "";
-  const profileImage = u?.data?.profileImage || u?.profileImage || "";
+  const profileImage = u?.data?.profileImage || u?.profileImageUrl || "";
   const phone = u?.mobile || u?.mobileNumber || "";
 
+  console.log(u,'u')
   const { bg, color } = colorFor(`${firstName}${lastName}`);
   const isApproved = status === "Approved";
 
