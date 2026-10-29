@@ -38,6 +38,7 @@ import { useTheme, useMediaQuery } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import axios from "axios";
 import Api from "../Api.jsx";
+import ProtectedAvatar from "./ProtectedAvatar.jsx";
 
 const TopNav = ({ onMenuClick }) => {
   const theme = useTheme();
@@ -523,7 +524,7 @@ const TopNav = ({ onMenuClick }) => {
                 }}
               />
 
-              <Avatar
+              <ProtectedAvatar
                 src={currentUser?.profileImageUrl || ""}
                 onClick={handleOpenProfileMenu}
                 sx={{
@@ -540,7 +541,7 @@ const TopNav = ({ onMenuClick }) => {
                 }}
               >
                 {currentUser?.firstName?.[0]}{currentUser?.lastName?.[0]}
-              </Avatar>
+              </ProtectedAvatar>
             </Box>
             <Menu
               anchorEl={profileAnchorEl}

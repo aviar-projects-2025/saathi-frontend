@@ -7,6 +7,7 @@ import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import HistoryIcon from "@mui/icons-material/History";
 import ProfileModal from "./Avatar.jsx";
+import ProtectedAvatar from "../components/ProtectedAvatar.jsx";
 
 
 
@@ -150,7 +151,7 @@ const Discover = () => {
                                         {index + 1}
                                     </Typography>
 
-                                    <Avatar
+                                    <ProtectedAvatar
                                         src={member?.profileImage || ""}
                                         alt={`${member?.name || ""}`}
                                         onClick={() => {
@@ -174,7 +175,7 @@ const Discover = () => {
                                     >
 
                                         {`${member?.name?.[0]}`}
-                                    </Avatar>
+                                    </ProtectedAvatar>
 
                                     <Box sx={{ flex: 1, minWidth: 0 }}>
                                         <Typography

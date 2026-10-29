@@ -26,6 +26,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useReferral } from "../context/ReferralContext";
 
 import ProfileModal from "../pages/Avatar";
+import ProtectedAvatar from "./ProtectedAvatar";
 
 export default function Sidebar({ onItemClick, isMobile = false }) {
   const { currentUser, completion } = useUser();
@@ -224,7 +225,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
               }}
             />
 
-            <Avatar
+            <ProtectedAvatar
               src={currentUser?.profileImageUrl}
               sx={{
                 width: 52,
@@ -234,7 +235,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
 
             >
               {currentUser?.firstName?.[0]}{currentUser?.lastName?.[0]}
-            </Avatar>
+            </ProtectedAvatar>
           </Box>
 
           <Box

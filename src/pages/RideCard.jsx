@@ -54,6 +54,7 @@ import RideDetailsModal from "./RideDetails.jsx";
 
 import Api from "../Api";
 import { toast } from "react-toastify";
+import ProtectedAvatar from "../components/ProtectedAvatar.jsx";
 
 const ORANGE = "#FF9933";
 const ORANGE_BG = "#FFF9F2";
@@ -521,7 +522,7 @@ export default function RideCard({ ride }) {
 
               }}
             >
-              <Avatar
+              <ProtectedAvatar
                 src={userProfile || ""}
                 alt={userName}
                 onClick={(event) => {
@@ -545,7 +546,7 @@ export default function RideCard({ ride }) {
                 }}
               >
                 {`${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`}
-              </Avatar>
+              </ProtectedAvatar>
 
               <Typography
                 fontWeight={700}

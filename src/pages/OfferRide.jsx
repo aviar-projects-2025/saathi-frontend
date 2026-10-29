@@ -756,7 +756,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
       setSubmitted(true);
       setTimeout(() => {
         if (onClose) onClose();
-        else navigate("/myride", { state: { tab: 2, refresh: true, refreshKey: Date.now() } });
+        navigate("/myride", { state: { tab: 2, refresh: true, refreshKey: Date.now() } });
       }, 1400);
     } catch (err) {
       setServerError(err.response?.data?.message || "Failed to post request");

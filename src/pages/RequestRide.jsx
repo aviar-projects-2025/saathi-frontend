@@ -59,6 +59,7 @@ import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import RideDetailsModal from "./RideDetails.jsx";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import ProfileModal from './Avatar.jsx';
+import ProtectedAvatar from "../components/ProtectedAvatar.jsx";
 
 const ACCENT = "#FF9933";
 const ACCENT_DARK = "#E67E22";
@@ -504,8 +505,7 @@ const RequestRide = ({ ride }) => {
                             spacing={1.25}
                             sx={{ minWidth: 0 }}
                           >
-                            {console.log(request,'request')}
-                            <Avatar
+                            <ProtectedAvatar
                               src={request?.rideId?.createdBy?.profileImageUrl || ""}
                               alt={
                                 request?.rideId?.createdBy?.firstName
@@ -530,7 +530,7 @@ const RequestRide = ({ ride }) => {
                             >
                               {`${request?.rideId?.createdBy?.firstName?.[0] || ""}${request?.rideId?.createdBy?.lastName?.[0] || ""
                                 }`.toUpperCase()}
-                            </Avatar>
+                            </ProtectedAvatar>
 
                             <Typography
                               sx={{

@@ -72,6 +72,7 @@ import ScheduleIcon from "@mui/icons-material/Schedule";
 import PhoneIcon from "@mui/icons-material/Phone";
 import FlagIcon from "@mui/icons-material/Flag";
 import FemaleIcon from "@mui/icons-material/Female";
+import ProtectedAvatar from "../components/ProtectedAvatar";
 
 // ── Design tokens ────────────────────────────────────────────────────────
 const TOKENS = {
@@ -480,7 +481,7 @@ function PassengerStub({
             alignItems="center"
             sx={{ minWidth: 0 }}
           >
-            <Avatar
+            <ProtectedAvatar
               src={profilePic}
               sx={{
                 width: { xs: 32, sm: 38 },
@@ -494,7 +495,7 @@ function PassengerStub({
             >
               {firstName?.[0]}
               {lastName?.[0]}
-            </Avatar>
+            </ProtectedAvatar>
             <Box sx={{ minWidth: 0 }}>
               <Typography
                 noWrap

@@ -7,6 +7,7 @@ import { useReferral } from '../context/ReferralContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import ProfileModal from './Avatar.jsx';
+import ProtectedAvatar from '../components/ProtectedAvatar.jsx';
 
 const Notifications = () => {
 
@@ -143,7 +144,7 @@ const Notifications = () => {
                                     }}
                                 >
                                     <ListItemAvatar>
-                                        <Avatar
+                                        <ProtectedAvatar
                                             src={item?.actorId?.profileImageUrl || item?.data?.profileImage}
                                             onClick={(event) => {
                                                 event.stopPropagation();
@@ -152,7 +153,7 @@ const Notifications = () => {
                                             }}
                                         >
                                             {item?.actorId?.firstName?.[0] || "U"}
-                                        </Avatar>
+                                        </ProtectedAvatar>
                                     </ListItemAvatar>
                                     <Box
                                         sx={{

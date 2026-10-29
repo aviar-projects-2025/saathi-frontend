@@ -2,11 +2,11 @@ import React from "react";
 import {
     Dialog,
     DialogContent,
-    Avatar,
     Typography,
     IconButton,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+import ProtectedAvatar from "../components/ProtectedAvatar";
 
 const SAFFRON = "#FF9933";
 
@@ -15,6 +15,12 @@ const ProfileModal = ({
     onClose,
     selectedProfile,
 }) => {
+    const fullName =
+        `${selectedProfile?.firstName || ""} ${selectedProfile?.lastName || ""}`
+            .trim() ||
+        selectedProfile?.name ||
+        "";
+
     return (
         <Dialog
             open={open}
@@ -30,6 +36,12 @@ const ProfileModal = ({
                         m: 1,
                     },
                 },
+                // Disable right-click on the backdrop too (extra safety)
+                backdrop: {
+                    sx: {
+                        backgroundColor: "rgba(0, 0, 0, 0.85)",
+                    },
+                },
             }}
         >
             <IconButton
@@ -43,9 +55,7 @@ const ProfileModal = ({
                     width: { xs: 36, sm: 42 },
                     height: { xs: 36, sm: 42 },
                     color: "#fff",
-                    //   backgroundColor: "rgba(0, 0, 0, 0.45)",
                     transition: "all 0.2s ease",
-
                     "&:hover": {
                         backgroundColor: "rgba(0, 0, 0, 0.7)",
                         transform: "rotate(90deg)",
@@ -62,10 +72,9 @@ const ProfileModal = ({
                     overflow: "visible",
                 }}
             >
-                <Avatar
+                <ProtectedAvatar
                     src={selectedProfile?.profileImageUrl || ""}
-                    alt={`${selectedProfile?.firstName || ""} ${selectedProfile?.lastName || ""} ${selectedProfile?.name || ""}
-          }`}
+                    alt={fullName}
                     sx={{
                         width: { xs: 200, sm: 360 },
                         height: { xs: 200, sm: 360 },
@@ -77,12 +86,13 @@ const ProfileModal = ({
                         fontWeight: 800,
                         border: "3px solid rgba(255,255,255,0.9)",
                         boxShadow: "0 8px 30px rgba(0,0,0,0.35)",
+                        borderRadius: "50%",
                     }}
                 >
                     {!selectedProfile?.profileImageUrl &&
-                        `${selectedProfile?.firstName?.[0] || ""} ${selectedProfile?.lastName?.[0] || ""
-                        } ${selectedProfile?.name?.[0] || ""}`}
-                </Avatar>
+                        `${selectedProfile?.firstName?.[0] || ""}${selectedProfile?.lastName?.[0] || selectedProfile?.name?.[0] || ""
+                        }`}
+                </ProtectedAvatar>
 
                 <Typography
                     fontWeight={700}
@@ -90,13 +100,13 @@ const ProfileModal = ({
                         color: "#fff",
                         fontSize: { xs: "1rem", sm: "1.25rem" },
                         textShadow: "0 2px 5px rgba(0,0,0,0.7)",
+                        mt: 1,
                     }}
                 >
-                    {`${selectedProfile?.firstName || ""} ${selectedProfile?.lastName || ""
-                        }`.trim() || selectedProfile?.name || ""}
+                    {fullName}
                 </Typography>
             </DialogContent>
-        </Dialog >
+        </Dialog>
     );
 };
 

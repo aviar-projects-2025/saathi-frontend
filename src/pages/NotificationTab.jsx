@@ -20,6 +20,7 @@ import { useNotifications } from "../context/NotificationContext";
 import Api from "../Api";
 import { useReferral } from "../context/ReferralContext";
 import ProfileModal from "./Avatar.jsx";
+import ProtectedAvatar from "../components/ProtectedAvatar.jsx";
 
 export default function NotificationTab({
   handleCloseNotifications = () => {},
@@ -424,7 +425,7 @@ export default function NotificationTab({
                   }}
                 >
                   <ListItemAvatar>
-                    <Avatar
+                    <ProtectedAvatar
                       src={
                         profile?.profileImageUrl ||
                         item?.data?.profileImageUrl ||
@@ -441,7 +442,7 @@ export default function NotificationTab({
                       sx={{ cursor: "pointer" }}
                     >
                       {firstName?.[0]?.toUpperCase() || "U"}
-                    </Avatar>
+                    </ProtectedAvatar>
                   </ListItemAvatar>
 
                   <Box

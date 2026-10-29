@@ -36,6 +36,7 @@ import Api from "../../Api";
 import ToastConfig from "../ToastConfig";
 import uploadToCloudinary from "../uploadToCloudinary";
 import { uploadImageToS3 } from "../../utils/s3Upload";
+import ProtectedAvatar from "../ProtectedAvatar";
 
 const ORANGE = "#C83F08";
 const NAVY = "#132858";
@@ -614,7 +615,7 @@ const Register = () => {
   /* ================= Shared brand ================= */
   const renderBrand = () => (
     <Stack direction="row" spacing={1.2} alignItems="center" sx={{ mb: 3 }}>
-      <Avatar
+      <ProtectedAvatar
         sx={{
           width: 34,
           height: 34,
@@ -624,7 +625,7 @@ const Register = () => {
         }}
       >
         S
-      </Avatar>
+      </ProtectedAvatar>
       <Typography
         sx={{
           color: NAVY,
@@ -684,7 +685,7 @@ const Register = () => {
             gap: 1.5,
           }}
         >
-          <Avatar
+          <ProtectedAvatar
             sx={{
               bgcolor: "#FFE0C8",
               color: "#9D350E",
@@ -699,7 +700,7 @@ const Register = () => {
               .join("")
               .slice(0, 2)
               .toUpperCase()}
-          </Avatar>
+          </ProtectedAvatar>
           <Box sx={{ minWidth: 0 }}>
             <Typography fontWeight={800} color="#25211E">
               {invitation?.referrerName} invited you
@@ -1003,7 +1004,7 @@ const Register = () => {
             }}
           >
             {profileImage ? (
-              <Avatar src={profileImage} sx={{ width: 62, height: 62 }} />
+              <ProtectedAvatar src={profileImage} sx={{ width: 62, height: 62 }} />
             ) : (
               <>
                 <AddAPhotoOutlinedIcon />
@@ -1405,7 +1406,7 @@ const Register = () => {
               spacing={1.5}
               sx={{ mb: index === 2 ? 0 : 2 }}
             >
-              <Avatar
+              <ProtectedAvatar
                 sx={{
                   width: 28,
                   height: 28,
@@ -1426,7 +1427,7 @@ const Register = () => {
                 }}
               >
                 {isDone ? <CheckCircleIcon fontSize="small" /> : index + 1}
-              </Avatar>
+              </ProtectedAvatar>
 
               <Box sx={{ pt: 0.2 }}>
                 <Typography fontWeight={700} sx={{ fontSize: 14 }}>
