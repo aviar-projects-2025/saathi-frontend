@@ -425,7 +425,7 @@ export default function NotificationTab({
                   }}
                 >
                   <ListItemAvatar>
-                    <ProtectedAvatar
+                    <Avatar
                       src={
                         profile?.profileImageUrl ||
                         item?.data?.profileImageUrl ||
@@ -442,7 +442,7 @@ export default function NotificationTab({
                       sx={{ cursor: "pointer" }}
                     >
                       {firstName?.[0]?.toUpperCase() || "U"}
-                    </ProtectedAvatar>
+                    </Avatar>
                   </ListItemAvatar>
 
                   <Box
