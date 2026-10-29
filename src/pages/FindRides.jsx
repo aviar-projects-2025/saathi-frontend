@@ -79,9 +79,17 @@ const CATEGORY_OPTIONS = [
 
 const LANGUAGE_OPTIONS = ["Tamil", "Hindi", "Telugu", "English"];
 
+const RADIUS_OPTIONS = [
+  { label: "Any", value: null },
+  { label: "10 mi", value: 10 },
+  { label: "25 mi", value: 25 },
+  { label: "50 mi", value: 50 },
+];
+
 const NAVBAR_HEIGHT = 35;
 const SCROLL_COLLAPSE_THRESHOLD = 24;
 
+/* ─────────── Defaults ─────────── */
 const emptyFilters = {
   type: "",
   transportMode: "",
@@ -92,10 +100,17 @@ const emptyFilters = {
   womenRidersOnly: false,
   dateFrom: "",
   dateTo: "",
-  radiusMi: 25,
+  radiusMi: null, // ← no radius by default so distant rides remain visible
 };
 
-/* ─────────── Filtering logic (client-side, matches JSON) ─────────── */
+/* ─────────── Filtering logic ─────────── */
+const normalizeCategory = (s) =>
+  String(s || "")
+    .toLowerCase()
+    .replace(/\s*\/\s*/g, "/")
+    .replace(/\s+/g, " ")
+    .trim();
+
 const normalizeRide = (ride) => {
   if (!ride) return null;
 
@@ -107,18 +122,23 @@ const normalizeRide = (ride) => {
   const languages = Array.isArray(ride.language)
     ? ride.language.map((l) => String(l).toLowerCase())
     : ride.language
-    ? [String(ride.language).toLowerCase()]
-    : [];
+      ? [String(ride.language).toLowerCase()]
+      : [];
 
   return {
     kind,
     fromText,
     toText,
     languages,
-    freeRides: Number(ride.costPerSeat || 0) === 0 && Number(ride.fuelSharing || 0) === 0,
+    freeRides:
+      Number(ride.costPerSeat || 0) === 0 &&
+      Number(ride.fuelSharing || 0) === 0,
     childFriendly: Boolean(ride.childFriendly) || Boolean(ride.travelingWithChild),
-    womenOnly: Boolean(ride.womenOnly) || Boolean(ride.womenDriversOnly) || ride.genderPreference === "Female",
-    category: (ride.category || "").toLowerCase(),
+    womenOnly:
+      Boolean(ride.womenOnly) ||
+      Boolean(ride.womenDriversOnly) ||
+      ride.genderPreference === "Female",
+    category: normalizeCategory(ride.category),
     transportMode: (ride.modeOfTravel || "").toLowerCase(),
     startTime: ride.startTime ? new Date(ride.startTime) : null,
     lat: Number(ride.fromLocation?.latitude),
@@ -130,40 +150,55 @@ const matchesFilters = (ride, filters, searchFrom, searchDestination, userLocati
   const n = normalizeRide(ride);
   if (!n) return false;
 
-  // ✅ Type filter: "Offers" -> "offer", "Requests" -> "request"
+  // Type ("Offers" → offer, "Requests" → request)
   if (filters.type) {
     const wantedKind = filters.type === "Offers" ? "offer" : "request";
     if (n.kind !== wantedKind) return false;
   }
 
+  // Transport mode
   if (filters.transportMode && n.transportMode !== filters.transportMode.toLowerCase()) return false;
-  if (filters.category && n.category !== filters.category.toLowerCase()) return false;
+
+  // Category
+  if (filters.category && n.category !== normalizeCategory(filters.category)) return false;
+
+  // Language
   if (filters.language && !n.languages.includes(filters.language.toLowerCase())) return false;
 
+  // Boolean toggles
   if (filters.freeRidesOnly && !n.freeRides) return false;
   if (filters.childFriendly && !n.childFriendly) return false;
   if (filters.womenRidersOnly && !n.womenOnly) return false;
 
+  // Date range — compare in UTC
   if (n.startTime) {
-    if (filters.dateFrom && n.startTime < new Date(filters.dateFrom + "T00:00:00")) return false;
-    if (filters.dateTo && n.startTime > new Date(filters.dateTo + "T23:59:59")) return false;
+    if (filters.dateFrom) {
+      const from = new Date(filters.dateFrom + "T00:00:00Z");
+      if (n.startTime < from) return false;
+    }
+    if (filters.dateTo) {
+      const to = new Date(filters.dateTo + "T23:59:59.999Z");
+      if (n.startTime > to) return false;
+    }
   }
 
+  // Text search
   if (searchFrom && !n.fromText.includes(searchFrom.toLowerCase())) return false;
   if (searchDestination && !n.toText.includes(searchDestination.toLowerCase())) return false;
 
-  if (userLocation && Number.isFinite(n.lat) && Number.isFinite(n.lng)) {
+  // Radius — only when user explicitly picked one
+  if (userLocation && filters.radiusMi && Number.isFinite(n.lat) && Number.isFinite(n.lng)) {
     const R = 6371;
     const dLat = ((n.lat - userLocation.latitude) * Math.PI) / 180;
     const dLon = ((n.lng - userLocation.longitude) * Math.PI) / 180;
     const a =
       Math.sin(dLat / 2) ** 2 +
       Math.cos((userLocation.latitude * Math.PI) / 180) *
-        Math.cos((n.lat * Math.PI) / 180) *
-        Math.sin(dLon / 2) ** 2;
+      Math.cos((n.lat * Math.PI) / 180) *
+      Math.sin(dLon / 2) ** 2;
     const km = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     const miles = km * 0.621371;
-    if (filters.radiusMi && miles > filters.radiusMi) return false;
+    if (miles > filters.radiusMi) return false;
   }
 
   return true;
@@ -203,7 +238,7 @@ export default function FindRides() {
   const token = localStorage.getItem("token");
   const resultsRef = useRef(null);
   const scrollStartRef = useRef(0);
-  const windowScrollHandlerRef = useRef(() => {});
+  const windowScrollHandlerRef = useRef(() => { });
 
   /* ─────────── Fetch rides ─────────── */
   const fetchRides = async ({ pageNumber = 1, reset = false } = {}) => {
@@ -214,7 +249,6 @@ export default function FindRides() {
       else setLoadingMore(true);
       loadingMoreRef.current = true;
 
-      // Backend is only responsible for pagination. All filtering is client-side.
       const res = await axios.get(`${Api}/rides/get`, {
         params: { type: "find", page: pageNumber, limit: LIMIT },
         headers: { Authorization: `Bearer ${token}` },
@@ -256,8 +290,8 @@ export default function FindRides() {
     const a =
       Math.sin(dLat / 2) ** 2 +
       Math.cos((lat1 * Math.PI) / 180) *
-        Math.cos((lat2 * Math.PI) / 180) *
-        Math.sin(dLon / 2) ** 2;
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) ** 2;
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   };
 
@@ -377,7 +411,7 @@ export default function FindRides() {
     return () => window.removeEventListener("scroll", onWindowScroll);
   }, []);
 
-  /* ✅ Update BOTH draft and applied so the list re-filters immediately */
+  /* Update BOTH draft and applied so the list re-filters immediately */
   const updateFilterAndApply = (key, value) => {
     setDraftFilters((prev) => {
       const next = { ...prev, [key]: value };
@@ -470,11 +504,11 @@ export default function FindRides() {
         setDraftFilters(next);
       },
     },
-    appliedFilters.radiusMi !== 25 && {
+    appliedFilters.radiusMi != null && {
       key: "radius",
       label: `Within ${appliedFilters.radiusMi} mi`,
       clear: () => {
-        const next = { ...appliedFilters, radiusMi: 25 };
+        const next = { ...appliedFilters, radiusMi: null };
         setAppliedFilters(next);
         setDraftFilters(next);
       },
@@ -571,7 +605,7 @@ export default function FindRides() {
               key={t.value || "all"}
               label={t.label}
               clickable
-              onClick={() => updateFilterAndApply("type", t.value)}  /* ✅ immediate */
+              onClick={() => updateFilterAndApply("type", t.value)}
               sx={pillChipSx(selected)}
             />
           );
@@ -583,7 +617,7 @@ export default function FindRides() {
       <FormControl fullWidth size="small" sx={{ mb: 2 }}>
         <Select
           value={draftFilters.category}
-          onChange={(e) => updateFilterAndApply("category", e.target.value)}  /* ✅ immediate */
+          onChange={(e) => updateFilterAndApply("category", e.target.value)}
           displayEmpty
           sx={{ fontSize: { xs: 12.5, sm: 13 }, borderRadius: 1.5, height: { xs: 34, sm: 36 } }}
         >
@@ -605,7 +639,7 @@ export default function FindRides() {
               key={lang}
               label={lang}
               clickable
-              onClick={() => updateFilterAndApply("language", selected ? "" : lang)}  /* ✅ */
+              onClick={() => updateFilterAndApply("language", selected ? "" : lang)}
               sx={pillChipSx(selected)}
             />
           );
@@ -619,7 +653,7 @@ export default function FindRides() {
             <Checkbox
               size="small"
               checked={draftFilters.freeRidesOnly}
-              onChange={(e) => updateFilterAndApply("freeRidesOnly", e.target.checked)}  /* ✅ */
+              onChange={(e) => updateFilterAndApply("freeRidesOnly", e.target.checked)}
               sx={{ color: "#bbb", "&.Mui-checked": { color: RUST }, py: 0.25 }}
             />
           }
@@ -630,7 +664,7 @@ export default function FindRides() {
             <Checkbox
               size="small"
               checked={draftFilters.childFriendly}
-              onChange={(e) => updateFilterAndApply("childFriendly", e.target.checked)}  /* ✅ */
+              onChange={(e) => updateFilterAndApply("childFriendly", e.target.checked)}
               sx={{ color: "#bbb", "&.Mui-checked": { color: RUST }, py: 0.25 }}
             />
           }
@@ -641,7 +675,7 @@ export default function FindRides() {
             <Checkbox
               size="small"
               checked={draftFilters.womenRidersOnly}
-              onChange={(e) => updateFilterAndApply("womenRidersOnly", e.target.checked)}  /* ✅ */
+              onChange={(e) => updateFilterAndApply("womenRidersOnly", e.target.checked)}
               sx={{ color: "#bbb", "&.Mui-checked": { color: RUST }, py: 0.25 }}
             />
           }
@@ -955,18 +989,14 @@ export default function FindRides() {
                   <Box sx={{ display: "flex", flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 1 }}>
                     <Typography sx={{ fontSize: { xs: 12, sm: 13 }, color: "text.secondary" }}>within</Typography>
                     <Box sx={{ display: "flex", flexDirection: "row", gap: 0.5 }}>
-                      {[
-                        { label: "10 mi", value: 10 },
-                        { label: "25 mi", value: 25 },
-                        { label: "50 mi", value: 50 },
-                      ].map((r) => {
+                      {RADIUS_OPTIONS.map((r) => {
                         const isActive = appliedFilters.radiusMi === r.value;
                         return (
                           <Chip
-                            key={r.value}
+                            key={String(r.value)}
                             label={r.label}
                             clickable
-                            onClick={() => updateFilterAndApply("radiusMi", r.value)}  /* ✅ immediate */
+                            onClick={() => updateFilterAndApply("radiusMi", r.value)}
                             sx={{
                               borderRadius: 999,
                               fontWeight: 700,

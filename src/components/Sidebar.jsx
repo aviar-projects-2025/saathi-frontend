@@ -295,7 +295,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
                 : currentUser?.language || ""}
             </Typography>
        
-            <Typography
+           { completion !== 100 && <Typography
               sx={{
                 fontSize: {
                   xs: "0.7rem",
@@ -307,7 +307,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
               }}
             >
               {Math.round(completion)}% completed
-            </Typography>
+            </Typography>}
           </Box>
 
           <ProfileModal

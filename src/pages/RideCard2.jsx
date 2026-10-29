@@ -22,7 +22,6 @@ const FONT = '"DM Sans", "Inter", "Segoe UI", Roboto, Arial, sans-serif';
 const BRAND = "#B5440F";
 const BRAND_HOVER = "#9A380B";
 
-/* Responsive font scale: xs (phones) → sm (tablets) → md (laptops) → lg (large) */
 const FS = {
     route: { xs: 11, sm: 12, md: 13, lg: 14 },
     subtitle: { xs: 9, sm: 10, md: 11, lg: 12 },
@@ -33,15 +32,14 @@ const FS = {
     avatar: { xs: 10, sm: 11, md: 12 },
 };
 
-// chip palettes
 const CHIP = {
-    blue: { bg: "#C9E2FA", color: "#134F85" }, // mode of travel / flight companion
-    green: { bg: "#C8EFD2", color: "#176128" }, // cost share / accepted
-    slate: { bg: "#D3DEE9", color: "#2B4258" }, // seats, duration, airline, flight no.
-    pink: { bg: "#F6C9E0", color: "#9A1F63" }, // women-only rides
-    amber: { bg: "#F5DDB3", color: "#7A4200" }, // no seats
-    red: { bg: "#F7C8C3", color: "#A82219" }, // rejected
-    info: { bg: "#C6DDF5", color: "#0B54A8" }, // you requested / applied
+    blue: { bg: "#C9E2FA", color: "#134F85" },
+    green: { bg: "#C8EFD2", color: "#176128" },
+    slate: { bg: "#D3DEE9", color: "#2B4258" },
+    pink: { bg: "#F6C9E0", color: "#9A1F63" },
+    amber: { bg: "#F5DDB3", color: "#7A4200" },
+    red: { bg: "#F7C8C3", color: "#A82219" },
+    info: { bg: "#C6DDF5", color: "#0B54A8" },
 };
 
 const getRideId = (rideId) =>
@@ -66,8 +64,6 @@ export default function RideList({ ride, onIcanHelp }) {
     const isFlight = ride?.modeOfTravel === "Flight";
     const isProfileComplete = completion === 100;
 
-    // Determine if this is an Offer (driving) or Request (needs a ride)
-    // Checks standard 'type' field, common alternative 'intent' field, or defaults to Offer
     const rideType = (ride?.kind || "").toLowerCase();
     const isOffer = rideType === "offer";
     const isRequest = rideType === "request";
@@ -143,24 +139,28 @@ export default function RideList({ ride, onIcanHelp }) {
     ).length;
     const isBlocked = cancelledRequestCount >= 3;
 
-    const pendingSeatsByMe = isAccepted ? 0 : requestedByMe;
-    const remainingSeatsForUser = isFlight
-        ? 1
-        : Math.max(Number(ride.availableSeats || 0) - pendingSeatsByMe, 0);
-    const noSeats = !isFlight && remainingSeatsForUser <= 0;
+    /* ★ Backend `availableSeats` already excludes ALL pending/approved seats.
+       Do NOT re-subtract own pending here. */
+    const availableSeats = Math.max(Number(ride.availableSeats || 0), 0);
+    const remainingSeatsForUser = isFlight ? 1 : availableSeats;
+    const noSeats = !isFlight && availableSeats <= 0;
 
     const maxSeatsForDialog = isFlight
         ? Infinity
         : alreadyRequested
-            ? remainingSeatsForUser + Number(currentRequest?.seatsRequested || 0)
-            : remainingSeatsForUser;
+            ? availableSeats + Number(currentRequest?.seatsRequested || 0)
+            : availableSeats;
+
+    /* ★ Women-only rides must also be blocked for non-women */
+    const womenOnlyMismatch =
+        ride.womenOnly === true && currentUser?.gender !== "Female";
 
     const genderMismatch =
-        ride.genderPreference &&
-        ride.genderPreference !== "Any" &&
-        ride.genderPreference !== currentUser?.gender;
+        (ride.genderPreference &&
+            ride.genderPreference !== "Any" &&
+            ride.genderPreference !== currentUser?.gender) ||
+        womenOnlyMismatch;
 
-    // Flight companion booking closes 2 hours before departure
     const isFlightBookingClosed =
         isFlight &&
         dateObj &&
@@ -185,123 +185,60 @@ export default function RideList({ ride, onIcanHelp }) {
     const chips = [];
 
     if (isFlight) {
-        chips.push({
-            label: "Flight companion",
-            ...CHIP.blue,
-        });
+        chips.push({ label: "Flight companion", ...CHIP.blue });
 
         if (ride.airlineName) {
-            chips.push({
-                label: ride.airlineName,
-                ...CHIP.slate,
-            });
+            chips.push({ label: ride.airlineName, ...CHIP.slate });
         }
-
         if (ride.flightNumber) {
-            chips.push({
-                label: `Flight ${ride.flightNumber}`,
-                ...CHIP.slate,
-            });
+            chips.push({ label: `Flight ${ride.flightNumber}`, ...CHIP.slate });
         }
     } else {
-
         if (ride.kind === "offer") {
-            chips.push({
-                label: "Offer",
-                ...CHIP.green,
-            });
+            chips.push({ label: "Offer", ...CHIP.green });
         } else if (ride.kind === "request") {
-            chips.push({
-                label: "Request",
-                ...CHIP.amber,
-            });
+            chips.push({ label: "Request", ...CHIP.amber });
         }
 
         if (ride.modeOfTravel) {
-            chips.push({
-                label: ride.modeOfTravel,
-                ...CHIP.blue,
-            });
+            chips.push({ label: ride.modeOfTravel, ...CHIP.blue });
         }
-
         if (ride.category) {
-            chips.push({
-                label: ride.category,
-                ...CHIP.blue,
-            });
+            chips.push({ label: ride.category, ...CHIP.blue });
         }
-
-        // Show Women Only chip only when womenOnly is true
         if (ride.womenOnly === true) {
-            chips.push({
-                label: "Women riders only",
-                ...CHIP.pink,
-            });
+            chips.push({ label: "Women riders only", ...CHIP.pink });
         }
-
         if (ride.childFriendly === true) {
-            chips.push({
-                label: "Child Friendly",
-                ...CHIP.amber,
-            });
+            chips.push({ label: "Child Friendly", ...CHIP.amber });
         }
 
         if (Number(ride.costPerSeat) === 0) {
-            chips.push({
-                label: "Free",
-                ...CHIP.green,
-            });
+            chips.push({ label: "Free", ...CHIP.green });
         } else if (Number(ride.costPerSeat) > 0) {
-            chips.push({
-                label: `Cost share $${ride.costPerSeat}`,
-                ...CHIP.green,
-            });
+            chips.push({ label: `Cost share $${ride.costPerSeat}`, ...CHIP.green });
         }
 
         chips.push(
             noSeats
-                ? {
-                    label: "No seats",
-                    ...CHIP.amber,
-                }
+                ? { label: "No seats", ...CHIP.amber }
                 : {
-                    label: `${remainingSeatsForUser} seat${remainingSeatsForUser > 1 ? "s" : ""}${totalSeat ? ` of ${totalSeat}` : ""}`,
+                    label: `${availableSeats} seat${availableSeats > 1 ? "s" : ""}${totalSeat ? ` of ${totalSeat}` : ""}`,
                     ...CHIP.slate,
                 },
         );
 
         if (ride.luggageSpace) {
-            chips.push({
-                label: ride.luggageSpace,
-                ...CHIP.blue,
-            });
+            chips.push({ label: ride.luggageSpace, ...CHIP.blue });
         }
     }
 
     if (durationText) {
-        chips.push({
-            label: durationText,
-            ...CHIP.slate,
-        });
+        chips.push({ label: durationText, ...CHIP.slate });
     }
 
-    // if (ride.genderPreference === "Female") {
-    //     chips.push({
-    //         label: "Women riders only",
-    //         ...CHIP.pink,
-    //     });
-    // } else if (ride.genderPreference === "Male") {
-    //     chips.push({
-    //         label: "Men riders only",
-    //         ...CHIP.slate,
-    //     });
-    // }
-
     if (isRejected) {
-        chips.push({
-            label: "Rejected",
-            ...CHIP.red,
-        });
+        chips.push({ label: "Rejected", ...CHIP.red });
     }
 
     if (myRequest && !isRejected) {
@@ -333,29 +270,15 @@ export default function RideList({ ride, onIcanHelp }) {
         isBlocked ||
         !isProfileComplete ||
         isFlightBookingClosed ||
-        // Only check seat availability for Offers, not Requests
-        (isOffer && !isFlight && !alreadyRequested && remainingSeatsForUser <= 0) ||
+        (isOffer && !isFlight && !alreadyRequested && availableSeats <= 0) ||
         (isRequest && alreadyRequested);
 
-    // console.log(
-    //     genderMismatch, "genderMismatch",
-    //     isRejected, "isRejected",
-    //     isBlocked, "isBlocked",
-    //     isProfileComplete, "isProfileComplete",
-    //     isFlightBookingClosed, "isFlightBookingClosed",
-    //     isFlight, "isFlight",
-    //     alreadyRequested, "alreadyRequested",
-    //     remainingSeatsForUser, "remainingSeatsForUser",
-    //     isRequest, "isRequest",
-    //     isOffer, "isOffer",              // <- add this for clarity
-    //     buttonDisabled, "buttonDisabled" // <- add this to verify the result
-    // );
-
-    // Base label based on type
     let baseLabel = isOffer ? "Request seat" : "I can drive";
 
     let buttonLabel;
-    if (genderMismatch) {
+    if (womenOnlyMismatch) {
+        buttonLabel = "Women riders only";
+    } else if (genderMismatch) {
         buttonLabel = `Only ${ride.genderPreference} allowed`;
     } else if (isRejected) {
         buttonLabel = "Rejected";
@@ -365,18 +288,18 @@ export default function RideList({ ride, onIcanHelp }) {
         buttonLabel = "Booking closed";
     } else if (alreadyRequested) {
         if (isOffer) {
-            buttonLabel = remainingSeatsForUser > 0
-                ? `Edit request (${remainingSeatsForUser} left)`
-                : "View request";
+            buttonLabel =
+                availableSeats > 0
+                    ? `Edit request (${availableSeats} left)`
+                    : "View request";
         } else {
             buttonLabel = "View request";
         }
     } else if (isFlight) {
         buttonLabel = "Request companion";
     } else if (!isOffer && !isRequest) {
-        // fallback
         buttonLabel = "Request seat";
-    } else if (isOffer && remainingSeatsForUser <= 0) {
+    } else if (isOffer && availableSeats <= 0) {
         buttonLabel = "No seats available";
     } else {
         buttonLabel = baseLabel;
@@ -385,9 +308,6 @@ export default function RideList({ ride, onIcanHelp }) {
     const handleButtonClick = (event) => {
         event.stopPropagation();
 
-        // A request card's action means "I can help", so open the parent
-        // Offer Ride flow with this request prefilled. Keep Request seat on
-        // offer cards routed through the existing Ridebook modal.
         if (isRequest) {
             if (typeof onIcanHelp === "function") {
                 onIcanHelp(ride);
@@ -426,7 +346,6 @@ export default function RideList({ ride, onIcanHelp }) {
                         overflow: "hidden",
                     }}
                 >
-                    {/* Avatar */}
                     <Avatar
                         src={userProfile || ""}
                         alt={userName}
@@ -450,7 +369,6 @@ export default function RideList({ ride, onIcanHelp }) {
                         {initials}
                     </Avatar>
 
-                    {/* Left: full ride name, subtitle, chips (clipped) */}
                     <Box
                         sx={{
                             flex: 1,
@@ -460,7 +378,6 @@ export default function RideList({ ride, onIcanHelp }) {
                             gap: 0.25,
                         }}
                     >
-                        {/* full ride name – wraps, never truncated */}
                         <Typography
                             sx={{
                                 fontFamily: FONT,
@@ -488,7 +405,6 @@ export default function RideList({ ride, onIcanHelp }) {
                             {subtitle}
                         </Typography>
 
-                        {/* chips: single row, overflow hidden */}
                         <Box
                             sx={{
                                 display: "flex",
@@ -530,7 +446,6 @@ export default function RideList({ ride, onIcanHelp }) {
                         </Box>
                     </Box>
 
-                    {/* Right: date top-right, button bottom-right */}
                     <Box
                         sx={{
                             flexShrink: 0,
@@ -599,7 +514,6 @@ export default function RideList({ ride, onIcanHelp }) {
 
                                         "&:hover": {
                                             bgcolor: isDanger ? "#D32F2F" : isOffer ? BRAND_HOVER : "#FDF0E8",
-                                            // Ensure text remains visible on hover
                                             color: isDanger || isOffer ? "#fff" : BRAND,
                                         },
 
