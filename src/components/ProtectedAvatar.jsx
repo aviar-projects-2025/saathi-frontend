@@ -20,12 +20,32 @@ export default function ProtectedAvatar({
     e.stopPropagation();
   };
 
-  // Extract size-related props, default to MUI Avatar default (40px)
-  // This ensures the wrapper never collapses or overflows in flex containers.
+  // --- Sizing ---
   const width = sx.width ?? 40;
   const height = sx.height ?? 40;
 
-  // Everything else about size stays on the Avatar itself
+  // --- Positioning (applied to the wrapper, NOT the inner Avatar) ---
+  const positioningSx = {
+    position: sx.position,
+    top: sx.top,
+    left: sx.left,
+    right: sx.right,
+    bottom: sx.bottom,
+    transform: sx.transform,
+    zIndex: sx.zIndex,
+  };
+
+  // --- Centering helpers (go on wrapper so mx:"auto" works) ---
+  const spacingSx = {
+    mx: sx.mx,
+    my: sx.my,
+    mt: sx.mt,
+    mb: sx.mb,
+    ml: sx.ml,
+    mr: sx.mr,
+  };
+
+  // --- Visual styles (go on the Avatar itself) ---
   const avatarSx = {
     width: "100%",
     height: "100%",
@@ -35,7 +55,7 @@ export default function ProtectedAvatar({
     fontSize: sx.fontSize,
     fontWeight: sx.fontWeight,
     border: sx.border,
-    borderRadius: sx.borderRadius,
+    borderRadius: sx.borderRadius ?? "50%",
     boxShadow: sx.boxShadow,
     pointerEvents: "none",
     userSelect: "none",
@@ -57,7 +77,6 @@ export default function ProtectedAvatar({
       onCut={blockEvent}
       onClick={onClick}
       sx={{
-        position: "relative",
         display: "inline-flex",
         alignItems: "center",
         justifyContent: "center",
@@ -69,6 +88,8 @@ export default function ProtectedAvatar({
         WebkitTouchCallout: "none",
         WebkitUserDrag: "none",
         cursor: onClick ? "pointer" : "default",
+        ...positioningSx,
+        ...spacingSx,
       }}
     >
       <Avatar
