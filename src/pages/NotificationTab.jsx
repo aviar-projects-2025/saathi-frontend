@@ -426,8 +426,8 @@ export default function NotificationTab({
                   <ListItemAvatar>
                     <Avatar
                       src={
-                        profile?.profileImage ||
-                        item?.data?.profileImage ||
+                        profile?.profileImageUrl ||
+                        item?.data?.profileImageUrl ||
                         undefined
                       }
                       onClick={(event) => {
