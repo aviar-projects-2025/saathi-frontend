@@ -347,7 +347,7 @@ export default function RideList({ ride, onIcanHelp }) {
                         overflow: "hidden",
                     }}
                 >
-                    <ProtectedAvatar
+                    <Avatar
                         src={userProfile || ""}
                         alt={userName}
                         onClick={(event) => {
@@ -369,7 +369,7 @@ export default function RideList({ ride, onIcanHelp }) {
                         }}
                     >
                         {initials}
-                    </ProtectedAvatar>
+                    </Avatar>
 
                     <Box
                         sx={{
