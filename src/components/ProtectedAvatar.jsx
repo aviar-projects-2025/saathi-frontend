@@ -13,15 +13,42 @@ export default function ProtectedAvatar({
   onClick,
   sx = {},
   children,
-  ...rest // pass through anything else (e.g. imgProps, variant, etc.)
+  ...rest
 }) {
   const blockEvent = (e) => {
     e.preventDefault();
     e.stopPropagation();
   };
 
-  // Split sx so we can apply structural styles to the wrapper,
-  // and let the Avatar pick up colors, font, border, etc.
+  // Extract size-related props, default to MUI Avatar default (40px)
+  // This ensures the wrapper never collapses or overflows in flex containers.
+  const width = sx.width ?? 40;
+  const height = sx.height ?? 40;
+
+  // Everything else about size stays on the Avatar itself
+  const avatarSx = {
+    width: "100%",
+    height: "100%",
+    bgcolor: sx.bgcolor,
+    color: sx.color,
+    fontFamily: sx.fontFamily,
+    fontSize: sx.fontSize,
+    fontWeight: sx.fontWeight,
+    border: sx.border,
+    borderRadius: sx.borderRadius,
+    boxShadow: sx.boxShadow,
+    pointerEvents: "none",
+    userSelect: "none",
+    WebkitUserSelect: "none",
+    "& img": {
+      pointerEvents: "none",
+      userSelect: "none",
+      WebkitUserSelect: "none",
+      WebkitUserDrag: "none",
+      WebkitTouchCallout: "none",
+    },
+  };
+
   return (
     <Box
       onContextMenu={blockEvent}
@@ -34,13 +61,13 @@ export default function ProtectedAvatar({
         display: "inline-flex",
         alignItems: "center",
         justifyContent: "center",
+        width,
+        height,
+        flexShrink: 0,
         userSelect: "none",
         WebkitUserSelect: "none",
         WebkitTouchCallout: "none",
         WebkitUserDrag: "none",
-        flexShrink: 0,
-        ...(sx.width != null ? { width: sx.width } : {}),
-        ...(sx.height != null ? { height: sx.height } : {}),
         cursor: onClick ? "pointer" : "default",
       }}
     >
@@ -49,30 +76,7 @@ export default function ProtectedAvatar({
         alt={alt || "Profile"}
         onContextMenu={blockEvent}
         onDragStart={blockEvent}
-        sx={{
-          width: "100%",
-          height: "100%",
-          // pass through visual sx props:
-          bgcolor: sx.bgcolor,
-          color: sx.color,
-          fontFamily: sx.fontFamily,
-          fontSize: sx.fontSize,
-          fontWeight: sx.fontWeight,
-          border: sx.border,
-          borderRadius: sx.borderRadius,
-          boxShadow: sx.boxShadow,
-          // ★ kill all direct interaction with the <img>
-          pointerEvents: "none",
-          userSelect: "none",
-          WebkitUserSelect: "none",
-          "& img": {
-            pointerEvents: "none",
-            userSelect: "none",
-            WebkitUserSelect: "none",
-            WebkitUserDrag: "none",
-            WebkitTouchCallout: "none",
-          },
-        }}
+        sx={avatarSx}
         {...rest}
       >
         {children}
