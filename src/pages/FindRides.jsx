@@ -807,11 +807,14 @@ export default function FindRides() {
           maxWidth: "100%",
           boxSizing: "border-box",
           bgcolor: "#FAF8F5",
-          p: { xs: 0.5, sm: 1.5, md: 2.5, lg: 3 },
+          // p: { xs: 0.5, sm: 1.5, md: 2.5, lg: 3 },
           overflowX: "clip",
         }}
       >
-        <Container maxWidth="lg" sx={{ px: { xs: 1.5, sm: 2.5, md: 3 }, py: { xs: 1.5, sm: 2.5 } }}>
+        <Container maxWidth="lg"
+         sx={{
+           px: { xs: 1.2, sm: 1 }, 
+           py: { xs: 1.2, sm: 1 } }}>
           <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: { xs: 1.5, sm: 2 } }}>
             <Typography
               component="h1"
