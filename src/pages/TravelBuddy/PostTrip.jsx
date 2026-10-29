@@ -29,6 +29,9 @@ import {
   createTheme,
 } from "@mui/material";
 
+import CloseIcon from "@mui/icons-material/Close";
+import { IconButton } from "@mui/material";
+
 /* ─────────── Design Tokens ─────────── */
 const c = {
   rust: "#C4410C",
@@ -368,7 +371,38 @@ function StepFlights({ form, setForm, onNext, onCancel }) {
 
       {flights.map((f, i) => (
         <Box key={i} sx={{ mb: 2.5 }}>
-          <SectionTitle>Flight segment {i + 1}</SectionTitle>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              width: "100%",
+              gap: 2,
+            }}
+          >
+            <SectionTitle>Flight segment {i + 1}</SectionTitle>
+            {i > 0 && (
+              <IconButton
+                onClick={() => {
+                  setForm((prev) => ({
+                    ...prev,
+                    flights: prev.flights.filter((_, index) => index !== i),
+                  }));
+                }}
+                size="small"
+                aria-label="Remove flight segment"
+                sx={{
+                  color: "#D32F2F",
+                  flexShrink: 0,
+                  "&:hover": {
+                    bgcolor: "#FDEAEA",
+                  },
+                }}
+              >
+                <CloseIcon fontSize="small" />
+              </IconButton>
+            )}
+          </Box>
           <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: 3, borderColor: c.border }}>
             <Row>
               <Field small label="Airline" placeholder="Emirates (EK)" {...bind(i, "airline")} />

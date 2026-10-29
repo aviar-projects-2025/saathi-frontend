@@ -129,7 +129,7 @@ function StatusChip({ status }) {
 
 /* ---------- Trip Cards ---------- */
 
-function MyTripRow({ trip, onViewMatches, showAction = true }) {
+function MyTripRow({ trip, onViewMatches, showAction = true, viewDetails }) {
   const isMatched = trip.status === "MATCHED";
   const flightNos = trip.flights?.map((f) => f.flightNumber).join(" · ") || "No flights";
   const route = trip.flights?.length > 0 ? [trip.flights[0].fromCode, ...trip.flights.map((f) => f.toCode)].join(" → ") : "Unknown route";
@@ -149,6 +149,7 @@ function MyTripRow({ trip, onViewMatches, showAction = true }) {
         transition: "box-shadow 0.2s",
         "&:hover": { boxShadow: "0px 4px 12px rgba(0,0,0,0.05)" },
       }}
+      onClick={() => viewDetails(trip)}
     >
       <Stack direction="row" spacing={2} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
         <Avatar sx={{ bgcolor: isMatched ? "#DDF4E4" : "#DCEBFA", width: 44, height: 44, flexShrink: 0 }}>
@@ -404,27 +405,120 @@ export default function TravelBuddy() {
     });
   };
 
+  // const getDeparture = (trip) => {
+  //   const raw = trip?.flights?.[0]?.departureTime;
+  //   if (!raw) return null;
+  //   const date = new Date(raw);
+  //   return Number.isNaN(date.getTime()) ? null : date;
+  // };
+  // const now = Date.now();
+  // const upcomingTrips = myTrips.filter((trip) => trip.status === "MATCHED" && getDeparture(trip)?.getTime() > now)
+  //   .sort((a, b) => getDeparture(a) - getDeparture(b));
+  // const historyTrips = myTrips.filter((trip) => {
+  //   const departure = getDeparture(trip);
+  //   return ["COMPLETED", "CANCELLED"].includes(trip.status) || Boolean(departure && departure.getTime() <= now);
+  // }).sort((a, b) => (getDeparture(b)?.getTime() || 0) - (getDeparture(a)?.getTime() || 0));
+
+  console.log("My Trip:", myTrips);
+
+
+  // Get the first flight's departure time
   const getDeparture = (trip) => {
     const raw = trip?.flights?.[0]?.departureTime;
+
     if (!raw) return null;
+
     const date = new Date(raw);
+
     return Number.isNaN(date.getTime()) ? null : date;
   };
+
+  // Get the last flight segment's arrival time
+
+  const getArrival = (trip) => {
+    const flights = trip?.flights;
+
+    if (!Array.isArray(flights) || flights.length === 0) {
+      return null;
+    }
+
+    const raw = flights[flights.length - 1]?.arrivalTime;
+
+    if (!raw) return null;
+
+    const date = new Date(raw);
+
+    return Number.isNaN(date.getTime()) ? null : date;
+  };
+
   const now = Date.now();
-  const upcomingTrips = myTrips.filter((trip) => trip.status === "MATCHED" && getDeparture(trip)?.getTime() > now)
-    .sort((a, b) => getDeparture(a) - getDeparture(b));
-  const historyTrips = myTrips.filter((trip) => {
-    const departure = getDeparture(trip);
-    return ["COMPLETED", "CANCELLED"].includes(trip.status) || Boolean(departure && departure.getTime() <= now);
-  }).sort((a, b) => (getDeparture(b)?.getTime() || 0) - (getDeparture(a)?.getTime() || 0));
+
+  const upcomingTrips = myTrips
+    .filter((trip) => {
+      const departure = getDeparture(trip);
+
+      return (
+        trip.status === "MATCHED" &&
+        departure !== null &&
+        departure.getTime() > now
+      );
+    })
+    .sort(
+      (a, b) => getDeparture(a).getTime() - getDeparture(b).getTime()
+    );
+
   const openTrips = myTrips.filter((trip) => {
-    if (trip.status !== "OPEN") return false;
+    // if (trip.status !== "OPEN") return false;
     const departure = getDeparture(trip);
-    return !departure || departure.getTime() > now;
+    const arrival = getArrival(trip);
+    
+    return departure.getTime() <= now || departure.getTime() >= now || arrival.getTime() >= now || arrival.getTime() <= now;
   }).sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+
+  const historyTrips = myTrips
+    .filter((trip) => {
+      const arrival = getArrival(trip);
+
+      return (
+        ["COMPLETED", "CANCELLED"].includes(trip.status) ||
+        (arrival !== null && arrival.getTime() <= now)
+      );
+    })
+    .sort(
+      (a, b) =>
+        (getArrival(b)?.getTime() || 0) -
+        (getArrival(a)?.getTime() || 0)
+    );
+
+  // const openTrips = myTrips
+  //   .filter((trip) => {
+  //     if (trip.status !== "OPEN") return false;
+
+  //     const departure = getDeparture(trip);
+
+  //     return departure.getTime() < now || arrival.getTime() > now;
+  //   })
+  //   .sort(
+  //     (a, b) =>
+  //       new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+  //   );
+
+  const currentTrips = myTrips.filter((trip) => {
+    const departure = getDeparture(trip);
+    const arrival = getArrival(trip);
+
+    return (
+      trip.status === "MATCHED" &&
+      departure !== null &&
+      arrival !== null &&
+      departure.getTime() <= now &&
+      arrival.getTime() > now
+    );
+  });
 
   const tabs = [
     { key: "browse", label: "Browse All Trips", count: null },
+    { key: "current", label: "Current Trips", count: currentTrips.length },
     { key: "upcoming", label: "Upcoming Trips", count: upcomingTrips.length },
     { key: "mine", label: "My Trips", count: openTrips.length },
     { key: "history", label: "History", count: historyTrips.length },
@@ -497,9 +591,13 @@ export default function TravelBuddy() {
                     {globalTrips.length ? globalTrips.map((trip) => <GlobalTripRow key={trip._id} trip={trip} onViewDetails={setSelectedTrip} />) : renderEmpty("No public trips found matching your search.")}
                   </Stack>
                 </>}
+                {activeTab === "current" && <>
+                  <Typography sx={{ color: colors.muted, mb: 2, fontSize: 13.5 }}>Current trips appear here.</Typography>
+                  {currentTrips.length ? <Stack spacing={1.75}>{currentTrips.map((trip) => <MyTripRow key={trip._id} trip={trip} showAction={false} onViewMatches={() => { }} viewDetails={setSelectedTrip} />)}</Stack> : renderEmpty("You don't have any current trips.")}
+                </>}
                 {activeTab === "upcoming" && <>
                   <Typography sx={{ color: colors.muted, mb: 2, fontSize: 13.5 }}>Confirmed matches with future departure dates appear here.</Typography>
-                  {upcomingTrips.length ? <Stack spacing={1.75}>{upcomingTrips.map((trip) => <MyTripRow key={trip._id} trip={trip} onViewMatches={(id) => navigate(`/trip-accepted/${id}`)} />)}</Stack> : renderEmpty("You don't have any upcoming matched trips yet.")}
+                  {upcomingTrips.length ? <Stack spacing={1.75}>{upcomingTrips.map((trip) => <MyTripRow key={trip._id} trip={trip} onViewMatches={(id) => navigate(`/trip-accepted/${id}`)} viewDetails={setSelectedTrip} />)}</Stack> : renderEmpty("You don't have any upcoming matched trips yet.")}
                 </>}
                 {activeTab === "mine" && <>
                   <Typography sx={{ color: colors.muted, mb: 2, fontSize: 13.5 }}>Open trips, including private offers awaiting a response, are shown only to you here.</Typography>
@@ -509,6 +607,7 @@ export default function TravelBuddy() {
                         <MyTripRow
                           key={trip._id}
                           trip={trip}
+                          viewDetails={setSelectedTrip}
                           onViewMatches={(id) =>
                             navigate("/travelbuddy/requests", {
                               state: {
@@ -526,7 +625,7 @@ export default function TravelBuddy() {
                 </>}
                 {activeTab === "history" && <>
                   <Typography sx={{ color: colors.muted, mb: 2, fontSize: 13.5 }}>Completed, cancelled, and past-departure trips appear here.</Typography>
-                  {historyTrips.length ? <Stack spacing={1.75}>{historyTrips.map((trip) => <MyTripRow key={trip._id} trip={trip} showAction={false} onViewMatches={() => { }} />)}</Stack> : renderEmpty("Your trip history is empty.")}
+                  {historyTrips.length ? <Stack spacing={1.75}>{historyTrips.map((trip) => <MyTripRow key={trip._id} trip={trip} showAction={false} onViewMatches={() => { }} viewDetails={setSelectedTrip} />)}</Stack> : renderEmpty("Your trip history is empty.")}
                 </>}
               </Box>
             </Fade>

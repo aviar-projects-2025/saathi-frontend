@@ -57,7 +57,8 @@ const TripAccepted = React.lazy(
 const PostTrip = React.lazy(() => import("./pages/TravelBuddy/PostTrip.jsx"))
 const Notifications = React.lazy(() => import("./pages/Notifications.jsx"))
 // const Settings = React.lazy(() => import("./pages/Settings.jsx"));
-const RequestRide = React.lazy(() => import("./pages/RequestRide.jsx"));
+// const RequestRide = React.lazy(() => import("./pages/RequestRide.jsx"));
+const RequestRide2 = React.lazy(() => import("./pages/RequestedRide2.jsx"));
 
 // ADMIN pages
 const AdminDashboard = React.lazy(() =>
@@ -142,7 +143,8 @@ function App() {
               <Route path="/trip-matches/:id" element={<InfoTripMatches />} />
               <Route path="/user-profile" element={<UserProfile />} />
               <Route path="/discover" element={<Discover />} />
-              <Route path="/request-ride" element={<RequestRide />} />
+              {/* <Route path="/request-ride" element={<RequestRide />} /> */}
+                <Route path="/request-ride" element={<RequestRide2 />} />
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/optin" element={<SmsNotifications />} />
               <Route path="/people-nearby" element={<PeopleNearYou />} />

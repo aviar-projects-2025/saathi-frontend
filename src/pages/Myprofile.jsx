@@ -88,7 +88,7 @@ const MyProfileSettings = () => {
   const handleShare = () => {
     const message = `Join me on Saathi Rides using my invite code: ${currentUser?.referralCode || ""}`;
     if (navigator.share) {
-      navigator.share({ title: "Saathi Invite", text: message }).catch(() => {});
+      navigator.share({ title: "Saathi Invite", text: message }).catch(() => { });
     } else {
       navigator.clipboard.writeText(message);
       toast.success("Invite message copied!", toasts);
@@ -110,9 +110,14 @@ const MyProfileSettings = () => {
   };
 
   return (
-    <Box sx={{ bgcolor: BG, minHeight: "100vh", py: { xs: 3, sm: 4 }, px: { xs: 2, sm: 4 } }}>
+    <Box sx={{
+      bgcolor: BG,
+      minHeight: "100vh",
+      py: { xs: 1, sm: 2 },
+      px: { xs: 1, sm: 2 }
+    }}>
       <Box sx={{ maxWidth: 900, mx: "auto", width: "100%" }}>
-        
+
         {/* ─── Page Header ─── */}
         <Typography sx={{ fontSize: { xs: 24, sm: 28 }, fontWeight: 800, color: NAVY, mb: 3 }}>
           Settings

@@ -364,6 +364,7 @@ export default function RideList({ ride, onIcanHelp }) {
                             fontFamily: FONT,
                             flexShrink: 0,
                             cursor: "pointer",
+                            alignSelf: "center",
                         }}
                     >
                         {initials}
@@ -399,7 +400,7 @@ export default function RideList({ ride, onIcanHelp }) {
                                 fontFamily: FONT,
                                 fontSize: FS.subtitle,
                                 color: "#6B6B6B",
-                                lineHeight: 2.5,
+                                // lineHeight: 2.5,
                             }}
                         >
                             {subtitle}
@@ -497,28 +498,41 @@ export default function RideList({ ride, onIcanHelp }) {
                                     disabled={buttonDisabled}
                                     onClick={handleButtonClick}
                                     sx={{
-                                        px: { xs: 1, sm: 1.5, md: 2 },
-                                        py: { xs: 0.35, md: 0.5 },
-                                        minHeight: 0,
-                                        minWidth: 0,
+                                        px: { xs: 1, sm: 1, md: 1 },
+                                        py: { xs: 0.8, sm: 1, md: 1 },
+                                        minHeight: { xs: 32, sm: 35, md: 40 },
+                                        minWidth: { xs: 80, sm: 100, md: 12 },
                                         borderRadius: "6px",
                                         textTransform: "none",
                                         fontFamily: FONT,
-                                        fontSize: FS.button,
-                                        fontWeight: 600,
-                                        lineHeight: 1.4,
+                                        fontSize: { xs: "10px", sm: "12px", md: "14px" },
+                                        fontWeight: 700,
+                                        lineHeight: 1,
                                         whiteSpace: "nowrap",
+
                                         color: isDanger || isOffer ? "#fff" : BRAND,
                                         border: isOffer ? "none" : `1px solid ${BRAND}`,
-                                        bgcolor: isDanger ? "#D32F2F" : isOffer ? BRAND : "#ffffffff",
+                                        bgcolor: isDanger
+                                            ? "#D32F2F"
+                                            : isOffer
+                                                ? BRAND
+                                                : "#ffffff",
 
                                         "&:hover": {
-                                            bgcolor: isDanger ? "#D32F2F" : isOffer ? BRAND_HOVER : "#FDF0E8",
+                                            bgcolor: isDanger
+                                                ? "#D32F2F"
+                                                : isOffer
+                                                    ? BRAND_HOVER
+                                                    : "#FDF0E8",
                                             color: isDanger || isOffer ? "#fff" : BRAND,
                                         },
 
                                         "&.Mui-disabled": {
-                                            bgcolor: isDanger ? "#EF9A9A" : isOffer ? "#E0E0E0" : "#F5F5F5",
+                                            bgcolor: isDanger
+                                                ? "#EF9A9A"
+                                                : isOffer
+                                                    ? "#E0E0E0"
+                                                    : "#F5F5F5",
                                             color: isDanger || isOffer ? "#fff" : "#A0A0A0",
                                             border: isOffer ? "none" : "1px solid #E0E0E0",
                                         },
