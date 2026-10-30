@@ -1107,7 +1107,7 @@ const Register = () => {
                   ))}
                 </TextField>
 
-                <Box>
+                <Box sx={{ width: "100%", minWidth: 0 }}>
                   <Typography fontWeight={700} fontSize={14} sx={{ mb: 1 }}>
                     Languages spoken{" "}
                     <Typography component="span" variant="caption">
@@ -1115,7 +1115,16 @@ const Register = () => {
                     </Typography>
                   </Typography>
 
-                  <Stack direction="row" flexWrap="wrap" gap={0.8}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: 0.8,
+                      width: "100%",
+                      minWidth: 0,
+                      overflow: "hidden",        // prevents horizontal scroll on mobile
+                    }}
+                  >
                     {LANGUAGES.map((language) => {
                       const selected = values.languages.includes(language);
                       return (
@@ -1133,22 +1142,26 @@ const Register = () => {
                           }}
                           sx={{
                             borderRadius: "20px",
-                            backgroundColor: selected
-                              ? ORANGE
-                              : "#FFFFFF",
+                            backgroundColor: selected ? ORANGE : "#FFFFFF",
                             color: selected ? "#FFFFFF" : "#25211E",
                             border: "1px solid #DDD5CC",
                             fontWeight: selected ? 700 : 400,
+                            fontSize: { xs: 12, sm: 13 },
+                            height: { xs: 28, sm: 32 },
+                            maxWidth: "100%",       // never overflow the parent
+                            "& .MuiChip-label": {
+                              px: { xs: 1.2, sm: 1.5 },
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                            },
                             "&:hover": {
-                              backgroundColor: selected
-                                ? "#A93205"
-                                : "#F3E9E1",
+                              backgroundColor: selected ? "#A93205" : "#F3E9E1",
                             },
                           }}
                         />
                       );
                     })}
-                  </Stack>
+                  </Box>
                 </Box>
 
                 <FormControl fullWidth>
