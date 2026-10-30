@@ -1043,7 +1043,7 @@ export default function RideDetailsModal({
   const isXs = useMediaQuery(theme.breakpoints.down("sm"));
   const isMd = useMediaQuery(theme.breakpoints.up("md"));
 
-  console.log(requests,'requests')
+  console.log(requests, 'requests')
   const pendingMember = requests.flatMap((item) => item?.pendingMembers || []);
   const isStarted = ride?.travelStatus === "Started";
   const startDate = new Date(ride?.startTime);
@@ -1502,6 +1502,12 @@ export default function RideDetailsModal({
           <Field icon={AccessTimeIcon} label="Time" value={timeLabel || "—"} />
 
           <Field
+            icon={ScheduleIcon}
+            label="Time Zone"
+            value={ride?.timeZone || "—"}
+          />
+
+          <Field
             icon={TravelIcon}
             label="Mode of Travel"
             value={ride?.modeOfTravel || "—"}
@@ -1521,6 +1527,12 @@ export default function RideDetailsModal({
           />
 
           <Field
+            icon={RouteIcon}
+            label="Distance"
+            value={ride?.distanceKm != null ? `${ride.distanceKm} km` : "—"}
+          />
+
+          <Field
             icon={EventSeatIcon}
             label="Available Seats"
             value={
@@ -1537,15 +1549,9 @@ export default function RideDetailsModal({
           />
 
           <Field
-            icon={PeopleIcon}
-            label="Passengers"
-            value={ride?.passengers ?? "—"}
-          />
-
-          <Field
-            icon={RouteIcon}
-            label="Distance"
-            value={ride?.distanceKm != null ? `${ride.distanceKm} km` : "—"}
+            icon={AttachMoneyIcon}
+            label="Cost Per Seat"
+            value={ride?.costPerSeat == null ? "No cost / Free" : `₹ ${ride.costPerSeat}`}
           />
 
           <Field
@@ -1555,15 +1561,28 @@ export default function RideDetailsModal({
           />
 
           <Field
-            icon={DescriptionIcon}
-            label="Ride Kind"
-            value={ride?.kind || "—"}
+            icon={LuggageIcon}
+            label="Luggage Space"
+            // value={ride?.luggageSpace || "—"}
+            value={ride?.luggageSpace == "None" ? "No bags" : `${ride.luggageSpace}`}
           />
 
           <Field
-            icon={AttachMoneyIcon}
-            label="Cost Per Seat"
-            value={ride?.costPerSeat != null ? `₹ ${ride.costPerSeat}` : "—"}
+            icon={ChildCareIcon}
+            label="Child Friendly"
+            value={ride?.childFriendly ? "Yes" : "No"}
+          />
+
+          <Field
+            icon={FemaleIcon}
+            label="Women Only"
+            value={ride?.womenOnly ? "Yes" : "No"}
+          />
+
+          <Field
+            icon={CalendarTodayIcon}
+            label="Recurring Ride"
+            value={ride?.recurringRide ? "Yes" : "No"}
           />
 
           <Field
@@ -1572,19 +1591,20 @@ export default function RideDetailsModal({
             value={ride?.confirmCostSharing ? "Yes" : "No"}
           />
 
+          <Field
+            icon={DescriptionIcon}
+            label="Ride Kind"
+            value={ride?.kind || "—"}
+          />
+
+          <Field
+            icon={PeopleIcon}
+            label="Passengers"
+            value={ride?.passengers || "—"}
+          />
+
           <Field icon={LuggageIcon} label="Bags" value={ride?.bags ?? "—"} />
 
-          <Field
-            icon={LuggageIcon}
-            label="Luggage Space"
-            value={ride?.luggageSpace || "—"}
-          />
-
-          <Field
-            icon={ChildCareIcon}
-            label="Child Friendly"
-            value={ride?.childFriendly ? "Yes" : "No"}
-          />
 
           <Field
             icon={ChildCareIcon}
@@ -1603,6 +1623,20 @@ export default function RideDetailsModal({
             span
           /> */}
 
+
+
+          <Field
+            icon={ScheduleIcon}
+            label="Flexibility"
+            value={ride?.flexibility || "—"}
+          />
+
+          <Field
+            icon={FemaleIcon}
+            label="Women Drivers Only"
+            value={ride?.womenDriversOnly ? "Yes" : "No"}
+          />
+
           <Field
             icon={TranslateIcon}
             label="Help Offered"
@@ -1612,18 +1646,6 @@ export default function RideDetailsModal({
                 : "—"
             }
             span
-          />
-
-          <Field
-            icon={CalendarTodayIcon}
-            label="Recurring Ride"
-            value={ride?.recurringRide ? "Yes" : "No"}
-          />
-
-          <Field
-            icon={ScheduleIcon}
-            label="Flexibility"
-            value={ride?.flexibility || "—"}
           />
 
           <Field
@@ -1644,24 +1666,6 @@ export default function RideDetailsModal({
             label="Travel Status"
             value={ride?.travelStatus || "—"}
           /> */}
-
-          <Field
-            icon={FemaleIcon}
-            label="Women Only"
-            value={ride?.womenOnly ? "Yes" : "No"}
-          />
-
-          <Field
-            icon={FemaleIcon}
-            label="Women Drivers Only"
-            value={ride?.womenDriversOnly ? "Yes" : "No"}
-          />
-
-          <Field
-            icon={ScheduleIcon}
-            label="Time Zone"
-            value={ride?.timeZone || "—"}
-          />
 
           <Field
             icon={DescriptionIcon}
