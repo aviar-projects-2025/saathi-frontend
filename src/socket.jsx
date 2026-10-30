@@ -1,35 +1,23 @@
+
 import { io } from "socket.io-client";
-import Api from "./Api";
 
-const SOCKET_URL = Api.replace(/\/api\/?$/, "").replace(/\/+$/, "");
-
-const socket = io(SOCKET_URL, {
-  autoConnect: false,
-  transports: ["websocket", "polling"], // fallback for old browsers
-  reconnection: true,
-  reconnectionAttempts: Infinity,
-  reconnectionDelay: 1000,
-  reconnectionDelayMax: 5000,
-  auth: (cb) => cb({ token: localStorage.getItem("token") }),
+const socket = io(import.meta.env.VITE_SOCKET_URL, {
+    transports: ["websocket"],
+    autoConnect: false,
 });
 
 export const connectSocket = () => {
-  const token = localStorage.getItem("token");
-  if (!token) return;
+    const token = localStorage.getItem("token");
 
-  socket.auth = { token };
+    if (!token) {
+        return;
+    }
 
-  if (!socket.connected) {
-    socket.connect();
-  } else {
-    // token rotated — force re-auth
-    socket.disconnect();
-    socket.connect();
-  }
-};
+    socket.auth = { token };
 
-export const disconnectSocket = () => {
-  if (socket.connected) socket.disconnect();
+    if (!socket.connected) {
+        socket.connect();
+    }
 };
 
 export default socket;
