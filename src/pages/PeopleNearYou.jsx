@@ -22,6 +22,7 @@ import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
 
 import Api from "../Api";
 import { useUser } from "../context/userConetext";
+import ProtectedAvatar from "../components/ProtectedAvatar";
 
 const ORANGE = "#E8650A";
 
@@ -547,8 +548,8 @@ export default function PeopleNearYou() {
                 }}
               >
                 {/* PROFILE IMAGE */}
-                <Avatar
-                  src={person.profileImage || ""}
+                <ProtectedAvatar
+                  src={person.profileImageUrl || ""}
                   alt={`${person.firstName || ""} ${person.lastName || ""
                     }`}
                   sx={{
@@ -559,8 +560,8 @@ export default function PeopleNearYou() {
                     border: "2px solid #FFE0B2",
                   }}
                 >
-                  {!person.profileImage && <PersonRoundedIcon />}
-                </Avatar>
+                  {!person.profileImageUrl && <PersonRoundedIcon />}
+                </ProtectedAvatar>
 
                 {/* DETAILS */}
                 <Box

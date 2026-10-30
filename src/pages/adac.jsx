@@ -751,7 +751,7 @@ function RideCard({
             }}
           >
             <Avatar
-              src={ride?.createdBy?.profileImage || ""}
+              src={ride?.createdBy?.profileImageUrl || ""}
               // alt={`${ride?.createdBy?.firstName[0]}${ride?.createdBy?.lastName[0]}`.toUpperCase()}
               onClick={() => {
                 setSelectedProfile(ride?.createdBy);

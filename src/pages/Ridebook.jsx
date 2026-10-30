@@ -378,7 +378,7 @@ export default function Ridebook({
     const storedUser = JSON.parse(localStorage.getItem("user"));
     const membersToSubmit = isEditMode ? newMembers : requestData.members;
     const seatsRequested = membersToSubmit.length;
-       console.log("fgfgghjkkhgjhhbh")
+      //  console.log("fgfgghjkkhgjhhbh")
     const payload = {
       firstName: storedUser?.firstName,
       requestedBy: storedUser?.id,
@@ -969,7 +969,7 @@ export default function Ridebook({
           rows={isMobile ? 3 : 4}
           size={isMobile ? "small" : "medium"}
           label={
-            isFlight ? "Why do you need a companion?" : "Message to Driver"
+            "Message to Rider"
           }
           value={requestData.message}
           sx={{

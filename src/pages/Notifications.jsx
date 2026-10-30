@@ -7,6 +7,7 @@ import { useReferral } from '../context/ReferralContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import ProfileModal from './Avatar.jsx';
+import ProtectedAvatar from '../components/ProtectedAvatar.jsx';
 
 const Notifications = () => {
 
@@ -24,30 +25,65 @@ const Notifications = () => {
 
     const navigate = useNavigate();
 
+
     const handleNavigation = (item) => {
+        console.log("Clicked notification:", {
+            type: item.type,
+            data: item.data,
+        });
+
         switch (item.type) {
             case "new_request":
             case "request_rejected":
-                navigate("/myride", { state: { tab: 2, rideId: item.data?.rideId }, });
+                navigate("/myride", {
+                    state: { tab: 2, rideId: item.data?.rideId },
+                });
                 break;
+
             case "request_accepted":
-                navigate("/request-ride", { state: { rideId: item.data?.rideId }, });
+                navigate("/request-ride", {
+                    state: { rideId: item.data?.rideId },
+                });
                 break;
+
             case "referral_approved":
             case "request_cancelled":
-                break
+                break;
+
             case "referral_pending":
             case "referral_rejected":
                 navigate("/my-referalls");
                 break;
+
             case "ride_started":
-                navigate("/myride")
+                navigate("/myride");
+                break;
+
+            case "travel_buddy_request":
+                navigate("/travelbuddy/requests", {
+                    state: {
+                        requestId: item.data?.requestId,
+                        tab: "received",
+                    },
+                });
+                break;
+
+            case "travel_buddy_request_accepted":
+            case "travel_buddy_request_rejected":
+                navigate("/travelbuddy/requests", {
+                    state: {
+                        requestId: item.data?.requestId,
+                        tab: "sent",
+                    },
+                });
                 break;
 
             default:
+                console.warn("Unhandled notification type:", item.type);
                 navigate("/");
         }
-    }
+    };
+
 
     const handleIsRead = (id, item) => {
 
@@ -108,8 +144,8 @@ const Notifications = () => {
                                     }}
                                 >
                                     <ListItemAvatar>
-                                        <Avatar
-                                            src={item?.actorId?.profileImage || item?.data?.profileImage}
+                                        <ProtectedAvatar
+                                            src={item?.actorId?.profileImageUrl || item?.data?.profileImage}
                                             onClick={(event) => {
                                                 event.stopPropagation();
                                                 setSelectedProfile(item?.actorId || item?.data);
@@ -117,7 +153,7 @@ const Notifications = () => {
                                             }}
                                         >
                                             {item?.actorId?.firstName?.[0] || "U"}
-                                        </Avatar>
+                                        </ProtectedAvatar>
                                     </ListItemAvatar>
                                     <Box
                                         sx={{

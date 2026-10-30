@@ -14,7 +14,7 @@ export const UserProvider = ({ children }) => {
     const requiredFields = [
         "firstName",
         "lastName",
-        // "bio",
+        "bio",
         // "email",
         "language",
         "mobile",
@@ -92,7 +92,7 @@ export const UserProvider = ({ children }) => {
             const res = await axios.get(
                 Api + `/save-post/${storedUser.id}?page=${pageNumber}&limit=12`
             );
-
+           
             const newPosts = res?.data?.savedPosts || [];
             const pagination = res?.data?.pagination;
 

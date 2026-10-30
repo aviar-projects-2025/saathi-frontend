@@ -35,6 +35,7 @@ import { toast } from "react-toastify"; // remove if you use a different toast l
 import ToastConfig from "../components/ToastConfig";
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import ProfileModal from './Avatar'
+import ProtectedAvatar from "../components/ProtectedAvatar";
 
 /* ── defined OUTSIDE so React never remounts it on re-render ── */
 const CommentInput = ({ value, onChange, onSend, placeholder }) => (
@@ -438,8 +439,8 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
                   spacing={{ xs: 0.75, sm: 1 }}
                   sx={{ py: 0.75 }}
                 >
-                  <Avatar
-                    src={item.userId?.profileImage}
+                  <ProtectedAvatar
+                    src={item.userId?.profileImageurl}
                     onClick={() => {
                       setSelectedProfile(item.userId);
                       setProfileModalOpen(true);
@@ -455,9 +456,9 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
                       mt: { xs: 0.4, sm: 0.5 },
                     }}
                   >
-                    {!currentUser?.profileImage &&
+                    {!currentUser?.profileImageUrl &&
                       `${currentUser?.firstName?.[0] || ""}${currentUser?.lastName?.[0] || ""}`}
-                  </Avatar>
+                  </ProtectedAvatar>
                   <Box sx={{ flex: 1, minWidth: 0 }}>
                     {renderCommentBody(item, false)}
 
@@ -564,7 +565,7 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
                       sx={{ ml: { xs: 3.5, sm: 4.5, md: 5 }, mt: 0.5 }}
                     >
                       <Stack direction="row" spacing={{ xs: 0.5, sm: 0.75 }}>
-                        <Avatar
+                        <ProtectedAvatar
                           src={replyItem?.userId?.profileImage}
                           sx={{
                             width: { xs: 20, sm: 22, md: 24 },

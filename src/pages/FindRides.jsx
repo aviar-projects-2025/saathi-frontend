@@ -3,350 +3,408 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 import {
-  Container,
-  Typography,
-  CircularProgress,
-  Box,
-  Grid,
-  TextField,
-  FormControl,
-  Select,
-  MenuItem,
-  Button,
-  Chip,
-  Collapse,
-  InputAdornment,
-  useMediaQuery,
-  useTheme,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  LinearProgress,
-  DialogActions,
-  IconButton,
+  Container, Typography, CircularProgress, Box, TextField, MenuItem,
+  Button, Chip, Collapse, useMediaQuery, useTheme, Dialog, DialogTitle,
+  DialogContent, LinearProgress, DialogActions, IconButton, Checkbox,
+  FormControlLabel, FormGroup, Paper, Divider, Stack, Select, FormControl,
 } from "@mui/material";
 
-import { useUser } from "../context/userConetext";
-
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
-import SearchIcon from "@mui/icons-material/Search";
-import TuneIcon from "@mui/icons-material/Tune";
 import CloseIcon from "@mui/icons-material/Close";
-import FlightIcon from "@mui/icons-material/Flight";
-import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
-import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
-import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
-import TrainIcon from "@mui/icons-material/Train";
 import FilterListOffIcon from "@mui/icons-material/FilterListOff";
-import VisibilityIcon from "@mui/icons-material/Visibility";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
-import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
+import SearchIcon from "@mui/icons-material/Search";
 
-import RideCard from "./RideCard.jsx";
+import RideList from "./RideCard2.jsx";
 import Api from "../Api";
 import OfferRide from "./OfferRide.jsx";
+import { useUser } from "../context/userConetext.jsx";
 
-// ─────────────────────────────────────────────
-// Saffron design tokens
-// ─────────────────────────────────────────────
+/* ─────────── Design tokens ─────────── */
+const saffron = { 50: "#FFF8EE", 200: "#FFD492", 500: "#F59300", 700: "#A85F00" };
+const RUST = "#C83F08";
+const RUST_DARK = "#A93205";
+const NAVY = "#1B2A4E";
 
-const saffron = {
-  50: "#FFF8EE",
-  100: "#FFE9C2",
-  200: "#FFD492",
-  300: "#FFC05C",
-  400: "#FFAB28",
-  500: "#F59300",
-  600: "#D47A00",
-  700: "#A85F00",
-  800: "#7C4500",
-  900: "#502C00",
+/* ─────────── Style helpers ─────────── */
+const sectionLabelSx = {
+  fontSize: { xs: 10, sm: 10.5, md: 11 },
+  fontWeight: 700,
+  letterSpacing: 0.6,
+  color: "text.secondary",
+  mb: 0.75,
+  textTransform: "uppercase",
 };
 
-const ORANGE = "#FF9933";
+const pillChipSx = (selected, extra = {}) => ({
+  borderRadius: 999,
+  fontWeight: 600,
+  fontSize: { xs: 11.5, sm: 12 },
+  height: { xs: 26, sm: 28 },
+  bgcolor: selected ? RUST : "#fff",
+  color: selected ? "#fff" : "#333",
+  border: `1px solid ${selected ? RUST : "#ddd"}`,
+  "&:hover": { bgcolor: selected ? RUST : "#f8f8f8" },
+  ...extra,
+});
 
-const inputFieldSx = {
+const dateInputSx = {
+  flex: 1,
+  minWidth: 0,
   "& .MuiOutlinedInput-root": {
-    borderRadius: "10px",
-    fontSize: "0.82rem",
-    background: saffron[50],
-
-    "& fieldset": {
-      borderColor: saffron[200],
-    },
-
-    "&:hover fieldset": {
-      borderColor: saffron[400],
-    },
-
-    "&.Mui-focused fieldset": {
-      borderColor: saffron[500],
-      borderWidth: 2,
-    },
+    fontSize: { xs: 12, sm: 12.5 },
+    borderRadius: 1.5,
+    height: { xs: 34, sm: 36 },
   },
+  "& input": { px: { xs: 1, sm: 1.5 } },
+};
 
-  "& .MuiInputLabel-root": {
-    fontSize: "0.8rem",
-    color: saffron[600],
-  },
-
-  "& .MuiInputLabel-root.Mui-focused": {
-    color: saffron[600],
+const searchInputSx = {
+  flex: 1,
+  minWidth: 0,
+  "& .MuiOutlinedInput-root": {
+    fontSize: { xs: 13, sm: 13.5 },
+    borderRadius: 1.5,
+    height: { xs: 40, sm: 42 },
+    bgcolor: "#fff",
   },
 };
 
-const selectSx = {
-  borderRadius: "10px",
-  fontSize: "0.82rem",
-  background: saffron[50],
-
-  "& .MuiOutlinedInput-notchedOutline": {
-    borderColor: saffron[200],
-  },
-
-  "&:hover .MuiOutlinedInput-notchedOutline": {
-    borderColor: saffron[400],
-  },
-
-  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-    borderColor: saffron[500],
-    borderWidth: 2,
-  },
-};
-
-const TRANSPORT_OPTIONS = [
-  {
-    label: "All",
-    value: "",
-    icon: null,
-  },
-  {
-    label: "Car",
-    value: "Car",
-    icon: <DirectionsCarIcon sx={{ fontSize: 14 }} />,
-  },
-  {
-    label: "Bike",
-    value: "Bike",
-    icon: <TwoWheelerIcon sx={{ fontSize: 14 }} />,
-  },
-  {
-    label: "Bus",
-    value: "Bus",
-    icon: <DirectionsBusIcon sx={{ fontSize: 14 }} />,
-  },
-  {
-    label: "Train",
-    value: "Train",
-    icon: <TrainIcon sx={{ fontSize: 14 }} />,
-  },
-  {
-    label: "Flight",
-    value: "Flight",
-    icon: <FlightIcon sx={{ fontSize: 14 }} />,
-  },
+const CATEGORY_OPTIONS = [
+  { label: "All categories", value: "" },
+  { label: "Airport pickup / drop", value: "Airport pickup / drop" },
+  { label: "Temple / event", value: "Temple / event" },
+  { label: "Ride request", value: "Ride request" },
 ];
 
-const GENDER_OPTIONS = [
-  {
-    label: "All",
-    value: "",
-  },
-  {
-    label: "Male",
-    value: "Male",
-  },
-  {
-    label: "Female",
-    value: "Female",
-  },
-  {
-    label: "Any",
-    value: "Any",
-  },
+const LANGUAGE_OPTIONS = ["Tamil", "Hindi", "Telugu", "English"];
+
+const RADIUS_OPTIONS = [
+  { label: "Any", value: null },
+  { label: "10 mi", value: 10 },
+  { label: "25 mi", value: 25 },
+  { label: "50 mi", value: 50 },
 ];
 
-const FUEL_OPTIONS = [
-  {
-    label: "All",
-    value: "",
-  },
-  {
-    label: "Yes",
-    value: "true",
-  },
-  {
-    label: "No",
-    value: "false",
-  },
-];
-
-const NAVBAR_HEIGHT = 64;
-
+const NAVBAR_HEIGHT = 35;
 const SCROLL_COLLAPSE_THRESHOLD = 24;
+const WELCOME_BANNER_DISMISS_KEY = "saathi_welcome_banner_dismissed";   // ← ADD
 
+/* ─────────── Defaults ─────────── */
 const emptyFilters = {
+  type: "",
   transportMode: "",
-  gender: "",
-  fuelSharing: "",
+  category: "",
   language: "",
+  freeRidesOnly: false,
+  childFriendly: false,
+  womenRidersOnly: false,
+  dateFrom: "",
+  dateTo: "",
+  radiusMi: null, // ← no radius by default so distant rides remain visible
 };
+
+/* ─────────── Filtering logic ─────────── */
+const normalizeCategory = (s) =>
+  String(s || "")
+    .toLowerCase()
+    .replace(/\s*\/\s*/g, "/")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const normalizeRide = (ride) => {
+  if (!ride) return null;
+
+  const kind = (ride.kind || ride.type || ride.intent || "").toLowerCase();
+
+  const fromText = (ride.from || ride.fromLocation?.address || "").toLowerCase();
+  const toText = (ride.destination || ride.destinationLocation?.address || "").toLowerCase();
+
+  const languages = Array.isArray(ride.language)
+    ? ride.language.map((l) => String(l).toLowerCase())
+    : ride.language
+      ? [String(ride.language).toLowerCase()]
+      : [];
+
+  return {
+    kind,
+    fromText,
+    toText,
+    languages,
+    freeRides:
+      Number(ride.costPerSeat || 0) === 0 &&
+      Number(ride.fuelSharing || 0) === 0,
+    childFriendly: Boolean(ride.childFriendly) || Boolean(ride.travelingWithChild),
+    womenOnly:
+      Boolean(ride.womenOnly) ||
+      Boolean(ride.womenDriversOnly) ||
+      ride.genderPreference === "Female",
+    category: normalizeCategory(ride.category),
+    transportMode: (ride.modeOfTravel || "").toLowerCase(),
+    startTime: ride.startTime ? new Date(ride.startTime) : null,
+    lat: Number(ride.fromLocation?.latitude),
+    lng: Number(ride.fromLocation?.longitude),
+  };
+};
+
+const matchesFilters = (ride, filters, searchFrom, searchDestination, userLocation) => {
+  const n = normalizeRide(ride);
+  if (!n) return false;
+
+  // Type ("Offers" → offer, "Requests" → request)
+  if (filters.type) {
+    const wantedKind = filters.type === "Offers" ? "offer" : "request";
+    if (n.kind !== wantedKind) return false;
+  }
+
+  // Transport mode
+  if (filters.transportMode && n.transportMode !== filters.transportMode.toLowerCase()) return false;
+
+  // Category
+  if (filters.category && n.category !== normalizeCategory(filters.category)) return false;
+
+  // Language
+  if (filters.language && !n.languages.includes(filters.language.toLowerCase())) return false;
+
+  // Boolean toggles
+  if (filters.freeRidesOnly && !n.freeRides) return false;
+  if (filters.childFriendly && !n.childFriendly) return false;
+  if (filters.womenRidersOnly && !n.womenOnly) return false;
+
+  // Date range — compare in UTC
+  if (n.startTime) {
+    if (filters.dateFrom) {
+      const from = new Date(filters.dateFrom + "T00:00:00Z");
+      if (n.startTime < from) return false;
+    }
+    if (filters.dateTo) {
+      const to = new Date(filters.dateTo + "T23:59:59.999Z");
+      if (n.startTime > to) return false;
+    }
+  }
+
+  // Text search
+  if (searchFrom && !n.fromText.includes(searchFrom.toLowerCase())) return false;
+  if (searchDestination && !n.toText.includes(searchDestination.toLowerCase())) return false;
+
+  // Radius — only when user explicitly picked one
+  if (userLocation && filters.radiusMi && Number.isFinite(n.lat) && Number.isFinite(n.lng)) {
+    const R = 6371;
+    const dLat = ((n.lat - userLocation.latitude) * Math.PI) / 180;
+    const dLon = ((n.lng - userLocation.longitude) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos((userLocation.latitude * Math.PI) / 180) *
+      Math.cos((n.lat * Math.PI) / 180) *
+      Math.sin(dLon / 2) ** 2;
+    const km = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const miles = km * 0.621371;
+    if (miles > filters.radiusMi) return false;
+  }
+
+  return true;
+};
+
+/* ─────────── Welcome Banner Component ─────────── */
+function WelcomeBanner({ firstName, onPostRide, onFindRide, onDismiss, postDisabled = false }) {
+  return (
+    <Paper
+      elevation={0}
+      sx={{
+        position: "relative",
+        mb: { xs: 2, sm: 2.5 },
+        borderRadius: 3,
+        overflow: "hidden",
+        background: "linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 50%, #FFCC80 100%)",
+        border: "1px solid #FFB74D",
+      }}
+    >
+      <IconButton
+        aria-label="dismiss welcome banner"
+        onClick={onDismiss}
+        size="small"
+        sx={{
+          position: "absolute",
+          top: 10,
+          right: 10,
+          color: "#A85F00",
+          bgcolor: "rgba(255,255,255,0.5)",
+          "&:hover": { bgcolor: "rgba(255,255,255,0.8)" },
+          zIndex: 2,
+        }}
+      >
+        <CloseIcon sx={{ fontSize: 18 }} />
+      </IconButton>
+
+      <Box sx={{ p: { xs: 2, sm: 2.5, md: 3 }, pr: { xs: 5, sm: 6 } }}>
+        <Typography
+          sx={{
+            fontSize: { xs: 16, sm: 18, md: 20 },
+            fontWeight: 800,
+            color: "#8B4513",
+            mb: 1.5,
+            lineHeight: 1.3,
+          }}
+        >
+          🙏 Welcome to Saathi, {firstName}!
+        </Typography>
+
+        <Typography
+          sx={{
+            fontSize: { xs: 12.5, sm: 13.5, md: 14 },
+            color: "#5D4037",
+            lineHeight: 1.65,
+            mb: 2,
+          }}
+        >
+          Saathi is a community rideshare app built exclusively for our Indian community in the US.
+          You can only join through a personal invite from someone you trust.
+        </Typography>
+
+        <Typography
+          sx={{
+            fontSize: { xs: 12.5, sm: 13, md: 13.5 },
+            color: "#5D4037",
+            fontWeight: 600,
+            mb: 1.25,
+          }}
+        >
+          Here's what you can do:
+        </Typography>
+
+        <Stack spacing={1} sx={{ mb: 2.5 }}>
+          {[
+            { icon: "🚗", bold: "Post a Ride", rest: " — offer seats if you're driving somewhere" },
+            { icon: "🔍", bold: "Find a Ride", rest: " — search for rides others have posted" },
+            { icon: "👥", bold: "Invite Friends", rest: " — share your referral link with people you trust" },
+          ].map((item) => (
+            <Box key={item.bold} sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
+              <Typography sx={{ fontSize: { xs: 14, sm: 15 }, lineHeight: 1.4 }}>{item.icon}</Typography>
+              <Typography sx={{ fontSize: { xs: 12.5, sm: 13, md: 13.5 }, color: "#4E342E", lineHeight: 1.5 }}>
+                <strong>{item.bold}</strong>{item.rest}
+              </Typography>
+            </Box>
+          ))}
+        </Stack>
+
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={1.25}>
+          <Button
+            variant="contained"
+            onClick={onPostRide}
+            disabled={postDisabled}
+            title={postDisabled ? "Complete your profile to post a ride" : ""}
+            sx={{
+              bgcolor: RUST,
+              color: "#fff",
+              textTransform: "none",
+              fontWeight: 700,
+              fontSize: { xs: 13, sm: 13.5 },
+              px: 2.5,
+              py: 1,
+              borderRadius: 999,
+              boxShadow: "0 2px 8px rgba(200,63,8,0.3)",
+              "&:hover": { bgcolor: RUST_DARK, boxShadow: "0 3px 10px rgba(200,63,8,0.4)" },
+            }}
+          >
+            Post your first ride →
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={onFindRide}
+            sx={{
+              color: RUST,
+              borderColor: RUST,
+              textTransform: "none",
+              fontWeight: 700,
+              fontSize: { xs: 13, sm: 13.5 },
+              px: 2.5,
+              py: 1,
+              borderRadius: 999,
+              bgcolor: "rgba(255,255,255,0.6)",
+              "&:hover": { bgcolor: "#fff", borderColor: RUST },
+            }}
+          >
+            Find a ride →
+          </Button>
+        </Stack>
+      </Box>
+    </Paper>
+  );
+}
 
 export default function FindRides() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
+  const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
   const { currentUser, completion } = useUser();
-
   const navigate = useNavigate();
 
   const [rides, setRides] = useState([]);
   const [open, setOpen] = useState(false);
-
+  const [requestRideToHelp, setRequestRideToHelp] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-
   const LIMIT = 10;
-
   const loadingMoreRef = useRef(false);
 
   const [filtersOpen, setFiltersOpen] = useState(false);
-
   const [searchFrom, setSearchFrom] = useState("");
   const [searchDestination, setSearchDestination] = useState("");
-  const [search, setSearch] = useState("");
 
   const [draftFilters, setDraftFilters] = useState(emptyFilters);
   const [appliedFilters, setAppliedFilters] = useState(emptyFilters);
 
-  const isProfileComplete = completion === 100;
-
-  const SIDEBAR_SCROLL_HEIGHT = "calc(100vh - 120px)";
-
   const [profileGateOpen, setProfileGateOpen] = useState(false);
-
   const hasCheckedProfileGateRef = useRef(false);
-
-  // ─────────────────────────────────────────────
-  // Current user's GPS location
-  // ─────────────────────────────────────────────
 
   const [userLocation, setUserLocation] = useState(null);
   const [locationLoading, setLocationLoading] = useState(false);
   const [locationError, setLocationError] = useState("");
 
-  const token = localStorage.getItem('token')
+  const token = localStorage.getItem("token");
   const resultsRef = useRef(null);
   const scrollStartRef = useRef(0);
+  const windowScrollHandlerRef = useRef(() => { });
 
+  /* ─── Welcome banner state ─── */
+  const [showWelcomeBanner, setShowWelcomeBanner] = useState(false);
+  const hasCheckedWelcomeRef = useRef(false);
 
-  // ─────────────────────────────────────────────
-  // Fetch rides
-  // ─────────────────────────────────────────────
+  console.log("currentUser:", currentUser);
+  console.log("createdAt raw:", currentUser?.createdAt);
+  console.log("createdAt parsed:", new Date(currentUser?.createdAt));
 
-
-
-  const {
-    transportMode,
-    gender,
-    fuelSharing,
-    language,
-  } = draftFilters;
-
-  const {
-    transportMode: appliedTransportMode,
-    gender: appliedGender,
-    fuelSharing: appliedFuelSharing,
-    language: appliedLanguage,
-  } = appliedFilters;
-
-  const fetchRides = async ({
-    pageNumber = 1,
-    reset = false,
-    searchFromValue = searchFrom,
-    searchDestinationValue = searchDestination,
-    searchValue = search,
-    transportModeValue = appliedTransportMode,
-    genderValue = appliedGender,
-    fuelSharingValue = appliedFuelSharing,
-    languageValue = appliedLanguage,
-  } = {}) => {
-    if (loadingMoreRef.current) {
-      return;
-    }
+  /* ─────────── Fetch rides ─────────── */
+  const fetchRides = async ({ pageNumber = 1, reset = false } = {}) => {
+    if (loadingMoreRef.current) return;
 
     try {
-      if (reset) {
-        setLoading(true);
-      } else {
-        setLoadingMore(true);
-      }
-
+      if (reset) setLoading(true);
+      else setLoadingMore(true);
       loadingMoreRef.current = true;
 
       const res = await axios.get(`${Api}/rides/get`, {
-        params: {
-          type: "find",
-
-          page: pageNumber,
-          limit: LIMIT,
-
-          searchFrom: searchFromValue,
-          searchDestination: searchDestinationValue,
-          search: searchValue,
-
-          transportMode: transportModeValue,
-          gender: genderValue,
-          fuelSharing: fuelSharingValue,
-          language: languageValue,
-        },
-
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        params: { type: "find", page: pageNumber, limit: LIMIT },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       const body = res?.data || {};
-
-      const newRides = Array.isArray(body.data)
-        ? body.data
-        : [];
-
-   
+      const newRides = Array.isArray(body.data) ? body.data : [];
 
       setRides((prev) => {
-        if (reset) {
-          return newRides;
-        }
-
-        const existingIds = new Set(
-          prev.map((ride) => String(ride?._id))
-        );
-
-        const uniqueRides = newRides.filter(
-          (ride) =>
-            !existingIds.has(String(ride?._id))
-        );
-
-        return [...prev, ...uniqueRides];
+        if (reset) return newRides;
+        const existingIds = new Set(prev.map((r) => String(r?._id)));
+        return [...prev, ...newRides.filter((r) => !existingIds.has(String(r?._id)))];
       });
 
       setPage(pageNumber);
-
       setHasMore(
-        typeof body.hasMore === "boolean"
-          ? body.hasMore
-          : newRides.length === LIMIT
+        typeof body.hasMore === "boolean" ? body.hasMore : newRides.length === LIMIT
       );
-
     } catch (error) {
-      console.error(
-        "Find rides error:",
-        error?.response?.data || error
-      );
+      console.error("Find rides error:", error?.response?.data || error);
     } finally {
       loadingMoreRef.current = false;
       setLoading(false);
@@ -355,343 +413,217 @@ export default function FindRides() {
   };
 
   useEffect(() => {
-    fetchRides({
-      pageNumber: 1,
-      reset: true,
-    });
+    fetchRides({ pageNumber: 1, reset: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const isFirstFilterRender = useRef(true);
-
+  /* ─────────── Welcome banner logic ─────────── */
   useEffect(() => {
-    if (isFirstFilterRender.current) {
-      isFirstFilterRender.current = false;
+    if (hasCheckedWelcomeRef.current) return;
+    if (!currentUser || !currentUser._id) return;
+
+    // Already dismissed → never show again
+    if (localStorage.getItem(WELCOME_BANNER_DISMISS_KEY) === "true") {
+      hasCheckedWelcomeRef.current = true;
       return;
     }
 
-    const timer = setTimeout(() => {
-      setRides([]);
-      setPage(1);
-      setHasMore(true);
-
-      fetchRides({
-        pageNumber: 1,
-        reset: true,
-      });
-    }, 400);
-
-    return () => clearTimeout(timer);
-  }, [
-    searchFrom,
-    searchDestination,
-    search,
-    appliedTransportMode,
-    appliedGender,
-    appliedFuelSharing,
-    appliedLanguage,
-  ]);
-
-
-
-  // ─────────────────────────────────────────────
-  // Distance calculation
-  // ─────────────────────────────────────────────
-
-  const calculateDistanceKm = (lat1, lon1, lat2, lon2) => {
-    if (
-      lat1 == null ||
-      lon1 == null ||
-      lat2 == null ||
-      lon2 == null
-    ) {
-      return Infinity;
+    // Must have joined within last 7 days
+    const createdAt = currentUser.createdAt ? new Date(currentUser.createdAt) : null;
+    if (!createdAt || isNaN(createdAt.getTime())) {
+      hasCheckedWelcomeRef.current = true;
+      return;
+    }
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    if (createdAt < sevenDaysAgo) {
+      hasCheckedWelcomeRef.current = true;
+      return;
     }
 
-    const R = 6371;
+    // Must not have posted/requested any rides yet
+    const checkUserRides = async () => {
+      try {
+        const res = await axios.get(`${Api}/rides/my/counts`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const counts = res?.data?.data || {};
+        const totalCreated = Number(counts.posts || 0);
+        if (totalCreated === 0) {
+          setShowWelcomeBanner(true);
+        }
+      } catch (error) {
+        console.error("Welcome banner check error:", error?.response?.data || error);
+      } finally {
+        hasCheckedWelcomeRef.current = true;
+      }
+    };
 
+    checkUserRides();
+  }, [currentUser, token]);
+
+  const handleDismissWelcomeBanner = () => {
+    setShowWelcomeBanner(false);
+    localStorage.setItem(WELCOME_BANNER_DISMISS_KEY, "true");
+  };
+
+  const handleWelcomePostRide = () => {
+    handleDismissWelcomeBanner();
+    tryOpenOfferRide();
+  };
+
+  const handleWelcomeFindRide = () => {
+    // handleDismissWelcomeBanner();
+    resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const isProfileComplete = Number.isFinite(completion) && completion === 100;
+
+  const tryOpenOfferRide = () => {
+    if (!isProfileComplete) {
+      setProfileGateOpen(true); // reuse the "Complete Your Profile" dialog
+      return;
+    }
+    setOpen(true);
+  };
+
+  /* ─────────── Location ─────────── */
+  const calculateDistanceKm = (lat1, lon1, lat2, lon2) => {
+    if (lat1 == null || lon1 == null || lat2 == null || lon2 == null) return Infinity;
+    const R = 6371;
     const dLat = ((lat2 - lat1) * Math.PI) / 180;
     const dLon = ((lon2 - lon1) * Math.PI) / 180;
-
     const a =
       Math.sin(dLat / 2) ** 2 +
       Math.cos((lat1 * Math.PI) / 180) *
       Math.cos((lat2 * Math.PI) / 180) *
       Math.sin(dLon / 2) ** 2;
-
-    const c =
-      2 * Math.atan2(
-        Math.sqrt(a),
-        Math.sqrt(1 - a)
-      );
-
-    return R * c;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   };
-
-  // ─────────────────────────────────────────────
-  // Request current location
-  // ─────────────────────────────────────────────
 
   const requestCurrentLocation = () => {
     if (!navigator.geolocation) {
-      setUserLocation(null);
-      setLocationLoading(false);
-      setLocationError(
-        "Location is not supported by this browser."
-      );
-
+      setLocationError("Location is not supported by this browser.");
       return;
     }
-
     setLocationLoading(true);
     setLocationError("");
-
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        const location = {
+        setUserLocation({
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
           accuracy: position.coords.accuracy,
-        };
-
-        setUserLocation(location);
+        });
         setLocationLoading(false);
-        setLocationError("");
       },
-
       (error) => {
-        console.error(
-          "GPS LOCATION ERROR:",
-          error
-        );
-
+        console.error("GPS LOCATION ERROR:", error);
         setUserLocation(null);
         setLocationLoading(false);
-
         switch (error.code) {
           case error.PERMISSION_DENIED:
-            setLocationError(
-              "Location permission is denied. Please allow location access."
-            );
+            setLocationError("Location permission is denied. Please allow location access.");
             break;
-
           case error.POSITION_UNAVAILABLE:
-            setLocationError(
-              "Please turn on your location to find rides nearby."
-            );
+            setLocationError("Please turn on your location to find rides nearby.");
             break;
-
           case error.TIMEOUT:
-            setLocationError(
-              "Location request timed out. Please try again."
-            );
+            setLocationError("Location request timed out. Please try again.");
             break;
-
           default:
-            setLocationError(
-              "Unable to get your current location."
-            );
+            setLocationError("Unable to get your current location.");
         }
       },
-
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 60000,
-      }
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
     );
   };
 
-  // Request GPS once when Find Rides opens
   useEffect(() => {
     requestCurrentLocation();
   }, []);
 
-  // ─────────────────────────────────────────────
-  // NEW:
-  // Open People Near You page
-  // ─────────────────────────────────────────────
-
-  const handlePeopleNearby = () => {
-    navigate("/people-nearby");
-  };
-
-  // ─────────────────────────────────────────────
-  // Get ride coordinates
-  // ─────────────────────────────────────────────
-
   const getRideCoordinates = (ride) => {
-    const fromLatitude = Number(
-      ride?.fromLocation?.latitude
-    );
-
-    const fromLongitude = Number(
-      ride?.fromLocation?.longitude
-    );
-
-    if (
-      Number.isFinite(fromLatitude) &&
-      Number.isFinite(fromLongitude)
-    ) {
-      return {
-        latitude: fromLatitude,
-        longitude: fromLongitude,
-      };
+    const fromLatitude = Number(ride?.fromLocation?.latitude);
+    const fromLongitude = Number(ride?.fromLocation?.longitude);
+    if (Number.isFinite(fromLatitude) && Number.isFinite(fromLongitude)) {
+      return { latitude: fromLatitude, longitude: fromLongitude };
     }
-
-    const directLatitude = Number(
-      ride?.fromLatitude
-    );
-
-    const directLongitude = Number(
-      ride?.fromLongitude
-    );
-
-    if (
-      Number.isFinite(directLatitude) &&
-      Number.isFinite(directLongitude)
-    ) {
-      return {
-        latitude: directLatitude,
-        longitude: directLongitude,
-      };
-    }
-
-    const coordinates =
-      ride?.fromLocation?.coordinates;
-
-    if (
-      Array.isArray(coordinates) &&
-      coordinates.length >= 2
-    ) {
-      const longitude = Number(coordinates[0]);
-      const latitude = Number(coordinates[1]);
-
-      if (
-        Number.isFinite(latitude) &&
-        Number.isFinite(longitude)
-      ) {
-        return {
-          latitude,
-          longitude,
-        };
-      }
-    }
-
     return null;
   };
 
   const getRideDistanceKm = (ride) => {
-    if (!userLocation) {
-      return Infinity;
-    }
-
-    const rideCoordinates =
-      getRideCoordinates(ride);
-
-    if (!rideCoordinates) {
-      return Infinity;
-    }
-
+    if (!userLocation) return Infinity;
+    const c = getRideCoordinates(ride);
+    if (!c) return Infinity;
     return calculateDistanceKm(
       userLocation.latitude,
       userLocation.longitude,
-      rideCoordinates.latitude,
-      rideCoordinates.longitude
+      c.latitude,
+      c.longitude
     );
   };
 
-  // ─────────────────────────────────────────────
-  // Profile completion gate
-  // ─────────────────────────────────────────────
-
+  /* ─────────── Profile gate ─────────── */
   useEffect(() => {
-    if (hasCheckedProfileGateRef.current) {
-      return;
-    }
-
-    if (
-      currentUser &&
-      currentUser._id &&
-      typeof completion === "number"
-    ) {
+    if (hasCheckedProfileGateRef.current) return;
+    if (currentUser && currentUser._id && typeof completion === "number") {
       hasCheckedProfileGateRef.current = true;
-
-      setProfileGateOpen(
-        completion !== 100
-      );
+      setProfileGateOpen(completion !== 100);
     }
   }, [currentUser, completion]);
 
-  const handleCloseProfileGate = () => {
-    setProfileGateOpen(false);
-  };
+  const handleCloseProfileGate = () => setProfileGateOpen(false);
 
-  // ─────────────────────────────────────────────
-  // Filters
-  // ─────────────────────────────────────────────
-
+  /* ─────────── Filters ─────────── */
   const openFilters = () => {
-    scrollStartRef.current =
-      resultsRef.current
-        ? resultsRef.current.scrollTop
-        : 0;
-
+    scrollStartRef.current = resultsRef.current ? resultsRef.current.scrollTop : 0;
+    if (typeof window !== "undefined" && window.scrollY) {
+      scrollStartRef.current = window.scrollY;
+    }
     setFiltersOpen(true);
   };
-
-  const closeFilters = () => {
-    setFiltersOpen(false);
-  };
-
-  const toggleFilters = () => {
-    if (filtersOpen) {
-      closeFilters();
-    } else {
-      openFilters();
-    }
-  };
+  const closeFilters = () => setFiltersOpen(false);
+  const toggleFilters = () => (filtersOpen ? closeFilters() : openFilters());
 
   const handleResultsScroll = (e) => {
     const element = e.currentTarget;
-
-    // ----------------------------------------
-    // Close filters when user starts scrolling
-    // ----------------------------------------
     if (filtersOpen) {
-      const delta = Math.abs(
-        element.scrollTop - scrollStartRef.current
-      );
-
-      if (delta > SCROLL_COLLAPSE_THRESHOLD) {
-        closeFilters();
-      }
+      const delta = Math.abs(element.scrollTop - scrollStartRef.current);
+      if (delta > SCROLL_COLLAPSE_THRESHOLD) closeFilters();
     }
-
-    // ----------------------------------------
-    // Infinite scroll
-    // ----------------------------------------
-    const distanceFromBottom =
-      element.scrollHeight -
-      element.scrollTop -
-      element.clientHeight;
-
-    if (
-      distanceFromBottom <= 300 &&
-      hasMore &&
-      !loadingMoreRef.current
-    ) {
-   
-
-      fetchRides({
-        pageNumber: page + 1,
-        reset: false,
-      });
+    const distanceFromBottom = element.scrollHeight - element.scrollTop - element.clientHeight;
+    if (distanceFromBottom <= 300 && hasMore && !loadingMoreRef.current) {
+      fetchRides({ pageNumber: page + 1, reset: false });
     }
   };
 
-  const applyFilters = () => {
-    setAppliedFilters(draftFilters);
-    closeFilters();
+  windowScrollHandlerRef.current = () => {
+    const scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
+    if (filtersOpen) {
+      const delta = Math.abs(scrollTop - scrollStartRef.current);
+      if (delta > SCROLL_COLLAPSE_THRESHOLD) closeFilters();
+    }
+    const distanceFromBottom =
+      document.documentElement.scrollHeight - scrollTop - window.innerHeight;
+    if (distanceFromBottom <= 300 && hasMore && !loadingMoreRef.current) {
+      fetchRides({ pageNumber: page + 1, reset: false });
+    }
+  };
+
+  useEffect(() => {
+    const onWindowScroll = () => windowScrollHandlerRef.current();
+    window.addEventListener("scroll", onWindowScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onWindowScroll);
+  }, []);
+
+  /* Update BOTH draft and applied so the list re-filters immediately */
+  const updateFilterAndApply = (key, value) => {
+    setDraftFilters((prev) => {
+      const next = { ...prev, [key]: value };
+      setAppliedFilters(next);
+      return next;
+    });
   };
 
   const clearFilters = () => {
@@ -699,246 +631,311 @@ export default function FindRides() {
     setAppliedFilters(emptyFilters);
   };
 
-  const updateDraft = (
-    key,
-    value
-  ) => {
-    setDraftFilters((prev) => {
-      const next = {
-        ...prev,
-        [key]: value,
-      };
-
-      if (
-        key === "transportMode" &&
-        value !== "Flight"
-      ) {
-        next.language = "";
-      }
-
-      return next;
-    });
-  };
-
+  /* Active chips reflect what is actually applied */
   const activeFilters = [
-    appliedTransportMode && {
+    appliedFilters.type && {
+      key: "type",
+      label: appliedFilters.type,
+      clear: () => {
+        const next = { ...appliedFilters, type: "" };
+        setAppliedFilters(next);
+        setDraftFilters(next);
+      },
+    },
+    appliedFilters.transportMode && {
       key: "transport",
-
-      label: appliedTransportMode,
-
+      label: appliedFilters.transportMode,
       clear: () => {
-        const next = {
-          ...appliedFilters,
-          transportMode: "",
-          language: "",
-        };
-
+        const next = { ...appliedFilters, transportMode: "" };
         setAppliedFilters(next);
         setDraftFilters(next);
       },
     },
-
-    appliedGender && {
-      key: "gender",
-
-      label: appliedGender,
-
+    appliedFilters.category && {
+      key: "category",
+      label: appliedFilters.category,
       clear: () => {
-        const next = {
-          ...appliedFilters,
-          gender: "",
-        };
-
+        const next = { ...appliedFilters, category: "" };
         setAppliedFilters(next);
         setDraftFilters(next);
       },
     },
-
-    appliedFuelSharing !== "" && {
-      key: "fuel",
-
-      label: `Fuel: ${appliedFuelSharing === "true"
-        ? "Yes"
-        : "No"
-        }`,
-
-      clear: () => {
-        const next = {
-          ...appliedFilters,
-          fuelSharing: "",
-        };
-
-        setAppliedFilters(next);
-        setDraftFilters(next);
-      },
-    },
-
-    appliedLanguage && {
+    appliedFilters.language && {
       key: "lang",
-
-      label: `Lang: ${appliedLanguage}`,
-
+      label: `Lang: ${appliedFilters.language}`,
       clear: () => {
-        const next = {
-          ...appliedFilters,
-          language: "",
-        };
-
+        const next = { ...appliedFilters, language: "" };
+        setAppliedFilters(next);
+        setDraftFilters(next);
+      },
+    },
+    appliedFilters.freeRidesOnly && {
+      key: "free",
+      label: "Free rides only",
+      clear: () => {
+        const next = { ...appliedFilters, freeRidesOnly: false };
+        setAppliedFilters(next);
+        setDraftFilters(next);
+      },
+    },
+    appliedFilters.childFriendly && {
+      key: "child",
+      label: "Child-friendly",
+      clear: () => {
+        const next = { ...appliedFilters, childFriendly: false };
+        setAppliedFilters(next);
+        setDraftFilters(next);
+      },
+    },
+    appliedFilters.womenRidersOnly && {
+      key: "women",
+      label: "Women riders only",
+      clear: () => {
+        const next = { ...appliedFilters, womenRidersOnly: false };
+        setAppliedFilters(next);
+        setDraftFilters(next);
+      },
+    },
+    (appliedFilters.dateFrom || appliedFilters.dateTo) && {
+      key: "dates",
+      label:
+        appliedFilters.dateFrom && appliedFilters.dateTo
+          ? `${appliedFilters.dateFrom} → ${appliedFilters.dateTo}`
+          : appliedFilters.dateFrom
+            ? `From ${appliedFilters.dateFrom}`
+            : `Until ${appliedFilters.dateTo}`,
+      clear: () => {
+        const next = { ...appliedFilters, dateFrom: "", dateTo: "" };
+        setAppliedFilters(next);
+        setDraftFilters(next);
+      },
+    },
+    appliedFilters.radiusMi != null && {
+      key: "radius",
+      label: `Within ${appliedFilters.radiusMi} mi`,
+      clear: () => {
+        const next = { ...appliedFilters, radiusMi: null };
         setAppliedFilters(next);
         setDraftFilters(next);
       },
     },
   ].filter(Boolean);
 
-  // ─────────────────────────────────────────────
-  // Filter rides
-  // ─────────────────────────────────────────────
+  /* ─────────── Sort + filter rides ─────────── */
+  const sortedVisibleRides = useMemo(() => {
+    const filtered = rides.filter((ride) =>
+      matchesFilters(ride, appliedFilters, searchFrom, searchDestination, userLocation)
+    );
 
-  const now = new Date();
+    return [...filtered].sort((a, b) => {
+      if (userLocation) {
+        const dA = getRideDistanceKm(a);
+        const dB = getRideDistanceKm(b);
+        const vA = Number.isFinite(dA);
+        const vB = Number.isFinite(dB);
+        if (vA && !vB) return -1;
+        if (!vA && vB) return 1;
+        if (vA && vB && dA !== dB) return dA - dB;
+      }
+      return new Date(a.startTime).getTime() - new Date(b.startTime).getTime();
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rides, userLocation, appliedFilters, searchFrom, searchDestination]);
 
+  /* ─────────── Filter Panel ─────────── */
+  const FilterPanel = () => (
+    <Paper
+      variant="outlined"
+      sx={{
+        p: { xs: 1.75, sm: 2.25, md: 2.5 },
+        borderRadius: 2.5,
+        borderColor: "divider",
+        bgcolor: "#fff",
+        width: "100%",
+        boxSizing: "border-box",
+        position: isDesktop ? "sticky" : "static",
+        top: NAVBAR_HEIGHT + 8,
+        alignSelf: "flex-start",
+        zIndex: 2,
+        maxHeight: isDesktop ? `calc(100vh - ${NAVBAR_HEIGHT}px - 48px)` : "none",
+        overflowY: isDesktop ? "auto" : "visible",
+        overflowX: "hidden",
+      }}
+    >
+      <Stack
+        direction="row"
+        sx={{ mb: 2, display: "flex", justifyContent: "space-between", alignItems: "center" }}
+      >
+        <Typography sx={{ fontSize: { xs: 14, sm: 15, md: 16 }, fontWeight: 700, color: "#1a1a1a" }}>
+          Filters
+        </Typography>
+        {!isDesktop && (
+          <IconButton size="small" onClick={closeFilters}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        )}
+      </Stack>
 
-  const visibleRides = rides;
+      {/* ─── Date range ─── */}
+      <Typography sx={sectionLabelSx}>Date range</Typography>
+      <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
+        <TextField
+          size="small"
+          type="date"
+          value={draftFilters.dateFrom}
+          onChange={(e) => updateFilterAndApply("dateFrom", e.target.value)}
+          sx={dateInputSx}
+          InputLabelProps={{ shrink: true }}
+        />
+        <TextField
+          size="small"
+          type="date"
+          value={draftFilters.dateTo}
+          onChange={(e) => updateFilterAndApply("dateTo", e.target.value)}
+          sx={dateInputSx}
+          InputLabelProps={{ shrink: true }}
+        />
+      </Stack>
 
-  // ─────────────────────────────────────────────
-  // Sort rides by distance
-  // ─────────────────────────────────────────────
-
-  const sortedVisibleRides =
-    useMemo(() => {
-      return [...visibleRides].sort(
-        (a, b) => {
-          if (userLocation) {
-            const distanceA =
-              getRideDistanceKm(a);
-
-            const distanceB =
-              getRideDistanceKm(b);
-
-            const validA =
-              Number.isFinite(
-                distanceA
-              );
-
-            const validB =
-              Number.isFinite(
-                distanceB
-              );
-
-            if (
-              validA &&
-              !validB
-            ) {
-              return -1;
-            }
-
-            if (
-              !validA &&
-              validB
-            ) {
-              return 1;
-            }
-
-            if (
-              validA &&
-              validB &&
-              distanceA !== distanceB
-            ) {
-              return (
-                distanceA - distanceB
-              );
-            }
-          }
-
+      {/* ─── Type ─── */}
+      <Typography sx={sectionLabelSx}>Type</Typography>
+      <Stack direction="row" spacing={0.75} sx={{ mb: 2, flexWrap: "wrap", gap: 0.75 }}>
+        {[
+          { label: "All", value: "" },
+          { label: "Offers", value: "Offers" },
+          { label: "Requests", value: "Requests" },
+        ].map((t) => {
+          const selected = (draftFilters.type || "") === t.value;
           return (
-            new Date(a.startTime).getTime() -
-            new Date(b.startTime).getTime()
+            <Chip
+              key={t.value || "all"}
+              label={t.label}
+              clickable
+              onClick={() => updateFilterAndApply("type", t.value)}
+              sx={pillChipSx(selected)}
+            />
           );
-        }
-      );
-    }, [
-      visibleRides,
-      userLocation,
-    ]);
+        })}
+      </Stack>
 
-  const formatDistance = (
-    distanceKm
-  ) => {
-    if (
-      !Number.isFinite(distanceKm)
-    ) {
-      return null;
-    }
+      {/* ─── Category ─── */}
+      <Typography sx={sectionLabelSx}>Category</Typography>
+      <FormControl fullWidth size="small" sx={{ mb: 2 }}>
+        <Select
+          value={draftFilters.category}
+          onChange={(e) => updateFilterAndApply("category", e.target.value)}
+          displayEmpty
+          sx={{ fontSize: { xs: 12.5, sm: 13 }, borderRadius: 1.5, height: { xs: 34, sm: 36 } }}
+        >
+          {CATEGORY_OPTIONS.map((c) => (
+            <MenuItem key={c.value} value={c.value} sx={{ fontSize: { xs: 12.5, sm: 13 } }}>
+              {c.label}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
 
-    if (distanceKm < 1) {
-      return `${Math.round(
-        distanceKm * 1000
-      )} m`;
-    }
+      {/* ─── Language ─── */}
+      <Typography sx={sectionLabelSx}>Language</Typography>
+      <Stack direction="row" spacing={0.75} sx={{ mb: 2, flexWrap: "wrap", gap: 0.75 }}>
+        {LANGUAGE_OPTIONS.map((lang) => {
+          const selected = draftFilters.language === lang;
+          return (
+            <Chip
+              key={lang}
+              label={lang}
+              clickable
+              onClick={() => updateFilterAndApply("language", selected ? "" : lang)}
+              sx={pillChipSx(selected)}
+            />
+          );
+        })}
+      </Stack>
 
-    return `${distanceKm.toFixed(
-      1
-    )} km`;
-  };
+      {/* ─── Toggles ─── */}
+      <FormGroup sx={{ mb: 2 }}>
+        <FormControlLabel
+          control={
+            <Checkbox
+              size="small"
+              checked={draftFilters.freeRidesOnly}
+              onChange={(e) => updateFilterAndApply("freeRidesOnly", e.target.checked)}
+              sx={{ color: "#bbb", "&.Mui-checked": { color: RUST }, py: 0.25 }}
+            />
+          }
+          label={<Typography sx={{ fontSize: { xs: 12.5, sm: 13 }, color: "#333" }}>Free rides only</Typography>}
+        />
+        <FormControlLabel
+          control={
+            <Checkbox
+              size="small"
+              checked={draftFilters.childFriendly}
+              onChange={(e) => updateFilterAndApply("childFriendly", e.target.checked)}
+              sx={{ color: "#bbb", "&.Mui-checked": { color: RUST }, py: 0.25 }}
+            />
+          }
+          label={<Typography sx={{ fontSize: { xs: 12.5, sm: 13 }, color: "#333" }}>Child-friendly</Typography>}
+        />
+        <FormControlLabel
+          control={
+            <Checkbox
+              size="small"
+              checked={draftFilters.womenRidersOnly}
+              onChange={(e) => updateFilterAndApply("womenRidersOnly", e.target.checked)}
+              sx={{ color: "#bbb", "&.Mui-checked": { color: RUST }, py: 0.25 }}
+            />
+          }
+          label={
+            <Typography sx={{ fontSize: { xs: 12.5, sm: 13 }, color: "#333" }}>
+              Women riders only{" "}
+              <Typography component="span" sx={{ fontSize: { xs: 11, sm: 11.5 }, color: "text.secondary" }}>
+                (shown to women)
+              </Typography>
+            </Typography>
+          }
+        />
+      </FormGroup>
 
+      {activeFilters.length > 0 && (
+        <Button
+          fullWidth
+          size="small"
+          startIcon={<FilterListOffIcon sx={{ fontSize: 15 }} />}
+          onClick={clearFilters}
+          sx={{
+            mt: 1,
+            color: "text.secondary",
+            textTransform: "none",
+            fontSize: { xs: 12, sm: 12.5 },
+            fontWeight: 600,
+            "&:hover": { bgcolor: "#f5f5f5" },
+          }}
+        >
+          Clear all
+        </Button>
+      )}
+    </Paper>
+  );
 
-  // if (loading) {
-  //   return (
-  //     <Box
-  //       sx={{
-  //         minHeight: "100vh",
-  //         display: "flex",
-  //         alignItems: "center",
-  //         justifyContent: "center",
-  //       }}
-  //     >
-  //       <CircularProgress
-  //         sx={{
-  //           color: saffron[500],
-  //         }}
-  //       />
-  //     </Box>
-  //   );
-  // }
-
+  /* ─────────── Main render ─────────── */
   return (
     <>
-
+      {/* Profile gate dialog */}
       <Dialog
         open={profileGateOpen}
         onClose={(event, reason) => {
-          if (
-            reason === "backdropClick"
-          ) {
-            return;
-          }
-
+          if (reason === "backdropClick") return;
           handleCloseProfileGate();
         }}
         fullWidth
         maxWidth="xs"
         PaperProps={{
           sx: {
-            borderRadius: {
-              xs: 2,
-              sm: 3,
-            },
-
-            m: {
-              xs: 1.5,
-              sm: 2,
-            },
-
-            width: {
-              xs: "95%",
-              sm: "100%",
-            },
-
+            borderRadius: { xs: 2, sm: 2.5, md: 3 },
+            m: { xs: 1, sm: 2, md: 3 },
+            maxWidth: { xs: "450px", sm: "450px" },
             textAlign: "center",
-
-            p: {
-              xs: 1,
-              sm: 1.5,
-            },
+            p: { xs: 1, sm: 1.3, md: 1.6 },
           },
         }}
       >
@@ -949,129 +946,54 @@ export default function FindRides() {
             alignItems: "center",
             gap: 1,
             fontWeight: 700,
-            fontSize: {
-              xs: "1rem",
-              sm: "1.15rem",
-            },
-            pt: 3,
+            fontSize: { xs: "1rem", sm: "1.15rem", md: "1.25rem" },
+            pt: { xs: 2, sm: 3 },
           }}
         >
-          <WarningAmberRoundedIcon
-            sx={{
-              fontSize: 40,
-              color: "#E8650A",
-            }}
-          />
-
+          <WarningAmberRoundedIcon sx={{ fontSize: { xs: 34, sm: 40 }, color: "#E8650A" }} />
           Complete Your Profile
         </DialogTitle>
-
         <DialogContent>
-          <Typography
-            sx={{
-              fontSize: {
-                xs: "0.85rem",
-                sm: "0.95rem",
-              },
-
-              color: "text.secondary",
-            }}
-          >
-            Your profile is only{" "}
-            {Number.isFinite(completion)
-              ? completion
-              : 0}
-            % complete. Please complete
-            your profile to 100% to unlock
-            all features, including
-            posting, liking, commenting and
-            saving in the Community.
+          <Typography sx={{ fontSize: { xs: "0.85rem", sm: "0.95rem" }, color: "text.secondary" }}>
+            Your profile is only {Number.isFinite(completion) ? completion : 0}% complete. Please complete your profile to 100% to unlock all features.
           </Typography>
-
-          <Box
-            sx={{
-              mt: 2.5,
-              px: {
-                xs: 1,
-                sm: 3,
-              },
-            }}
-          >
+          <Box sx={{ mt: 2.5, px: { xs: 1, sm: 3 } }}>
             <LinearProgress
               variant="determinate"
-              value={
-                Number.isFinite(completion)
-                  ? completion
-                  : 0
-              }
-              sx={{
-                height: 8,
-                borderRadius: 5,
-                bgcolor: "#F0E6DC",
-
-                "& .MuiLinearProgress-bar":
-                {
-                  bgcolor: "#FF9933",
-                },
-              }}
+              value={Number.isFinite(completion) ? completion : 0}
+              sx={{ height: 8, borderRadius: 5, bgcolor: "#F0E6DC", "& .MuiLinearProgress-bar": { bgcolor: "#FF9933" } }}
             />
           </Box>
         </DialogContent>
-
-        <DialogActions
-          sx={{
-            justifyContent: "center",
-            pb: 3,
-            pt: 1,
-            gap: 1.5,
-          }}
-        >
+        <DialogActions sx={{ justifyContent: "center", flexWrap: "wrap", pb: { xs: 2, sm: 3 }, pt: 1, gap: 1.5 }}>
           <Button
             variant="contained"
-            onClick={
-              handleCloseProfileGate
-            }
+            onClick={handleCloseProfileGate}
             sx={{
               textTransform: "none",
               borderRadius: 999,
-              px: 3,
+              px: { xs: 2.5, sm: 3 },
+              fontSize: { xs: 13, sm: 14 },
               fontWeight: 600,
               bgcolor: "#FF9933",
               color: "#fff",
-
-              "&:hover": {
-                bgcolor: "#FF9933",
-                color: "#fff",
-              },
+              "&:hover": { bgcolor: "#FF9933", color: "#fff" },
             }}
           >
-            OK
+            Not now
           </Button>
-
           <Button
             variant="contained"
-            onClick={() => {
-              navigate(
-                "/user-profile",
-                {
-                  state: {
-                    openEditProfile: true,
-                  },
-                }
-              );
-            }}
+            onClick={() => navigate("/user-profile", { state: { openEditProfile: true } })}
             sx={{
               textTransform: "none",
               borderRadius: 999,
-              px: 3,
+              px: { xs: 2.5, sm: 3 },
+              fontSize: { xs: 13, sm: 14 },
               fontWeight: 600,
               bgcolor: "#FF9933",
               color: "#fff",
-
-              "&:hover": {
-                bgcolor: "#FF9933",
-                color: "#fff",
-              },
+              "&:hover": { bgcolor: "#FF9933", color: "#fff" },
             }}
           >
             Update profile
@@ -1081,1696 +1003,404 @@ export default function FindRides() {
 
       <Box
         sx={{
-          height: `calc(100vh - ${NAVBAR_HEIGHT}px)`,
-          display: "flex",
-          flexDirection: "column",
+          minHeight: {
+            xs: `calc(100dvh - ${NAVBAR_HEIGHT}px)`,
+            sm: `calc(100dvh - ${NAVBAR_HEIGHT}px)`,
+            md: `calc(100vh - ${NAVBAR_HEIGHT}px)`,
+            lg: `calc(100vh - ${NAVBAR_HEIGHT}px)`,
+          },
           width: "100%",
+          maxWidth: "100%",
           boxSizing: "border-box",
-          overflowX: "hidden",
-          p: 1,
+          bgcolor: "#FAF8F5",
+          // p: { xs: 0.5, sm: 1.5, md: 2.5, lg: 3 },
+          overflowX: "clip",
         }}
       >
-        {/* ──────────────────────────────────────
-            Sticky header
-        ─────────────────────────────────────── */}
-        <Box
+        <Container maxWidth="lg"
           sx={{
-            position: "sticky",
-            top: 0,
-            zIndex: 100,
-            flexShrink: 0,
-          }}
-        >
+            px: { xs: 1.2, sm: 1 },
+            py: { xs: 1.2, sm: 1 }
+          }}>
+          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: { xs: 1.5, sm: 2 } }}>
+            <Typography
+              component="h1"
+              sx={{
+                fontSize: { xs: 20, sm: 26, md: 30 },
+                fontWeight: 800,
+                color: NAVY,
+                letterSpacing: -0.3,
+                lineHeight: 1.2,
+              }}
+            >
+              Find a ride
+            </Typography>
+          </Stack>
+          {console.log(showWelcomeBanner, 'showWelcomeBanner')}
+
+          {showWelcomeBanner && (
+            <WelcomeBanner
+              firstName={currentUser?.firstName || currentUser?.name?.split(" ")[0] || "there"}
+              onPostRide={handleWelcomePostRide}
+              onFindRide={handleWelcomeFindRide}
+              onDismiss={handleDismissWelcomeBanner}
+              postDisabled={!isProfileComplete}
+            />
+          )}
+
+
           <Box
             sx={{
-              color: "#000000",
-              pt: 1,
-              pb: {
-                xs: 0,
-                sm: 2,
-                md: 3,
+              display: "grid",
+              gridTemplateColumns: {
+                xs: "minmax(0, 1fr)",
+                md: "280px minmax(0, 1fr)",
+                lg: "300px minmax(0, 1fr)",
               },
+              gap: { xs: 1.5, sm: 2, md: 3 },
+              alignItems: "flex-start",
             }}
           >
-            <Container
-              disableGutters
-            >
-              {/* ───────────────────────────────
-                  Page title
-              ─────────────────────────────── */}
-              <Typography
-                fontWeight={800}
-                sx={{
-                  fontSize: {
-                    xs: "1rem",
-                    sm: "1.45rem",
-                    md: "1.8rem",
-                  },
-                  letterSpacing:
-                    "0.3px",
-                  lineHeight: 1.2,
-                }}
-              >
-                Find a Ride
-              </Typography>
+            {isDesktop ? (
+              <FilterPanel />
+            ) : (
+              <Collapse in={filtersOpen} timeout="auto">
+                <FilterPanel />
+              </Collapse>
+            )}
 
-              {/* ───────────────────────────────
-                  Location + People Near You
-              ─────────────────────────────── */}
-              <Box
-                sx={{
-                  mt: 1,
-                  mb: 0.5,
-                  display: "flex",
-                  alignItems:
-                    "center",
-                  gap: 1,
-                  flexWrap: "wrap",
-                }}
-              >
-                {/* Enable Location */}
+            <Box sx={{ minWidth: 0, width: "100%" }}>
+              {!isDesktop && (
                 <Button
-                  onClick={requestCurrentLocation}
-                  disabled={locationLoading}
-                  startIcon={
-                    <LocationOnIcon
-                      sx={{
-                        fontSize: {
-                          xs: "15px !important",
-                          sm: "17px !important",
-                          md: "18px !important",
-                        },
-                        color: userLocation ? "#2E7D32" : "#E8650A",
-                      }}
-                    />
-                  }
+                  fullWidth
+                  onClick={toggleFilters}
+                  startIcon={<FilterListOffIcon />}
                   sx={{
-                    minHeight: {
-                      xs: 26,
-                      sm: 28,
-                      md: 30,
-                    },
-                    height: {
-                      xs: 28,
-                      sm: 30,
-                      md: 32,
-                    },
-                    px: {
-                      xs: 1,
-                      sm: 1.25,
-                      md: 1.5,
-                    },
-                    borderRadius: 999,
+                    mb: 1.5,
+                    bgcolor: "#fff",
+                    color: "#333",
+                    border: "1px solid #ddd",
                     textTransform: "none",
-                    fontSize: {
-                      xs: "0.62rem",
-                      sm: "0.70rem",
-                      md: "0.78rem",
-                    },
                     fontWeight: 600,
-                    lineHeight: 1,
-                    whiteSpace: "nowrap",
-                    color: userLocation ? "#2E7D32" : "#E8650A",
-                    background: userLocation ? "#EAF6EC" : "#FFF4E8",
-                    border: `1px solid ${userLocation ? "#A5D6A7" : "#FFD09B"
-                      }`,
-                    boxShadow: "none",
-                    "& .MuiButton-startIcon": {
-                      marginRight: {
-                        xs: "3px",
-                        sm: "4px",
-                        md: "5px",
-                      },
-                      marginLeft: 0,
-                    },
-                    "&:hover": {
-                      background: userLocation ? "#E0F2E3" : "#FFEBD7",
-                      boxShadow: "none",
-                    },
-                  }}
-                >
-                  {locationLoading
-                    ? "Getting location..."
-                    : userLocation
-                      ? "Location Enabled"
-                      : "Enable Location"}
-                </Button>
-
-                {/* People Near You */}
-
-                <Button
-                  onClick={handlePeopleNearby}
-                  startIcon={
-                    <PeopleAltIcon
-                      sx={{
-                        fontSize: {
-                          xs: "14px !important",
-                          sm: "16px !important",
-                          md: "17px !important",
-                        },
-                      }}
-                    />
-                  }
-                  sx={{
-                    minHeight: {
-                      xs: 26,
-                      sm: 28,
-                      md: 30,
-                    },
-                    height: {
-                      xs: 28,
-                      sm: 30,
-                      md: 32,
-                    },
-                    px: {
-                      xs: 1,
-                      sm: 1.25,
-                      md: 1.5,
-                    },
-                    borderRadius: 999,
-                    textTransform: "none",
-                    fontSize: {
-                      xs: "0.62rem",
-                      sm: "0.70rem",
-                      md: "0.78rem",
-                    },
-                    fontWeight: 700,
-                    lineHeight: 1,
-                    whiteSpace: "nowrap",
-                    color: "#E8650A",
-                    background: "#FFF",
-                    border: "1px solid #FFD09B",
-                    boxShadow: "none",
-                    "& .MuiButton-startIcon": {
-                      marginRight: {
-                        xs: "3px",
-                        sm: "4px",
-                        md: "5px",
-                      },
-                      marginLeft: 0,
-                    },
-                    "&:hover": {
-                      background: "#FFF4E8",
-                      borderColor: "#FFAB28",
-                      boxShadow: "none",
-                    },
-                  }}
-                >
-                  People Near You
-                </Button>
-
-                {/* Location error */}
-
-                {!userLocation && !locationLoading && (
-                  <Typography
-                    sx={{
-                      mt: 0.75,
-                      fontSize: {
-                        xs: "0.68rem",
-                        sm: "0.75rem",
-                      },
-                      color: "text.secondary",
-                    }}
-                  >
-                    Enable location to see rides near you (optional)
-                  </Typography>
-                )}
-              </Box>
-
-              {/* ───────────────────────────────
-                  General search
-              ─────────────────────────────── */}
-              <Box
-                sx={{
-                  display: "flex",
-                  gap: {
-                    xs: 0.7,
-                    sm: 1.25,
-                  },
-                  alignItems:
-                    "center",
-                  flexDirection: "row",
-                  mt: {
-                    xs: 2.3,
-                    sm: 1.5,
-                  },
-                }}
-              >
-                <TextField
-                  size="small"
-                  placeholder="Search by From / To / Airport / City..."
-                  value={search}
-                  onChange={(e) =>
-                    setSearch(
-                      e.target.value
-                    )
-                  }
-
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <SearchIcon
-                          sx={{
-                            color:
-                              saffron[500],
-
-                            fontSize: 20,
-                          }}
-                        />
-                      </InputAdornment>
-                    ),
-                  }}
-
-                  sx={{
-                    flex: 1,
-
-                    minWidth: 0,
-
-                    "& .MuiOutlinedInput-root":
-                    {
-                      borderRadius:
-                        "12px",
-
-                      background:
-                        "rgba(255,255,255,0.96)",
-
-                      fontSize: {
-                        xs: "0.65rem",
-                        sm: "0.84rem",
-                      },
-
-                      height: {
-                        xs: 32,
-                        sm: 40,
-                      },
-
-                      "& fieldset": {
-                        border: "none",
-                      },
-
-                      "& input": {
-                        py: 0,
-
-                        px: {
-                          xs: 1,
-                          sm: 1,
-                        },
-                      },
-
-                      "& .MuiInputAdornment-root":
-                      {
-                        ml: {
-                          xs: 0.75,
-                          sm: 1,
-                        },
-
-                        mr: {
-                          xs: 0.25,
-                          sm: 0.5,
-                        },
-                      },
-                    },
-                  }}
-                />
-              </Box>
-
-              {/* ───────────────────────────────
-                  From / To / Filters / Requests
-              ─────────────────────────────── */}
-
-              <Box
-                sx={{
-                  display: "flex",
-
-                  gap: {
-                    xs: 1,
-                    sm: 1.25,
-                  },
-
-                  alignItems:
-                    "center",
-
-                  flexDirection: "row",
-
-                  mt: {
-                    xs: 2,
-                    sm: 1.5,
-                  },
-
-                  mb: {
-                    xs: 1,
-                    sm: 1,
-                  },
-                }}
-              >
-                {/* From */}
-
-                <TextField
-                  size="small"
-
-                  placeholder={
-                    isMobile
-                      ? "From"
-                      : "From / City / Airport"
-                  }
-
-                  value={searchFrom}
-
-                  onChange={(e) =>
-                    setSearchFrom(
-                      e.target.value
-                    )
-                  }
-
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <SearchIcon
-                          sx={{
-                            color:
-                              saffron[500],
-
-                            fontSize: {
-                              xs: 14,
-                              sm: 17,
-                            },
-                          }}
-                        />
-                      </InputAdornment>
-                    ),
-                  }}
-
-                  sx={{
-                    flex: 1,
-
-                    minWidth: 0,
-
-                    "& .MuiOutlinedInput-root":
-                    {
-                      borderRadius:
-                        "12px",
-
-                      background:
-                        "rgba(255,255,255,0.96)",
-
-                      fontSize: {
-                        xs: "0.65rem",
-                        sm: "0.84rem",
-                      },
-
-                      height: {
-                        xs: 34,
-                        sm: 40,
-                      },
-
-                      "& fieldset": {
-                        border: "none",
-                      },
-
-                      "& input": {
-                        py: 0,
-
-                        px: {
-                          xs: 1,
-                          sm: 1,
-                        },
-                      },
-
-                      "& .MuiInputAdornment-root":
-                      {
-                        ml: {
-                          xs: 0.75,
-                          sm: 1,
-                        },
-
-                        mr: {
-                          xs: 0.25,
-                          sm: 0.5,
-                        },
-                      },
-                    },
-                  }}
-                />
-
-                {/* To */}
-
-                <TextField
-                  size="small"
-
-                  placeholder={
-                    isMobile
-                      ? "To"
-                      : "To / City / Airport"
-                  }
-
-                  value={
-                    searchDestination
-                  }
-
-                  onChange={(e) =>
-                    setSearchDestination(
-                      e.target.value
-                    )
-                  }
-
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <SearchIcon
-                          sx={{
-                            color:
-                              saffron[500],
-
-                            fontSize: {
-                              xs: 12,
-                              sm: 17,
-                            },
-                          }}
-                        />
-                      </InputAdornment>
-                    ),
-                  }}
-
-                  sx={{
-                    flex: 1,
-
-                    minWidth: 0,
-
-                    "& .MuiOutlinedInput-root":
-                    {
-                      borderRadius:
-                        "12px",
-
-                      background:
-                        "rgba(255,255,255,0.96)",
-
-                      fontSize: {
-                        xs: "0.65rem",
-                        sm: "0.84rem",
-                      },
-
-                      height: {
-                        xs: 34,
-                        sm: 40,
-                      },
-
-                      pr: 0.5,
-
-                      "& fieldset": {
-                        border: "none",
-                      },
-
-                      "& input": {
-                        py: 0,
-
-                        px: {
-                          xs: 1,
-                          sm: 1,
-                        },
-                      },
-
-                      "& .MuiInputAdornment-root":
-                      {
-                        ml: {
-                          xs: 0.75,
-                          sm: 1,
-                        },
-
-                        mr: {
-                          xs: 0.25,
-                          sm: 0.5,
-                        },
-                      },
-                    },
-                  }}
-                />
-
-                {/* Filters */}
-
-                <Button
-                  onClick={
-                    toggleFilters
-                  }
-                  sx={{
-                    flexShrink: 0,
-
-                    borderRadius:
-                      "50px",
-
-                    background:
-                      "#ffff",
-
-                    backdropFilter:
-                      "blur(6px)",
-
-                    border: "none",
-
-                    color: "#100f0f",
-
-                    fontWeight: 700,
-
-                    textTransform:
-                      "none",
-
-                    fontSize: {
-                      xs: "0.7rem",
-                      sm: "0.82rem",
-                    },
-
-                    height: {
-                      xs: 34,
-                      sm: 40,
-                    },
-
-                    minWidth: {
-                      xs: "auto",
-                      sm: 100,
-                    },
-
-                    px: {
-                      xs: 1.25,
-                      sm: 2,
-                    },
-
-                    gap: {
-                      xs: 0.4,
-                      sm: 0.75,
-                    },
-
-                    boxShadow: "none",
-
-                    whiteSpace:
-                      "nowrap",
-
-                    display: "flex",
-
-                    alignItems:
-                      "center",
-
-                    "&:hover": {
-                      background:
-                        saffron[500],
-
-                      boxShadow: "none",
-
-                      color: "#ffff",
-                    },
-                  }}
-                >
-                  <TuneIcon
-                    sx={{
-                      fontSize: {
-                        xs: 14,
-                        sm: 17,
-                      },
-                    }}
-                  />
-
-                  <Box
-                    component="span"
-                    sx={{
-                      display: {
-                        xs: "none",
-                        sm: "inline",
-                      },
-                    }}
-                  >
-                    Filters
-                    {activeFilters.length >
-                      0
-                      ? ` (${activeFilters.length})`
-                      : ""}
-                  </Box>
-
-                  {isMobile &&
-                    activeFilters.length >
-                    0 && (
-                      <Box
-                        sx={{
-                          width: 6,
-                          height: 6,
-                          borderRadius:
-                            "50%",
-
-                          background:
-                            "#fff",
-
-                          flexShrink: 0,
-                        }}
-                      />
-                    )}
-                </Button>
-
-                {/* Requests */}
-
-                <Button
-                  variant="contained"
-                  size="small"
-                  startIcon={
-                    <VisibilityIcon />
-                  }
-                  onClick={() =>
-                    navigate(
-                      "/request-ride"
-                    )
-                  }
-                  sx={{
-                    bgcolor: ORANGE,
-
-                    color: "#ffffff",
-
-                    "&:hover": {
-                      bgcolor:
-                        "#e68a00",
-                    },
-
-                    "&.Mui-disabled":
-                    {
-                      bgcolor:
-                        "#e0e0e0",
-                    },
-
-                    fontWeight: 700,
-
-                    fontSize: {
-                      xs: "0.7rem",
-                      sm: "0.875rem",
-                    },
-
-                    px: {
-                      xs: 1.5,
-                      sm: 3,
-                    },
-
-                    py: {
-                      xs: 0.5,
-                      sm: 1,
-                    },
-
+                    fontSize: { xs: 12.5, sm: 13.5 },
+                    py: { xs: 0.8, sm: 1 },
                     borderRadius: 2,
-
-                    whiteSpace:
-                      "nowrap",
-
                     boxShadow: "none",
-
-                    textTransform:
-                      "none",
+                    "&:hover": { bgcolor: "#f8f8f8", boxShadow: "none" },
                   }}
                 >
-                  View Your Requests
+                  {filtersOpen ? "Hide filters" : "Show filters"}
+                  {activeFilters.length > 0 ? ` (${activeFilters.length})` : ""}
                 </Button>
-              </Box>
+              )}
 
-              {/* Active filter chips */}
-
-              {activeFilters.length >
-                0 && (
-                  <Box
-                    sx={{
-                      display: "flex",
-
-                      flexWrap:
-                        "wrap",
-
-                      gap: {
-                        xs: 0.5,
-                        sm: 0.75,
-                      },
-
-                      mt: 1.25,
-                    }}
-                  >
-                    {activeFilters.map(
-                      (f) => (
-                        <Chip
-                          key={f.key}
-                          label={f.label}
-                          onDelete={
-                            f.clear
-                          }
-                          deleteIcon={
-                            <CloseIcon />
-                          }
-                          size="small"
-                          sx={{
-                            background:
-                              "rgba(255,255,255,0.9)",
-
-                            border: `1px solid ${saffron[300]}`,
-
-                            color:
-                              saffron[800],
-
-                            fontWeight: 600,
-
-                            fontSize: {
-                              xs: "0.65rem",
-                              sm: "0.75rem",
-                            },
-
-                            height: {
-                              xs: 22,
-                              sm: 26,
-                            },
-
-                            "& .MuiChip-deleteIcon":
-                            {
-                              color:
-                                saffron[500],
-
-                              fontSize: {
-                                xs: "0.8rem",
-                                sm: "0.95rem",
-                              },
-                            },
-
-                            "& .MuiChip-label":
-                            {
-                              px: {
-                                xs: 0.75,
-                                sm: 1,
-                              },
-                            },
-                          }}
-                        />
-                      )
-                    )}
-                  </Box>
-                )}
-            </Container>
-          </Box>
-        </Box>
-
-        {/* ──────────────────────────────────────
-            Results
-        ─────────────────────────────────────── */}
-
-        <Box
-          ref={resultsRef}
-          onScroll={
-            handleResultsScroll
-          }
-          sx={{
-            flex: 1,
-
-            overflowY: "auto",
-
-            overflowX: "hidden",
-
-            pb: {
-              xs: 4,
-              sm: 6,
-            },
-
-            "&::-webkit-scrollbar":
-            {
-              width: 5,
-            },
-
-            "&::-webkit-scrollbar-track":
-            {
-              background:
-                saffron[50],
-            },
-
-            "&::-webkit-scrollbar-thumb":
-            {
-              background:
-                saffron[300],
-
-              borderRadius: 4,
-            },
-          }}
-        >
-          <Container
-            maxWidth="md"
-            disableGutters
-            sx={{
-              px: {
-                xs: 0,
-                sm: 3,
-              },
-            }}
-          >
-            {/* ───────────────────────────────
-                Filter panel
-            ─────────────────────────────── */}
-
-            <Collapse
-              in={filtersOpen}
-            >
-              <Box
+              <Paper
+                variant="outlined"
                 sx={{
-                  background:
-                    "#fff",
-
-                  borderRadius: {
-                    xs: 3,
-                    md: 4,
-                  },
-
-                  border: `1.5px solid ${saffron[100]}`,
-
-                  p: {
-                    xs: 1.75,
-                    sm: 3,
-                  },
-
-                  mt: {
-                    xs: 1.5,
-                    sm: 2,
-                  },
-
-                  mb: {
-                    xs: 1.5,
-                    sm: 2,
-                  },
+                  p: { xs: 1.25, sm: 2 },
+                  mb: 2,
+                  borderRadius: 2.5,
+                  borderColor: "divider",
+                  bgcolor: "#fff",
+                  boxSizing: "border-box",
+                  overflow: "hidden",
                 }}
               >
-                {/* Transport */}
-
-                <Box mb={2}>
-                  <Typography
-                    component="span"
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={1.25} sx={{ mb: { xs: 1.25, sm: 1.75 } }}>
+                  <TextField
+                    size="small"
+                    placeholder="From (US city or airport)"
+                    value={searchFrom}
+                    onChange={(e) => setSearchFrom(e.target.value)}
+                    sx={searchInputSx}
+                  />
+                  <TextField
+                    size="small"
+                    placeholder="To (US city or airport)"
+                    value={searchDestination}
+                    onChange={(e) => setSearchDestination(e.target.value)}
+                    sx={searchInputSx}
+                  />
+                  <Button
+                    variant="contained"
+                    startIcon={<SearchIcon sx={{ fontSize: 18 }} />}
+                    onClick={() => fetchRides({ pageNumber: 1, reset: true })}
                     sx={{
-                      fontSize: {
-                        xs: "0.65rem",
-                        sm: "0.7rem",
-                      },
-
+                      bgcolor: NAVY,
+                      color: "#fff",
+                      textTransform: "none",
                       fontWeight: 700,
-
-                      textTransform:
-                        "uppercase",
-
-                      letterSpacing:
-                        "0.08em",
-
-                      color:
-                        saffron[700],
-
-                      display:
-                        "block",
-
-                      mb: 1,
+                      fontSize: { xs: 13, sm: 13.5 },
+                      px: { xs: 2, sm: 3 },
+                      height: { xs: 40, sm: 42 },
+                      width: { xs: "100%", sm: "auto" },
+                      flexShrink: 0,
+                      borderRadius: 1.5,
+                      boxShadow: "none",
+                      "&:hover": { bgcolor: "#0F1E3D", boxShadow: "none" },
                     }}
                   >
-                    Mode of Travel
-                  </Typography>
+                    Search
+                  </Button>
+                </Stack>
 
-                  <Box
-                    sx={{
-                      display: "flex",
-
-                      flexWrap:
-                        "wrap",
-
-                      gap: {
-                        xs: 0.6,
-                        sm: 1,
-                      },
-                    }}
-                  >
-                    {TRANSPORT_OPTIONS.map(
-                      (opt) => {
-                        const selected =
-                          transportMode ===
-                          opt.value;
-
-                        return (
-                          <Chip
-                            key={
-                              opt.value
-                            }
-                            label={
-                              opt.label
-                            }
-                            icon={
-                              opt.icon
-                            }
-                            onClick={() =>
-                              updateDraft(
-                                "transportMode",
-                                opt.value
-                              )
-                            }
-                            sx={{
-                              borderRadius:
-                                "20px",
-
-                              border: `1.5px solid ${selected
-                                ? saffron[500]
-                                : saffron[200]
-                                }`,
-
-                              background:
-                                selected
-                                  ? saffron[500]
-                                  : "#fff",
-
-                              color:
-                                selected
-                                  ? "#fff"
-                                  : saffron[700],
-
-                              fontWeight: 600,
-
-                              fontSize: {
-                                xs: "0.68rem",
-                                sm: "0.86rem",
-                              },
-
-                              height: {
-                                xs: 24,
-                                sm: 30,
-                              },
-
-                              cursor:
-                                "pointer",
-
-                              "& .MuiChip-label":
-                              {
-                                px: {
-                                  xs: 1,
-                                  sm: 1.8,
-                                },
-                              },
-
-                              "&:hover":
-                              {
-                                background:
-                                  selected
-                                    ? saffron[600]
-                                    : saffron[50],
-
-                                borderColor:
-                                  saffron[400],
-                              },
-
-                              "& .MuiChip-icon":
-                              {
-                                color:
-                                  selected
-                                    ? "#fff"
-                                    : saffron[500],
-
-                                ml: {
-                                  xs: 0.5,
-                                  sm: 0.75,
-                                },
-
-                                mr: {
-                                  xs: "-4px",
-                                  sm: "-2px",
-                                },
-                              },
-                            }}
-                          />
-                        );
-                      }
-                    )}
-                  </Box>
-                </Box>
-
-                {/* Dropdowns */}
-
-                <Grid
-                  container
-                  spacing={{
-                    xs: 1,
-                    sm: 2,
-                  }}
-                  alignItems="flex-end"
-                >
-                  {/* Gender */}
-
-                  <Grid
-                    item
-                    xs={6}
-                    sm={4}
-                    md={3}
-                  >
-                    <Typography
-                      component="span"
-                      sx={{
-                        fontSize: {
-                          xs: "0.65rem",
-                          sm: "0.7rem",
-                        },
-
-                        fontWeight: 600,
-
-                        textTransform:
-                          "uppercase",
-
-                        letterSpacing:
-                          "0.08em",
-
-                        color:
-                          saffron[700],
-
-                        display:
-                          "block",
-
-                        mt: 1,
-
-                        mb: 1,
-                      }}
-                    >
-                      Gender
-                    </Typography>
-
-                    <FormControl
-                      fullWidth
-                      size="small"
-                    >
-                      <Select
-                        value={gender}
-                        displayEmpty
-                        onChange={(e) =>
-                          updateDraft(
-                            "gender",
-                            e.target.value
-                          )
-                        }
-                        sx={{
-                          ...selectSx,
-
-                          fontSize: {
-                            xs: "0.7rem",
-                            sm: "0.82rem",
-                          },
-
-                          height: {
-                            xs: 30,
-                            sm: 36,
-                          },
-                        }}
-                      >
-                        {GENDER_OPTIONS.map(
-                          (g) => (
-                            <MenuItem
-                              key={
-                                g.value
-                              }
-                              value={
-                                g.value
-                              }
-                              sx={{
-                                fontSize: {
-                                  xs: "0.7rem",
-                                  sm: "0.85rem",
-                                },
-                              }}
-                            >
-                              {g.label}
-                            </MenuItem>
-                          )
-                        )}
-                      </Select>
-                    </FormControl>
-                  </Grid>
-
-                  {/* Fuel */}
-
-                  <Grid
-                    item
-                    xs={6}
-                    sm={4}
-                    md={3}
-                  >
-                    <Typography
-                      component="span"
-                      sx={{
-                        fontSize: {
-                          xs: "0.65rem",
-                          sm: "0.7rem",
-                        },
-
-                        fontWeight: 600,
-
-                        textTransform:
-                          "uppercase",
-
-                        letterSpacing:
-                          "0.08em",
-
-                        color:
-                          saffron[700],
-
-                        display:
-                          "block",
-
-                        mt: 1,
-
-                        mb: 1,
-                      }}
-                    >
-                      Fuel Sharing
-                    </Typography>
-
-                    <FormControl
-                      fullWidth
-                      size="small"
-                    >
-                      <Select
-                        value={
-                          fuelSharing
-                        }
-                        displayEmpty
-                        onChange={(e) =>
-                          updateDraft(
-                            "fuelSharing",
-                            e.target.value
-                          )
-                        }
-                        sx={{
-                          ...selectSx,
-
-                          fontSize: {
-                            xs: "0.7rem",
-                            sm: "0.82rem",
-                          },
-
-                          height: {
-                            xs: 30,
-                            sm: 36,
-                          },
-                        }}
-                      >
-                        {FUEL_OPTIONS.map(
-                          (f) => (
-                            <MenuItem
-                              key={
-                                f.value
-                              }
-                              value={
-                                f.value
-                              }
-                              sx={{
-                                fontSize: {
-                                  xs: "0.7rem",
-                                  sm: "0.85rem",
-                                },
-                              }}
-                            >
-                              {f.label}
-                            </MenuItem>
-                          )
-                        )}
-                      </Select>
-                    </FormControl>
-                  </Grid>
-
-                  {/* Language */}
-
-                  {transportMode ===
-                    "Flight" && (
-                      <Grid
-                        item
-                        xs={12}
-                        sm={4}
-                        md={6}
-                      >
-                        <Typography
-                          component="span"
-                          sx={{
-                            fontSize: {
-                              xs: "0.6rem",
-                              sm: "0.7rem",
-                            },
-
-                            fontWeight: 600,
-
-                            textTransform:
-                              "uppercase",
-
-                            letterSpacing:
-                              "0.08em",
-
-                            color:
-                              saffron[700],
-
-                            display:
-                              "block",
-
-                            mt: 1,
-                          }}
-                        >
-                          Language
-                        </Typography>
-
-                        <TextField
-                          fullWidth
-                          size="small"
-
-                          placeholder="Tamil, English, Hindi…"
-
-                          value={
-                            language
-                          }
-
-                          onChange={(e) =>
-                            updateDraft(
-                              "language",
-                              e.target
-                                .value
-                            )
-                          }
-
-                          sx={{
-                            ...inputFieldSx,
-
-                            "& .MuiOutlinedInput-root":
-                            {
-                              ...inputFieldSx[
-                              "& .MuiOutlinedInput-root"
-                              ],
-
-                              fontSize: {
-                                xs: "0.7rem",
-                                sm: "0.82rem",
-                              },
-
-                              height: {
-                                xs: 30,
-                                sm: 36,
-                              },
-
-                              mt: 1,
-                            },
-                          }}
-                        />
-                      </Grid>
-                    )}
-                </Grid>
-
-                {/* Filter actions */}
+                <Divider sx={{ my: { xs: 1.25, sm: 1.75 } }} />
 
                 <Box
                   sx={{
                     display: "flex",
-
-                    alignItems:
-                      "center",
-
-                    justifyContent:
-                      "space-between",
-
-                    gap: 1,
-
-                    mt: {
-                      xs: 1.5,
-                      sm: 2.5,
-                    },
+                    flexDirection: { xs: "column", md: "row" },
+                    alignItems: { xs: "stretch", md: "center" },
+                    flexWrap: "wrap",
+                    gap: { xs: 1.25, md: 1.5 },
                   }}
                 >
                   <Button
+                    onClick={requestCurrentLocation}
+                    disabled={locationLoading}
                     startIcon={
-                      <FilterListOffIcon
-                        sx={{
-                          fontSize: {
-                            xs: 12,
-                            sm: 16,
-                          },
-                        }}
+                      <LocationOnIcon
+                        sx={{ fontSize: { xs: 16, sm: 18, md: 15 }, color: userLocation ? "#2E7D32" : RUST }}
                       />
                     }
-                    onClick={
-                      clearFilters
-                    }
-                    variant="contained"
                     sx={{
-                      borderRadius:
-                        "50px",
-
-                      color: "#ffff",
-
-                      bgcolor:
-                        "#757575",
-
-                      fontWeight: 600,
-
-                      fontSize: {
-                        xs: "0.7rem",
-                        sm: "0.82rem",
-                      },
-
-                      px: {
-                        xs: 1.5,
-                        sm: 2.5,
-                      },
-
-                      height: {
-                        xs: 30,
-                        sm: 36,
-                      },
-
-                      textTransform:
-                        "none",
-                    }}
-                  >
-                    Clear all
-                  </Button>
-
-                  <Button
-                    onClick={
-                      applyFilters
-                    }
-                    sx={{
-                      borderRadius:
-                        "50px",
-
-                      border: "none",
-
-                      background:
-                        saffron[500],
-
-                      color: "#fff",
-
+                      textTransform: "none",
                       fontWeight: 700,
-
-                      fontSize: {
-                        xs: "0.72rem",
-                        sm: "0.85rem",
-                      },
-
-                      px: {
-                        xs: 2,
-                        sm: 3,
-                      },
-
-                      height: {
-                        xs: 32,
-                        sm: 38,
-                      },
-
-                      textTransform:
-                        "none",
-
-                      boxShadow: "none",
-
-                      "&:hover": {
-                        background:
-                          saffron[600],
-                      },
+                      fontSize: { xs: 12.5, sm: 13, md: 10.5 },
+                      borderRadius: 999,
+                      px: { xs: 2, sm: 2, md: 1 },
+                      py: 0.75,
+                      border: `1.5px solid ${userLocation ? "#A5D6A7" : RUST}`,
+                      bgcolor: userLocation ? "#EAF6EC" : "#fff",
+                      whiteSpace: "nowrap",
+                      alignSelf: { xs: "stretch", md: "center" },
+                      "&:hover": { bgcolor: userLocation ? "#E0F2E3" : "#FFF5EC" },
                     }}
                   >
-                    Apply
+                    <Typography
+                      sx={{
+                        fontSize: { xs: 12.5, sm: 13, md: 10.5 },
+                        color: userLocation ? "#2E7D32" : RUST,
+                        fontWeight: 600,
+                      }}
+                    >
+                      {locationLoading ? "Getting location..." : "Use my location"}
+                    </Typography>
                   </Button>
-                </Box>
-              </Box>
-            </Collapse>
 
-            <Box
-              sx={{
-                display: "flex",
-                mb: {
-                  xs: 1.5,
-                  sm: 2,
-                },
+                  <Typography sx={{ fontSize: { xs: 12, sm: 13 }, color: "text.secondary" }}>or type a location</Typography>
 
-                mt: {
-                  xs: 2,
-                  sm: 1.5,
-                },
-              }}
-            >
-              {/* <Typography
-                fontWeight={700}
-                sx={{
-                  color:
-                    saffron[800],
-
-                  fontSize: {
-                    xs: "0.83rem",
-                    sm: "1rem",
-                  },
-                }}
-              >
-                {visibleRides.length}{" "}
-                <Typography
-                  component="span"
-                  fontWeight={400}
-                  color="text.secondary"
-                >
-                  {visibleRides.length ===
-                    1
-                    ? "result"
-                    : "results"}{" "}
-                  found
-                </Typography>
-              </Typography> */}
-            </Box>
-
-            {/* ───────────────────────────────
-                Ride cards
-            ─────────────────────────────── */}
-
-            {loading ?
-
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <CircularProgress
-                  sx={{
-                    color: saffron[500],
-                  }}
-                />
-              </Box>
-              :
-
-              sortedVisibleRides.length >
-                0 ? (
-                <>
-                  <Grid
-                    spacing={{
-                      xs: 1,
-                      sm: 2,
-                    }}
-                  >
-                    {sortedVisibleRides.map(
-                      (ride) => {
-                        const isOwnRide =
-                          ride.createdBy?._id ===
-                          currentUser?._id;
-
-                        const distanceKm =
-                          getRideDistanceKm(
-                            ride
-                          );
-
-                        return (
-                          <Grid
-                            item
-                            xs={12}
-                            sm={6}
-                            md={4}
-                            key={
-                              ride._id
-                            }
-                          >
-                            <RideCard
-                              ride={ride}
-                              isOwnRide={
-                                isOwnRide
-                              }
-                              distanceKm={
-                                distanceKm
-                              }
-                              distanceLabel={formatDistance(
-                                distanceKm
-                              )}
-                            />
-                          </Grid>
-                        );
-                      }
-                    )}
-                  </Grid>
-
-                  {loadingMore && (
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "center",
-                        py: 2,
-                      }}
-                    >
-                      <CircularProgress
-                        size={26}
-                        sx={{
-                          color: saffron[500],
-                        }}
-                      />
-                    </Box>
-                  )}
-
-                  {!hasMore && (
-                    <Typography
-                      sx={{
-                        textAlign: "center",
-                        color: "text.secondary",
-                        fontSize: "0.8rem",
-                        py: 2,
-                      }}
-                    >
-                      No more rides
-                    </Typography>
-                  )}
-                </>
-
-              ) : (
-                <>
-                  <Box
+                  <TextField
+                    size="small"
+                    placeholder="City or zip"
+                    value={searchFrom}
+                    onChange={(e) => setSearchFrom(e.target.value)}
                     sx={{
-                      borderRadius: {
-                        xs: 3,
-                        sm: 4,
-                      },
-
-                      textAlign:
-                        "center",
-
-                      py: {
-                        xs: 3,
-                        sm: 5,
-                      },
-
-                      px: {
-                        xs: 2,
-                        sm: 4,
-                      },
-
-                      mt: {
-                        xs: "40%",
-                        sm: "10%",
+                      flex: 1,
+                      minWidth: { xs: 0, md: 160 },
+                      width: { xs: "100%", md: "auto" },
+                      "& .MuiOutlinedInput-root": {
+                        fontSize: { xs: 12.5, sm: 13 },
+                        borderRadius: 1.5,
+                        height: { xs: 36, sm: 38 },
+                        bgcolor: "#fff",
                       },
                     }}
-                  >
-                    <Typography
-                      variant="h6"
-                      fontWeight={600}
-                      color="text.primary"
-                    >
-                      No rides posted yet in your area.
-                    </Typography>
+                  />
 
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
+                  <Box sx={{ display: "flex", flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 1 }}>
+                    <Typography sx={{ fontSize: { xs: 12, sm: 13 }, color: "text.secondary" }}>within</Typography>
+                    <Box sx={{ display: "flex", flexDirection: "row", gap: 0.5 }}>
+                      {RADIUS_OPTIONS.map((r) => {
+                        const isActive = appliedFilters.radiusMi === r.value;
+                        return (
+                          <Chip
+                            key={String(r.value)}
+                            label={r.label}
+                            clickable
+                            onClick={() => updateFilterAndApply("radiusMi", r.value)}
+                            sx={{
+                              borderRadius: 999,
+                              fontWeight: 700,
+                              fontSize: { xs: 11.5, sm: 12 },
+                              height: { xs: 28, sm: 30 },
+                              bgcolor: isActive ? RUST : "#fff",
+                              color: isActive ? "#fff" : "#333",
+                              border: `1px solid ${isActive ? RUST : "#ddd"}`,
+                              "&:hover": { bgcolor: isActive ? RUST : "#f8f8f8" },
+                            }}
+                          />
+                        );
+                      })}
+                    </Box>
+                  </Box>
+                </Box>
+
+                <Typography sx={{ fontSize: { xs: 11.5, sm: 12.5 }, color: "text.secondary", mt: { xs: 1.25, sm: 1.75 }, lineHeight: 1.5 }}>
+                  {sortedVisibleRides.length} ride{sortedVisibleRides.length === 1 ? "" : "s"} near {searchFrom || "your area"}. Your location is used only for this search and is not stored.
+                </Typography>
+
+                {locationError && (
+                  <Typography sx={{ fontSize: { xs: 11.5, sm: 12 }, color: "#B00020", mt: 0.75 }}>
+                    {locationError}
+                  </Typography>
+                )}
+              </Paper>
+
+              {activeFilters.length > 0 && (
+                <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap sx={{ mb: 1.5 }}>
+                  {activeFilters.map((f) => (
+                    <Chip
+                      key={f.key}
+                      label={f.label}
+                      onDelete={f.clear}
+                      size="small"
                       sx={{
-                        mt: 1,
+                        bgcolor: "#fff",
+                        border: `1px solid ${RUST}`,
+                        color: RUST,
+                        fontWeight: 600,
+                        fontSize: { xs: 11, sm: 11.5 },
+                        height: { xs: 24, sm: 26 },
+                        maxWidth: "100%",
+                        "& .MuiChip-deleteIcon": { color: RUST, fontSize: 16 },
                       }}
-                    >
-                      Be the first to post a ride for your community!
-                    </Typography>
+                    />
+                  ))}
+                </Stack>
+              )}
 
+              <Box ref={resultsRef} onScroll={handleResultsScroll} sx={{ maxHeight: "none", overflowY: "visible", overflowX: "clip" }}>
+                {loading ? (
+                  <Box sx={{ display: "flex", justifyContent: "center", py: { xs: 5, sm: 8 } }}>
+                    <CircularProgress sx={{ color: saffron[500] }} />
+                  </Box>
+                ) : sortedVisibleRides.length > 0 ? (
+                  <>
+                    <Stack spacing={{ xs: 1.25, sm: 1.5 }}>
+                      {sortedVisibleRides.map((ride) => (
+                        <RideList
+                          key={ride._id}
+                          ride={ride}
+                          onIcanHelp={(requestRide) => {
+                            if (!isProfileComplete) {
+                              setProfileGateOpen(true);
+                              return;
+                            }
+                            setRequestRideToHelp(requestRide);
+                            setOpen(true);
+                          }}
+                        />
+                      ))}
+                    </Stack>
+
+                    {loadingMore && (
+                      <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+                        <CircularProgress size={26} sx={{ color: saffron[500] }} />
+                      </Box>
+                    )}
+
+                    {!hasMore && (
+                      <Typography
+                        sx={{
+                          textAlign: "center",
+                          color: "text.secondary",
+                          fontSize: { xs: "0.75rem", sm: "0.8rem" },
+                          py: 2,
+                        }}
+                      >
+                        No more rides
+                      </Typography>
+                    )}
+                  </>
+                ) : (
+                  <Paper
+                    variant="outlined"
+                    sx={{ borderRadius: 2.5, borderColor: "divider", textAlign: "center", py: { xs: 3.5, sm: 5 }, px: { xs: 2, sm: 4 } }}
+                  >
+                    <Typography variant="h6" fontWeight={700} color="text.primary" sx={{ fontSize: { xs: 15, sm: 16, md: 17 } }}>
+                      No rides match your search.
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontSize: { xs: 12.5, sm: 14 } }}>
+                      Try a wider radius or post a request so drivers can find you.
+                    </Typography>
                     <Button
                       variant="contained"
-                      onClick={() => setOpen(true)}
+                      onClick={tryOpenOfferRide}
+                      disabled={!isProfileComplete}
+                      title={!isProfileComplete ? "Complete your profile to post a ride" : ""}
                       sx={{
                         mt: 2.5,
                         px: 3,
-                        py: 1,
+                        py: { xs: 0.8, sm: 1 },
                         borderRadius: 999,
-                        backgroundColor: "#FF9933",
+                        backgroundColor: RUST,
                         color: "#fff",
                         fontWeight: 700,
+                        fontSize: { xs: 13, sm: 14 },
                         textTransform: "none",
                         boxShadow: "none",
-                        "&:hover": {
-                          backgroundColor: "#E68A00",
-                          boxShadow: "none",
-                        },
+                        "&:hover": { backgroundColor: RUST_DARK, boxShadow: "none" },
                       }}
                     >
                       Post a Ride
                     </Button>
-                    <Dialog
-                      open={open}
-                      onClose={(event, reason) => {
-                        if (reason === "backdropClick") return;
-                        setOpen(false);
-                      }}
-                      fullWidth
-                      maxWidth="sm"
-                      fullScreen={isMobile}
-                      PaperProps={{
-                        sx: {
-                          width: {
-                            xs: "100%",
-                            sm: "80%",
-                            md: "90%",
-                          },
-                          maxWidth: {
-                            sm: 600,
-                            md: 800,
-                          },
-                          borderRadius: {
-                            xs: 0,
-                            sm: 3,
-                          },
-                          m: {
-                            xs: 0,
-                            sm: 3,
-                          },
-                          overflow: "hidden",
-                        },
-                      }}
-                    >
-                      <DialogTitle
-                        sx={{
-                          position: "relative",
-                          fontWeight: 700,
-                          py: 2,
-                          pr: 6,
-                        }}
-                      >
-                        Offer Ride
+                  </Paper>
+                )}
+              </Box>
 
-                        <IconButton
-                          aria-label="close"
-                          onClick={() => setOpen(false)}
-                          sx={{
-                            position: "absolute",
-                            top: 12,
-                            right: 12,
-                            color: "text.secondary",
-                          }}
-                        >
-                          <CloseIcon />
-                        </IconButton>
-                      </DialogTitle>
-
-                      <DialogContent
-                        dividers
-                        sx={{
-                          p: {
-                            xs: 1,
-                            sm: 2,
-                          },
-                          overflowY: "auto",
-                          maxHeight: {
-                            xs: "100vh",
-                            sm: "75vh",
-                          },
-                        }}
-                      >
-                        <OfferRide setOpen={setOpen} />
-                      </DialogContent>
-                    </Dialog>
-                  </Box>
-                </>
-              )
-            }
-          </Container>
-        </Box>
+              <Box sx={{ mt: 2, p: { xs: 1.25, sm: 1.75 }, borderRadius: 2, bgcolor: "#EAF3FB", border: "1px solid #CFE2F3" }}>
+                <Typography sx={{ fontSize: { xs: 11.5, sm: 12.5 }, color: "#1A3E8A", lineHeight: 1.55 }}>
+                  Cards show city or airport only. The exact pickup address and phone number are shared after the driver accepts your request.
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
+        </Container>
       </Box>
+
+      <Dialog
+        open={open}
+        onClose={(event, reason) => {
+          if (reason === "backdropClick") return;
+          setOpen(false);
+          setRequestRideToHelp(null);
+        }}
+        fullWidth
+        maxWidth="sm"
+        fullScreen={isMobile}
+        PaperProps={{
+          sx: {
+            width: { xs: "100%", sm: "80%", md: "90%" },
+            maxWidth: { sm: 600, md: 800 },
+            borderRadius: { xs: 0, sm: 3 },
+            m: { xs: 0, sm: 3 },
+            overflow: "hidden",
+          },
+        }}
+      >
+        <DialogTitle sx={{ position: "relative", fontWeight: 700, fontSize: { xs: "1.05rem", sm: "1.25rem" }, py: 2, pr: 6 }}>
+          {requestRideToHelp ? "Offer Ride — Help with Request" : "Offer Ride"}
+          <IconButton
+            aria-label="close"
+            onClick={() => { setOpen(false); setRequestRideToHelp(null); }}
+            sx={{ position: "absolute", top: 12, right: 12, color: "text.secondary" }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent dividers sx={{ p: { xs: 1, sm: 2 }, overflowY: "auto", maxHeight: { xs: "100vh", sm: "75vh" } }}>
+          <OfferRide
+            setOpen={setOpen}
+            requestRide={requestRideToHelp}
+            onClose={() => {
+              setOpen(false);
+              setRequestRideToHelp(null);
+              fetchRides({ pageNumber: 1, reset: true });
+            }}
+          />
+        </DialogContent>
+      </Dialog>
     </>
   );
-} 
+}

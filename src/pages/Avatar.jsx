@@ -2,7 +2,6 @@ import React from "react";
 import {
     Dialog,
     DialogContent,
-    Avatar,
     Typography,
     IconButton,
     Button,
@@ -10,6 +9,7 @@ import {
 
 import CloseIcon from "@mui/icons-material/Close";
 import MessageIcon from "@mui/icons-material/Message";
+import ProtectedAvatar from "../components/ProtectedAvatar";
 
 const SAFFRON = "#FF9933";
 
@@ -42,6 +42,11 @@ const ProfileModal = ({
 
         return `${first}${last}`.toUpperCase();
     };
+    const fullName =
+        `${selectedProfile?.firstName || ""} ${selectedProfile?.lastName || ""}`
+            .trim() ||
+        selectedProfile?.name ||
+        "";
 
     return (
         <Dialog
@@ -56,6 +61,12 @@ const ProfileModal = ({
                         boxShadow: "none",
                         overflow: "visible",
                         m: 1,
+                    },
+                },
+                // Disable right-click on the backdrop too (extra safety)
+                backdrop: {
+                    sx: {
+                        backgroundColor: "rgba(0, 0, 0, 0.85)",
                     },
                 },
             }}
@@ -73,9 +84,7 @@ const ProfileModal = ({
                     width: { xs: 36, sm: 42 },
                     height: { xs: 36, sm: 42 },
                     color: "#fff",
-
                     transition: "all 0.2s ease",
-
                     "&:hover": {
                         backgroundColor:
                             "rgba(0, 0, 0, 0.7)",
@@ -93,11 +102,9 @@ const ProfileModal = ({
                     overflow: "visible",
                 }}
             >
-                {/* PROFILE IMAGE */}
-
                 <Avatar
-                    src={selectedProfile?.profileImage || ""}
-                    alt={getProfileName()}
+                    src={selectedProfile?.profileImageUrl || ""}
+                    alt={fullName}
                     sx={{
                         width: {
                             xs: 200,
@@ -121,16 +128,14 @@ const ProfileModal = ({
                         },
 
                         fontWeight: 800,
-
-                        border:
-                            "3px solid rgba(255,255,255,0.9)",
-
-                        boxShadow:
-                            "0 8px 30px rgba(0,0,0,0.35)",
+                        border: "3px solid rgba(255,255,255,0.9)",
+                        boxShadow: "0 8px 30px rgba(0,0,0,0.35)",
+                        borderRadius: "50%",
                     }}
                 >
-                    {!selectedProfile?.profileImage &&
-                        getInitials()}
+                    {!selectedProfile?.profileImageUrl &&
+                        `${selectedProfile?.firstName?.[0] || ""}${selectedProfile?.lastName?.[0] || selectedProfile?.name?.[0] || ""
+                        }`}
                 </Avatar>
 
                 {/* NAME */}
@@ -139,17 +144,12 @@ const ProfileModal = ({
                     fontWeight={700}
                     sx={{
                         color: "#fff",
-
-                        fontSize: {
-                            xs: "1rem",
-                            sm: "1.25rem",
-                        },
-
-                        textShadow:
-                            "0 2px 5px rgba(0,0,0,0.7)",
+                        fontSize: { xs: "1rem", sm: "1.25rem" },
+                        textShadow: "0 2px 5px rgba(0,0,0,0.7)",
+                        mt: 1,
                     }}
                 >
-                    {getProfileName()}
+                    {fullName}
                 </Typography>
 
                 {/* MESSAGE BUTTON */}

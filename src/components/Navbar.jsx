@@ -40,6 +40,7 @@ import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlineOutlined
 import axios from "axios";
 import Api from "../Api.jsx";
 import MessagesModal from "../pages/MessagesModal.jsx";
+import ProtectedAvatar from "./ProtectedAvatar.jsx";
 
 const TopNav = ({ onMenuClick }) => {
   const theme = useTheme();
@@ -115,7 +116,7 @@ const TopNav = ({ onMenuClick }) => {
     try {
       await axios.patch(`${Api}/notification/${currentUser?._id}`)
         .then((res) => {
-          console.log(res, 'res')
+
           if (res?.data?.success === true) {
             fetchNotifications()
           }
@@ -226,7 +227,7 @@ const TopNav = ({ onMenuClick }) => {
               alignItems: "center",
               cursor: "pointer",
             }}
-            onClick={() => navigate("/community")}
+            onClick={() => navigate("/find-ride")}
           >
             <img
               src={saathilogo1}
@@ -236,14 +237,34 @@ const TopNav = ({ onMenuClick }) => {
               style={{ marginRight: 5, objectFit: "contain" }}
             />
 
-            <Typography variant="h6" sx={{ fontWeight: 900 }}>
-              <Box component="span" sx={{ color: "#f97316" }}>
-                Saa
-              </Box>
-              <Box component="span" sx={{ color: "#15803d" }}>
-                thi
-              </Box>
-            </Typography>
+            <Box sx={{ display: "flex", flexDirection: "column" }}>
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: 900,
+                  lineHeight: 1.1,
+                }}
+              >
+                <Box component="span" sx={{ color: "#f97316" }}>
+                  Saa
+                </Box>
+                <Box component="span" sx={{ color: "#15803d" }}>
+                  thi
+                </Box>
+              </Typography>
+
+              <Typography
+                sx={{
+                  fontSize: "10px",
+                  color: "#666666",
+                  mt: 0.3,
+                  lineHeight: 1.2,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Community rides · By invite only
+              </Typography>
+            </Box>
           </Box>
         </Box>
 
@@ -508,7 +529,7 @@ const TopNav = ({ onMenuClick }) => {
                 },
               }}
             >
-              <OfferRide setOpen={setOpen} />
+              <OfferRide setOpen={setOpen} onClose={() => { setOpen(false) }} />
             </DialogContent>
           </Dialog>
 
@@ -528,7 +549,7 @@ const TopNav = ({ onMenuClick }) => {
               />
 
               <Avatar
-                src={currentUser?.profileImage || ""}
+                src={currentUser?.profileImageUrl || ""}
                 onClick={handleOpenProfileMenu}
                 sx={{
                   bgcolor: "#f97316",

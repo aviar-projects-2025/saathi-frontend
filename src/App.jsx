@@ -27,7 +27,9 @@ const ResetPassword = React.lazy(() =>
 const VerifyOTP = React.lazy(() =>
   import("./components/Auth/VerifyOTP.jsx")
 );
-
+const TravelBuddyRequests = React.lazy(
+  () => import("./pages/TravelBuddy/TravelBuddyRequests.jsx")
+);
 
 // Shared (both roles)
 const Invite = React.lazy(() => import("./pages/Invite.jsx"));
@@ -43,13 +45,20 @@ const UserProfile = React.lazy(() => import("./pages/UserProfile.jsx"));
 const OfferRide = React.lazy(() => import("./pages/OfferRide.jsx"));
 const MyRides = React.lazy(() => import("./pages/MyRides.jsx"));
 const PeopleNearYou = React.lazy(() => import("./pages/PeopleNearYou.jsx"));
-
+const TravelBuddy = React.lazy(() => import("./pages/TravelBuddy/index.jsx"));
+const TripMatches = React.lazy(() => import("./pages/TravelBuddy/TripMatches.jsx"));
+const InfoTripMatches = React.lazy(() => import("./pages/TravelBuddy/InfoTripMatches.jsx"))
 const MyReferrals = React.lazy(() =>
   import("./pages/referral/MyReferrals.jsx")
 );
+const TripAccepted = React.lazy(
+  () => import("./pages/TravelBuddy/TripAccepted.jsx")
+);
+const PostTrip = React.lazy(() => import("./pages/TravelBuddy/PostTrip.jsx"))
 const Notifications = React.lazy(() => import("./pages/Notifications.jsx"))
 // const Settings = React.lazy(() => import("./pages/Settings.jsx"));
-const RequestRide = React.lazy(() => import("./pages/RequestRide.jsx"));
+// const RequestRide = React.lazy(() => import("./pages/RequestRide.jsx"));
+const RequestRide2 = React.lazy(() => import("./pages/RequestedRide2.jsx"));
 
 // ADMIN pages
 const AdminDashboard = React.lazy(() =>
@@ -128,25 +137,38 @@ function App() {
               <Route path="/profile" element={<Profile />} />
               <Route path="/myprofile" element={<Myprofile />} />
               <Route path="/myride" element={<MyRides />} />
+              <Route path="/travelBuddy" element={<TravelBuddy />} />
+              <Route path="/post-trip" element={<PostTrip />} />
+              <Route path="/trip-matches" element={<TripMatches />} />
+              <Route path="/trip-matches/:id" element={<InfoTripMatches />} />
               <Route path="/user-profile" element={<UserProfile />} />
               <Route path="/discover" element={<Discover />} />
-              <Route path="/request-ride" element={<RequestRide />} />
+              {/* <Route path="/request-ride" element={<RequestRide />} /> */}
+                <Route path="/request-ride" element={<RequestRide2 />} />
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/optin" element={<SmsNotifications />} />
               <Route path="/people-nearby" element={<PeopleNearYou />} />
+              <Route
+                path="/travelbuddy/requests"
+                element={<TravelBuddyRequests />}
+              />
+              <Route
+                path="/trip-accepted/:id"
+                element={<TripAccepted />}
+              />
 
             </Route>
           </Route>
-          
+
           {/* Both ADMIN and USER */}
           <Route
             element={<ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.USER]} />}
           >
             <Route element={<UserLayout />}>
               <Route path="/invite" element={<Invite />} />
-              {/* <Route path="/community" element={<Community />} /> */}
+              <Route path="/community" element={<Community />} />
               <Route path="/my-referalls" element={<MyReferrals />} />
-              
+
               {/* <Route path="/settings" element={<Settings />} /> */}
             </Route>
           </Route>

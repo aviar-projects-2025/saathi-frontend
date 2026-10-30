@@ -48,6 +48,7 @@ import FolderIcon from "@mui/icons-material/Folder";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import ToastConfig from '../components/ToastConfig.jsx';
 import ProfileModal from './Avatar.jsx';
+import ProtectedAvatar from '../components/ProtectedAvatar.jsx';
 
 import ChatModal from "./ChatModal";
 
@@ -830,7 +831,7 @@ export default function Community() {
               },
             }}
           >
-            OK
+            Not now
           </Button>
           <Button
             variant="contained"
@@ -1298,7 +1299,7 @@ export default function Community() {
                   <Box sx={{ p: isMobile ? 1.5 : 2 }}>
                     {/* Post header */}
                     <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: isMobile ? 1 : 1.5 }}>
-                      <Avatar
+                      <ProtectedAvatar
                         src={post?.authorId?.profileImage}
                         alt={`${post?.authorId?.firstName || ""} ${post?.authorId?.lastName || ""}`}
                         onClick={() => {
@@ -1319,7 +1320,7 @@ export default function Community() {
                         {!post?.authorId?.profileImage &&
                           `${post?.authorId?.firstName?.[0] || ""}${post?.authorId?.lastName?.[0] || ""
                           }`}
-                      </Avatar>
+                      </ProtectedAvatar>
 
                       <Box sx={{ flex: 1, minWidth: 0 }}>
                         <Typography

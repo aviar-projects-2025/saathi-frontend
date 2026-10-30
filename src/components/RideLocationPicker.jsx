@@ -25,6 +25,7 @@ export default function RideLocationPicker({
   ride,
   onDestinationChange,
   onRouteCalculated,
+  disabled = false, // ★ NEW PROP for help mode
 }) {
   const [map, setMap] = useState(null);
   const [routePath, setRoutePath] = useState([]);
@@ -92,7 +93,7 @@ export default function RideLocationPicker({
   }, [onRouteCalculated]);
 
   useEffect(() => {
-    if (hasFrom) {
+    if (hasFrom || disabled) {
       setUserLocation(null);
       return;
     }
@@ -123,7 +124,7 @@ export default function RideLocationPicker({
         maximumAge: 300000,
       }
     );
-  }, [hasFrom]);
+  }, [hasFrom, disabled]);
 
   const formatDuration = (durationMinutes) => {
     const hours = Math.floor(durationMinutes / 60);
@@ -215,6 +216,7 @@ export default function RideLocationPicker({
     latitude,
     longitude
   ) => {
+    if (disabled) return;
     try {
       const result = await reverseGeocode(
         latitude,
@@ -293,6 +295,7 @@ export default function RideLocationPicker({
     latitude,
     longitude
   ) => {
+    if (disabled) return;
     try {
       const result = await reverseGeocode(
         latitude,
@@ -367,8 +370,9 @@ export default function RideLocationPicker({
         const fromAutocomplete =
           new PlaceAutocompleteElement();
 
-        fromAutocomplete.placeholder =
-          "Search pickup location";
+        fromAutocomplete.placeholder = disabled
+          ? ""
+          : "Search pickup location";
 
         fromAutocomplete.includedRegionCodes = [
           "us",
@@ -376,6 +380,12 @@ export default function RideLocationPicker({
         ];
 
         fromAutocomplete.style.width = "100%";
+        
+        // ★ Disable input interactions when in help mode
+        if (disabled) {
+          fromAutocomplete.style.pointerEvents = "none";
+          fromAutocomplete.style.opacity = "0.7";
+        }
 
         fromAutocompleteRef.current =
           fromAutocomplete;
@@ -395,6 +405,7 @@ export default function RideLocationPicker({
         fromAutocomplete.addEventListener(
           "gmp-select",
           async (event) => {
+            if (disabled) return;
             try {
               const place =
                 event.placePrediction.toPlace();
@@ -484,8 +495,9 @@ export default function RideLocationPicker({
         const destinationAutocomplete =
           new PlaceAutocompleteElement();
 
-        destinationAutocomplete.placeholder =
-          "Search destination";
+        destinationAutocomplete.placeholder = disabled
+          ? ""
+          : "Search destination";
 
         destinationAutocomplete.includedRegionCodes = [
           "us",
@@ -494,6 +506,12 @@ export default function RideLocationPicker({
 
         destinationAutocomplete.style.width =
           "100%";
+
+        // ★ Disable input interactions when in help mode
+        if (disabled) {
+          destinationAutocomplete.style.pointerEvents = "none";
+          destinationAutocomplete.style.opacity = "0.7";
+        }
 
         destinationAutocompleteRef.current =
           destinationAutocomplete;
@@ -515,6 +533,7 @@ export default function RideLocationPicker({
         destinationAutocomplete.addEventListener(
           "gmp-select",
           async (event) => {
+            if (disabled) return;
             try {
               const place =
                 event.placePrediction.toPlace();
@@ -615,7 +634,7 @@ export default function RideLocationPicker({
       fromAutocompleteRef.current = null;
       destinationAutocompleteRef.current = null;
     };
-  }, [isLoaded]);
+  }, [isLoaded, disabled]);
 
   useEffect(() => {
     const autocomplete =
@@ -628,18 +647,16 @@ export default function RideLocationPicker({
         fromCountryCode,
       ];
 
-      autocomplete.placeholder =
-        "Search destination";
+      autocomplete.placeholder = disabled ? "" : "Search destination";
     } else {
       autocomplete.includedRegionCodes = [
         "us",
         "in",
       ];
 
-      autocomplete.placeholder =
-        "Search destination";
+      autocomplete.placeholder = disabled ? "" : "Search destination";
     }
-  }, [fromCountryCode]);
+  }, [fromCountryCode, disabled]);
 
   useEffect(() => {
     if (
@@ -922,7 +939,7 @@ export default function RideLocationPicker({
   ]);
 
   const handleMapClick = async (event) => {
-    if (!event.latLng) return;
+    if (disabled || !event.latLng) return;
 
     const latitude = event.latLng.lat();
     const longitude = event.latLng.lng();
@@ -943,7 +960,7 @@ export default function RideLocationPicker({
   const handleFromMarkerDragEnd = async (
     event
   ) => {
-    if (!event.latLng) return;
+    if (disabled || !event.latLng) return;
 
     const latitude = event.latLng.lat();
     const longitude = event.latLng.lng();
@@ -956,7 +973,7 @@ export default function RideLocationPicker({
 
   const handleDestinationMarkerDragEnd =
     async (event) => {
-      if (!event.latLng) return;
+      if (disabled || !event.latLng) return;
 
       const latitude = event.latLng.lat();
       const longitude = event.latLng.lng();
@@ -1040,91 +1057,114 @@ export default function RideLocationPicker({
         </div>
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          flexWrap: "wrap",
-          marginBottom: "6px",
-        }}
-      >
-        <strong style={{ fontSize: "14px" }}>
-          Select on map:
-        </strong>
+      {/* ★ Hide map selection buttons in help mode */}
+      {!disabled && (
+        <>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              flexWrap: "wrap",
+              marginBottom: "6px",
+            }}
+          >
+            <strong style={{ fontSize: "14px" }}>
+              Select on map:
+            </strong>
 
-        <button
-          type="button"
-          onClick={() =>
-            setMapSelectionMode("from")
-          }
+            <button
+              type="button"
+              onClick={() =>
+                setMapSelectionMode("from")
+              }
+              style={{
+                padding: "5px 9px",
+                borderRadius: "6px",
+                border:
+                  mapSelectionMode === "from"
+                    ? "1.5px solid #E8650A"
+                    : "1px solid #ccc",
+                background:
+                  mapSelectionMode === "from"
+                    ? "#fff3eb"
+                    : "#fff",
+                cursor: "pointer",
+                fontWeight: 600,
+                fontSize: "13px",
+                lineHeight: 1.2,
+              }}
+            >
+              From
+            </button>
+
+            <button
+              type="button"
+              onClick={() =>
+                setMapSelectionMode(
+                  "destination"
+                )
+              }
+              style={{
+                padding: "5px 9px",
+                borderRadius: "6px",
+                border:
+                  mapSelectionMode ===
+                  "destination"
+                    ? "2px solid #E8650A"
+                    : "1px solid #ccc",
+                background:
+                  mapSelectionMode ===
+                  "destination"
+                    ? "#fff3eb"
+                    : "#fff",
+                cursor: "pointer",
+                fontWeight: 600,
+                fontSize: "13px",
+                lineHeight: 1.2,
+              }}
+            >
+              Destination
+            </button>
+          </div>
+
+          <div
+            style={{
+              marginBottom: "6px",
+              fontSize: "13.5px",
+              color: "#666",
+              lineHeight: 1.4,
+            }}
+          >
+            Click the map to select{" "}
+            <strong>
+              {mapSelectionMode === "from"
+                ? "From"
+                : "Destination"}
+            </strong>
+            . You can also drag either marker.
+          </div>
+        </>
+      )}
+
+      {/* ★ Show a lock message in help mode */}
+      {disabled && (
+        <div
           style={{
-            padding: "5px 9px",
-            borderRadius: "6px",
-            border:
-              mapSelectionMode === "from"
-                ? "1.5px solid #E8650A"
-                : "1px solid #ccc",
-            background:
-              mapSelectionMode === "from"
-                ? "#fff3eb"
-                : "#fff",
-            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            marginBottom: "6px",
+            fontSize: "13.5px",
+            color: "#999",
             fontWeight: 600,
-            fontSize: "13px",
-            lineHeight: 1.2,
           }}
         >
-          From
-        </button>
+          🔒 Route fixed from request
+        </div>
+      )}
 
-        <button
-          type="button"
-          onClick={() =>
-            setMapSelectionMode(
-              "destination"
-            )
-          }
-          style={{
-            padding: "5px 9px",
-            borderRadius: "6px",
-            border:
-              mapSelectionMode ===
-              "destination"
-                ? "2px solid #E8650A"
-                : "1px solid #ccc",
-            background:
-              mapSelectionMode ===
-              "destination"
-                ? "#fff3eb"
-                : "#fff",
-            cursor: "pointer",
-            fontWeight: 600,
-            fontSize: "13px",
-            lineHeight: 1.2,
-          }}
-        >
-          Destination
-        </button>
-      </div>
-
-      <div
-        style={{
-          marginBottom: "6px",
-          fontSize: "13.5px",
-          color: "#666",
-          lineHeight: 1.4,
-        }}
-      >
-        Click the map to select{" "}
-        <strong>
-          {mapSelectionMode === "from"
-            ? "From"
-            : "Destination"}
-        </strong>
-        . You can also drag either marker.
-      </div>
-
+      {/* ★ Map is always shown, but interactions are disabled */}
       <GoogleMap
         mapContainerStyle={containerStyle}
         center={center}
@@ -1136,6 +1176,11 @@ export default function RideLocationPicker({
           streetViewControl: false,
           mapTypeControl: false,
           fullscreenControl: false,
+          // ★ Disable all gestures when disabled
+          gestureHandling: disabled ? "none" : "auto",
+          draggable: !disabled,
+          scrollwheel: !disabled,
+          disableDoubleClickZoom: disabled,
         }}
       >
         {hasFrom && (
@@ -1144,12 +1189,10 @@ export default function RideLocationPicker({
               lat: fromLocation.latitude,
               lng: fromLocation.longitude,
             }}
-            draggable={true}
-            onDragEnd={
-              handleFromMarkerDragEnd
-            }
+            draggable={!disabled} // ★ Markers not draggable
+            onDragEnd={handleFromMarkerDragEnd}
             onClick={() =>
-              setMapSelectionMode("from")
+              !disabled && setMapSelectionMode("from")
             }
           />
         )}
@@ -1160,11 +1203,12 @@ export default function RideLocationPicker({
               lat: destinationLocation.latitude,
               lng: destinationLocation.longitude,
             }}
-            draggable={true}
+            draggable={!disabled} // ★ Markers not draggable
             onDragEnd={
               handleDestinationMarkerDragEnd
             }
             onClick={() =>
+              !disabled &&
               setMapSelectionMode(
                 "destination"
               )
