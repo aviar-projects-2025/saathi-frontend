@@ -661,7 +661,7 @@ const UserProfile = () => {
     "About",
     `Reviews${ratingCount ? ` (${ratingCount})` : ""}`,
     `Rides${completedRideItems.length ? ` (${completedRideItems.length})` : ""}`,
-    `Posts${totalPosts ? ` (${totalPosts})` : ""}`,
+    // `Posts${totalPosts ? ` (${totalPosts})` : ""}`,
   ];
 
   return (

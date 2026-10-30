@@ -1,27 +1,9 @@
 import React, { useState, useEffect } from "react";
 import {
-  Box,
-  Button,
-  Card,
-  CardActionArea,
-  Chip,
-  Avatar,
-  Paper,
-  Stack,
-  Typography,
-  createTheme,
-  ThemeProvider,
-  CssBaseline,
-  CircularProgress,
-  TextField,
-  InputAdornment,
-  Fade,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Divider,
-  IconButton,
+  Box, Button, Card, CardActionArea, Chip, Avatar, Paper, Stack, Typography,
+  createTheme, ThemeProvider, CssBaseline, CircularProgress,
+  TextField, InputAdornment, Fade, Dialog, DialogTitle, DialogContent,
+  DialogActions, Divider, IconButton,
 } from "@mui/material";
 import FlightIcon from "@mui/icons-material/Flight";
 import SearchIcon from "@mui/icons-material/Search";
@@ -30,8 +12,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Api from "../../Api";
 import { format } from "date-fns";
+import ProtectedAvatar from "../../components/ProtectedAvatar.jsx";
 
-/* ---------- Design Tokens ---------- */
 const colors = {
   navy: "#1B2A5C",
   rust: "#C2410C",
@@ -54,102 +36,76 @@ const theme = createTheme({
 });
 
 const BTN = {
-  height: 46,
-  minHeight: 46,
-  px: 2,
-  py: 0,
-  borderRadius: 2,
-  fontSize: 15,
-  fontWeight: 700,
-  lineHeight: 1.2,
-  textAlign: "center",
-  boxShadow: "none",
+  height: 46, minHeight: 46, px: 2, py: 0, borderRadius: 2,
+  fontSize: 15, fontWeight: 700, lineHeight: 1.2, textAlign: "center", boxShadow: "none",
 };
-
 const actionStyles = {
   base: { ...BTN, width: 170 },
-  contained: {
-    bgcolor: colors.rustDark,
-    color: "#fff",
-    "&:hover": { bgcolor: "#9A2F06" },
-  },
-  outlined: {
-    color: colors.rustDark,
-    borderColor: colors.rustDark,
-    borderWidth: 1.5,
-    bgcolor: "#fff",
-    "&:hover": { borderWidth: 1.5, borderColor: "#9A2F06", bgcolor: "#FFF4EE" },
-  },
+  contained: { bgcolor: colors.rustDark, color: "#fff", "&:hover": { bgcolor: "#9A2F06" } },
+  outlined: { color: colors.rustDark, borderColor: colors.rustDark, borderWidth: 1.5, bgcolor: "#fff", "&:hover": { borderWidth: 1.5, borderColor: "#9A2F06", bgcolor: "#FFF4EE" } },
 };
 
-/* ---------- Shared Components ---------- */
+/* ── Helpers ── */
+const getDeparture = (trip) => {
+  const raw = trip?.flights?.[0]?.departureTime;
+  if (!raw) return null;
+  const d = new Date(raw);
+  return Number.isNaN(d.getTime()) ? null : d;
+};
+const getArrival = (trip) => {
+  const flights = trip?.flights;
+  if (!Array.isArray(flights) || !flights.length) return null;
+  const raw = flights[flights.length - 1]?.arrivalTime;
+  if (!raw) return null;
+  const d = new Date(raw);
+  return Number.isNaN(d.getTime()) ? null : d;
+};
+const formatTripDate = (value, pattern = "eee, MMM d, yyyy · h:mm a") => {
+  if (!value) return "Not provided";
+  const d = new Date(value);
+  return isNaN(d.getTime()) ? "Not provided" : format(d, pattern);
+};
 
+/* ── Small components ── */
 function RoleCard({ title, description, onClick }) {
   return (
-    <Card
-      variant="outlined"
-      sx={{
-        flex: 1,
-        borderRadius: 3,
-        bgcolor: "#fff",
-        transition: "border-color 0.2s",
-        "&:hover": { borderColor: colors.rust },
-      }}
-    >
+    <Card variant="outlined" sx={{ flex: 1, borderRadius: 3, bgcolor: "#fff", transition: "border-color 0.2s", "&:hover": { borderColor: colors.rust } }}>
       <CardActionArea onClick={onClick} sx={{ p: { xs: 1.75, sm: 2.25 }, height: "100%" }}>
-        <Typography sx={{ fontWeight: 700, fontSize: { xs: 16, sm: 18 }, color: colors.navy, mb: 0.75 }}>
-          {title}
-        </Typography>
-        <Typography sx={{ fontSize: { xs: 13, sm: 14 }, color: colors.muted, lineHeight: 1.5 }}>
-          {description}
-        </Typography>
+        <Typography sx={{ fontWeight: 700, fontSize: { xs: 16, sm: 18 }, color: colors.navy, mb: 0.75 }}>{title}</Typography>
+        <Typography sx={{ fontSize: { xs: 13, sm: 14 }, color: colors.muted, lineHeight: 1.5 }}>{description}</Typography>
       </CardActionArea>
     </Card>
   );
 }
 
 function StatusChip({ status }) {
-  const normalized = String(status || "OPEN").toUpperCase();
-  const styles = {
+  const n = String(status || "OPEN").toUpperCase();
+  const s = {
     MATCHED: { label: "MATCHED", bg: "#D6F0DF", color: "#166534" },
     OPEN: { label: "OPEN", bg: "#FCE9B8", color: "#8A4B08" },
     COMPLETED: { label: "COMPLETED", bg: "#DCEBFA", color: "#1B2A5C" },
     CANCELLED: { label: "CANCELLED", bg: "#FDE2E2", color: "#991B1B" },
-  };
-  const { label, bg, color } = styles[normalized] || styles.OPEN;
-
-  return (
-    <Chip
-      label={label}
-      size="small"
-      sx={{ fontWeight: 700, fontSize: 11, height: 24, borderRadius: "14px", bgcolor: bg, color: color, letterSpacing: 0.4 }}
-    />
-  );
+  }[n] || { label: "OPEN", bg: "#FCE9B8", color: "#8A4B08" };
+  return <Chip label={s.label} size="small" sx={{ fontWeight: 700, fontSize: 11, height: 24, borderRadius: "14px", bgcolor: s.bg, color: s.color, letterSpacing: 0.4 }} />;
 }
 
-/* ---------- Trip Cards ---------- */
-
-function MyTripRow({ trip, onViewMatches, showAction = true, viewDetails }) {
+function MyTripRow({ trip, onViewMatches, showAction = true, viewDetails, currentUserId }) {
   const isMatched = trip.status === "MATCHED";
+  const isMine = String(trip.createdBy?._id || trip.createdBy) === String(currentUserId);
   const flightNos = trip.flights?.map((f) => f.flightNumber).join(" · ") || "No flights";
   const route = trip.flights?.length > 0 ? [trip.flights[0].fromCode, ...trip.flights.map((f) => f.toCode)].join(" → ") : "Unknown route";
-  const dateStr = trip.flights?.[0]?.departureTime ? format(new Date(trip.flights[0].departureTime), "eee MM/dd/yyyy h:mm a") : "Date TBD";
+  const dateStr = formatTripDate(trip.flights?.[0]?.departureTime, "eee MM/dd/yyyy h:mm a");
 
   return (
     <Paper
       variant="outlined"
+      onClick={() => viewDetails(trip)}
       sx={{
-        p: { xs: 1.75, sm: 2 },
-        borderRadius: 3,
-        borderColor: colors.border,
-        display: "flex",
-        flexDirection: { xs: "column", md: "row" },
-        alignItems: { xs: "stretch", md: "center" },
-        gap: 2,
-        transition: "box-shadow 0.2s",
+        p: { xs: 1.75, sm: 2 }, borderRadius: 3, borderColor: colors.border,
+        display: "flex", flexDirection: { xs: "column", md: "row" }, alignItems: { xs: "stretch", md: "center" },
+        gap: 2, cursor: "pointer", transition: "box-shadow 0.2s",
         "&:hover": { boxShadow: "0px 4px 12px rgba(0,0,0,0.05)" },
       }}
-      onClick={() => viewDetails(trip)}
     >
       <Stack direction="row" spacing={2} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
         <Avatar sx={{ bgcolor: isMatched ? "#DDF4E4" : "#DCEBFA", width: 44, height: 44, flexShrink: 0 }}>
@@ -161,6 +117,7 @@ function MyTripRow({ trip, onViewMatches, showAction = true, viewDetails }) {
           </Typography>
           <Typography sx={{ fontSize: { xs: 12, sm: 12.5 }, color: colors.muted, mt: 0.25 }}>
             {dateStr} · {trip.flights?.length || 0} segment{trip.flights?.length > 1 ? "s" : ""}
+            {!isMine && trip.createdBy?.firstName ? ` · ${trip.createdBy.firstName}` : ""}
           </Typography>
         </Box>
       </Stack>
@@ -169,15 +126,23 @@ function MyTripRow({ trip, onViewMatches, showAction = true, viewDetails }) {
         {trip.status === "OPEN" && trip.isRequestSubmission && (
           <Chip size="small" label="Private offer" sx={{ bgcolor: "#F3E8FF", color: "#6B21A8", fontWeight: 700 }} />
         )}
-        {showAction && ((trip.status === "OPEN" && !trip.isRequestSubmission) || isMatched) && (
+        {showAction && isMine && ((trip.status === "OPEN" && !trip.isRequestSubmission) || isMatched) && (
           <Button
             variant={isMatched ? "outlined" : "contained"}
             disableElevation
-            onClick={() => onViewMatches(trip._id, isMatched)}
+            onClick={(e) => { e.stopPropagation(); onViewMatches(trip._id, isMatched); }}
             sx={{ ...actionStyles.base, ...(isMatched ? actionStyles.outlined : actionStyles.contained) }}
           >
-            {console.log(isMatched, 'isMatched ')}
             {isMatched ? "Open trip" : "View requests"}
+          </Button>
+        )}
+        {showAction && !isMine && isMatched && (
+          <Button
+            variant="outlined" disableElevation
+            onClick={(e) => { e.stopPropagation(); onViewMatches(trip._id, true); }}
+            sx={{ ...actionStyles.base, ...actionStyles.outlined }}
+          >
+            Open trip
           </Button>
         )}
       </Stack>
@@ -185,77 +150,52 @@ function MyTripRow({ trip, onViewMatches, showAction = true, viewDetails }) {
   );
 }
 
-function formatTripDate(value, pattern = "eee, MMM d, yyyy · h:mm a") {
-  if (!value) return "Not provided";
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "Not provided" : format(date, pattern);
-}
-
-function DetailLine({ label, value }) {
-  return (
-    <Box sx={{ minWidth: 0 }}>
-      <Typography sx={{ fontSize: 12, color: colors.muted, mb: 0.35 }}>{label}</Typography>
-      <Typography sx={{ fontSize: 14, color: "#1F2937", fontWeight: 600, overflowWrap: "anywhere" }}>
-        {value || "Not provided"}
-      </Typography>
-    </Box>
-  );
-}
-
-function GlobalTripRow({ trip, onViewDetails }) {
+function GlobalTripRow({ trip, onViewDetails, currentUserId }) {
   const isParent = trip.role === "parent";
   const flightNos = trip.flights?.map((f) => f.flightNumber).filter(Boolean).join(" · ") || "No flights";
   const route = trip.flights?.length > 0 ? [trip.flights[0].fromCode, ...trip.flights.map((f) => f.toCode)].filter(Boolean).join(" → ") : "Route not provided";
-  const dateStr = trip.flights?.[0]?.departureTime ? formatTripDate(trip.flights[0].departureTime, "eee, MMM d, yyyy") : "Date TBD";
+  const dateStr = formatTripDate(trip.flights?.[0]?.departureTime, "eee, MMM d, yyyy");
   const userName = [trip.createdBy?.firstName, trip.createdBy?.lastName].filter(Boolean).join(" ") || "Community member";
+  const isOwn = String(trip.createdBy?._id || trip.createdBy) === String(currentUserId);
 
   return (
     <Paper
-      variant="outlined"
-      role="button"
-      tabIndex={0}
-      aria-label={`View trip details for ${userName}`}
+      variant="outlined" role="button" tabIndex={0}
       onClick={() => onViewDetails(trip)}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          onViewDetails(trip);
-        }
-      }}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onViewDetails(trip); } }}
       sx={{
-        p: { xs: 1.75, sm: 2 },
-        borderRadius: 3,
-        borderColor: colors.border,
-        display: "flex",
-        flexDirection: { xs: "column", md: "row" },
-        alignItems: { xs: "stretch", md: "center" },
-        gap: 2,
-        cursor: "pointer",
+        p: { xs: 1.75, sm: 2 }, borderRadius: 3, borderColor: colors.border,
+        display: "flex", flexDirection: { xs: "column", md: "row" },
+        alignItems: { xs: "stretch", md: "center" }, gap: 2, cursor: "pointer",
         transition: "box-shadow 0.2s, border-color 0.2s",
         "&:hover": { boxShadow: "0px 4px 12px rgba(0,0,0,0.08)", borderColor: colors.rust },
-        "&:focus-visible": { outline: `2px solid ${colors.rust}`, outlineOffset: 2 },
       }}
     >
       <Stack direction="row" spacing={2} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
-        <Avatar src={trip.createdBy?.profileImage || undefined} alt={userName} sx={{ bgcolor: isParent ? "#DCEBFA" : "#DDF4E4", width: 48, height: 48, flexShrink: 0 }}>
-          {!trip.createdBy?.profileImage && <FlightIcon sx={{ color: "#1E293B", transform: "rotate(45deg)", fontSize: 20 }} />}
-        </Avatar>
+        <ProtectedAvatar
+          src={trip.createdBy?.profileImage || ""} alt={userName}
+          sx={{ width: 48, height: 48, flexShrink: 0, bgcolor: isParent ? "#DCEBFA" : "#DDF4E4" }}
+        >
+          <FlightIcon sx={{ color: "#1E293B", transform: "rotate(45deg)", fontSize: 20 }} />
+        </ProtectedAvatar>
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography sx={{ fontWeight: 700, fontSize: { xs: 14.5, sm: 16 }, color: "#1F2937", wordBreak: "break-word" }}>
-            {userName} · <span style={{ color: isParent ? colors.navy : "#14653A" }}>{isParent ? "Needs Help" : "Can Help"}</span>
+            {userName}{isOwn ? " (you)" : ""} ·{" "}
+            <span style={{ color: isParent ? colors.navy : "#14653A" }}>{isParent ? "Needs Help" : "Can Help"}</span>
           </Typography>
           <Typography sx={{ fontSize: { xs: 12, sm: 12.5 }, color: colors.muted, mt: 0.25 }}>
             {flightNos} · {route} · {dateStr}
           </Typography>
-          <Typography sx={{ fontSize: 12, color: colors.rust, fontWeight: 700, mt: 0.75 }}>Tap to view full trip details</Typography>
+          <Typography sx={{ fontSize: 12, color: colors.rust, fontWeight: 700, mt: 0.75 }}>
+            {isOwn ? "Your trip · Tap to view" : "Tap to view full trip details"}
+          </Typography>
         </Box>
       </Stack>
       <Stack direction="row" spacing={2} sx={{ flexShrink: 0, alignItems: "center", justifyContent: "flex-end" }}>
         <StatusChip status={trip.status} />
         <Button
-          variant="outlined"
-          disableElevation
-          onClick={(event) => { event.stopPropagation(); onViewDetails(trip); }}
+          variant="outlined" disableElevation
+          onClick={(e) => { e.stopPropagation(); onViewDetails(trip); }}
           sx={{ ...actionStyles.base, ...actionStyles.outlined }}
         >
           View details
@@ -265,101 +205,103 @@ function GlobalTripRow({ trip, onViewDetails }) {
   );
 }
 
-function TripDetailsDialog({ trip, onClose, onAction }) {
+function TripDetailsDialog({ trip, onClose, onAction, currentUserId }) {
   if (!trip) return null;
   const isParent = trip.role === "parent";
   const userName = [trip.createdBy?.firstName, trip.createdBy?.lastName].filter(Boolean).join(" ") || "Community member";
   const flights = Array.isArray(trip.flights) ? trip.flights : [];
-  const status = trip.status || "OPEN";
+  const isOwn = String(trip.createdBy?._id || trip.createdBy) === String(currentUserId);
+  const canRequest = !isOwn && trip.status === "OPEN" && !trip.isRequestSubmission;
 
   return (
-    <Dialog open={Boolean(trip)} onClose={onClose} fullWidth maxWidth="sm" scroll="paper">
+    <Dialog open onClose={onClose} fullWidth maxWidth="sm" scroll="paper">
       <DialogTitle sx={{ pr: 6, pb: 1 }}>
         <Stack direction="row" spacing={1.5} alignItems="center">
-          <Avatar src={trip.createdBy?.profileImage || undefined} alt={userName} sx={{ width: 52, height: 52, bgcolor: "#DCEBFA" }}>
-            {!trip.createdBy?.profileImage && <FlightIcon />}
-          </Avatar>
+          <ProtectedAvatar
+            src={trip.createdBy?.profileImage || ""} alt={userName}
+            sx={{ width: 52, height: 52, bgcolor: "#DCEBFA" }}
+          >
+            <FlightIcon />
+          </ProtectedAvatar>
           <Box sx={{ minWidth: 0, flex: 1 }}>
-            <Typography sx={{ fontSize: 19, fontWeight: 800, color: colors.navy }}>{userName}</Typography>
+            <Typography sx={{ fontSize: 19, fontWeight: 800, color: colors.navy }}>{userName}{isOwn ? " (you)" : ""}</Typography>
             <Typography sx={{ fontSize: 13, color: colors.muted }}>
               {isParent ? `Parent trip${trip.relationship ? ` · ${trip.relationship}` : ""}` : "Companion trip"}
               {isParent && trip.ageBand ? ` · Age ${trip.ageBand}` : ""}
             </Typography>
           </Box>
-          <IconButton aria-label="Close trip details" onClick={onClose} sx={{ position: "absolute", top: 8, right: 8 }}><CloseIcon /></IconButton>
+          <IconButton onClick={onClose} sx={{ position: "absolute", top: 8, right: 8 }}><CloseIcon /></IconButton>
         </Stack>
       </DialogTitle>
       <DialogContent dividers sx={{ bgcolor: "#FFFEFC" }}>
         <Stack spacing={2.5}>
           <Stack direction="row" justifyContent="space-between" alignItems="center">
             <Typography sx={{ fontSize: 16, fontWeight: 800, color: colors.navy }}>Trip details</Typography>
-            <StatusChip status={status} />
+            <StatusChip status={trip.status} />
           </Stack>
 
           <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr 1fr", sm: "repeat(3, 1fr)" }, gap: 2 }}>
-            <DetailLine label="Trip role" value={isParent ? "Needs help" : "Can help"} />
-            <DetailLine label="Posted" value={formatTripDate(trip.createdAt, "MMM d, yyyy")} />
-            <DetailLine label="Pickup" value={trip.pickup === "family" ? "Family pickup" : trip.pickup === "saathi" ? "Saathi pickup" : trip.pickup} />
+            <Box><Typography sx={{ fontSize: 12, color: colors.muted }}>Trip role</Typography><Typography sx={{ fontSize: 14, fontWeight: 600 }}>{isParent ? "Needs help" : "Can help"}</Typography></Box>
+            <Box><Typography sx={{ fontSize: 12, color: colors.muted }}>Posted</Typography><Typography sx={{ fontSize: 14, fontWeight: 600 }}>{formatTripDate(trip.createdAt, "MMM d, yyyy")}</Typography></Box>
+            <Box><Typography sx={{ fontSize: 12, color: colors.muted }}>Pickup</Typography><Typography sx={{ fontSize: 14, fontWeight: 600 }}>{trip.pickup === "family" ? "Family pickup" : trip.pickup === "saathi" ? "Saathi pickup" : trip.pickup}</Typography></Box>
           </Box>
 
           <Divider />
           <Box>
             <Typography sx={{ fontSize: 15, fontWeight: 800, color: colors.navy, mb: 1.5 }}>Flight itinerary ({flights.length})</Typography>
-            {flights.length ? (
-              <Stack spacing={1.5}>
-                {flights.map((flight, index) => (
-                  <Paper key={flight._id || `${flight.flightNumber || "flight"}-${index}`} variant="outlined" sx={{ p: 1.75, borderRadius: 2.5, borderColor: colors.border, bgcolor: "#fff" }}>
-                    <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1.5 }}>
-                      <Typography sx={{ fontWeight: 800, color: colors.navy }}>Flight {index + 1}</Typography>
-                      <Chip size="small" icon={<FlightIcon />} label={flight.airline || "Airline not provided"} sx={{ maxWidth: "65%" }} />
-                    </Stack>
-                    <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
-                      <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Typography sx={{ fontSize: 22, fontWeight: 800 }}>{flight.fromCode || "—"}</Typography>
-                        <Typography sx={{ fontSize: 11, color: colors.muted }}>Departure airport</Typography>
-                      </Box>
-                      <FlightIcon sx={{ color: colors.rust, transform: "rotate(45deg)" }} />
-                      <Box sx={{ flex: 1, minWidth: 0, textAlign: "right" }}>
-                        <Typography sx={{ fontSize: 22, fontWeight: 800 }}>{flight.toCode || "—"}</Typography>
-                        <Typography sx={{ fontSize: 11, color: colors.muted }}>Arrival airport</Typography>
-                      </Box>
-                    </Stack>
-                    <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1.5 }}>
-                      <DetailLine label="Flight number" value={flight.flightNumber} />
-                      <DetailLine label="Airline" value={flight.airline} />
-                      <DetailLine label="Departure" value={formatTripDate(flight.departureTime)} />
-                      <DetailLine label="Arrival" value={formatTripDate(flight.arrivalTime)} />
-                    </Box>
-                  </Paper>
-                ))}
-              </Stack>
-            ) : <Typography sx={{ fontSize: 13, color: colors.muted }}>No flight details have been added.</Typography>}
+            <Stack spacing={1.5}>
+              {flights.map((flight, index) => (
+                <Paper key={flight._id || index} variant="outlined" sx={{ p: 1.75, borderRadius: 2.5, borderColor: colors.border, bgcolor: "#fff" }}>
+                  <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1.5 }}>
+                    <Typography sx={{ fontWeight: 800, color: colors.navy }}>Flight {index + 1}</Typography>
+                    <Chip size="small" icon={<FlightIcon />} label={flight.airline || "Airline not provided"} sx={{ maxWidth: "65%" }} />
+                  </Stack>
+                  <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
+                    <Box sx={{ flex: 1 }}><Typography sx={{ fontSize: 22, fontWeight: 800 }}>{flight.fromCode}</Typography><Typography sx={{ fontSize: 11, color: colors.muted }}>Departure</Typography></Box>
+                    <FlightIcon sx={{ color: colors.rust, transform: "rotate(45deg)" }} />
+                    <Box sx={{ flex: 1, textAlign: "right" }}><Typography sx={{ fontSize: 22, fontWeight: 800 }}>{flight.toCode}</Typography><Typography sx={{ fontSize: 11, color: colors.muted }}>Arrival</Typography></Box>
+                  </Stack>
+                  <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1.5 }}>
+                    <Box><Typography sx={{ fontSize: 12, color: colors.muted }}>Flight no.</Typography><Typography sx={{ fontSize: 14, fontWeight: 600 }}>{flight.flightNumber || "—"}</Typography></Box>
+                    <Box><Typography sx={{ fontSize: 12, color: colors.muted }}>Airline</Typography><Typography sx={{ fontSize: 14, fontWeight: 600 }}>{flight.airline || "—"}</Typography></Box>
+                    <Box><Typography sx={{ fontSize: 12, color: colors.muted }}>Departure</Typography><Typography sx={{ fontSize: 14, fontWeight: 600 }}>{formatTripDate(flight.departureTime)}</Typography></Box>
+                    <Box><Typography sx={{ fontSize: 12, color: colors.muted }}>Arrival</Typography><Typography sx={{ fontSize: 14, fontWeight: 600 }}>{formatTripDate(flight.arrivalTime)}</Typography></Box>
+                  </Box>
+                </Paper>
+              ))}
+            </Stack>
           </Box>
 
           <Divider />
           <Box>
             <Typography sx={{ fontSize: 15, fontWeight: 800, color: colors.navy, mb: 1.5 }}>Preferences</Typography>
             <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr 1fr", sm: "repeat(3, 1fr)" }, gap: 2 }}>
-              <DetailLine label="Languages" value={trip.languages?.length ? trip.languages.join(", ") : "Not specified"} />
-              <DetailLine label={isParent ? "Help needed" : "Help offered"} value={trip.help?.length ? trip.help.join(", ") : "Not specified"} />
-              {isParent && <DetailLine label="Relationship" value={trip.relationship} />}
-              {isParent && <DetailLine label="Traveller age" value={trip.ageBand} />}
+              <Box><Typography sx={{ fontSize: 12, color: colors.muted }}>Languages</Typography><Typography sx={{ fontSize: 14, fontWeight: 600 }}>{trip.languages?.length ? trip.languages.join(", ") : "Not specified"}</Typography></Box>
+              <Box><Typography sx={{ fontSize: 12, color: colors.muted }}>{isParent ? "Help needed" : "Help offered"}</Typography><Typography sx={{ fontSize: 14, fontWeight: 600 }}>{trip.help?.length ? trip.help.join(", ") : "Not specified"}</Typography></Box>
+              {isParent && <Box><Typography sx={{ fontSize: 12, color: colors.muted }}>Relationship</Typography><Typography sx={{ fontSize: 14, fontWeight: 600 }}>{trip.relationship || "—"}</Typography></Box>}
+              {isParent && <Box><Typography sx={{ fontSize: 12, color: colors.muted }}>Traveller age</Typography><Typography sx={{ fontSize: 14, fontWeight: 600 }}>{trip.ageBand || "—"}</Typography></Box>}
             </Box>
           </Box>
         </Stack>
       </DialogContent>
-      <DialogActions sx={{ p: 2, gap: 1, flexDirection: { xs: "column-reverse", sm: "row" }, "& > :not(style) ~ :not(style)": { ml: 0 } }}>
+      <DialogActions sx={{ p: 2, gap: 1, flexDirection: { xs: "column-reverse", sm: "row" } }}>
         <Button onClick={onClose} sx={{ ...BTN, width: { xs: "100%", sm: "auto" }, color: colors.muted }}>Close</Button>
-        <Button variant="contained" disableElevation onClick={() => onAction(trip)} sx={{ ...BTN, width: { xs: "100%", sm: "auto" }, bgcolor: colors.rust, "&:hover": { bgcolor: colors.rustDark } }}>
-          {isParent ? "Offer to Help" : "Ask for Help"}
-        </Button>
+        {canRequest && (
+          <Button variant="contained" disableElevation onClick={() => onAction(trip)} sx={{ ...BTN, width: { xs: "100%", sm: "auto" }, bgcolor: colors.rust, "&:hover": { bgcolor: colors.rustDark } }}>
+            {isParent ? "Offer to Help" : "Ask for Help"}
+          </Button>
+        )}
+        {isOwn && trip.status === "OPEN" && !trip.isRequestSubmission && (
+          <Button variant="contained" disableElevation onClick={() => { onClose(); onAction({ ...trip, __viewRequests: true }); }} sx={{ ...BTN, width: { xs: "100%", sm: "auto" }, bgcolor: colors.rust, "&:hover": { bgcolor: colors.rustDark } }}>
+            View requests
+          </Button>
+        )}
       </DialogActions>
     </Dialog>
   );
 }
 
-/* ---------- Main Page ---------- */
-
+/* ── Main ── */
 export default function TravelBuddy() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -371,6 +313,8 @@ export default function TravelBuddy() {
   const [activeTab, setActiveTab] = useState(requestedTab || "browse");
   const [selectedTrip, setSelectedTrip] = useState(null);
   const token = localStorage.getItem("token");
+  const currentUser = JSON.parse(localStorage.getItem("user") || "null");
+  const currentUserId = currentUser?.id || currentUser?._id;
 
   useEffect(() => {
     let cancelled = false;
@@ -398,6 +342,15 @@ export default function TravelBuddy() {
 
   const handleGlobalAction = (trip) => {
     if (!trip?._id || trip.status !== "OPEN") return;
+
+    // If it's my own trip, go to requests management
+    if (String(trip.createdBy?._id || trip.createdBy) === String(currentUserId)) {
+      if (trip.__viewRequests) {
+        navigate("/travelbuddy/requests", { state: { tab: "received", targetTripId: trip._id } });
+      }
+      return;
+    }
+
     const targetRole = trip.role === "parent" ? "companion" : "parent";
     setSelectedTrip(null);
     navigate("/post-trip", {
@@ -405,116 +358,41 @@ export default function TravelBuddy() {
     });
   };
 
-  // const getDeparture = (trip) => {
-  //   const raw = trip?.flights?.[0]?.departureTime;
-  //   if (!raw) return null;
-  //   const date = new Date(raw);
-  //   return Number.isNaN(date.getTime()) ? null : date;
-  // };
-  // const now = Date.now();
-  // const upcomingTrips = myTrips.filter((trip) => trip.status === "MATCHED" && getDeparture(trip)?.getTime() > now)
-  //   .sort((a, b) => getDeparture(a) - getDeparture(b));
-  // const historyTrips = myTrips.filter((trip) => {
-  //   const departure = getDeparture(trip);
-  //   return ["COMPLETED", "CANCELLED"].includes(trip.status) || Boolean(departure && departure.getTime() <= now);
-  // }).sort((a, b) => (getDeparture(b)?.getTime() || 0) - (getDeparture(a)?.getTime() || 0));
-
-  console.log("My Trip:", myTrips);
-
-
-  // Get the first flight's departure time
-  const getDeparture = (trip) => {
-    const raw = trip?.flights?.[0]?.departureTime;
-
-    if (!raw) return null;
-
-    const date = new Date(raw);
-
-    return Number.isNaN(date.getTime()) ? null : date;
-  };
-
-  // Get the last flight segment's arrival time
-
-  const getArrival = (trip) => {
-    const flights = trip?.flights;
-
-    if (!Array.isArray(flights) || flights.length === 0) {
-      return null;
-    }
-
-    const raw = flights[flights.length - 1]?.arrivalTime;
-
-    if (!raw) return null;
-
-    const date = new Date(raw);
-
-    return Number.isNaN(date.getTime()) ? null : date;
-  };
-
   const now = Date.now();
+
+  const openTrips = myTrips
+    .filter((trip) => {
+      if (trip.status !== "OPEN") return false;
+      const departure = getDeparture(trip);
+      if (!departure) return true;
+      return departure.getTime() > now;
+    })
+    .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
 
   const upcomingTrips = myTrips
     .filter((trip) => {
+      if (trip.status !== "MATCHED") return false;
       const departure = getDeparture(trip);
-
-      return (
-        trip.status === "MATCHED" &&
-        departure !== null &&
-        departure.getTime() > now
-      );
+      return departure && departure.getTime() > now;
     })
-    .sort(
-      (a, b) => getDeparture(a).getTime() - getDeparture(b).getTime()
-    );
+    .sort((a, b) => getDeparture(a).getTime() - getDeparture(b).getTime());
 
-  const openTrips = myTrips.filter((trip) => {
-    // if (trip.status !== "OPEN") return false;
-    const departure = getDeparture(trip);
-    const arrival = getArrival(trip);
-    
-    return departure.getTime() <= now || departure.getTime() >= now || arrival.getTime() >= now || arrival.getTime() <= now;
-  }).sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+  const currentTrips = myTrips
+    .filter((trip) => {
+      if (trip.status !== "MATCHED") return false;
+      const departure = getDeparture(trip);
+      const arrival = getArrival(trip);
+      return departure && arrival && departure.getTime() <= now && arrival.getTime() > now;
+    })
+    .sort((a, b) => getDeparture(a).getTime() - getDeparture(b).getTime());
 
   const historyTrips = myTrips
     .filter((trip) => {
+      if (["COMPLETED", "CANCELLED"].includes(trip.status)) return true;
       const arrival = getArrival(trip);
-
-      return (
-        ["COMPLETED", "CANCELLED"].includes(trip.status) ||
-        (arrival !== null && arrival.getTime() <= now)
-      );
+      return arrival && arrival.getTime() <= now;
     })
-    .sort(
-      (a, b) =>
-        (getArrival(b)?.getTime() || 0) -
-        (getArrival(a)?.getTime() || 0)
-    );
-
-  // const openTrips = myTrips
-  //   .filter((trip) => {
-  //     if (trip.status !== "OPEN") return false;
-
-  //     const departure = getDeparture(trip);
-
-  //     return departure.getTime() < now || arrival.getTime() > now;
-  //   })
-  //   .sort(
-  //     (a, b) =>
-  //       new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
-  //   );
-
-  const currentTrips = myTrips.filter((trip) => {
-    const departure = getDeparture(trip);
-    const arrival = getArrival(trip);
-
-    return (
-      trip.status === "MATCHED" &&
-      departure !== null &&
-      arrival !== null &&
-      departure.getTime() <= now &&
-      arrival.getTime() > now
-    );
-  });
+    .sort((a, b) => (getArrival(b)?.getTime() || 0) - (getArrival(a)?.getTime() || 0));
 
   const tabs = [
     { key: "browse", label: "Browse All Trips", count: null },
@@ -531,32 +409,21 @@ export default function TravelBuddy() {
     </Paper>
   );
 
-  const renderTripList = (trips, emptyMessage, showAction = true) => trips.length ? (
-    <Stack spacing={1.75} sx={{ mb: 2.5 }}>
-      {
-        trips.map((trip) => (
+  const renderList = (trips, emptyMessage, showAction = true) =>
+    trips.length ? (
+      <Stack spacing={1.75} sx={{ mb: 2.5 }}>
+        {trips.map((trip) => (
           <MyTripRow
-            key={trip._id}
-            trip={trip}
-            showAction={showAction}
+            key={trip._id} trip={trip} showAction={showAction} currentUserId={currentUserId}
+            viewDetails={setSelectedTrip}
             onViewMatches={(id, isMatched) => {
-              if (isMatched) {
-                navigate(`/trip-accepted/${id}`);
-                return;
-              }
-
-              navigate("/travelbuddy/requests", {
-                state: {
-                  tab: "received",
-                  targetTripId: id,
-                },
-              });
+              if (isMatched) { navigate(`/trip-accepted/${id}`); return; }
+              navigate("/travelbuddy/requests", { state: { tab: "received", targetTripId: id } });
             }}
           />
-        ))
-      }
-    </Stack>
-  ) : renderEmpty(emptyMessage, !showAction && false);
+        ))}
+      </Stack>
+    ) : renderEmpty(emptyMessage);
 
   return (
     <ThemeProvider theme={theme}>
@@ -580,58 +447,50 @@ export default function TravelBuddy() {
             })}
           </Stack>
 
-          {loading ? <Box display="flex" justifyContent="center" py={8}><CircularProgress size={32} sx={{ color: colors.rust }} /></Box> : (
+          {loading ? (
+            <Box display="flex" justifyContent="center" py={8}><CircularProgress size={32} sx={{ color: colors.rust }} /></Box>
+          ) : (
             <Fade in timeout={250}>
               <Box>
-                {activeTab === "browse" && <>
-                  <Paper sx={{ p: 2, borderRadius: 3, border: `1px solid ${colors.border}`, mb: 3 }}>
-                    <TextField fullWidth size="small" placeholder="Search by flight number (EK 544), airline, or airport code (MAA, ORD)" value={search} onChange={(e) => setSearch(e.target.value)} InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment>, sx: { borderRadius: 2, bgcolor: "#FAFAFA" } }} />
-                  </Paper>
-                  <Stack spacing={1.75} sx={{ mb: 2.5 }}>
-                    {globalTrips.length ? globalTrips.map((trip) => <GlobalTripRow key={trip._id} trip={trip} onViewDetails={setSelectedTrip} />) : renderEmpty("No public trips found matching your search.")}
-                  </Stack>
-                </>}
-                {activeTab === "current" && <>
-                  <Typography sx={{ color: colors.muted, mb: 2, fontSize: 13.5 }}>Current trips appear here.</Typography>
-                  {currentTrips.length ? <Stack spacing={1.75}>{currentTrips.map((trip) => <MyTripRow key={trip._id} trip={trip} showAction={false} onViewMatches={() => { }} viewDetails={setSelectedTrip} />)}</Stack> : renderEmpty("You don't have any current trips.")}
-                </>}
-                {activeTab === "upcoming" && <>
-                  <Typography sx={{ color: colors.muted, mb: 2, fontSize: 13.5 }}>Confirmed matches with future departure dates appear here.</Typography>
-                  {upcomingTrips.length ? <Stack spacing={1.75}>{upcomingTrips.map((trip) => <MyTripRow key={trip._id} trip={trip} onViewMatches={(id) => navigate(`/trip-accepted/${id}`)} viewDetails={setSelectedTrip} />)}</Stack> : renderEmpty("You don't have any upcoming matched trips yet.")}
-                </>}
-                {activeTab === "mine" && <>
-                  <Typography sx={{ color: colors.muted, mb: 2, fontSize: 13.5 }}>Open trips, including private offers awaiting a response, are shown only to you here.</Typography>
-                  {openTrips.length ? (
-                    <Stack spacing={1.75}>
-                      {openTrips.map((trip) => (
-                        <MyTripRow
-                          key={trip._id}
-                          trip={trip}
-                          viewDetails={setSelectedTrip}
-                          onViewMatches={(id) =>
-                            navigate("/travelbuddy/requests", {
-                              state: {
-                                tab: "received",
-                                targetTripId: id,
-                              },
-                            })
-                          }
-                        />
-                      ))}
+                {activeTab === "browse" && (
+                  <>
+                    <Paper sx={{ p: 2, borderRadius: 3, border: `1px solid ${colors.border}`, mb: 3 }}>
+                      <TextField fullWidth size="small" placeholder="Search by flight number (EK 544), airline, or airport code (MAA, ORD)" value={search} onChange={(e) => setSearch(e.target.value)} InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment>, sx: { borderRadius: 2, bgcolor: "#FAFAFA" } }} />
+                    </Paper>
+                    <Stack spacing={1.75} sx={{ mb: 2.5 }}>
+                      {globalTrips.length ? globalTrips.map((trip) => <GlobalTripRow key={trip._id} trip={trip} onViewDetails={setSelectedTrip} currentUserId={currentUserId} />) : renderEmpty("No public trips found matching your search.")}
                     </Stack>
-                  ) : (
-                    renderEmpty("You don't have any open trips.", true)
-                  )}
-                </>}
-                {activeTab === "history" && <>
-                  <Typography sx={{ color: colors.muted, mb: 2, fontSize: 13.5 }}>Completed, cancelled, and past-departure trips appear here.</Typography>
-                  {historyTrips.length ? <Stack spacing={1.75}>{historyTrips.map((trip) => <MyTripRow key={trip._id} trip={trip} showAction={false} onViewMatches={() => { }} viewDetails={setSelectedTrip} />)}</Stack> : renderEmpty("Your trip history is empty.")}
-                </>}
+                  </>
+                )}
+                {activeTab === "current" && (
+                  <>
+                    <Typography sx={{ color: colors.muted, mb: 2, fontSize: 13.5 }}>Matched trips happening right now.</Typography>
+                    {renderList(currentTrips, "You don't have any current trips.")}
+                  </>
+                )}
+                {activeTab === "upcoming" && (
+                  <>
+                    <Typography sx={{ color: colors.muted, mb: 2, fontSize: 13.5 }}>Confirmed matches with future departure dates appear here.</Typography>
+                    {renderList(upcomingTrips, "You don't have any upcoming matched trips yet.")}
+                  </>
+                )}
+                {activeTab === "mine" && (
+                  <>
+                    <Typography sx={{ color: colors.muted, mb: 2, fontSize: 13.5 }}>Open trips, including private offers awaiting a response.</Typography>
+                    {renderList(openTrips, "You don't have any open trips.", true)}
+                  </>
+                )}
+                {activeTab === "history" && (
+                  <>
+                    <Typography sx={{ color: colors.muted, mb: 2, fontSize: 13.5 }}>Completed and past-departure trips appear here.</Typography>
+                    {renderList(historyTrips, "Your trip history is empty.", false)}
+                  </>
+                )}
               </Box>
             </Fade>
           )}
 
-          <TripDetailsDialog trip={selectedTrip} onClose={() => setSelectedTrip(null)} onAction={handleGlobalAction} />
+          <TripDetailsDialog trip={selectedTrip} onClose={() => setSelectedTrip(null)} onAction={handleGlobalAction} currentUserId={currentUserId} />
           <Box sx={{ bgcolor: colors.amberBg, color: colors.amberText, borderRadius: 2.5, px: 2.5, py: 1.75, fontSize: 13.5, lineHeight: 1.6, mt: 3 }}>
             <Box component="span" sx={{ fontWeight: 700 }}>Safety basics:</Box>{" "}companions are volunteers, not caregivers or escorts. Nobody should carry items for anyone else. The family approves every helper.
           </Box>

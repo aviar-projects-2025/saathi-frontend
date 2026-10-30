@@ -524,7 +524,7 @@ const TopNav = ({ onMenuClick }) => {
                 }}
               />
 
-              <ProtectedAvatar
+              <Avatar
                 src={currentUser?.profileImageUrl || ""}
                 onClick={handleOpenProfileMenu}
                 sx={{
@@ -541,7 +541,7 @@ const TopNav = ({ onMenuClick }) => {
                 }}
               >
                 {currentUser?.firstName?.[0]}{currentUser?.lastName?.[0]}
-              </ProtectedAvatar>
+              </Avatar>
             </Box>
             <Menu
               anchorEl={profileAnchorEl}

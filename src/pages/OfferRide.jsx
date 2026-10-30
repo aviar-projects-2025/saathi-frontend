@@ -1248,6 +1248,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
               <RideLocationPicker
                 fromLocation={offerForm.fromLocation}
                 destinationLocation={offerForm.destinationLocation}
+                disabled={Boolean(requestRide)}
                 onFromChange={(loc) => {
                   setOfferForm((p) => ({ ...p, from: loc.address, fromLocation: loc }));
                   setErrors((p) => {
@@ -1297,6 +1298,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                   error={showErrors && !!errors.date}
                   helperText={showErrors ? errors.date : ""}
                   InputLabelProps={{ shrink: true }}
+                  disabled={Boolean(requestRide)} // ★ ADDED
                   sx={tfSx}
                 />
               </Box>
@@ -1311,6 +1313,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                   error={showErrors && !!errors.time}
                   helperText={showErrors ? errors.time : ""}
                   InputLabelProps={{ shrink: true }}
+                  disabled={Boolean(requestRide)} // ★ ADDED
                   sx={tfSx}
                 />
               </Box>
@@ -1320,6 +1323,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                   fullWidth
                   size={inputSize}
                   error={showErrors && !!errors.timeZone}
+                  disabled={Boolean(requestRide)} // ★ ADDED
                 >
                   <Select
                     value={offerForm.timeZone}

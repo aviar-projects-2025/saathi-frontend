@@ -1,6 +1,12 @@
 import React from "react";
 import { Avatar, Box } from "@mui/material";
 
+/**
+ * ProtectedAvatar
+ * Drop-in replacement for MUI <Avatar src="..." />
+ * Blocks right-click, drag-save, mobile long-press save menu, and text selection
+ * while preserving onClick, alt text, initials fallback, and all MUI Avatar props.
+ */
 export default function ProtectedAvatar({
   src,
   alt,
@@ -14,28 +20,12 @@ export default function ProtectedAvatar({
     e.stopPropagation();
   };
 
+  // Extract size-related props, default to MUI Avatar default (40px)
+  // This ensures the wrapper never collapses or overflows in flex containers.
   const width = sx.width ?? 40;
   const height = sx.height ?? 40;
 
-  const positioningSx = {
-    position: sx.position,
-    top: sx.top,
-    left: sx.left,
-    right: sx.right,
-    bottom: sx.bottom,
-    transform: sx.transform,
-    zIndex: sx.zIndex,
-  };
-
-  const spacingSx = {
-    mx: sx.mx,
-    my: sx.my,
-    mt: sx.mt,
-    mb: sx.mb,
-    ml: sx.ml,
-    mr: sx.mr,
-  };
-
+  // Everything else about size stays on the Avatar itself
   const avatarSx = {
     width: "100%",
     height: "100%",
@@ -45,7 +35,7 @@ export default function ProtectedAvatar({
     fontSize: sx.fontSize,
     fontWeight: sx.fontWeight,
     border: sx.border,
-    borderRadius: sx.borderRadius ?? "50%",
+    borderRadius: sx.borderRadius,
     boxShadow: sx.boxShadow,
     pointerEvents: "none",
     userSelect: "none",
@@ -59,22 +49,13 @@ export default function ProtectedAvatar({
     },
   };
 
-  const handleWrapperClick = (event) => {
-    // If user clicked the wrapper itself (rare — usually they hit the overlay),
-    // stop propagation and call onClick once.
-    if (onClick) {
-      event.stopPropagation();
-      onClick(event);
-    }
-  };
-
   return (
     <Box
       onContextMenu={blockEvent}
       onDragStart={blockEvent}
       onCopy={blockEvent}
       onCut={blockEvent}
-      onClick={handleWrapperClick}
+      onClick={onClick}
       sx={{
         position: "relative",
         display: "inline-flex",
@@ -83,14 +64,11 @@ export default function ProtectedAvatar({
         width,
         height,
         flexShrink: 0,
-        overflow: "hidden",          // ← keep the overlay inside
         userSelect: "none",
         WebkitUserSelect: "none",
         WebkitTouchCallout: "none",
         WebkitUserDrag: "none",
         cursor: onClick ? "pointer" : "default",
-        ...positioningSx,
-        ...spacingSx,
       }}
     >
       <Avatar
@@ -104,25 +82,19 @@ export default function ProtectedAvatar({
         {children}
       </Avatar>
 
-      {/* Overlay: catches clicks and stops propagation to parent card */}
-      {onClick && (
-        <Box
-          onClick={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            onClick(event);
-          }}
-          onContextMenu={blockEvent}
-          onDragStart={blockEvent}
-          sx={{
-            position: "absolute",
-            inset: 0,
-            borderRadius: "50%",
-            zIndex: 1,
-            cursor: "pointer",
-          }}
-        />
-      )}
+      {/* Transparent overlay — catches clicks, right-clicks, long-press */}
+      <Box
+        onClick={onClick}
+        onContextMenu={blockEvent}
+        onDragStart={blockEvent}
+        sx={{
+          position: "absolute",
+          inset: 0,
+          borderRadius: "50%",
+          zIndex: 1,
+          cursor: onClick ? "pointer" : "default",
+        }}
+      />
     </Box>
   );
 }
