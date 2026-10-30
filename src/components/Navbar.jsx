@@ -36,11 +36,12 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import { useTheme, useMediaQuery } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlineOutlined';
+import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutlineOutlined";
 import axios from "axios";
 import Api from "../Api.jsx";
-import MessagesModal from "../pages/MessagesModal.jsx";
+import ChatModal from "../pages/ChatModal";
 import ProtectedAvatar from "./ProtectedAvatar.jsx";
+import { useChatSocket } from "../hooks/useChatSocket";
 
 const TopNav = ({ onMenuClick }) => {
   const theme = useTheme();
@@ -49,34 +50,24 @@ const TopNav = ({ onMenuClick }) => {
   const [open, setOpen] = useState(false);
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
 
-  const { tabNotification, notifications, fetchNotifications } = useNotifications();
+  const { tabNotification, notifications, fetchNotifications } =
+    useNotifications();
 
   const [moreAnchorEl, setMoreAnchorEl] = useState(null);
 
   const [messagesOpen, setMessagesOpen] = useState(false);
 
-  const [conversations, setConversations] = useState([]);
+  // ─── Realtime chat badge ───
+  const { unreadChats, resetUnread } = useChatSocket();
 
   const openMoreMenu = Boolean(moreAnchorEl);
 
-  // const unreadCount = tabNotification?.filter(n => !n.isRead).length;
-  // console.log(tabNotification, 'tabNotification')
   const uniqueNotifications = Object.values(
     (tabNotification || []).reduce((acc, curr) => {
-      acc[curr._id] = curr; // handle both cases
+      acc[curr._id] = curr;
       return acc;
     }, {})
   );
-
-  // const unreadCount = Object.values(
-  //   (tabNotification || []).reduce((acc, curr) => {
-  //     if(curr.type == "ride_started") return 0;
-  //     if (!curr?.isRead) {
-  //       acc[curr?.data.rideId || curr._id] = curr;
-  //     }
-  //     return acc;
-  //   }, {})
-  // ).length;
 
   const unreadCount = Object.values(
     (tabNotification || []).reduce((acc, curr) => {
@@ -84,23 +75,20 @@ const TopNav = ({ onMenuClick }) => {
       if (!curr?.isRead) {
         acc[curr?.data?.rideId || curr._id] = curr;
       }
-
       return acc;
-    }, {}),
+    }, {})
   ).length;
-  // console.log(unreadCount,'unreadCount')
+
   const [selectedMenu, setSelectedMenu] = useState("");
 
   const { completion, currentUser } = useUser();
   const navigate = useNavigate();
 
-  // Separate anchor state for each menu so they don't fight over one another
   const [notifAnchorEl, setNotifAnchorEl] = useState(null);
   const [profileAnchorEl, setProfileAnchorEl] = useState(null);
 
   const openNotifications = Boolean(notifAnchorEl);
   const openProfileMenu = Boolean(profileAnchorEl);
-
 
   const handleOpenMoreMenu = (event) => {
     setMoreAnchorEl(event.currentTarget);
@@ -110,24 +98,21 @@ const TopNav = ({ onMenuClick }) => {
     setMoreAnchorEl(null);
   };
 
-
   const handleMarkAllAsRead = async () => {
-    // API call / notification context function here
     try {
-      await axios.patch(`${Api}/notification/${currentUser?._id}`)
+      await axios
+        .patch(`${Api}/notification/${currentUser?._id}`)
         .then((res) => {
-
           if (res?.data?.success === true) {
-            fetchNotifications()
+            fetchNotifications();
           }
-        })
+        });
     } catch (error) {
-      console.log(error)
+      console.log(error);
     } finally {
       handleCloseMoreMenu();
     }
   };
-
 
   const handleOpenNotifications = (event) => {
     setNotifAnchorEl(event.currentTarget);
@@ -222,11 +207,7 @@ const TopNav = ({ onMenuClick }) => {
           </IconButton>
 
           <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              cursor: "pointer",
-            }}
+            sx={{ display: "flex", alignItems: "center", cursor: "pointer" }}
             onClick={() => navigate("/find-ride")}
           >
             <img
@@ -240,10 +221,7 @@ const TopNav = ({ onMenuClick }) => {
             <Box sx={{ display: "flex", flexDirection: "column" }}>
               <Typography
                 variant="h6"
-                sx={{
-                  fontWeight: 900,
-                  lineHeight: 1.1,
-                }}
+                sx={{ fontWeight: 900, lineHeight: 1.1 }}
               >
                 <Box component="span" sx={{ color: "#f97316" }}>
                   Saa
@@ -281,31 +259,39 @@ const TopNav = ({ onMenuClick }) => {
               sx={{
                 color: "#5f4632",
                 transition: "color 0.2s ease",
-                "&:hover": {
-                  color: "#f97316",
-                },
+                "&:hover": { color: "#f97316" },
               }}
             >
               <EmojiEventsIcon />
             </IconButton>
           )}
 
+          {/* ─── 💬 Chat icon with realtime unread badge ─── */}
           <IconButton
             onClick={() => setMessagesOpen(true)}
             sx={{
               color: "#5f4632",
               transition: "color 0.2s ease",
-
-              "&:hover": {
-                color: "#f97316",
-              },
+              "&:hover": { color: "#f97316" },
             }}
           >
-            <ChatBubbleOutlineIcon
+            <Badge
+              color="error"
+              badgeContent={unreadChats}
+              invisible={unreadChats === 0}
               sx={{
-                fontSize: "clamp(26px, 5vw, 28px)",
+                "& .MuiBadge-badge": {
+                  fontSize: "clamp(0.55rem, 1.5vw, 0.75rem)",
+                  minWidth: "clamp(14px, 3vw, 20px)",
+                  height: "clamp(14px, 3vw, 20px)",
+                  padding: "0 5px",
+                },
               }}
-            />
+            >
+              <ChatBubbleOutlineIcon
+                sx={{ fontSize: "clamp(26px, 5vw, 28px)" }}
+              />
+            </Badge>
           </IconButton>
 
           <IconButton
@@ -334,18 +320,13 @@ const TopNav = ({ onMenuClick }) => {
               />
             </Badge>
           </IconButton>
+
           <Menu
             anchorEl={notifAnchorEl}
             open={openNotifications}
             onClose={handleCloseNotifications}
-            anchorOrigin={{
-              vertical: "bottom",
-              horizontal: "right",
-            }}
-            transformOrigin={{
-              vertical: "top",
-              horizontal: "right",
-            }}
+            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+            transformOrigin={{ vertical: "top", horizontal: "right" }}
           >
             <Box
               sx={{
@@ -360,10 +341,7 @@ const TopNav = ({ onMenuClick }) => {
                 Notifications
               </Typography>
 
-              <IconButton
-                onClick={handleOpenMoreMenu}
-                size="small"
-              >
+              <IconButton onClick={handleOpenMoreMenu} size="small">
                 <MoreVertIcon />
               </IconButton>
             </Box>
@@ -372,19 +350,14 @@ const TopNav = ({ onMenuClick }) => {
               anchorEl={moreAnchorEl}
               open={openMoreMenu}
               onClose={handleCloseMoreMenu}
-              anchorOrigin={{
-                vertical: "bottom",
-                horizontal: "right",
-              }}
-              transformOrigin={{
-                vertical: "top",
-                horizontal: "right",
-              }}
+              anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+              transformOrigin={{ vertical: "top", horizontal: "right" }}
             >
               <MenuItem onClick={handleMarkAllAsRead}>
                 Mark all as read
               </MenuItem>
             </Menu>
+
             <Box
               sx={{
                 display: "flex",
@@ -401,20 +374,19 @@ const TopNav = ({ onMenuClick }) => {
                 handleCloseNotifications={handleCloseNotifications}
               />
             </Box>
+
             {uniqueNotifications?.length > 4 && (
               <Typography
                 onClick={() => {
-                  handleCloseNotifications()
-                  navigate("/notifications")
+                  handleCloseNotifications();
+                  navigate("/notifications");
                 }}
                 sx={{
-                  textAlign: 'center',
-                  fontSize: '12px',
-                  color: '#1f49adff',
-                  cursor: 'pointer',
-                  '&:hover': {
-                    textDecoration: 'underline'
-                  }
+                  textAlign: "center",
+                  fontSize: "12px",
+                  color: "#1f49adff",
+                  cursor: "pointer",
+                  "&:hover": { textDecoration: "underline" },
                 }}
               >
                 See more
@@ -442,11 +414,7 @@ const TopNav = ({ onMenuClick }) => {
                   backgroundColor: "#f97316",
                   color: "#ffffff",
                   fontWeight: 700,
-
-                  "&:hover": {
-                    backgroundColor: "#f5c4a1",
-                  },
-
+                  "&:hover": { backgroundColor: "#f5c4a1" },
                   "&.Mui-disabled": {
                     backgroundColor: "#d1d5db",
                     color: "#6b7280",
@@ -470,35 +438,16 @@ const TopNav = ({ onMenuClick }) => {
             fullScreen={isMobile}
             PaperProps={{
               sx: {
-                width: {
-                  xs: "100%",
-                  sm: "80%",
-                  md: "90%",
-                },
-                maxWidth: {
-                  sm: 600,
-                  md: 800,
-                },
-                borderRadius: {
-                  xs: 0,
-                  sm: 3,
-                },
-                m: {
-                  xs: 0,
-                  sm: 3,
-                },
+                width: { xs: "100%", sm: "80%", md: "90%" },
+                maxWidth: { sm: 600, md: 800 },
+                borderRadius: { xs: 0, sm: 3 },
+                m: { xs: 0, sm: 3 },
                 overflow: "hidden",
               },
             }}
           >
             <DialogTitle
-              sx={{
-                position: "relative",
-                // textAlign: "center",
-                fontWeight: 700,
-                py: 2,
-                pr: 6,
-              }}
+              sx={{ position: "relative", fontWeight: 700, py: 2, pr: 6 }}
             >
               Offer Ride
               <IconButton
@@ -518,18 +467,17 @@ const TopNav = ({ onMenuClick }) => {
             <DialogContent
               dividers
               sx={{
-                p: {
-                  xs: 1,
-                  sm: 2,
-                },
+                p: { xs: 1, sm: 2 },
                 overflowY: "auto",
-                maxHeight: {
-                  xs: "100vh",
-                  sm: "75vh",
-                },
+                maxHeight: { xs: "100vh", sm: "75vh" },
               }}
             >
-              <OfferRide setOpen={setOpen} onClose={() => { setOpen(false) }} />
+              <OfferRide
+                setOpen={setOpen}
+                onClose={() => {
+                  setOpen(false);
+                }}
+              />
             </DialogContent>
           </Dialog>
 
@@ -564,9 +512,11 @@ const TopNav = ({ onMenuClick }) => {
                   cursor: "pointer",
                 }}
               >
-                {currentUser?.firstName?.[0]}{currentUser?.lastName?.[0]}
+                {currentUser?.firstName?.[0]}
+                {currentUser?.lastName?.[0]}
               </Avatar>
             </Box>
+
             <Menu
               anchorEl={profileAnchorEl}
               open={openProfileMenu}
@@ -582,7 +532,7 @@ const TopNav = ({ onMenuClick }) => {
                   onClick={() => handleSelect(option)}
                   sx={{
                     "&.Mui-selected": {
-                      bgcolor: "#fff", // Saffron
+                      bgcolor: "#fff",
                       color: "#FF9933",
                     },
                     "&.Mui-selected:hover": {
@@ -605,24 +555,18 @@ const TopNav = ({ onMenuClick }) => {
             </Menu>
           </Stack>
         </Box>
-        <MessagesModal
+
+        {/* ─── ChatModal with unread reset ─── */}
+        <ChatModal
           open={messagesOpen}
           onClose={() => setMessagesOpen(false)}
-          conversations={conversations}
-          onOpenChat={(user) => {
-            setMessagesOpen(false);
-
-            // Open your ChatModal here
-            console.log("Open chat with:", user);
-          }}
+          onResetUnread={resetUnread}
         />
+
         <Dialog
           open={logoutDialogOpen}
           onClose={(event, reason) => {
-            if (reason === "backdropClick") {
-              return;
-            }
-
+            if (reason === "backdropClick") return;
             cancelLogout();
           }}
           fullWidth
@@ -642,7 +586,6 @@ const TopNav = ({ onMenuClick }) => {
             },
           }}
         >
-          {/* Decorative Top Bar */}
           <Box
             sx={{
               height: { xs: 3, sm: 4 },
@@ -651,29 +594,6 @@ const TopNav = ({ onMenuClick }) => {
               flexShrink: 0,
             }}
           />
-
-          {/* Close Button */}
-          {/* <IconButton
-              onClick={cancelLogout}
-              aria-label="Close"
-              sx={{
-                position: "absolute",
-                right: { xs: 8, sm: 12 },
-                top: { xs: 8, sm: 12 },
-                color: "#E85D26",
-                zIndex: 10,
-                bgcolor: "#f3f4f6",
-                "&:hover": {
-                  bgcolor: "#fee2e2",
-                  color: "#E85D26",
-                },
-                width: { xs: 28, sm: 36 },
-                height: { xs: 28, sm: 36 },
-                p: 0,
-              }}
-            >
-              <CloseIcon sx={{ fontSize: { xs: 14, sm: 20 } }} />
-            </IconButton> */}
 
           <DialogTitle
             sx={{
@@ -715,7 +635,7 @@ const TopNav = ({ onMenuClick }) => {
               pt: { xs: 1, sm: 2 },
               gap: { xs: 0.75, sm: 1.5 },
               justifyContent: "center",
-              flexDirection: "row", // Always in row
+              flexDirection: "row",
             }}
           >
             <Button
@@ -764,7 +684,9 @@ const TopNav = ({ onMenuClick }) => {
                 fontSize: { xs: "0.7rem", sm: "0.9rem" },
                 py: { xs: 0.5, sm: 1 },
               }}
-              startIcon={<LogoutIcon sx={{ fontSize: { xs: 14, sm: 20 } }} />}
+              startIcon={
+                <LogoutIcon sx={{ fontSize: { xs: 14, sm: 20 } }} />
+              }
             >
               Logout
             </Button>

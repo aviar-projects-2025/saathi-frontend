@@ -10,7 +10,7 @@ import React, {
 import axios from "axios";
 import { toast } from "react-toastify";
 import Api from "../Api";
-import socket from "../socket";
+import socket, { connectSocket } from "../socket";
 import notificationSound from "../sounds/notifysound.wav";
 
 const NotificationContext = createContext(null);
@@ -25,16 +25,16 @@ const getStoredUser = () => {
 
 const getUserId = (user) => user?.id || user?._id || user?.userId || null;
 
-// ★ FIX: Fall back to data._id / data.rideId / data.requestId
+// Fall back to data._id / data.rideId / data.requestId
 // so `ride_started` and similar events with no top-level _id get a stable key.
 const getNotificationId = (item) =>
   String(
     item?._id ||
-    item?.id ||
-    item?.data?._id ||
-    item?.data?.rideId ||
-    item?.data?.requestId ||
-    ""
+      item?.id ||
+      item?.data?._id ||
+      item?.data?.rideId ||
+      item?.data?.requestId ||
+      ""
   );
 
 function normalizeList(payload) {
@@ -48,14 +48,15 @@ function normalizeList(payload) {
 function mergeNotifications(existing, incoming) {
   const byId = new Map();
 
-  // Preserve existing items that somehow have no id
   [...incoming, ...existing].forEach((item) => {
     const id = getNotificationId(item);
     if (id) {
       byId.set(id, { ...byId.get(id), ...item });
     } else {
-      // Keep no-id items unique by injecting a synthetic key
-      const synthetic = `_noid_${JSON.stringify(item).slice(0, 40)}_${Math.random()}`;
+      const synthetic = `_noid_${JSON.stringify(item).slice(
+        0,
+        40
+      )}_${Math.random()}`;
       byId.set(synthetic, { ...item, _syntheticId: synthetic });
     }
   });
@@ -137,7 +138,7 @@ export function NotificationProvider({ children }) {
   const handleIncomingNotification = useCallback(
     (incoming) => {
       if (!incoming || typeof incoming !== "object") return;
-      console.log(incoming,'incoming')
+
       const id = getNotificationId(incoming);
       console.log("[NOTIFICATIONS] incoming", incoming.type, "id=", id);
 
@@ -147,7 +148,9 @@ export function NotificationProvider({ children }) {
       }
       if (id) handledRealtimeIds.current.add(id);
 
-      setNotifications((previous) => mergeNotifications(previous, [incoming]));
+      setNotifications((previous) =>
+        mergeNotifications(previous, [incoming])
+      );
 
       if (incoming?.isSilent !== true) {
         playNotificationSound();
@@ -175,26 +178,33 @@ export function NotificationProvider({ children }) {
     };
   }, []);
 
+  /* ─── Socket lifecycle + realtime notifications ───
+     Backend emits: io.to(userId).emit("notification", payload)
+     Server auto-joins socket to socket.userId room — no manual join needed.
+  */
   useEffect(() => {
     if (!userId) {
       setNotifications([]);
       return undefined;
     }
 
-    const joinUserRoom = () => {
-      console.debug("[NOTIFICATIONS][SOCKET] joining user room", userId);
-      socket.emit("join", userId);
-      socket.emit("join_room", userId);
-    };
+    // Connect socket (idempotent — no-op if already connected)
+    connectSocket();
 
-    joinUserRoom();
-    socket.on("connect", joinUserRoom);
     socket.on("notification", handleIncomingNotification);
+
+    // On reconnect, refetch to catch anything missed offline
+    const onReconnect = () => {
+      console.debug("[NOTIFICATIONS] socket reconnected — refetching");
+      fetchNotifications();
+    };
+    socket.on("connect", onReconnect);
+
     fetchNotifications();
 
     return () => {
-      socket.off("connect", joinUserRoom);
       socket.off("notification", handleIncomingNotification);
+      socket.off("connect", onReconnect);
     };
   }, [userId, fetchNotifications, handleIncomingNotification]);
 
