@@ -54,6 +54,7 @@ import RideDetailsModal from "./RideDetails.jsx";
 
 import Api from "../Api";
 import { toast } from "react-toastify";
+import ProtectedAvatar from "../components/ProtectedAvatar.jsx";
 
 const ORANGE = "#FF9933";
 const ORANGE_BG = "#FFF9F2";
@@ -346,7 +347,7 @@ export default function RideCard({ ride }) {
 
 
   const remainingSeatsForUser = isFlight
-    ? null
+    ? 1
     : Math.max(Number(ride.availableSeats || 0) - pendingSeatsByMe, 0);
 
   const noSeats = !isFlight && remainingSeatsForUser <= 0;
@@ -521,7 +522,7 @@ export default function RideCard({ ride }) {
 
               }}
             >
-              <Avatar
+              <ProtectedAvatar
                 src={userProfile || ""}
                 alt={userName}
                 onClick={(event) => {
@@ -545,7 +546,7 @@ export default function RideCard({ ride }) {
                 }}
               >
                 {`${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`}
-              </Avatar>
+              </ProtectedAvatar>
 
               <Typography
                 fontWeight={700}
@@ -614,7 +615,7 @@ export default function RideCard({ ride }) {
           <Typography
             fontWeight={700}
             sx={{
-              marginLeft: { xs: "15%", sm: "12%" },
+              marginLeft: { xs: "15%", sm: "12%", md: "10%" },
               fontSize: { xs: "0.7rem", sm: "0.6rem" },
               position: "relative",
               top: { xs: "-18px", sm: "-30px" },
@@ -939,6 +940,7 @@ export default function RideCard({ ride }) {
                         arrow
                       >
                         <Box component="span">
+                          {console.log(remainingSeatsForUser,'remainingSeatsForUser')}
                           <Button
                             disabled={
                               genderMismatch ||

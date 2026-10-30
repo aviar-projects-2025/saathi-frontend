@@ -59,6 +59,7 @@ import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import RideDetailsModal from "./RideDetails.jsx";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import ProfileModal from './Avatar.jsx';
+import ProtectedAvatar from "../components/ProtectedAvatar.jsx";
 
 const ACCENT = "#FF9933";
 const ACCENT_DARK = "#E67E22";
@@ -504,8 +505,8 @@ const RequestRide = ({ ride }) => {
                             spacing={1.25}
                             sx={{ minWidth: 0 }}
                           >
-                            <Avatar
-                              src={request?.rideId?.createdBy?.profileImage || ""}
+                            <ProtectedAvatar
+                              src={request?.rideId?.createdBy?.profileImageUrl || ""}
                               alt={
                                 request?.rideId?.createdBy?.firstName
                                   ? `${request.rideId.createdBy.firstName} ${request.rideId.createdBy.lastName || ""
@@ -529,7 +530,7 @@ const RequestRide = ({ ride }) => {
                             >
                               {`${request?.rideId?.createdBy?.firstName?.[0] || ""}${request?.rideId?.createdBy?.lastName?.[0] || ""
                                 }`.toUpperCase()}
-                            </Avatar>
+                            </ProtectedAvatar>
 
                             <Typography
                               sx={{
@@ -611,12 +612,22 @@ const RequestRide = ({ ride }) => {
                                 },
                               }}
                             />
+                            {console.log(request?.rideId?.travelStatus)}
+                            {console.log(request?.status)}
 
-                            {request?.status !== "CANCELLED" &&
-                              request?.status !== "REJECTED" &&
-                              request?.rideId?.travelStatus !== "CANCELLED" &&
-                              request?.rideId?.travelStatus !== "Cancelled" &&
-                              new Date() <= new Date(request?.rideId?.startTime) && (
+                            {(
+                              (
+                                request?.status === "ACCEPTED" &&
+                                request?.rideId?.travelStatus === "Waiting"
+                              ) ||
+                              (
+                                request?.status !== "CANCELLED" &&
+                                request?.status !== "REJECTED" &&
+                                request?.rideId?.travelStatus !== "CANCELLED" &&
+                                request?.rideId?.travelStatus !== "Cancelled" &&
+                                new Date() <= new Date(request?.rideId?.startTime)
+                              )
+                            ) && (
                                 <IconButton
                                   onClick={(event) => handleMenuOpen(event, request)}
                                   sx={{
@@ -632,10 +643,9 @@ const RequestRide = ({ ride }) => {
                                       fontSize: { xs: 18, sm: 20, md: 22 },
                                     }}
                                   />
-                                 
                                 </IconButton>
                               )}
-                              
+
                           </Box>
                         </Box>
 

@@ -118,7 +118,7 @@ const UserLayout = () => {
                   PaperProps={{
                     sx: {
                       width: "70%",
-                      maxWidth: 280,
+                      maxWidth: 260,
                       mt: `${TOPBAR_HEIGHT}px`,
                       height: `calc(100% - ${TOPBAR_HEIGHT}px)`,
                     },
@@ -136,7 +136,7 @@ const UserLayout = () => {
                   minWidth: 0,
                   height: "100%",
                   overflowY: "auto",
-                  pb: 4,
+                  pb: 3,
                   display: "flex",
                   justifyContent: "center",
                   alignItems: "flex-start",
@@ -147,7 +147,7 @@ const UserLayout = () => {
                     width: "100%",
                     maxWidth: { xs: "100%", sm: "100%" },
                     mx: "auto", // explicit centering for the outlet content too
-                    p: { xs: 1, sm: 2, md: 3 },
+                    p: { xs: 1, sm: 1.5, md: 2 },
                   }}
                 >
                   <Outlet />

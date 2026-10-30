@@ -13,7 +13,7 @@ import {
   DialogContent,
   DialogActions,
 } from "@mui/material";
-
+import TelegramIcon from "@mui/icons-material/Telegram";
 import SearchIcon from "@mui/icons-material/Search";
 import RouteIcon from "@mui/icons-material/Route";
 import SettingsIcon from "@mui/icons-material/Settings";
@@ -21,12 +21,12 @@ import DashboardIcon from "@mui/icons-material/Dashboard";
 import LogoutIcon from "@mui/icons-material/Logout";
 import HandshakeIcon from "@mui/icons-material/Handshake";
 import PersonIcon from "@mui/icons-material/Person";
-
 import { useUser } from "../context/userConetext";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useReferral } from "../context/ReferralContext";
 
 import ProfileModal from "../pages/Avatar";
+import ProtectedAvatar from "./ProtectedAvatar";
 
 export default function Sidebar({ onItemClick, isMobile = false }) {
   const { currentUser, completion } = useUser();
@@ -60,6 +60,12 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
           link: "/request-ride",
         },
       ],
+    },
+    {
+      id: "travel-buddy",
+      label: "Travel Buddy",
+      icon: <TelegramIcon/>,
+      link: "/travelbuddy",
     },
     {
       id: "my-rides",
@@ -219,8 +225,8 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
               }}
             />
 
-            <Avatar
-              src={currentUser?.profileImage}
+            <ProtectedAvatar
+              src={currentUser?.profileImageUrl}
               sx={{
                 width: 52,
                 height: 52,
@@ -229,7 +235,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
 
             >
               {currentUser?.firstName?.[0]}{currentUser?.lastName?.[0]}
-            </Avatar>
+            </ProtectedAvatar>
           </Box>
 
           <Box
@@ -264,7 +270,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
               sx={{
                 fontSize: {
                   xs: "0.75rem",
-                  sm: "0.9rem",
+                  sm: "0.7rem",
                 },
                 color: "text.secondary",
                 overflow: "hidden",
@@ -273,10 +279,24 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
                 mt: 0.25,
               }}
             >
-              {currentUser?.email}
+              {currentUser?.city}
             </Typography>
-
             <Typography
+              sx={{
+                fontSize: { xs: "0.75rem", sm: "0.7rem" },
+                color: "text.secondary",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                mt: 0.25,
+              }}
+            >
+              {Array.isArray(currentUser?.language)
+                ? currentUser.language.join(", ")
+                : currentUser?.language || ""}
+            </Typography>
+       
+           { completion !== 100 && <Typography
               sx={{
                 fontSize: {
                   xs: "0.7rem",
@@ -288,7 +308,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
               }}
             >
               {Math.round(completion)}% completed
-            </Typography>
+            </Typography>}
           </Box>
 
           <ProfileModal

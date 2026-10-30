@@ -36,6 +36,8 @@ import US_Cities from "../config/US_Cities.json"
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import Popper from "@mui/material/Popper";
+import uploadImageToS3 from "../utils/s3Upload.js";
+import ProtectedAvatar from "../components/ProtectedAvatar.jsx";
 
 const CustomPopper = (props) => {
     return (
@@ -144,7 +146,7 @@ const buildFormData = (user) => ({
     gender: user?.gender || "",
     bio: user?.bio || "",
     city: user?.city || "",
-    profileImage: user?.profileImage || "",
+    profileImage: user?.profileImageUrl || "",
     zipcode: user?.zipcode || "",
 });
 
@@ -189,13 +191,14 @@ const validateForm = (formData) => {
 
 const EditProfile = ({ open, onClose }) => {
     const { currentUser, getuserData } = useUser();
+    console.log(currentUser, 'currentUser')
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
     const cropSize = isMobile ? CROP_BOX_SIZE_MOBILE : CROP_BOX_SIZE;
     const [submitLoading, setSubmitLoading] = useState(false);
     const [errors, setErrors] = useState({});
     const [profileImage, setProfileImage] = useState(
-        currentUser?.profileImage || ""
+        currentUser?.profileImageUrl || ""
     );
     const [profileFile, setProfileFile] = useState(null);
     const [formData, setFormData] = useState(buildFormData(currentUser));
@@ -226,10 +229,15 @@ const EditProfile = ({ open, onClose }) => {
     const [mobileError, setMobileError] = useState("");
     const token = localStorage.getItem("token");
 
+    const isTesting =
+        import.meta.env.VITE_COUNTRY_CODE_VALIDATION === "testing";
+
+    const [countryCode, setCountryCode] = useState("+1");
+
     useEffect(() => {
         if (currentUser) {
             setFormData(buildFormData(currentUser));
-            setProfileImage(currentUser?.profileImage || "");
+            setProfileImage(currentUser?.profileImageUrl || "");
             setProfileFile(null);
             syncCityUI(currentUser?.city);   // add
         }
@@ -246,12 +254,14 @@ const EditProfile = ({ open, onClose }) => {
 
 
     const sendMobileOtp = async () => {
-        if (!/^\+?\d{10,15}$/.test(newMobile)) {
-            setMobileError("Enter a valid mobile number");
+        if (!/^\d{10}$/.test(newMobile)) {
+            setMobileError("Enter a valid 10-digit mobile number");
             return;
         }
 
-        if (newMobile === formData.mobile) {
+        const fullMobileNumber = `${countryCode}${newMobile}`;
+
+        if (fullMobileNumber === formData.mobile) {
             setMobileError("Enter a different mobile number");
             return;
         }
@@ -263,7 +273,7 @@ const EditProfile = ({ open, onClose }) => {
             await axios.post(
                 `${Api}/auth/send-change-mobile-otp`,
                 {
-                    mobileNumber: newMobile,
+                    mobileNumber: fullMobileNumber,
                 },
                 {
                     headers: {
@@ -596,6 +606,7 @@ const EditProfile = ({ open, onClose }) => {
         setErrors((prev) => ({ ...prev, city: "" }));
     };
 
+
     const handleUpdateProfile = async () => {
         try {
             setSubmitLoading(true);
@@ -609,9 +620,14 @@ const EditProfile = ({ open, onClose }) => {
 
             let uploadedImage = null;
 
-
             if (profileFile) {
-                uploadedImage = await uploadToCloudinary(profileFile);
+                const uploaded = await uploadImageToS3(
+                    profileFile,
+                    "profiles"
+                );
+
+                // Save the S3 object key
+                uploadedImage = uploaded.key;
             }
 
             const data = {
@@ -627,25 +643,35 @@ const EditProfile = ({ open, onClose }) => {
                 city: formData.city,
                 zipcode: formData.zipcode,
 
+                // Send the S3 key to your backend
                 ...(uploadedImage && {
-                    profileImage: uploadedImage.url,
-                    imagePublicId: uploadedImage.publicId,
+                    profileImage: uploadedImage,
                 }),
             };
 
-            await axios.post(`${Api}/users/update/${currentUser?._id}`, data);
+            await axios.post(
+                `${Api}/users/update/${currentUser?._id}`,
+                data
+            );
 
-            getuserData();
+            await getuserData();
 
             toast.success("Profile Updated", toast);
 
             handleCloseProfile();
         } catch (error) {
-            console.log(error.response);
+            console.error(
+                "Profile update failed:",
+                error.response?.data || error.message
+            );
+            toast.error(
+                error.response?.data?.message || "Failed to update profile"
+            );
         } finally {
             setSubmitLoading(false);
         }
     };
+
 
     const displayed = getDisplayedSize();
 
@@ -807,7 +833,7 @@ const EditProfile = ({ open, onClose }) => {
                                     alignItems: "center",
                                 }}
                             >
-                                <Avatar
+                                <ProtectedAvatar
                                     src={profileImage || formData.profileImage || ""}
                                     sx={{
                                         width: {
@@ -829,7 +855,7 @@ const EditProfile = ({ open, onClose }) => {
                                     }}
                                 >
                                     {formData?.firstName?.[0]}{formData?.lastName?.[0]}
-                                </Avatar>
+                                </ProtectedAvatar>
 
                                 <Button
                                     variant="contained"
@@ -1063,24 +1089,59 @@ const EditProfile = ({ open, onClose }) => {
                                                     Enter your new mobile number
                                                 </Typography>
 
-                                                <TextField
-                                                    fullWidth
-                                                    label="New Mobile Number"
-                                                    size="small"
-                                                    value={newMobile}
-                                                    onChange={(e) => {
-                                                        setNewMobile(
-                                                            e.target.value
-                                                                .replace(/[^\d+]/g, "")
-                                                                .replace(/(?!^)\+/g, "")
-                                                        );
-                                                        setMobileError("");
-                                                    }}
-                                                    error={!!mobileError}
-                                                    helperText={mobileError}
-                                                    InputProps={fieldFont}
-                                                    InputLabelProps={fieldFont}
-                                                />
+                                                <Stack direction="row" spacing={1} sx={{ width: "100%" }}>
+                                                    {isTesting ? (
+                                                        <TextField
+                                                            select
+                                                            size="small"
+                                                            label="Code"
+                                                            value={countryCode}
+                                                            onChange={(e) => {
+                                                                setCountryCode(e.target.value);
+                                                                setNewMobile("");
+                                                                setMobileError("");
+                                                            }}
+                                                            sx={{ width: 115 }}
+                                                        >
+                                                            <MenuItem value="+91">🇮🇳 +91</MenuItem>
+                                                            <MenuItem value="+1">🇺🇸 +1</MenuItem>
+                                                        </TextField>
+                                                    ) : (
+                                                        <TextField
+                                                            size="small"
+                                                            value="US +1"
+                                                            disabled
+                                                            sx={{
+                                                                width: 115,
+                                                                "& .MuiInputBase-input.Mui-disabled": {
+                                                                    color: "#555",
+                                                                    WebkitTextFillColor: "#555",
+                                                                },
+                                                            }}
+                                                        />
+                                                    )}
+
+                                                    <TextField
+                                                        fullWidth
+                                                        label="New Mobile Number"
+                                                        size="small"
+                                                        value={newMobile}
+                                                        onChange={(e) => {
+                                                            setNewMobile(
+                                                                e.target.value.replace(/\D/g, "").slice(0, 10)
+                                                            );
+                                                            setMobileError("");
+                                                        }}
+                                                        error={!!mobileError}
+                                                        helperText={mobileError}
+                                                        inputProps={{
+                                                            maxLength: 10,
+                                                            inputMode: "numeric",
+                                                        }}
+                                                        InputProps={fieldFont}
+                                                        InputLabelProps={fieldFont}
+                                                    />
+                                                </Stack>
 
                                                 <Stack
                                                     direction="row"
@@ -1472,32 +1533,27 @@ const EditProfile = ({ open, onClose }) => {
                             <Autocomplete
                                 fullWidth
                                 size="small"
-
                                 options={AUTOCOMPLETE_OPTIONS}
                                 value={value}
-
                                 onChange={handleCitiesChange}
                                 filterOptions={filterOptions}
-
-                                getOptionLabel={(o) => o?.label || ""}
-
-                                getOptionKey={(o) => `${o.abbr}-${o.city}`}
-
-                                isOptionEqualToValue={(a, b) =>
-                                    a.abbr === b.abbr && a.city === b.city
+                                getOptionLabel={(option) => option?.label || ""}
+                                getOptionKey={(option) => `${option.abbr}-${option.city}`}
+                                isOptionEqualToValue={(option, selectedValue) =>
+                                    option.abbr === selectedValue.abbr &&
+                                    option.city === selectedValue.city
                                 }
-
                                 noOptionsText="No matching city"
-
-                                slots={{
-                                    popper: CustomPopper,
-                                }}
-
                                 slotProps={{
+                                    popper: {
+                                        sx: {
+                                            zIndex: 9999,
+                                        },
+                                    },
                                     listbox: {
                                         sx: {
                                             maxHeight: "200px",
-
+                                            overflowY: "auto",
                                             "& .MuiAutocomplete-option": {
                                                 padding: "12px 20px",
                                                 fontSize: "16px",
@@ -1506,7 +1562,6 @@ const EditProfile = ({ open, onClose }) => {
                                         },
                                     },
                                 }}
-
                                 renderInput={(params) => (
                                     <TextField
                                         {...params}
@@ -1591,7 +1646,7 @@ const EditProfile = ({ open, onClose }) => {
                                         textTransform: "none",
                                     }}
                                     onClick={() => {
-                                        setProfileImage(currentUser?.profileImage || "");
+                                        setProfileImage(currentUser?.profileImageUrl || "");
                                         setProfileFile(null);
                                         resetForm();
                                         setErrors({});

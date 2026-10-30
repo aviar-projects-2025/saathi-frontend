@@ -1,0 +1,395 @@
+import React, { useState } from "react";
+import {
+  Box,
+  Button,
+  Chip,
+  Link,
+  Paper,
+  Stack,
+  Avatar,
+  Typography,
+  CssBaseline,
+  ThemeProvider,
+  createTheme,
+} from "@mui/material";
+import { useNavigate } from "react-router-dom";
+/* ---------- Theme ---------- */
+const colors = {
+  bg: "#FAF8F4",
+  navy: "#10255A",
+  green: "#14653A",
+  greenLight: "#DDF7E6",
+  red: "#BF1E1E",
+  orange: "#D4410F",
+  blueTint: "#D9EEFB",
+  blueText: "#0B5C8E",
+  border: "#E4E1DA",
+  muted: "#6B6B6B",
+};
+
+const theme = createTheme({
+  palette: {
+    background: { default: colors.bg },
+    primary: { main: colors.navy },
+    success: { main: colors.green },
+    error: { main: colors.red },
+  },
+  typography: {
+    fontFamily: '"DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif',
+    button: { textTransform: "none", fontWeight: 700 },
+  },
+  shape: { borderRadius: 8 },
+});
+
+/* One size for every button */
+const BTN = {
+  height: 46,
+  minHeight: 46,
+  px: 2,
+  py: 0,
+  borderRadius: 2,
+  fontSize: 15,
+  fontWeight: 700,
+  lineHeight: 1.2,
+  textAlign: "center",
+  boxShadow: "none",
+  width: "100%",
+};
+
+/* Equal-width button grids */
+const gridTwo = {
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr",
+  gap: 1.5,
+};
+const gridResponsive = (cols) => ({
+  display: "grid",
+  gridTemplateColumns: { xs: "1fr", sm: `repeat(${cols}, 1fr)` },
+  gap: 1.5,
+});
+
+
+/* ---------- Small helpers ---------- */
+const SectionLabel = ({ children, color = colors.muted }) => (
+  <Typography
+    sx={{
+      fontSize: 11,
+      fontWeight: 700,
+      letterSpacing: 0.3,
+      textTransform: "uppercase",
+      color,
+      mb: 1.5,
+    }}
+  >
+    {children}
+  </Typography>
+);
+
+const cardSx = {
+  p: { xs: 2, sm: 2.5 },
+  borderRadius: 2,
+  border: `1px solid ${colors.border}`,
+  bgcolor: "#fff",
+  boxShadow: "none",
+};
+
+/* ---------- Component ---------- */
+export default function TripMatched({
+  data,
+  onBack,
+  onCall,
+  onText,
+  onAddRide,
+  onArrived,
+  onNeedHelp,
+  onRate,
+  onReport,
+  onCancel,
+}) {
+  const [checkIn, setCheckIn] = useState(null); // null | "arrived" | "help"
+  const navigate = useNavigate();
+  const handleBack = onBack ?? (() => navigate(-1));
+  const handleArrived = () => {
+    setCheckIn("arrived");
+    onArrived?.();
+  };
+  const handleHelp = () => {
+    setCheckIn("help");
+    onNeedHelp?.();
+  };
+
+  if (!data) {
+    return (
+      <Box sx={{ minHeight: "100vh", p: 3, bgcolor: "#FAF8F4" }}>
+        <Typography variant="h6">
+          No confirmed companion details available
+        </Typography>
+        <Typography sx={{ mt: 1, color: "text.secondary" }}>
+          Companion details will appear here after the trip owner approves
+          a Travel Buddy request.
+        </Typography>
+        <Button onClick={() => navigate("/travelbuddy")} sx={{ mt: 2 }}>
+          Back to Travel Buddy
+        </Button>
+      </Box>
+    );
+  }
+
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Box sx={{ minHeight: "100vh", bgcolor: "background.default", p: { xs: 2, sm: 2.5 } }}>
+        <Box sx={{ maxWidth: 860, mx: "auto" }}>
+          {/* Back link */}
+          <Link
+            component="button"
+            underline="none"
+            onClick={handleBack}
+            sx={{ color: colors.orange, fontWeight: 700, fontSize: 14, mb: 2 }}
+          >
+            Back to Travel Buddy
+          </Link>
+
+          {/* Title row */}
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            justifyContent="space-between"
+            alignItems={{ xs: "flex-start", sm: "center" }}
+            spacing={{ xs: 1, sm: 2 }}
+            sx={{ mb: 2.5 }}
+          >
+            <Typography
+              component="h1"
+              sx={{ fontSize: { xs: 22, sm: 26 }, fontWeight: 700, color: colors.navy }}
+            >
+              {data.title} · {data.status}
+            </Typography>
+            <Chip
+              label="COMPANION ACCEPTED"
+              size="small"
+              sx={{
+                bgcolor: colors.greenLight,
+                color: colors.green,
+                fontWeight: 700,
+                fontSize: 11,
+                letterSpacing: 0.3,
+                flexShrink: 0,
+              }}
+            />
+          </Stack>
+
+          {/* Journey + Companion */}
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr", md: "1.2fr 1fr" },
+              gap: 2,
+              mb: 2,
+            }}
+          >
+            {/* Journey */}
+            <Paper sx={cardSx}>
+              <SectionLabel>Journey (local times)</SectionLabel>
+
+              <Stack spacing={1.25}>
+                <Typography sx={{ fontSize: { xs: 13.5, sm: 14 }, wordBreak: "break-word" }}>
+                  <b>{data.legs[0].flight}</b>&nbsp;&nbsp;{data.legs[0].route}
+                </Typography>
+                <Typography sx={{ fontSize: { xs: 13.5, sm: 14 }, color: colors.muted }}>
+                  {data.layover}
+                </Typography>
+                <Typography sx={{ fontSize: { xs: 13.5, sm: 14 }, wordBreak: "break-word" }}>
+                  <b>{data.legs[1].flight}</b>&nbsp;&nbsp;{data.legs[1].route}
+                </Typography>
+                <Typography sx={{ fontSize: { xs: 13.5, sm: 14 }, color: colors.muted }}>
+                  Total {data.total} · {data.date}
+                </Typography>
+              </Stack>
+
+              <Box
+                sx={{
+                  mt: 2,
+                  p: 1.5,
+                  borderRadius: 1.5,
+                  bgcolor: colors.blueTint,
+                  color: colors.blueText,
+                  fontSize: { xs: 12.5, sm: 13 },
+                  lineHeight: 1.55,
+                }}
+              >
+                {data.pickup}{" "}
+                <Link
+                  component="button"
+                  onClick={onAddRide}
+                  sx={{
+                    color: colors.blueText,
+                    fontWeight: 700,
+                    fontSize: { xs: 12.5, sm: 13 },
+                    textAlign: "left",
+                    verticalAlign: "baseline",
+                  }}
+                >
+                  Or add an airport-pickup ride
+                </Link>
+              </Box>
+            </Paper>
+
+            {/* Companion */}
+            <Paper sx={cardSx}>
+              <SectionLabel>Companion</SectionLabel>
+
+              <Stack direction="row" spacing={2} alignItems="center">
+                <Avatar
+                  sx={{
+                    width: { xs: 48, sm: 60 },
+                    height: { xs: 48, sm: 60 },
+                    bgcolor: colors.greenLight,
+                    color: colors.green,
+                    fontWeight: 700,
+                    fontSize: 16,
+                    flexShrink: 0,
+                  }}
+                >
+                  {data.companion.initials}
+                </Avatar>
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography sx={{ fontWeight: 700, fontSize: 16 }}>
+                    {data.companion.name}
+                  </Typography>
+                  <Typography sx={{ fontSize: 12, color: colors.muted, wordBreak: "break-word" }}>
+                    {data.companion.phone} · {data.companion.languages}
+                  </Typography>
+                </Box>
+              </Stack>
+
+              <Box sx={{ ...gridTwo, mt: 2.5 }}>
+                <Button
+                  variant="contained"
+                  onClick={onCall}
+                  sx={{
+                    ...BTN,
+                    bgcolor: colors.green,
+                    "&:hover": { bgcolor: "#0F4F2D" },
+                  }}
+                >
+                  Call
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={onText}
+                  sx={{
+                    ...BTN,
+                    color: colors.green,
+                    borderColor: colors.green,
+                    borderWidth: 2,
+                    "&:hover": { borderWidth: 2, borderColor: colors.green },
+                  }}
+                >
+                  Text
+                </Button>
+              </Box>
+
+              <Typography sx={{ fontSize: 12, color: colors.muted, mt: 1.5 }}>
+                Contact visible only for this trip. Ends 7 days after arrival.
+              </Typography>
+            </Paper>
+          </Box>
+
+          {/* Arrival check-in */}
+          <Paper
+            sx={{
+              ...cardSx,
+              border: `2px solid ${colors.orange}`,
+              mb: 2,
+            }}
+          >
+            <SectionLabel color={colors.orange}>
+              Arrival check-in (text sent at arrival + 1 hour)
+            </SectionLabel>
+
+            <Typography sx={{ fontSize: { xs: 14, sm: 15 }, mb: 1.5 }}>
+              {checkIn === "arrived"
+                ? "Thanks — Mother arrived safely. Please leave a rating."
+                : checkIn === "help"
+                  ? "Help is on the way. A moderator and the family contact have been notified."
+                  : "Did Mother reach her pickup safely?"}
+            </Typography>
+
+            <Box sx={{ ...gridResponsive(2), mb: 1.5 }}>
+              <Button
+                variant="contained"
+                onClick={handleArrived}
+                disabled={checkIn !== null}
+                sx={{
+                  ...BTN,
+                  bgcolor: colors.green,
+                  "&:hover": { bgcolor: "#0F4F2D" },
+                }}
+              >
+                Arrived safely
+              </Button>
+              <Button
+                variant="contained"
+                onClick={handleHelp}
+                disabled={checkIn !== null}
+                sx={{
+                  ...BTN,
+                  bgcolor: colors.red,
+                  "&:hover": { bgcolor: "#9E1818" },
+                }}
+              >
+                Need help
+              </Button>
+            </Box>
+
+            <Typography sx={{ fontSize: 12, color: colors.muted }}>
+              "Need help" creates an urgent moderator item and texts the family
+              contact. No reply after 2 hours also escalates. After "Arrived
+              safely", both sides are asked to leave a rating.
+            </Typography>
+          </Paper>
+
+          {/* Footer actions */}
+          <Box sx={gridResponsive(3)}>
+            <Button
+              variant="contained"
+              onClick={onRate}
+              sx={{
+                ...BTN,
+                bgcolor: colors.navy,
+                "&:hover": { bgcolor: "#0B1A42" },
+              }}
+            >
+              Rate {data.companion.name.split(" ")[0]}
+            </Button>
+            <Button
+              variant="outlined"
+              color="error"
+              onClick={onReport}
+              sx={{
+                ...BTN,
+                borderColor: colors.red,
+                color: colors.red,
+              }}
+            >
+              Report
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={onCancel}
+              sx={{
+                ...BTN,
+                color: "#333",
+                borderColor: colors.border,
+                bgcolor: "#F3F1EC",
+                fontWeight: 600,
+              }}
+            >
+              Cancel match
+            </Button>
+          </Box>
+        </Box>
+      </Box>
+    </ThemeProvider>
+  );
+}
