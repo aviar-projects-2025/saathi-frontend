@@ -221,7 +221,7 @@ const TopNav = ({ onMenuClick }) => {
               alignItems: "center",
               cursor: "pointer",
             }}
-            onClick={() => navigate("/community")}
+            onClick={() => navigate("/find-ride")}
           >
             <img
               src={saathilogo1}

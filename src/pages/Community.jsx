@@ -48,6 +48,7 @@ import FolderIcon from "@mui/icons-material/Folder";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import ToastConfig from '../components/ToastConfig.jsx';
 import ProfileModal from './Avatar.jsx';
+import ProtectedAvatar from '../components/ProtectedAvatar.jsx';
 
 const BREAKPOINTS = { xs: 0, sm: 600, md: 900, lg: 1200, xl: 1536 }; // MUI defaults
 
