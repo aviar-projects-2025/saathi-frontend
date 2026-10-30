@@ -88,6 +88,7 @@ const RADIUS_OPTIONS = [
 
 const NAVBAR_HEIGHT = 35;
 const SCROLL_COLLAPSE_THRESHOLD = 24;
+const WELCOME_BANNER_DISMISS_KEY = "saathi_welcome_banner_dismissed";   // ← ADD
 
 /* ─────────── Defaults ─────────── */
 const emptyFilters = {
@@ -204,6 +205,133 @@ const matchesFilters = (ride, filters, searchFrom, searchDestination, userLocati
   return true;
 };
 
+/* ─────────── Welcome Banner Component ─────────── */
+function WelcomeBanner({ firstName, onPostRide, onFindRide, onDismiss, postDisabled = false }) {
+  return (
+    <Paper
+      elevation={0}
+      sx={{
+        position: "relative",
+        mb: { xs: 2, sm: 2.5 },
+        borderRadius: 3,
+        overflow: "hidden",
+        background: "linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 50%, #FFCC80 100%)",
+        border: "1px solid #FFB74D",
+      }}
+    >
+      <IconButton
+        aria-label="dismiss welcome banner"
+        onClick={onDismiss}
+        size="small"
+        sx={{
+          position: "absolute",
+          top: 10,
+          right: 10,
+          color: "#A85F00",
+          bgcolor: "rgba(255,255,255,0.5)",
+          "&:hover": { bgcolor: "rgba(255,255,255,0.8)" },
+          zIndex: 2,
+        }}
+      >
+        <CloseIcon sx={{ fontSize: 18 }} />
+      </IconButton>
+
+      <Box sx={{ p: { xs: 2, sm: 2.5, md: 3 }, pr: { xs: 5, sm: 6 } }}>
+        <Typography
+          sx={{
+            fontSize: { xs: 16, sm: 18, md: 20 },
+            fontWeight: 800,
+            color: "#8B4513",
+            mb: 1.5,
+            lineHeight: 1.3,
+          }}
+        >
+          🙏 Welcome to Saathi, {firstName}!
+        </Typography>
+
+        <Typography
+          sx={{
+            fontSize: { xs: 12.5, sm: 13.5, md: 14 },
+            color: "#5D4037",
+            lineHeight: 1.65,
+            mb: 2,
+          }}
+        >
+          Saathi is a community rideshare app built exclusively for our Indian community in the US.
+          You can only join through a personal invite from someone you trust.
+        </Typography>
+
+        <Typography
+          sx={{
+            fontSize: { xs: 12.5, sm: 13, md: 13.5 },
+            color: "#5D4037",
+            fontWeight: 600,
+            mb: 1.25,
+          }}
+        >
+          Here's what you can do:
+        </Typography>
+
+        <Stack spacing={1} sx={{ mb: 2.5 }}>
+          {[
+            { icon: "🚗", bold: "Post a Ride", rest: " — offer seats if you're driving somewhere" },
+            { icon: "🔍", bold: "Find a Ride", rest: " — search for rides others have posted" },
+            { icon: "👥", bold: "Invite Friends", rest: " — share your referral link with people you trust" },
+          ].map((item) => (
+            <Box key={item.bold} sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
+              <Typography sx={{ fontSize: { xs: 14, sm: 15 }, lineHeight: 1.4 }}>{item.icon}</Typography>
+              <Typography sx={{ fontSize: { xs: 12.5, sm: 13, md: 13.5 }, color: "#4E342E", lineHeight: 1.5 }}>
+                <strong>{item.bold}</strong>{item.rest}
+              </Typography>
+            </Box>
+          ))}
+        </Stack>
+
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={1.25}>
+          <Button
+            variant="contained"
+            onClick={onPostRide}
+            disabled={postDisabled}
+            title={postDisabled ? "Complete your profile to post a ride" : ""}
+            sx={{
+              bgcolor: RUST,
+              color: "#fff",
+              textTransform: "none",
+              fontWeight: 700,
+              fontSize: { xs: 13, sm: 13.5 },
+              px: 2.5,
+              py: 1,
+              borderRadius: 999,
+              boxShadow: "0 2px 8px rgba(200,63,8,0.3)",
+              "&:hover": { bgcolor: RUST_DARK, boxShadow: "0 3px 10px rgba(200,63,8,0.4)" },
+            }}
+          >
+            Post your first ride →
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={onFindRide}
+            sx={{
+              color: RUST,
+              borderColor: RUST,
+              textTransform: "none",
+              fontWeight: 700,
+              fontSize: { xs: 13, sm: 13.5 },
+              px: 2.5,
+              py: 1,
+              borderRadius: 999,
+              bgcolor: "rgba(255,255,255,0.6)",
+              "&:hover": { bgcolor: "#fff", borderColor: RUST },
+            }}
+          >
+            Find a ride →
+          </Button>
+        </Stack>
+      </Box>
+    </Paper>
+  );
+}
+
 export default function FindRides() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -239,6 +367,14 @@ export default function FindRides() {
   const resultsRef = useRef(null);
   const scrollStartRef = useRef(0);
   const windowScrollHandlerRef = useRef(() => { });
+
+  /* ─── Welcome banner state ─── */
+  const [showWelcomeBanner, setShowWelcomeBanner] = useState(false);
+  const hasCheckedWelcomeRef = useRef(false);
+
+  console.log("currentUser:", currentUser);
+  console.log("createdAt raw:", currentUser?.createdAt);
+  console.log("createdAt parsed:", new Date(currentUser?.createdAt));
 
   /* ─────────── Fetch rides ─────────── */
   const fetchRides = async ({ pageNumber = 1, reset = false } = {}) => {
@@ -280,6 +416,76 @@ export default function FindRides() {
     fetchRides({ pageNumber: 1, reset: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  /* ─────────── Welcome banner logic ─────────── */
+  useEffect(() => {
+    if (hasCheckedWelcomeRef.current) return;
+    if (!currentUser || !currentUser._id) return;
+
+    // Already dismissed → never show again
+    if (localStorage.getItem(WELCOME_BANNER_DISMISS_KEY) === "true") {
+      hasCheckedWelcomeRef.current = true;
+      return;
+    }
+
+    // Must have joined within last 7 days
+    const createdAt = currentUser.createdAt ? new Date(currentUser.createdAt) : null;
+    if (!createdAt || isNaN(createdAt.getTime())) {
+      hasCheckedWelcomeRef.current = true;
+      return;
+    }
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    if (createdAt < sevenDaysAgo) {
+      hasCheckedWelcomeRef.current = true;
+      return;
+    }
+
+    // Must not have posted/requested any rides yet
+    const checkUserRides = async () => {
+      try {
+        const res = await axios.get(`${Api}/rides/my/counts`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const counts = res?.data?.data || {};
+        const totalCreated = Number(counts.posts || 0);
+        if (totalCreated === 0) {
+          setShowWelcomeBanner(true);
+        }
+      } catch (error) {
+        console.error("Welcome banner check error:", error?.response?.data || error);
+      } finally {
+        hasCheckedWelcomeRef.current = true;
+      }
+    };
+
+    checkUserRides();
+  }, [currentUser, token]);
+
+  const handleDismissWelcomeBanner = () => {
+    setShowWelcomeBanner(false);
+    localStorage.setItem(WELCOME_BANNER_DISMISS_KEY, "true");
+  };
+
+  const handleWelcomePostRide = () => {
+    handleDismissWelcomeBanner();
+    tryOpenOfferRide();
+  };
+
+  const handleWelcomeFindRide = () => {
+    // handleDismissWelcomeBanner();
+    resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const isProfileComplete = Number.isFinite(completion) && completion === 100;
+
+  const tryOpenOfferRide = () => {
+    if (!isProfileComplete) {
+      setProfileGateOpen(true); // reuse the "Complete Your Profile" dialog
+      return;
+    }
+    setOpen(true);
+  };
 
   /* ─────────── Location ─────────── */
   const calculateDistanceKm = (lat1, lon1, lat2, lon2) => {
@@ -812,9 +1018,10 @@ export default function FindRides() {
         }}
       >
         <Container maxWidth="lg"
-         sx={{
-           px: { xs: 1.2, sm: 1 }, 
-           py: { xs: 1.2, sm: 1 } }}>
+          sx={{
+            px: { xs: 1.2, sm: 1 },
+            py: { xs: 1.2, sm: 1 }
+          }}>
           <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: { xs: 1.5, sm: 2 } }}>
             <Typography
               component="h1"
@@ -829,6 +1036,18 @@ export default function FindRides() {
               Find a ride
             </Typography>
           </Stack>
+          {console.log(showWelcomeBanner, 'showWelcomeBanner')}
+
+          {showWelcomeBanner && (
+            <WelcomeBanner
+              firstName={currentUser?.firstName || currentUser?.name?.split(" ")[0] || "there"}
+              onPostRide={handleWelcomePostRide}
+              onFindRide={handleWelcomeFindRide}
+              onDismiss={handleDismissWelcomeBanner}
+              postDisabled={!isProfileComplete}
+            />
+          )}
+
 
           <Box
             sx={{
@@ -1060,7 +1279,18 @@ export default function FindRides() {
                   <>
                     <Stack spacing={{ xs: 1.25, sm: 1.5 }}>
                       {sortedVisibleRides.map((ride) => (
-                        <RideList key={ride._id} ride={ride} onIcanHelp={(requestRide) => { setRequestRideToHelp(requestRide); setOpen(true); }} />
+                        <RideList
+                          key={ride._id}
+                          ride={ride}
+                          onIcanHelp={(requestRide) => {
+                            if (!isProfileComplete) {
+                              setProfileGateOpen(true);
+                              return;
+                            }
+                            setRequestRideToHelp(requestRide);
+                            setOpen(true);
+                          }}
+                        />
                       ))}
                     </Stack>
 
@@ -1096,7 +1326,9 @@ export default function FindRides() {
                     </Typography>
                     <Button
                       variant="contained"
-                      onClick={() => setOpen(true)}
+                      onClick={tryOpenOfferRide}
+                      disabled={!isProfileComplete}
+                      title={!isProfileComplete ? "Complete your profile to post a ride" : ""}
                       sx={{
                         mt: 2.5,
                         px: 3,

@@ -615,7 +615,7 @@ const Register = () => {
   /* ================= Shared brand ================= */
   const renderBrand = () => (
     <Stack direction="row" spacing={1.2} alignItems="center" sx={{ mb: 3 }}>
-      <ProtectedAvatar
+      <Avatar
         sx={{
           width: 34,
           height: 34,
@@ -625,7 +625,7 @@ const Register = () => {
         }}
       >
         S
-      </ProtectedAvatar>
+      </Avatar>
       <Typography
         sx={{
           color: NAVY,
@@ -685,7 +685,7 @@ const Register = () => {
             gap: 1.5,
           }}
         >
-          <ProtectedAvatar
+          <Avatar
             sx={{
               bgcolor: "#FFE0C8",
               color: "#9D350E",
@@ -700,7 +700,7 @@ const Register = () => {
               .join("")
               .slice(0, 2)
               .toUpperCase()}
-          </ProtectedAvatar>
+          </Avatar>
           <Box sx={{ minWidth: 0 }}>
             <Typography fontWeight={800} color="#25211E">
               {invitation?.referrerName} invited you
@@ -1004,7 +1004,7 @@ const Register = () => {
             }}
           >
             {profileImage ? (
-              <ProtectedAvatar src={profileImage} sx={{ width: 62, height: 62 }} />
+              <Avatar src={profileImage} sx={{ width: 62, height: 62 }} />
             ) : (
               <>
                 <AddAPhotoOutlinedIcon />
@@ -1406,7 +1406,7 @@ const Register = () => {
               spacing={1.5}
               sx={{ mb: index === 2 ? 0 : 2 }}
             >
-              <ProtectedAvatar
+              <Avatar
                 sx={{
                   width: 28,
                   height: 28,
@@ -1427,7 +1427,7 @@ const Register = () => {
                 }}
               >
                 {isDone ? <CheckCircleIcon fontSize="small" /> : index + 1}
-              </ProtectedAvatar>
+              </Avatar>
 
               <Box sx={{ pt: 0.2 }}>
                 <Typography fontWeight={700} sx={{ fontSize: 14 }}>
