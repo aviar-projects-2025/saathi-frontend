@@ -540,58 +540,73 @@ const MyRides = () => {
     refreshAllCategories();
   }, [refreshRide]);
 
-  // ★ Notification-driven refresh (fixed to preserve id-less items)
+  // ★ Notification-driven refresh (removed dedupe — refetch on ANY notification)
+  // We do NOT dedupe here anymore because:
+  //   1. The backend may legitimately re-emit the same ride's status changes
+  //   2. Dupe notifications for the same ride/request are handled by the server
+  //   3. Firing an extra refresh is cheap; missing a refresh breaks UX
+  const lastNotificationCount = useRef(0);
+
   useEffect(() => {
-    if (!notifications?.length) return;
+    if (!notifications?.length) {
+      lastNotificationCount.current = 0;
+      return;
+    }
 
-    const fresh = notifications.filter((n) => {
-      const id = String(
-        n?._id ||
-        n?.id ||
-        n?.data?._id ||
-        n?.data?.rideId ||
-        n?.data?.requestId ||
-        n?._syntheticId ||
-        ""
+    // Skip the initial hydration (fetch returns 40 items at once)
+    if (lastNotificationCount.current === 0) {
+      lastNotificationCount.current = notifications.length;
+      return;
+    }
+
+    // Only fire when the count grows (a new notification was added)
+    if (notifications.length > lastNotificationCount.current) {
+      const newest = notifications[0];
+      console.log(
+        "[MY_RIDES] refreshing due to new notification:",
+        newest?.type,
+        "| total:",
+        notifications.length
       );
-      if (!id) return true;
-      if (processedNotificationIds.current.has(id)) return false;
-      processedNotificationIds.current.add(id);
-      return true;
-    });
-
-    if (fresh.length) {
-      console.log("[MY_RIDES] refreshing due to new notifications:", fresh.map((n) => n?.type));
       refreshAllCategories();
     }
+
+    lastNotificationCount.current = notifications.length;
   }, [notifications]);
 
-  // ★ Direct socket listener (belt-and-suspenders)
+  // ★ Direct socket listener — never misses, works even if context dedupe drops
   useEffect(() => {
     if (!currentUserId) return;
 
+    const REFRESH_TYPES = new Set([
+      "new_request",
+      "request_accepted",
+      "request_rejected",
+      "request_cancelled",
+      "ride_request_update",
+      "ride_started",
+      "ride_completed",
+      "ride_updated",
+      "ride_status",
+      "ride_cancelled",
+      "help_proposal_received",
+      "help_proposal_accepted",
+      "help_proposal_rejected",
+    ]);
+
     const onSocketNotification = (payload) => {
       const t = payload?.type;
-      const refreshTypes = [
-        "ride_started",
-        "ride_completed",
-        "ride_updated",
-        "ride_status",
-        "ride_cancelled",
-        "request_accepted",
-        "request_rejected",
-        "new_request",
-      ];
-      if (refreshTypes.includes(t)) {
-        console.log("[MY_RIDES][SOCKET] refreshing due to", t);
-        refreshAllCategories();
-      }
+      if (!t || !REFRESH_TYPES.has(t)) return;
+
+      console.log("[MY_RIDES][SOCKET] realtime refresh on:", t);
+      refreshAllCategories();
     };
 
     socket.on("notification", onSocketNotification);
     return () => {
       socket.off("notification", onSocketNotification);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUserId]);
 
   // ★ Polling safety net (every 30s while on Current tab)
@@ -744,8 +759,10 @@ const MyRides = () => {
 
       <Box sx={{ position: "sticky", top: 0, zIndex: 10, bgcolor: "#FAF8F5", pb: 0.5 }}>
         <Tabs value={tab} onChange={handleTabChange} variant="scrollable" scrollButtons={false}
-          sx={{ minHeight: 42, "& .MuiTabs-flexContainer": { gap: "8px" }, "& .MuiTabs-indicator": { display: "none" },
-            "& .MuiTab-root": { minWidth: "auto", px: 2, py: 0.75, minHeight: 38, border: `1px solid #DCD4CB`, borderRadius: "24px", bgcolor: "#fff", textTransform: "none", marginRight: 2, fontSize: { xs: "0.74rem", sm: "0.82rem" }, fontWeight: 700, color: "#292929", "&.Mui-selected": { color: "#fff", bgcolor: "#C83D08", borderColor: "#C83D08" } } }}>
+          sx={{
+            minHeight: 42, "& .MuiTabs-flexContainer": { gap: "8px" }, "& .MuiTabs-indicator": { display: "none" },
+            "& .MuiTab-root": { minWidth: "auto", px: 2, py: 0.75, minHeight: 38, border: `1px solid #DCD4CB`, borderRadius: "24px", bgcolor: "#fff", textTransform: "none", marginRight: 2, fontSize: { xs: "0.74rem", sm: "0.82rem" }, fontWeight: 700, color: "#292929", "&.Mui-selected": { color: "#fff", bgcolor: "#C83D08", borderColor: "#C83D08" } }
+          }}>
           {tabs.map((t) => <Tab key={t.key} label={t.label} />)}
         </Tabs>
       </Box>

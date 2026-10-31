@@ -26,15 +26,9 @@ export default function ChatModal({
 
   const [selectedUser, setSelectedUser] = useState(null);
   const [search, setSearch] = useState("");
-  const [listRefreshKey, setListRefreshKey] = useState(0);
 
-  // Global listener — reorder list when a new message arrives while modal is open
-  const { lastMessage } = useChatSocket();
-  useEffect(() => {
-    if (open && lastMessage) {
-      setListRefreshKey((k) => k + 1);
-    }
-  }, [lastMessage, open]);
+  // Global listener
+  const { unreadByChat, clearChatUnread } = useChatSocket();
 
   useEffect(() => {
     if (open && initialUser?._id) setSelectedUser(initialUser);
@@ -65,15 +59,16 @@ export default function ChatModal({
       fullScreen={isMobile}
       maxWidth="sm"
       fullWidth
+      // FIX 1: Moved height styling directly to the Paper so it never shrinks
       PaperProps={{
         sx: {
           width: "100%",
-          height: isMobile ? "100%" : "min(720px, 88vh)",
+          height: isMobile ? "100%" : "min(720px, 88vh)", // Fixed height
           maxHeight: isMobile ? "100%" : "88vh",
           borderRadius: isMobile ? 0 : "20px",
           overflow: "hidden",
           m: isMobile ? 0 : 2,
-          display: "flex",
+          display: "flex", // Flexbox wrapper
           flexDirection: "column",
           backgroundColor: "#FFFFFF",
           boxShadow: "0 24px 60px rgba(0, 0, 0, 0.25)",
@@ -89,6 +84,7 @@ export default function ChatModal({
         },
       }}
     >
+      {/* HEADER: flexShrink: 0 ensures it never squishes */}
       {!selectedUser && (
         <Box
           sx={{
@@ -99,7 +95,7 @@ export default function ChatModal({
             gap: 1.5,
             background: "linear-gradient(135deg, #FFF8EE 0%, #FFFFFF 100%)",
             borderBottom: "1px solid #F1E4D7",
-            flexShrink: 0,
+            flexShrink: 0, 
           }}
         >
           <Avatar
@@ -150,10 +146,11 @@ export default function ChatModal({
         </Box>
       )}
 
+      {/* BODY: flex: 1 fills remaining space smoothly */}
       <Box
         sx={{
           flex: 1,
-          minHeight: 0,
+          minHeight: 0, 
           display: "flex",
           flexDirection: "column",
           backgroundColor: "#FFFFFF",
@@ -167,10 +164,14 @@ export default function ChatModal({
           />
         ) : (
           <ChatList
-            key={listRefreshKey}
+            // FIX 2: Removed `key={listRefreshKey}` so it doesn't unmount/remount
             search={search}
             setSearch={setSearch}
-            onSelectUser={setSelectedUser}
+            onSelectUser={(user) => {
+              setSelectedUser(user);
+              clearChatUnread(user?.chatId || user?._id);
+            }}
+            unreadByChat={unreadByChat}
           />
         )}
       </Box>
