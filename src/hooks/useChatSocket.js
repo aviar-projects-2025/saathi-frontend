@@ -1,16 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import socket from "../socket";
 
-/**
- * Global chat listener — usable from TopNav AND ChatModal.
- *
- * Returns:
- *   - `lastMessage`     : the last incoming `chat:message` payload
- *   - `unreadChats`     : total unread messages (for 💬 badge)
- *   - `unreadByChat`    : Map<chatId, count> (for per-row badges in list)
- *   - `resetUnread()`   : clears total (call when modal opens)
- *   - `clearChatUnread(chatId)` : clears one chat's counter
- */
 export const useChatSocket = ({ onMessage } = {}) => {
   const [lastMessage, setLastMessage] = useState(null);
   const [unreadChats, setUnreadChats] = useState(0);
@@ -55,11 +45,19 @@ export const useChatSocket = ({ onMessage } = {}) => {
         setUnreadChats((n) => n + 1);
 
         const chatId = String(payload.chatId?._id || payload.chatId || "");
-        if (chatId) {
-          setUnreadByChat((prev) => ({
-            ...prev,
-            [chatId]: (prev[chatId] || 0) + 1,
-          }));
+        const senderUserId = String(
+          typeof payload.senderId === "object"
+            ? payload.senderId?._id || payload.senderId?.id || ""
+            : payload.senderId || ""
+        );
+
+        if (chatId || senderUserId) {
+          setUnreadByChat((prev) => {
+            const next = { ...prev };
+            if (chatId) next[chatId] = (next[chatId] || 0) + 1;
+            if (senderUserId) next[senderUserId] = (next[senderUserId] || 0) + 1;
+            return next;
+          });
         }
       }
 
@@ -75,21 +73,20 @@ export const useChatSocket = ({ onMessage } = {}) => {
     setUnreadByChat({});
   }, []);
 
-  const clearChatUnread = useCallback((chatId) => {
-    if (!chatId) return;
-    const key = String(chatId);
+  const clearChatUnread = useCallback((chatOrUserId) => {
+  if (!chatOrUserId) return;
+  const key = String(chatOrUserId);
 
-    setUnreadByChat((prev) => {
-      if (!prev[key]) return prev;
-      const next = { ...prev };
-      const count = next[key];
-      delete next[key];
+  setUnreadByChat((prev) => {
+    if (!prev[key]) return prev;
+    const next = { ...prev };
+    const count = next[key];
+    delete next[key];
 
-      // Decrement total by the amount we just cleared
-      setUnreadChats((total) => Math.max(0, total - count));
-      return next;
-    });
-  }, []);
+    setUnreadChats((total) => Math.max(0, total - count));
+    return next;
+  });
+}, []);
 
   return {
     lastMessage,

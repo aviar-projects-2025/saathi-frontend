@@ -23,7 +23,7 @@ import ProfileModal from "./Avatar.jsx";
 import ProtectedAvatar from "../components/ProtectedAvatar.jsx";
 
 export default function NotificationTab({
-  handleCloseNotifications = () => {},
+  handleCloseNotifications = () => { },
 }) {
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null);
@@ -159,7 +159,7 @@ export default function NotificationTab({
         case "referral_rejected":
           navigate("/my-referalls");
           break;
-        
+
         // Travel Buddy: incoming request for the original trip owner
         case "travel_buddy_request":
           navigate("/travelbuddy/requests", {
@@ -199,35 +199,32 @@ export default function NotificationTab({
   const handleIsRead = useCallback(
     async (id, item) => {
       if (!id || item?.isRead) return;
-
       const normalizedId = String(id);
-
       if (markingIds.includes(normalizedId)) return;
-
       setMarkingIds((previous) => [...previous, normalizedId]);
 
       try {
-        console.log("[NotificationTab] Marking notification as read:", id);
-
         await axios.patch(
-          `${Api}/notification/single/${encodeURIComponent(id)}`
+          `${Api}/notification/single/${encodeURIComponent(id)}`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+            },
+          }
         );
 
-        await Promise.allSettled([
-          Promise.resolve().then(() => fetchNotifications()),
-          Promise.resolve().then(() => getPendingReferralCount()),
-        ]);
-
-        console.log("[NotificationTab] Marked as read:", id);
+        // Refresh context state so the row immediately loses its "unread" style
+        await fetchNotifications();
+        await getPendingReferralCount();
       } catch (error) {
         console.error(
-          "[NotificationTab] Failed to mark notification as read:",
+          "[NotificationTab] Mark read failed:",
           error?.response?.data || error.message
         );
-
         toast.error(
           error?.response?.data?.message ||
-            "Unable to mark notification as read"
+          "Unable to mark notification as read"
         );
       } finally {
         setMarkingIds((previous) =>
