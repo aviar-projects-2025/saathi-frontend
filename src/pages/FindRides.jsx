@@ -1241,7 +1241,7 @@ export default function FindRides() {
                 </Typography>
 
                 {locationError && (
-                  <Typography sx={{ fontSize: { xs: 11.5, sm: 12 }, color: "#B00020", mt: 0.75 }}>
+                  <Typography sx={{ fontSize: { xs: 11.5, sm: 12 }, color: "#929595ff", mt: 0.75 }}>
                     {locationError}
                   </Typography>
                 )}
