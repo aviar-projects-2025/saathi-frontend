@@ -1,40 +1,26 @@
-
-import React, { Suspense, useEffect } from "react";
+import React, { Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "./routes/ProtectedRoute.jsx";
+import PublicRoute from "./routes/PublicRoute.jsx";
 import ROLES from "./context/Role";
 import { ToastContainer } from "react-toastify";
 
-// Layouts (kept eager since they wrap routes and load immediately anyway)
 import AdminLayout from "./components/AdminLayout.jsx";
 import UserLayout from "./components/UserLayout.jsx";
-import PublicRoute from "./routes/PublicRoute.jsx";
 
 const Web = React.lazy(() => import("./pages/Web.jsx"));
 const Login = React.lazy(() => import("./components/Auth/Login.jsx"));
 const Register = React.lazy(() => import("./components/Auth/Register.jsx"));
 const Unauthorized = React.lazy(() => import("./pages/Unauthorized.jsx"));
 const SmsNotifications = React.lazy(() => import("./pages/SmsNotifications.jsx"));
-const WaitingApproval = React.lazy(() =>
-  import("./components/Auth/WaitingApproval.jsx")
-);
-const ForgotPassword = React.lazy(() =>
-  import("./components/Auth/ForgotPassword.jsx")
-);
-const ResetPassword = React.lazy(() =>
-  import("./components/Auth/ResetPassword.jsx")
-);
-const VerifyOTP = React.lazy(() =>
-  import("./components/Auth/VerifyOTP.jsx")
-);
-const TravelBuddyRequests = React.lazy(
-  () => import("./pages/TravelBuddy/TravelBuddyRequests.jsx")
-);
+const WaitingApproval = React.lazy(() => import("./components/Auth/WaitingApproval.jsx"));
+const ForgotPassword = React.lazy(() => import("./components/Auth/ForgotPassword.jsx"));
+const ResetPassword = React.lazy(() => import("./components/Auth/ResetPassword.jsx"));
+const VerifyOTP = React.lazy(() => import("./components/Auth/VerifyOTP.jsx"));
+const TravelBuddyRequests = React.lazy(() => import("./pages/TravelBuddy/TravelBuddyRequests.jsx"));
 
-// Shared (both roles)
 const Invite = React.lazy(() => import("./pages/Invite.jsx"));
 
-// USER pages
 const Home = React.lazy(() => import("./pages/Home.jsx"));
 const FindRides = React.lazy(() => import("./pages/FindRides.jsx"));
 const Profile = React.lazy(() => import("./pages/Profile.jsx"));
@@ -47,26 +33,16 @@ const MyRides = React.lazy(() => import("./pages/MyRides.jsx"));
 const PeopleNearYou = React.lazy(() => import("./pages/PeopleNearYou.jsx"));
 const TravelBuddy = React.lazy(() => import("./pages/TravelBuddy/index.jsx"));
 const TripMatches = React.lazy(() => import("./pages/TravelBuddy/TripMatches.jsx"));
-const InfoTripMatches = React.lazy(() => import("./pages/TravelBuddy/InfoTripMatches.jsx"))
-const MyReferrals = React.lazy(() =>
-  import("./pages/referral/MyReferrals.jsx")
-);
-const TripAccepted = React.lazy(
-  () => import("./pages/TravelBuddy/TripAccepted.jsx")
-);
-const PostTrip = React.lazy(() => import("./pages/TravelBuddy/PostTrip.jsx"))
-const Notifications = React.lazy(() => import("./pages/Notifications.jsx"))
-// const Settings = React.lazy(() => import("./pages/Settings.jsx"));
-// const RequestRide = React.lazy(() => import("./pages/RequestRide.jsx"));
+const InfoTripMatches = React.lazy(() => import("./pages/TravelBuddy/InfoTripMatches.jsx"));
+const MyReferrals = React.lazy(() => import("./pages/referral/MyReferrals.jsx"));
+const TripAccepted = React.lazy(() => import("./pages/TravelBuddy/TripAccepted.jsx"));
+const PostTrip = React.lazy(() => import("./pages/TravelBuddy/PostTrip.jsx"));
+const Notifications = React.lazy(() => import("./pages/Notifications.jsx"));
 const RequestRide2 = React.lazy(() => import("./pages/RequestedRide2.jsx"));
 
-// ADMIN pages
-const AdminDashboard = React.lazy(() =>
-  import("./pages/admin/AdminDashboard.jsx")
-);
+const AdminDashboard = React.lazy(() => import("./pages/admin/AdminDashboard.jsx"));
 const AdminUsers = React.lazy(() => import("./pages/admin/AdminUsers.jsx"));
 
-// ---------- Fallback Loader ----------
 const Loader = () => (
   <div
     style={{
@@ -82,17 +58,10 @@ const Loader = () => (
 );
 
 function App() {
-  useEffect(() => {
-    const handleClose = () => {
-      sessionStorage.clear(); // or localStorage.clear()
-    };
-
-    window.addEventListener("beforeunload", handleClose);
-
-    return () => {
-      window.removeEventListener("beforeunload", handleClose);
-    };
-  }, []);
+  // ✅ FIXED: Removed the beforeunload → sessionStorage.clear() effect.
+  // It had no purpose (auth lives in localStorage), triggered on every full-page
+  // reload (including the old window.location.href redirect from Login), and
+  // contributed to auth-state divergence between context and storage.
 
   return (
     <BrowserRouter>
@@ -143,20 +112,12 @@ function App() {
               <Route path="/trip-matches/:id" element={<InfoTripMatches />} />
               <Route path="/user-profile" element={<UserProfile />} />
               <Route path="/discover" element={<Discover />} />
-              {/* <Route path="/request-ride" element={<RequestRide />} /> */}
-                <Route path="/request-ride" element={<RequestRide2 />} />
+              <Route path="/request-ride" element={<RequestRide2 />} />
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/optin" element={<SmsNotifications />} />
               <Route path="/people-nearby" element={<PeopleNearYou />} />
-              <Route
-                path="/travelbuddy/requests"
-                element={<TravelBuddyRequests />}
-              />
-              <Route
-                path="/trip-accepted/:id"
-                element={<TripAccepted />}
-              />
-
+              <Route path="/travelbuddy/requests" element={<TravelBuddyRequests />} />
+              <Route path="/trip-accepted/:id" element={<TripAccepted />} />
             </Route>
           </Route>
 
@@ -168,8 +129,6 @@ function App() {
               <Route path="/invite" element={<Invite />} />
               <Route path="/community" element={<Community />} />
               <Route path="/my-referalls" element={<MyReferrals />} />
-
-              {/* <Route path="/settings" element={<Settings />} /> */}
             </Route>
           </Route>
 

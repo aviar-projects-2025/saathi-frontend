@@ -25,9 +25,10 @@ import CloseIcon from "@mui/icons-material/Close";
 import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
 import AddIcon from "@mui/icons-material/Add";
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import saathilogo1 from "../assets/saathilogo1.png";
 import { useUser } from "../context/userConetext.jsx";
+import { useAuth } from "../context/AuthContext"; // ✅ FIXED: import useAuth for logout
 import NotificationTab from "../pages/NotificationTab.jsx";
 import { useNotifications } from "../context/NotificationContext.jsx";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
@@ -50,14 +51,15 @@ const TopNav = ({ onMenuClick }) => {
   const [open, setOpen] = useState(false);
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
 
+  // ✅ FIXED: pull logout() from AuthContext — single source of truth
+  const { logout } = useAuth();
+
   const { tabNotification, notifications, fetchNotifications } =
     useNotifications();
 
   const [moreAnchorEl, setMoreAnchorEl] = useState(null);
-
   const [messagesOpen, setMessagesOpen] = useState(false);
 
-  // ─── Realtime chat badge ───
   const { unreadChats, resetUnread } = useChatSocket();
 
   const openMoreMenu = Boolean(moreAnchorEl);
@@ -90,13 +92,8 @@ const TopNav = ({ onMenuClick }) => {
   const openNotifications = Boolean(notifAnchorEl);
   const openProfileMenu = Boolean(profileAnchorEl);
 
-  const handleOpenMoreMenu = (event) => {
-    setMoreAnchorEl(event.currentTarget);
-  };
-
-  const handleCloseMoreMenu = () => {
-    setMoreAnchorEl(null);
-  };
+  const handleOpenMoreMenu = (event) => setMoreAnchorEl(event.currentTarget);
+  const handleCloseMoreMenu = () => setMoreAnchorEl(null);
 
   const handleMarkAllAsRead = async () => {
     try {
@@ -114,21 +111,10 @@ const TopNav = ({ onMenuClick }) => {
     }
   };
 
-  const handleOpenNotifications = (event) => {
-    setNotifAnchorEl(event.currentTarget);
-  };
-
-  const handleCloseNotifications = () => {
-    setNotifAnchorEl(null);
-  };
-
-  const handleOpenProfileMenu = (event) => {
-    setProfileAnchorEl(event.currentTarget);
-  };
-
-  const handleCloseProfileMenu = () => {
-    setProfileAnchorEl(null);
-  };
+  const handleOpenNotifications = (event) => setNotifAnchorEl(event.currentTarget);
+  const handleCloseNotifications = () => setNotifAnchorEl(null);
+  const handleOpenProfileMenu = (event) => setProfileAnchorEl(event.currentTarget);
+  const handleCloseProfileMenu = () => setProfileAnchorEl(null);
 
   const isProfileComplete = completion === 100;
 
@@ -165,15 +151,16 @@ const TopNav = ({ onMenuClick }) => {
     }
   };
 
+  // ✅ FIXED: atomic logout via AuthContext, then navigate.
+  // No localStorage.clear() (it wiped unrelated keys and raced with context state).
+  // No setTimeout band-aid — state flips synchronously before navigation.
   const confirmLogout = () => {
-    localStorage.clear();
     setLogoutDialogOpen(false);
-    navigate("/login");
+    logout();
+    navigate("/login", { replace: true });
   };
 
-  const cancelLogout = () => {
-    setLogoutDialogOpen(false);
-  };
+  const cancelLogout = () => setLogoutDialogOpen(false);
 
   return (
     <AppBar
@@ -219,16 +206,9 @@ const TopNav = ({ onMenuClick }) => {
             />
 
             <Box sx={{ display: "flex", flexDirection: "column" }}>
-              <Typography
-                variant="h6"
-                sx={{ fontWeight: 900, lineHeight: 1.1 }}
-              >
-                <Box component="span" sx={{ color: "#f97316" }}>
-                  Saa
-                </Box>
-                <Box component="span" sx={{ color: "#15803d" }}>
-                  thi
-                </Box>
+              <Typography variant="h6" sx={{ fontWeight: 900, lineHeight: 1.1 }}>
+                <Box component="span" sx={{ color: "#f97316" }}>Saa</Box>
+                <Box component="span" sx={{ color: "#15803d" }}>thi</Box>
               </Typography>
 
               <Typography
@@ -266,7 +246,7 @@ const TopNav = ({ onMenuClick }) => {
             </IconButton>
           )}
 
-          {/* ─── 💬 Chat icon with realtime unread badge ─── */}
+          {/* Chat icon */}
           <IconButton
             onClick={() => setMessagesOpen(true)}
             sx={{
@@ -288,16 +268,12 @@ const TopNav = ({ onMenuClick }) => {
                 },
               }}
             >
-              <ChatBubbleOutlineIcon
-                sx={{ fontSize: "clamp(26px, 5vw, 28px)" }}
-              />
+              <ChatBubbleOutlineIcon sx={{ fontSize: "clamp(26px, 5vw, 28px)" }} />
             </Badge>
           </IconButton>
 
-          <IconButton
-            onClick={handleOpenNotifications}
-            sx={{ color: "#5f4632" }}
-          >
+          {/* Notifications icon */}
+          <IconButton onClick={handleOpenNotifications} sx={{ color: "#5f4632" }}>
             <Badge
               color="error"
               badgeContent={unreadCount}
@@ -337,10 +313,7 @@ const TopNav = ({ onMenuClick }) => {
                 width: "100%",
               }}
             >
-              <Typography sx={{ pl: 2, fontSize: 14 }}>
-                Notifications
-              </Typography>
-
+              <Typography sx={{ pl: 2, fontSize: 14 }}>Notifications</Typography>
               <IconButton onClick={handleOpenMoreMenu} size="small">
                 <MoreVertIcon />
               </IconButton>
@@ -353,9 +326,7 @@ const TopNav = ({ onMenuClick }) => {
               anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
               transformOrigin={{ vertical: "top", horizontal: "right" }}
             >
-              <MenuItem onClick={handleMarkAllAsRead}>
-                Mark all as read
-              </MenuItem>
+              <MenuItem onClick={handleMarkAllAsRead}>Mark all as read</MenuItem>
             </Menu>
 
             <Box
@@ -370,9 +341,7 @@ const TopNav = ({ onMenuClick }) => {
                 overflowY: "auto",
               }}
             >
-              <NotificationTab
-                handleCloseNotifications={handleCloseNotifications}
-              />
+              <NotificationTab handleCloseNotifications={handleCloseNotifications} />
             </Box>
 
             {uniqueNotifications?.length > 4 && (
@@ -446,19 +415,12 @@ const TopNav = ({ onMenuClick }) => {
               },
             }}
           >
-            <DialogTitle
-              sx={{ position: "relative", fontWeight: 700, py: 2, pr: 6 }}
-            >
+            <DialogTitle sx={{ position: "relative", fontWeight: 700, py: 2, pr: 6 }}>
               Offer Ride
               <IconButton
                 aria-label="close"
                 onClick={() => setOpen(false)}
-                sx={{
-                  position: "absolute",
-                  top: 12,
-                  right: 12,
-                  color: "text.secondary",
-                }}
+                sx={{ position: "absolute", top: 12, right: 12, color: "text.secondary" }}
               >
                 <CloseIcon />
               </IconButton>
@@ -472,12 +434,7 @@ const TopNav = ({ onMenuClick }) => {
                 maxHeight: { xs: "100vh", sm: "75vh" },
               }}
             >
-              <OfferRide
-                setOpen={setOpen}
-                onClose={() => {
-                  setOpen(false);
-                }}
-              />
+              <OfferRide setOpen={setOpen} onClose={() => setOpen(false)} />
             </DialogContent>
           </Dialog>
 
@@ -531,24 +488,17 @@ const TopNav = ({ onMenuClick }) => {
                   selected={selectedMenu === option.label}
                   onClick={() => handleSelect(option)}
                   sx={{
-                    "&.Mui-selected": {
-                      bgcolor: "#fff",
-                      color: "#FF9933",
-                    },
-                    "&.Mui-selected:hover": {
-                      color: "#e68a00",
-                    },
+                    "&.Mui-selected": { bgcolor: "#fff", color: "#FF9933" },
+                    "&.Mui-selected:hover": { color: "#e68a00" },
                   }}
                 >
                   <ListItemIcon
                     sx={{
-                      color:
-                        selectedMenu === option.label ? "#FF9933" : "inherit",
+                      color: selectedMenu === option.label ? "#FF9933" : "inherit",
                     }}
                   >
                     {option.icon}
                   </ListItemIcon>
-
                   <ListItemText>{option.label}</ListItemText>
                 </MenuItem>
               ))}
@@ -556,7 +506,6 @@ const TopNav = ({ onMenuClick }) => {
           </Stack>
         </Box>
 
-        {/* ─── ChatModal with unread reset ─── */}
         <ChatModal
           open={messagesOpen}
           onClose={() => setMessagesOpen(false)}
@@ -652,10 +601,7 @@ const TopNav = ({ onMenuClick }) => {
                 borderColor: "#6b7280",
                 color: "#ffffff",
                 bgcolor: "#6b7280",
-                "&:hover": {
-                  borderColor: "#6b7280",
-                  bgcolor: "#6b7280",
-                },
+                "&:hover": { borderColor: "#6b7280", bgcolor: "#6b7280" },
                 px: { xs: 1, sm: 3 },
                 fontSize: { xs: "0.7rem", sm: "0.9rem" },
                 py: { xs: 0.5, sm: 1 },
@@ -676,17 +622,13 @@ const TopNav = ({ onMenuClick }) => {
                 height: { xs: 32, sm: 46 },
                 background: "linear-gradient(135deg, #E85D26, #E85D26)",
                 color: "#ffffff",
-                "&:hover": {
-                  background: "linear-gradient(135deg, #D65A00, #D65A00)",
-                },
+                "&:hover": { background: "linear-gradient(135deg, #D65A00, #D65A00)" },
                 boxShadow: "0 4px 15px rgba(232, 93, 38, 0.3)",
                 px: { xs: 1, sm: 3 },
                 fontSize: { xs: "0.7rem", sm: "0.9rem" },
                 py: { xs: 0.5, sm: 1 },
               }}
-              startIcon={
-                <LogoutIcon sx={{ fontSize: { xs: 14, sm: 20 } }} />
-              }
+              startIcon={<LogoutIcon sx={{ fontSize: { xs: 14, sm: 20 } }} />}
             >
               Logout
             </Button>
