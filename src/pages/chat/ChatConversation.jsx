@@ -350,7 +350,7 @@ export default function ChatConversation({ user, onBack, onClose }) {
           <ArrowBackIcon />
         </IconButton>
         <Avatar
-          src={user?.profileImage || ""}
+          src={user?.profileImageUrl || ""}
           sx={{
             width: 42,
             height: 42,
@@ -360,7 +360,7 @@ export default function ChatConversation({ user, onBack, onClose }) {
             border: "2px solid #FFEAD1",
           }}
         >
-          {!user?.profileImage && getInitials(user)}
+          {!user?.profileImageUrl && getInitials(user)}
         </Avatar>
         <Box sx={{ ml: 1.5, flex: 1, minWidth: 0 }}>
           <Typography
@@ -450,7 +450,7 @@ export default function ChatConversation({ user, onBack, onClose }) {
               {/* Avatar for received messages (last of group only) */}
               {!isMine && (
                 <Avatar
-                  src={!nextSame ? user?.profileImage || "" : ""}
+                  src={!nextSame ? user?.profileImageUrl || "" : ""}
                   sx={{
                     width: 26,
                     height: 26,
@@ -461,7 +461,7 @@ export default function ChatConversation({ user, onBack, onClose }) {
                     flexShrink: 0,
                   }}
                 >
-                  {!nextSame && !user?.profileImage && getInitials(user)}
+                  {!nextSame && !user?.profileImageUrl && getInitials(user)}
                 </Avatar>
               )}
 

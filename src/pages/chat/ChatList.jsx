@@ -158,7 +158,7 @@ export default function ChatList({
         ) : (
           people.map((p) => {
             const unreadCount = unreadByChat[p._id] || unreadByChat[p.chatId] || 0;
-
+            console.log(p,'pr')
             return (
               <Box
                 key={p._id}
@@ -193,7 +193,7 @@ export default function ChatList({
                   }}
                 >
                   <Avatar
-                    src={p.profileImage || ""}
+                    src={p.profileImageUrl || ""}
                     sx={{
                       width: 52,
                       height: 52,
@@ -204,7 +204,7 @@ export default function ChatList({
                       flexShrink: 0,
                     }}
                   >
-                    {!p.profileImage && getInitials(p)}
+                    {!p.profileImageUrl && getInitials(p)}
                   </Avatar>
                 </Badge>
 
