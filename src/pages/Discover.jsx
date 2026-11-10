@@ -152,7 +152,7 @@ const Discover = () => {
                                     </Typography>
 
                                     <ProtectedAvatar
-                                        src={member?.profileImage || ""}
+                                        src={member?.profileImageUrl || ""}
                                         alt={`${member?.name || ""}`}
                                         onClick={() => {
                                             setSelectedProfile(member);

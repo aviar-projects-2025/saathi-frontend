@@ -1580,7 +1580,7 @@ const Register = () => {
                     <MenuItem value="">Prefer not to say</MenuItem>
                     <MenuItem value="Female">Female</MenuItem>
                     <MenuItem value="Male">Male</MenuItem>
-                    <MenuItem value="Other">Other</MenuItem>
+                    {/* <MenuItem value="Other">Other</MenuItem> */}
                   </TextField>
                   <Typography
                     variant="caption"

@@ -493,9 +493,9 @@ const MyProfileSettings = () => {
         </Section>
 
         {/* ─── 3. SMS Preferences ─── */}
-        <Section title="Text message (SMS) preferences">
+        {/* <Section title="Text message (SMS) preferences">
           <Stack spacing={0}>
-            {/* Row 1 */}
+
             <Row sx={{ py: 2 }}>
               <Box sx={{ minWidth: 0 }}>
                 <Typography sx={{ fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>
@@ -513,7 +513,7 @@ const MyProfileSettings = () => {
             </Row>
             <Divider sx={{ borderColor: BORDER }} />
 
-            {/* Row 2 */}
+
             <Row sx={{ py: 2 }}>
               <Typography sx={{ fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>
                 Referral approval requests
@@ -526,7 +526,7 @@ const MyProfileSettings = () => {
             </Row>
             <Divider sx={{ borderColor: BORDER }} />
 
-            {/* Row 3 */}
+
             <Row sx={{ py: 2 }}>
               <Typography sx={{ fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>
                 Route alerts
@@ -539,7 +539,7 @@ const MyProfileSettings = () => {
             </Row>
             <Divider sx={{ borderColor: BORDER }} />
 
-            {/* Row 4 */}
+
             <Row sx={{ py: 2 }}>
               <Typography sx={{ fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>
                 Community news and tips
@@ -555,7 +555,7 @@ const MyProfileSettings = () => {
           <Typography sx={{ fontSize: 12.5, color: TEXT_MUTED, mt: 2, lineHeight: 1.6 }}>
             Message and data rates may apply. Reply STOP to opt out, HELP for help. Verification codes are always sent.
           </Typography>
-        </Section>
+        </Section> */}
 
         {/* ─── 4. Legal Links ─── */}
         <Paper

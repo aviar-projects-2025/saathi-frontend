@@ -1043,7 +1043,7 @@ export default function RideDetailsModal({
   const isXs = useMediaQuery(theme.breakpoints.down("sm"));
   const isMd = useMediaQuery(theme.breakpoints.up("md"));
 
-  console.log(requests,'requests')
+  console.log(requests, 'requests')
   const pendingMember = requests.flatMap((item) => item?.pendingMembers || []);
   const isStarted = ride?.travelStatus === "Started";
   const startDate = new Date(ride?.startTime);
@@ -1697,6 +1697,10 @@ export default function RideDetailsModal({
         {(!pendingMember || pendingMember.length === 0) &&
           showEdit &&
           ride?.travelStatus !== "Started" &&
+          ride?.travelStatus !== "Completed" &&
+          ride?.travelStatus !== "Cancelled" &&
+          // Check if there are no accepted requests in the manifest
+          !requests.some(r => ["ACCEPTED", "APPROVED", "AUTO_REJECTED"].includes(r.status?.toUpperCase())) &&
           (ride?.createdBy?._id === user?.id ||
             (typeof ride?.createdBy === "string" &&
               ride?.createdBy === user?.id)) && (

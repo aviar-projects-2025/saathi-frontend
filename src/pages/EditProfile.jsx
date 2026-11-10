@@ -165,8 +165,7 @@ const validateForm = (formData) => {
         errors.lastName = "Last name is required";
     }
 
-
-    // First Name
+    // City
     if (!formData.city?.trim()) {
         errors.city = "City is required";
     }
@@ -178,12 +177,22 @@ const validateForm = (formData) => {
         errors.mobile = "Please enter a valid mobile number (10–15 digits)";
     }
 
-
     const zipcode = formData.zipcode?.trim();
     if (!zipcode) {
         errors.zipcode = "ZipCode is required";
     } else if (!/^\d{5}$/.test(zipcode)) {
         errors.zipcode = "Please enter a valid 5-digit ZipCode";
+    }
+
+    // ── NEW: DOB 18+ VALIDATION ──
+    if (formData.dob) {
+        const today = dayjs();
+        const birthDate = dayjs(formData.dob);
+        const age = today.diff(birthDate, 'year');
+
+        if (age < 18) {
+            errors.dob = "You must be at least 18 years old";
+        }
     }
 
     return errors;
@@ -1453,21 +1462,22 @@ const EditProfile = ({ open, onClose }) => {
                             >
                                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                                     <DatePicker
-                                        label="Date of Birth (Optional)"
+                                        label="Date of Birth (Required)"
                                         value={formData?.dob}
                                         onChange={(newValue) => {
                                             setFormData((prev) => ({
                                                 ...prev,
                                                 dob: newValue,
                                             }));
-
-
+                                            // Clear the error when they change the date
+                                            setErrors((prev) => ({ ...prev, dob: "" }));
                                         }}
+                                        maxDate={dayjs().subtract(18, 'year')} // <-- Restricts calendar to 18+ years ago
                                         slotProps={{
                                             textField: {
                                                 size: "small",
-                                                // error: !!errors.dob,
-                                                helperText: errors.dob,
+                                                error: !!errors.dob,          // <-- Shows red border if error
+                                                helperText: errors.dob,       // <-- Shows the error message
                                                 fullWidth: true,
                                                 InputProps: fieldFont,
                                                 InputLabelProps: fieldFont,

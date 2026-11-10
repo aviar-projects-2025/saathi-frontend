@@ -7,6 +7,7 @@ import { ToastContainer } from "react-toastify";
 
 import AdminLayout from "./components/AdminLayout.jsx";
 import UserLayout from "./components/UserLayout.jsx";
+import RoomDetails from "./pages/community/RoomDetails.jsx";
 
 const Web = React.lazy(() => import("./pages/Web.jsx"));
 const Login = React.lazy(() => import("./components/Auth/Login.jsx"));
@@ -129,6 +130,7 @@ function App() {
               <Route path="/invite" element={<Invite />} />
               <Route path="/community" element={<Community />} />
               <Route path="/my-referalls" element={<MyReferrals />} />
+              <Route path="/community/room/:roomId" element={<RoomDetails />} />
             </Route>
           </Route>
 
