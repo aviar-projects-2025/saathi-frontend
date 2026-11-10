@@ -394,7 +394,7 @@ const UserProfile = () => {
       if (!isNaN(ts)) {
         memberSince = new Date(ts).toLocaleDateString(undefined, { month: "short", year: "numeric" });
       }
-    } catch {}
+    } catch { }
   }
 
   const name = displayNameOf(profile || currentUser);
@@ -707,12 +707,28 @@ const UserProfile = () => {
               </Stack>
               <Button
                 variant="outlined"
-                startIcon={<EditOutlinedIcon fontSize="small" />}
+                startIcon={<EditOutlinedIcon sx={{ fontSize: { xs: 14, sm: 16 } }} />}
                 onClick={() => setEditProfileOpen(true)}
                 sx={{
-                  flexShrink: 0, whiteSpace: "nowrap", textTransform: "none", fontWeight: 650, fontSize: "0.88rem",
-                  borderRadius: "999px", px: 2.5, color: C.ink, borderColor: C.line,
-                  "&:hover": { borderColor: C.saffron, bgcolor: C.tint, color: C.saffronDark },
+                  flexShrink: 0,
+                  whiteSpace: "nowrap",
+                  textTransform: "none",
+                  fontWeight: 650,
+                  fontSize: { xs: "0.72rem", sm: "0.82rem" },
+                  borderRadius: "999px",
+                  px: { xs: 1.25, sm: 2 },
+                  py: { xs: 0.5, sm: 0.75 },
+                  ml: { xs: "auto", sm: 0 },
+                  color: C.ink,
+                  borderColor: C.line,
+                  "& .MuiButton-startIcon": {
+                    mr: { xs: 0.5, sm: 1 },
+                  },
+                  "&:hover": {
+                    borderColor: C.saffron,
+                    bgcolor: C.tint,
+                    color: C.saffronDark,
+                  },
                 }}
               >
                 Edit profile

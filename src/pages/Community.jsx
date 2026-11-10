@@ -24,7 +24,8 @@ import { ROOMS } from "./community/rooms.js";
 export { ROOMS };
 
 const GATE_BTN = {
-  textTransform: "none", borderRadius: 999, px: 3, fontWeight: 600,
+  textTransform: "none", borderRadius: 999, px: { xs: 2.5, sm: 3 }, fontWeight: 600,
+  fontSize: { xs: "0.85rem", sm: "0.9rem" },
   bgcolor: "#FF9933", color: "#fff", "&:hover": { bgcolor: "#FF9933" },
 };
 
@@ -68,30 +69,40 @@ export default function Community() {
         onClose={(e, reason) => { if (reason !== "backdropClick") setGateOpen(false); }}
         fullWidth
         maxWidth="xs"
-        PaperProps={{ sx: { borderRadius: 3, textAlign: "center", p: 1 } }}
+        PaperProps={{
+          sx: {
+            borderRadius: 3, textAlign: "center", p: { xs: 0.5, sm: 1 },
+            m: { xs: 2, sm: 4 }, width: { xs: "calc(100% - 32px)", sm: "100%" },
+          },
+        }}
       >
-        <DialogTitle sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1, fontWeight: 700, pt: 3 }}>
-          <WarningAmberRoundedIcon sx={{ fontSize: 40, color: "#E8650A" }} />
+        <DialogTitle
+          sx={{
+            display: "flex", flexDirection: "column", alignItems: "center", gap: 1, fontWeight: 700,
+            pt: { xs: 2.5, sm: 3 }, fontSize: { xs: "1.1rem", sm: "1.25rem" },
+          }}
+        >
+          <WarningAmberRoundedIcon sx={{ fontSize: { xs: 34, sm: 40 }, color: "#E8650A" }} />
           Complete your profile
         </DialogTitle>
-        <DialogContent>
-          <Typography sx={{ fontSize: "0.95rem", color: "text.secondary" }}>
+        <DialogContent sx={{ px: { xs: 2, sm: 3 } }}>
+          <Typography sx={{ fontSize: { xs: "0.86rem", sm: "0.95rem" }, color: "text.secondary" }}>
             Your profile is {completionPct}% complete. Finish it to unlock posting in the Community.
           </Typography>
-          <Box sx={{ mt: 2.5, px: 3 }}>
+          <Box sx={{ mt: { xs: 2, sm: 2.5 }, px: { xs: 1, sm: 3 } }}>
             <LinearProgress
               variant="determinate"
               value={completionPct}
-              sx={{ height: 8, borderRadius: 5, bgcolor: "#F0E6DC", "& .MuiLinearProgress-bar": { bgcolor: "#FF9933" } }}
+              sx={{ height: { xs: 7, sm: 8 }, borderRadius: 5, bgcolor: "#F0E6DC", "& .MuiLinearProgress-bar": { bgcolor: "#FF9933" } }}
             />
           </Box>
         </DialogContent>
-        <DialogActions sx={{ justifyContent: "center", pb: 3, gap: 1.5 }}>
+        <DialogActions sx={{ justifyContent: "center", flexWrap: "wrap", pb: { xs: 2.5, sm: 3 }, px: 2, gap: { xs: 1, sm: 1.5 } }}>
           <Button variant="contained" onClick={() => setGateOpen(false)} sx={GATE_BTN}>Not now</Button>
           <Button
             variant="contained"
             onClick={() => navigate("/user-profile", { state: { openEditProfile: true } })}
-            sx={GATE_BTN}
+            sx={{ ...GATE_BTN, ml: "0 !important" }}
           >
             Update profile
           </Button>
@@ -99,19 +110,40 @@ export default function Community() {
       </Dialog>
 
       <PageLayout>
-        <Box sx={{ display: "flex", gap: 3, alignItems: "flex-start", width: "100%", maxWidth: 1100 }}>
+        <Box
+          sx={{
+            display: "flex", gap: { md: 2.5, lg: 3 }, alignItems: "flex-start",
+            width: "100%", maxWidth: 1100, minWidth: 0, boxSizing: "border-box",
+          }}
+        >
           {/* Main column */}
-          <Box sx={{ flex: 1, minWidth: 0, maxWidth: 640 }}>
+          <Box sx={{ flex: 1, minWidth: 0, width: "100%", maxWidth: { xs: "100%", md: 640 } }}>
             {/* Header */}
-            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-              <Typography variant="h5" fontWeight={900} color="#B33A00">Saathi</Typography>
-              <Stack direction="row" spacing={1}>
-                <Chip icon={<LocationOnIcon fontSize="small" />} label={currentUser?.city || "Set city"} variant="outlined" sx={{ fontWeight: 600, bgcolor: "#fff" }} />
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: { xs: 1.5, sm: 2 }, gap: 1 }}>
+              <Typography fontWeight={900} color="#B33A00" sx={{ fontSize: { xs: "1.3rem", sm: "1.5rem" } }}>
+                Saathi
+              </Typography>
+              <Stack direction="row" spacing={1} sx={{ minWidth: 0 }}>
+                <Chip
+                  icon={<LocationOnIcon sx={{ fontSize: { xs: 16, sm: 18 } }} />}
+                  label={currentUser?.city || "Set city"}
+                  variant="outlined"
+                  sx={{
+                    fontWeight: 600, bgcolor: "#fff", maxWidth: { xs: 150, sm: 220 },
+                    height: { xs: 28, sm: 32 }, fontSize: { xs: "0.76rem", sm: "0.8125rem" },
+                    "& .MuiChip-label": { px: { xs: 0.9, sm: 1.5 } },
+                  }}
+                />
                 {/* <IconButton sx={{ bgcolor: "#fff", border: "1px solid #eee" }}><NotificationsNoneIcon /></IconButton> */}
               </Stack>
             </Box>
 
-            <Typography sx={{ fontSize: "1.5rem", fontWeight: 800, lineHeight: 1.2, mb: 2 }}>
+            <Typography
+              sx={{
+                fontSize: { xs: "1.2rem", sm: "1.4rem", md: "1.5rem" },
+                fontWeight: 800, lineHeight: 1.25, mb: { xs: 1.5, sm: 2 }, wordBreak: "break-word",
+              }}
+            >
               Namaste{currentUser?.firstName ? `, ${currentUser.firstName}` : ""} 👋<br />
               What does {city} need today?
             </Typography>
@@ -119,32 +151,60 @@ export default function Community() {
             {/* Quick post */}
             <Paper
               onClick={handleQuickPost}
-              sx={{ p: 1.5, mb: 3, borderRadius: 3, border: "1px solid #E0E0E0", boxShadow: "none", display: "flex", alignItems: "center", gap: 1, cursor: "pointer" }}
+              sx={{
+                p: { xs: 1.1, sm: 1.5 }, mb: { xs: 2.5, sm: 3 }, borderRadius: { xs: 2.5, sm: 3 },
+                border: "1px solid #E0E0E0", boxShadow: "none",
+                display: "flex", alignItems: "center", gap: { xs: 0.75, sm: 1 }, cursor: "pointer", minWidth: 0,
+              }}
             >
-              <Box sx={{ width: 28, height: 28, borderRadius: "50%", bgcolor: "#FFF0E5", display: "flex", alignItems: "center", justifyContent: "center", color: "#E8650A" }}>
-                <AddIcon fontSize="small" />
+              <Box
+                sx={{
+                  width: { xs: 26, sm: 28 }, height: { xs: 26, sm: 28 }, flexShrink: 0,
+                  borderRadius: "50%", bgcolor: "#FFF0E5",
+                  display: "flex", alignItems: "center", justifyContent: "center", color: "#E8650A",
+                }}
+              >
+                <AddIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
               </Box>
-              <Typography color="text.secondary" fontSize="0.9rem">Ask, offer or recommend something...</Typography>
+              <Typography color="text.secondary" noWrap sx={{ fontSize: { xs: "0.84rem", sm: "0.9rem" }, minWidth: 0 }}>
+                Ask, offer or recommend something...
+              </Typography>
             </Paper>
 
             {/* Rooms */}
-            <Typography variant="h6" fontWeight={700} sx={{ mb: 1.5 }}>Rooms</Typography>
-            <Box sx={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 1.5, mb: 4 }}>
+            <Typography fontWeight={700} sx={{ mb: { xs: 1, sm: 1.5 }, fontSize: { xs: "1.05rem", sm: "1.2rem", md: "1.25rem" } }}>
+              Rooms
+            </Typography>
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: { xs: "repeat(2, minmax(0, 1fr))", sm: "repeat(3, minmax(0, 1fr))" },
+                gap: { xs: 1, sm: 1.5 },
+                mb: { xs: 3, sm: 4 },
+              }}
+            >
               {ROOMS.map((room) => (
                 <Paper
                   key={room.id}
                   onClick={() => navigate(`/community/room/${room.id}`)}
-                  sx={{ p: 1.5, borderRadius: 3, bgcolor: room.color, boxShadow: "none", cursor: "pointer", "&:hover": { opacity: 0.9 } }}
+                  sx={{
+                    p: { xs: 1.25, sm: 1.5 }, borderRadius: { xs: 2.5, sm: 3 }, bgcolor: room.color,
+                    boxShadow: "none", cursor: "pointer", minWidth: 0, "&:hover": { opacity: 0.9 },
+                  }}
                 >
-                  <Typography fontSize="1.2rem" mb={0.5}>{room.icon}</Typography>
-                  <Typography fontWeight={700} fontSize="0.95rem" mb={0.5}>{room.label}</Typography>
-                  <Typography fontSize="0.75rem" color="text.secondary">Tap to view</Typography>
+                  <Typography mb={0.5} sx={{ fontSize: { xs: "1.1rem", sm: "1.2rem" } }}>{room.icon}</Typography>
+                  <Typography fontWeight={700} mb={0.5} sx={{ fontSize: { xs: "0.88rem", sm: "0.95rem" }, wordBreak: "break-word" }}>
+                    {room.label}
+                  </Typography>
+                  <Typography color="text.secondary" sx={{ fontSize: { xs: "0.7rem", sm: "0.75rem" } }}>Tap to view</Typography>
                 </Paper>
               ))}
             </Box>
 
             {/* Feed */}
-            <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>Community feed</Typography>
+            <Typography fontWeight={700} sx={{ mb: { xs: 1.5, sm: 2 }, fontSize: { xs: "1.05rem", sm: "1.2rem", md: "1.25rem" } }}>
+              Community feed
+            </Typography>
             <FeedList feed={feed} emptyText="Start the conversation: ask, offer or recommend something." />
           </Box>
 
@@ -152,7 +212,8 @@ export default function Community() {
           {showSidebar && (
             <Box
               sx={{
-                flex: "0 0 340px", width: 340, position: "sticky", top: 20,
+                flex: { md: "0 0 300px", lg: "0 0 340px" }, width: { md: 300, lg: 340 },
+                position: "sticky", top: 20,
                 height: "calc(100vh - 120px)", overflowY: "auto", overflowX: "hidden",
                 scrollbarWidth: "thin", scrollbarColor: "#E0D4C8 transparent",
                 "&::-webkit-scrollbar": { width: 4 },

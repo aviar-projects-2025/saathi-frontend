@@ -451,7 +451,16 @@ const MyProfileSettings = () => {
             </Box>
 
             {/* Action Buttons */}
-            <Box sx={{ display: "flex", gap: 2, flexShrink: 0 }}>
+
+            <Box
+              sx={{
+                display: "flex",
+                gap: { xs: 1, sm: 1.5 },
+                flexShrink: 0,
+                flexWrap: { xs: "wrap", sm: "nowrap" },
+                justifyContent: "flex-end",
+              }}
+            >
               <Button
                 variant="contained"
                 disableElevation
@@ -461,15 +470,18 @@ const MyProfileSettings = () => {
                   color: "#fff",
                   textTransform: "none",
                   fontWeight: 700,
-                  px: 3,
-                  height: 48,
+                  fontSize: { xs: "11px", sm: "12px", md: "13px" },
+                  px: { xs: 1.5, sm: 2 },
+                  py: 0.5,
+                  height: { xs: 34, sm: 38 },
                   borderRadius: 1.5,
-                  minWidth: 100,
+                  minWidth: { xs: 70, sm: 85 },
                   "&:hover": { bgcolor: RUST_DARK },
                 }}
               >
                 Copy
               </Button>
+
               <Button
                 variant="outlined"
                 onClick={handleShare}
@@ -479,16 +491,22 @@ const MyProfileSettings = () => {
                   borderWidth: 1.5,
                   textTransform: "none",
                   fontWeight: 700,
-                  px: 3,
-                  height: 48,
+                  fontSize: { xs: "11px", sm: "12px", md: "13px" },
+                  px: { xs: 1.5, sm: 2 },
+                  py: 0.5,
+                  height: { xs: 34, sm: 38 },
                   borderRadius: 1.5,
-                  minWidth: 100,
-                  "&:hover": { borderWidth: 1.5, bgcolor: "#FFF5EC" },
+                  minWidth: { xs: 70, sm: 85 },
+                  "&:hover": {
+                    borderWidth: 1.5,
+                    bgcolor: "#FFF5EC",
+                  },
                 }}
               >
                 Share
               </Button>
             </Box>
+
           </Box>
         </Section>
 

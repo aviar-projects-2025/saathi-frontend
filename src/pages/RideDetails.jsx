@@ -1484,15 +1484,24 @@ export default function RideDetailsModal({
 
         <Box
           sx={{
-            display: "grid",
-            gridTemplateColumns: {
-              xs: "1fr",
-              sm: "repeat(2, minmax(0, 1fr))",
-              md: "repeat(3, minmax(0, 1fr))",
-            },
+            display: "flex",
+            flexWrap: "wrap",
             gap: 2,
+            width: "100%",
+            alignItems: "stretch",
+
+            "& > *": {
+              flex: {
+                xs: "1 1 calc(50% - 16px)",       // Mobile: 2
+                sm: "1 1 calc(33.333% - 16px)",   // Tablet: 3
+                // md: "1 1 calc(25% - 16px)",       // Laptop: 4
+                // lg: "1 1 calc(25% - 16px)",       // Desktop: 4
+              },
+              minWidth: 0,
+            },
           }}
         >
+
           <Field
             icon={CalendarTodayIcon}
             label="Date"
@@ -1773,6 +1782,6 @@ export default function RideDetailsModal({
           Close
         </Button>
       </Box>
-    </Dialog>
+    </Dialog >
   );
 }

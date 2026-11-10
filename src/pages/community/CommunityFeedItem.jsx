@@ -26,6 +26,9 @@ import { getRoom } from "./rooms.js";
 const SAFFRON = "#E8650A";
 const RUST = "#B33A00";
 
+/* Card padding is reused so the image can bleed edge-to-edge on mobile */
+const CARD_PX = { xs: 1.5, sm: 2, md: 2.5 };
+
 const formatTimeAgo = (date) => {
     const mins = Math.floor((Date.now() - new Date(date).getTime()) / 60000);
     if (mins < 1) return "Just now";
@@ -38,7 +41,7 @@ const formatTimeAgo = (date) => {
 const isHttp = (v) => typeof v === "string" && /^https?:\/\//i.test(v);
 
 // Uses the signed URL the API returns (profileImageUrl); falls back to initials if missing / broken.
-const AuthorAvatar = ({ author, size, onClick }) => {
+const AuthorAvatar = ({ author, onClick }) => {
     const [broken, setBroken] = useState(false);
     const src = author?.profileImageUrl || (isHttp(author?.profileImage) ? author.profileImage : "");
     const initials = `${author?.firstName?.[0] || ""}${author?.lastName?.[0] || ""}`.toUpperCase();
@@ -52,8 +55,14 @@ const AuthorAvatar = ({ author, size, onClick }) => {
             onClick={onClick}
             imgProps={{ onError: () => setBroken(true), referrerPolicy: "no-referrer" }}
             sx={{
-                width: size, height: size, bgcolor: SAFFRON, color: "#fff",
-                fontWeight: 800, fontSize: size * 0.4, cursor: "pointer", flexShrink: 0,
+                width: { xs: 36, sm: 40, md: 44 },
+                height: { xs: 36, sm: 40, md: 44 },
+                bgcolor: SAFFRON,
+                color: "#fff",
+                fontWeight: 800,
+                fontSize: { xs: "0.85rem", sm: "0.95rem", md: "1.05rem" },
+                cursor: "pointer",
+                flexShrink: 0,
             }}
         >
             {initials}
@@ -154,8 +163,16 @@ export default function CommunityFeedItem({
         <>
             <Paper
                 sx={{
-                    p: { xs: 2, sm: 2.5 }, mb: 2.5, borderRadius: 4,
-                    border: "1px solid #EFE7DF", boxShadow: "0 1px 2px rgba(60,30,10,0.04)",
+                    width: "100%",
+                    maxWidth: "100%",
+                    boxSizing: "border-box",
+                    overflow: "hidden",
+                    py: { xs: 1.5, sm: 2, md: 2.5 },
+                    px: CARD_PX,
+                    mb: { xs: 1.5, sm: 2, md: 2.5 },
+                    borderRadius: { xs: 2.5, sm: 3, md: 4 },
+                    border: "1px solid #EFE7DF",
+                    boxShadow: "0 1px 2px rgba(60,30,10,0.04)",
                 }}
             >
                 {/* Header: author on top, like a social post */}
@@ -163,45 +180,57 @@ export default function CommunityFeedItem({
                     direction="row"
                     justifyContent="space-between"
                     alignItems="center"
-                    mb={2}
-                    sx={{ width: "100%" }} // Ensure the parent takes full width
+                    mb={{ xs: 1.25, sm: 1.75, md: 2 }}
+                    sx={{ width: "100%" }}
                 >
                     <Stack
                         direction="row"
-                        spacing={1.5}
+                        spacing={{ xs: 1, sm: 1.25, md: 1.5 }}
                         alignItems="center"
-                        sx={{ minWidth: 0, flex: 1 }} // <-- ADD flex: 1 HERE
+                        sx={{ minWidth: 0, flex: 1 }}
                     >
-                        <AuthorAvatar author={author} size={44} onClick={openProfile} />
-                        <Box sx={{ minWidth: 0, flex: 1 }}> {/* <-- ADD flex: 1 HERE TOO */}
+                        <AuthorAvatar author={author} onClick={openProfile} />
+                        <Box sx={{ minWidth: 0, flex: 1 }}>
                             <Typography
                                 fontWeight={700}
-                                fontSize="1rem"
                                 lineHeight={1.25}
                                 noWrap
                                 onClick={openProfile}
-                                sx={{ cursor: "pointer", "&:hover": { textDecoration: "underline" } }}
+                                sx={{
+                                    fontSize: { xs: "0.9rem", sm: "0.95rem", md: "1rem" },
+                                    cursor: "pointer",
+                                    "&:hover": { textDecoration: "underline" },
+                                }}
                             >
                                 {author?.firstName} {author?.lastName}
                             </Typography>
                             <Typography
                                 component="div"
-                                sx={{ fontSize: "0.78rem", color: "text.secondary", lineHeight: 1.5, mt: 0.25 }}
+                                sx={{
+                                    fontSize: { xs: "0.7rem", sm: "0.75rem", md: "0.78rem" },
+                                    color: "text.secondary",
+                                    lineHeight: 1.5,
+                                    mt: 0.25,
+                                }}
                                 noWrap
                             >
                                 {formatTimeAgo(post.createdAt)}
-                                <Box component="span" sx={{ mx: 0.75, opacity: 0.5 }}>•</Box>
+                                <Box component="span" sx={{ mx: { xs: 0.5, sm: 0.75 }, opacity: 0.5 }}>•</Box>
                                 <Box component="span" sx={{ color: RUST, fontWeight: 600 }}>{room.label}</Box>
-                                <Box component="span" sx={{ mx: 0.75, opacity: 0.5 }}>•</Box>
+                                <Box component="span" sx={{ mx: { xs: 0.5, sm: 0.75 }, opacity: 0.5 }}>•</Box>
                                 <Box component="span" sx={{ textTransform: "capitalize" }}>{post.postType?.replace("_", " ")}</Box>
                             </Typography>
                         </Box>
                     </Stack>
 
                     {isAuthor && (
-                        <Box sx={{ flexShrink: 0, ml: 1 }}> {/* <-- WRAP IN BOX and ADD flexShrink: 0 */}
-                            <IconButton size="small" onClick={(e) => setMenuAnchor(e.currentTarget)}>
-                                <MoreHorizIcon fontSize="small" />
+                        <Box sx={{ flexShrink: 0, ml: { xs: 0.5, sm: 1 }, mr: { xs: -0.5, sm: 0 } }}>
+                            <IconButton
+                                size="small"
+                                onClick={(e) => setMenuAnchor(e.currentTarget)}
+                                sx={{ p: { xs: 0.5, sm: 0.75 } }}
+                            >
+                                <MoreHorizIcon sx={{ fontSize: { xs: 20, sm: 22 } }} />
                             </IconButton>
                         </Box>
                     )}
@@ -209,22 +238,41 @@ export default function CommunityFeedItem({
 
                 {/* Content: bold title only when the post has a real title; otherwise plain body text */}
                 {hasTitle ? (
-                    <Typography fontWeight={700} fontSize="1.1rem" lineHeight={1.35} mb={body && !isOffering ? 0.75 : 1.5}>
+                    <Typography
+                        fontWeight={700}
+                        lineHeight={1.35}
+                        mb={body && !isOffering ? 0.75 : { xs: 1, sm: 1.5 }}
+                        sx={{ fontSize: { xs: "0.98rem", sm: "1.05rem", md: "1.1rem" }, wordBreak: "break-word" }}
+                    >
                         {post.title}
                     </Typography>
                 ) : (
-                    <Typography sx={{ fontSize: "1rem", lineHeight: 1.65, mb: 1.5, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+                    <Typography
+                        sx={{
+                            fontSize: { xs: "0.92rem", sm: "0.97rem", md: "1rem" },
+                            lineHeight: 1.65,
+                            mb: { xs: 1, sm: 1.5 },
+                            whiteSpace: "pre-wrap",
+                            wordBreak: "break-word",
+                        }}
+                    >
                         {post.description}
                     </Typography>
                 )}
 
                 {hasTitle && body && !isOffering && (
-                    <Box mb={1.5}>
+                    <Box mb={{ xs: 1, sm: 1.5 }}>
                         <Typography
                             sx={{
-                                fontSize: "0.95rem", lineHeight: 1.65, color: "#444", whiteSpace: "pre-wrap", wordBreak: "break-word",
-                                overflow: "hidden", display: "-webkit-box",
-                                WebkitLineClamp: expanded ? "unset" : 3, WebkitBoxOrient: "vertical",
+                                fontSize: { xs: "0.86rem", sm: "0.92rem", md: "0.95rem" },
+                                lineHeight: 1.65,
+                                color: "#444",
+                                whiteSpace: "pre-wrap",
+                                wordBreak: "break-word",
+                                overflow: "hidden",
+                                display: "-webkit-box",
+                                WebkitLineClamp: expanded ? "unset" : 3,
+                                WebkitBoxOrient: "vertical",
                             }}
                         >
                             {body}
@@ -233,7 +281,10 @@ export default function CommunityFeedItem({
                             <Button
                                 size="small"
                                 onClick={() => setExpanded((v) => !v)}
-                                sx={{ p: 0, mt: 0.25, minWidth: "auto", textTransform: "none", fontSize: "0.8rem", fontWeight: 600, color: SAFFRON }}
+                                sx={{
+                                    p: 0, mt: 0.25, minWidth: "auto", textTransform: "none",
+                                    fontSize: { xs: "0.75rem", sm: "0.8rem" }, fontWeight: 600, color: SAFFRON,
+                                }}
                             >
                                 {expanded ? "See less" : "See more"}
                             </Button>
@@ -243,40 +294,88 @@ export default function CommunityFeedItem({
 
                 {/* Tags */}
                 {(post.subCategory || post.timeframe || post.zipcode || post.tags?.length > 0) && (
-                    <Stack direction="row" spacing={0.75} mb={1.75} flexWrap="wrap" useFlexGap>
+                    <Stack direction="row" spacing={0.75} mb={{ xs: 1.25, sm: 1.75 }} flexWrap="wrap" useFlexGap>
                         {[post.subCategory, post.timeframe, post.zipcode, ...(post.tags || [])].filter(Boolean).map((t) => (
                             <Chip
                                 key={t}
                                 label={t}
                                 size="small"
-                                sx={{ bgcolor: "#FAF5F0", color: "#6B5B4E", fontSize: "0.72rem", fontWeight: 500, height: 24, border: "1px solid #F0E6DC" }}
+                                sx={{
+                                    bgcolor: "#FAF5F0", color: "#6B5B4E",
+                                    fontSize: { xs: "0.68rem", sm: "0.72rem" },
+                                    fontWeight: 500,
+                                    height: { xs: 22, sm: 24 },
+                                    maxWidth: "100%",
+                                    border: "1px solid #F0E6DC",
+                                    "& .MuiChip-label": { px: { xs: 0.9, sm: 1.1 } },
+                                }}
                             />
                         ))}
                     </Stack>
                 )}
 
-                {/* Image */}
+                {/* Image: full width — edge-to-edge on mobile, rounded inside the card on larger screens */}
                 {post.postImage && (
-                    <Box sx={{ mb: 1.75, borderRadius: 3, overflow: "hidden", border: "1px solid #EFE7DF" }}>
+                    <Box
+                        sx={{
+                            mb: { xs: 1.25, sm: 1.75 },
+                            mx: { xs: -1.5, sm: 0 },
+                            width: { xs: "calc(100% + 24px)", sm: "100%" },
+                            maxWidth: { xs: "none", sm: "100%" },
+                            borderRadius: { xs: 0, sm: 2.5, md: 3 },
+                            overflow: "hidden",
+                            border: { xs: "none", sm: "1px solid #EFE7DF" },
+                            borderTop: { xs: "1px solid #EFE7DF" },
+                            borderBottom: { xs: "1px solid #EFE7DF" },
+                            "& img, & video": {
+                                display: "block",
+                                width: "100%",
+                                maxWidth: "100%",
+                                height: "auto",
+                                objectFit: "cover",
+                            },
+                        }}
+                    >
                         <CommunityImage src={post.postImage} postImageUrl={post.postImageUrl} />
                     </Box>
                 )}
 
                 {/* Offering layout vs standard author row */}
                 {isOffering && (
-                    <Box sx={{ bgcolor: "#F9F9F9", p: 2, borderRadius: 2, mb: 2 }}>
+                    <Box sx={{ bgcolor: "#F9F9F9", p: { xs: 1.5, sm: 2 }, borderRadius: 2, mb: { xs: 1.5, sm: 2 } }}>
                         {hasTitle && body && (
-                            <Typography fontSize="0.85rem" color="text.secondary" mb={2}>{body}</Typography>
+                            <Typography
+                                color="text.secondary"
+                                mb={{ xs: 1.5, sm: 2 }}
+                                sx={{ fontSize: { xs: "0.8rem", sm: "0.85rem" }, wordBreak: "break-word" }}
+                            >
+                                {body}
+                            </Typography>
                         )}
-                        <Stack direction="row" spacing={2} alignItems="center" mb={2} flexWrap="wrap" useFlexGap>
+                        <Stack
+                            direction="row"
+                            spacing={{ xs: 1.5, sm: 2 }}
+                            alignItems="center"
+                            mb={{ xs: 1.5, sm: 2 }}
+                            flexWrap="wrap"
+                            useFlexGap
+                        >
                             <Stack direction="row" alignItems="center" spacing={0.5}>
-                                <StarIcon sx={{ fontSize: 16, color: "#FFB300" }} />
-                                <Typography fontWeight={700} fontSize="0.9rem">{post.providerDetails?.rating || "New"}</Typography>
-                                <Typography fontSize="0.75rem" color="text.secondary">({post.providerDetails?.reviewCount || 0} jobs)</Typography>
+                                <StarIcon sx={{ fontSize: { xs: 15, sm: 16 }, color: "#FFB300" }} />
+                                <Typography fontWeight={700} sx={{ fontSize: { xs: "0.82rem", sm: "0.9rem" } }}>
+                                    {post.providerDetails?.rating || "New"}
+                                </Typography>
+                                <Typography sx={{ fontSize: { xs: "0.7rem", sm: "0.75rem" } }} color="text.secondary">
+                                    ({post.providerDetails?.reviewCount || 0} jobs)
+                                </Typography>
                             </Stack>
-                            <Typography fontWeight={700} fontSize="0.9rem">{post.providerDetails?.price || "Contact for price"}</Typography>
+                            <Typography fontWeight={700} sx={{ fontSize: { xs: "0.82rem", sm: "0.9rem" } }}>
+                                {post.providerDetails?.price || "Contact for price"}
+                            </Typography>
                             {post.providerDetails?.isInsured && (
-                                <Typography fontSize="0.75rem" color="#2E7D32" fontWeight={600}>Insured</Typography>
+                                <Typography sx={{ fontSize: { xs: "0.7rem", sm: "0.75rem" } }} color="#2E7D32" fontWeight={600}>
+                                    Insured
+                                </Typography>
                             )}
                         </Stack>
                         {!isAuthor && (
@@ -284,7 +383,11 @@ export default function CommunityFeedItem({
                                 fullWidth
                                 variant="outlined"
                                 onClick={() => onMessage?.(author)}
-                                sx={{ textTransform: "none", borderColor: RUST, color: RUST, fontWeight: 600, borderRadius: 2 }}
+                                sx={{
+                                    textTransform: "none", borderColor: RUST, color: RUST, fontWeight: 600, borderRadius: 2,
+                                    py: { xs: 0.6, sm: 0.8 },
+                                    fontSize: { xs: "0.82rem", sm: "0.9rem" },
+                                }}
                             >
                                 Message {author?.firstName}
                             </Button>
@@ -294,27 +397,27 @@ export default function CommunityFeedItem({
 
                 {/* Actions */}
                 <Divider sx={{ borderColor: "#F3ECE5" }} />
-                <Stack direction="row" sx={{ pt: 0.75, mx: -0.5 }}>
+                <Stack direction="row" sx={{ pt: 0.5, mx: { xs: -0.75, sm: -0.5 } }}>
                     {[
                         {
                             key: "like",
                             active: post.isLiked,
                             onClick: () => onToggleLike(post._id, post.isLiked),
-                            icon: post.isLiked ? <ThumbUpIcon fontSize="small" /> : <ThumbUpOffAltIcon fontSize="small" />,
+                            icon: post.isLiked ? <ThumbUpIcon /> : <ThumbUpOffAltIcon />,
                             label: `${post.likes || 0} Useful`,
                         },
                         {
                             key: "answer",
                             active: showComments,
                             onClick: () => setShowComments((v) => !v),
-                            icon: <ChatIcon fontSize="small" />,
+                            icon: <ChatIcon />,
                             label: `Answer${commentCount > 0 ? ` (${commentCount})` : ""}`,
                         },
                         {
                             key: "save",
                             active: saved,
                             onClick: () => onToggleSave(post),
-                            icon: saved ? <BookmarkIcon fontSize="small" /> : <BookmarkBorderIcon fontSize="small" />,
+                            icon: saved ? <BookmarkIcon /> : <BookmarkBorderIcon />,
                             label: saved ? "Saved" : "Save",
                         },
                     ].map((a) => (
@@ -323,9 +426,22 @@ export default function CommunityFeedItem({
                             onClick={a.onClick}
                             startIcon={a.icon}
                             sx={{
-                                flex: 1, py: 1, borderRadius: 2, textTransform: "none", fontWeight: 600, fontSize: "0.875rem",
+                                flex: 1,
+                                minWidth: 0,
+                                py: { xs: 0.75, sm: 1 },
+                                px: { xs: 0.5, sm: 1 },
+                                borderRadius: 2,
+                                textTransform: "none",
+                                fontWeight: 600,
+                                fontSize: { xs: "0.75rem", sm: "0.82rem", md: "0.875rem" },
+                                whiteSpace: "nowrap",
                                 color: a.active ? SAFFRON : "text.secondary",
                                 "&:hover": { bgcolor: "#FFF5EC" },
+                                "& .MuiButton-startIcon": {
+                                    mr: { xs: 0.4, sm: 0.75, md: 1 },
+                                    ml: 0,
+                                    "& > *:nth-of-type(1)": { fontSize: { xs: 17, sm: 19, md: 20 } },
+                                },
                             }}
                         >
                             {a.label}
@@ -335,7 +451,7 @@ export default function CommunityFeedItem({
 
                 {/* Comments */}
                 {showComments && (
-                    <Box sx={{ mt: 1.5, pt: 2, borderTop: "1px solid #F3ECE5" }}>
+                    <Box sx={{ mt: { xs: 1, sm: 1.5 }, pt: { xs: 1.5, sm: 2 }, borderTop: "1px solid #F3ECE5", minWidth: 0 }}>
                         <CommunityComments post={post} user={commentUser} onCommentsChanged={setCommentCount} />
                     </Box>
                 )}
@@ -343,13 +459,16 @@ export default function CommunityFeedItem({
 
             {/* Edit / Delete menu */}
             <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={() => setMenuAnchor(null)}>
-                <MenuItem onClick={openEdit}>
+                <MenuItem onClick={openEdit} sx={{ fontSize: { xs: "0.88rem", sm: "1rem" } }}>
                     <ListItemIcon><EditIcon fontSize="small" /></ListItemIcon>
-                    <ListItemText>Edit</ListItemText>
+                    <ListItemText primaryTypographyProps={{ sx: { fontSize: "inherit" } }}>Edit</ListItemText>
                 </MenuItem>
-                <MenuItem onClick={() => { setMenuAnchor(null); setDeleteOpen(true); }}>
+                <MenuItem
+                    onClick={() => { setMenuAnchor(null); setDeleteOpen(true); }}
+                    sx={{ fontSize: { xs: "0.88rem", sm: "1rem" } }}
+                >
                     <ListItemIcon><DeleteIcon fontSize="small" color="error" /></ListItemIcon>
-                    <ListItemText>Delete</ListItemText>
+                    <ListItemText primaryTypographyProps={{ sx: { fontSize: "inherit" } }}>Delete</ListItemText>
                 </MenuItem>
             </Menu>
 
@@ -361,13 +480,30 @@ export default function CommunityFeedItem({
                 scroll="paper"
                 disableRestoreFocus
                 onClose={(e, reason) => { if (reason !== "backdropClick") setEditOpen(false); }}
-                PaperProps={{ sx: { borderRadius: { xs: 0, sm: 3 }, m: { xs: 0, sm: 2 }, maxHeight: { xs: "100dvh", sm: "calc(100% - 64px)" } } }}
+                PaperProps={{
+                    sx: {
+                        borderRadius: { xs: 0, sm: 3 },
+                        m: { xs: 0, sm: 2 },
+                        width: { xs: "100%", sm: "calc(100% - 32px)" },
+                        maxWidth: { xs: "100%", sm: 600 },
+                        height: { xs: "100dvh", sm: "auto" },
+                        maxHeight: { xs: "100dvh", sm: "calc(100% - 64px)" },
+                    },
+                }}
             >
-                <DialogTitle sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontWeight: 600, py: 1.5, px: 2 }}>
+                <DialogTitle
+                    sx={{
+                        display: "flex", alignItems: "center", justifyContent: "space-between",
+                        fontWeight: 600, py: 1.5, px: { xs: 1.5, sm: 2 },
+                        fontSize: { xs: "1rem", sm: "1.15rem" },
+                    }}
+                >
                     Edit post
-                    <IconButton size="small" onClick={() => setEditOpen(false)}><CloseIcon fontSize="small" /></IconButton>
+                    <IconButton size="small" onClick={() => setEditOpen(false)} sx={{ p: { xs: 0.75, sm: 0.5 } }}>
+                        <CloseIcon fontSize="small" />
+                    </IconButton>
                 </DialogTitle>
-                <DialogContent dividers sx={{ px: { xs: 1.5, sm: 3 }, py: 2 }}>
+                <DialogContent dividers sx={{ px: { xs: 1.5, sm: 3 }, py: { xs: 1.5, sm: 2 } }}>
                     {hasTitle && (
                         <TextField
                             fullWidth size="small" margin="dense" label="Title"
@@ -379,7 +515,13 @@ export default function CommunityFeedItem({
                         label={hasTitle ? "Details" : "Description"}
                         value={editDesc} onChange={(e) => setEditDesc(e.target.value)}
                     />
-                    <Box sx={{ mt: 2 }}>
+                    <Box
+                        sx={{
+                            mt: 2,
+                            width: "100%",
+                            "& img": { maxWidth: "100%", height: "auto" },
+                        }}
+                    >
                         <ImagePicker
                             file={editImage}
                             onChange={setEditImage}
@@ -387,13 +529,22 @@ export default function CommunityFeedItem({
                         />
                     </Box>
                 </DialogContent>
-                <DialogActions sx={{ p: 2, gap: 1 }}>
-                    <Button onClick={resetEdit} sx={{ textTransform: "none", color: "#666" }}>Reset</Button>
+                <DialogActions sx={{ p: { xs: 1.5, sm: 2 }, gap: 1 }}>
+                    <Button
+                        onClick={resetEdit}
+                        sx={{ textTransform: "none", color: "#666", fontSize: { xs: "0.85rem", sm: "0.9rem" } }}
+                    >
+                        Reset
+                    </Button>
                     <Button
                         variant="contained"
                         disabled={updating || (!editDesc.trim() && !editTitle.trim())}
                         onClick={handleSave}
-                        sx={{ textTransform: "none", bgcolor: "#FF9933", fontWeight: 600, "&:hover": { bgcolor: "#E68A00" } }}
+                        sx={{
+                            textTransform: "none", bgcolor: "#FF9933", fontWeight: 600,
+                            fontSize: { xs: "0.85rem", sm: "0.9rem" },
+                            "&:hover": { bgcolor: "#E68A00" },
+                        }}
                     >
                         {updating ? "Saving..." : "Save"}
                     </Button>
@@ -406,16 +557,35 @@ export default function CommunityFeedItem({
                 fullWidth
                 maxWidth="xs"
                 onClose={(e, reason) => { if (reason !== "backdropClick") setDeleteOpen(false); }}
+                PaperProps={{ sx: { m: { xs: 2, sm: 4 }, width: { xs: "calc(100% - 32px)", sm: "100%" }, borderRadius: 3 } }}
             >
-                <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1, fontWeight: 600 }}>
+                <DialogTitle
+                    sx={{
+                        display: "flex", alignItems: "center", gap: 1, fontWeight: 600,
+                        fontSize: { xs: "1.05rem", sm: "1.2rem" }, px: { xs: 2, sm: 3 },
+                    }}
+                >
                     <WarningAmberRoundedIcon color="error" /> Delete post?
                 </DialogTitle>
-                <DialogContent>
-                    <Typography color="text.secondary">Are you sure you want to delete this post? This can't be undone.</Typography>
+                <DialogContent sx={{ px: { xs: 2, sm: 3 } }}>
+                    <Typography color="text.secondary" sx={{ fontSize: { xs: "0.88rem", sm: "1rem" } }}>
+                        Are you sure you want to delete this post? This can't be undone.
+                    </Typography>
                 </DialogContent>
-                <DialogActions sx={{ px: 3, pb: 2 }}>
-                    <Button onClick={() => setDeleteOpen(false)} sx={{ textTransform: "none" }}>Cancel</Button>
-                    <Button color="error" variant="contained" disabled={deleting} onClick={handleDelete} sx={{ textTransform: "none" }}>
+                <DialogActions sx={{ px: { xs: 2, sm: 3 }, pb: 2 }}>
+                    <Button
+                        onClick={() => setDeleteOpen(false)}
+                        sx={{ textTransform: "none", fontSize: { xs: "0.85rem", sm: "0.9rem" } }}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        color="error"
+                        variant="contained"
+                        disabled={deleting}
+                        onClick={handleDelete}
+                        sx={{ textTransform: "none", fontSize: { xs: "0.85rem", sm: "0.9rem" } }}
+                    >
                         {deleting ? "Deleting..." : "Delete"}
                     </Button>
                 </DialogActions>
