@@ -4,8 +4,12 @@ import {
     DialogContent,
     Typography,
     IconButton,
+    Button,
+    Avatar,
 } from "@mui/material";
+
 import CloseIcon from "@mui/icons-material/Close";
+import MessageIcon from "@mui/icons-material/Message";
 import ProtectedAvatar from "../components/ProtectedAvatar";
 
 const SAFFRON = "#FF9933";
@@ -14,7 +18,31 @@ const ProfileModal = ({
     open,
     onClose,
     selectedProfile,
+    onMessage,
+    currentUser,
 }) => {
+    const isOwnProfile =
+        selectedProfile?._id === currentUser?._id;
+
+    const getProfileName = () => {
+        const fullName = `${selectedProfile?.firstName || ""} ${
+            selectedProfile?.lastName || ""
+        }`.trim();
+
+        return fullName || selectedProfile?.name || "";
+    };
+
+    const getInitials = () => {
+        const first =
+            selectedProfile?.firstName?.[0] ||
+            selectedProfile?.name?.[0] ||
+            "";
+
+        const last =
+            selectedProfile?.lastName?.[0] || "";
+
+        return `${first}${last}`.toUpperCase();
+    };
     const fullName =
         `${selectedProfile?.firstName || ""} ${selectedProfile?.lastName || ""}`
             .trim() ||
@@ -44,6 +72,8 @@ const ProfileModal = ({
                 },
             }}
         >
+            {/* CLOSE BUTTON */}
+
             <IconButton
                 aria-label="close"
                 onClick={onClose}
@@ -57,7 +87,8 @@ const ProfileModal = ({
                     color: "#fff",
                     transition: "all 0.2s ease",
                     "&:hover": {
-                        backgroundColor: "rgba(0, 0, 0, 0.7)",
+                        backgroundColor:
+                            "rgba(0, 0, 0, 0.7)",
                         transform: "rotate(90deg)",
                     },
                 }}
@@ -72,17 +103,31 @@ const ProfileModal = ({
                     overflow: "visible",
                 }}
             >
-                <ProtectedAvatar
+                <Avatar
                     src={selectedProfile?.profileImageUrl || ""}
                     alt={fullName}
                     sx={{
-                        width: { xs: 200, sm: 360 },
-                        height: { xs: 200, sm: 360 },
+                        width: {
+                            xs: 200,
+                            sm: 360,
+                        },
+
+                        height: {
+                            xs: 200,
+                            sm: 360,
+                        },
+
                         mx: "auto",
                         mb: 1.5,
+
                         bgcolor: SAFFRON,
                         color: "#fff",
-                        fontSize: { xs: "3rem", sm: "5rem" },
+
+                        fontSize: {
+                            xs: "3rem",
+                            sm: "5rem",
+                        },
+
                         fontWeight: 800,
                         border: "3px solid rgba(255,255,255,0.9)",
                         boxShadow: "0 8px 30px rgba(0,0,0,0.35)",
@@ -92,7 +137,9 @@ const ProfileModal = ({
                     {!selectedProfile?.profileImageUrl &&
                         `${selectedProfile?.firstName?.[0] || ""}${selectedProfile?.lastName?.[0] || selectedProfile?.name?.[0] || ""
                         }`}
-                </ProtectedAvatar>
+                </Avatar>
+
+                {/* NAME */}
 
                 <Typography
                     fontWeight={700}
@@ -105,6 +152,47 @@ const ProfileModal = ({
                 >
                     {fullName}
                 </Typography>
+
+                {/* MESSAGE BUTTON */}
+
+                {!isOwnProfile &&
+                    selectedProfile?._id && (
+                        <Button
+                            variant="contained"
+                            startIcon={<MessageIcon />}
+                            onClick={() => {
+                                onMessage(selectedProfile);
+                            }}
+                            sx={{
+                                mt: 1.5,
+
+                                px: 3,
+                                py: 0.8,
+
+                                borderRadius: 2,
+
+                                backgroundColor:
+                                    SAFFRON,
+
+                                color: "#fff",
+
+                                fontWeight: 700,
+
+                                textTransform:
+                                    "none",
+
+                                boxShadow:
+                                    "0 4px 12px rgba(0,0,0,0.25)",
+
+                                "&:hover": {
+                                    backgroundColor:
+                                        "#e68a00",
+                                },
+                            }}
+                        >
+                            Message
+                        </Button>
+                    )}
             </DialogContent>
         </Dialog>
     );

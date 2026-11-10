@@ -9,6 +9,7 @@ import { ReferralProvider } from "./context/ReferralContext";
 import { UserProvider } from "./context/userConetext";
 import { NotificationProvider } from "./context/NotificationContext";
 import {RatingProvider} from "./context/RatingContext"
+import './utils/axiosInterceptor'
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
