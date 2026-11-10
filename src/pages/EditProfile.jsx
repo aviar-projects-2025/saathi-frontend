@@ -182,8 +182,8 @@ const validateForm = (formData) => {
     const zipcode = formData.zipcode?.trim();
     if (!zipcode) {
         errors.zipcode = "ZipCode is required";
-    } else if (!/^[A-Za-z0-9](?:[A-Za-z0-9\s-]{0,14}[A-Za-z0-9])?$/.test(zipcode)) {
-        errors.zipcode = "Please enter a valid ZipCode / Postal Code";
+    } else if (!/^\d{5}$/.test(zipcode)) {
+        errors.zipcode = "Please enter a valid 5-digit ZipCode";
     }
 
     return errors;

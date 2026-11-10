@@ -10,7 +10,7 @@ import React, {
 import axios from "axios";
 import { toast } from "react-toastify";
 import Api from "../Api";
-import socket from "../socket";
+import socket, { connectSocket } from "../socket";
 import notificationSound from "../sounds/notifysound.wav";
 
 const NotificationContext = createContext(null);
@@ -25,16 +25,27 @@ const getStoredUser = () => {
 
 const getUserId = (user) => user?.id || user?._id || user?.userId || null;
 
-// ★ FIX: Fall back to data._id / data.rideId / data.requestId
-// so `ride_started` and similar events with no top-level _id get a stable key.
+const getUserIdFromToken = () => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) return null;
+    const p = token.split(".")[1];
+    const b = p.replace(/-/g, "+").replace(/_/g, "/");
+    const d = JSON.parse(atob(b.padEnd(Math.ceil(b.length / 4) * 4, "=")));
+    return d.id || d._id || d.userId || d.sub || null;
+  } catch {
+    return null;
+  }
+};
+
 const getNotificationId = (item) =>
   String(
     item?._id ||
-    item?.id ||
-    item?.data?._id ||
-    item?.data?.rideId ||
-    item?.data?.requestId ||
-    ""
+      item?.id ||
+      item?.data?._id ||
+      item?.data?.rideId ||
+      item?.data?.requestId ||
+      ""
   );
 
 function normalizeList(payload) {
@@ -47,19 +58,15 @@ function normalizeList(payload) {
 
 function mergeNotifications(existing, incoming) {
   const byId = new Map();
-
-  // Preserve existing items that somehow have no id
   [...incoming, ...existing].forEach((item) => {
     const id = getNotificationId(item);
     if (id) {
       byId.set(id, { ...byId.get(id), ...item });
     } else {
-      // Keep no-id items unique by injecting a synthetic key
       const synthetic = `_noid_${JSON.stringify(item).slice(0, 40)}_${Math.random()}`;
       byId.set(synthetic, { ...item, _syntheticId: synthetic });
     }
   });
-
   return [...byId.values()].sort(
     (a, b) =>
       new Date(b.createdAt || b.updatedAt || 0) -
@@ -69,7 +76,7 @@ function mergeNotifications(existing, incoming) {
 
 export function NotificationProvider({ children }) {
   const [user, setUser] = useState(getStoredUser);
-  const userId = getUserId(user);
+  const userId = getUserId(user) || getUserIdFromToken();
 
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -78,6 +85,7 @@ export function NotificationProvider({ children }) {
   const handledRealtimeIds = useRef(new Set());
   const audioRef = useRef(null);
 
+  /* ─── Sound ─── */
   useEffect(() => {
     try {
       audioRef.current = new Audio(notificationSound);
@@ -87,10 +95,12 @@ export function NotificationProvider({ children }) {
     }
   }, []);
 
+  /* ─── Fetch via HTTP ─── */
   const fetchNotifications = useCallback(async () => {
     const latestUser = getStoredUser();
-    const id = getUserId(latestUser) || userId;
+    const id = getUserId(latestUser) || getUserIdFromToken() || userId;
     if (!id) {
+      console.warn("⚠️ [NOTIFICATIONS] fetch — no userId, skipping");
       setNotifications([]);
       return [];
     }
@@ -105,10 +115,7 @@ export function NotificationProvider({ children }) {
       });
       const list = normalizeList(response.data);
       setNotifications((previous) => mergeNotifications(previous, list));
-      console.debug("[NOTIFICATIONS][FETCH]", {
-        userId: id,
-        count: list.length,
-      });
+      console.log("📥 [NOTIFICATIONS] fetched:", list.length, "items");
       return list;
     } catch (error) {
       setNotificationError(
@@ -117,7 +124,7 @@ export function NotificationProvider({ children }) {
           "Unable to load notifications"
       );
       console.error(
-        "[NOTIFICATIONS][FETCH][ERROR]",
+        "❌ [NOTIFICATIONS] fetch error:",
         error?.response?.data || error.message
       );
       return [];
@@ -126,28 +133,33 @@ export function NotificationProvider({ children }) {
     }
   }, [userId]);
 
+  /* ─── Sound helper ─── */
   const playNotificationSound = useCallback(() => {
     if (!audioRef.current) return;
     audioRef.current.currentTime = 0;
-    audioRef.current.play().catch(() => {
-      // Browsers may block sound until the user interacts with the page.
-    });
+    audioRef.current.play().catch(() => {});
   }, []);
 
+  /* ─── Realtime handler ─── */
   const handleIncomingNotification = useCallback(
     (incoming) => {
       if (!incoming || typeof incoming !== "object") return;
-      console.log(incoming,'incoming')
+
       const id = getNotificationId(incoming);
-      console.log("[NOTIFICATIONS] incoming", incoming.type, "id=", id);
+      console.log("📨 [NOTIFICATIONS] SOCKET received:", incoming.type, "id =", id);
 
       if (id && handledRealtimeIds.current.has(id)) {
-        console.log("[NOTIFICATIONS] duplicate ignored:", id);
+        console.log("⏭️ [NOTIFICATIONS] duplicate ignored:", id);
         return;
       }
       if (id) handledRealtimeIds.current.add(id);
 
-      setNotifications((previous) => mergeNotifications(previous, [incoming]));
+      const enriched = {
+        ...incoming,
+        createdAt: incoming.createdAt || new Date().toISOString(),
+      };
+
+      setNotifications((previous) => mergeNotifications(previous, [enriched]));
 
       if (incoming?.isSilent !== true) {
         playNotificationSound();
@@ -156,15 +168,11 @@ export function NotificationProvider({ children }) {
           toast.info(message, { toastId: id || undefined, autoClose: 4500 });
         }
       }
-
-      console.debug("[NOTIFICATIONS][SOCKET] received", {
-        id,
-        type: incoming.type,
-      });
     },
     [playNotificationSound]
   );
 
+  /* ─── Re-sync on localStorage auth change ─── */
   useEffect(() => {
     const refreshStoredUser = () => setUser(getStoredUser());
     window.addEventListener("storage", refreshStoredUser);
@@ -175,29 +183,37 @@ export function NotificationProvider({ children }) {
     };
   }, []);
 
+  /* ─── THE CRITICAL FIX: connect socket + subscribe ─── */
   useEffect(() => {
-    if (!userId) {
-      setNotifications([]);
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.warn("⚠️ [NOTIFICATIONS] no token — cannot connect socket");
       return undefined;
     }
 
-    const joinUserRoom = () => {
-      console.debug("[NOTIFICATIONS][SOCKET] joining user room", userId);
-      socket.emit("join", userId);
-      socket.emit("join_room", userId);
-    };
+    console.log("🔌 [NOTIFICATIONS] connecting socket...");
+    connectSocket();
 
-    joinUserRoom();
-    socket.on("connect", joinUserRoom);
     socket.on("notification", handleIncomingNotification);
-    fetchNotifications();
+
+    const onConnect = () => {
+      console.log("🔗 [NOTIFICATIONS] socket connected, id =", socket.id);
+      fetchNotifications();
+    };
+    socket.on("connect", onConnect);
+
+    if (socket.connected) {
+      console.log("🔗 [NOTIFICATIONS] already connected, fetching now");
+      fetchNotifications();
+    }
 
     return () => {
-      socket.off("connect", joinUserRoom);
       socket.off("notification", handleIncomingNotification);
+      socket.off("connect", onConnect);
     };
-  }, [userId, fetchNotifications, handleIncomingNotification]);
+  }, [handleIncomingNotification, fetchNotifications]);
 
+  /* ─── Mark read ─── */
   const markNotificationRead = useCallback(async (notification) => {
     const id = getNotificationId(notification);
     if (!id || notification?.isRead) return;
@@ -222,13 +238,14 @@ export function NotificationProvider({ children }) {
         )
       );
       console.error(
-        "[NOTIFICATIONS][MARK_READ][ERROR]",
+        "❌ [NOTIFICATIONS] mark read error:",
         error?.response?.data || error.message
       );
       throw error;
     }
   }, []);
 
+  /* ─── Mark all read ─── */
   const markAllNotificationsRead = useCallback(async () => {
     if (!userId) return;
     const unread = notifications.filter((item) => !item.isRead);
@@ -250,7 +267,7 @@ export function NotificationProvider({ children }) {
         previous.map((item) => ({ ...item, isRead: false }))
       );
       console.error(
-        "[NOTIFICATIONS][MARK_ALL_READ][ERROR]",
+        "❌ [NOTIFICATIONS] mark all read error:",
         error?.response?.data || error.message
       );
       throw error;
