@@ -51,8 +51,9 @@ import ProfileModal from './Avatar.jsx';
 import ProtectedAvatar from '../components/ProtectedAvatar.jsx';
 
 import ChatModal from "./ChatModal";
+import uploadImageToS3 from "../utils/s3Upload.js";
 
-const BREAKPOINTS = { xs: 0, sm: 600, md: 900, lg: 1200, xl: 1536 }; // MUI defaults
+const BREAKPOINTS = { xs: 0, sm: 600, md: 900, lg: 1200, xl: 1536 };
 
 function getTier(width) {
   if (width < BREAKPOINTS.sm) return 'xs';
@@ -68,8 +69,6 @@ function useResponsiveTier() {
   );
   useEffect(() => {
     const handleResize = () => setTier(getTier(window.innerWidth));
-    // Run once on mount in case the initial state above was computed
-    // before layout/zoom settled.
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -84,6 +83,7 @@ export default function Community() {
   const [media, setMedia] = useState(null);
   const [preview, setPreview] = useState("");
   const [loading, setLoading] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [postLoading, setPostLoading] = useState(false);
   const [communityPosts, setCommunityPosts] = useState([]);
   const [activeCommentPostId, setActiveCommentPostId] = useState(null);
@@ -155,12 +155,10 @@ export default function Community() {
       return Infinity;
     }
 
-    // Exact postal code = highest priority
     if (authorZip === currentZip) {
       return 0;
     }
 
-    // Different length = lower priority
     if (authorZip.length !== currentZip.length) {
       return 100;
     }
@@ -170,7 +168,6 @@ export default function Community() {
       currentZip
     );
 
-    // More matching starting digits = closer
     return authorZip.length - commonLen;
   };
 
@@ -202,9 +199,6 @@ export default function Community() {
       const posts = postsRes?.data?.data || [];
       const likedPostIds = likesRes?.data?.data || [];
 
-      console.log(posts, 'posts')
-
-      // Add like + comment information
       const updatedPosts = posts.map((post) => ({
         ...post,
         isLiked: likedPostIds.includes(post._id),
@@ -214,30 +208,24 @@ export default function Community() {
           0,
       }));
 
-
       const sortedPosts = sortPostsByProximity(
         updatedPosts,
         currentUser
       );
 
-
       setCommunityPosts(sortedPosts);
 
-      // Set post IDs in sorted order
       const postIds = sortedPosts.map(
         (post) => post._id
       );
 
       setPostId(postIds);
-
-      // Pagination
       setPage(1);
 
       setHasMore(
         postsRes?.data?.pagination?.hasMore ?? false
       );
 
-      // Initial comment counts
       setCommentCounts(
         Object.fromEntries(
           sortedPosts.map((post) => [
@@ -247,11 +235,9 @@ export default function Community() {
         )
       );
 
-      // Fetch latest comment counts
       const countEntries = await Promise.all(
         sortedPosts.map(async (post) => {
           try {
-            console.log(post, 'post')
             const res = await axios.get(
               `${Api}/community/comments/${post._id}/${user.id}`
             );
@@ -301,9 +287,7 @@ export default function Community() {
 
       const updatedPosts = posts.map((post) => ({
         ...post,
-
         isLiked: likedPostIds.includes(post._id),
-
         commentCount:
           post.commentCount ??
           post.comments?.length ??
@@ -320,10 +304,8 @@ export default function Community() {
         ...posts.map((post) => post._id),
       ]);
 
-      // ⭐ Add comment counts
       setCommentCounts((prev) => ({
         ...prev,
-
         ...Object.fromEntries(
           updatedPosts.map((post) => [
             post._id,
@@ -332,7 +314,6 @@ export default function Community() {
         ),
       }));
 
-      // ⭐ Update pagination
       setPage(nextPage);
 
       setHasMore(
@@ -384,7 +365,6 @@ export default function Community() {
 
   const getComments = async (postId) => {
     try {
-      // setLoading(true);
       const res = await axios.get(Api + `/community/comments/${postId}`);
       setCommentCounts((prev) => ({ ...prev, [postId]: res.data.data.comments.length }));
     } catch (error) {
@@ -414,7 +394,6 @@ export default function Community() {
     }
   };
 
-
   const editImagePreview = useMemo(() => {
     if (!editImage) return previewImage;
 
@@ -426,7 +405,6 @@ export default function Community() {
     );
   };
 
-  // inside your component:
   const [imageMenuAnchor, setImageMenuAnchor] = useState(null);
   const isImageMenuOpen = Boolean(imageMenuAnchor);
 
@@ -456,9 +434,9 @@ export default function Community() {
   }, [editPreviewUrl]);
   const navigate = useNavigate();
   const tier = useResponsiveTier();
-  const isMobile = tier === 'xs';                 // phones
-  const isTablet = tier === 'sm'; // tablets / small laptops
-  const isDesktop = tier === 'md' || tier === 'lg' || tier === 'xl'; // laptops and up
+  const isMobile = tier === 'xs';
+  const isTablet = tier === 'sm';
+  const isDesktop = tier === 'md' || tier === 'lg' || tier === 'xl';
 
   const showSidebar = !isMobile;
 
@@ -510,7 +488,6 @@ export default function Community() {
   const hasCheckedProfileGateRef = useRef(false);
 
   useEffect(() => {
-
     if (hasCheckedProfileGateRef.current) return;
     if (currentUser && currentUser._id && typeof completion === "number") {
       hasCheckedProfileGateRef.current = true;
@@ -525,7 +502,8 @@ export default function Community() {
   const handleEdit = (post) => {
     setSelectedPost(post);
     setEditDescription(post.description);
-    setPreviewImage(post.postImage);
+    // Show the signed URL if available; fall back to the raw key/URL
+    setPreviewImage(post.postImageUrl || post.postImage);
 
     setOriginalDescription(post.description);
     setOriginalImage(post.postImage);
@@ -533,38 +511,40 @@ export default function Community() {
     setEditImage(null);
     setEditOpen(true);
   };
+
+  // ─────────────────────────────────────────────
+  // UPDATED: handleUpdate — upload to S3, send JSON
+  // ─────────────────────────────────────────────
   const handleUpdate = async () => {
     try {
       setImagePostLoading(true);
 
       const user = JSON.parse(localStorage.getItem("user"));
 
-      const formData = new FormData();
-      formData.append("userId", user.id);
-      formData.append("description", editDescription);
-
+      let imageKey;
       if (editImage) {
-        formData.append("postImage", editImage);
+        const { key } = await uploadImageToS3(editImage, "community");
+        imageKey = key;
       }
 
       const res = await axios.put(
         `${Api}/community/${selectedPost._id}`,
-        formData,
         {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
+          userId: user.id,
+          description: editDescription,
+          ...(imageKey && { postImage: imageKey }),
         }
       );
 
+      const updated = res.data.data;
       setCommunityPosts((prev) =>
-
         prev.map((post) =>
           post._id === selectedPost._id
             ? {
               ...post,
-              description: res.data.data.description,
-              postImage: res.data.data.postImage,
+              description: updated.description,
+              postImage: updated.postImage,
+              postImageUrl: updated.postImageUrl,
             }
             : post
         )
@@ -587,21 +567,34 @@ export default function Community() {
     setEditImage(null);
     setPreviewImage(originalImage);
   };
+
+  // ─────────────────────────────────────────────
+  // UPDATED: handleCreatePost — upload to S3, send JSON
+  // ─────────────────────────────────────────────
   const handleCreatePost = async () => {
     try {
       setLoading(true);
-      const formData = new FormData();
-      formData.append("description", post);
-      formData.append("authorId", user?.id);
-      formData.append("name", "Daniel Arun");
-      formData.append("city", "Saathi Community");
-      formData.append("time", "Just now");
-      formData.append("initials", "DA");
-      formData.append("verified", true);
-      if (media) formData.append("postImage", media);
 
-      await axios.post(Api + "/community/", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+      let imageKey = null;
+      if (media) {
+        setUploadingImage(true);
+        try {
+          const { key } = await uploadImageToS3(media, "community");
+          imageKey = key;
+        } finally {
+          setUploadingImage(false);
+        }
+      }
+
+      await axios.post(Api + "/community/", {
+        description: post,
+        authorId: user?.id,
+        name: "Daniel Arun",
+        city: "Saathi Community",
+        time: "Just now",
+        initials: "DA",
+        verified: true,
+        ...(imageKey && { postImage: imageKey }),
       });
 
       setPost("");
@@ -610,23 +603,19 @@ export default function Community() {
       toast.success("Posted!...", toasts);
     } catch (error) {
       console.log(error);
-      // toast.error(error.message, {
-      //   position: isMobile ? "top-center" : "top-right",
-      // });
-      toast.error(error.message, toasts);
-
+      toast.error(
+        error.response?.data?.message || error.message,
+        toasts
+      );
     } finally {
       setLoading(false);
       getCommmunityPost();
     }
   };
 
-
-
   useEffect(() => {
     getCommmunityPost();
   }, []);
-
 
   const formattedDateTime = (createdAt) =>
     new Date(createdAt).toLocaleString("en-IN", {
@@ -860,7 +849,6 @@ export default function Community() {
         </DialogActions>
       </Dialog>
       <PageLayout>
-        {/* Page header */}
         <Typography variant="h5" fontWeight={800} sx={{ mb: { xs: 0.5, sm: 0.5 }, fontSize: { xs: "1rem", sm: "1.2rem", md: "1.35rem", lg: "1.5rem" } }}>
           Saathi <span style={{ color: '#E8650A' }}>Community</span>
         </Typography>
@@ -868,19 +856,16 @@ export default function Community() {
           Built on trust, referrals, and shared roots
         </Typography>
 
-        {/* Main layout: Community box + SidebarContent box, single flex row, gap 2, responsive */}
         <Box
           sx={{
             display: 'flex',
             flexDirection: { xs: 'column', sm: 'row' },
-            // gap: 1,
             alignItems: 'flex-start',
             width: '100%',
             maxWidth: "1200px"
           }}
         >
 
-          {/* ── Community feed box ── */}
           <Box
             sx={{
               flex: 1,
@@ -988,7 +973,6 @@ export default function Community() {
 
               </Box>
 
-              {/* Image preview */}
               {preview && (
                 <Box
                   sx={{
@@ -1082,7 +1066,6 @@ export default function Community() {
                       <Button
                         onClick={() => {
                           if (isProfileComplete) {
-                            // setOpenMediaDialog((prev) => !prev);
                             isDesktop
                               ? fileInputRef.current?.click()
                               : setOpenMediaDialog(true);
@@ -1115,7 +1098,6 @@ export default function Community() {
                         />
                       </Button>
 
-                      {/* Hidden File Input */}
                       <input
                         ref={fileInputRef}
                         hidden
@@ -1144,7 +1126,7 @@ export default function Community() {
                             color: "#fff",
 
                             "& .MuiButton-startIcon svg": {
-                              fontSize: { xs: "13px", sm: "14px" } // 14px, 16px, 18px, etc.
+                              fontSize: { xs: "13px", sm: "14px" }
                             },
 
                             "&:hover": {
@@ -1156,7 +1138,6 @@ export default function Community() {
                         </Button>
 
                         <Button
-                          // variant="contained"
                           startIcon={<FolderIcon />}
                           onClick={() => fileInputRef.current?.click()}
                           size={isMobile ? "small" : "medium"}
@@ -1168,7 +1149,7 @@ export default function Community() {
                             bgcolor: "#2e7d32",
                             color: "#fff",
                             "& .MuiButton-startIcon svg": {
-                              fontSize: { xs: "13px", sm: "14px" } // 14px, 16px, 18px, etc.
+                              fontSize: { xs: "13px", sm: "14px" }
                             },
 
                             "&:hover": {
@@ -1181,7 +1162,6 @@ export default function Community() {
                         </Button>
                       </Stack>
 
-                      {/* Hidden Camera Input */}
                       <input
                         ref={cameraInputRef}
                         hidden
@@ -1191,7 +1171,6 @@ export default function Community() {
                         onChange={handleMediaSelect}
                       />
 
-                      {/* Hidden File Input */}
                       <input
                         ref={fileInputRef}
                         hidden
@@ -1217,6 +1196,7 @@ export default function Community() {
                       variant="contained"
                       disabled={
                         loading ||
+                        uploadingImage ||
                         (!post.trim() && !media) ||
                         !isProfileComplete
                       }
@@ -1238,14 +1218,17 @@ export default function Community() {
                         },
                       }}
                     >
-                      {loading ? "Posting…" : "Post"}
+                      {loading
+                        ? uploadingImage
+                          ? "Uploading…"
+                          : "Posting…"
+                        : "Post"}
                     </Button>
                   </Box>
                 </Tooltip>
               </Stack>
             </Box>
 
-            {/* Posts list */}
             {postLoading ? (
               <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', py: 4 }}>
                 <CircularProgress size={isMobile ? 36 : 50} sx={{ color: "#FF9933" }} />
@@ -1261,14 +1244,6 @@ export default function Community() {
                   textAlign: "center",
                 }}
               >
-                {/* <InboxOutlinedIcon
-                  sx={{
-                    fontSize: { xs: 40, sm: 64 },
-                    color: "text.disabled",
-                    mb: 2,
-                  }}
-                /> */}
-
                 <Typography variant="h6" fontWeight={600} color="text.primary">
                   No Posts Yet
                 </Typography>
@@ -1297,7 +1272,6 @@ export default function Community() {
                   }}
                 >
                   <Box sx={{ p: isMobile ? 1.5 : 2 }}>
-                    {/* Post header */}
                     <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: isMobile ? 1 : 1.5 }}>
                       <ProtectedAvatar
                         src={post?.authorId?.profileImage}
@@ -1457,7 +1431,6 @@ export default function Community() {
                                   const postId = selectedPost._id;
                                   handleMenuClose();
                                   handleDelete(postId);
-                                  // setDeleteOpen(false);
                                 }}
                                 sx={{
                                   flex: 1,
@@ -1471,8 +1444,6 @@ export default function Community() {
                               </Button>
                             </DialogActions>
                           </Dialog>
-
-                          {/* Edit post of Community Image */}
 
                           <Dialog
                             open={editOpen}
@@ -1492,7 +1463,6 @@ export default function Community() {
                                 borderRadius: { xs: 0, sm: 3 },
                                 m: { xs: 0, sm: 2 },
 
-                                // Important for mobile keyboard
                                 maxHeight: {
                                   xs: "100dvh",
                                   sm: "calc(100% - 64px)",
@@ -1500,7 +1470,6 @@ export default function Community() {
                               },
                             }}
                           >
-                            {/* Dialog Header */}
                             <DialogTitle
                               sx={{
                                 display: "flex",
@@ -1526,7 +1495,6 @@ export default function Community() {
                               </IconButton>
                             </DialogTitle>
 
-                            {/* Dialog Content */}
                             <DialogContent
                               dividers
                               sx={{
@@ -1596,8 +1564,6 @@ export default function Community() {
                                   </Button>
                                 </Box>
 
-
-                                {/* Image Menu */}
                                 <Menu
                                   anchorEl={imageMenuAnchor}
                                   open={isImageMenuOpen}
@@ -1639,7 +1605,6 @@ export default function Community() {
                               </Box>
                             </DialogContent>
 
-                            {/* Dialog Footer */}
                             <DialogActions
                               sx={{
                                 p: { xs: 1.5, sm: 2 },
@@ -1700,18 +1665,9 @@ export default function Community() {
                               </Stack>
                             </DialogActions>
                           </Dialog>
-
-
-
                         </>
                       )}
-
                     </Box>
-
-                    {/* Post body */}
-                    {/* <Typography sx={{ mt: 1.5, fontSize: bodyFontSize, lineHeight: 1.6 }}>
-                      {post.description}
-                    </Typography> */}
 
                     <Box>
                       <Typography
@@ -1749,19 +1705,23 @@ export default function Community() {
 
                   </Box>
 
-                  {/* Post image */}
-                  {post.postImage && <CommunityImage src={post.postImage} />}
+                  {/* ── UPDATED: pass postImageUrl so CommunityImage
+                        prefers the signed URL ── */}
+                  {post.postImage && (
+                    <CommunityImage
+                      src={post.postImage}
+                      postImageUrl={post.postImageUrl}
+                    />
+                  )}
 
-                  < Divider />
+                  <Divider />
 
-                  {/* Action buttons */}
-                  < Stack
+                  <Stack
                     direction="row"
                     sx={{
                       py: isMobile ? 0.25 : 0.5,
                       px: isMobile ? 0.5 : 2,
                       gap: isMobile ? 0 : 5,
-                      // justifyContent: isMobile ? 'space-around' : 'flex-start',
                       justifyContent: 'space-around',
                     }}
                   >
@@ -1793,7 +1753,6 @@ export default function Community() {
                       sx={{ textTransform: 'none', color: 'text.secondary', fontSize: btnFontSize }}
                     >
                       {commentCounts[post._id] ?? 0}
-
                     </Button>
 
                     <Button
@@ -1874,7 +1833,6 @@ export default function Community() {
             }}
           />
 
-          {/* SidebarContent */}
           {showSidebar && (
             <Box
               sx={{
@@ -1926,7 +1884,5 @@ export default function Community() {
         </Box >
       </PageLayout >
     </>
-
-
   );
 }
