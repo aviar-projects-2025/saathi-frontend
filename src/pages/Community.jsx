@@ -103,8 +103,8 @@ export default function Community() {
           {/* Main column */}
           <Box sx={{ flex: 1, minWidth: 0, maxWidth: 640 }}>
             {/* Header */}
-            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-              <Typography variant="h5" fontWeight={900} color="#B33A00">Saathi</Typography>
+            <Box sx={{ display: "flex", justifyContent: "flex-end", alignItems: "center", mb: 2 }}>
+              {/* <Typography variant="h5" fontWeight={900} color="#B33A00">Saathi</Typography> */}
               <Stack direction="row" spacing={1}>
                 <Chip icon={<LocationOnIcon fontSize="small" />} label={currentUser?.city || "Set city"} variant="outlined" sx={{ fontWeight: 600, bgcolor: "#fff" }} />
                 {/* <IconButton sx={{ bgcolor: "#fff", border: "1px solid #eee" }}><NotificationsNoneIcon /></IconButton> */}

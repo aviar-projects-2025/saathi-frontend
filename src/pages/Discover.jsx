@@ -48,12 +48,14 @@ const Discover = () => {
 
                 const res = await axios.get(`${Api}/users/top-riders`);
 
+                console.log(res,'res')
                 const riders = res.data?.data || [];
                 const formatted = riders.map((rider, index) => ({
                     name: `${rider.firstName} ${rider.lastName}`,
                     initials: getInitials(rider.firstName, rider.lastName),
                     rides: rider.completedRideCount,
-                    profileImage: rider.profileImage,
+                    // profileImage: rider.profileImageUrl,
+                    profileImageUrl : rider.profileImageUrl,
                     // city: rider.city || "",
                     badge: getBadge(index),
                     verified: rider.isVerified,
@@ -150,7 +152,7 @@ const Discover = () => {
                                     >
                                         {index + 1}
                                     </Typography>
-
+                                        {console.log(member,'member')}
                                     <ProtectedAvatar
                                         src={member?.profileImageUrl || ""}
                                         alt={`${member?.name || ""}`}
