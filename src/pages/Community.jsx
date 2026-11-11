@@ -119,10 +119,10 @@ export default function Community() {
           {/* Main column */}
           <Box sx={{ flex: 1, minWidth: 0, width: "100%", maxWidth: { xs: "100%", md: 640 } }}>
             {/* Header */}
-            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: { xs: 1.5, sm: 2 }, gap: 1 }}>
-              <Typography fontWeight={900} color="#B33A00" sx={{ fontSize: { xs: "1.3rem", sm: "1.5rem" } }}>
+            <Box sx={{ display: "flex", justifyContent: "flex-end", alignItems: "center", mb: { xs: 1.5, sm: 2 }, gap: 1 }}>
+              {/* <Typography fontWeight={900} color="#B33A00" sx={{ fontSize: { xs: "1.3rem", sm: "1.5rem" } }}>
                 Saathi
-              </Typography>
+              </Typography> */}
               <Stack direction="row" spacing={1} sx={{ minWidth: 0 }}>
                 <Chip
                   icon={<LocationOnIcon sx={{ fontSize: { xs: 16, sm: 18 } }} />}

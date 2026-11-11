@@ -371,7 +371,7 @@ export default function ChatConversation({ user, onBack, onClose }) {
             {getUserName(user)}
           </Typography>
           <Typography sx={{ fontSize: "0.72rem", color: "#888" }}>
-            {blockedByMe ? "Blocked" : blockedMe ? "Unavailable" : "Online"}
+            {blockedByMe ? "Blocked" : blockedMe && "Unavailable" }
           </Typography>
         </Box>
         <IconButton

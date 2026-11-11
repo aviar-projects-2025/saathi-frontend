@@ -338,7 +338,7 @@ export default function CreatePostModal({
 
               <Stack direction={{ xs: "column", sm: "row" }} spacing={{ xs: 2.25, sm: 2 }}>
                 <TextField {...fieldProps} label="When" value={timeframe} onChange={(e) => setTimeframe(e.target.value)} placeholder="This weekend" sx={{ "& .MuiInputBase-input": { fontSize: { xs: "0.92rem", sm: "1rem" } } }} />
-                <TextField {...fieldProps} label="Zip code" value={zipcode} onChange={(e) => setZipcode(e.target.value)} placeholder="75034" sx={{ "& .MuiInputBase-input": { fontSize: { xs: "0.92rem", sm: "1rem" } } }} />
+                <TextField {...fieldProps} label="Zip code" disabled value={zipcode} onChange={(e) => setZipcode(e.target.value)} placeholder="75034" sx={{ "& .MuiInputBase-input": { fontSize: { xs: "0.92rem", sm: "1rem" } } }} />
               </Stack>
 
               {postType === "offering" && (
