@@ -10,6 +10,8 @@ import { useUser } from "../context/userConetext.jsx";
 import { useRide } from "../context/RideContext";
 import Api from "../Api";
 import ProtectedAvatar from "../components/ProtectedAvatar.jsx";
+// ★ ADDED: Import ChatModal
+import ChatModal from "./ChatModal";
 
 const FONT = '"DM Sans", "Inter", "Segoe UI", Roboto, Arial, sans-serif';
 const BRAND = "#B5440F";
@@ -48,8 +50,13 @@ export default function RideList({ ride, onIcanHelp }) {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [openEditModal, setOpenEditModal] = useState(false);
   const [selectedRideModal, setSelectedRideModal] = useState(null);
+  
+  // Profile and Chat Modals
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null);
+  // ★ ADDED: Chat Modal State
+  const [chatModalOpen, setChatModalOpen] = useState(false);
+  const [chatUser, setChatUser] = useState(null);
 
   const storedUser = JSON.parse(localStorage.getItem("user"));
 
@@ -81,7 +88,6 @@ export default function RideList({ ride, onIcanHelp }) {
       const res = await axios.get(`${Api}/help-proposals/sent`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-      console.log(res ,'res ')
       const body = res?.data;
       const list = Array.isArray(body?.data)
         ? body.data
@@ -92,7 +98,6 @@ export default function RideList({ ride, onIcanHelp }) {
             : [];
       setMyHelpProposals(list);
     } catch (error) {
-      // If endpoint doesn't exist yet, silently default to []
       console.warn("[help-proposals/sent]", error?.response?.status, error.message);
       setMyHelpProposals([]);
     }
@@ -278,9 +283,9 @@ export default function RideList({ ride, onIcanHelp }) {
     !isProfileComplete ||
     isFlightBookingClosed ||
     (isOffer && !isFlight && !alreadyRequested && availableSeats <= 0) ||
-    (isRequest && alreadyOfferedHelp) ||               // ★ my offer is pending/accepted
-    (isRequest && isRequestClosed && !alreadyOfferedHelp) || // ★ someone else got accepted
-    (isRequest && myHelpWasCancelled);                 // ★ I cancelled my offer
+    (isRequest && alreadyOfferedHelp) ||
+    (isRequest && isRequestClosed && !alreadyOfferedHelp) ||
+    (isRequest && myHelpWasCancelled);
 
   let baseLabel = isOffer ? "Request seat" : "I can drive";
 
@@ -515,10 +520,26 @@ export default function RideList({ ride, onIcanHelp }) {
         </Paper>
       </Box>
 
+      {/* ★ UPDATED: Profile Modal wires directly to Chat Modal */}
       <ProfileModal
         open={profileModalOpen}
         selectedProfile={selectedProfile}
         onClose={() => setProfileModalOpen(false)}
+        onMessage={(user) => {
+          setProfileModalOpen(false);
+          setChatUser(user);
+          setChatModalOpen(true);
+        }}
+      />
+
+      {/* ★ ADDED: Chat Modal */}
+      <ChatModal
+        open={chatModalOpen}
+        selectedUser={chatUser}
+        onClose={() => {
+          setChatModalOpen(false);
+          setChatUser(null);
+        }}
       />
 
       {selectedRideModal && (

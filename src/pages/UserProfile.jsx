@@ -784,7 +784,7 @@ const UserProfile = () => {
           </Box>
         </Box>
 
-        <ProfileModal open={profileModalOpen} selectedProfile={selectedProfile} onClose={() => setProfileModalOpen(false)} />
+        <ProfileModal open={profileModalOpen} currentUser={currentUser} selectedProfile={selectedProfile} onClose={() => setProfileModalOpen(false)} />
         {editProfileOpen && (
           <EditProfile open={editProfileOpen} onClose={() => { setEditProfileOpen(false); getuserData?.(); loadProfileData(); loadReviews(); }} />
         )}

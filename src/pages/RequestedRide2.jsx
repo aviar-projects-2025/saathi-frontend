@@ -31,6 +31,8 @@ import RideDetailsModal from "./RideDetails.jsx";
 import PageLayout from "../components/PageLayout";
 import ToastConfig from "../components/ToastConfig.jsx";
 import { useRide } from "../context/RideContext";
+// ★ ADDED: Import ChatModal
+import ChatModal from "./ChatModal";
 
 /* ───────────── Design tokens (same as RideCard) ───────────── */
 const FONT = '"DM Sans", "Inter", "Segoe UI", Roboto, Arial, sans-serif';
@@ -122,8 +124,13 @@ const RequestRide = () => {
     const [anchorEl, setAnchorEl] = useState(null);
     const [isCancelling, setIsCancelling] = useState(false);
     const [selectedRideDetails, setSelectedRideDetails] = useState(null);
+    
+    // Profile and Chat Modals
     const [profileModalOpen, setProfileModalOpen] = useState(false);
     const [selectedProfile, setSelectedProfile] = useState(null);
+    // ★ ADDED: Chat Modal State
+    const [chatModalOpen, setChatModalOpen] = useState(false);
+    const [chatUser, setChatUser] = useState(null);
 
     const user = JSON.parse(localStorage.getItem("user"));
     const toasts = ToastConfig();
@@ -630,7 +637,6 @@ const RequestRide = () => {
                             sx: {
                                 borderRadius: "12px",
                                 minWidth: { xs: 60, sm: 120 },
-                                // mt: 1,
                                 bgcolor: "#F8FAFC",
                                 border: "1px solid #E2E8F0",
                                 boxShadow: "0px 12px 32px rgba(0, 0, 0, 0.14)",
@@ -648,16 +654,10 @@ const RequestRide = () => {
                         sx={{
                             borderRadius: "10px",
                             bgcolor: "#FFFFFF",
-                            // py: { xs: 0.75, sm: 1 },
-                            // px: { xs: 1, sm: 1.5 },
                             "&:hover": { bgcolor: "#EEF2FF" },
                         }}
                     >
-                        <ListItemIcon
-                            sx={{
-                                minWidth: { xs: 24, sm: 30 },
-                            }}
-                        >
+                        <ListItemIcon sx={{ minWidth: { xs: 24, sm: 30 } }}>
                             <EditIcon
                                 sx={{
                                     color: "#6C63FF",
@@ -665,12 +665,9 @@ const RequestRide = () => {
                                 }}
                             />
                         </ListItemIcon>
-
                         <Typography
                             fontWeight={600}
-                            sx={{
-                                fontSize: { xs: 12, sm: 13, md: 14 },
-                            }}
+                            sx={{ fontSize: { xs: 12, sm: 13, md: 14 } }}
                             color="text.primary"
                         >
                             Update
@@ -686,16 +683,10 @@ const RequestRide = () => {
                         sx={{
                             borderRadius: "10px",
                             bgcolor: "#FFFFFF",
-                            // py: { xs: 0.75, sm: 1 },
-                            // px: { xs: 1, sm: 1.5 },
                             "&:hover": { bgcolor: "#FFF1F2" },
                         }}
                     >
-                        <ListItemIcon
-                            sx={{
-                                minWidth: { xs: 24, sm: 30 },
-                            }}
-                        >
+                        <ListItemIcon sx={{ minWidth: { xs: 24, sm: 30 } }}>
                             <DeleteIcon
                                 sx={{
                                     color: "#E53935",
@@ -703,18 +694,16 @@ const RequestRide = () => {
                                 }}
                             />
                         </ListItemIcon>
-
                         <Typography
                             fontWeight={600}
-                            sx={{
-                                fontSize: { xs: 12, sm: 13, md: 14 },
-                            }}
+                            sx={{ fontSize: { xs: 12, sm: 13, md: 14 } }}
                             color="error.main"
                         >
                             Cancel
                         </Typography>
                     </MenuItem>
                 </Menu>
+
                 {/* Cancel confirmation */}
                 <Dialog
                     open={openCancelDialog}
@@ -794,10 +783,26 @@ const RequestRide = () => {
                     </DialogActions>
                 </Dialog>
 
+                {/* ★ UPDATED: Profile Modal wires directly to Chat Modal */}
                 <ProfileModal
                     open={profileModalOpen}
                     selectedProfile={selectedProfile}
                     onClose={() => setProfileModalOpen(false)}
+                    onMessage={(user) => {
+                        setProfileModalOpen(false);
+                        setChatUser(user);
+                        setChatModalOpen(true);
+                    }}
+                />
+
+                {/* ★ ADDED: Chat Modal */}
+                <ChatModal
+                    open={chatModalOpen}
+                    selectedUser={chatUser}
+                    onClose={() => {
+                        setChatModalOpen(false);
+                        setChatUser(null);
+                    }}
                 />
 
                 <Ridebook
