@@ -95,6 +95,7 @@ export default function CommunityFeedItem({
     const [editOpen, setEditOpen] = useState(false);
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [editTitle, setEditTitle] = useState("");
+    const [editWhen, setEditWhen] = useState("");
     const [editDesc, setEditDesc] = useState("");
     const [editImage, setEditImage] = useState(null);
     const [updating, setUpdating] = useState(false);
@@ -121,6 +122,7 @@ export default function CommunityFeedItem({
     }, [post._id, commentUser.id]);
 
     const hasTitle = !!post.title;
+    const hasWhen = !!post.timeframe;
     const body = post.description || "";
     const isLong = body.length > 120;
 
@@ -128,6 +130,7 @@ export default function CommunityFeedItem({
     const openEdit = () => {
         setMenuAnchor(null);
         setEditTitle(post.title || "");
+        setEditWhen(post.timeframe || "")
         setEditDesc(post.description || "");
         setEditImage(null);
         setEditOpen(true);
@@ -135,6 +138,7 @@ export default function CommunityFeedItem({
 
     const resetEdit = () => {
         setEditTitle(post.title || "");
+        setEditWhen(post.timeframe || "")
         setEditDesc(post.description || "");
         setEditImage(null);
     };
@@ -143,6 +147,7 @@ export default function CommunityFeedItem({
         setUpdating(true);
         const ok = await onUpdatePost(post._id, {
             title: hasTitle ? editTitle.trim() : undefined,
+            when: hasWhen ? editWhen.trim() : undefined,
             description: editDesc,
             imageFile: editImage,
         });
@@ -510,6 +515,12 @@ export default function CommunityFeedItem({
                         <TextField
                             fullWidth size="small" margin="dense" label="Title"
                             value={editTitle} onChange={(e) => setEditTitle(e.target.value)} sx={{ mb: 1 }}
+                        />
+                    )}
+                    {hasWhen && (
+                        <TextField
+                            fullWidth size="small" margin="dense" label="When"
+                            value={editWhen} onChange={(e) => setEditWhen(e.target.value)} sx={{ mb: 1 }}
                         />
                     )}
                     <TextField

@@ -547,6 +547,7 @@ export default function PeopleNearYou() {
                   },
                 }}
               >
+                {console.log(person,'person')}
                 {/* PROFILE IMAGE */}
                 <ProtectedAvatar
                   src={person.profileImageUrl || ""}

@@ -134,6 +134,17 @@ export default function Community() {
                     "& .MuiChip-label": { px: { xs: 0.9, sm: 1.5 } },
                   }}
                 />
+                <Chip
+                  // icon={< sx={{ fontSize: { xs: 16, sm: 18 } }} />}
+                  label={"People near you"}
+                  variant="outlined"
+                  onClick={() => navigate(`/people-nearby`)}
+                  sx={{
+                    fontWeight: 600, bgcolor: "#fff", maxWidth: { xs: 150, sm: 220 },
+                    height: { xs: 28, sm: 32 }, fontSize: { xs: "0.76rem", sm: "0.8125rem" },
+                    "& .MuiChip-label": { px: { xs: 0.9, sm: 1.5 } },
+                  }}
+                />
                 {/* <IconButton sx={{ bgcolor: "#fff", border: "1px solid #eee" }}><NotificationsNoneIcon /></IconButton> */}
               </Stack>
             </Box>
