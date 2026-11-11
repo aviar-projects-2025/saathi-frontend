@@ -242,7 +242,7 @@ export default function CommunityFeedItem({
                         fontWeight={700}
                         lineHeight={1.35}
                         mb={body && !isOffering ? 0.75 : { xs: 1, sm: 1.5 }}
-                        sx={{ fontSize: { xs: "0.98rem", sm: "1.05rem", md: "1.1rem" }, wordBreak: "break-word" }}
+                        sx={{ fontSize: { xs: "0.98rem", sm: "1.05rem", md: "1.1rem" }, wordBreak: "break-word", m: { xs: 0.25, sm: 0.5 } }}
                     >
                         {post.title}
                     </Typography>
@@ -294,7 +294,7 @@ export default function CommunityFeedItem({
 
                 {/* Tags */}
                 {(post.subCategory || post.timeframe || post.zipcode || post.tags?.length > 0) && (
-                    <Stack direction="row" spacing={0.75} mb={{ xs: 1.25, sm: 1.75 }} flexWrap="wrap" useFlexGap>
+                    <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap sx={{ mb: { xs: 1, sm: 1.75 } }}>
                         {[post.subCategory, post.timeframe, post.zipcode, ...(post.tags || [])].filter(Boolean).map((t) => (
                             <Chip
                                 key={t}
@@ -356,7 +356,7 @@ export default function CommunityFeedItem({
                             direction="row"
                             spacing={{ xs: 1.5, sm: 2 }}
                             alignItems="center"
-                            mb={{ xs: 1.5, sm: 2 }}
+                            sx={{ mt: { xs: 1, sm: 1.5 } }}
                             flexWrap="wrap"
                             useFlexGap
                         >
@@ -373,8 +373,9 @@ export default function CommunityFeedItem({
                                 {post.providerDetails?.price || "Contact for price"}
                             </Typography>
                             {post.providerDetails?.isInsured && (
-                                <Typography sx={{ fontSize: { xs: "0.7rem", sm: "0.75rem" } }} color="#2E7D32" fontWeight={600}>
-                                    Insured
+                                <Typography sx={{ fontSize: { xs: "0.82rem", sm: "0.9rem" } }} color="#2E7D32" fontWeight={600}>
+                                    {/* Insured */}
+                                    ✓ Insured
                                 </Typography>
                             )}
                         </Stack>
@@ -455,10 +456,11 @@ export default function CommunityFeedItem({
                         <CommunityComments post={post} user={commentUser} onCommentsChanged={setCommentCount} />
                     </Box>
                 )}
-            </Paper>
+            </Paper >
 
             {/* Edit / Delete menu */}
-            <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={() => setMenuAnchor(null)}>
+            < Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={() => setMenuAnchor(null)
+            }>
                 <MenuItem onClick={openEdit} sx={{ fontSize: { xs: "0.88rem", sm: "1rem" } }}>
                     <ListItemIcon><EditIcon fontSize="small" /></ListItemIcon>
                     <ListItemText primaryTypographyProps={{ sx: { fontSize: "inherit" } }}>Edit</ListItemText>
@@ -470,10 +472,10 @@ export default function CommunityFeedItem({
                     <ListItemIcon><DeleteIcon fontSize="small" color="error" /></ListItemIcon>
                     <ListItemText primaryTypographyProps={{ sx: { fontSize: "inherit" } }}>Delete</ListItemText>
                 </MenuItem>
-            </Menu>
+            </Menu >
 
             {/* Edit dialog */}
-            <Dialog
+            < Dialog
                 open={editOpen}
                 fullWidth
                 maxWidth="sm"
@@ -549,10 +551,10 @@ export default function CommunityFeedItem({
                         {updating ? "Saving..." : "Save"}
                     </Button>
                 </DialogActions>
-            </Dialog>
+            </Dialog >
 
             {/* Delete confirmation */}
-            <Dialog
+            < Dialog
                 open={deleteOpen}
                 fullWidth
                 maxWidth="xs"
@@ -589,7 +591,7 @@ export default function CommunityFeedItem({
                         {deleting ? "Deleting..." : "Delete"}
                     </Button>
                 </DialogActions>
-            </Dialog>
+            </Dialog >
         </>
     );
 }

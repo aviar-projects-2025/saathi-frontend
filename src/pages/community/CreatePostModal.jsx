@@ -30,6 +30,7 @@ const H_SIZE = { xs: "1.2rem", sm: "1.4rem", md: "1.5rem" };
 const chipSx = {
   height: { xs: 30, sm: 32 },
   fontSize: { xs: "0.78rem", sm: "0.8125rem" },
+  mt: { xs: 0.25, sm: 0.5 },
   maxWidth: "100%",
   "& .MuiChip-label": { px: { xs: 1.1, sm: 1.5 } },
 };

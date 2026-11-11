@@ -135,14 +135,14 @@ export default function RoomDetails() {
           <Stack
             direction="row"
             spacing={{ xs: 0.75, sm: 1 }}
+            useFlexGap
             sx={{
-              overflowX: "auto",
+              flexWrap: "wrap",
               pb: { xs: 1.5, sm: 2 },
               mb: { xs: 1, sm: 2 },
-              WebkitOverflowScrolling: "touch",
-              scrollbarWidth: "none",
-              "&::-webkit-scrollbar": { display: "none" },
-              "& > *": { flexShrink: 0 },
+              "& > *": {
+                flexShrink: 0,
+              },
             }}
           >
             {subCategories.map((sub) => (
@@ -153,11 +153,16 @@ export default function RoomDetails() {
                 sx={{
                   bgcolor: activeSub === sub ? "#333" : "#fff",
                   color: activeSub === sub ? "#fff" : "#333",
-                  fontWeight: 600, border: "1px solid #E0E0E0",
+                  fontWeight: 600,
+                  border: "1px solid #E0E0E0",
                   height: { xs: 30, sm: 32 },
                   fontSize: { xs: "0.78rem", sm: "0.8125rem" },
-                  "& .MuiChip-label": { px: { xs: 1.1, sm: 1.5 } },
-                  "&:hover": { bgcolor: activeSub === sub ? "#333" : "#f5f5f5" },
+                  "& .MuiChip-label": {
+                    px: { xs: 1.1, sm: 1.5 },
+                  },
+                  "&:hover": {
+                    bgcolor: activeSub === sub ? "#333" : "#f5f5f5",
+                  },
                 }}
               />
             ))}
