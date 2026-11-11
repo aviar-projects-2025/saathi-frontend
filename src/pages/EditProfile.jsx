@@ -1462,7 +1462,7 @@ const EditProfile = ({ open, onClose }) => {
                             >
                                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                                     <DatePicker
-                                        label="Date of Birth (Required)"
+                                        label="Date of Birth (Optional)"
                                         value={formData?.dob}
                                         onChange={(newValue) => {
                                             setFormData((prev) => ({
