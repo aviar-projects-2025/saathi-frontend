@@ -48,39 +48,49 @@ export default function FeedList({ feed, emptyText = "No posts yet. Be the first
 
   return (
     <>
-      {loading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-          <CircularProgress size={34} sx={{ color: "#E8650A" }} />
-        </Box>
-      ) : posts.length === 0 ? (
-        <Box sx={{ textAlign: "center", py: 6 }}>
-          <Typography fontWeight={600}>Nothing here yet</Typography>
-          <Typography color="text.secondary" sx={{ mt: 0.5 }}>{emptyText}</Typography>
-        </Box>
-      ) : (
-        posts.map((post) => (
-          <CommunityFeedItem
-            key={post._id}
-            post={post}
-            currentUser={currentUser}
-            isPostSaved={isPostSaved}
-            onToggleLike={toggleLike}
-            onToggleSave={toggleSave}
-            onDeletePost={deletePost}
-            onUpdatePost={updatePost}
-            onUserClick={openProfile}
-            onMessage={openChat}
-          />
-        ))
-      )}
+      {/* Full-width wrapper so feed items fill the available space at every breakpoint */}
+      <Box sx={{ width: "100%", maxWidth: "100%", minWidth: 0, boxSizing: "border-box" }}>
+        {loading ? (
+          <Box sx={{ display: "flex", justifyContent: "center", py: { xs: 3, sm: 4 } }}>
+            <CircularProgress sx={{ color: "#E8650A", width: { xs: "28px !important", sm: "34px !important" }, height: { xs: "28px !important", sm: "34px !important" } }} />
+          </Box>
+        ) : posts.length === 0 ? (
+          <Box sx={{ textAlign: "center", py: { xs: 4, sm: 6 }, px: { xs: 2, sm: 3 } }}>
+            <Typography fontWeight={600} sx={{ fontSize: { xs: "0.95rem", sm: "1rem", md: "1.05rem" } }}>
+              Nothing here yet
+            </Typography>
+            <Typography
+              color="text.secondary"
+              sx={{ mt: 0.5, fontSize: { xs: "0.84rem", sm: "0.92rem", md: "1rem" }, wordBreak: "break-word" }}
+            >
+              {emptyText}
+            </Typography>
+          </Box>
+        ) : (
+          posts.map((post) => (
+            <CommunityFeedItem
+              key={post._id}
+              post={post}
+              currentUser={currentUser}
+              isPostSaved={isPostSaved}
+              onToggleLike={toggleLike}
+              onToggleSave={toggleSave}
+              onDeletePost={deletePost}
+              onUpdatePost={updatePost}
+              onUserClick={openProfile}
+              onMessage={openChat}
+            />
+          ))
+        )}
 
-      {!loading && hasMore && <div ref={sentinelRef} style={{ height: 1 }} />}
+        {!loading && hasMore && <div ref={sentinelRef} style={{ height: 1 }} />}
 
-      {loadingMore && (
-        <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
-          <CircularProgress size={30} sx={{ color: "#FF9933" }} />
-        </Box>
-      )}
+        {loadingMore && (
+          <Box sx={{ display: "flex", justifyContent: "center", py: { xs: 2, sm: 3 } }}>
+            <CircularProgress sx={{ color: "#FF9933", width: { xs: "26px !important", sm: "30px !important" }, height: { xs: "26px !important", sm: "30px !important" } }} />
+          </Box>
+        )}
+      </Box>
 
       <ProfileModal
         open={profileOpen}
