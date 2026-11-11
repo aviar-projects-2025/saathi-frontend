@@ -24,6 +24,17 @@ const POST_TYPES = [
 
 const HOUSING_TAGS = ["Handyman", "Plumbing", "Electrical", "HVAC", "Cleaning", "Movers", "Pest control", "Lawn"];
 
+/* Shared responsive tokens */
+const BODY_PX = { xs: 1.75, sm: 3 };
+const H_SIZE = { xs: "1.2rem", sm: "1.4rem", md: "1.5rem" };
+const chipSx = {
+  height: { xs: 30, sm: 32 },
+  fontSize: { xs: "0.78rem", sm: "0.8125rem" },
+  mt: { xs: 0.25, sm: 0.5 },
+  maxWidth: "100%",
+  "& .MuiChip-label": { px: { xs: 1.1, sm: 1.5 } },
+};
+
 export default function CreatePostModal({
   open,
   onClose,
@@ -117,82 +128,164 @@ export default function CreatePostModal({
     <Box
       sx={{
         position: "fixed", inset: 0, bgcolor: "rgba(0,0,0,0.5)", zIndex: 1300,
-        display: "flex", justifyContent: "center", alignItems: { xs: "flex-end", md: "center" },
-        p: { xs: 0, md: 2 },
+        display: "flex", justifyContent: "center", alignItems: { xs: "center", md: "center" },
+        p: { xs: 1, md: 2 },
+        boxSizing: "border-box",
       }}
     >
       <Paper
         elevation={0}
         sx={{
-          width: "100%", maxWidth: 600, display: "flex", flexDirection: "column", overflow: "hidden",
-          height: { xs: "92vh", md: "auto" }, maxHeight: { xs: "92vh", md: "90vh" },
-          borderRadius: { xs: "20px 20px 0 0", md: "20px" },
+          width: "100%", maxWidth: { xs: "100%", sm: 600 }, display: "flex", flexDirection: "column", overflow: "hidden",
+          boxSizing: "border-box",
+          height: { xs: "92dvh", md: "auto" }, maxHeight: { xs: "92dvh", md: "90dvh" },
+          borderRadius: { xs: "10px", sm: "20px 20px 0 0", md: "20px" },
         }}
       >
+
         {/* Header */}
-        <Box sx={{ display: "flex", alignItems: "center", px: 1.5, py: 1.25, borderBottom: "1px solid #F0E6DC", flexShrink: 0 }}>
-          <IconButton onClick={step === 1 ? onClose : () => setStep(1)} disabled={loading}>
-            {step === 1 ? <CloseIcon /> : <ArrowBackIcon />}
-          </IconButton>
-          <Box sx={{ flex: 1, textAlign: "center" }}>
-            <Typography fontWeight={700} fontSize="0.95rem">{step === 1 ? "New post" : "Post details"}</Typography>
-            <Box sx={{ display: "flex", justifyContent: "center", gap: 0.75, mt: 0.5 }}>
-              <Box sx={{ width: 28, height: 3, borderRadius: 2, bgcolor: "#E8650A" }} />
-              <Box sx={{ width: 28, height: 3, borderRadius: 2, bgcolor: step === 2 ? "#E8650A" : "#E0E0E0" }} />
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            px: { xs: 0.75, sm: 1.5 },
+            py: { xs: 0.75, sm: 1.25 },
+            borderBottom: "1px solid #F0E6DC",
+            flexShrink: 0,
+          }}
+        >
+          {/* Left: Title and progress */}
+          <Box sx={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+            <Typography
+              fontWeight={700}
+              noWrap
+              sx={{ fontSize: { xs: "0.85rem", sm: "0.95rem" } }}
+            >
+              {step === 1 ? "New post" : "Post details"}
+            </Typography>
+
+            <Box
+              sx={{
+                display: "flex",
+                gap: 0.75,
+                mt: 0.5,
+              }}
+            >
+              <Box
+                sx={{
+                  width: { xs: 24, sm: 28 },
+                  height: 3,
+                  borderRadius: 2,
+                  bgcolor: "#E8650A",
+                }}
+              />
+
+              <Box
+                sx={{
+                  width: { xs: 24, sm: 28 },
+                  height: 3,
+                  borderRadius: 2,
+                  bgcolor: step === 2 ? "#E8650A" : "#E0E0E0",
+                }}
+              />
             </Box>
           </Box>
-          <Box width={40} />
+
+          {/* Right: Cancel / Back */}
+          <Button
+            onClick={step === 1 ? onClose : () => setStep(1)}
+            disabled={loading}
+            sx={{
+              minWidth: "auto",
+              textTransform: "none",
+              fontSize: { xs: "12px", sm: "13px" },
+              fontWeight: 600,
+              color: "#E8650A",
+              px: 1,
+            }}
+          >
+            {step === 1 ? "Cancel" : "Back"}
+          </Button>
         </Box>
 
         {/* Scrollable body */}
-        <Box sx={{ flex: 1, overflowY: "auto", px: { xs: 2, sm: 3 }, py: 3 }}>
+        <Box
+          sx={{
+            flex: 1, overflowY: "auto", overflowX: "hidden", minHeight: 0,
+            px: BODY_PX, py: { xs: 2, sm: 3 },
+            WebkitOverflowScrolling: "touch",
+          }}
+        >
           {step === 1 ? (
             <>
-              <Typography variant="h5" fontWeight={800} mb={0.5}>What would you like to do?</Typography>
-              <Typography color="text.secondary" fontSize="0.9rem" mb={3}>Picking one helps the right people find it.</Typography>
+              <Typography fontWeight={800} mb={0.5} sx={{ fontSize: H_SIZE, lineHeight: 1.25 }}>
+                What would you like to do?
+              </Typography>
+              <Typography color="text.secondary" mb={{ xs: 2, sm: 3 }} sx={{ fontSize: { xs: "0.82rem", sm: "0.9rem" }, m: 1 }}>
+                Picking one helps the right people find it.
+              </Typography>
 
-              <Stack spacing={1.5} mb={4}>
+              <Stack spacing={{ xs: 1, sm: 1.5 }} mb={{ xs: 3, sm: 4 }}>
                 {POST_TYPES.map((t) => (
                   <Paper
                     key={t.id}
                     onClick={() => setPostType(t.id)}
                     sx={{
-                      p: 2, borderRadius: 3, boxShadow: "none", cursor: "pointer", display: "flex", gap: 2, alignItems: "center",
+                      p: { xs: 1.25, sm: 2 }, borderRadius: { xs: 2.5, sm: 3 }, boxShadow: "none", cursor: "pointer",
+                      display: "flex", gap: { xs: 1.25, sm: 2 }, alignItems: "center", minWidth: 0,
                       border: postType === t.id ? "2px solid #E8650A" : "1px solid #E0E0E0",
+                      // keep the box size constant when the border width changes
+                      m: postType === t.id ? 0 : "1px",
                       bgcolor: postType === t.id ? "#FFF8F2" : "#fff",
                     }}
                   >
-                    <Box sx={{ width: 40, height: 40, borderRadius: 2, bgcolor: "#F5F5F5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.2rem" }}>{t.icon}</Box>
-                    <Box>
-                      <Typography fontWeight={700}>{t.label}</Typography>
-                      <Typography fontSize="0.8rem" color="text.secondary">{t.hint}</Typography>
+                    <Box
+                      sx={{
+                        width: { xs: 36, sm: 40 }, height: { xs: 36, sm: 40 }, flexShrink: 0,
+                        borderRadius: 2, bgcolor: "#F5F5F5",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: { xs: "1.05rem", sm: "1.2rem" },
+                      }}
+                    >
+                      {t.icon}
+                    </Box>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography fontWeight={700} sx={{ fontSize: { xs: "0.92rem", sm: "1rem" } }}>{t.label}</Typography>
+                      <Typography color="text.secondary" sx={{ fontSize: { xs: "0.74rem", sm: "0.8rem" }, lineHeight: 1.4 }}>
+                        {t.hint}
+                      </Typography>
                     </Box>
                   </Paper>
                 ))}
               </Stack>
 
-              <Typography fontWeight={700} mb={1.5}>Which room?</Typography>
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: subOptions.length ? 3 : 1 }}>
+              <Typography fontWeight={700} mb={{ xs: 1, sm: 1.5 }} sx={{ fontSize: { xs: "0.92rem", sm: "1rem" }, m: 1.2 }}>
+                Which room?
+              </Typography>
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: { xs: 0.75, sm: 1 }, mb: subOptions.length ? { xs: 2.5, sm: 3 } : 1 }}>
                 {ALL_ROOMS.map((r) => (
                   <Chip
                     key={r.id}
                     label={r.label}
                     onClick={() => { setRoom(r.id); setSubCategory(""); }}
-                    sx={{ bgcolor: room === r.id ? "#333" : "#F5F5F5", color: room === r.id ? "#fff" : "#333", fontWeight: 600, "&:hover": { bgcolor: room === r.id ? "#333" : "#EAEAEA" } }}
+                    sx={{ ...chipSx, bgcolor: room === r.id ? "#333" : "#F5F5F5", color: room === r.id ? "#fff" : "#333", fontWeight: 600, "&:hover": { bgcolor: room === r.id ? "#333" : "#EAEAEA" } }}
                   />
                 ))}
               </Box>
 
               {subOptions.length > 0 && (
                 <>
-                  <Typography fontWeight={700} mb={1.5}>Topic <Typography component="span" color="text.secondary" fontSize="0.85rem">(optional)</Typography></Typography>
-                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                  <Typography fontWeight={700} mb={{ xs: 1, sm: 1.5 }} sx={{ fontSize: { xs: "0.92rem", sm: "1rem" } }}>
+                    Topic <Typography component="span" color="text.secondary" sx={{ fontSize: { xs: "0.78rem", sm: "0.85rem" } }}>(optional)</Typography>
+                  </Typography>
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: { xs: 0.75, sm: 1 } }}>
                     {subOptions.map((s) => (
                       <Chip
                         key={s}
                         label={s}
                         onClick={() => setSubCategory((prev) => (prev === s ? "" : s))}
-                        sx={{ bgcolor: subCategory === s ? "#E8650A" : "#F5F5F5", color: subCategory === s ? "#fff" : "#333", fontWeight: 600, "&:hover": { bgcolor: subCategory === s ? "#E8650A" : "#EAEAEA" } }}
+                        sx={{ ...chipSx, bgcolor: subCategory === s ? "#E8650A" : "#F5F5F5", color: subCategory === s ? "#fff" : "#333", fontWeight: 600, "&:hover": { bgcolor: subCategory === s ? "#E8650A" : "#EAEAEA" } }}
                       />
                     ))}
                   </Box>
@@ -200,28 +293,30 @@ export default function CreatePostModal({
               )}
             </>
           ) : (
-            <Stack spacing={3}>
+            <Stack spacing={{ xs: 2.25, sm: 3 }}>
               <Box>
-                <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap mb={1.5}>
-                  <Chip size="small" label={typeInfo?.label.replace("...", "")} sx={{ bgcolor: "#FFF0E5", color: "#B33A00", fontWeight: 700 }} />
-                  <Chip size="small" label={roomLabel} sx={{ bgcolor: "#E8F5E9", fontWeight: 600 }} />
-                  {subCategory && <Chip size="small" label={subCategory} sx={{ bgcolor: "#F5F5F5", fontWeight: 600 }} />}
+                <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap mb={{ xs: 1, sm: 1.5 }}>
+                  <Chip size="small" label={typeInfo?.label.replace("...", "")} sx={{ bgcolor: "#FFF0E5", color: "#B33A00", fontWeight: 700, maxWidth: "100%", fontSize: { xs: "0.72rem", sm: "0.8125rem" } }} />
+                  <Chip size="small" label={roomLabel} sx={{ bgcolor: "#E8F5E9", fontWeight: 600, maxWidth: "100%", fontSize: { xs: "0.72rem", sm: "0.8125rem" } }} />
+                  {subCategory && <Chip size="small" label={subCategory} sx={{ bgcolor: "#F5F5F5", fontWeight: 600, maxWidth: "100%", fontSize: { xs: "0.72rem", sm: "0.8125rem" } }} />}
                 </Stack>
-                <Typography variant="h5" fontWeight={800} lineHeight={1.25}>
+                <Typography fontWeight={800} sx={{ fontSize: H_SIZE, lineHeight: 1.25, wordBreak: "break-word" }}>
                   Tell {currentUser?.city || "your city"} what you need
                 </Typography>
               </Box>
 
               {["housing", "services"].includes(room) && (
                 <Box>
-                  <Typography fontWeight={700} mb={1.25}>Type of help</Typography>
-                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                  <Typography fontWeight={700} mb={{ xs: 1, sm: 1.25 }} sx={{ fontSize: { xs: "0.92rem", sm: "1rem" } }}>
+                    Type of help
+                  </Typography>
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: { xs: 0.75, sm: 1 } }}>
                     {HOUSING_TAGS.map((t) => (
                       <Chip
                         key={t}
                         label={t}
                         onClick={() => setTags((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]))}
-                        sx={{ bgcolor: tags.includes(t) ? "#1B5E20" : "#F5F5F5", color: tags.includes(t) ? "#fff" : "#333", fontWeight: 600, "&:hover": { bgcolor: tags.includes(t) ? "#1B5E20" : "#EAEAEA" } }}
+                        sx={{ ...chipSx, bgcolor: tags.includes(t) ? "#1B5E20" : "#F5F5F5", color: tags.includes(t) ? "#fff" : "#333", fontWeight: 600, "&:hover": { bgcolor: tags.includes(t) ? "#1B5E20" : "#EAEAEA" } }}
                       />
                     ))}
                   </Box>
@@ -238,19 +333,23 @@ export default function CreatePostModal({
                 inputProps={{ maxLength: 100 }}
                 helperText={`${title.length}/100`}
                 FormHelperTextProps={{ sx: { textAlign: "right", mx: 0 } }}
+                sx={{ "& .MuiInputBase-input": { fontSize: { xs: "0.92rem", sm: "1rem" } } }}
               />
 
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-                <TextField {...fieldProps} label="When" value={timeframe} onChange={(e) => setTimeframe(e.target.value)} placeholder="This weekend" />
-                <TextField {...fieldProps} label="Zip code" value={zipcode} onChange={(e) => setZipcode(e.target.value)} placeholder="75034" />
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={{ xs: 2.25, sm: 2 }}>
+                <TextField {...fieldProps} label="When" value={timeframe} onChange={(e) => setTimeframe(e.target.value)} placeholder="This weekend" sx={{ "& .MuiInputBase-input": { fontSize: { xs: "0.92rem", sm: "1rem" } } }} />
+                <TextField {...fieldProps} label="Zip code" value={zipcode} onChange={(e) => setZipcode(e.target.value)} placeholder="75034" sx={{ "& .MuiInputBase-input": { fontSize: { xs: "0.92rem", sm: "1rem" } } }} />
               </Stack>
 
               {postType === "offering" && (
-                <Stack direction="row" spacing={2} alignItems="center">
-                  <TextField {...fieldProps} label="Price" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="$60/hr" />
+                <Stack direction="row" spacing={{ xs: 1.25, sm: 2 }} alignItems="center">
+                  <TextField {...fieldProps} label="Price" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="$60/hr" sx={{ "& .MuiInputBase-input": { fontSize: { xs: "0.92rem", sm: "1rem" } } }} />
                   <FormControlLabel
-                    sx={{ m: 0, whiteSpace: "nowrap", flexShrink: 0 }}
-                    control={<Checkbox checked={isInsured} onChange={(e) => setIsInsured(e.target.checked)} sx={{ "&.Mui-checked": { color: "#E8650A" } }} />}
+                    sx={{
+                      m: 0, whiteSpace: "nowrap", flexShrink: 0,
+                      "& .MuiFormControlLabel-label": { fontSize: { xs: "0.85rem", sm: "1rem" } },
+                    }}
+                    control={<Checkbox checked={isInsured} onChange={(e) => setIsInsured(e.target.checked)} sx={{ p: { xs: 0.75, sm: 1 }, "&.Mui-checked": { color: "#E8650A" } }} />}
                     label="Insured"
                   />
                 </Stack>
@@ -264,10 +363,13 @@ export default function CreatePostModal({
                 value={details}
                 onChange={(e) => setDetails(e.target.value)}
                 placeholder="Slow leak under the sink..."
+                sx={{ "& .MuiInputBase-input": { fontSize: { xs: "0.92rem", sm: "1rem" } } }}
               />
 
-              <Box>
-                <Typography fontWeight={700} mb={1.25}>Photo <Typography component="span" color="text.secondary" fontSize="0.85rem">(optional)</Typography></Typography>
+              <Box sx={{ width: "100%", minWidth: 0, "& img": { maxWidth: "100%", height: "auto" } }}>
+                <Typography fontWeight={700} mb={{ xs: 1, sm: 1.25 }} sx={{ fontSize: { xs: "0.92rem", sm: "1rem" } }}>
+                  Photo <Typography component="span" color="text.secondary" sx={{ fontSize: { xs: "0.78rem", sm: "0.85rem" } }}>(optional)</Typography>
+                </Typography>
                 <ImagePicker file={image} onChange={setImage} disabled={loading} />
               </Box>
             </Stack>
@@ -276,7 +378,13 @@ export default function CreatePostModal({
 
         {/* Sticky footer */}
         <Divider />
-        <Box sx={{ px: { xs: 2, sm: 3 }, py: 2, flexShrink: 0 }}>
+        <Box
+          sx={{
+            px: BODY_PX, pt: { xs: 1.25, sm: 2 },
+            pb: { xs: "calc(10px + env(safe-area-inset-bottom, 0px))", sm: 2 },
+            flexShrink: 0,
+          }}
+        >
           {step === 1 ? (
             <Button fullWidth variant="contained" onClick={() => setStep(2)} sx={primaryBtn}>Continue</Button>
           ) : (
@@ -291,7 +399,11 @@ export default function CreatePostModal({
 }
 
 const primaryBtn = {
-  bgcolor: "#B33A00", py: 1.4, borderRadius: 3, fontWeight: 700, fontSize: "1rem",
+  bgcolor: "#B33A00",
+  py: { xs: 1.1, sm: 1.4 },
+  borderRadius: { xs: 2.5, sm: 3 },
+  fontWeight: 700,
+  fontSize: { xs: "0.92rem", sm: "1rem" },
   textTransform: "none", boxShadow: "none",
   "&:hover": { bgcolor: "#8f2e00", boxShadow: "none" },
   "&.Mui-disabled": { bgcolor: "#E5D5CB", color: "#fff" },
