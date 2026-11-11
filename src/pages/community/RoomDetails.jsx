@@ -74,12 +74,12 @@ export default function RoomDetails() {
         >
           Back
         </Button>
-        <Button
+        {/* <Button
           variant="outlined"
           sx={{ position: "absolute", top: 16, right: 16, borderRadius: 99, textTransform: "none", borderColor: "#333", color: "#333" }}
         >
           Follow room
-        </Button>
+        </Button> */}
         <Typography variant="h4" fontWeight={800} color="#1A1A1A" mb={1}>{roomInfo.label}</Typography>
         <Typography fontSize="0.9rem" color="text.secondary">{subtitle}</Typography>
       </Box>
