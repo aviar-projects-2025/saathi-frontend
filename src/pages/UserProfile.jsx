@@ -748,8 +748,8 @@ const UserProfile = () => {
               <Surface sx={{ p: 3 }}>
                 <Typography sx={{ fontFamily: SERIF, fontWeight: 600, fontSize: "1.15rem", color: C.ink, mb: 1.5 }}>Trust</Typography>
                 <Stack divider={<Divider sx={{ borderColor: C.line }} />}>
-                  <Fact label="Invited by" value={inviterName} />
-                  <Fact label="Vouched for" value={`${vouchedCount} ${vouchedCount === 1 ? "member" : "members"}`} />
+                  <Fact label="Invited by" value={inviterName === "Admin A" ? 'Admin' : inviterName} />
+                  <Fact label="Vouched for" value={`${referralCounts.total} ${referralCounts.total === 1 ? "member" : "members"}`} />
                   <Fact label="Reports against" value={reportsCount} />
                   <Fact label="Languages" value={languages} />
                 </Stack>
