@@ -441,6 +441,7 @@ const Register = () => {
 
         if (response.data?.success && response.data?.invitation) {
           setInvitation(response.data.invitation);
+          console.log(response.data.invitation)
         } else {
           setInvitationError(
             response.data?.message || "This invitation link is invalid."
@@ -1024,7 +1025,8 @@ const Register = () => {
             gap: 1.5,
           }}
         >
-          <Avatar
+          <ProtectedAvatar
+            src={invitation?.profileImageUrl}
             sx={{
               bgcolor: "#FFE0C8",
               color: "#9D350E",
@@ -1039,7 +1041,7 @@ const Register = () => {
               .join("")
               .slice(0, 2)
               .toUpperCase()}
-          </Avatar>
+          </ProtectedAvatar>
           <Box sx={{ minWidth: 0 }}>
             <Typography fontWeight={800} color="#25211E">
               {invitation?.referrerName} invited you
