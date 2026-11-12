@@ -394,7 +394,7 @@ const UserProfile = () => {
       if (!isNaN(ts)) {
         memberSince = new Date(ts).toLocaleDateString(undefined, { month: "short", year: "numeric" });
       }
-    } catch {}
+    } catch { }
   }
 
   const name = displayNameOf(profile || currentUser);
@@ -707,12 +707,28 @@ const UserProfile = () => {
               </Stack>
               <Button
                 variant="outlined"
-                startIcon={<EditOutlinedIcon fontSize="small" />}
+                startIcon={<EditOutlinedIcon sx={{ fontSize: { xs: 14, sm: 16 } }} />}
                 onClick={() => setEditProfileOpen(true)}
                 sx={{
-                  flexShrink: 0, whiteSpace: "nowrap", textTransform: "none", fontWeight: 650, fontSize: "0.88rem",
-                  borderRadius: "999px", px: 2.5, color: C.ink, borderColor: C.line,
-                  "&:hover": { borderColor: C.saffron, bgcolor: C.tint, color: C.saffronDark },
+                  flexShrink: 0,
+                  whiteSpace: "nowrap",
+                  textTransform: "none",
+                  fontWeight: 650,
+                  fontSize: { xs: "0.72rem", sm: "0.82rem" },
+                  borderRadius: "999px",
+                  px: { xs: 1.25, sm: 2 },
+                  py: { xs: 0.5, sm: 0.75 },
+                  ml: { xs: "auto", sm: 0 },
+                  color: C.ink,
+                  borderColor: C.line,
+                  "& .MuiButton-startIcon": {
+                    mr: { xs: 0.5, sm: 1 },
+                  },
+                  "&:hover": {
+                    borderColor: C.saffron,
+                    bgcolor: C.tint,
+                    color: C.saffronDark,
+                  },
                 }}
               >
                 Edit profile
@@ -748,8 +764,8 @@ const UserProfile = () => {
               <Surface sx={{ p: 3 }}>
                 <Typography sx={{ fontFamily: SERIF, fontWeight: 600, fontSize: "1.15rem", color: C.ink, mb: 1.5 }}>Trust</Typography>
                 <Stack divider={<Divider sx={{ borderColor: C.line }} />}>
-                  <Fact label="Invited by" value={inviterName} />
-                  <Fact label="Vouched for" value={`${vouchedCount} ${vouchedCount === 1 ? "member" : "members"}`} />
+                  <Fact label="Invited by" value={inviterName === "Admin A" ? 'Admin' : inviterName} />
+                  <Fact label="Vouched for" value={`${referralCounts.total} ${referralCounts.total === 1 ? "member" : "members"}`} />
                   <Fact label="Reports against" value={reportsCount} />
                   <Fact label="Languages" value={languages} />
                 </Stack>
@@ -768,7 +784,7 @@ const UserProfile = () => {
           </Box>
         </Box>
 
-        <ProfileModal open={profileModalOpen} selectedProfile={selectedProfile} onClose={() => setProfileModalOpen(false)} />
+        <ProfileModal open={profileModalOpen} currentUser={currentUser} selectedProfile={selectedProfile} onClose={() => setProfileModalOpen(false)} />
         {editProfileOpen && (
           <EditProfile open={editProfileOpen} onClose={() => { setEditProfileOpen(false); getuserData?.(); loadProfileData(); loadReviews(); }} />
         )}

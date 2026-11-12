@@ -40,6 +40,7 @@ import Api from "../Api";
 import { toast } from "react-toastify";
 import ToastConfig from "../components/ToastConfig";
 import RideLocationPicker from "../components/RideLocationPicker";
+import dayjs from "dayjs";
 
 /* ═══════════════════════════════════════════════════════
    THEME
@@ -151,15 +152,12 @@ const INITIAL_REQUEST = {
    SHARED STYLES  (RESPONSIVE)
    ═══════════════════════════════════════════════════════ */
 
-/* RESPONSIVE: inputs use 16px on phones (prevents iOS auto-zoom on focus),
-   and a slightly smaller size on larger screens. */
 const tfSx = {
   "& .MuiInputBase-input": {
     fontSize: { xs: "1rem", sm: "0.95rem" },
     minWidth: 0,
   },
   "& .MuiOutlinedInput-root": { borderRadius: 2, bgcolor: "#fff" },
-  /* RESPONSIVE: date/time inputs can overflow on narrow Android/iOS screens */
   "& input[type='date'], & input[type='time']": {
     minWidth: 0,
     WebkitAppearance: "none",
@@ -187,7 +185,6 @@ const primaryBtn = {
   fontWeight: 700,
   fontSize: { xs: 14.5, sm: 15, md: 15.5 },
   py: { xs: 1.4, sm: 1.5, md: 1.6 },
-  /* RESPONSIVE: comfortable touch target */
   minHeight: 48,
   borderRadius: 2,
   boxShadow: "none",
@@ -196,11 +193,6 @@ const primaryBtn = {
   "&.Mui-disabled": { bgcolor: "#E3C9BE", color: "#fff" },
 };
 
-/* RESPONSIVE: auto-fitting grid for side-by-side fields.
-   - phones: 1 column
-   - tablets: 2 columns
-   - desktop: as many columns as fit (min ~150px each)
-   Replaces the old Stack direction={{ xs: "column", sm: "row" }} which got cramped at sm. */
 const fieldGridSx = {
   display: "grid",
   gap: { xs: 1.75, sm: 2 },
@@ -212,7 +204,6 @@ const fieldGridSx = {
   minWidth: 0,
 };
 
-/* RESPONSIVE: two-up grid that stays 2 columns even on phones (short numeric fields) */
 const pairGridSx = {
   display: "grid",
   gap: { xs: 1.5, sm: 2 },
@@ -221,7 +212,6 @@ const pairGridSx = {
   minWidth: 0,
 };
 
-/* RESPONSIVE: info callout shared style */
 const infoAlertSx = {
   borderRadius: 2,
   bgcolor: "#EAF3FB",
@@ -233,7 +223,6 @@ const infoAlertSx = {
   alignItems: "flex-start",
 };
 
-/* RESPONSIVE: inline error text */
 const errTextSx = { fontSize: { xs: 11.5, sm: 12 }, color: "#C5221F", mt: 0.5 };
 
 /* ═══════════════════════════════════════════════════════
@@ -249,14 +238,12 @@ function ChipToggle({ label, active, onClick }) {
         borderRadius: 999,
         fontWeight: 600,
         fontSize: { xs: 12.5, sm: 13 },
-        /* RESPONSIVE: taller touch target on phones */
         height: { xs: 34, sm: 34, md: 36 },
         maxWidth: "100%",
         bgcolor: active ? RUST : "#fff",
         color: active ? "#fff" : INK,
         border: `1px solid ${active ? RUST : BORDER}`,
         "&:hover": { bgcolor: active ? RUST_DARK : "#F4F0EA" },
-        /* RESPONSIVE: long labels wrap/truncate instead of overflowing */
         "& .MuiChip-label": {
           overflow: "hidden",
           textOverflow: "ellipsis",
@@ -348,7 +335,6 @@ function SeatStepper({ value, onChange, min = 1, max = 7 }) {
   const inc = () => onChange(Math.min(max, value + 1));
 
   const btnSx = {
-    /* RESPONSIVE: ≥44px touch targets everywhere */
     width: { xs: 44, sm: 46, md: 48 },
     height: { xs: 44, sm: 46, md: 48 },
     border: `1px solid ${BORDER}`,
@@ -407,9 +393,7 @@ function StepProgress({ steps, step }) {
 export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen }) {
   const navigate = useNavigate();
   const theme = useTheme();
-  /* RESPONSIVE: extra breakpoints available if needed later */
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md")); // eslint-disable-line no-unused-vars
   const inputSize = isMobile ? "small" : "medium";
   const isEditMode = Boolean(ride);
 
@@ -435,34 +419,79 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
   const [submitted, setSubmitted] = useState(false);
   const [serverError, setServerError] = useState("");
 
-  /* Hydrate offer when editing */
-  useEffect(() => {
-    if (!ride || mode !== "offer") return;
-    const start = ride.startTime ? new Date(ride.startTime) : null;
-    const pad = (n) => String(n).padStart(2, "0");
-    setOfferForm({
-      ...INITIAL_OFFER,
-      ...ride,
-      date: start ? `${start.getFullYear()}-${pad(start.getMonth() + 1)}-${pad(start.getDate())}` : "",
-      time: start ? `${pad(start.getHours())}:${pad(start.getMinutes())}` : "",
-      costPerSeat: ride.costPerSeat ?? ride.fuelSharing ?? "",
-      luggageSpace: ride.luggageSpace || "None",
-      childFriendly: !!ride.childFriendly,
-      recurringRide: !!ride.recurringRide,
-      womenOnly: !!ride.womenOnly,
-      helpCanOffer: ride.helpCanOffer || [],
-      exactPickup: ride.exactPickup || "",
-      notes: ride.notes || "",
-      confirmCostSharing: !!ride.confirmCostSharing,
-    });
-  }, [ride, mode]);
 
-  /*
-   * When a member clicks "I can drive" on a ride request, prefill the offer
-   * form with that request's route, requested departure time, and location data.
-   * This is separate from the edit-ride hydration above so normal Offer Ride
-   * creation and editing keep their existing behaviour.
-   */
+  /* ★ NEW: State to hold user's existing rides for conflict checking */
+  const [existingRides, setExistingRides] = useState([]);
+  const [timeConflictMsg, setTimeConflictMsg] = useState("");
+
+
+  /* Fetch existing rides on mount */
+  useEffect(() => {
+    const fetchExisting = async () => {
+      if (!user?.id) return;
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get(`${Api}/rides/get`, {
+          params: { type: "my", category: "upcoming", limit: 50 },
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.data?.data) {
+          setExistingRides(res.data.data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch existing rides for conflict check", err);
+      }
+    };
+    fetchExisting();
+  }, [user?.id]);
+
+  /* Hydrate offer/request when editing */
+  useEffect(() => {
+    if (!ride) return;
+
+    // If the ride is a request, switch mode to request and populate requestForm
+    if (ride.kind === "request") {
+      setMode("request");
+      const start = ride.startTime ? new Date(ride.startTime) : null;
+      const pad = (n) => String(n).padStart(2, "0");
+      const validDate = start && !Number.isNaN(start.getTime());
+
+      setRequestForm({
+        ...INITIAL_REQUEST,
+        ...ride,
+        date: validDate ? `${start.getFullYear()}-${pad(start.getMonth() + 1)}-${pad(start.getDate())}` : "",
+        neededBy: validDate ? `${pad(start.getHours())}:${pad(start.getMinutes())}` : "",
+        passengers: ride.passengers || 1,
+        bags: ride.bags || 1,
+        flexibility: ride.flexibility || "± 1 hour",
+      });
+      return;
+    }
+
+    // Otherwise, handle it as an offer
+    if (ride.kind === "offer" || !ride.kind) {
+      setMode("offer");
+      const start = ride.startTime ? new Date(ride.startTime) : null;
+      const pad = (n) => String(n).padStart(2, "0");
+      setOfferForm({
+        ...INITIAL_OFFER,
+        ...ride,
+        date: start ? `${start.getFullYear()}-${pad(start.getMonth() + 1)}-${pad(start.getDate())}` : "",
+        time: start ? `${pad(start.getHours())}:${pad(start.getMinutes())}` : "",
+        costPerSeat: ride.costPerSeat ?? ride.fuelSharing ?? "",
+        luggageSpace: ride.luggageSpace || "None",
+        childFriendly: !!ride.childFriendly,
+        recurringRide: !!ride.recurringRide,
+        womenOnly: !!ride.womenOnly,
+        helpCanOffer: ride.helpCanOffer || [],
+        exactPickup: ride.exactPickup || "",
+        notes: ride.notes || "",
+        confirmCostSharing: !!ride.confirmCostSharing,
+      });
+    }
+  }, [ride]);
+
+  /* When a member clicks "I can drive" on a ride request, prefill the offer form */
   useEffect(() => {
     if (!requestRide) return;
 
@@ -543,6 +572,37 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
   const costEntered = Number(offerForm.costPerSeat || 0);
   const costExceedsCap = costEntered > costCap;
 
+  /* ★ NEW: Conflict Checking Logic */
+  const checkTimeConflict = (startTimeStr, durationMin) => {
+    if (!startTimeStr) return null;
+
+    const newStart = new Date(startTimeStr).getTime();
+    const newDurationMs = (durationMin || 60) * 60 * 1000;
+    const newEnd = newStart + newDurationMs;
+    const BUFFER_MS = 60 * 60 * 1000;
+
+    for (const existing of existingRides) {
+      if (isEditMode && (existing._id === ride?._id || existing.id === ride?.id)) continue;
+      if (["Cancelled", "Completed"].includes(existing.travelStatus)) continue;
+
+      const exStart = new Date(existing.startTime).getTime();
+      const exDurationMs = (existing.duration || 60) * 60 * 1000;
+      const exEnd = exStart + exDurationMs;
+
+      const isOverlapping = newStart < exEnd && newEnd > exStart;
+      const isTooCloseAfter = newStart >= exEnd && newStart < (exEnd + BUFFER_MS);
+      const isTooCloseBefore = exStart >= newEnd && exStart < (newEnd + BUFFER_MS);
+
+      if (isOverlapping || isTooCloseAfter || isTooCloseBefore) {
+        const fmt = (ts) => new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        // ★ NEW: Include the end time of the existing ride in the message
+        return `Time conflict: You already have a ride from ${existing.from} to ${existing.destination} at ${fmt(exStart)} that ends at ${fmt(exEnd)}. Please leave at least 1 hour gap after it.`;
+      }
+    }
+    return null;
+  };
+
   /* ─────── OFFER VALIDATION ─────── */
   const validateOfferStep = () => {
     setShowErrors(true);
@@ -559,6 +619,19 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
       if (offerForm.date && offerForm.time) {
         const d = new Date(`${offerForm.date}T${offerForm.time}:00`);
         if (d.getTime() <= Date.now()) e.time = "Departure can't be in the past";
+
+        // ★ NEW: Check for conflicts
+        if (offerForm.date && offerForm.time) {
+          const d = new Date(`${offerForm.date}T${offerForm.time}:00`);
+          if (d.getTime() <= Date.now()) e.time = "Departure can't be in the past";
+
+          // ★ NEW: Check conflicts
+          if (!e.time) {
+            const conflictMsg = checkTimeConflict(d.toISOString(), offerForm.duration);
+            setTimeConflictMsg(conflictMsg || ""); // Set the new state
+            if (conflictMsg) e._hasConflict = true; // Flag to stop proceeding
+          }
+        }
       }
     }
     if (step === 1) {
@@ -595,6 +668,13 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
     if (requestForm.date && requestForm.neededBy) {
       const d = new Date(`${requestForm.date}T${requestForm.neededBy}`);
       if (d.getTime() <= Date.now()) e.neededBy = "Needed-by time can't be in the past";
+
+      // ★ NEW: Check conflicts
+      if (!e.neededBy) {
+        const conflictMsg = checkTimeConflict(d.toISOString(), 60);
+        setTimeConflictMsg(conflictMsg || "");
+        if (conflictMsg) e._hasConflict = true;
+      }
     }
 
     setRequestErrors(e);
@@ -667,7 +747,6 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
   /* ─────── SUBMIT ─────── */
 
   const createOffer = async () => {
-    // Keep your existing form validation before this point.
     try {
       setSaving(true);
       const payload = buildOfferPayload();
@@ -685,7 +764,6 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
       };
 
       if (requestRide) {
-        // I Can Help: send a proposal, not a public Ride.
         const response = await axios.post(
           `${Api}/help-proposals`,
           {
@@ -704,7 +782,6 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
         return;
       }
 
-      // Normal offer posting remains unchanged.
       await axios.post(`${Api}/rides/`, payload, config);
 
       toast.success("Ride posted successfully");
@@ -712,7 +789,6 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
       navigate("/myride", { state: { tab: 2, refresh: true, refreshKey: Date.now() } });
     } catch (error) {
       console.error("Unable to submit offer:", error);
-
       toast.error(
         error.response?.data?.message ||
         "Unable to submit your offer"
@@ -722,7 +798,6 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
       setSaving(false);
     }
   };
-
 
   const updateOfferRide = async () => {
     try {
@@ -766,6 +841,26 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
     }
   };
 
+  const updateRequestRide = async () => {
+    if (!validateRequest()) return;
+    try {
+      setSaving(true);
+      setServerError("");
+      const res = await axios.patch(`${Api}/rides/edit/${ride._id || ride.id}`, buildRequestPayload());
+      const updated = res.data?.data || { ...ride, ...buildRequestPayload() };
+      toast.success("Request updated", TOASTS);
+      refreshRides();
+      onSave?.(updated);
+      setSubmitted(true);
+      setTimeout(() => onClose?.(), 1200);
+    } catch (err) {
+      setServerError(err.response?.data?.message || "Failed to update request");
+      toast.error(err.response?.data?.message || "Failed to update request", TOASTS);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const formReset = () => {
     setOfferForm(INITIAL_OFFER);
     setRequestForm(INITIAL_REQUEST);
@@ -774,6 +869,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
     setRequestErrors({});
     setShowErrors(false);
     setServerError("");
+    setTimeConflictMsg("");
   };
 
   /* ─────── SUCCESS SCREEN ─────── */
@@ -782,7 +878,6 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
       <PageLayout>
         <Box
           sx={{
-            /* RESPONSIVE: 100vh fallback first, then dvh for mobile browser bars */
             minHeight: { xs: "60vh", sm: "50vh" },
             "@supports (height: 100dvh)": {
               minHeight: { xs: "60dvh", sm: "50dvh" },
@@ -815,7 +910,9 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                 ? isEditMode
                   ? "Changes saved!"
                   : "Ride posted!"
-                : "Request posted!"}
+                : isEditMode
+                  ? "Changes saved!"
+                  : "Request posted!"}
             </Typography>
             <Typography
               sx={{ color: MUTED, fontSize: { xs: 14, sm: 15 }, lineHeight: 1.55 }}
@@ -838,10 +935,8 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
       <Box
         sx={{
           width: "100%",
-          /* RESPONSIVE: container grows with the screen (phone → tablet → laptop → large desktop) */
           maxWidth: { xs: "100%", sm: 600, md: 720, lg: 780, xl: 840 },
           mx: "auto",
-          /* RESPONSIVE: side padding scales + respects iPhone notch/landscape safe-area */
           px: {
             xs: "max(16px, env(safe-area-inset-left))",
             sm: 3,
@@ -854,11 +949,9 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
             md: 10,
           },
           bgcolor: BG,
-          /* RESPONSIVE: 100vh fallback, then 100dvh so mobile address-bar doesn't cause jump */
           minHeight: "100vh",
           "@supports (height: 100dvh)": { minHeight: "100dvh" },
           boxSizing: "border-box",
-          /* RESPONSIVE: prevent any child from creating horizontal scroll */
           overflowX: "hidden",
         }}
       >
@@ -867,13 +960,51 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
           direction="row"
           alignItems="center"
           justifyContent="space-between"
-          sx={{ mb: 1.5 }}
+          sx={{ mb: 1.5, minHeight: 40 }}
         >
-          {mode === "offer" && (
-            <Typography sx={{ fontSize: { xs: 12.5, sm: 13 }, color: MUTED, fontWeight: 600 }}>
+          {/* Back Button */}
+          {(mode === "offer" || isEditMode) && (
+            <IconButton
+              onClick={() => {
+                if (mode === "offer" && step > 0) {
+                  setStep((prev) => prev - 1);
+                } else {
+                  if (onClose) onClose();
+                  else navigate(-1);
+                }
+              }}
+              sx={{
+                bgcolor: "#fff",
+                border: `1px solid ${BORDER}`,
+                color: INK,
+                "&:hover": { bgcolor: "#F4F0EA" },
+                width: 36,
+                height: 36,
+              }}
+            >
+              <ArrowLeft size={18} />
+            </IconButton>
+          )}
+
+          {/* Step Counter */}
+          {mode === "offer" ? (
+            <Typography
+              sx={{
+                fontSize: { xs: 12.5, sm: 13 },
+                color: MUTED,
+                fontWeight: 600,
+                flex: 1,
+                textAlign: "center",
+                pr: mode === "offer" ? 4.5 : 0,
+              }}
+            >
               Step {step + 1} of {OFFER_STEPS.length}
             </Typography>
+          ) : (
+            <Box sx={{ flex: 1 }} />
           )}
+
+          <Box sx={{ width: { xs: 36, sm: 0 }, display: { xs: "block", sm: "none" } }} />
         </Stack>
 
         {/* ─── Progress ─── */}
@@ -882,7 +1013,6 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
         {/* ─── Title ─── */}
         <Typography
           sx={{
-            /* RESPONSIVE: fluid heading size */
             fontSize: { xs: 24, sm: 30, md: 34 },
             fontWeight: 800,
             color: NAVY,
@@ -898,7 +1028,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
               : step === 1
                 ? "Ride options"
                 : "Review your ride"
-            : "Post a ride"}
+            : isEditMode ? "Edit your request" : "Post a ride"}
         </Typography>
         <Typography
           sx={{
@@ -916,9 +1046,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
             : "Tell drivers where you need to go."}
         </Typography>
 
-        {/* When opened from "I can drive", the user has already chosen to offer a ride.
-            Hide the request/offer switch to avoid an accidental switch to "I need a ride". */}
-        {!requestRide && (
+        {!requestRide && !isEditMode && (
           <Stack direction="row" spacing={1} sx={{ mb: 3 }}>
             <Button
               fullWidth
@@ -972,7 +1100,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
         )}
 
         {/* ══════════════════════════════════════════════════════
-           REQUEST FLOW (single page)
+           REQUEST FLOW
         ══════════════════════════════════════════════════════ */}
         {mode === "request" && (
           <Stack spacing={{ xs: 2.25, sm: 2.5, md: 3 }}>
@@ -1012,8 +1140,6 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
               )}
             </Box>
 
-            {/* Date / Needed by / Flexible by */}
-            {/* RESPONSIVE: auto-fit grid instead of rigid row/column */}
             <Box sx={fieldGridSx}>
               <Box sx={{ minWidth: 0 }}>
                 <Typography sx={labelSx}>Date</Typography>
@@ -1061,8 +1187,6 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
               </Box>
             </Box>
 
-            {/* Passengers / Bags */}
-            {/* RESPONSIVE: always 2 columns (short numeric fields fit on phones) */}
             <Box sx={pairGridSx}>
               <Box sx={{ minWidth: 0 }}>
                 <Typography sx={labelSx}>Passengers</Typography>
@@ -1100,7 +1224,6 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
               </Box>
             </Box>
 
-            {/* Category */}
             <Box>
               <Typography sx={labelSx}>Category</Typography>
               <Box
@@ -1134,7 +1257,6 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
               )}
             </Box>
 
-            {/* Preference toggles */}
             <Paper
               variant="outlined"
               sx={{ borderRadius: 2, borderColor: BORDER, bgcolor: CARD, overflow: "hidden" }}
@@ -1155,7 +1277,6 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
               </Box>
             </Paper>
 
-            {/* Notes */}
             <Box>
               <Typography sx={labelSx}>
                 Notes <span style={{ fontWeight: 400, textTransform: "none", color: MUTED }}>(optional)</span>
@@ -1173,7 +1294,6 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
               />
             </Box>
 
-            {/* Info callout */}
             <Alert icon={<Info size={18} />} severity="info" sx={infoAlertSx}>
               Drivers going your way will see this request and can offer to drive. You choose who
               to accept. Your exact address and phone are shared only after you accept.
@@ -1185,13 +1305,28 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
               </Alert>
             )}
 
+            {/* ★ NEW: Show conflict error above the button */}
+            {timeConflictMsg && (
+              <Alert severity="error" sx={{ borderRadius: 2, fontWeight: 500 }}>
+                {timeConflictMsg}
+              </Alert>
+            )}
+
             <Button
-              onClick={createRequest}
+              onClick={() => {
+                if (isEditMode) {
+                  updateRequestRide();
+                } else {
+                  createRequest();
+                }
+              }}
               disabled={saving}
               startIcon={saving ? <CircularProgress size={18} sx={{ color: "#fff" }} /> : null}
               sx={primaryBtn}
             >
-              {saving ? "Posting..." : "Post request"}
+              {saving
+                ? (isEditMode ? "Updating..." : "Posting...")
+                : (isEditMode ? "Update request" : "Post request")}
             </Button>
           </Stack>
         )}
@@ -1205,7 +1340,6 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
               Trip details
             </Typography>
 
-            {/* RESPONSIVE: info strip wraps instead of overflowing on narrow screens */}
             <Stack
               direction="row"
               spacing={1.25}
@@ -1284,8 +1418,6 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
               )}
             </Box>
 
-            {/* Date / Time / Time zone */}
-            {/* RESPONSIVE: auto-fit grid */}
             <Box sx={fieldGridSx}>
               <Box sx={{ minWidth: 0 }}>
                 <Typography sx={labelSx}>Date</Typography>
@@ -1298,7 +1430,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                   error={showErrors && !!errors.date}
                   helperText={showErrors ? errors.date : ""}
                   InputLabelProps={{ shrink: true }}
-                  disabled={Boolean(requestRide)} // ★ ADDED
+                  disabled={Boolean(requestRide)}
                   sx={tfSx}
                 />
               </Box>
@@ -1313,7 +1445,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                   error={showErrors && !!errors.time}
                   helperText={showErrors ? errors.time : ""}
                   InputLabelProps={{ shrink: true }}
-                  disabled={Boolean(requestRide)} // ★ ADDED
+                  disabled={Boolean(requestRide)}
                   sx={tfSx}
                 />
               </Box>
@@ -1323,7 +1455,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                   fullWidth
                   size={inputSize}
                   error={showErrors && !!errors.timeZone}
-                  disabled={Boolean(requestRide)} // ★ ADDED
+                  disabled={Boolean(requestRide)}
                 >
                   <Select
                     value={offerForm.timeZone}
@@ -1404,6 +1536,13 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
               </Alert>
             )}
 
+            {/* ★ NEW: Show conflict error above the button */}
+            {timeConflictMsg && (
+              <Alert severity="error" sx={{ borderRadius: 2, fontWeight: 500 }}>
+                {timeConflictMsg}
+              </Alert>
+            )}
+
             <Button
               onClick={() => {
                 if (validateOfferStep()) {
@@ -1424,7 +1563,6 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
         {mode === "offer" && step === 1 && (
           <Stack spacing={{ xs: 2.5, sm: 3, md: 3.5 }}>
             <Box>
-              {/* RESPONSIVE: label + hint wrap onto two lines on narrow screens */}
               <Stack
                 direction="row"
                 spacing={1}
@@ -1453,7 +1591,6 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                 }}
                 sx={{
                   ...tfSx,
-                  /* RESPONSIVE: full width on phones, fixed on larger screens */
                   width: { xs: "100%", sm: 240 },
                   maxWidth: "100%",
                   "& input": { fontSize: 16, fontWeight: 700 },
@@ -1656,7 +1793,6 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                 </Box>
 
                 <Box sx={{ flex: 1, minWidth: 0 }}>
-                  {/* RESPONSIVE: long addresses wrap instead of pushing the layout wider */}
                   <Typography
                     sx={{
                       fontSize: { xs: 14.5, sm: 16 },
@@ -1814,7 +1950,6 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
               </Typography>
             </Paper>
 
-            {/* RESPONSIVE: checkbox aligned to the top of multi-line label on small screens */}
             <FormControlLabel
               sx={{ alignItems: "flex-start", mr: 0, ml: { xs: -0.5, sm: -1 } }}
               control={

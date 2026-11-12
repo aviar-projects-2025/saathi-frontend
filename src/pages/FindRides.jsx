@@ -120,10 +120,11 @@ const normalizeRide = (ride) => {
   const fromText = (ride.from || ride.fromLocation?.address || "").toLowerCase();
   const toText = (ride.destination || ride.destinationLocation?.address || "").toLowerCase();
 
-  const languages = Array.isArray(ride.language)
-    ? ride.language.map((l) => String(l).toLowerCase())
-    : ride.language
-      ? [String(ride.language).toLowerCase()]
+  const authorLanguage = ride.createdBy?.language;
+  const languages = Array.isArray(authorLanguage)
+    ? authorLanguage.map((l) => String(l).toLowerCase())
+    : authorLanguage
+      ? [String(authorLanguage).toLowerCase()]
       : [];
 
   return {
@@ -351,6 +352,7 @@ export default function FindRides() {
 
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [searchFrom, setSearchFrom] = useState("");
+  const [searchFromLocation, setSearchFromLocation] = useState("");
   const [searchDestination, setSearchDestination] = useState("");
 
   const [draftFilters, setDraftFilters] = useState(emptyFilters);
@@ -724,7 +726,7 @@ export default function FindRides() {
   /* ─────────── Sort + filter rides ─────────── */
   const sortedVisibleRides = useMemo(() => {
     const filtered = rides.filter((ride) =>
-      matchesFilters(ride, appliedFilters, searchFrom, searchDestination, userLocation)
+      matchesFilters(ride, appliedFilters, searchFrom, searchFromLocation, searchDestination, userLocation)
     );
 
     return [...filtered].sort((a, b) => {
@@ -740,7 +742,7 @@ export default function FindRides() {
       return new Date(a.startTime).getTime() - new Date(b.startTime).getTime();
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rides, userLocation, appliedFilters, searchFrom, searchDestination]);
+  }, [rides, userLocation, appliedFilters, searchFrom, searchFromLocation, searchDestination]);
 
   /* ─────────── Filter Panel ─────────── */
   const FilterPanel = () => (
@@ -1193,8 +1195,8 @@ export default function FindRides() {
                   <TextField
                     size="small"
                     placeholder="City or zip"
-                    value={searchFrom}
-                    onChange={(e) => setSearchFrom(e.target.value)}
+                    value={searchFromLocation}
+                    onChange={(e) => setSearchFromLocation(e.target.value)}
                     sx={{
                       flex: 1,
                       minWidth: { xs: 0, md: 160 },
@@ -1208,32 +1210,35 @@ export default function FindRides() {
                     }}
                   />
 
-                  <Box sx={{ display: "flex", flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 1 }}>
-                    <Typography sx={{ fontSize: { xs: 12, sm: 13 }, color: "text.secondary" }}>within</Typography>
-                    <Box sx={{ display: "flex", flexDirection: "row", gap: 0.5 }}>
-                      {RADIUS_OPTIONS.map((r) => {
-                        const isActive = appliedFilters.radiusMi === r.value;
-                        return (
-                          <Chip
-                            key={String(r.value)}
-                            label={r.label}
-                            clickable
-                            onClick={() => updateFilterAndApply("radiusMi", r.value)}
-                            sx={{
-                              borderRadius: 999,
-                              fontWeight: 700,
-                              fontSize: { xs: 11.5, sm: 12 },
-                              height: { xs: 28, sm: 30 },
-                              bgcolor: isActive ? RUST : "#fff",
-                              color: isActive ? "#fff" : "#333",
-                              border: `1px solid ${isActive ? RUST : "#ddd"}`,
-                              "&:hover": { bgcolor: isActive ? RUST : "#f8f8f8" },
-                            }}
-                          />
-                        );
-                      })}
+                  {/* Only show radius options if a location is present */}
+                  {(userLocation || searchFromLocation.trim().length > 0) && (
+                    <Box sx={{ display: "flex", flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 1 }}>
+                      <Typography sx={{ fontSize: { xs: 12, sm: 13 }, color: "text.secondary" }}>within</Typography>
+                      <Box sx={{ display: "flex", flexDirection: "row", gap: 0.5 }}>
+                        {RADIUS_OPTIONS.map((r) => {
+                          const isActive = appliedFilters.radiusMi === r.value;
+                          return (
+                            <Chip
+                              key={String(r.value)}
+                              label={r.label}
+                              clickable
+                              onClick={() => updateFilterAndApply("radiusMi", r.value)}
+                              sx={{
+                                borderRadius: 999,
+                                fontWeight: 700,
+                                fontSize: { xs: 11.5, sm: 12 },
+                                height: { xs: 28, sm: 30 },
+                                bgcolor: isActive ? RUST : "#fff",
+                                color: isActive ? "#fff" : "#333",
+                                border: `1px solid ${isActive ? RUST : "#ddd"}`,
+                                "&:hover": { bgcolor: isActive ? RUST : "#f8f8f8" },
+                              }}
+                            />
+                          );
+                        })}
+                      </Box>
                     </Box>
-                  </Box>
+                  )}
                 </Box>
 
                 <Typography sx={{ fontSize: { xs: 11.5, sm: 12.5 }, color: "text.secondary", mt: { xs: 1.25, sm: 1.75 }, lineHeight: 1.5 }}>

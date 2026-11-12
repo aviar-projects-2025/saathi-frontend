@@ -40,6 +40,7 @@ import uploadToCloudinary from "../uploadToCloudinary";
 import { uploadImageToS3 } from "../../utils/s3Upload";
 import ProtectedAvatar from "../ProtectedAvatar";
 import LegalModal from "../LegalModal";
+import saathilogo1 from "../../assets/saathilogo1.png";
 
 const ORANGE = "#C83F08";
 const NAVY = "#132858";
@@ -955,10 +956,11 @@ const Register = () => {
   const renderBrand = () => (
     <Stack direction="row" spacing={1.2} alignItems="center" sx={{ mb: 3 }}>
       <Avatar
+        src={saathilogo1}
         sx={{
           width: 34,
           height: 34,
-          backgroundColor: ORANGE,
+          backgroundColor: "white",
           fontWeight: 800,
           fontSize: 16,
         }}
@@ -1580,7 +1582,7 @@ const Register = () => {
                     <MenuItem value="">Prefer not to say</MenuItem>
                     <MenuItem value="Female">Female</MenuItem>
                     <MenuItem value="Male">Male</MenuItem>
-                    <MenuItem value="Other">Other</MenuItem>
+                    {/* <MenuItem value="Other">Other</MenuItem> */}
                   </TextField>
                   <Typography
                     variant="caption"

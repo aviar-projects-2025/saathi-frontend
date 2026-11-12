@@ -37,6 +37,33 @@ const LINE = "#E8DED4";
 const KIND = {
   offer: { label: "🚗 You’re offering a ride", short: "Offering", color: "#2D6A4F", bg: "#E8F5E9" },
   request: { label: "🙋 You need a ride", short: "Need a ride", color: "#3F4FBF", bg: "#ECEEFC" },
+  matched: { label: "🙋 You need a ride · driver confirmed", short: "Need a ride", color: "#3F4FBF", bg: "#ECEEFC" },
+  driving: { label: "🤝 You’re the driver", short: "Offering", color: "#2D6A4F", bg: "#E8F5E9" },
+};
+
+const isMatched = (ride) => ride?.kind === "request" && Boolean(ride?.helpProposalId);
+
+// What this ride is to ME: "offer" (I'm driving) or "request" (I need a ride)
+const roleOf = (ride, userId) => {
+  const me = String(userId || "");
+  const driverIsMe = String(getRefId(ride?.actualDriver) || "") === me;
+  const ownerIsMe = String(getRefId(ride?.createdBy) || "") === me;
+  if (isMatched(ride) && driverIsMe && !ownerIsMe) return "offer";
+  return ride?.kind === "request" ? "request" : "offer";
+};
+
+const personName = (p) =>
+  [p?.firstName, p?.lastName].filter(Boolean).join(" ") || "a community member";
+
+const statusLabelOf = (ride) => {
+  if (ride?.travelStatus === "Cancelled") return "Cancelled";
+  if (ride?.travelStatus === "Completed") return "Completed";
+  if (ride?.travelStatus === "Started") return "Ongoing";
+  if (ride?.kind === "request") {
+    if (isMatched(ride)) return "Driver confirmed";
+    return ride?.status === "CLOSED" ? "Request closed" : "Waiting for a driver";
+  }
+  return ride?.status === "FULL" ? "Filled" : "Open for requests";
 };
 const travelIcons = {
   Car: DirectionsCarIcon, Bus: DirectionsBusIcon, Bike: TwoWheelerIcon,
@@ -56,13 +83,6 @@ const fmtTime = (d) => {
   const x = new Date(d);
   return isNaN(x) ? "—" : x.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
 };
-const statusLabelOf = (ride) => {
-  if (ride?.travelStatus === "Cancelled") return "Cancelled";
-  if (ride?.travelStatus === "Completed") return "Completed";
-  if (ride?.travelStatus === "Started") return "Ongoing";
-  if (ride?.kind === "request") return ride?.status === "CLOSED" ? "Request closed" : "Waiting for a driver";
-  return ride?.status === "FULL" ? "Filled" : "Open for requests";
-};
 
 /* ───────────── small components ───────────── */
 function EmptyState({ message1, message2 }) {
@@ -74,8 +94,9 @@ function EmptyState({ message1, message2 }) {
   );
 }
 
-function KindFilter({ value, onChange, rides }) {
-  const n = (k) => rides.filter((r) => k === "all" || r.kind === k).length;
+function KindFilter({ value, onChange, rides, userId }) {
+  const n = (k) => rides.filter((r) => k === "all" || roleOf(r, userId) === k).length;
+
   return (
     <ToggleButtonGroup
       exclusive fullWidth value={value} onChange={(_, v) => v && onChange(v)}
@@ -174,11 +195,12 @@ function RideCard({
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isOffer = ride?.kind !== "request";
-  const k = KIND[isOffer ? "offer" : "request"];
-  const Mode = travelIcons[ride?.modeOfTravel] || DirectionsCarIcon;
-
   const currentUserId = user?.id || user?._id;
+  const matched = isMatched(ride);
+  const role = roleOf(ride, currentUserId);
+  const isOffer = role === "offer";
+  const k = KIND[matched ? (isOffer ? "driving" : "matched") : isOffer ? "offer" : "request"];
+  const Mode = travelIcons[ride?.modeOfTravel] || DirectionsCarIcon;
   const isOwner = String(getRefId(ride?.createdBy) || "") === String(currentUserId || "");
   const isActualDriver = String(getRefId(ride?.actualDriver) || "") === String(currentUserId || "");
   const canManageTravel = isOwner || (Boolean(ride?.helpProposalId) && isActualDriver);
@@ -198,9 +220,21 @@ function RideCard({
 
   const strong = (t) => <b style={{ color: k.color }}>{t}</b>;
   let footerText;
-  if (isCompleted || isCancelled) footerText = isCompleted ? "This ride is complete" : "This ride was cancelled";
-  else if (isOffer) footerText = pendingCount > 0 ? <>{strong(`${pendingCount} new request${pendingCount > 1 ? "s" : ""}`)} waiting for you</> : rideRequests.length > 0 ? "All requests handled" : "No requests yet";
-  else footerText = offersCount > 0 ? <>{strong(`${offersCount} offer${offersCount > 1 ? "s" : ""}`)} to help you</> : "No offers yet · we’ll notify you";
+  if (isCompleted || isCancelled) {
+    footerText = isCompleted ? "This ride is complete" : "This ride was cancelled";
+  } else if (matched) {
+    footerText = isOffer
+      ? <>Passenger: {strong(personName(ride.createdBy))}</>
+      : <>Driver: {strong(personName(ride.actualDriver))}</>;
+  } else if (isOffer) {
+    footerText = pendingCount > 0
+      ? <>{strong(`${pendingCount} new request${pendingCount > 1 ? "s" : ""}`)} waiting for you</>
+      : rideRequests.length > 0 ? "All requests handled" : "No requests yet";
+  } else {
+    footerText = offersCount > 0
+      ? <>{strong(`${offersCount} offer${offersCount > 1 ? "s" : ""}`)} to help you</>
+      : "No offers yet · we’ll notify you";
+  }
 
   return (
     <>
@@ -208,9 +242,6 @@ function RideCard({
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 1, px: 2, pt: 1.5, flexWrap: "wrap" }}>
           <Stack direction="row" spacing={0.75} alignItems="center" useFlexGap flexWrap="wrap">
             <Chip size="small" label={k.label} sx={{ bgcolor: k.bg, color: k.color, fontWeight: 700, borderRadius: "8px" }} />
-            {isOffer && ride?.helpProposalId && (
-              <Chip size="small" variant="outlined" label={isActualDriver ? "Accepted help ride" : "Your requested ride"} sx={{ fontWeight: 600, fontSize: "0.68rem", borderRadius: "8px" }} />
-            )}
           </Stack>
           <Typography sx={{ fontSize: "0.76rem", fontWeight: 600, color: isCompleted ? "#2D6A4F" : isCancelled ? "#9B2226" : "text.secondary" }}>
             {statusLabelOf(ride)}
@@ -234,8 +265,11 @@ function RideCard({
         <Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap" sx={{ px: 2, py: 1.5 }}>
           <Chip size="small" variant="outlined" icon={<CalendarTodayIcon />} label={`${fmtDate(ride.startTime)} · ${fmtTime(ride.startTime)}`} />
           <Chip size="small" variant="outlined" icon={<Mode />} label={ride.modeOfTravel || "Car"} />
-          {isOffer && ride.modeOfTravel !== "Flight" && (
+          {ride.kind === "offer" && ride.modeOfTravel !== "Flight" && (
             <Chip size="small" variant="outlined" icon={<EventSeatIcon />} label={`${ride.totalSeats} seat${ride.totalSeats === 1 ? "" : "s"}`} />
+          )}
+          {ride.kind === "request" && (
+            <Chip size="small" variant="outlined" icon={<EventSeatIcon />} label={`${ride.passengers || 1} passenger${(ride.passengers || 1) === 1 ? "" : "s"}`} />
           )}
         </Stack>
 
@@ -668,21 +702,34 @@ const MyRides = () => {
   };
 
   /* ── render ── */
-  const visibleRides = activeData.rides.filter((r) => kind === "all" || r.kind === kind);
+  const visibleRides = activeData.rides.filter((r) => kind === "all" || roleOf(r, currentUserId) === kind);
 
   const renderList = (list) =>
     list.map((ride) => {
       const completed = ride?.travelStatus === "Completed";
       const cancelled = ride?.travelStatus === "Cancelled";
       const rideRequests = allRequests.filter((req) => req.rideId?._id?.toString() === ride._id?.toString());
+
       const pendingCount = rideRequests.filter((r) => r.status?.toUpperCase() === "PENDING").length;
+
+      // ★ NEW: Check if any request is already accepted/approved
+      const hasApprovedRequests = rideRequests.some((r) =>
+        ["ACCEPTED", "APPROVED", "AUTO_REJECTED"].includes(r.status?.toUpperCase())
+      );
+
       const offersCount = pendingProposals.filter((p) => String(getRefId(p?.requestRideId) || "") === String(ride._id)).length;
+      const matched = isMatched(ride);
+      const owner = String(getRefId(ride.createdBy) || "") === String(currentUserId || "");
+
+      // ★ NEW: Prevent editing if completed, cancelled, matched, or someone has been approved
+      const canEdit = active.edit && !completed && !cancelled && !matched && !hasApprovedRequests;
+
       return (
         <RideCard
           key={idOf(ride)} ride={ride} user={currentUser}
           isCurrentRide={active.current}
-          showEdit={active.edit && !completed && !cancelled}
-          showDelete={active.del && !completed && !cancelled}
+          showEdit={canEdit} // <-- Updated
+          showDelete={active.del && !completed && !cancelled && (!matched || owner)}
           onEdit={setEditRide} onDelete={setDeleteRide}
           rideRequests={rideRequests} pendingCount={pendingCount} offersCount={offersCount}
           notificationRide={notificationRide} setNotificationRide={setNotificationRide}
@@ -767,7 +814,7 @@ const MyRides = () => {
         </Tabs>
       </Box>
 
-      <KindFilter value={kind} onChange={setKind} rides={activeData.rides} />
+      <KindFilter value={kind} onChange={setKind} rides={activeData.rides} userId={currentUserId} />
 
       <Box>
         {(initialLoading && active.key === "current" && !activeData.loaded) || (activeData.loading && !activeData.loaded) ? (

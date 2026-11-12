@@ -314,6 +314,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
           <ProfileModal
             open={profileModalOpen}
             selectedProfile={selectedProfile}
+            currentUser={currentUser}
             onClose={() => {
               setProfileModalOpen(false);
             }}

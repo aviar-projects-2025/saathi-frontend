@@ -9,7 +9,11 @@ import {
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 
-const CommunityImage = ({ src }) => {
+const CommunityImage = ({ src, postImageUrl }) => {
+  // Prefer the signed S3 URL; fall back to the raw value
+  // (handles legacy Cloudinary URLs stored in postImage).
+  const imageUrl = postImageUrl || src;
+
   const [loaded, setLoaded] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -26,6 +30,7 @@ const CommunityImage = ({ src }) => {
 
   const isMobile = useMediaQuery("(max-width: 767px)");
 
+  if (!imageUrl) return null;
 
   const zoomAtPoint = (clientX, clientY, element) => {
     const rect = element.getBoundingClientRect();
@@ -37,7 +42,6 @@ const CommunityImage = ({ src }) => {
 
     setZoomed((prev) => {
       if (prev) {
-      
         setPosition({ x: 0, y: 0 });
         isDraggingRef.current = false;
 
@@ -48,16 +52,13 @@ const CommunityImage = ({ src }) => {
     });
   };
 
-
   const handleDoubleClick = (e) => {
-
     if (isMobile) return;
 
     zoomAtPoint(e.clientX, e.clientY, e.currentTarget);
   };
 
   const handleTouchEnd = (e) => {
-
     if (!isMobile) return;
 
     const now = Date.now();
@@ -66,11 +67,7 @@ const CommunityImage = ({ src }) => {
     if (timeSinceLastTap < 300) {
       const touch = e.changedTouches[0];
 
-      zoomAtPoint(
-        touch.clientX,
-        touch.clientY,
-        e.currentTarget
-      );
+      zoomAtPoint(touch.clientX, touch.clientY, e.currentTarget);
 
       lastTapRef.current = 0;
     } else {
@@ -78,9 +75,7 @@ const CommunityImage = ({ src }) => {
     }
   };
 
-
   const handleMouseDown = (e) => {
-  
     if (isMobile || !zoomed) return;
 
     e.preventDefault();
@@ -98,16 +93,12 @@ const CommunityImage = ({ src }) => {
   };
 
   const handleMouseMove = (e) => {
-    
     if (isMobile || !isDraggingRef.current || !zoomed) {
       return;
     }
 
-    const deltaX =
-      e.clientX - dragStartRef.current.x;
-
-    const deltaY =
-      e.clientY - dragStartRef.current.y;
+    const deltaX = e.clientX - dragStartRef.current.x;
+    const deltaY = e.clientY - dragStartRef.current.y;
 
     setPosition({
       x: startPositionRef.current.x + deltaX,
@@ -121,7 +112,6 @@ const CommunityImage = ({ src }) => {
     isDraggingRef.current = false;
   };
 
-
   const handleClose = () => {
     setOpen(false);
     setZoomed(false);
@@ -133,7 +123,6 @@ const CommunityImage = ({ src }) => {
 
   return (
     <>
-      
       <Box
         onClick={() => setOpen(true)}
         sx={{
@@ -158,20 +147,20 @@ const CommunityImage = ({ src }) => {
 
         <Box
           component="img"
-          src={src}
+          src={imageUrl}
           loading="lazy"
           alt="Community"
           onLoad={() => setLoaded(true)}
+          onError={(e) => {
+            e.currentTarget.style.display = "none";
+          }}
           sx={{
             width: "100%",
             height: "auto",
             display: "block",
             opacity: loaded ? 1 : 0,
-            filter: loaded
-              ? "blur(0px)"
-              : "blur(8px)",
-            transition:
-              "opacity .3s ease, filter .3s ease",
+            filter: loaded ? "blur(0px)" : "blur(8px)",
+            transition: "opacity .3s ease, filter .3s ease",
           }}
         />
       </Box>
@@ -211,31 +200,14 @@ const CommunityImage = ({ src }) => {
             borderRadius: 2,
           }}
         >
-          {/* Close Button */}
           <IconButton
             onClick={handleClose}
             sx={{
               position: "absolute",
-              top: {
-                xs: 4,
-                sm: 6,
-                md: 8,
-              },
-              right: {
-                xs: 4,
-                sm: 6,
-                md: 8,
-              },
-              width: {
-                xs: 25,
-                sm: 30,
-                md: 35,
-              },
-              height: {
-                xs: 25,
-                sm: 30,
-                md: 35,
-              },
+              top: { xs: 4, sm: 6, md: 8 },
+              right: { xs: 4, sm: 6, md: 8 },
+              width: { xs: 25, sm: 30, md: 35 },
+              height: { xs: 25, sm: 30, md: 35 },
               color: "#fff",
               bgcolor: "rgba(0,0,0,0.5)",
               "&:hover": {
@@ -246,11 +218,7 @@ const CommunityImage = ({ src }) => {
           >
             <CloseIcon
               sx={{
-                fontSize: {
-                  xs: 16,
-                  sm: 18,
-                  md: 20,
-                },
+                fontSize: { xs: 16, sm: 18, md: 20 },
               }}
             />
           </IconButton>
@@ -269,36 +237,22 @@ const CommunityImage = ({ src }) => {
           >
             <Box
               component="img"
-              src={src}
+              src={imageUrl}
               alt="Post"
-
               onDoubleClick={handleDoubleClick}
-
               onTouchEnd={handleTouchEnd}
-
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
               onMouseLeave={handleMouseUp}
-
               sx={{
                 display: "block",
-
-                maxWidth: zoomed
-                  ? "none"
-                  : "95vw",
-
-                maxHeight: zoomed
-                  ? "none"
-                  : "90vh",
-
+                maxWidth: zoomed ? "none" : "95vw",
+                maxHeight: zoomed ? "none" : "90vh",
                 width: "auto",
                 height: "auto",
-
                 objectFit: "contain",
-
                 borderRadius: 2,
-
                 cursor: isMobile
                   ? zoomed
                     ? "default"
@@ -308,17 +262,13 @@ const CommunityImage = ({ src }) => {
                     ? "grabbing"
                     : "grab"
                   : "zoom-in",
-
                 transform: zoomed
                   ? `translate(${position.x}px, ${position.y}px) scale(2.5)`
                   : "translate(0px, 0px) scale(1)",
-
                 transformOrigin: origin,
-
                 transition: isDraggingRef.current
                   ? "none"
                   : "transform 0.25s ease",
-
                 userSelect: "none",
                 WebkitUserSelect: "none",
                 touchAction: "manipulation",

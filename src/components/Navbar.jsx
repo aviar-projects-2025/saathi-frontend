@@ -1,3 +1,4 @@
+
 import {
   AppBar,
   Toolbar,
@@ -19,6 +20,7 @@ import {
   DialogContent,
   DialogActions,
 } from "@mui/material";
+
 import OfferRide from "../pages/OfferRide.jsx";
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
@@ -28,7 +30,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import saathilogo1 from "../assets/saathilogo1.png";
 import { useUser } from "../context/userConetext.jsx";
-import { useAuth } from "../context/AuthContext"; // ✅ FIXED: import useAuth for logout
+import { useAuth } from "../context/AuthContext";
 import NotificationTab from "../pages/NotificationTab.jsx";
 import { useNotifications } from "../context/NotificationContext.jsx";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
@@ -41,7 +43,6 @@ import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutlineOutlined
 import axios from "axios";
 import Api from "../Api.jsx";
 import ChatModal from "../pages/ChatModal";
-import ProtectedAvatar from "./ProtectedAvatar.jsx";
 import { useChatSocket } from "../hooks/useChatSocket";
 
 const TopNav = ({ onMenuClick }) => {
@@ -51,11 +52,9 @@ const TopNav = ({ onMenuClick }) => {
   const [open, setOpen] = useState(false);
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
 
-  // ✅ FIXED: pull logout() from AuthContext — single source of truth
   const { logout } = useAuth();
 
-  const { tabNotification, notifications, fetchNotifications } =
-    useNotifications();
+  const { tabNotification, fetchNotifications } = useNotifications();
 
   const [moreAnchorEl, setMoreAnchorEl] = useState(null);
   const [messagesOpen, setMessagesOpen] = useState(false);
@@ -74,9 +73,11 @@ const TopNav = ({ onMenuClick }) => {
   const unreadCount = Object.values(
     (tabNotification || []).reduce((acc, curr) => {
       if (curr.type === "ride_started") return acc;
+
       if (!curr?.isRead) {
         acc[curr?.data?.rideId || curr._id] = curr;
       }
+
       return acc;
     }, {})
   ).length;
@@ -92,18 +93,20 @@ const TopNav = ({ onMenuClick }) => {
   const openNotifications = Boolean(notifAnchorEl);
   const openProfileMenu = Boolean(profileAnchorEl);
 
-  const handleOpenMoreMenu = (event) => setMoreAnchorEl(event.currentTarget);
+  const handleOpenMoreMenu = (event) =>
+    setMoreAnchorEl(event.currentTarget);
+
   const handleCloseMoreMenu = () => setMoreAnchorEl(null);
 
   const handleMarkAllAsRead = async () => {
     try {
-      await axios
-        .patch(`${Api}/notification/${currentUser?._id}`)
-        .then((res) => {
-          if (res?.data?.success === true) {
-            fetchNotifications();
-          }
-        });
+      const res = await axios.patch(
+        `${Api}/notification/${currentUser?._id}`
+      );
+
+      if (res?.data?.success === true) {
+        fetchNotifications();
+      }
     } catch (error) {
       console.log(error);
     } finally {
@@ -111,9 +114,14 @@ const TopNav = ({ onMenuClick }) => {
     }
   };
 
-  const handleOpenNotifications = (event) => setNotifAnchorEl(event.currentTarget);
+  const handleOpenNotifications = (event) =>
+    setNotifAnchorEl(event.currentTarget);
+
   const handleCloseNotifications = () => setNotifAnchorEl(null);
-  const handleOpenProfileMenu = (event) => setProfileAnchorEl(event.currentTarget);
+
+  const handleOpenProfileMenu = (event) =>
+    setProfileAnchorEl(event.currentTarget);
+
   const handleCloseProfileMenu = () => setProfileAnchorEl(null);
 
   const isProfileComplete = completion === 100;
@@ -121,17 +129,17 @@ const TopNav = ({ onMenuClick }) => {
   const profileMenuOptions = [
     {
       label: "Profile",
-      icon: <AccountCircleIcon fontSize="small" />,
+      icon: <AccountCircleIcon />,
       link: "/user-profile",
     },
     {
       label: "Settings",
-      icon: <SettingsOutlinedIcon fontSize="small" />,
+      icon: <SettingsOutlinedIcon />,
       link: "/myprofile",
     },
     {
       label: "Log out",
-      icon: <LogoutIcon fontSize="small" />,
+      icon: <LogoutIcon />,
       link: "/login",
     },
   ];
@@ -144,6 +152,7 @@ const TopNav = ({ onMenuClick }) => {
   const handleSelect = (option) => {
     setSelectedMenu(option.label);
     handleCloseProfileMenu();
+
     if (option.label === "Log out") {
       handleLogout();
     } else if (option.link) {
@@ -151,9 +160,6 @@ const TopNav = ({ onMenuClick }) => {
     }
   };
 
-  // ✅ FIXED: atomic logout via AuthContext, then navigate.
-  // No localStorage.clear() (it wiped unrelated keys and raced with context state).
-  // No setTimeout band-aid — state flips synchronously before navigation.
   const confirmLogout = () => {
     setLogoutDialogOpen(false);
     logout();
@@ -175,45 +181,72 @@ const TopNav = ({ onMenuClick }) => {
     >
       <Toolbar
         sx={{
-          minHeight: { xs: 58, md: 68 },
-          px: { xs: 1.5, sm: 2, md: 3 },
+          minHeight: { xs: 54, sm: 60, md: 66 },
+          px: { xs: 1, sm: 2, md: 3 },
           display: "flex",
           justifyContent: "space-between",
         }}
       >
+        {/* LOGO SECTION */}
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <IconButton
             onClick={onMenuClick}
             sx={{
               display: { xs: "inline-flex", lg: "none" },
-              mr: 1,
+              mr: 0.5,
               color: "#d97706",
+              p: 0.8,
             }}
           >
-            <MenuIcon />
+            <MenuIcon sx={{ fontSize: { xs: 21, sm: 23 } }} />
           </IconButton>
 
           <Box
-            sx={{ display: "flex", alignItems: "center", cursor: "pointer" }}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              cursor: "pointer",
+            }}
             onClick={() => navigate("/find-ride")}
           >
             <img
               src={saathilogo1}
               alt="saathi"
-              width={38}
-              height={38}
-              style={{ marginRight: 5, objectFit: "contain" }}
+              width={34}
+              height={34}
+              style={{
+                marginRight: 4,
+                objectFit: "contain",
+              }}
             />
 
             <Box sx={{ display: "flex", flexDirection: "column" }}>
-              <Typography variant="h6" sx={{ fontWeight: 900, lineHeight: 1.1 }}>
-                <Box component="span" sx={{ color: "#f97316" }}>Saa</Box>
-                <Box component="span" sx={{ color: "#15803d" }}>thi</Box>
+              <Typography
+                sx={{
+                  fontSize: {
+                    xs: "15px",
+                    sm: "17px",
+                    md: "19px",
+                  },
+                  fontWeight: 900,
+                  lineHeight: 1.1,
+                }}
+              >
+                <Box component="span" sx={{ color: "#f97316" }}>
+                  Saa
+                </Box>
+                <Box component="span" sx={{ color: "#15803d" }}>
+                  thi
+                </Box>
               </Typography>
 
               <Typography
                 sx={{
-                  fontSize: "10px",
+                  fontSize: {
+                    xs: "7px",
+                    sm: "8px",
+                    md: "9px",
+                  },
                   color: "#666666",
                   mt: 0.3,
                   lineHeight: 1.2,
@@ -226,32 +259,34 @@ const TopNav = ({ onMenuClick }) => {
           </Box>
         </Box>
 
+        {/* RIGHT SIDE ACTIONS */}
         <Box
           sx={{
             display: "flex",
             alignItems: "center",
-            gap: { xs: 0.2, sm: 1.5 },
+            gap: { xs: 0.1, sm: 1, md: 1.5 },
           }}
         >
+          {/* DISCOVER ICON */}
           {isMobile && (
             <IconButton
               onClick={() => navigate("/discover")}
               sx={{
                 color: "#5f4632",
-                transition: "color 0.2s ease",
+                p: 0.8,
                 "&:hover": { color: "#f97316" },
               }}
             >
-              <EmojiEventsIcon />
+              <EmojiEventsIcon sx={{ fontSize: 22 }} />
             </IconButton>
           )}
 
-          {/* Chat icon */}
+          {/* CHAT ICON */}
           <IconButton
             onClick={() => setMessagesOpen(true)}
             sx={{
               color: "#5f4632",
-              transition: "color 0.2s ease",
+              p: 0.8,
               "&:hover": { color: "#f97316" },
             }}
           >
@@ -261,61 +296,91 @@ const TopNav = ({ onMenuClick }) => {
               invisible={unreadChats === 0}
               sx={{
                 "& .MuiBadge-badge": {
-                  fontSize: "clamp(0.55rem, 1.5vw, 0.75rem)",
-                  minWidth: "clamp(14px, 3vw, 20px)",
-                  height: "clamp(14px, 3vw, 20px)",
-                  padding: "0 5px",
+                  fontSize: "9px",
+                  minWidth: 15,
+                  height: 15,
+                  padding: "0 3px",
                 },
               }}
             >
-              <ChatBubbleOutlineIcon sx={{ fontSize: "clamp(26px, 5vw, 28px)" }} />
+              <ChatBubbleOutlineIcon
+                sx={{ fontSize: { xs: 21, sm: 23, md: 24 } }}
+              />
             </Badge>
           </IconButton>
 
-          {/* Notifications icon */}
-          <IconButton onClick={handleOpenNotifications} sx={{ color: "#5f4632" }}>
+          {/* NOTIFICATIONS ICON */}
+          <IconButton
+            onClick={handleOpenNotifications}
+            sx={{
+              color: "#5f4632",
+              p: 0.8,
+            }}
+          >
             <Badge
               color="error"
               badgeContent={unreadCount}
               invisible={unreadCount === 0}
               sx={{
                 "& .MuiBadge-badge": {
-                  fontSize: "clamp(0.55rem, 1.5vw, 0.75rem)",
-                  minWidth: "clamp(14px, 3vw, 20px)",
-                  height: "clamp(14px, 3vw, 20px)",
-                  padding: "0 5px",
+                  fontSize: "9px",
+                  minWidth: 15,
+                  height: 15,
+                  padding: "0 3px",
                 },
               }}
             >
               <NotificationsNoneIcon
                 sx={{
                   color: openNotifications ? "#f97316" : "#5f4632",
-                  transition: "0.2s",
-                  fontSize: "clamp(26px, 5vw, 28px)",
+                  fontSize: { xs: 22, sm: 24, md: 25 },
                 }}
               />
             </Badge>
           </IconButton>
 
+          {/* NOTIFICATION MENU */}
           <Menu
             anchorEl={notifAnchorEl}
             open={openNotifications}
             onClose={handleCloseNotifications}
-            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-            transformOrigin={{ vertical: "top", horizontal: "right" }}
+            anchorOrigin={{
+              vertical: "bottom",
+              horizontal: "right",
+            }}
+            transformOrigin={{
+              vertical: "top",
+              horizontal: "right",
+            }}
+            slotProps={{
+              paper: {
+                sx: {
+                  minWidth: 280,
+                  maxWidth: "calc(100vw - 20px)",
+                },
+              },
+            }}
           >
             <Box
               sx={{
                 display: "flex",
-                flexDirection: "row",
                 alignItems: "center",
                 justifyContent: "space-between",
                 width: "100%",
               }}
             >
-              <Typography sx={{ pl: 2, fontSize: 14 }}>Notifications</Typography>
+              <Typography
+                sx={{
+                  pl: 2,
+                  fontSize: "12px",
+                  fontWeight: 600,
+                }}
+              >
+                Notifications
+              </Typography>
+
               <IconButton onClick={handleOpenMoreMenu} size="small">
-                <MoreVertIcon />
+                <MoreVertIcon sx={{ fontSize: 19 }} />
               </IconButton>
             </Box>
 
@@ -323,10 +388,24 @@ const TopNav = ({ onMenuClick }) => {
               anchorEl={moreAnchorEl}
               open={openMoreMenu}
               onClose={handleCloseMoreMenu}
-              anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-              transformOrigin={{ vertical: "top", horizontal: "right" }}
+              anchorOrigin={{
+                vertical: "bottom",
+                horizontal: "right",
+              }}
+              transformOrigin={{
+                vertical: "top",
+                horizontal: "right",
+              }}
             >
-              <MenuItem onClick={handleMarkAllAsRead}>Mark all as read</MenuItem>
+              <MenuItem
+                onClick={handleMarkAllAsRead}
+                sx={{
+                  fontSize: "11px",
+                  minHeight: 34,
+                }}
+              >
+                Mark all as read
+              </MenuItem>
             </Menu>
 
             <Box
@@ -335,13 +414,18 @@ const TopNav = ({ onMenuClick }) => {
                 flexDirection: "column",
                 justifyContent: "center",
                 alignItems: "center",
-                width: 320,
+                width: { xs: 280, sm: 320 },
                 p: 1,
-                maxHeight: 400,
+                maxHeight: 380,
                 overflowY: "auto",
+                "& *": {
+                  fontSize: "12px",
+                },
               }}
             >
-              <NotificationTab handleCloseNotifications={handleCloseNotifications} />
+              <NotificationTab
+                handleCloseNotifications={handleCloseNotifications}
+              />
             </Box>
 
             {uniqueNotifications?.length > 4 && (
@@ -352,10 +436,13 @@ const TopNav = ({ onMenuClick }) => {
                 }}
                 sx={{
                   textAlign: "center",
-                  fontSize: "12px",
+                  fontSize: "11px",
                   color: "#1f49adff",
                   cursor: "pointer",
-                  "&:hover": { textDecoration: "underline" },
+                  py: 0.5,
+                  "&:hover": {
+                    textDecoration: "underline",
+                  },
                 }}
               >
                 See more
@@ -363,6 +450,7 @@ const TopNav = ({ onMenuClick }) => {
             )}
           </Menu>
 
+          {/* POST RIDE BUTTON */}
           <Tooltip
             title={
               !isProfileComplete
@@ -375,7 +463,7 @@ const TopNav = ({ onMenuClick }) => {
               <Button
                 onClick={() => setOpen(true)}
                 disabled={!isProfileComplete}
-                startIcon={<AddIcon />}
+                startIcon={<AddIcon sx={{ fontSize: "16px !important" }} />}
                 sx={{
                   display: { xs: "none", sm: "flex" },
                   textTransform: "none",
@@ -383,7 +471,17 @@ const TopNav = ({ onMenuClick }) => {
                   backgroundColor: "#f97316",
                   color: "#ffffff",
                   fontWeight: 700,
-                  "&:hover": { backgroundColor: "#f5c4a1" },
+                  fontSize: {
+                    sm: "11px",
+                    md: "12px",
+                    lg: "13px",
+                  },
+                  minWidth: "auto",
+                  py: 0.6,
+                  px: 1.5,
+                  "&:hover": {
+                    backgroundColor: "#e96810",
+                  },
                   "&.Mui-disabled": {
                     backgroundColor: "#d1d5db",
                     color: "#6b7280",
@@ -396,6 +494,7 @@ const TopNav = ({ onMenuClick }) => {
             </Box>
           </Tooltip>
 
+          {/* OFFER RIDE DIALOG */}
           <Dialog
             open={open}
             onClose={(event, reason) => {
@@ -415,14 +514,28 @@ const TopNav = ({ onMenuClick }) => {
               },
             }}
           >
-            <DialogTitle sx={{ position: "relative", fontWeight: 700, py: 2, pr: 6 }}>
+            <DialogTitle
+              sx={{
+                position: "relative",
+                fontWeight: 700,
+                fontSize: { xs: "14px", sm: "16px" },
+                py: 1.5,
+                pr: 6,
+              }}
+            >
               Offer Ride
+
               <IconButton
                 aria-label="close"
                 onClick={() => setOpen(false)}
-                sx={{ position: "absolute", top: 12, right: 12, color: "text.secondary" }}
+                sx={{
+                  position: "absolute",
+                  top: 8,
+                  right: 10,
+                  color: "text.secondary",
+                }}
               >
-                <CloseIcon />
+                <CloseIcon sx={{ fontSize: 20 }} />
               </IconButton>
             </DialogTitle>
 
@@ -434,12 +547,18 @@ const TopNav = ({ onMenuClick }) => {
                 maxHeight: { xs: "100vh", sm: "75vh" },
               }}
             >
-              <OfferRide setOpen={setOpen} onClose={() => setOpen(false)} />
+              <OfferRide
+                setOpen={setOpen}
+                onClose={() => setOpen(false)}
+              />
             </DialogContent>
           </Dialog>
 
+          {/* PROFILE AVATAR */}
           <Stack>
-            <Box sx={{ position: "relative", width: 44, height: 44 }}>
+            <Box
+             sx={{ position: "relative", width: 44, height: 44 }}
+             >
               <CircularProgress
                 variant="determinate"
                 value={completion}
@@ -458,9 +577,9 @@ const TopNav = ({ onMenuClick }) => {
                 onClick={handleOpenProfileMenu}
                 sx={{
                   bgcolor: "#f97316",
-                  width: 34,
-                  height: 34,
-                  fontSize: 14,
+                  width: { xs: 28, sm: 32, md: 34 },
+                  height: { xs: 28, sm: 32, md: 34 },
+                  fontSize: { xs: 10, sm: 12, md: 13 },
                   fontWeight: 800,
                   position: "absolute",
                   top: "50%",
@@ -474,12 +593,19 @@ const TopNav = ({ onMenuClick }) => {
               </Avatar>
             </Box>
 
+            {/* PROFILE MENU */}
             <Menu
               anchorEl={profileAnchorEl}
               open={openProfileMenu}
               onClose={handleCloseProfileMenu}
-              anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-              transformOrigin={{ vertical: "top", horizontal: "center" }}
+              anchorOrigin={{
+                vertical: "bottom",
+                horizontal: "center",
+              }}
+              transformOrigin={{
+                vertical: "top",
+                horizontal: "center",
+              }}
               sx={{ mt: 1.5 }}
             >
               {profileMenuOptions.map((option) => (
@@ -488,30 +614,55 @@ const TopNav = ({ onMenuClick }) => {
                   selected={selectedMenu === option.label}
                   onClick={() => handleSelect(option)}
                   sx={{
-                    "&.Mui-selected": { bgcolor: "#fff", color: "#FF9933" },
-                    "&.Mui-selected:hover": { color: "#e68a00" },
+                    fontSize: "12px",
+                    minHeight: 36,
+                    py: 0.5,
+                    "&.Mui-selected": {
+                      bgcolor: "#fff",
+                      color: "#FF9933",
+                    },
+                    "&.Mui-selected:hover": {
+                      color: "#e68a00",
+                    },
                   }}
                 >
                   <ListItemIcon
                     sx={{
-                      color: selectedMenu === option.label ? "#FF9933" : "inherit",
+                      minWidth: 30,
+                      color:
+                        selectedMenu === option.label
+                          ? "#FF9933"
+                          : "inherit",
+                      "& .MuiSvgIcon-root": {
+                        fontSize: 17,
+                      },
                     }}
                   >
                     {option.icon}
                   </ListItemIcon>
-                  <ListItemText>{option.label}</ListItemText>
+
+                  <ListItemText
+                    primary={option.label}
+                    slotProps={{
+                      primary: {
+                        fontSize: "12px",
+                      },
+                    }}
+                  />
                 </MenuItem>
               ))}
             </Menu>
           </Stack>
         </Box>
 
+        {/* CHAT MODAL */}
         <ChatModal
           open={messagesOpen}
           onClose={() => setMessagesOpen(false)}
           onResetUnread={resetUnread}
         />
 
+        {/* LOGOUT CONFIRMATION DIALOG */}
         <Dialog
           open={logoutDialogOpen}
           onClose={(event, reason) => {
@@ -537,7 +688,7 @@ const TopNav = ({ onMenuClick }) => {
         >
           <Box
             sx={{
-              height: { xs: 3, sm: 4 },
+              height: 4,
               background: "linear-gradient(90deg, #f97316, #dc2626)",
               width: "100%",
               flexShrink: 0,
@@ -547,32 +698,32 @@ const TopNav = ({ onMenuClick }) => {
           <DialogTitle
             sx={{
               fontWeight: 800,
-              fontSize: { xs: "0.95rem", sm: "1.25rem" },
-              pt: { xs: 2.5, sm: 4 },
+              fontSize: { xs: "13px", sm: "15px" },
+              pt: { xs: 2, sm: 3 },
               pb: 0,
               textAlign: "center",
               color: "#1F2430",
-              px: { xs: 2, sm: 3 },
+              px: 2,
             }}
           />
 
           <DialogContent
             sx={{
-              pt: { xs: 1.5, sm: 2.5 },
-              pb: { xs: 0.5, sm: 1.5 },
-              px: { xs: 2, sm: 3 },
+              pt: 2,
+              pb: 1,
+              px: 2,
             }}
           >
-            <Box sx={{ textAlign: "center", px: { xs: 0.5, sm: 1 } }}>
+            <Box sx={{ textAlign: "center", px: 0.5 }}>
               <Typography
                 sx={{
-                  fontSize: { xs: "0.85rem", sm: "1rem" },
+                  fontSize: { xs: "12px", sm: "14px" },
                   fontWeight: 600,
                   color: "#1F2430",
-                  mb: { xs: 0.5, sm: 1 },
+                  mb: 1,
                 }}
               >
-                Are you sure you want to logout ?
+                Are you sure you want to logout?
               </Typography>
             </Box>
           </DialogContent>
@@ -580,9 +731,9 @@ const TopNav = ({ onMenuClick }) => {
           <DialogActions
             sx={{
               px: { xs: 1.5, sm: 3 },
-              pb: { xs: 2, sm: 3.5 },
-              pt: { xs: 1, sm: 2 },
-              gap: { xs: 0.75, sm: 1.5 },
+              pb: { xs: 2, sm: 3 },
+              pt: 1,
+              gap: 1,
               justifyContent: "center",
               flexDirection: "row",
             }}
@@ -595,20 +746,24 @@ const TopNav = ({ onMenuClick }) => {
                 textTransform: "none",
                 fontWeight: 600,
                 flex: { xs: 1, sm: "0 0 auto" },
-                minWidth: { xs: "auto", sm: 110 },
-                minHeight: { xs: 32, sm: 46 },
-                height: { xs: 32, sm: 46 },
+                minWidth: { xs: "auto", sm: 100 },
+                minHeight: { xs: 32, sm: 40 },
+                height: { xs: 32, sm: 40 },
                 borderColor: "#6b7280",
                 color: "#ffffff",
                 bgcolor: "#6b7280",
-                "&:hover": { borderColor: "#6b7280", bgcolor: "#6b7280" },
-                px: { xs: 1, sm: 3 },
-                fontSize: { xs: "0.7rem", sm: "0.9rem" },
-                py: { xs: 0.5, sm: 1 },
+                "&:hover": {
+                  borderColor: "#6b7280",
+                  bgcolor: "#6b7280",
+                },
+                px: { xs: 1, sm: 2.5 },
+                fontSize: { xs: "11px", sm: "12px" },
+                py: 0.5,
               }}
             >
               Cancel
             </Button>
+
             <Button
               onClick={confirmLogout}
               variant="contained"
@@ -617,18 +772,22 @@ const TopNav = ({ onMenuClick }) => {
                 textTransform: "none",
                 fontWeight: 700,
                 flex: { xs: 1, sm: "0 0 auto" },
-                minWidth: { xs: "auto", sm: 110 },
-                minHeight: { xs: 32, sm: 46 },
-                height: { xs: 32, sm: 46 },
+                minWidth: { xs: "auto", sm: 100 },
+                minHeight: { xs: 32, sm: 40 },
+                height: { xs: 32, sm: 40 },
                 background: "linear-gradient(135deg, #E85D26, #E85D26)",
                 color: "#ffffff",
-                "&:hover": { background: "linear-gradient(135deg, #D65A00, #D65A00)" },
+                "&:hover": {
+                  background: "linear-gradient(135deg, #D65A00, #D65A00)",
+                },
                 boxShadow: "0 4px 15px rgba(232, 93, 38, 0.3)",
-                px: { xs: 1, sm: 3 },
-                fontSize: { xs: "0.7rem", sm: "0.9rem" },
-                py: { xs: 0.5, sm: 1 },
+                px: { xs: 1, sm: 2.5 },
+                fontSize: { xs: "11px", sm: "12px" },
+                py: 0.5,
               }}
-              startIcon={<LogoutIcon sx={{ fontSize: { xs: 14, sm: 20 } }} />}
+              startIcon={
+                <LogoutIcon sx={{ fontSize: { xs: 13, sm: 17 } }} />
+              }
             >
               Logout
             </Button>

@@ -451,7 +451,16 @@ const MyProfileSettings = () => {
             </Box>
 
             {/* Action Buttons */}
-            <Box sx={{ display: "flex", gap: 2, flexShrink: 0 }}>
+
+            <Box
+              sx={{
+                display: "flex",
+                gap: { xs: 1, sm: 1.5 },
+                flexShrink: 0,
+                flexWrap: { xs: "wrap", sm: "nowrap" },
+                justifyContent: "flex-end",
+              }}
+            >
               <Button
                 variant="contained"
                 disableElevation
@@ -461,15 +470,18 @@ const MyProfileSettings = () => {
                   color: "#fff",
                   textTransform: "none",
                   fontWeight: 700,
-                  px: 3,
-                  height: 48,
+                  fontSize: { xs: "11px", sm: "12px", md: "13px" },
+                  px: { xs: 1.5, sm: 2 },
+                  py: 0.5,
+                  height: { xs: 34, sm: 38 },
                   borderRadius: 1.5,
-                  minWidth: 100,
+                  minWidth: { xs: 70, sm: 85 },
                   "&:hover": { bgcolor: RUST_DARK },
                 }}
               >
                 Copy
               </Button>
+
               <Button
                 variant="outlined"
                 onClick={handleShare}
@@ -479,23 +491,29 @@ const MyProfileSettings = () => {
                   borderWidth: 1.5,
                   textTransform: "none",
                   fontWeight: 700,
-                  px: 3,
-                  height: 48,
+                  fontSize: { xs: "11px", sm: "12px", md: "13px" },
+                  px: { xs: 1.5, sm: 2 },
+                  py: 0.5,
+                  height: { xs: 34, sm: 38 },
                   borderRadius: 1.5,
-                  minWidth: 100,
-                  "&:hover": { borderWidth: 1.5, bgcolor: "#FFF5EC" },
+                  minWidth: { xs: 70, sm: 85 },
+                  "&:hover": {
+                    borderWidth: 1.5,
+                    bgcolor: "#FFF5EC",
+                  },
                 }}
               >
                 Share
               </Button>
             </Box>
+
           </Box>
         </Section>
 
         {/* ─── 3. SMS Preferences ─── */}
-        <Section title="Text message (SMS) preferences">
+        {/* <Section title="Text message (SMS) preferences">
           <Stack spacing={0}>
-            {/* Row 1 */}
+
             <Row sx={{ py: 2 }}>
               <Box sx={{ minWidth: 0 }}>
                 <Typography sx={{ fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>
@@ -513,7 +531,7 @@ const MyProfileSettings = () => {
             </Row>
             <Divider sx={{ borderColor: BORDER }} />
 
-            {/* Row 2 */}
+
             <Row sx={{ py: 2 }}>
               <Typography sx={{ fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>
                 Referral approval requests
@@ -526,7 +544,7 @@ const MyProfileSettings = () => {
             </Row>
             <Divider sx={{ borderColor: BORDER }} />
 
-            {/* Row 3 */}
+
             <Row sx={{ py: 2 }}>
               <Typography sx={{ fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>
                 Route alerts
@@ -539,7 +557,7 @@ const MyProfileSettings = () => {
             </Row>
             <Divider sx={{ borderColor: BORDER }} />
 
-            {/* Row 4 */}
+
             <Row sx={{ py: 2 }}>
               <Typography sx={{ fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>
                 Community news and tips
@@ -555,7 +573,7 @@ const MyProfileSettings = () => {
           <Typography sx={{ fontSize: 12.5, color: TEXT_MUTED, mt: 2, lineHeight: 1.6 }}>
             Message and data rates may apply. Reply STOP to opt out, HELP for help. Verification codes are always sent.
           </Typography>
-        </Section>
+        </Section> */}
 
         {/* ─── 4. Legal Links ─── */}
         <Paper
