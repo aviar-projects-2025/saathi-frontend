@@ -40,6 +40,7 @@ import uploadToCloudinary from "../uploadToCloudinary";
 import { uploadImageToS3 } from "../../utils/s3Upload";
 import ProtectedAvatar from "../ProtectedAvatar";
 import LegalModal from "../LegalModal";
+import saathilogo1 from "../../assets/saathilogo1.png";
 
 const ORANGE = "#C83F08";
 const NAVY = "#132858";
@@ -441,7 +442,6 @@ const Register = () => {
 
         if (response.data?.success && response.data?.invitation) {
           setInvitation(response.data.invitation);
-          console.log(response.data.invitation)
         } else {
           setInvitationError(
             response.data?.message || "This invitation link is invalid."
@@ -956,6 +956,7 @@ const Register = () => {
   const renderBrand = () => (
     <Stack direction="row" spacing={1.2} alignItems="center" sx={{ mb: 3 }}>
       <Avatar
+        src={saathilogo1}
         sx={{
           width: 34,
           height: 34,
@@ -1025,8 +1026,7 @@ const Register = () => {
             gap: 1.5,
           }}
         >
-          <ProtectedAvatar
-            src={invitation?.profileImageUrl}
+          <Avatar
             sx={{
               bgcolor: "#FFE0C8",
               color: "#9D350E",
@@ -1041,7 +1041,7 @@ const Register = () => {
               .join("")
               .slice(0, 2)
               .toUpperCase()}
-          </ProtectedAvatar>
+          </Avatar>
           <Box sx={{ minWidth: 0 }}>
             <Typography fontWeight={800} color="#25211E">
               {invitation?.referrerName} invited you
