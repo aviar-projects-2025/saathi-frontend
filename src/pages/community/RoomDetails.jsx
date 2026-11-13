@@ -142,7 +142,7 @@ export default function RoomDetails() {
         )}
 
         <Box
-          ref={contentRef}
+          // ref={contentRef}
           sx={{
             flex: 1,
             width: "100%",
