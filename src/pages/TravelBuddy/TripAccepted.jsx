@@ -1,4 +1,3 @@
-
 import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
@@ -32,6 +31,8 @@ const COLORS = {
   greenBg: "#E8F7EE",
 };
 
+const wrapText = { overflowWrap: "anywhere", minWidth: 0 };
+
 const getRoute = (trip) => {
   if (!trip) return "Route unavailable";
 
@@ -41,9 +42,8 @@ const getRoute = (trip) => {
     const first = flights[0];
     const last = flights[flights.length - 1];
 
-    return `${first.fromCode || first.from || "Origin"} → ${
-      last.toCode || last.to || "Destination"
-    }`;
+    return `${first.fromCode || first.from || "Origin"} → ${last.toCode || last.to || "Destination"
+      }`;
   }
 
   const from =
@@ -76,13 +76,13 @@ const getDeparture = (trip) => {
   return Number.isNaN(date.getTime())
     ? String(value)
     : date.toLocaleString(undefined, {
-        weekday: "short",
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-      });
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
 };
 
 const getInitials = (name = "") => {
@@ -94,8 +94,7 @@ const getInitials = (name = "") => {
     .join("") || "TB";
 };
 
-// WhatsApp requires a country code and digits only.
-// A 10-digit local number defaults to India (+91).
+
 const getWhatsAppNumber = (phone = "") => {
   const trimmed = String(phone).trim();
 
@@ -109,7 +108,7 @@ const getWhatsAppNumber = (phone = "") => {
     digits = `91${digits}`;
   }
 
-  // E.164 numbers contain at most 15 digits.
+
   if (digits.length < 8 || digits.length > 15) return "";
 
   return digits;
@@ -154,6 +153,7 @@ function TripCard({ title, subtitle, trip, number }) {
       elevation={0}
       sx={{
         height: "100%",
+        minWidth: 0,
         border: `1px solid ${COLORS.border}`,
         borderRadius: 4,
         bgcolor: "#fff",
@@ -174,7 +174,7 @@ function TripCard({ title, subtitle, trip, number }) {
           alignItems="center"
           spacing={1}
         >
-          <Box>
+          <Box sx={{ minWidth: 0 }}>
             <Typography
               sx={{
                 color: COLORS.muted,
@@ -191,8 +191,9 @@ function TripCard({ title, subtitle, trip, number }) {
               sx={{
                 color: COLORS.text,
                 fontWeight: 800,
-                fontSize: 16,
+                fontSize: { xs: 15, sm: 16 },
                 mt: 0.5,
+                ...wrapText,
               }}
             >
               {title}
@@ -203,6 +204,7 @@ function TripCard({ title, subtitle, trip, number }) {
             sx={{
               width: 40,
               height: 40,
+              flexShrink: 0,
               bgcolor: COLORS.cream,
               color: COLORS.primary,
               fontWeight: 800,
@@ -214,8 +216,8 @@ function TripCard({ title, subtitle, trip, number }) {
 
         <Typography
           sx={{
-            mt: 2.5,
-            fontSize: { xs: 20, sm: 23 },
+            mt: { xs: 2, sm: 2.5 },
+            fontSize: { xs: 19, sm: 21, md: 23 },
             lineHeight: 1.35,
             fontWeight: 800,
             color: COLORS.text,
@@ -236,8 +238,8 @@ function TripCard({ title, subtitle, trip, number }) {
             borderRadius: 2.5,
           }}
         >
-          <Typography sx={{ fontSize: 18 }}>📅</Typography>
-          <Box>
+          <Typography sx={{ fontSize: 18, flexShrink: 0 }}>📅</Typography>
+          <Box sx={{ minWidth: 0 }}>
             <Typography sx={{ fontSize: 11, color: COLORS.muted }}>
               DEPARTURE
             </Typography>
@@ -247,6 +249,7 @@ function TripCard({ title, subtitle, trip, number }) {
                 fontSize: 13,
                 color: COLORS.text,
                 fontWeight: 700,
+                ...wrapText,
               }}
             >
               {getDeparture(trip) || "Date not provided"}
@@ -260,6 +263,7 @@ function TripCard({ title, subtitle, trip, number }) {
             label={String(trip.status).replaceAll("_", " ")}
             sx={{
               mt: 1.5,
+              maxWidth: "100%",
               bgcolor: COLORS.greenBg,
               color: COLORS.green,
               fontWeight: 800,
@@ -274,7 +278,7 @@ function TripCard({ title, subtitle, trip, number }) {
 
             {flights.map((flight, index) => (
               <Box key={flight._id || index} sx={{ py: 0.5 }}>
-                <Typography sx={{ fontSize: 13, fontWeight: 700 }}>
+                <Typography sx={{ fontSize: 13, fontWeight: 700, ...wrapText }}>
                   ✈ {flight.flightNumber || `Flight ${index + 1}`}
                 </Typography>
 
@@ -283,6 +287,7 @@ function TripCard({ title, subtitle, trip, number }) {
                     color: COLORS.muted,
                     fontSize: 12,
                     mt: 0.4,
+                    ...wrapText,
                   }}
                 >
                   {flight.fromCode || flight.from || "Origin"} →{" "}
@@ -291,7 +296,7 @@ function TripCard({ title, subtitle, trip, number }) {
 
                 {flight.departureTime && (
                   <Typography
-                    sx={{ color: COLORS.muted, fontSize: 12, mt: 0.4 }}
+                    sx={{ color: COLORS.muted, fontSize: 12, mt: 0.4, ...wrapText }}
                   >
                     {new Date(flight.departureTime).toLocaleString()}
                   </Typography>
@@ -308,6 +313,7 @@ function TripCard({ title, subtitle, trip, number }) {
               fontSize: 13,
               lineHeight: 1.6,
               color: COLORS.muted,
+              ...wrapText,
             }}
           >
             {trip.description}
@@ -357,7 +363,7 @@ export default function TripAccepted() {
 
       setError(
         err.response?.data?.message ||
-          "Unable to load this trip. Please try again."
+        "Unable to load this trip. Please try again."
       );
     } finally {
       setLoading(false);
@@ -384,8 +390,14 @@ export default function TripAccepted() {
     <Box
       sx={{
         minHeight: "100vh",
+        "@supports (min-height: 100dvh)": { minHeight: "100dvh" },
+        width: "100%",
+        overflowX: "hidden",
         bgcolor: COLORS.background,
-        pb: 6,
+        pb: {
+          xs: "calc(32px + env(safe-area-inset-bottom, 0px))",
+          sm: "calc(48px + env(safe-area-inset-bottom, 0px))",
+        },
       }}
     >
       {/* Hero */}
@@ -393,18 +405,24 @@ export default function TripAccepted() {
         sx={{
           background: `linear-gradient(130deg, ${COLORS.primaryDark} 0%, ${COLORS.primary} 60%, #F99A4D 100%)`,
           color: "#fff",
-          pt: { xs: 3, sm: 4 },
-          pb: { xs: 5, sm: 7 },
-          px: 2,
+          pt: {
+            xs: "calc(16px + env(safe-area-inset-top, 0px))",
+            sm: "calc(32px + env(safe-area-inset-top, 0px))",
+          },
+          pb: { xs: 5, sm: 6, md: 7 },
+          pl: { xs: "max(16px, env(safe-area-inset-left, 0px))", sm: 2 },
+          pr: { xs: "max(16px, env(safe-area-inset-right, 0px))", sm: 2 },
         }}
       >
-        <Container maxWidth="md">
+        <Container maxWidth="md" disableGutters sx={{ px: { sm: 2, md: 3 } }}>
           <Button
             onClick={() => navigate("/travelBuddy")}
             sx={{
               color: "#fff",
-              mb: 3,
+              mb: { xs: 2, sm: 3 },
               px: 0,
+              minHeight: 44,
+              fontSize: { xs: 14, sm: 15 },
               "&:hover": { bgcolor: "rgba(255,255,255,0.1)" },
             }}
           >
@@ -426,6 +444,7 @@ export default function TripAccepted() {
                 borderRadius: "50%",
                 bgcolor: "rgba(255,255,255,0.18)",
                 fontSize: 20,
+                flexShrink: 0,
               }}
             >
               ✓
@@ -447,10 +466,10 @@ export default function TripAccepted() {
             component="h1"
             sx={{
               maxWidth: 650,
-              fontSize: { xs: 29, sm: 39 },
+              fontSize: { xs: 27, sm: 34, md: 39 },
               lineHeight: 1.15,
               fontWeight: 900,
-              letterSpacing: -0.8,
+              letterSpacing: { xs: -0.5, sm: -0.8 },
             }}
           >
             Your journey is better together.
@@ -461,8 +480,8 @@ export default function TripAccepted() {
               mt: 1.5,
               maxWidth: 570,
               color: "rgba(255,255,255,0.9)",
-              fontSize: { xs: 14, sm: 16 },
-              lineHeight: 1.8,
+              fontSize: { xs: 14, sm: 15, md: 16 },
+              lineHeight: { xs: 1.65, sm: 1.8 },
             }}
           >
             Your Travel Buddy connection is confirmed. Connect with your
@@ -476,6 +495,7 @@ export default function TripAccepted() {
             sx={{
               mt: 2.5,
               display: "inline-flex",
+              maxWidth: "100%",
               px: 1.5,
               py: 0.8,
               borderRadius: 20,
@@ -490,12 +510,20 @@ export default function TripAccepted() {
         </Container>
       </Box>
 
-      <Container maxWidth="md" sx={{ mt: { xs: -3, sm: -4 } }}>
+      <Container
+        maxWidth="md"
+        disableGutters
+        sx={{
+          mt: { xs: -3, sm: -4 },
+          pl: { xs: "max(16px, env(safe-area-inset-left, 0px))", sm: 2, md: 3 },
+          pr: { xs: "max(16px, env(safe-area-inset-right, 0px))", sm: 2, md: 3 },
+        }}
+      >
         {loading ? (
           <Paper
             elevation={0}
             sx={{
-              p: 6,
+              p: { xs: 4, sm: 6 },
               borderRadius: 4,
               textAlign: "center",
               border: `1px solid ${COLORS.border}`,
@@ -515,7 +543,7 @@ export default function TripAccepted() {
               border: `1px solid ${COLORS.border}`,
             }}
           >
-            <Alert severity="error" sx={{ mb: 2 }}>
+            <Alert severity="error" sx={{ mb: 2, ...wrapText }}>
               {error}
             </Alert>
 
@@ -523,6 +551,8 @@ export default function TripAccepted() {
               variant="contained"
               onClick={loadAcceptedTrip}
               sx={{
+                minHeight: 44,
+                width: { xs: "100%", sm: "auto" },
                 bgcolor: COLORS.primary,
                 "&:hover": { bgcolor: COLORS.primaryDark },
               }}
@@ -531,21 +561,21 @@ export default function TripAccepted() {
             </Button>
           </Paper>
         ) : data ? (
-          <Stack spacing={3}>
+          <Stack spacing={{ xs: 2.5, sm: 3 }}>
             {/* Companion contact card */}
             <Paper
               elevation={0}
               sx={{
-                p: { xs: 2.5, sm: 3.5 },
+                p: { xs: 2, sm: 3, md: 3.5 },
                 borderRadius: 4,
                 border: `1px solid ${COLORS.border}`,
                 bgcolor: "#fff",
               }}
             >
               <Stack
-                direction={{ xs: "column", sm: "row" }}
+                direction={{ xs: "column", md: "row" }}
                 spacing={2}
-                alignItems={{ xs: "stretch", sm: "center" }}
+                alignItems={{ xs: "stretch", md: "center" }}
               >
                 <Stack
                   direction="row"
@@ -555,11 +585,12 @@ export default function TripAccepted() {
                 >
                   <Avatar
                     sx={{
-                      width: 64,
-                      height: 64,
+                      width: { xs: 56, sm: 64 },
+                      height: { xs: 56, sm: 64 },
+                      flexShrink: 0,
                       bgcolor: COLORS.cream,
                       color: COLORS.primary,
-                      fontSize: 22,
+                      fontSize: { xs: 20, sm: 22 },
                       fontWeight: 900,
                       border: "2px solid #FFE0C7",
                     }}
@@ -583,7 +614,7 @@ export default function TripAccepted() {
                     <Typography
                       sx={{
                         mt: 0.5,
-                        fontSize: { xs: 19, sm: 22 },
+                        fontSize: { xs: 18, sm: 20, md: 22 },
                         fontWeight: 900,
                         color: COLORS.text,
                         overflowWrap: "anywhere",
@@ -621,11 +652,13 @@ export default function TripAccepted() {
                     sx={{
                       minHeight: 48,
                       px: 2.5,
+                      width: { xs: "100%", md: "auto" },
                       borderRadius: 2.5,
                       bgcolor: "#168C50",
                       color: "#fff",
                       fontWeight: 800,
                       whiteSpace: "nowrap",
+                      flexShrink: 0,
                       "&:hover": { bgcolor: "#107441" },
                     }}
                   >
@@ -634,7 +667,7 @@ export default function TripAccepted() {
                 )}
               </Stack>
 
-              <Divider sx={{ my: 2.5 }} />
+              <Divider sx={{ my: { xs: 2, sm: 2.5 } }} />
 
               <Stack
                 direction={{ xs: "column", sm: "row" }}
@@ -659,6 +692,7 @@ export default function TripAccepted() {
                       sx={{
                         display: "inline-block",
                         mt: 0.6,
+                        minHeight: { xs: 28, sm: "auto" },
                         color: COLORS.text,
                         fontSize: 15,
                         fontWeight: 800,
@@ -693,10 +727,12 @@ export default function TripAccepted() {
                       sx={{
                         display: "inline-block",
                         mt: 0.6,
+                        minHeight: { xs: 28, sm: "auto" },
                         color: COLORS.text,
                         fontSize: 14,
                         fontWeight: 700,
                         overflowWrap: "anywhere",
+                        maxWidth: "100%",
                       }}
                     >
                       {companion.email}
@@ -706,7 +742,7 @@ export default function TripAccepted() {
               </Stack>
 
               {phone && !whatsappNumber && (
-                <Alert severity="info" sx={{ mt: 2 }}>
+                <Alert severity="info" sx={{ mt: 2, fontSize: { xs: 13, sm: 14 }, ...wrapText }}>
                   WhatsApp couldn't validate this number. Store the
                   companion's phone with its international country code,
                   such as +91 or +1.
@@ -714,7 +750,7 @@ export default function TripAccepted() {
               )}
 
               {!phone && (
-                <Alert severity="info" sx={{ mt: 2 }}>
+                <Alert severity="info" sx={{ mt: 2, fontSize: { xs: 13, sm: 14 }, ...wrapText }}>
                   WhatsApp chat is unavailable because the companion's
                   phone number was not returned by the server.
                 </Alert>
@@ -726,7 +762,7 @@ export default function TripAccepted() {
               <Typography
                 sx={{
                   color: COLORS.text,
-                  fontSize: 21,
+                  fontSize: { xs: 19, sm: 21 },
                   fontWeight: 900,
                   mb: 0.5,
                 }}
@@ -748,10 +784,10 @@ export default function TripAccepted() {
                 sx={{
                   display: "grid",
                   gridTemplateColumns: {
-                    xs: "1fr",
-                    sm: "repeat(2, minmax(0, 1fr))",
+                    xs: "minmax(0, 1fr)",
+                    md: "repeat(2, minmax(0, 1fr))",
                   },
-                  gap: 2,
+                  gap: { xs: 1.5, sm: 2 },
                   alignItems: "stretch",
                 }}
               >
@@ -775,15 +811,15 @@ export default function TripAccepted() {
             <Paper
               elevation={0}
               sx={{
-                p: 2.5,
+                p: { xs: 2, sm: 2.5 },
                 borderRadius: 3,
                 bgcolor: COLORS.cream,
                 border: "1px solid #FFE1C8",
               }}
             >
               <Stack direction="row" spacing={1.5} alignItems="flex-start">
-                <Typography sx={{ fontSize: 22 }}>💬</Typography>
-                <Box>
+                <Typography sx={{ fontSize: 22, flexShrink: 0 }}>💬</Typography>
+                <Box sx={{ minWidth: 0 }}>
                   <Typography
                     sx={{ fontWeight: 800, color: COLORS.text }}
                   >
@@ -795,7 +831,7 @@ export default function TripAccepted() {
                       mt: 0.6,
                       color: COLORS.muted,
                       fontSize: 13,
-                      lineHeight: 1.8,
+                      lineHeight: { xs: 1.65, sm: 1.8 },
                     }}
                   >
                     Confirm departure times, meeting points, and any

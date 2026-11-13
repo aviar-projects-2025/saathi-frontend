@@ -3,7 +3,7 @@ import {
   Box, Button, Card, CardActionArea, Chip, Avatar, Paper, Stack, Typography,
   createTheme, ThemeProvider, CssBaseline, CircularProgress,
   TextField, InputAdornment, Fade, Dialog, DialogTitle, DialogContent,
-  DialogActions, Divider, IconButton,
+  DialogActions, Divider, IconButton, useMediaQuery, useTheme,
 } from "@mui/material";
 import FlightIcon from "@mui/icons-material/Flight";
 import SearchIcon from "@mui/icons-material/Search";
@@ -36,16 +36,27 @@ const theme = createTheme({
 });
 
 const BTN = {
-  height: 46, minHeight: 46, px: 2, py: 0, borderRadius: 2,
-  fontSize: 15, fontWeight: 700, lineHeight: 1.2, textAlign: "center", boxShadow: "none",
+  height: { xs: 44, sm: 46 },
+  minHeight: { xs: 44, sm: 46 },
+  px: 2,
+  py: 0,
+  borderRadius: 2,
+  fontSize: { xs: 14, sm: 15 },
+  fontWeight: 700,
+  lineHeight: 1.2,
+  textAlign: "center",
+  boxShadow: "none",
+  whiteSpace: "nowrap",
 };
 const actionStyles = {
-  base: { ...BTN, width: 170 },
+  base: { ...BTN, width: { xs: "100%", sm: "auto", md: 170 }, minWidth: { sm: 150 } },
   contained: { bgcolor: colors.rustDark, color: "#fff", "&:hover": { bgcolor: "#9A2F06" } },
   outlined: { color: colors.rustDark, borderColor: colors.rustDark, borderWidth: 1.5, bgcolor: "#fff", "&:hover": { borderWidth: 1.5, borderColor: "#9A2F06", bgcolor: "#FFF4EE" } },
 };
 
-/* ── Helpers ── */
+const labelSx = { fontSize: 12, color: colors.muted };
+const valueSx = { fontSize: 14, fontWeight: 600, overflowWrap: "anywhere" };
+
 const getDeparture = (trip) => {
   const raw = trip?.flights?.[0]?.departureTime;
   if (!raw) return null;
@@ -66,13 +77,19 @@ const formatTripDate = (value, pattern = "eee, MMM d, yyyy · h:mm a") => {
   return isNaN(d.getTime()) ? "Not provided" : format(d, pattern);
 };
 
-/* ── Small components ── */
+
 function RoleCard({ title, description, onClick }) {
   return (
-    <Card variant="outlined" sx={{ flex: 1, borderRadius: 3, bgcolor: "#fff", transition: "border-color 0.2s", "&:hover": { borderColor: colors.rust } }}>
+    <Card
+      variant="outlined"
+      sx={{
+        flex: 1, minWidth: 0, borderRadius: 3, bgcolor: "#fff",
+        transition: "border-color 0.2s", "&:hover": { borderColor: colors.rust },
+      }}
+    >
       <CardActionArea onClick={onClick} sx={{ p: { xs: 1.75, sm: 2.25 }, height: "100%" }}>
-        <Typography sx={{ fontWeight: 700, fontSize: { xs: 16, sm: 18 }, color: colors.navy, mb: 0.75 }}>{title}</Typography>
-        <Typography sx={{ fontSize: { xs: 13, sm: 14 }, color: colors.muted, lineHeight: 1.5 }}>{description}</Typography>
+        <Typography sx={{ fontWeight: 700, fontSize: { xs: 16, sm: 17, md: 18 }, color: colors.navy, mb: 0.75 }}>{title}</Typography>
+        <Typography sx={{ fontSize: { xs: 13, sm: 13.5, md: 14 }, color: colors.muted, lineHeight: 1.5 }}>{description}</Typography>
       </CardActionArea>
     </Card>
   );
@@ -89,6 +106,30 @@ function StatusChip({ status }) {
   return <Chip label={s.label} size="small" sx={{ fontWeight: 700, fontSize: 11, height: 24, borderRadius: "14px", bgcolor: s.bg, color: s.color, letterSpacing: 0.4 }} />;
 }
 
+const rowPaperSx = {
+  p: { xs: 1.5, sm: 2 },
+  borderRadius: 3,
+  borderColor: colors.border,
+  display: "flex",
+  flexDirection: { xs: "column", md: "row" },
+  alignItems: { xs: "stretch", md: "center" },
+  gap: { xs: 1.5, md: 2 },
+  cursor: "pointer",
+  width: "100%",
+  minWidth: 0,
+  boxSizing: "border-box",
+};
+const rowActionsSx = {
+  flexShrink: 0,
+  alignItems: "center",
+  justifyContent: { xs: "flex-start", md: "flex-end" },
+  flexWrap: "wrap",
+  rowGap: 1,
+  columnGap: 1.5,
+  
+  "& > .MuiButton-root": { flexBasis: { xs: "100%", sm: "auto" } },
+};
+
 function MyTripRow({ trip, onViewMatches, showAction = true, viewDetails, currentUserId }) {
   const isMatched = trip.status === "MATCHED";
   const isMine = String(trip.createdBy?._id || trip.createdBy) === String(currentUserId);
@@ -100,28 +141,23 @@ function MyTripRow({ trip, onViewMatches, showAction = true, viewDetails, curren
     <Paper
       variant="outlined"
       onClick={() => viewDetails(trip)}
-      sx={{
-        p: { xs: 1.75, sm: 2 }, borderRadius: 3, borderColor: colors.border,
-        display: "flex", flexDirection: { xs: "column", md: "row" }, alignItems: { xs: "stretch", md: "center" },
-        gap: 2, cursor: "pointer", transition: "box-shadow 0.2s",
-        "&:hover": { boxShadow: "0px 4px 12px rgba(0,0,0,0.05)" },
-      }}
+      sx={{ ...rowPaperSx, transition: "box-shadow 0.2s", "&:hover": { boxShadow: "0px 4px 12px rgba(0,0,0,0.05)" } }}
     >
-      <Stack direction="row" spacing={2} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
-        <Avatar sx={{ bgcolor: isMatched ? "#DDF4E4" : "#DCEBFA", width: 44, height: 44, flexShrink: 0 }}>
+      <Stack direction="row" spacing={{ xs: 1.5, sm: 2 }} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
+        <Avatar sx={{ bgcolor: isMatched ? "#DDF4E4" : "#DCEBFA", width: { xs: 40, sm: 44 }, height: { xs: 40, sm: 44 }, flexShrink: 0 }}>
           <FlightIcon sx={{ color: "#1E293B", transform: "rotate(45deg)", fontSize: 20 }} />
         </Avatar>
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography sx={{ fontWeight: 700, fontSize: { xs: 14.5, sm: 16 }, color: "#1F2937", wordBreak: "break-word" }}>
+          <Typography sx={{ fontWeight: 700, fontSize: { xs: 14, sm: 15, md: 16 }, color: "#1F2937", overflowWrap: "anywhere", lineHeight: 1.35 }}>
             {trip.relationship || "Traveller"} · {flightNos} · {route}
           </Typography>
-          <Typography sx={{ fontSize: { xs: 12, sm: 12.5 }, color: colors.muted, mt: 0.25 }}>
+          <Typography sx={{ fontSize: { xs: 12, sm: 12.5 }, color: colors.muted, mt: 0.25, overflowWrap: "anywhere" }}>
             {dateStr} · {trip.flights?.length || 0} segment{trip.flights?.length > 1 ? "s" : ""}
             {!isMine && trip.createdBy?.firstName ? ` · ${trip.createdBy.firstName}` : ""}
           </Typography>
         </Box>
       </Stack>
-      <Stack direction="row" spacing={2} sx={{ flexShrink: 0, alignItems: "center", justifyContent: "flex-end", flexWrap: "wrap" }}>
+      <Stack direction="row" sx={rowActionsSx}>
         <StatusChip status={trip.status} />
         {trip.status === "OPEN" && trip.isRequestSubmission && (
           <Chip size="small" label="Private offer" sx={{ bgcolor: "#F3E8FF", color: "#6B21A8", fontWeight: 700 }} />
@@ -164,26 +200,25 @@ function GlobalTripRow({ trip, onViewDetails, currentUserId }) {
       onClick={() => onViewDetails(trip)}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onViewDetails(trip); } }}
       sx={{
-        p: { xs: 1.75, sm: 2 }, borderRadius: 3, borderColor: colors.border,
-        display: "flex", flexDirection: { xs: "column", md: "row" },
-        alignItems: { xs: "stretch", md: "center" }, gap: 2, cursor: "pointer",
+        ...rowPaperSx,
         transition: "box-shadow 0.2s, border-color 0.2s",
         "&:hover": { boxShadow: "0px 4px 12px rgba(0,0,0,0.08)", borderColor: colors.rust },
+        "&:focus-visible": { outline: `2px solid ${colors.rust}`, outlineOffset: 2 },
       }}
     >
-      <Stack direction="row" spacing={2} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
+      <Stack direction="row" spacing={{ xs: 1.5, sm: 2 }} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
         <ProtectedAvatar
           src={trip.createdBy?.profileImage || ""} alt={userName}
-          sx={{ width: 48, height: 48, flexShrink: 0, bgcolor: isParent ? "#DCEBFA" : "#DDF4E4" }}
+          sx={{ width: { xs: 42, sm: 48 }, height: { xs: 42, sm: 48 }, flexShrink: 0, bgcolor: isParent ? "#DCEBFA" : "#DDF4E4" }}
         >
           <FlightIcon sx={{ color: "#1E293B", transform: "rotate(45deg)", fontSize: 20 }} />
         </ProtectedAvatar>
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography sx={{ fontWeight: 700, fontSize: { xs: 14.5, sm: 16 }, color: "#1F2937", wordBreak: "break-word" }}>
+          <Typography sx={{ fontWeight: 700, fontSize: { xs: 14, sm: 15, md: 16 }, color: "#1F2937", overflowWrap: "anywhere", lineHeight: 1.35 }}>
             {userName}{isOwn ? " (you)" : ""} ·{" "}
             <span style={{ color: isParent ? colors.navy : "#14653A" }}>{isParent ? "Needs Help" : "Can Help"}</span>
           </Typography>
-          <Typography sx={{ fontSize: { xs: 12, sm: 12.5 }, color: colors.muted, mt: 0.25 }}>
+          <Typography sx={{ fontSize: { xs: 12, sm: 12.5 }, color: colors.muted, mt: 0.25, overflowWrap: "anywhere" }}>
             {flightNos} · {route} · {dateStr}
           </Typography>
           <Typography sx={{ fontSize: 12, color: colors.rust, fontWeight: 700, mt: 0.75 }}>
@@ -191,7 +226,7 @@ function GlobalTripRow({ trip, onViewDetails, currentUserId }) {
           </Typography>
         </Box>
       </Stack>
-      <Stack direction="row" spacing={2} sx={{ flexShrink: 0, alignItems: "center", justifyContent: "flex-end" }}>
+      <Stack direction="row" sx={rowActionsSx}>
         <StatusChip status={trip.status} />
         <Button
           variant="outlined" disableElevation
@@ -205,7 +240,19 @@ function GlobalTripRow({ trip, onViewDetails, currentUserId }) {
   );
 }
 
+function InfoItem({ label, children }) {
+  return (
+    <Box sx={{ minWidth: 0 }}>
+      <Typography sx={labelSx}>{label}</Typography>
+      <Typography sx={valueSx}>{children}</Typography>
+    </Box>
+  );
+}
+
 function TripDetailsDialog({ trip, onClose, onAction, currentUserId }) {
+  const muiTheme = useTheme();
+  const fullScreen = useMediaQuery(muiTheme.breakpoints.down("sm"));
+
   if (!trip) return null;
   const isParent = trip.role === "parent";
   const userName = [trip.createdBy?.firstName, trip.createdBy?.lastName].filter(Boolean).join(" ") || "Community member";
@@ -213,37 +260,47 @@ function TripDetailsDialog({ trip, onClose, onAction, currentUserId }) {
   const isOwn = String(trip.createdBy?._id || trip.createdBy) === String(currentUserId);
   const canRequest = !isOwn && trip.status === "OPEN" && !trip.isRequestSubmission;
 
+  const dialogBtn = { ...BTN, width: { xs: "100%", sm: "auto" } };
+
   return (
-    <Dialog open onClose={onClose} fullWidth maxWidth="sm" scroll="paper">
-      <DialogTitle sx={{ pr: 6, pb: 1 }}>
+    <Dialog
+      open onClose={onClose} fullWidth maxWidth="sm" scroll="paper" fullScreen={fullScreen}
+      PaperProps={{ sx: { m: { xs: 0, sm: 2 }, width: { sm: "calc(100% - 32px)" }, maxHeight: { sm: "calc(100% - 32px)" } } }}
+    >
+      <DialogTitle sx={{ pr: 7, pb: 1, pt: { xs: "calc(16px + env(safe-area-inset-top, 0px))", sm: 2 }, px: { xs: 2, sm: 3 } }}>
         <Stack direction="row" spacing={1.5} alignItems="center">
           <ProtectedAvatar
             src={trip.createdBy?.profileImage || ""} alt={userName}
-            sx={{ width: 52, height: 52, bgcolor: "#DCEBFA" }}
+            sx={{ width: { xs: 44, sm: 52 }, height: { xs: 44, sm: 52 }, flexShrink: 0, bgcolor: "#DCEBFA" }}
           >
             <FlightIcon />
           </ProtectedAvatar>
           <Box sx={{ minWidth: 0, flex: 1 }}>
-            <Typography sx={{ fontSize: 19, fontWeight: 800, color: colors.navy }}>{userName}{isOwn ? " (you)" : ""}</Typography>
-            <Typography sx={{ fontSize: 13, color: colors.muted }}>
+            <Typography sx={{ fontSize: { xs: 17, sm: 19 }, fontWeight: 800, color: colors.navy, overflowWrap: "anywhere", lineHeight: 1.25 }}>{userName}{isOwn ? " (you)" : ""}</Typography>
+            <Typography sx={{ fontSize: 13, color: colors.muted, overflowWrap: "anywhere" }}>
               {isParent ? `Parent trip${trip.relationship ? ` · ${trip.relationship}` : ""}` : "Companion trip"}
               {isParent && trip.ageBand ? ` · Age ${trip.ageBand}` : ""}
             </Typography>
           </Box>
-          <IconButton onClick={onClose} sx={{ position: "absolute", top: 8, right: 8 }}><CloseIcon /></IconButton>
+          <IconButton
+            onClick={onClose} aria-label="Close"
+            sx={{ position: "absolute", top: { xs: "calc(8px + env(safe-area-inset-top, 0px))", sm: 8 }, right: 8 }}
+          >
+            <CloseIcon />
+          </IconButton>
         </Stack>
       </DialogTitle>
-      <DialogContent dividers sx={{ bgcolor: "#FFFEFC" }}>
+      <DialogContent dividers sx={{ bgcolor: "#FFFEFC", px: { xs: 2, sm: 3 } }}>
         <Stack spacing={2.5}>
-          <Stack direction="row" justifyContent="space-between" alignItems="center">
+          <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
             <Typography sx={{ fontSize: 16, fontWeight: 800, color: colors.navy }}>Trip details</Typography>
             <StatusChip status={trip.status} />
           </Stack>
 
-          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr 1fr", sm: "repeat(3, 1fr)" }, gap: 2 }}>
-            <Box><Typography sx={{ fontSize: 12, color: colors.muted }}>Trip role</Typography><Typography sx={{ fontSize: 14, fontWeight: 600 }}>{isParent ? "Needs help" : "Can help"}</Typography></Box>
-            <Box><Typography sx={{ fontSize: 12, color: colors.muted }}>Posted</Typography><Typography sx={{ fontSize: 14, fontWeight: 600 }}>{formatTripDate(trip.createdAt, "MMM d, yyyy")}</Typography></Box>
-            <Box><Typography sx={{ fontSize: 12, color: colors.muted }}>Pickup</Typography><Typography sx={{ fontSize: 14, fontWeight: 600 }}>{trip.pickup === "family" ? "Family pickup" : trip.pickup === "saathi" ? "Saathi pickup" : trip.pickup}</Typography></Box>
+          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(2, minmax(0, 1fr))", sm: "repeat(3, minmax(0, 1fr))" }, gap: 2 }}>
+            <InfoItem label="Trip role">{isParent ? "Needs help" : "Can help"}</InfoItem>
+            <InfoItem label="Posted">{formatTripDate(trip.createdAt, "MMM d, yyyy")}</InfoItem>
+            <InfoItem label="Pickup">{trip.pickup === "family" ? "Family pickup" : trip.pickup === "saathi" ? "Saathi pickup" : trip.pickup}</InfoItem>
           </Box>
 
           <Divider />
@@ -251,21 +308,21 @@ function TripDetailsDialog({ trip, onClose, onAction, currentUserId }) {
             <Typography sx={{ fontSize: 15, fontWeight: 800, color: colors.navy, mb: 1.5 }}>Flight itinerary ({flights.length})</Typography>
             <Stack spacing={1.5}>
               {flights.map((flight, index) => (
-                <Paper key={flight._id || index} variant="outlined" sx={{ p: 1.75, borderRadius: 2.5, borderColor: colors.border, bgcolor: "#fff" }}>
-                  <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1.5 }}>
-                    <Typography sx={{ fontWeight: 800, color: colors.navy }}>Flight {index + 1}</Typography>
-                    <Chip size="small" icon={<FlightIcon />} label={flight.airline || "Airline not provided"} sx={{ maxWidth: "65%" }} />
+                <Paper key={flight._id || index} variant="outlined" sx={{ p: { xs: 1.5, sm: 1.75 }, borderRadius: 2.5, borderColor: colors.border, bgcolor: "#fff" }}>
+                  <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
+                    <Typography sx={{ fontWeight: 800, color: colors.navy, flexShrink: 0 }}>Flight {index + 1}</Typography>
+                    <Chip size="small" icon={<FlightIcon />} label={flight.airline || "Airline not provided"} sx={{ maxWidth: { xs: "60%", sm: "65%" } }} />
                   </Stack>
                   <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
-                    <Box sx={{ flex: 1 }}><Typography sx={{ fontSize: 22, fontWeight: 800 }}>{flight.fromCode}</Typography><Typography sx={{ fontSize: 11, color: colors.muted }}>Departure</Typography></Box>
-                    <FlightIcon sx={{ color: colors.rust, transform: "rotate(45deg)" }} />
-                    <Box sx={{ flex: 1, textAlign: "right" }}><Typography sx={{ fontSize: 22, fontWeight: 800 }}>{flight.toCode}</Typography><Typography sx={{ fontSize: 11, color: colors.muted }}>Arrival</Typography></Box>
+                    <Box sx={{ flex: 1, minWidth: 0 }}><Typography sx={{ fontSize: { xs: 20, sm: 22 }, fontWeight: 800 }}>{flight.fromCode}</Typography><Typography sx={{ fontSize: 11, color: colors.muted }}>Departure</Typography></Box>
+                    <FlightIcon sx={{ color: colors.rust, transform: "rotate(45deg)", flexShrink: 0 }} />
+                    <Box sx={{ flex: 1, minWidth: 0, textAlign: "right" }}><Typography sx={{ fontSize: { xs: 20, sm: 22 }, fontWeight: 800 }}>{flight.toCode}</Typography><Typography sx={{ fontSize: 11, color: colors.muted }}>Arrival</Typography></Box>
                   </Stack>
-                  <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1.5 }}>
-                    <Box><Typography sx={{ fontSize: 12, color: colors.muted }}>Flight no.</Typography><Typography sx={{ fontSize: 14, fontWeight: 600 }}>{flight.flightNumber || "—"}</Typography></Box>
-                    <Box><Typography sx={{ fontSize: 12, color: colors.muted }}>Airline</Typography><Typography sx={{ fontSize: 14, fontWeight: 600 }}>{flight.airline || "—"}</Typography></Box>
-                    <Box><Typography sx={{ fontSize: 12, color: colors.muted }}>Departure</Typography><Typography sx={{ fontSize: 14, fontWeight: 600 }}>{formatTripDate(flight.departureTime)}</Typography></Box>
-                    <Box><Typography sx={{ fontSize: 12, color: colors.muted }}>Arrival</Typography><Typography sx={{ fontSize: 14, fontWeight: 600 }}>{formatTripDate(flight.arrivalTime)}</Typography></Box>
+                  <Box sx={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 1.5 }}>
+                    <InfoItem label="Flight no.">{flight.flightNumber || "—"}</InfoItem>
+                    <InfoItem label="Airline">{flight.airline || "—"}</InfoItem>
+                    <InfoItem label="Departure">{formatTripDate(flight.departureTime)}</InfoItem>
+                    <InfoItem label="Arrival">{formatTripDate(flight.arrivalTime)}</InfoItem>
                   </Box>
                 </Paper>
               ))}
@@ -275,24 +332,32 @@ function TripDetailsDialog({ trip, onClose, onAction, currentUserId }) {
           <Divider />
           <Box>
             <Typography sx={{ fontSize: 15, fontWeight: 800, color: colors.navy, mb: 1.5 }}>Preferences</Typography>
-            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr 1fr", sm: "repeat(3, 1fr)" }, gap: 2 }}>
-              <Box><Typography sx={{ fontSize: 12, color: colors.muted }}>Languages</Typography><Typography sx={{ fontSize: 14, fontWeight: 600 }}>{trip.languages?.length ? trip.languages.join(", ") : "Not specified"}</Typography></Box>
-              <Box><Typography sx={{ fontSize: 12, color: colors.muted }}>{isParent ? "Help needed" : "Help offered"}</Typography><Typography sx={{ fontSize: 14, fontWeight: 600 }}>{trip.help?.length ? trip.help.join(", ") : "Not specified"}</Typography></Box>
-              {isParent && <Box><Typography sx={{ fontSize: 12, color: colors.muted }}>Relationship</Typography><Typography sx={{ fontSize: 14, fontWeight: 600 }}>{trip.relationship || "—"}</Typography></Box>}
-              {isParent && <Box><Typography sx={{ fontSize: 12, color: colors.muted }}>Traveller age</Typography><Typography sx={{ fontSize: 14, fontWeight: 600 }}>{trip.ageBand || "—"}</Typography></Box>}
+            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(2, minmax(0, 1fr))", sm: "repeat(3, minmax(0, 1fr))" }, gap: 2 }}>
+              <InfoItem label="Languages">{trip.languages?.length ? trip.languages.join(", ") : "Not specified"}</InfoItem>
+              <InfoItem label={isParent ? "Help needed" : "Help offered"}>{trip.help?.length ? trip.help.join(", ") : "Not specified"}</InfoItem>
+              {isParent && <InfoItem label="Relationship">{trip.relationship || "—"}</InfoItem>}
+              {isParent && <InfoItem label="Traveller age">{trip.ageBand || "—"}</InfoItem>}
             </Box>
           </Box>
         </Stack>
       </DialogContent>
-      <DialogActions sx={{ p: 2, gap: 1, flexDirection: { xs: "column-reverse", sm: "row" } }}>
-        <Button onClick={onClose} sx={{ ...BTN, width: { xs: "100%", sm: "auto" }, color: colors.muted }}>Close</Button>
+      <DialogActions
+        sx={{
+          p: 2, gap: 1,
+          pb: { xs: "calc(16px + env(safe-area-inset-bottom, 0px))", sm: 2 },
+          flexDirection: { xs: "column-reverse", sm: "row" },
+          alignItems: { xs: "stretch", sm: "center" },
+          "& > :not(style) ~ :not(style)": { ml: 0 },
+        }}
+      >
+        <Button onClick={onClose} sx={{ ...dialogBtn, color: colors.muted }}>Close</Button>
         {canRequest && (
-          <Button variant="contained" disableElevation onClick={() => onAction(trip)} sx={{ ...BTN, width: { xs: "100%", sm: "auto" }, bgcolor: colors.rust, "&:hover": { bgcolor: colors.rustDark } }}>
+          <Button variant="contained" disableElevation onClick={() => onAction(trip)} sx={{ ...dialogBtn, bgcolor: colors.rust, "&:hover": { bgcolor: colors.rustDark } }}>
             {isParent ? "Offer to Help" : "Ask for Help"}
           </Button>
         )}
         {isOwn && trip.status === "OPEN" && !trip.isRequestSubmission && (
-          <Button variant="contained" disableElevation onClick={() => { onClose(); onAction({ ...trip, __viewRequests: true }); }} sx={{ ...BTN, width: { xs: "100%", sm: "auto" }, bgcolor: colors.rust, "&:hover": { bgcolor: colors.rustDark } }}>
+          <Button variant="contained" disableElevation onClick={() => { onClose(); onAction({ ...trip, __viewRequests: true }); }} sx={{ ...dialogBtn, bgcolor: colors.rust, "&:hover": { bgcolor: colors.rustDark } }}>
             View requests
           </Button>
         )}
@@ -343,7 +408,7 @@ export default function TravelBuddy() {
   const handleGlobalAction = (trip) => {
     if (!trip?._id || trip.status !== "OPEN") return;
 
-    // If it's my own trip, go to requests management
+    
     if (String(trip.createdBy?._id || trip.createdBy) === String(currentUserId)) {
       if (trip.__viewRequests) {
         navigate("/travelbuddy/requests", { state: { tab: "received", targetTripId: trip._id } });
@@ -403,15 +468,15 @@ export default function TravelBuddy() {
   ];
 
   const renderEmpty = (message, action = false) => (
-    <Paper variant="outlined" sx={{ p: 4, borderRadius: 3, borderColor: colors.border, textAlign: "center", bgcolor: "#fff" }}>
+    <Paper variant="outlined" sx={{ p: { xs: 3, sm: 4 }, borderRadius: 3, borderColor: colors.border, textAlign: "center", bgcolor: "#fff" }}>
       <Typography sx={{ color: colors.muted, fontSize: 14, mb: action ? 2 : 0 }}>{message}</Typography>
-      {action && <Button variant="contained" disableElevation onClick={() => navigate("/post-trip")} sx={{ ...actionStyles.base, ...actionStyles.contained, width: "auto", px: 3 }}>Post your first trip</Button>}
+      {action && <Button variant="contained" disableElevation onClick={() => navigate("/post-trip")} sx={{ ...actionStyles.base, ...actionStyles.contained, width: { xs: "100%", sm: "auto" }, px: 3 }}>Post your first trip</Button>}
     </Paper>
   );
 
   const renderList = (trips, emptyMessage, showAction = true) =>
     trips.length ? (
-      <Stack spacing={1.75} sx={{ mb: 2.5 }}>
+      <Stack spacing={{ xs: 1.5, sm: 1.75 }} sx={{ mb: 2.5 }}>
         {trips.map((trip) => (
           <MyTripRow
             key={trip._id} trip={trip} showAction={showAction} currentUserId={currentUserId}
@@ -428,24 +493,83 @@ export default function TravelBuddy() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box sx={{ bgcolor: colors.bg, minHeight: "100vh", py: { xs: 2, sm: 3 }, px: { xs: 2, sm: 3 } }}>
-        <Box sx={{ maxWidth: 880, mx: "auto" }}>
-          <Typography component="h1" sx={{ fontSize: { xs: 24, sm: 28 }, fontWeight: 800, color: colors.navy }}>Travel Buddy</Typography>
-          <Typography sx={{ fontSize: { xs: 13, sm: 14 }, color: colors.muted, mt: 0.5, mb: 2.5 }}>
+      <Box
+        sx={{
+          bgcolor: colors.bg,
+          minHeight: "100vh",
+          "@supports (min-height: 100dvh)": { minHeight: "100dvh" },
+          width: "100%",
+          overflowX: "hidden",
+          boxSizing: "border-box",
+          py: { xs: 2, sm: 3, md: 4 },
+          pl: { xs: "max(16px, env(safe-area-inset-left, 0px))", sm: 3, md: 4 },
+          pr: { xs: "max(16px, env(safe-area-inset-right, 0px))", sm: 3, md: 4 },
+          pb: { xs: "calc(16px + env(safe-area-inset-bottom, 0px))", sm: 3, md: 4 },
+        }}
+      >
+        <Box sx={{ width: "100%", maxWidth: { xs: "100%", sm: 720, md: 880, xl: 960 }, mx: "auto" }}>
+          <Typography component="h1" sx={{ fontSize: { xs: 24, sm: 28, md: 30 }, fontWeight: 800, color: colors.navy, lineHeight: 1.2 }}>Travel Buddy</Typography>
+          <Typography sx={{ fontSize: { xs: 13, sm: 14, md: 15 }, color: colors.muted, mt: 0.5, mb: { xs: 2, sm: 2.5 }, maxWidth: 680 }}>
             Find a trusted community member on the same flight to help a parent travelling from India to the US.
           </Typography>
 
-          <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 4 }}>
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={{ xs: 1.5, sm: 2 }}
+            sx={{ mb: { xs: 3, sm: 4 }, alignItems: "stretch" }}
+          >
             <RoleCard title="My parent needs a companion" description="Post your parent's flight. Members on the same flight can offer to look out for them." onClick={() => navigate("/post-trip")} />
             <RoleCard title="I'm flying and can help" description="Volunteer to be a companion for a senior on your flight. You never carry items for anyone." onClick={() => navigate("/post-trip", { state: { role: "companion" } })} />
           </Stack>
 
-          <Stack direction="row" spacing={1} sx={{ mb: 3, justifyContent: { xs: "flex-start", md: "center" }, flexWrap: "wrap", rowGap: 1 }}>
-            {tabs.map((tab) => {
-              const active = activeTab === tab.key;
-              return <Chip key={tab.key} label={`${tab.label}${tab.count !== null ? ` (${tab.count})` : ""}`} onClick={() => setActiveTab(tab.key)} sx={{ height: 42, px: 1.5, fontSize: 13.5, fontWeight: 700, borderRadius: "21px", bgcolor: active ? colors.activeChip : "#fff", color: active ? "#fff" : colors.navy, border: `1.5px solid ${active ? colors.activeChip : colors.border}`, "&:hover": { bgcolor: active ? colors.activeChip : "#F3EFE6" }, boxShadow: active ? "0 4px 12px rgba(27,42,92,0.2)" : "none" }} />;
-            })}
-          </Stack>
+          <Box
+            sx={{
+              mb: 3,
+              mx: { xs: -2, sm: 0 },
+              px: { xs: 2, sm: 0 },
+              overflowX: { xs: "auto", sm: "visible" },
+              WebkitOverflowScrolling: "touch",
+              scrollbarWidth: "none",
+              "&::-webkit-scrollbar": { display: "none" },
+            }}
+          >
+            <Stack
+              direction="row"
+              spacing={1}
+              role="tablist"
+              sx={{
+                width: { xs: "max-content", sm: "auto" },
+                minWidth: { xs: "100%", sm: 0 },
+                justifyContent: { xs: "flex-start", md: "center" },
+                flexWrap: { xs: "nowrap", sm: "wrap" },
+                rowGap: 1,
+                pb: { xs: 0.5, sm: 0 },
+              }}
+            >
+              {tabs.map((tab) => {
+                const active = activeTab === tab.key;
+                return (
+                  <Chip
+                    key={tab.key}
+                    role="tab"
+                    aria-selected={active}
+                    label={`${tab.label}${tab.count !== null ? ` (${tab.count})` : ""}`}
+                    onClick={() => setActiveTab(tab.key)}
+                    sx={{
+                      height: { xs: 40, sm: 42 }, px: { xs: 1, sm: 1.5 },
+                      fontSize: { xs: 13, sm: 13.5 }, fontWeight: 700, borderRadius: "21px",
+                      flexShrink: 0,
+                      bgcolor: active ? colors.activeChip : "#fff",
+                      color: active ? "#fff" : colors.navy,
+                      border: `1.5px solid ${active ? colors.activeChip : colors.border}`,
+                      "&:hover": { bgcolor: active ? colors.activeChip : "#F3EFE6" },
+                      boxShadow: active ? "0 4px 12px rgba(27,42,92,0.2)" : "none",
+                    }}
+                  />
+                );
+              })}
+            </Stack>
+          </Box>
 
           {loading ? (
             <Box display="flex" justifyContent="center" py={8}><CircularProgress size={32} sx={{ color: colors.rust }} /></Box>
@@ -454,10 +578,18 @@ export default function TravelBuddy() {
               <Box>
                 {activeTab === "browse" && (
                   <>
-                    <Paper sx={{ p: 2, borderRadius: 3, border: `1px solid ${colors.border}`, mb: 3 }}>
-                      <TextField fullWidth size="small" placeholder="Search by flight number (EK 544), airline, or airport code (MAA, ORD)" value={search} onChange={(e) => setSearch(e.target.value)} InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment>, sx: { borderRadius: 2, bgcolor: "#FAFAFA" } }} />
+                    <Paper sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: 3, border: `1px solid ${colors.border}`, mb: 3 }}>
+                      <TextField
+                        fullWidth size="small"
+                        placeholder="Search by flight number (EK 544), airline, or airport code (MAA, ORD)"
+                        value={search} onChange={(e) => setSearch(e.target.value)}
+                        InputProps={{
+                          startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment>,
+                          sx: { borderRadius: 2, bgcolor: "#FAFAFA", fontSize: { xs: 16, sm: 14 } }, // 16px prevents iOS zoom-on-focus
+                        }}
+                      />
                     </Paper>
-                    <Stack spacing={1.75} sx={{ mb: 2.5 }}>
+                    <Stack spacing={{ xs: 1.5, sm: 1.75 }} sx={{ mb: 2.5 }}>
                       {globalTrips.length ? globalTrips.map((trip) => <GlobalTripRow key={trip._id} trip={trip} onViewDetails={setSelectedTrip} currentUserId={currentUserId} />) : renderEmpty("No public trips found matching your search.")}
                     </Stack>
                   </>
@@ -491,7 +623,7 @@ export default function TravelBuddy() {
           )}
 
           <TripDetailsDialog trip={selectedTrip} onClose={() => setSelectedTrip(null)} onAction={handleGlobalAction} currentUserId={currentUserId} />
-          <Box sx={{ bgcolor: colors.amberBg, color: colors.amberText, borderRadius: 2.5, px: 2.5, py: 1.75, fontSize: 13.5, lineHeight: 1.6, mt: 3 }}>
+          <Box sx={{ bgcolor: colors.amberBg, color: colors.amberText, borderRadius: 2.5, px: { xs: 2, sm: 2.5 }, py: { xs: 1.5, sm: 1.75 }, fontSize: { xs: 13, sm: 13.5 }, lineHeight: 1.6, mt: 3 }}>
             <Box component="span" sx={{ fontWeight: 700 }}>Safety basics:</Box>{" "}companions are volunteers, not caregivers or escorts. Nobody should carry items for anyone else. The family approves every helper.
           </Box>
         </Box>

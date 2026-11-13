@@ -41,33 +41,50 @@ const theme = createTheme({
   shape: { borderRadius: 8 },
 });
 
-/* One size for every button */
+
 const BTN = {
-  height: 46,
-  minHeight: 46,
+  height: { xs: 44, sm: 46 },
+  minHeight: { xs: 44, sm: 46 },
   px: 2,
   py: 0,
   borderRadius: 2,
-  fontSize: 15,
+  fontSize: { xs: 14, sm: 15 },
   fontWeight: 700,
   lineHeight: 1.2,
   textAlign: "center",
   boxShadow: "none",
   width: "100%",
+  minWidth: 0,
 };
 
-/* Equal-width button grids */
+
 const gridTwo = {
   display: "grid",
-  gridTemplateColumns: "1fr 1fr",
+  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
   gap: 1.5,
 };
 const gridResponsive = (cols) => ({
   display: "grid",
-  gridTemplateColumns: { xs: "1fr", sm: `repeat(${cols}, 1fr)` },
+  gridTemplateColumns: { xs: "minmax(0, 1fr)", sm: `repeat(${cols}, minmax(0, 1fr))` },
   gap: 1.5,
 });
 
+
+const pageSx = {
+  minHeight: "100vh",
+  "@supports (min-height: 100dvh)": { minHeight: "100dvh" },
+  width: "100%",
+  boxSizing: "border-box",
+  overflowX: "hidden",
+  pt: { xs: 2, sm: 2.5, md: 4 },
+  pb: {
+    xs: "calc(16px + env(safe-area-inset-bottom, 0px))",
+    sm: "calc(20px + env(safe-area-inset-bottom, 0px))",
+    md: 4,
+  },
+  pl: { xs: "max(16px, env(safe-area-inset-left, 0px))", sm: 2.5, md: 4 },
+  pr: { xs: "max(16px, env(safe-area-inset-right, 0px))", sm: 2.5, md: 4 },
+};
 
 /* ---------- Small helpers ---------- */
 const SectionLabel = ({ children, color = colors.muted }) => (
@@ -79,6 +96,8 @@ const SectionLabel = ({ children, color = colors.muted }) => (
       textTransform: "uppercase",
       color,
       mb: 1.5,
+      lineHeight: 1.4,
+      overflowWrap: "anywhere",
     }}
   >
     {children}
@@ -91,7 +110,10 @@ const cardSx = {
   border: `1px solid ${colors.border}`,
   bgcolor: "#fff",
   boxShadow: "none",
+  minWidth: 0,
 };
+
+const bodyText = { fontSize: { xs: 13.5, sm: 14 }, overflowWrap: "anywhere", lineHeight: 1.5 };
 
 /* ---------- Component ---------- */
 export default function TripMatched({
@@ -120,17 +142,22 @@ export default function TripMatched({
 
   if (!data) {
     return (
-      <Box sx={{ minHeight: "100vh", p: 3, bgcolor: "#FAF8F4" }}>
-        <Typography variant="h6">
-          No confirmed companion details available
-        </Typography>
-        <Typography sx={{ mt: 1, color: "text.secondary" }}>
-          Companion details will appear here after the trip owner approves
-          a Travel Buddy request.
-        </Typography>
-        <Button onClick={() => navigate("/travelbuddy")} sx={{ mt: 2 }}>
-          Back to Travel Buddy
-        </Button>
+      <Box sx={{ ...pageSx, p: { xs: 2, sm: 3 }, bgcolor: "#FAF8F4" }}>
+        <Box sx={{ maxWidth: 860, mx: "auto" }}>
+          <Typography variant="h6" sx={{ fontSize: { xs: 18, sm: 20 } }}>
+            No confirmed companion details available
+          </Typography>
+          <Typography sx={{ mt: 1, color: "text.secondary", fontSize: { xs: 14, sm: 16 } }}>
+            Companion details will appear here after the trip owner approves
+            a Travel Buddy request.
+          </Typography>
+          <Button
+            onClick={() => navigate("/travelbuddy")}
+            sx={{ mt: 2, minHeight: 44 }}
+          >
+            Back to Travel Buddy
+          </Button>
+        </Box>
       </Box>
     );
   }
@@ -138,14 +165,29 @@ export default function TripMatched({
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box sx={{ minHeight: "100vh", bgcolor: "background.default", p: { xs: 2, sm: 2.5 } }}>
-        <Box sx={{ maxWidth: 860, mx: "auto" }}>
+      <Box sx={{ ...pageSx, bgcolor: "background.default" }}>
+        <Box
+          sx={{
+            width: "100%",
+            maxWidth: { xs: "100%", sm: 720, md: 860 },
+            mx: "auto",
+          }}
+        >
           {/* Back link */}
           <Link
             component="button"
             underline="none"
             onClick={handleBack}
-            sx={{ color: colors.orange, fontWeight: 700, fontSize: 14, mb: 2 }}
+            sx={{
+              color: colors.orange,
+              fontWeight: 700,
+              fontSize: 14,
+              mb: 1,
+              minHeight: 44,
+              display: "inline-flex",
+              alignItems: "center",
+              textAlign: "left",
+            }}
           >
             Back to Travel Buddy
           </Link>
@@ -156,11 +198,18 @@ export default function TripMatched({
             justifyContent="space-between"
             alignItems={{ xs: "flex-start", sm: "center" }}
             spacing={{ xs: 1, sm: 2 }}
-            sx={{ mb: 2.5 }}
+            sx={{ mb: { xs: 2, sm: 2.5 } }}
           >
             <Typography
               component="h1"
-              sx={{ fontSize: { xs: 22, sm: 26 }, fontWeight: 700, color: colors.navy }}
+              sx={{
+                fontSize: { xs: 20, sm: 24, md: 26 },
+                fontWeight: 700,
+                color: colors.navy,
+                lineHeight: 1.25,
+                minWidth: 0,
+                overflowWrap: "anywhere",
+              }}
             >
               {data.title} · {data.status}
             </Typography>
@@ -174,6 +223,7 @@ export default function TripMatched({
                 fontSize: 11,
                 letterSpacing: 0.3,
                 flexShrink: 0,
+                maxWidth: "100%",
               }}
             />
           </Stack>
@@ -182,9 +232,10 @@ export default function TripMatched({
           <Box
             sx={{
               display: "grid",
-              gridTemplateColumns: { xs: "1fr", md: "1.2fr 1fr" },
-              gap: 2,
-              mb: 2,
+              gridTemplateColumns: { xs: "minmax(0, 1fr)", md: "minmax(0, 1.2fr) minmax(0, 1fr)" },
+              gap: { xs: 1.5, sm: 2 },
+              mb: { xs: 1.5, sm: 2 },
+              alignItems: "stretch",
             }}
           >
             {/* Journey */}
@@ -192,16 +243,16 @@ export default function TripMatched({
               <SectionLabel>Journey (local times)</SectionLabel>
 
               <Stack spacing={1.25}>
-                <Typography sx={{ fontSize: { xs: 13.5, sm: 14 }, wordBreak: "break-word" }}>
+                <Typography sx={bodyText}>
                   <b>{data.legs[0].flight}</b>&nbsp;&nbsp;{data.legs[0].route}
                 </Typography>
-                <Typography sx={{ fontSize: { xs: 13.5, sm: 14 }, color: colors.muted }}>
+                <Typography sx={{ ...bodyText, color: colors.muted }}>
                   {data.layover}
                 </Typography>
-                <Typography sx={{ fontSize: { xs: 13.5, sm: 14 }, wordBreak: "break-word" }}>
+                <Typography sx={bodyText}>
                   <b>{data.legs[1].flight}</b>&nbsp;&nbsp;{data.legs[1].route}
                 </Typography>
-                <Typography sx={{ fontSize: { xs: 13.5, sm: 14 }, color: colors.muted }}>
+                <Typography sx={{ ...bodyText, color: colors.muted }}>
                   Total {data.total} · {data.date}
                 </Typography>
               </Stack>
@@ -215,6 +266,7 @@ export default function TripMatched({
                   color: colors.blueText,
                   fontSize: { xs: 12.5, sm: 13 },
                   lineHeight: 1.55,
+                  overflowWrap: "anywhere",
                 }}
               >
                 {data.pickup}{" "}
@@ -238,7 +290,7 @@ export default function TripMatched({
             <Paper sx={cardSx}>
               <SectionLabel>Companion</SectionLabel>
 
-              <Stack direction="row" spacing={2} alignItems="center">
+              <Stack direction="row" spacing={{ xs: 1.5, sm: 2 }} alignItems="center">
                 <Avatar
                   sx={{
                     width: { xs: 48, sm: 60 },
@@ -252,17 +304,17 @@ export default function TripMatched({
                 >
                   {data.companion.initials}
                 </Avatar>
-                <Box sx={{ minWidth: 0 }}>
-                  <Typography sx={{ fontWeight: 700, fontSize: 16 }}>
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                  <Typography sx={{ fontWeight: 700, fontSize: { xs: 15, sm: 16 }, overflowWrap: "anywhere" }}>
                     {data.companion.name}
                   </Typography>
-                  <Typography sx={{ fontSize: 12, color: colors.muted, wordBreak: "break-word" }}>
+                  <Typography sx={{ fontSize: 12, color: colors.muted, overflowWrap: "anywhere" }}>
                     {data.companion.phone} · {data.companion.languages}
                   </Typography>
                 </Box>
               </Stack>
 
-              <Box sx={{ ...gridTwo, mt: 2.5 }}>
+              <Box sx={{ ...gridTwo, mt: { xs: 2, sm: 2.5 } }}>
                 <Button
                   variant="contained"
                   onClick={onCall}
@@ -300,14 +352,14 @@ export default function TripMatched({
             sx={{
               ...cardSx,
               border: `2px solid ${colors.orange}`,
-              mb: 2,
+              mb: { xs: 1.5, sm: 2 },
             }}
           >
             <SectionLabel color={colors.orange}>
               Arrival check-in (text sent at arrival + 1 hour)
             </SectionLabel>
 
-            <Typography sx={{ fontSize: { xs: 14, sm: 15 }, mb: 1.5 }}>
+            <Typography sx={{ fontSize: { xs: 14, sm: 15 }, mb: 1.5, overflowWrap: "anywhere" }}>
               {checkIn === "arrived"
                 ? "Thanks — Mother arrived safely. Please leave a rating."
                 : checkIn === "help"
@@ -342,7 +394,7 @@ export default function TripMatched({
               </Button>
             </Box>
 
-            <Typography sx={{ fontSize: 12, color: colors.muted }}>
+            <Typography sx={{ fontSize: 12, color: colors.muted, lineHeight: 1.5 }}>
               "Need help" creates an urgent moderator item and texts the family
               contact. No reply after 2 hours also escalates. After "Arrived
               safely", both sides are asked to leave a rating.

@@ -266,7 +266,10 @@ function RideCard({
           <Chip size="small" variant="outlined" icon={<CalendarTodayIcon />} label={`${fmtDate(ride.startTime)} · ${fmtTime(ride.startTime)}`} />
           <Chip size="small" variant="outlined" icon={<Mode />} label={ride.modeOfTravel || "Car"} />
           {ride.kind === "offer" && ride.modeOfTravel !== "Flight" && (
-            <Chip size="small" variant="outlined" icon={<EventSeatIcon />} label={`${ride.totalSeats} seat${ride.totalSeats === 1 ? "" : "s"}`} />
+            <Chip size="small" variant="outlined" icon={<EventSeatIcon />} label={`${ride.totalSeats} Total seat${ride.totalSeats === 1 ? "" : "s"}`} />
+          )}
+          {ride.kind === "offer" && ride.modeOfTravel !== "Flight" && (
+            <Chip size="small" variant="outlined" icon={<EventSeatIcon />} label={`${ride.availableSeats} Available seat${ride.availableSeats === 1 ? "" : "s"}`} />
           )}
           {ride.kind === "request" && (
             <Chip size="small" variant="outlined" icon={<EventSeatIcon />} label={`${ride.passengers || 1} passenger${(ride.passengers || 1) === 1 ? "" : "s"}`} />

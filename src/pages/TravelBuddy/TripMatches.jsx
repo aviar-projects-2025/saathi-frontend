@@ -2,7 +2,7 @@ import React, { memo, useState, useEffect } from "react";
 import { useParams, useNavigate, Link as RouterLink } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
-import Api from "../../Api"; // Adjust path if needed
+import Api from "../../Api"; 
 
 import {
   Avatar,
@@ -48,33 +48,34 @@ const theme = createTheme({
   shape: { borderRadius: 12 },
 });
 
-/* One size for every button */
-const BTN_WIDTH = 210;
+/* ─────────── Responsive style tokens ─────────── */
+const BTN_WIDTH = 200;
 const buttonBase = {
-  height: 46,
-  minHeight: 46,
+  height: { xs: 44, sm: 46 },
+  minHeight: { xs: 44, sm: 46 },
   px: 2,
   py: 0,
   borderRadius: 2,
-  fontSize: 14,
+  fontSize: { xs: 13.5, sm: 14 },
   fontWeight: 700,
   lineHeight: 1.2,
   textAlign: "center",
   boxShadow: "none",
   width: "100%",
+  minWidth: 0,
 };
 
-/* Equal-width button group: stacked full width on phones, fixed equal columns from sm up */
+
 const buttonGroupSx = {
   display: "grid",
   gridAutoFlow: { xs: "row", sm: "column" },
-  gridAutoColumns: { xs: "1fr", sm: `${BTN_WIDTH}px` },
+  gridAutoColumns: { xs: "minmax(0, 1fr)", sm: "minmax(0, 1fr)", md: `${BTN_WIDTH}px` },
   gap: 1.25,
   width: { xs: "100%", md: "auto" },
   flexShrink: 0,
-  justifyContent: { xs: "stretch", sm: "end" },
-  alignItems: { xs: "stretch", sm: "center" },
-  ml: { xs: 0, sm: "auto" },
+  justifyContent: { xs: "stretch", md: "end" },
+  alignItems: "center",
+  ml: { xs: 0, md: "auto" },
 };
 
 const TONES = {
@@ -90,8 +91,10 @@ const SectionLabel = ({ children }) => (
       letterSpacing: 0.3,
       textTransform: "uppercase",
       color: c.muted,
-      mt: 3,
+      mt: { xs: 2.5, sm: 3 },
       mb: 1.5,
+      lineHeight: 1.4,
+      overflowWrap: "anywhere",
     }}
   >
     {children}
@@ -166,11 +169,16 @@ const MatchCard = memo(function MatchCard({
         p: { xs: 1.5, sm: 2 },
         borderRadius: 3,
         bgcolor: "#fff",
+        minWidth: 0,
         borderColor: best ? c.green : c.border,
         borderWidth: best ? 2 : 1,
       }}
     >
-      <Stack direction={{ xs: "column", md: "row" }} spacing={2} alignItems={{ md: "center" }}>
+      <Stack
+        direction={{ xs: "column", md: "row" }}
+        spacing={{ xs: 1.5, md: 2 }}
+        alignItems={{ xs: "stretch", md: "center" }}
+      >
         <Stack
           direction="row"
           spacing={{ xs: 1.5, sm: 2 }}
@@ -193,22 +201,22 @@ const MatchCard = memo(function MatchCard({
 
           <Box sx={{ minWidth: 0 }}>
             <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
-              <Typography sx={{ fontWeight: 800, fontSize: { xs: 15, sm: 16 }, color: c.navy }}>
+              <Typography sx={{ fontWeight: 800, fontSize: { xs: 15, sm: 16 }, color: c.navy, overflowWrap: "anywhere" }}>
                 {match.name}
               </Typography>
               <Chip
                 label={match.tier}
                 size="small"
-                sx={{ height: 20, fontSize: 11, fontWeight: 700, bgcolor: t.chipBg, color: t.chipText }}
+                sx={{ height: 20, fontSize: 11, fontWeight: 700, bgcolor: t.chipBg, color: t.chipText, maxWidth: "100%" }}
               />
             </Stack>
             <Typography
-              sx={{ fontSize: 12.5, color: c.muted, lineHeight: 1.5, wordBreak: "break-word", mt: 0.5 }}
+              sx={{ fontSize: { xs: 12, sm: 12.5 }, color: c.muted, lineHeight: 1.5, overflowWrap: "anywhere", mt: 0.5 }}
             >
               {match.details}
             </Typography>
             <Typography
-              sx={{ fontSize: 12.5, color: c.text, lineHeight: 1.5, wordBreak: "break-word", mt: 0.5 }}
+              sx={{ fontSize: { xs: 12, sm: 12.5 }, color: c.text, lineHeight: 1.5, overflowWrap: "anywhere", mt: 0.5 }}
             >
               {match.note}
             </Typography>
@@ -240,6 +248,7 @@ const Notice = ({ bg, color, children }) => (
       py: 1.5,
       fontSize: { xs: 12.5, sm: 13 },
       lineHeight: 1.6,
+      overflowWrap: "anywhere",
     }}
   >
     {children}
@@ -304,8 +313,6 @@ export default function TripMatches() {
       fetchMatches();
     }
 
-    // Refresh if the route changes; prevent updates after unmount.
-    // Existing loading/error rendering should remain below.
   }, [id]);
 
   const handleAccept = async (match) => {
@@ -364,7 +371,7 @@ export default function TripMatches() {
     },
   ].filter((g) => g.matches.length > 0);
 
-  // Format summary text
+  
   const route = trip?.flights?.length > 0
     ? [trip.flights[0].fromCode, ...trip.flights.map(f => f.toCode)].join(" → ")
     : "";
@@ -374,37 +381,72 @@ export default function TripMatches() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box sx={{ bgcolor: c.bg, minHeight: "100vh", py: { xs: 2, sm: 2.5 }, px: { xs: 2, sm: 2.5 } }}>
-        <Box sx={{ maxWidth: 900, mx: "auto" }}>
+      <Box
+        sx={{
+          bgcolor: c.bg,
+          minHeight: "100vh",
+          "@supports (min-height: 100dvh)": { minHeight: "100dvh" },
+          width: "100%",
+          boxSizing: "border-box",
+          overflowX: "hidden",
+          pt: { xs: 2, sm: 2.5, md: 4 },
+          pb: {
+            xs: "calc(24px + env(safe-area-inset-bottom, 0px))",
+            sm: "calc(24px + env(safe-area-inset-bottom, 0px))",
+            md: 6,
+          },
+          pl: { xs: "max(16px, env(safe-area-inset-left, 0px))", sm: 2.5, md: 4 },
+          pr: { xs: "max(16px, env(safe-area-inset-right, 0px))", sm: 2.5, md: 4 },
+        }}
+      >
+        <Box sx={{ width: "100%", maxWidth: { xs: "100%", sm: 720, md: 900 }, mx: "auto" }}>
 
           <Link
             component="button"
             type="button"
             underline="none"
             onClick={() => navigate("/travel-buddy")}
-            sx={{ color: c.rust, fontWeight: 700, fontSize: 14, mb: 2, display: "inline-block" }}
+            sx={{
+              color: c.rust,
+              fontWeight: 700,
+              fontSize: 14,
+              mb: 1,
+              minHeight: 44,
+              display: "inline-flex",
+              alignItems: "center",
+              textAlign: "left",
+            }}
           >
             Back to Travel Buddy
           </Link>
 
           {loading ? (
-            <Box display="flex" justifyContent="center" py={8}>
+            <Box display="flex" justifyContent="center" py={{ xs: 6, sm: 8 }}>
               <CircularProgress sx={{ color: c.rust }} />
             </Box>
           ) : error ? (
-            <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>
+            <Alert severity="error" sx={{ mt: 2, fontSize: { xs: 13, sm: 14 }, overflowWrap: "anywhere" }}>{error}</Alert>
           ) : (
             <>
-              <Typography component="h1" sx={{ fontWeight: 800, fontSize: { xs: 22, sm: 26 }, color: c.navy }}>
+              <Typography
+                component="h1"
+                sx={{
+                  fontWeight: 800,
+                  fontSize: { xs: 20, sm: 24, md: 26 },
+                  color: c.navy,
+                  lineHeight: 1.25,
+                  overflowWrap: "anywhere",
+                }}
+              >
                 Matches for {trip?.relationship ? `${trip.relationship}'s trip` : "your trip"}
               </Typography>
-              <Typography sx={{ fontSize: { xs: 13, sm: 14 }, color: c.muted, wordBreak: "break-word", mt: 0.5, mb: 2 }}>
+              <Typography sx={{ fontSize: { xs: 13, sm: 14 }, color: c.muted, overflowWrap: "anywhere", mt: 0.5, mb: 2 }}>
                 {flightNos} · {route} · {dateStr}
               </Typography>
 
               {groups.length === 0 ? (
-                <Box sx={{ mt: 4, p: 4, textAlign: "center", bgcolor: "#fff", borderRadius: 3, border: `1px dashed ${c.border}` }}>
-                  <Typography sx={{ color: c.muted, fontSize: 15 }}>
+                <Box sx={{ mt: { xs: 3, sm: 4 }, p: { xs: 3, sm: 4 }, textAlign: "center", bgcolor: "#fff", borderRadius: 3, border: `1px dashed ${c.border}` }}>
+                  <Typography sx={{ color: c.muted, fontSize: { xs: 14, sm: 15 } }}>
                     No matches found yet. We will text you when a member posts the same flight.
                   </Typography>
                 </Box>
