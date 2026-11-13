@@ -1027,6 +1027,7 @@ const Register = () => {
           }}
         >
           <Avatar
+            src={invitation?.profileImageUrl}
             sx={{
               bgcolor: "#FFE0C8",
               color: "#9D350E",
