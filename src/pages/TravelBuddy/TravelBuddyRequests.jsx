@@ -1,4 +1,3 @@
-
 import React, { useCallback, useEffect, useState } from "react";
 import {
   Alert,
@@ -20,6 +19,10 @@ import FlightIcon from "@mui/icons-material/Flight";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Api from "../../Api";
+
+/* ── Responsive style tokens ── */
+const touchBtn = { minHeight: { xs: 44, sm: 42 }, fontSize: { xs: 14, sm: 15 } };
+const wrapText = { overflowWrap: "anywhere", minWidth: 0 };
 
 const TravelBuddyRequests = () => {
   const location = useLocation();
@@ -65,7 +68,7 @@ const TravelBuddyRequests = () => {
       console.error("Failed to fetch Travel Buddy requests:", err);
       setError(
         err.response?.data?.message ||
-          "Could not load Travel Buddy requests."
+        "Could not load Travel Buddy requests."
       );
     } finally {
       setLoading(false);
@@ -110,7 +113,7 @@ const TravelBuddyRequests = () => {
       console.error("Failed to respond to Travel Buddy request:", err);
       setError(
         err.response?.data?.message ||
-          `Failed to ${action} this request. Please try again.`
+        `Failed to ${action} this request. Please try again.`
       );
     } finally {
       setBusyId(null);
@@ -121,8 +124,8 @@ const TravelBuddyRequests = () => {
     !user
       ? "Community member"
       : [user.firstName, user.lastName]
-          .filter(Boolean)
-          .join(" ") || "Community member";
+        .filter(Boolean)
+        .join(" ") || "Community member";
 
   const getRoute = (trip) => {
     const flights = trip?.flights || [];
@@ -160,28 +163,58 @@ const TravelBuddyRequests = () => {
   return (
     <Box
       sx={{
-        maxWidth: 900,
+        width: "100%",
+        maxWidth: { xs: "100%", sm: 720, md: 900 },
         mx: "auto",
-        px: { xs: 2, sm: 3 },
-        py: 3,
+        boxSizing: "border-box",
+        overflowX: "hidden",
+        minHeight: "100vh",
+        "@supports (min-height: 100dvh)": { minHeight: "100dvh" },
+        pt: { xs: 2, sm: 3, md: 4 },
+        pb: {
+          xs: "calc(24px + env(safe-area-inset-bottom, 0px))",
+          sm: "calc(32px + env(safe-area-inset-bottom, 0px))",
+        },
+        pl: { xs: "max(16px, env(safe-area-inset-left, 0px))", sm: 3 },
+        pr: { xs: "max(16px, env(safe-area-inset-right, 0px))", sm: 3 },
       }}
     >
       <Typography
         component="h1"
-        sx={{ fontSize: 27, fontWeight: 800, color: "#1B2A5C" }}
+        sx={{
+          fontSize: { xs: 22, sm: 25, md: 27 },
+          fontWeight: 800,
+          color: "#1B2A5C",
+          lineHeight: 1.2,
+        }}
       >
         Travel Buddy Requests
       </Typography>
 
-      <Typography sx={{ color: "text.secondary", mt: 0.5, mb: 3 }}>
+      <Typography
+        sx={{
+          color: "text.secondary",
+          mt: 0.5,
+          mb: { xs: 2, sm: 3 },
+          fontSize: { xs: 13.5, sm: 15, md: 16 },
+        }}
+      >
         Review requests from community members and track your submitted
         requests.
       </Typography>
 
-      <Stack direction="row" spacing={1} sx={{ mb: 3 }}>
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: { xs: "repeat(2, minmax(0, 1fr))", sm: "repeat(2, max-content)" },
+          gap: 1,
+          mb: { xs: 2, sm: 3 },
+        }}
+      >
         <Button
           variant={tab === "received" ? "contained" : "outlined"}
           onClick={() => setTab("received")}
+          sx={{ ...touchBtn, px: { sm: 3 } }}
         >
           Received ({received.length})
         </Button>
@@ -189,23 +222,24 @@ const TravelBuddyRequests = () => {
         <Button
           variant={tab === "sent" ? "contained" : "outlined"}
           onClick={() => setTab("sent")}
+          sx={{ ...touchBtn, px: { sm: 3 } }}
         >
           Sent ({sent.length})
         </Button>
-      </Stack>
+      </Box>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert severity="error" sx={{ mb: 2, fontSize: { xs: 13, sm: 14 }, ...wrapText }}>
           {error}
         </Alert>
       )}
 
       {loading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
+        <Box sx={{ display: "flex", justifyContent: "center", py: { xs: 6, sm: 8 } }}>
           <CircularProgress />
         </Box>
       ) : sortedItems.length === 0 ? (
-        <Paper variant="outlined" sx={{ p: 4, textAlign: "center" }}>
+        <Paper variant="outlined" sx={{ p: { xs: 3, sm: 4 }, textAlign: "center" }}>
           <Typography sx={{ fontWeight: 700 }}>
             {tab === "received"
               ? "No incoming requests"
@@ -214,7 +248,7 @@ const TravelBuddyRequests = () => {
 
           <Typography
             color="text.secondary"
-            sx={{ mt: 1, mb: 2 }}
+            sx={{ mt: 1, mb: 2, fontSize: { xs: 13.5, sm: 16 } }}
           >
             {tab === "received"
               ? "New requests to connect with your trip will appear here."
@@ -224,12 +258,13 @@ const TravelBuddyRequests = () => {
           <Button
             variant="outlined"
             onClick={() => navigate("/travelBuddy")}
+            sx={{ ...touchBtn, width: { xs: "100%", sm: "auto" } }}
           >
             Browse trips
           </Button>
         </Paper>
       ) : (
-        <Stack spacing={2}>
+        <Stack spacing={{ xs: 1.5, sm: 2 }}>
           {sortedItems.map((request) => {
             const isPending = request.status === "PENDING";
             const isBusy = busyId === request._id;
@@ -247,8 +282,9 @@ const TravelBuddyRequests = () => {
                 key={request._id}
                 variant="outlined"
                 sx={{
-                  p: { xs: 2, sm: 2.5 },
+                  p: { xs: 1.75, sm: 2.5 },
                   borderRadius: 3,
+                  minWidth: 0,
                   borderColor:
                     request._id === requestedId
                       ? "#C2410C"
@@ -262,18 +298,22 @@ const TravelBuddyRequests = () => {
                   alignItems="center"
                   sx={{ mb: 2 }}
                 >
-                  <Avatar src={otherUser?.profileImage || undefined}>
+                  <Avatar
+                    src={otherUser?.profileImage || undefined}
+                    sx={{ flexShrink: 0, width: { xs: 40, sm: 44 }, height: { xs: 40, sm: 44 } }}
+                  >
                     {getUserName(otherUser).charAt(0)}
                   </Avatar>
 
                   <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography sx={{ fontWeight: 800 }}>
+                    <Typography sx={{ fontWeight: 800, fontSize: { xs: 15, sm: 16 }, ...wrapText }}>
                       {getUserName(otherUser)}
                     </Typography>
 
                     <Typography
                       variant="body2"
                       color="text.secondary"
+                      sx={{ fontSize: { xs: 12.5, sm: 14 }, ...wrapText }}
                     >
                       {tab === "received"
                         ? "Wants to connect with your trip"
@@ -284,6 +324,7 @@ const TravelBuddyRequests = () => {
                   <Chip
                     size="small"
                     label={formatStatus(request.status)}
+                    sx={{ flexShrink: 0, maxWidth: { xs: 110, sm: "none" }, fontSize: { xs: 11, sm: 12 } }}
                     color={
                       request.status === "ACCEPTED"
                         ? "success"
@@ -296,7 +337,7 @@ const TravelBuddyRequests = () => {
 
                 <Stack spacing={1.5}>
                   {tab === "received" && (
-                    <Box>
+                    <Box sx={{ minWidth: 0 }}>
                       <Typography
                         variant="caption"
                         color="text.secondary"
@@ -304,7 +345,7 @@ const TravelBuddyRequests = () => {
                         Their submitted trip
                       </Typography>
 
-                      <Typography sx={{ fontWeight: 700 }}>
+                      <Typography sx={{ fontWeight: 700, fontSize: { xs: 14.5, sm: 16 }, ...wrapText }}>
                         <FlightIcon
                           sx={{
                             fontSize: 17,
@@ -318,13 +359,14 @@ const TravelBuddyRequests = () => {
                       <Typography
                         variant="body2"
                         color="text.secondary"
+                        sx={{ fontSize: { xs: 12.5, sm: 14 }, ...wrapText }}
                       >
                         {getFlightNumbers(submittedTrip)}
                       </Typography>
                     </Box>
                   )}
 
-                  <Box>
+                  <Box sx={{ minWidth: 0 }}>
                     <Typography
                       variant="caption"
                       color="text.secondary"
@@ -334,13 +376,14 @@ const TravelBuddyRequests = () => {
                         : "Trip you requested to connect with"}
                     </Typography>
 
-                    <Typography sx={{ fontWeight: 600 }}>
+                    <Typography sx={{ fontWeight: 600, fontSize: { xs: 14.5, sm: 16 }, ...wrapText }}>
                       {getRoute(targetTrip)}
                     </Typography>
 
                     <Typography
                       variant="body2"
                       color="text.secondary"
+                      sx={{ fontSize: { xs: 12.5, sm: 14 }, ...wrapText }}
                     >
                       {getFlightNumbers(targetTrip)}
                     </Typography>
@@ -358,6 +401,7 @@ const TravelBuddyRequests = () => {
                       variant="contained"
                       disabled={Boolean(busyId)}
                       onClick={() => setConfirmRequest(request)}
+                      sx={touchBtn}
                     >
                       {isBusy ? (
                         <CircularProgress size={20} color="inherit" />
@@ -372,6 +416,7 @@ const TravelBuddyRequests = () => {
                       color="inherit"
                       disabled={Boolean(busyId)}
                       onClick={() => respondToRequest(request, "reject")}
+                      sx={touchBtn}
                     >
                       Not Now
                     </Button>
@@ -382,21 +427,21 @@ const TravelBuddyRequests = () => {
                   <Typography
                     variant="body2"
                     color="text.secondary"
-                    sx={{ mt: 2 }}
+                    sx={{ mt: 2, fontSize: { xs: 13, sm: 14 } }}
                   >
                     Waiting for the trip owner to respond.
                   </Typography>
                 )}
 
                 {request.status === "ACCEPTED" && (
-                  <Alert severity="success" sx={{ mt: 2 }}>
+                  <Alert severity="success" sx={{ mt: 2, fontSize: { xs: 13, sm: 14 }, ...wrapText }}>
                     Request approved. Both trips are now matched. Contact
                     details are available only if both members consented.
                   </Alert>
                 )}
 
                 {request.status === "REJECTED" && (
-                  <Alert severity="info" sx={{ mt: 2 }}>
+                  <Alert severity="info" sx={{ mt: 2, fontSize: { xs: 13, sm: 14 }, ...wrapText }}>
                     {request.publishOnReject
                       ? "This request was declined. Your submitted trip was set to public, as requested."
                       : "This request was declined. Your submitted trip remains private."}
@@ -415,30 +460,43 @@ const TravelBuddyRequests = () => {
         }}
         fullWidth
         maxWidth="xs"
+        PaperProps={{
+          sx: { m: { xs: 2, sm: 4 }, width: { xs: "calc(100% - 32px)", sm: "100%" } },
+        }}
       >
-        <DialogTitle sx={{ fontWeight: 800 }}>
+        <DialogTitle sx={{ fontWeight: 800, fontSize: { xs: 18, sm: 20 } }}>
           Approve Travel Buddy request?
         </DialogTitle>
 
         <DialogContent>
-          <DialogContentText>
+          <DialogContentText sx={{ fontSize: { xs: 14, sm: 16 } }}>
             If you approve this request, your registered contact details may
             be shared with this matched traveller so you can coordinate your
             journey. Your details will be available only after both members
             have consented and the request is approved.
           </DialogContentText>
 
-          <Alert severity="info" sx={{ mt: 2 }}>
+          <Alert severity="info" sx={{ mt: 2, fontSize: { xs: 13, sm: 14 } }}>
             Only continue if you are comfortable sharing your contact
             details with this traveller.
           </Alert>
         </DialogContent>
 
-        <DialogActions sx={{ p: 2, pt: 0 }}>
+        <DialogActions
+          sx={{
+            p: 2,
+            pt: 0,
+            gap: 1,
+            flexDirection: { xs: "column-reverse", sm: "row" },
+            alignItems: "stretch",
+            "& > :not(style) ~ :not(style)": { ml: 0 },
+          }}
+        >
           <Button
             onClick={() => setConfirmRequest(null)}
             disabled={Boolean(busyId)}
             color="inherit"
+            sx={{ ...touchBtn, width: { xs: "100%", sm: "auto" } }}
           >
             Cancel
           </Button>
@@ -451,6 +509,7 @@ const TravelBuddyRequests = () => {
                 respondToRequest(confirmRequest, "accept", true);
               }
             }}
+            sx={{ ...touchBtn, width: { xs: "100%", sm: "auto" } }}
           >
             {busyId === confirmRequest?._id ? (
               <CircularProgress size={20} color="inherit" />

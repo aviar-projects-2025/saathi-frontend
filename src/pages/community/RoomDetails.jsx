@@ -141,8 +141,19 @@ export default function RoomDetails() {
           </Stack>
         )}
 
-        {/* Feed List */}
-        <FeedList feed={feed} emptyText="No posts in this room yet. Be the first!" />
+        <Box
+          ref={contentRef}
+          sx={{
+            flex: 1,
+            width: "100%",
+            maxWidth: { xs: "100%", md: 640 },
+            minWidth: 0,
+            boxSizing: "border-box",
+            pb: { xs: 14, sm: 12 },
+          }}
+        >
+          <FeedList feed={feed} emptyText="No posts in this room yet. Be the first!" />
+        </Box>
       </Box>
 
       {/* ★ FIXED: Floating Action Button */}

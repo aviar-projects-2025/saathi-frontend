@@ -1482,6 +1482,7 @@ export default function RideDetailsModal({
 
         {/* ── Ticket data fields ── */}
 
+
         <Box
           sx={{
             display: "flex",
@@ -1489,212 +1490,188 @@ export default function RideDetailsModal({
             gap: 2,
             width: "100%",
             alignItems: "stretch",
-
             "& > *": {
               flex: {
                 xs: "1 1 calc(50% - 16px)",       // Mobile: 2
                 sm: "1 1 calc(33.333% - 16px)",   // Tablet: 3
-                // md: "1 1 calc(25% - 16px)",       // Laptop: 4
-                // lg: "1 1 calc(25% - 16px)",       // Desktop: 4
+                md: "1 1 calc(33.333% - 16px)",   // Laptop: 3
+                lg: "1 1 calc(33.333% - 16px)",   // Desktop: 3
               },
               minWidth: 0,
             },
           }}
         >
+          {dateLabel && (
+            <Field icon={CalendarTodayIcon} label="Date" value={dateLabel} />
+          )}
 
-          <Field
-            icon={CalendarTodayIcon}
-            label="Date"
-            value={dateLabel || "—"}
-          />
+          {timeLabel && (
+            <Field icon={AccessTimeIcon} label="Time" value={timeLabel} />
+          )}
 
-          <Field icon={AccessTimeIcon} label="Time" value={timeLabel || "—"} />
+          {ride?.timeZone && (
+            <Field icon={ScheduleIcon} label="Time Zone" value={ride.timeZone} />
+          )}
 
-          <Field
-            icon={ScheduleIcon}
-            label="Time Zone"
-            value={ride?.timeZone || "—"}
-          />
+          {ride?.modeOfTravel && (
+            <Field icon={TravelIcon} label="Mode of Travel" value={ride.modeOfTravel} />
+          )}
 
-          <Field
-            icon={TravelIcon}
-            label="Mode of Travel"
-            value={ride?.modeOfTravel || "—"}
-          />
-
-          <Field
-            icon={AccessTimeIcon}
-            label="Travel Duration"
-            value={
-              ride?.duration != null
-                ? ride.duration >= 60
-                  ? `${Math.floor(ride.duration / 60)} hr ${ride.duration % 60
-                  } min`
+          {ride?.duration != null && (
+            <Field
+              icon={AccessTimeIcon}
+              label="Travel Duration"
+              value={
+                ride.duration >= 60
+                  ? `${Math.floor(ride.duration / 60)} hr ${ride.duration % 60} min`
                   : `${ride.duration} min`
-                : "—"
-            }
-          />
+              }
+            />
+          )}
 
-          <Field
-            icon={RouteIcon}
-            label="Distance"
-            value={ride?.distanceKm != null ? `${ride.distanceKm} km` : "—"}
-          />
+          {ride?.distanceKm != null && (
+            <Field
+              icon={RouteIcon}
+              label="Distance"
+              value={`${ride.distanceKm} km`}
+            />
+          )}
 
-          <Field
-            icon={EventSeatIcon}
-            label="Available Seats"
-            value={
-              ride?.availableSeats === 0
-                ? "Seats Filled"
-                : (ride?.availableSeats ?? "—")
-            }
-          />
+          {ride?.availableSeats != null && (
+            <Field
+              icon={EventSeatIcon}
+              label="Available Seats"
+              value={ride.availableSeats === 0 ? "Seats Filled" : ride.availableSeats}
+            />
+          )}
 
-          <Field
-            icon={EventSeatIcon}
-            label="Total Seats"
-            value={ride?.totalSeats ?? "—"}
-          />
+          {ride?.totalSeats != null && (
+            <Field icon={EventSeatIcon} label="Total Seats" value={ride.totalSeats} />
+          )}
+          {ride && (
+            <Field
+              icon={AttachMoneyIcon}
+              label="Cost Per Seat"
+              value={
+                ride.costPerSeat == null
+                  ? "Free"
+                  : `₹ ${ride.costPerSeat}`
+              }
+            />
+          )}
 
-          <Field
-            icon={AttachMoneyIcon}
-            label="Cost Per Seat"
-            value={ride?.costPerSeat == null ? "No cost / Free" : `₹ ${ride.costPerSeat}`}
-          />
+          {ride?.category && (
+            <Field icon={CategoryIcon} label="Category" value={ride.category} />
+          )}
 
-          <Field
-            icon={CategoryIcon}
-            label="Category"
-            value={ride?.category || "—"}
-          />
+          {ride?.luggageSpace && (
+            <Field
+              icon={LuggageIcon}
+              label="Luggage Space"
+              value={ride.luggageSpace === "None" ? "No bags" : ride.luggageSpace}
+            />
+          )}
 
-          <Field
-            icon={LuggageIcon}
-            label="Luggage Space"
-            // value={ride?.luggageSpace || "—"}
-            value={ride?.luggageSpace == "None" ? "No bags" : `${ride.luggageSpace}`}
-          />
+          {ride?.childFriendly != null && (
+            <Field
+              icon={ChildCareIcon}
+              label="Child Friendly"
+              value={ride.childFriendly ? "Yes" : "No"}
+            />
+          )}
 
-          <Field
-            icon={ChildCareIcon}
-            label="Child Friendly"
-            value={ride?.childFriendly ? "Yes" : "No"}
-          />
+          {ride?.womenOnly != null && (
+            <Field
+              icon={FemaleIcon}
+              label="Women Only"
+              value={ride.womenOnly ? "Yes" : "No"}
+            />
+          )}
 
-          <Field
-            icon={FemaleIcon}
-            label="Women Only"
-            value={ride?.womenOnly ? "Yes" : "No"}
-          />
+          {ride?.recurringRide != null && (
+            <Field
+              icon={CalendarTodayIcon}
+              label="Recurring Ride"
+              value={ride.recurringRide ? "Yes" : "No"}
+            />
+          )}
 
-          <Field
-            icon={CalendarTodayIcon}
-            label="Recurring Ride"
-            value={ride?.recurringRide ? "Yes" : "No"}
-          />
+          {ride?.confirmCostSharing != null && (
+            <Field
+              icon={CheckCircleIcon}
+              label="Cost Sharing Confirmed"
+              value={ride.confirmCostSharing ? "Yes" : "No"}
+            />
+          )}
 
-          <Field
-            icon={CheckCircleIcon}
-            label="Cost Sharing Confirmed"
-            value={ride?.confirmCostSharing ? "Yes" : "No"}
-          />
+          {ride?.kind && (
+            <Field icon={DescriptionIcon} label="Ride Kind" value={ride.kind} />
+          )}
 
-          <Field
-            icon={DescriptionIcon}
-            label="Ride Kind"
-            value={ride?.kind || "—"}
-          />
+          {ride?.passengers != null && ride.passengers !== "" && (
+            <Field icon={PeopleIcon} label="Passengers" value={ride.passengers} />
+          )}
 
-          <Field
-            icon={PeopleIcon}
-            label="Passengers"
-            value={ride?.passengers || "—"}
-          />
+          {ride?.bags != null && (
+            <Field
+              icon={LuggageIcon}
+              label="Bags"
+              value={ride.bags === 0 ? "No bags" : ride.bags}
+            />
+          )}
 
-          <Field icon={LuggageIcon} label="Bags" value={ride?.bags ?? "—"} />
+          {ride?.travelingWithChild != null && (
+            <Field
+              icon={ChildCareIcon}
+              label="Traveling With Child"
+              value={ride.travelingWithChild ? "Yes" : "No"}
+            />
+          )}
 
+          {ride?.flexibility && (
+            <Field icon={ScheduleIcon} label="Flexibility" value={ride.flexibility} />
+          )}
 
-          <Field
-            icon={ChildCareIcon}
-            label="Traveling With Child"
-            value={ride?.travelingWithChild ? "Yes" : "No"}
-          />
+          {ride?.womenDriversOnly != null && (
+            <Field
+              icon={FemaleIcon}
+              label="Women Drivers Only"
+              value={ride.womenDriversOnly ? "Yes" : "No"}
+            />
+          )}
 
-          {/* <Field
-            icon={TranslateIcon}
-            label="Languages"
-            value={
-              Array.isArray(ride?.language) && ride.language.length
-                ? ride.language.join(", ")
-                : "—"
-            }
-            span
-          /> */}
-
-
-
-          <Field
-            icon={ScheduleIcon}
-            label="Flexibility"
-            value={ride?.flexibility || "—"}
-          />
-
-          <Field
-            icon={FemaleIcon}
-            label="Women Drivers Only"
-            value={ride?.womenDriversOnly ? "Yes" : "No"}
-          />
-
-          <Field
-            icon={TranslateIcon}
-            label="Help Offered"
-            value={
-              Array.isArray(ride?.helpCanOffer) && ride.helpCanOffer.length
-                ? ride.helpCanOffer.join(", ")
-                : "—"
-            }
-            span
-          />
-
-          <Field
-            icon={PhoneIcon}
-            label="Contact / Notes"
-            value={ride?.notes || "—"}
-            span
-          />
-
-          {/* <Field
-            icon={FlagIcon}
-            label="Ride Status"
-            value={ride?.status || "—"}
-          /> */}
-
-          {/* <Field
-            icon={DirectionsCarIcon}
-            label="Travel Status"
-            value={ride?.travelStatus || "—"}
-          /> */}
-
-          <Field
-            icon={DescriptionIcon}
-            label="Description"
-            value={ride?.description || "—"}
-            span
-          />
+          {Array.isArray(ride?.helpCanOffer) && ride.helpCanOffer.length > 0 && (
+            <Field
+              icon={TranslateIcon}
+              label="Help Offered"
+              value={ride.helpCanOffer.join(", ")}
+              span
+            />
+          )}
         </Box>
 
-        <br />
+        {ride?.notes != null && ride.notes !== "" && (
+          <Box sx={{ width: "100%", mt: 2, mb: 2 }}>
+            <Field
+              icon={PhoneIcon}
+              label="Contact / Notes"
+              value={ride.notes}
+              span
+            />
+          </Box>
+        )}
 
-        {/*
-        {ride?.description && (
-          <Field
-            icon={DescriptionIcon}
-            label="Description"
-            value={ride?.description || "—"}
-            span
-          />
-        )} */}
+        {ride?.description != null && ride.description !== "" && (
+          <Box sx={{ width: "100%", mt: 2 }}>
+            <Field
+              icon={DescriptionIcon}
+              label="Description"
+              value={ride.description}
+              span
+            />
+          </Box>
+        )}
+
       </DialogContent>
 
       <Box

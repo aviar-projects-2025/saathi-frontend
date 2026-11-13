@@ -465,20 +465,108 @@ export default function CommunityFeedItem({
             </Paper >
 
             {/* Edit / Delete menu */}
-            < Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={() => setMenuAnchor(null)
-            }>
-                <MenuItem onClick={openEdit} sx={{ fontSize: { xs: "0.88rem", sm: "1rem" } }}>
-                    <ListItemIcon><EditIcon fontSize="small" /></ListItemIcon>
-                    <ListItemText primaryTypographyProps={{ sx: { fontSize: "inherit" } }}>Edit</ListItemText>
-                </MenuItem>
+            <Menu
+                anchorEl={menuAnchor}
+                open={Boolean(menuAnchor)}
+                onClose={() => setMenuAnchor(null)}
+                anchorOrigin={{
+                    vertical: "bottom",
+                    horizontal: "left",
+                }}
+                transformOrigin={{
+                    vertical: "top",
+                    horizontal: "left",
+                }}
+                slotProps={{
+                    paper: {
+                        elevation: 0,
+                        sx: {
+                            borderRadius: "12px",
+                            minWidth: { xs: 120, sm: 140 },
+                            bgcolor: "#F8FAFC",
+                            border: "1px solid #E2E8F0",
+                            boxShadow: "0px 12px 32px rgba(0, 0, 0, 0.14)",
+                            p: 0.5,
+                        },
+                    },
+                }}
+            >
+                {/* Edit */}
                 <MenuItem
-                    onClick={() => { setMenuAnchor(null); setDeleteOpen(true); }}
-                    sx={{ fontSize: { xs: "0.88rem", sm: "1rem" } }}
+                    onClick={openEdit}
+                    sx={{
+                        borderRadius: "10px",
+                        bgcolor: "#FFFFFF",
+                        mb: 0.5,
+                        "&:hover": {
+                            bgcolor: "#EEF2FF",
+                        },
+                    }}
                 >
-                    <ListItemIcon><DeleteIcon fontSize="small" color="error" /></ListItemIcon>
-                    <ListItemText primaryTypographyProps={{ sx: { fontSize: "inherit" } }}>Delete</ListItemText>
+                    <ListItemIcon
+                        sx={{
+                            minWidth: { xs: 24, sm: 30 },
+                        }}
+                    >
+                        <EditIcon
+                            sx={{
+                                color: "#6C63FF",
+                                fontSize: { xs: 15, sm: 18, md: 20 },
+                            }}
+                        />
+                    </ListItemIcon>
+
+                    <ListItemText
+                        primary="Edit"
+                        primaryTypographyProps={{
+                            fontWeight: 600,
+                            color: "text.primary",
+                            sx: {
+                                fontSize: { xs: 12, sm: 13, md: 14 },
+                            },
+                        }}
+                    />
                 </MenuItem>
-            </Menu >
+
+                {/* Delete */}
+                <MenuItem
+                    onClick={() => {
+                        setMenuAnchor(null);
+                        setDeleteOpen(true);
+                    }}
+                    sx={{
+                        borderRadius: "10px",
+                        bgcolor: "#FFFFFF",
+                        "&:hover": {
+                            bgcolor: "#FFF1F2",
+                        },
+                    }}
+                >
+                    <ListItemIcon
+                        sx={{
+                            minWidth: { xs: 24, sm: 30 },
+                        }}
+                    >
+                        <DeleteIcon
+                            sx={{
+                                color: "#E53935",
+                                fontSize: { xs: 15, sm: 18, md: 20 },
+                            }}
+                        />
+                    </ListItemIcon>
+
+                    <ListItemText
+                        primary="Delete"
+                        primaryTypographyProps={{
+                            fontWeight: 600,
+                            color: "error.main",
+                            sx: {
+                                fontSize: { xs: 12, sm: 13, md: 14 },
+                            },
+                        }}
+                    />
+                </MenuItem>
+            </Menu>
 
             {/* Edit dialog */}
             < Dialog

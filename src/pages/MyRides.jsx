@@ -262,42 +262,96 @@ function RideCard({
           </Box>
         </Box>
 
-        <Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap" sx={{ px: 2, py: 1.5 }}>
-          <Chip size="small" variant="outlined" icon={<CalendarTodayIcon />} label={`${fmtDate(ride.startTime)} · ${fmtTime(ride.startTime)}`} />
-          <Chip size="small" variant="outlined" icon={<Mode />} label={ride.modeOfTravel || "Car"} />
-          {ride.kind === "offer" && ride.modeOfTravel !== "Flight" && (
-            <Chip size="small" variant="outlined" icon={<EventSeatIcon />} label={`${ride.totalSeats} seat${ride.totalSeats === 1 ? "" : "s"}`} />
-          )}
-          {ride.kind === "request" && (
-            <Chip size="small" variant="outlined" icon={<EventSeatIcon />} label={`${ride.passengers || 1} passenger${(ride.passengers || 1) === 1 ? "" : "s"}`} />
-          )}
-        </Stack>
+        <Stack
+          direction="row"
+          spacing={0.75}
+          useFlexGap
+          sx={{
+            display: "flex",
+            flexWrap: "wrap",
+            px: 2,
+            py: 1.5,
+            width: "100%",
+            maxWidth: "100%",
+            minWidth: 0,
+            overflowX: "visible",
+            "& .MuiChip-root": {
+              flexShrink: 0,
+              maxWidth: "100%",
+            },
+            "& .MuiChip-label": {
+              whiteSpace: "nowrap",
+            },
+          }}
+        >
+        <Chip
+          size="small"
+          variant="outlined"
+          icon={<CalendarTodayIcon />}
+          label={`${fmtDate(ride.startTime)} · ${fmtTime(ride.startTime)}`}
+        />
 
-        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 1, bgcolor: k.bg, px: 2, py: 1.25, flexWrap: "wrap" }}>
-          <Typography sx={{ fontSize: "0.84rem", flex: "1 1 140px" }}>{footerText}</Typography>
-          <Stack direction="row" spacing={1}>
-            {isCurrentRide && canManageTravel && !isCompleted && !isCancelled && (
-              <Button size="small" variant="contained" disabled={busy} onClick={() => onTravelAction(ride)}
-                sx={{ bgcolor: isStarted ? "#C62828" : "#E8650A", boxShadow: "none", whiteSpace: "nowrap", "&:hover": { bgcolor: isStarted ? "#9B1C1C" : "#C85508" } }}>
-                {busy ? "Please wait…" : isStarted ? "Complete Ride" : "Start Ride"}
-              </Button>
-            )}
-            <Button size="small" variant="contained" onClick={() => setDetailsOpen(true)}
-              sx={{ bgcolor: k.color, boxShadow: "none", whiteSpace: "nowrap", "&:hover": { bgcolor: k.color, opacity: 0.9 } }}>
-              {isOffer && pendingCount > 0 ? "Review" : "View"}
+        <Chip
+          size="small"
+          variant="outlined"
+          icon={<Mode />}
+          label={ride.modeOfTravel || "Car"}
+        />
+
+        {ride.kind === "offer" && ride.modeOfTravel !== "Flight" && (
+          <>
+            <Chip
+              size="small"
+              variant="outlined"
+              icon={<EventSeatIcon />}
+              label={`${ride.totalSeats} Total seat${ride.totalSeats === 1 ? "" : "s"}`}
+            />
+
+            <Chip
+              size="small"
+              variant="outlined"
+              icon={<EventSeatIcon />}
+              label={`${ride.availableSeats} Available seat${ride.availableSeats === 1 ? "" : "s"}`}
+            />
+          </>
+        )}
+
+        {ride.kind === "request" && (
+          <Chip
+            size="small"
+            variant="outlined"
+            icon={<EventSeatIcon />}
+            label={`${ride.passengers || 1} passenger${(ride.passengers || 1) === 1 ? "" : "s"}`}
+          />
+        )}
+      </Stack>
+
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 1, bgcolor: k.bg, px: 2, py: 1.25, flexWrap: "wrap" }}>
+        <Typography sx={{ fontSize: "0.84rem", flex: "1 1 140px" }}>{footerText}</Typography>
+        <Stack direction="row" spacing={1}>
+          {isCurrentRide && canManageTravel && !isCompleted && !isCancelled && (
+            <Button size="small" variant="contained" disabled={busy} onClick={() => onTravelAction(ride)}
+              sx={{ bgcolor: isStarted ? "#C62828" : "#E8650A", boxShadow: "none", whiteSpace: "nowrap", "&:hover": { bgcolor: isStarted ? "#9B1C1C" : "#C85508" } }}>
+              {busy ? "Please wait…" : isStarted ? "Complete Ride" : "Start Ride"}
             </Button>
-          </Stack>
-        </Box>
+          )}
+          <Button size="small" variant="contained" onClick={() => setDetailsOpen(true)}
+            sx={{ bgcolor: k.color, boxShadow: "none", whiteSpace: "nowrap", "&:hover": { bgcolor: k.color, opacity: 0.9 } }}>
+            {isOffer && pendingCount > 0 ? "Review" : "View"}
+          </Button>
+        </Stack>
       </Box>
+    </Box >
 
-      {detailsOpen && (
+      { detailsOpen && (
         <RideDetailsModal
           ride={ride} user={user} showEdit={showEdit} showDelete={showDelete}
           onEdit={onEdit} onDelete={onDelete} onClose={() => setDetailsOpen(false)}
           requests={rideRequests} onApprove={onApprove} onReject={onReject}
           onRequestUpdated={onRequestUpdated} approveLoading={approveLoading} rejectLoading={rejectLoading}
         />
-      )}
+      )
+}
     </>
   );
 }

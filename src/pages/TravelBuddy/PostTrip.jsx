@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
-import Api from "../../Api"; // Adjust path if needed
+import Api from "../../Api"; 
 
 import {
   Alert,
@@ -56,17 +56,40 @@ const theme = createTheme({
   shape: { borderRadius: 12 },
 });
 
+/* ─────────── Responsive style tokens ─────────── */
 const BTN = {
-  height: 46,
-  minHeight: 46,
+  height: { xs: 44, sm: 46 },
+  minHeight: { xs: 44, sm: 46 },
   px: 2,
   py: 0,
   borderRadius: 2.5,
-  fontSize: 15,
+  fontSize: { xs: 14, sm: 15 },
   fontWeight: 700,
   lineHeight: 1.2,
   textAlign: "center",
   boxShadow: "none",
+};
+
+
+const inputFontSx = {
+  "& .MuiInputBase-input, & .MuiSelect-select": { fontSize: { xs: 16, sm: 14 } },
+};
+
+const pageSx = {
+  bgcolor: c.bg,
+  minHeight: "100vh",
+  "@supports (min-height: 100dvh)": { minHeight: "100dvh" },
+  width: "100%",
+  boxSizing: "border-box",
+  overflowX: "hidden",
+  pt: { xs: 2, sm: 2.5, md: 4 },
+  pb: {
+    xs: "calc(24px + env(safe-area-inset-bottom, 0px))",
+    sm: "calc(24px + env(safe-area-inset-bottom, 0px))",
+    md: 6,
+  },
+  pl: { xs: "max(16px, env(safe-area-inset-left, 0px))", sm: 2.5, md: 4 },
+  pr: { xs: "max(16px, env(safe-area-inset-right, 0px))", sm: 2.5, md: 4 },
 };
 
 const ROLES = [
@@ -84,8 +107,8 @@ const EMPTY_FLIGHT = {
   flightNumber: "",
   from: "",
   to: "",
-  departure: "", // datetime-local string
-  arrival: "",   // datetime-local string
+  departure: "", 
+  arrival: "",   
 };
 
 const INITIAL_FORM = {
@@ -99,7 +122,7 @@ const INITIAL_FORM = {
   agreed: false,
 };
 
-// Convert an API date into the local value expected by datetime-local inputs.
+
 const toDateTimeLocal = (value) => {
   if (!value) return "";
   const date = new Date(value);
@@ -174,10 +197,22 @@ const hasErrors = (errs) =>
 
 /* ─────────── Shared UI ─────────── */
 const FieldLabel = ({ children, small }) => (
-  <Typography sx={{ fontWeight: 700, fontSize: small ? 12 : 13, color: "#111", mb: 0.75 }}>
+  <Typography sx={{ fontWeight: 700, fontSize: small ? 12 : 13, color: "#111", mb: 0.75, lineHeight: 1.35, overflowWrap: "anywhere" }}>
     {children}
   </Typography>
 );
+
+const fieldSx = {
+  ...inputFontSx,
+  "& .MuiOutlinedInput-root": {
+    bgcolor: "#fff",
+    borderRadius: 1.5,
+    "& fieldset": { borderColor: c.border },
+    "&.Mui-focused fieldset": { borderColor: c.rust },
+  },
+
+  "& input[type='datetime-local']": { minWidth: 0, width: "100%", boxSizing: "border-box" },
+};
 
 const Field = ({ label, small, error, ...props }) => (
   <Box sx={{ flex: 1, minWidth: 0, width: "100%" }}>
@@ -188,14 +223,7 @@ const Field = ({ label, small, error, ...props }) => (
       error={Boolean(error)}
       helperText={error || " "}
       {...props}
-      sx={{
-        "& .MuiOutlinedInput-root": {
-          bgcolor: "#fff",
-          borderRadius: 1.5,
-          "& fieldset": { borderColor: c.border },
-          "&.Mui-focused fieldset": { borderColor: c.rust },
-        },
-      }}
+      sx={fieldSx}
     />
   </Box>
 );
@@ -210,14 +238,7 @@ const SelectField = ({ label, options, error, ...props }) => (
       error={Boolean(error)}
       helperText={error || " "}
       {...props}
-      sx={{
-        "& .MuiOutlinedInput-root": {
-          bgcolor: "#fff",
-          borderRadius: 1.5,
-          "& fieldset": { borderColor: c.border },
-          "&.Mui-focused fieldset": { borderColor: c.rust },
-        },
-      }}
+      sx={fieldSx}
     >
       {options.map((o) => (
         <MenuItem key={o} value={o}>
@@ -245,6 +266,8 @@ const MultiSelect = ({ label, options, value, onChange, error, placeholder }) =>
                 else onChange([...value, opt]);
               }}
               sx={{
+                height: { xs: 36, sm: 32 },
+                fontSize: { xs: 13.5, sm: 13 },
                 borderRadius: "20px",
                 bgcolor: selected ? c.rust : "#fff",
                 color: selected ? "#fff" : "#333",
@@ -262,13 +285,13 @@ const MultiSelect = ({ label, options, value, onChange, error, placeholder }) =>
 };
 
 const Row = ({ children }) => (
-  <Stack direction={{ xs: "column", sm: "row" }} spacing={{ xs: 1, sm: 2 }} sx={{ mb: 1.5 }}>
+  <Stack direction={{ xs: "column", sm: "row" }} spacing={{ xs: 1, sm: 2 }} sx={{ mb: 1.5, minWidth: 0 }}>
     {children}
   </Stack>
 );
 
 const SectionTitle = ({ children }) => (
-  <Typography sx={{ fontWeight: 800, fontSize: 16, color: c.navy, mb: 1.5, mt: 2 }}>{children}</Typography>
+  <Typography sx={{ fontWeight: 800, fontSize: { xs: 15, sm: 16 }, color: c.navy, mb: 1.5, mt: 2 }}>{children}</Typography>
 );
 
 const PrimaryButton = (props) => (
@@ -287,14 +310,14 @@ const PrimaryButton = (props) => (
 );
 
 const Header = ({ leftLabel, onLeft, step }) => (
-  <Box sx={{ mb: 3, width: "100%" }}>
-    <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1} sx={{ mb: 1.5, width: "100%" }}>
+  <Box sx={{ mb: { xs: 2, sm: 3 }, width: "100%" }}>
+    <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1} sx={{ mb: 1, width: "100%" }}>
       <Typography sx={{ fontSize: { xs: 13, sm: 14 }, color: c.muted, textAlign: "left", flex: 1, minWidth: 0 }}>
         Step {step} of 2: {step === 1 ? "Flights" : "Traveller and review"}
       </Typography>
       <Button
         onClick={onLeft}
-        sx={{ p: 0, minWidth: 0, minHeight: 40, flexShrink: 0, color: c.rust, fontSize: 14, whiteSpace: "nowrap", "&:hover": { bgcolor: "transparent" } }}
+        sx={{ p: 0, minWidth: 44, minHeight: 44, flexShrink: 0, color: c.rust, fontSize: 14, whiteSpace: "nowrap", "&:hover": { bgcolor: "transparent" } }}
       >
         {leftLabel}
       </Button>
@@ -306,6 +329,14 @@ const Header = ({ leftLabel, onLeft, step }) => (
     </Stack>
   </Box>
 );
+
+const pageTitleSx = {
+  fontWeight: 800,
+  fontSize: { xs: 22, sm: 24, md: 26 },
+  color: c.navy,
+  mb: 2,
+  lineHeight: 1.25,
+};
 
 /* ─────────── Step 1: Flights ─────────── */
 function StepFlights({ form, setForm, onNext, onCancel, isPrefilled }) {
@@ -342,17 +373,17 @@ function StepFlights({ form, setForm, onNext, onCancel, isPrefilled }) {
   return (
     <>
       <Header leftLabel="Cancel" onLeft={onCancel} step={1} />
-      <Typography component="h1" sx={{ fontWeight: 800, fontSize: { xs: 22, sm: 26 }, color: c.navy, mb: 2 }}>
+      <Typography component="h1" sx={pageTitleSx}>
         Post a Travel Buddy trip
       </Typography>
 
       {isPrefilled && (
-        <Alert severity="info" sx={{ mb: 2 }}>
+        <Alert severity="info" sx={{ mb: 2, fontSize: { xs: 13, sm: 14 } }}>
           You're requesting to join another trip. The flight details are fixed to match their itinerary. You can only add your traveler details.
         </Alert>
       )}
 
-      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 1.5, mb: 3 }}>
+      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "minmax(0, 1fr)", sm: "repeat(2, minmax(0, 1fr))" }, gap: 1.5, mb: 3 }}>
         {ROLES.map(([val, text]) => {
           const on = form.role === val;
           return (
@@ -364,6 +395,8 @@ function StepFlights({ form, setForm, onNext, onCancel, isPrefilled }) {
               onClick={() => setRole(val)}
               sx={{
                 ...BTN,
+                height: "auto",
+                py: 1,
                 bgcolor: on ? c.rust : "#fff",
                 color: on ? "#fff" : "#111",
                 border: `1px solid ${on ? c.rust : c.border}`,
@@ -382,7 +415,12 @@ function StepFlights({ form, setForm, onNext, onCancel, isPrefilled }) {
           <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", gap: 2 }}>
             <SectionTitle>Flight segment {i + 1}</SectionTitle>
             {i > 0 && !isPrefilled && (
-              <IconButton onClick={() => setForm((prev) => ({ ...prev, flights: prev.flights.filter((_, idx) => idx !== i) }))} size="small" sx={{ color: "#D32F2F" }}>
+              <IconButton
+                aria-label={`Remove flight segment ${i + 1}`}
+                onClick={() => setForm((prev) => ({ ...prev, flights: prev.flights.filter((_, idx) => idx !== i) }))}
+                size="small"
+                sx={{ color: "#D32F2F", width: 40, height: 40, mt: 1 }}
+              >
                 <CloseIcon fontSize="small" />
               </IconButton>
             )}
@@ -405,12 +443,17 @@ function StepFlights({ form, setForm, onNext, onCancel, isPrefilled }) {
       ))}
 
       {!isPrefilled && flights.length < MAX_FLIGHTS && (
-        <Link component="button" type="button" underline="none" onClick={addFlight} sx={{ color: c.rust, fontWeight: 700, fontSize: 14, mb: 2, display: "block", textAlign: "left" }}>
+        <Link
+          component="button"
+          type="button"
+          underline="none"
+          onClick={addFlight}
+          sx={{ color: c.rust, fontWeight: 700, fontSize: 14, mb: 2, display: "flex", alignItems: "center", minHeight: 44, textAlign: "left" }}
+        >
           + Add another segment (up to {MAX_FLIGHTS})
         </Link>
       )}
 
-      {/* ... rest unchanged ... */}
       <PrimaryButton onClick={handleNext}>Next: Traveller details</PrimaryButton>
     </>
   );
@@ -431,7 +474,7 @@ function StepTraveller({ form, setForm, onBack, onSubmit, submitting, requestMod
     if (!hasErrors(errors)) onSubmit();
   };
 
-  // Get first flight and last flight for summary
+
   const firstFlight = form.flights[0];
   const lastFlight = form.flights[form.flights.length - 1];
   const route = [airportCode(firstFlight.from), ...form.flights.map((f) => airportCode(f.to))].filter(Boolean).join(" → ");
@@ -439,7 +482,7 @@ function StepTraveller({ form, setForm, onBack, onSubmit, submitting, requestMod
   return (
     <>
       <Header leftLabel="Back" onLeft={onBack} step={2} />
-      <Typography component="h1" sx={{ fontWeight: 800, fontSize: { xs: 22, sm: 26 }, color: c.navy, mb: 2 }}>
+      <Typography component="h1" sx={pageTitleSx}>
         {isCompanion ? "About you" : "About your traveller"}
       </Typography>
 
@@ -459,27 +502,27 @@ function StepTraveller({ form, setForm, onBack, onSubmit, submitting, requestMod
 
       <Box sx={{ mt: 3, mb: 3 }}>
         <FieldLabel>Who meets them in the US?</FieldLabel>
-        <Paper variant="outlined" sx={{ px: 2, py: 1, borderRadius: 3, borderColor: c.border }}>
+        <Paper variant="outlined" sx={{ px: { xs: 1.5, sm: 2 }, py: 1, borderRadius: 3, borderColor: c.border }}>
           <RadioGroup value={form.pickup} onChange={(e) => setField("pickup")(e.target.value)}>
-            <FormControlLabel value="family" control={<Radio sx={{ "&.Mui-checked": { color: c.rust } }} />} label={<Typography sx={{ fontSize: 14 }}>Family member picks up at {airportCode(lastFlight.to) || "US airport"}</Typography>} sx={{ borderBottom: `1px solid ${c.border}`, m: 0, py: 0.5 }} />
-            <FormControlLabel value="saathi" control={<Radio sx={{ "&.Mui-checked": { color: c.rust } }} />} label={<Typography sx={{ fontSize: 14 }}>Arrange pickup through Saathi</Typography>} sx={{ m: 0, py: 0.5 }} />
+            <FormControlLabel value="family" control={<Radio sx={{ "&.Mui-checked": { color: c.rust } }} />} label={<Typography sx={{ fontSize: 14, overflowWrap: "anywhere" }}>Family member picks up at {airportCode(lastFlight.to) || "US airport"}</Typography>} sx={{ borderBottom: `1px solid ${c.border}`, m: 0, py: 0.5, minHeight: 44, alignItems: "center" }} />
+            <FormControlLabel value="saathi" control={<Radio sx={{ "&.Mui-checked": { color: c.rust } }} />} label={<Typography sx={{ fontSize: 14, overflowWrap: "anywhere" }}>Arrange pickup through Saathi</Typography>} sx={{ m: 0, py: 0.5, minHeight: 44, alignItems: "center" }} />
           </RadioGroup>
         </Paper>
       </Box>
 
-      <Paper variant="outlined" sx={{ p: 2, borderRadius: 3, borderColor: c.border, mb: 3 }}>
+      <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: 3, borderColor: c.border, mb: 3 }}>
         <Typography sx={{ fontWeight: 700, fontSize: 13, mb: 1 }}>Review: what others see</Typography>
-        <Typography sx={{ fontSize: 13, color: c.muted, mb: 1 }}>
+        <Typography sx={{ fontSize: 13, color: c.muted, mb: 1, overflowWrap: "anywhere" }}>
           {route} · {form.languages.join(", ")}
         </Typography>
-        {!isCompanion && <Typography sx={{ fontSize: 13, color: c.muted }}>Traveller {form.ageBand} · {form.relationship}</Typography>}
+        {!isCompanion && <Typography sx={{ fontSize: 13, color: c.muted, overflowWrap: "anywhere" }}>Traveller {form.ageBand} · {form.relationship}</Typography>}
         <Typography sx={{ fontSize: 12, color: c.muted, mt: 1 }}>
           Never collected or shown: passport, booking reference (PNR), seat, exact home address.
         </Typography>
       </Paper>
 
       {requestMode && (
-        <Paper variant="outlined" sx={{ p: 2, mb: 3, borderRadius: 2.5, borderColor: c.border, bgcolor: "#fff" }}>
+        <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, mb: 3, borderRadius: 2.5, borderColor: c.border, bgcolor: "#fff" }}>
           <FormControlLabel
             sx={{ alignItems: "flex-start", mx: 0 }}
             control={<Checkbox size="small" checked={publishOnReject} onChange={(e) => setPublishOnReject(e.target.checked)} sx={{ p: 0.5, mr: 1, "&.Mui-checked": { color: c.rust } }} />}
@@ -590,8 +633,8 @@ export default function PostTrip() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box sx={{ bgcolor: c.bg, minHeight: "100vh", py: { xs: 2, sm: 2.5 }, px: { xs: 2, sm: 2.5 } }}>
-        <Box sx={{ maxWidth: 680, mx: "auto" }}>
+      <Box sx={pageSx}>
+        <Box sx={{ width: "100%", maxWidth: { xs: "100%", sm: 600, md: 680 }, mx: "auto" }}>
           {step === 1 ? (
             <StepFlights form={form} setForm={setForm} onCancel={() => navigate(-1)} isPrefilled={Boolean(prefillTrip)} onNext={() => setStep(2)} />
           ) : (
@@ -607,26 +650,37 @@ export default function PostTrip() {
         }}
         fullWidth
         maxWidth="xs"
+        PaperProps={{ sx: { m: { xs: 2, sm: 4 }, width: { xs: "calc(100% - 32px)", sm: "100%" } } }}
       >
-        <DialogTitle sx={{ fontWeight: 800, color: c.navy }}>
+        <DialogTitle sx={{ fontWeight: 800, color: c.navy, fontSize: { xs: 18, sm: 20 } }}>
           Share contact details?
         </DialogTitle>
         <DialogContent>
-          <DialogContentText>
+          <DialogContentText sx={{ fontSize: { xs: 14, sm: 16 } }}>
             By sending this Travel Buddy request, you agree that your registered
             contact details may be shared with the trip owner if they approve
             the request and both of you consent to the connection.
           </DialogContentText>
-          <Alert severity="info" sx={{ mt: 2 }}>
+          <Alert severity="info" sx={{ mt: 2, fontSize: { xs: 13, sm: 14 } }}>
             Your contact details will not be unlocked just by sending the request.
             The trip owner must approve it and agree to contact sharing too.
           </Alert>
         </DialogContent>
-        <DialogActions sx={{ p: 2, pt: 0 }}>
+        <DialogActions
+          sx={{
+            p: 2,
+            pt: 0,
+            gap: 1,
+            flexDirection: { xs: "column-reverse", sm: "row" },
+            alignItems: "stretch",
+            "& > :not(style) ~ :not(style)": { ml: 0 },
+          }}
+        >
           <Button
             color="inherit"
             disabled={submitting}
             onClick={() => setContactConsentOpen(false)}
+            sx={{ minHeight: 44, width: { xs: "100%", sm: "auto" } }}
           >
             Cancel
           </Button>
@@ -634,6 +688,7 @@ export default function PostTrip() {
             variant="contained"
             disabled={submitting}
             onClick={createTrip}
+            sx={{ minHeight: 44, width: { xs: "100%", sm: "auto" } }}
           >
             {submitting ? "Sending..." : "Agree & Send Request"}
           </Button>

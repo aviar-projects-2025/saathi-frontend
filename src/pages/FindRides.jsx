@@ -208,13 +208,29 @@ const matchesFilters = (ride, filters, searchFrom, searchDestination, userLocati
 
 /* ─────────── Welcome Banner Component ─────────── */
 function WelcomeBanner({ firstName, onPostRide, onFindRide, onDismiss, postDisabled = false }) {
+  // Shared pill-button sizing: full width + 44px touch target on phones, auto width from sm up
+  const pillBtn = {
+    textTransform: "none",
+    fontWeight: 700,
+    fontSize: { xs: 13.5, sm: 13.5 },
+    minHeight: { xs: 44, sm: 40 },
+    px: 2.5,
+    py: 1,
+    borderRadius: 999,
+    width: { xs: "100%", sm: "auto" },
+    whiteSpace: "normal",
+    lineHeight: 1.25,
+  };
+
   return (
     <Paper
       elevation={0}
       sx={{
         position: "relative",
+        width: "100%",
+        boxSizing: "border-box",
         mb: { xs: 2, sm: 2.5 },
-        borderRadius: 3,
+        borderRadius: { xs: 2.5, sm: 3 },
         overflow: "hidden",
         background: "linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 50%, #FFCC80 100%)",
         border: "1px solid #FFB74D",
@@ -226,8 +242,10 @@ function WelcomeBanner({ firstName, onPostRide, onFindRide, onDismiss, postDisab
         size="small"
         sx={{
           position: "absolute",
-          top: 10,
-          right: 10,
+          top: { xs: 6, sm: 10 },
+          right: { xs: 6, sm: 10 },
+          width: { xs: 40, sm: 34 },
+          height: { xs: 40, sm: 34 },
           color: "#A85F00",
           bgcolor: "rgba(255,255,255,0.5)",
           "&:hover": { bgcolor: "rgba(255,255,255,0.8)" },
@@ -237,7 +255,14 @@ function WelcomeBanner({ firstName, onPostRide, onFindRide, onDismiss, postDisab
         <CloseIcon sx={{ fontSize: 18 }} />
       </IconButton>
 
-      <Box sx={{ p: { xs: 2, sm: 2.5, md: 3 }, pr: { xs: 5, sm: 6 } }}>
+      <Box
+        sx={{
+          p: { xs: 2, sm: 2.5, md: 3 },
+          // keep text clear of the dismiss button
+          pr: { xs: 6.5, sm: 7, md: 8 },
+          maxWidth: { md: 820 },
+        }}
+      >
         <Typography
           sx={{
             fontSize: { xs: 16, sm: 18, md: 20 },
@@ -245,6 +270,7 @@ function WelcomeBanner({ firstName, onPostRide, onFindRide, onDismiss, postDisab
             color: "#8B4513",
             mb: 1.5,
             lineHeight: 1.3,
+            overflowWrap: "anywhere",
           }}
         >
           🙏 Welcome to Saathi, {firstName}!
@@ -256,6 +282,7 @@ function WelcomeBanner({ firstName, onPostRide, onFindRide, onDismiss, postDisab
             color: "#5D4037",
             lineHeight: 1.65,
             mb: 2,
+            maxWidth: 680,
           }}
         >
           Saathi is a community rideshare app built exclusively for our Indian community in the US.
@@ -273,36 +300,43 @@ function WelcomeBanner({ firstName, onPostRide, onFindRide, onDismiss, postDisab
           Here's what you can do:
         </Typography>
 
-        <Stack spacing={1} sx={{ mb: 2.5 }}>
+        <Stack spacing={1} sx={{ mb: { xs: 2, sm: 2.5 } }}>
           {[
             { icon: "🚗", bold: "Post a Ride", rest: " — offer seats if you're driving somewhere" },
             { icon: "🔍", bold: "Find a Ride", rest: " — search for rides others have posted" },
             { icon: "👥", bold: "Invite Friends", rest: " — share your referral link with people you trust" },
           ].map((item) => (
-            <Box key={item.bold} sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
-              <Typography sx={{ fontSize: { xs: 14, sm: 15 }, lineHeight: 1.4 }}>{item.icon}</Typography>
-              <Typography sx={{ fontSize: { xs: 12.5, sm: 13, md: 13.5 }, color: "#4E342E", lineHeight: 1.5 }}>
+            <Box key={item.bold} sx={{ display: "flex", alignItems: "flex-start", gap: 1, minWidth: 0 }}>
+              <Typography sx={{ fontSize: { xs: 14, sm: 15 }, lineHeight: 1.4, flexShrink: 0 }}>{item.icon}</Typography>
+              <Typography
+                sx={{
+                  fontSize: { xs: 12.5, sm: 13, md: 13.5 },
+                  color: "#4E342E",
+                  lineHeight: 1.5,
+                  minWidth: 0,
+                  overflowWrap: "anywhere",
+                }}
+              >
                 <strong>{item.bold}</strong>{item.rest}
               </Typography>
             </Box>
           ))}
         </Stack>
 
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={1.25}>
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          spacing={{ xs: 1, sm: 1.25 }}
+          alignItems={{ xs: "stretch", sm: "center" }}
+        >
           <Button
             variant="contained"
             onClick={onPostRide}
             disabled={postDisabled}
             title={postDisabled ? "Complete your profile to post a ride" : ""}
             sx={{
+              ...pillBtn,
               bgcolor: RUST,
               color: "#fff",
-              textTransform: "none",
-              fontWeight: 700,
-              fontSize: { xs: 13, sm: 13.5 },
-              px: 2.5,
-              py: 1,
-              borderRadius: 999,
               boxShadow: "0 2px 8px rgba(200,63,8,0.3)",
               "&:hover": { bgcolor: RUST_DARK, boxShadow: "0 3px 10px rgba(200,63,8,0.4)" },
             }}
@@ -313,14 +347,9 @@ function WelcomeBanner({ firstName, onPostRide, onFindRide, onDismiss, postDisab
             variant="outlined"
             onClick={onFindRide}
             sx={{
+              ...pillBtn,
               color: RUST,
               borderColor: RUST,
-              textTransform: "none",
-              fontWeight: 700,
-              fontSize: { xs: 13, sm: 13.5 },
-              px: 2.5,
-              py: 1,
-              borderRadius: 999,
               bgcolor: "rgba(255,255,255,0.6)",
               "&:hover": { bgcolor: "#fff", borderColor: RUST },
             }}
