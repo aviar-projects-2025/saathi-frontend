@@ -103,6 +103,29 @@ const filterCityOptions = (options, { inputValue }) => {
   return [...matches, OTHER_OPTION];
 };
 
+/* ─────────────────────────────────────────────────────────────
+   Name rules — SINGLE source of truth, used by:
+     • sanitizeName() in the onChange handler (input-time filtering)
+     • Yup's .matches() in the validation schema (submit-time check)
+
+   Rules:
+     • Must start with a letter (any script)
+     • Allows letters (\p{L}) + combining marks (\p{M}) throughout
+     • Space, straight apostrophe, curly apostrophe, hyphen are
+       allowed as SEPARATORS, but only between letters — never at
+       the start or end
+     • Digits, other punctuation, emoji, tabs, newlines are rejected
+   ───────────────────────────────────────────────────────────── */
+const NAME_PATTERN = new RegExp(
+  String.raw`^\p{L}[\p{L}\p{M}]*(?:[ '\u2019-][\p{L}\p{M}]+)*$`,
+  "u"
+);
+
+// For stripping at input time: keep only letters/marks and allowed separators.
+const NAME_STRIP = new RegExp(String.raw`[^\p{L}\p{M} '\u2019-]`, "gu");
+
+const sanitizeName = (value) => String(value ?? "").replace(NAME_STRIP, "");
+
 const Register = () => {
   const navigate = useNavigate();
   const toasts = ToastConfig();
@@ -844,8 +867,8 @@ const Register = () => {
       .min(2, "First name must contain at least 2 characters")
       .max(40, "First name cannot exceed 40 characters")
       .matches(
-        /^[\p{L}][\p{L}\s'-]*$/u,
-        "First name can contain only letters"
+        NAME_PATTERN,
+        "First name can contain only letters, spaces, apostrophes, and hyphens"
       )
       .required("First name is required"),
 
@@ -854,8 +877,8 @@ const Register = () => {
       .min(1, "Last name is required")
       .max(40, "Last name cannot exceed 40 characters")
       .matches(
-        /^[\p{L}][\p{L}\s'-]*$/u,
-        "Last name can contain only letters"
+        NAME_PATTERN,
+        "Last name can contain only letters, spaces, apostrophes, and hyphens"
       )
       .required("Last name is required"),
 
@@ -1429,24 +1452,49 @@ const Register = () => {
                     fullWidth
                     label="First name"
                     name="firstName"
+                    type="text"
                     value={values.firstName}
-                    onChange={handleChange}
+                    onChange={(event) => {
+                      // Strip digits / disallowed chars before Formik sees them.
+                      // 3rd arg `false` = do NOT validate on every keystroke;
+                      // blur/submit will validate (via onBlur + onSubmit).
+                      setFieldValue(
+                        "firstName",
+                        sanitizeName(event.target.value),
+                        false
+                      );
+                    }}
                     onBlur={handleBlur}
                     error={touched.firstName && Boolean(errors.firstName)}
                     helperText={touched.firstName && errors.firstName}
-                    inputProps={{ maxLength: 40 }}
+                    inputProps={{
+                      maxLength: 40,
+                      inputMode: "text",
+                      autoComplete: "given-name",
+                    }}
                     sx={inputSx}
                   />
                   <TextField
                     fullWidth
                     label="Last name"
                     name="lastName"
+                    type="text"
                     value={values.lastName}
-                    onChange={handleChange}
+                    onChange={(event) => {
+                      setFieldValue(
+                        "lastName",
+                        sanitizeName(event.target.value),
+                        false
+                      );
+                    }}
                     onBlur={handleBlur}
                     error={touched.lastName && Boolean(errors.lastName)}
                     helperText={touched.lastName && errors.lastName}
-                    inputProps={{ maxLength: 40 }}
+                    inputProps={{
+                      maxLength: 40,
+                      inputMode: "text",
+                      autoComplete: "family-name",
+                    }}
                     sx={inputSx}
                   />
                 </Stack>
