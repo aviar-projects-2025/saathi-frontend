@@ -24,8 +24,6 @@ const ProfileModal = ({
     const isOwnProfile =
         selectedProfile?._id === currentUser?._id;
 
-    console.log(selectedProfile,'selectedProfile')
-    console.log(currentUser,'currentUser')
 
 
     const getProfileName = () => {

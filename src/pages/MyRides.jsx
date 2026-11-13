@@ -337,7 +337,7 @@ const MyRides = () => {
   const [helpProposals, setHelpProposals] = useState([]);
   const [loadingHelpProposals, setLoadingHelpProposals] = useState(false);
   const [respondingProposalId, setRespondingProposalId] = useState(null);
-  const [offersOpen, setOffersOpen] = useState(false);
+  const [offersOpen, setOffersOpen] = useState(location?.state?.offersOpen || false);
 
   const sentinelRef = useRef(null);
   const processedRideIds = useRef(new Set());
@@ -362,6 +362,7 @@ const MyRides = () => {
       setLoadingHelpProposals(true);
       const res = await axios.get(`${Api}/help-proposals/received`, authConfig());
       const body = res?.data;
+      console.log(body,'body')
       setHelpProposals(Array.isArray(body?.data) ? body.data : Array.isArray(body?.proposals) ? body.proposals : Array.isArray(body) ? body : []);
     } catch (error) {
       toast.error(error?.response?.data?.message || "Unable to load help proposals", toasts);
@@ -754,6 +755,7 @@ const MyRides = () => {
               <Typography sx={{ fontWeight: 800, fontSize: "0.95rem" }}>People offered to help you</Typography>
               <Typography variant="body2" color="text.secondary">On your ride requests · tap to review</Typography>
             </Box>
+            {console.log(offersOpen ,'offersOpen ')}
             <ExpandMoreIcon sx={{ transform: offersOpen ? "rotate(180deg)" : "none", transition: "transform .2s", color: "text.secondary" }} />
           </Box>
           <Collapse in={offersOpen} unmountOnExit>
@@ -771,6 +773,7 @@ const MyRides = () => {
                 const responding = respondingProposalId === proposal._id;
                 return (
                   <Box key={proposal._id} sx={{ p: { xs: 1.5, sm: 2 } }}>
+                    {console.log(helper,'helper')}
                     <Stack direction="row" spacing={1.25} alignItems="center" sx={{ mb: 1.25 }}>
                       <ProtectedAvatar src={helper.profileImageUrl || ""} sx={{ width: 40, height: 40, bgcolor: "#FFF0E3", color: "#C65B00", fontWeight: 800 }}>
                         {`${helper.firstName?.[0] || ""}${helper.lastName?.[0] || ""}` || "U"}

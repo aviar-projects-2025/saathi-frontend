@@ -210,7 +210,7 @@ export default function useCommunityFeed({
 
   /* ── edit (text + optional new image) ── returns true / false */
   const updatePost = useCallback(
-    async (postId, { title, description, imageFile }) => {
+    async (postId, { title, description, imageFile, when }) => {
       try {
         let imageKey;
         if (imageFile) {
@@ -221,23 +221,26 @@ export default function useCommunityFeed({
         const res = await axios.put(`${Api}/community/${postId}`, {
           userId,
           ...(title !== undefined && { title }),
+          ...(when !== undefined && { when }),
           description,
           ...(imageKey && { postImage: imageKey }),
         });
 
         const updated = res.data.data;
+        console.log(updated,'updated')
         setPosts((prev) =>
-          prev.map((p) =>
+          prev.map((p) =>(
             p._id === postId
               ? {
                   ...p,
                   title: updated.title,
+                  timeframe : updated.timeframe,
                   description: updated.description,
                   postImage: updated.postImage,
                   postImageUrl: updated.postImageUrl,
                 }
               : p
-          )
+          ))
         );
         toast.success(res.data.message || "Post updated", toasts);
         return true;

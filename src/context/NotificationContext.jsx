@@ -144,7 +144,7 @@ export function NotificationProvider({ children }) {
   const handleIncomingNotification = useCallback(
     (incoming) => {
       if (!incoming || typeof incoming !== "object") return;
-
+      
       const id = getNotificationId(incoming);
       console.log("📨 [NOTIFICATIONS] SOCKET received:", incoming.type, "id =", id);
 
