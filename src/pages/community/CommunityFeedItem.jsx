@@ -145,6 +145,7 @@ export default function CommunityFeedItem({
 
     const handleSave = async () => {
         setUpdating(true);
+        console.log(editWhen,'editWhen')
         const ok = await onUpdatePost(post._id, {
             title: hasTitle ? editTitle.trim() : undefined,
             when: hasWhen ? editWhen.trim() : undefined,

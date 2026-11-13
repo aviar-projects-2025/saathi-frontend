@@ -303,7 +303,7 @@ export default function Ridebook({
   };
 
   const validate = () => {
-  
+
     const membersToValidate = isEditMode ? newMembers : requestData.members;
 
     if (isEditMode) {
@@ -378,7 +378,7 @@ export default function Ridebook({
     const storedUser = JSON.parse(localStorage.getItem("user"));
     const membersToSubmit = isEditMode ? newMembers : requestData.members;
     const seatsRequested = membersToSubmit.length;
-      //  console.log("fgfgghjkkhgjhhbh")
+    //  console.log("fgfgghjkkhgjhhbh")
     const payload = {
       firstName: storedUser?.firstName,
       requestedBy: storedUser?.id,
@@ -649,8 +649,8 @@ export default function Ridebook({
             <Chip
               label={`${Math.max(
                 Number(ride?.availableSeats || 0) -
-                  pendingSeatsByMe -
-                  (isEditMode ? newMembers.length : requestData.members.length),
+                pendingSeatsByMe -
+                (isEditMode ? newMembers.length : requestData.members.length),
                 0,
               )}`}
               size="small"
@@ -777,8 +777,9 @@ export default function Ridebook({
                   sx={{
                     display: "flex",
                     gap: 1.25,
-                    alignItems: "center",
-                    p: 1.25,
+                    // ★ FIX: Align to top so the Avatar and Name stay anchored when the error text appears
+                    alignItems: "flex-start",
+                    p: { xs: 1.25, sm: 1.5 },
                     borderRadius: 2.5,
                     border: "1px solid #EEE",
                     bgcolor: "#FCFCFC",
@@ -793,6 +794,8 @@ export default function Ridebook({
                       fontWeight: 700,
                       bgcolor: "#FFE3C2",
                       color: "#8A5200",
+                      // ★ FIX: Add slight top margin to align perfectly with the input text
+                      mt: 0.5,
                     }}
                   >
                     {index + 1}
@@ -813,12 +816,12 @@ export default function Ridebook({
                     error={!isLockedSelfSlot && !!memberErrors[index]?.name}
                     helperText={
                       !isLockedSelfSlot && memberErrors[index]?.name
-                        ? isMobile
-                          ? "Required"
-                          : "Name is required"
+                        ? isMobile ? "Required" : "Name is required"
                         : ""
                     }
                     sx={{
+                      // ★ FIX: Keep name input aligned
+                      mt: 0.5,
                       "& .MuiInputBase-input": {
                         fontSize: "0.85rem",
                         fontFamily: "'Inter', sans-serif",
@@ -828,6 +831,9 @@ export default function Ridebook({
                         WebkitTextFillColor: "#555",
                         opacity: 1,
                       },
+                      "& .MuiFormHelperText-root": {
+                        marginLeft: 0,
+                      }
                     }}
                     onChange={(e) =>
                       !isLockedSelfSlot &&
@@ -835,49 +841,52 @@ export default function Ridebook({
                     }
                   />
 
-                  <TextField
-                    placeholder="Age"
-                    type="number"
-                    size="small"
-                    variant="standard"
-                    InputProps={{ disableUnderline: true }}
-                    sx={{
-                      width: 125,
-                      "& .MuiInputBase-input": {
-                        fontSize: "0.85rem",
-                        textAlign: "center",
-                      },
-                    }}
-                    value={
-                      
-                       member.age
-                    }
-                    // disabled={isLockedSelfSlot}
-                    error={!isLockedSelfSlot && !!memberErrors[index]?.age}
-                    helperText={
-                      !isLockedSelfSlot && memberErrors[index]?.age
-                        ? isMobile
-                          ? "Required"
-                          : "Age required"
-                        : ""
-                    }
-                    inputProps={{ min: 1, max: 120 }}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      if (
-                        value === "" ||
-                        (Number(value) >= 1 && Number(value) <= 120)
-                      ) {
-                        handleMemberChange(index, "age", value);
+                  <Box sx={{ width: 80, flexShrink: 0 }}>
+                    <TextField
+                      placeholder="Age"
+                      type="number"
+                      size="small"
+                      variant="standard"
+                      InputProps={{ disableUnderline: true }}
+                      sx={{
+                        width: "100%",
+                        // ★ FIX: Align age input with name
+                        mt: 0.5,
+                        "& .MuiInputBase-input": {
+                          fontSize: "0.85rem",
+                          textAlign: "center",
+                        },
+                      }}
+                      value={member.age}
+                      error={!!memberErrors[index]?.age}
+                      helperText={
+                        memberErrors[index]?.age
+                          ? isMobile ? "Required" : "Age required"
+                          : ""
                       }
-                    }}
-                  />
+                      inputProps={{ min: 1, max: 120 }}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (
+                          value === "" ||
+                          (Number(value) >= 1 && Number(value) <= 120)
+                        ) {
+                          handleMemberChange(index, "age", value);
+                        }
+                      }}
+                    />
+                  </Box>
 
                   <IconButton
                     color="error"
                     onClick={() => handleRemoveMember(index)}
                     disabled={isLockedSelfSlot}
                     size="small"
+                    sx={{
+                      // ★ FIX: Align the remove button with the input fields
+                      mt: 0.25,
+                      flexShrink: 0,
+                    }}
                   >
                     <RemoveCircle fontSize="small" />
                   </IconButton>

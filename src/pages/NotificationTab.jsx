@@ -93,8 +93,11 @@ export default function NotificationTab({
         rideId,
         data: item?.data,
       });
+      console.log(type, 'type')
+      console.log(item, 'item')
 
       switch (type) {
+
         // Incoming booking requests and updates received by the ride owner.
         case "new_request":
         case "ride_request_update":
@@ -127,6 +130,20 @@ export default function NotificationTab({
 
         // Help proposal events.
         case "help_proposal_received":
+          navigate("/myride", {
+            state: {
+              tab: 2,
+              offersOpen : true,
+              // ...(rideId ? { rideId } : {}),
+              // notificationType: type,
+              // helpProposalId:
+              //   item?.data?.helpProposalId ||
+              //   item?.data?.proposalId ||
+              //   item?.data?.proposal?._id ||
+              //   null,
+            },
+          });
+          break;
         case "help_proposal_created":
         case "help_proposal_pending":
         case "help_proposal_accepted":
