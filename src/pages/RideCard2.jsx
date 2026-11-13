@@ -121,8 +121,8 @@ export default function RideList({ ride, onIcanHelp }) {
   const dateObj = ride.startTime ? new Date(ride.startTime) : null;
   const dateStr = dateObj
     ? dateObj.toLocaleDateString("en-US", {
-        weekday: "short", month: "2-digit", day: "2-digit", year: "numeric",
-      })
+      weekday: "short", month: "2-digit", day: "2-digit", year: "numeric",
+    })
     : "No date";
   const timeStr = dateObj
     ? dateObj.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
@@ -235,11 +235,19 @@ export default function RideList({ ride, onIcanHelp }) {
 
     chips.push(
       noSeats
-        ? { label: "No seats", ...CHIP.amber }
+        ? { label: "Required seats", ...CHIP.amber }
         : { label: `${availableSeats} seat${availableSeats > 1 ? "s" : ""}${totalSeat ? ` of ${totalSeat}` : ""}`, ...CHIP.slate },
     );
 
-    if (ride.luggageSpace) chips.push({ label: ride.luggageSpace, ...CHIP.blue });
+    if (
+      ride.luggageSpace &&
+      ride.luggageSpace.trim().toLowerCase() !== "none"
+    ) {
+      chips.push({
+        label: ride.luggageSpace,
+        ...CHIP.blue,
+      });
+    }
   }
 
   if (durationText) chips.push({ label: durationText, ...CHIP.slate });

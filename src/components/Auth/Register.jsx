@@ -960,7 +960,7 @@ const Register = () => {
         sx={{
           width: 34,
           height: 34,
-          backgroundColor: ORANGE,
+          backgroundColor: "white",
           fontWeight: 800,
           fontSize: 16,
         }}
