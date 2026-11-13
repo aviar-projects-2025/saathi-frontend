@@ -341,7 +341,7 @@ export default function CreatePostModal({
                 <TextField {...fieldProps} label="Zip code" disabled value={zipcode} onChange={(e) => setZipcode(e.target.value)} placeholder="75034" sx={{ "& .MuiInputBase-input": { fontSize: { xs: "0.92rem", sm: "1rem" } } }} />
               </Stack>
 
-              {postType === "offering" && (
+              {/* {postType === "offering" && (
                 <Stack direction="row" spacing={{ xs: 1.25, sm: 2 }} alignItems="center">
                   <TextField {...fieldProps} label="Price" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="$60/hr" sx={{ "& .MuiInputBase-input": { fontSize: { xs: "0.92rem", sm: "1rem" } } }} />
                   <FormControlLabel
@@ -353,7 +353,7 @@ export default function CreatePostModal({
                     label="Insured"
                   />
                 </Stack>
-              )}
+              )} */}
 
               <TextField
                 {...fieldProps}

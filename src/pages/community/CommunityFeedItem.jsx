@@ -121,7 +121,9 @@ export default function CommunityFeedItem({
         return () => { cancelled = true; };
     }, [post._id, commentUser.id]);
 
+    {console.log('post', post)}
     const hasTitle = !!post.title;
+    const description = !!post.description;
     const hasWhen = !!post.timeframe;
     const body = post.description || "";
     const isLong = body.length > 120;
@@ -265,8 +267,21 @@ export default function CommunityFeedItem({
                         {post.description}
                     </Typography>
                 )}
+                {/* {description && (
+                    <Typography
+                        sx={{
+                            fontSize: { xs: "0.92rem", sm: "0.97rem", md: "1rem" },
+                            lineHeight: 1.65,
+                            mb: { xs: 1, sm: 1.5 },
+                            whiteSpace: "pre-wrap",
+                            wordBreak: "break-word",
+                        }}
+                    >
+                        {post.description}
+                    </Typography>
+                )} */}
 
-                {hasTitle && body && !isOffering && (
+                {hasTitle && body && (
                     <Box mb={{ xs: 1, sm: 1.5 }}>
                         <Typography
                             sx={{
@@ -347,7 +362,7 @@ export default function CommunityFeedItem({
                 )}
 
                 {/* Offering layout vs standard author row */}
-                {isOffering && (
+                {/* {isOffering && (
                     <Box sx={{ bgcolor: "#F9F9F9", p: { xs: 1.5, sm: 2 }, borderRadius: 2, mb: { xs: 1.5, sm: 2 } }}>
                         {hasTitle && body && (
                             <Typography
@@ -380,7 +395,7 @@ export default function CommunityFeedItem({
                             </Typography>
                             {post.providerDetails?.isInsured && (
                                 <Typography sx={{ fontSize: { xs: "0.82rem", sm: "0.9rem" } }} color="#2E7D32" fontWeight={600}>
-                                    {/* Insured */}
+
                                     ✓ Insured
                                 </Typography>
                             )}
@@ -400,7 +415,7 @@ export default function CommunityFeedItem({
                             </Button>
                         )}
                     </Box>
-                )}
+                )} */}
 
                 {/* Actions */}
                 <Divider sx={{ borderColor: "#F3ECE5" }} />
