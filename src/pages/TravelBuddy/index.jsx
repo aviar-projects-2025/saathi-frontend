@@ -3,7 +3,7 @@ import {
   Box, Button, Card, CardActionArea, Chip, Avatar, Paper, Stack, Typography,
   createTheme, ThemeProvider, CssBaseline, CircularProgress,
   TextField, InputAdornment, Fade, Dialog, DialogTitle, DialogContent,
-  DialogActions, Divider, IconButton, useMediaQuery, useTheme,
+  DialogActions, Divider, IconButton, useMediaQuery, useTheme, Alert,
 } from "@mui/material";
 import FlightIcon from "@mui/icons-material/Flight";
 import SearchIcon from "@mui/icons-material/Search";
@@ -52,6 +52,7 @@ const actionStyles = {
   base: { ...BTN, width: { xs: "100%", sm: "auto", md: 170 }, minWidth: { sm: 150 } },
   contained: { bgcolor: colors.rustDark, color: "#fff", "&:hover": { bgcolor: "#9A2F06" } },
   outlined: { color: colors.rustDark, borderColor: colors.rustDark, borderWidth: 1.5, bgcolor: "#fff", "&:hover": { borderWidth: 1.5, borderColor: "#9A2F06", bgcolor: "#FFF4EE" } },
+  danger: { color: "#B91C1C", borderColor: "#B91C1C", borderWidth: 1.5, bgcolor: "#fff", "&:hover": { borderWidth: 1.5, borderColor: "#991B1B", bgcolor: "#FEF2F2" } },
 };
 
 const labelSx = { fontSize: 12, color: colors.muted };
@@ -76,7 +77,6 @@ const formatTripDate = (value, pattern = "eee, MMM d, yyyy · h:mm a") => {
   const d = new Date(value);
   return isNaN(d.getTime()) ? "Not provided" : format(d, pattern);
 };
-
 
 function RoleCard({ title, description, onClick }) {
   return (
@@ -126,16 +126,18 @@ const rowActionsSx = {
   flexWrap: "wrap",
   rowGap: 1,
   columnGap: 1.5,
-  
   "& > .MuiButton-root": { flexBasis: { xs: "100%", sm: "auto" } },
 };
 
-function MyTripRow({ trip, onViewMatches, showAction = true, viewDetails, currentUserId }) {
+function MyTripRow({ trip, onViewMatches, showAction = true, viewDetails, currentUserId, onEdit, onCancel }) {
   const isMatched = trip.status === "MATCHED";
   const isMine = String(trip.createdBy?._id || trip.createdBy) === String(currentUserId);
   const flightNos = trip.flights?.map((f) => f.flightNumber).join(" · ") || "No flights";
   const route = trip.flights?.length > 0 ? [trip.flights[0].fromCode, ...trip.flights.map((f) => f.toCode)].join(" → ") : "Unknown route";
   const dateStr = formatTripDate(trip.flights?.[0]?.departureTime, "eee MM/dd/yyyy h:mm a");
+
+  const canEdit = isMine && trip.status === "OPEN" && !trip.isRequestSubmission;
+  const canCancel = isMine && ["OPEN", "MATCHED"].includes(trip.status);
 
   return (
     <Paper
@@ -143,7 +145,6 @@ function MyTripRow({ trip, onViewMatches, showAction = true, viewDetails, curren
       onClick={() => viewDetails(trip)}
       sx={{ ...rowPaperSx, transition: "box-shadow 0.2s", "&:hover": { boxShadow: "0px 4px 12px rgba(0,0,0,0.05)" } }}
     >
-      {/* {console.log(trip?.createdBy?.profileImageUrl,'trip')} */}
       <Stack direction="row" spacing={{ xs: 1.5, sm: 2 }} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
         <Avatar src={trip?.createdBy?.profileImageUrl} sx={{ bgcolor: isMatched ? "#DDF4E4" : "#DCEBFA", width: { xs: 40, sm: 44 }, height: { xs: 40, sm: 44 }, flexShrink: 0 }}>
           <FlightIcon sx={{ color: "#1E293B", transform: "rotate(45deg)", fontSize: 20 }} />
@@ -163,6 +164,18 @@ function MyTripRow({ trip, onViewMatches, showAction = true, viewDetails, curren
         {trip.status === "OPEN" && trip.isRequestSubmission && (
           <Chip size="small" label="Private offer" sx={{ bgcolor: "#F3E8FF", color: "#6B21A8", fontWeight: 700 }} />
         )}
+
+        {showAction && canEdit && (
+          <Button
+            variant="outlined"
+            disableElevation
+            onClick={(e) => { e.stopPropagation(); onEdit?.(trip); }}
+            sx={{ ...actionStyles.base, ...actionStyles.outlined }}
+          >
+            Edit
+          </Button>
+        )}
+
         {showAction && isMine && ((trip.status === "OPEN" && !trip.isRequestSubmission) || isMatched) && (
           <Button
             variant={isMatched ? "outlined" : "contained"}
@@ -173,13 +186,26 @@ function MyTripRow({ trip, onViewMatches, showAction = true, viewDetails, curren
             {isMatched ? "Open trip" : "View requests"}
           </Button>
         )}
+
         {showAction && !isMine && isMatched && (
           <Button
-            variant="outlined" disableElevation
+            variant="outlined"
+            disableElevation
             onClick={(e) => { e.stopPropagation(); onViewMatches(trip._id, true); }}
             sx={{ ...actionStyles.base, ...actionStyles.outlined }}
           >
             Open trip
+          </Button>
+        )}
+
+        {showAction && canCancel && (
+          <Button
+            variant="outlined"
+            disableElevation
+            onClick={(e) => { e.stopPropagation(); onCancel?.(trip); }}
+            sx={{ ...actionStyles.base, ...actionStyles.danger }}
+          >
+            Cancel
           </Button>
         )}
       </Stack>
@@ -208,7 +234,6 @@ function GlobalTripRow({ trip, onViewDetails, currentUserId }) {
       }}
     >
       <Stack direction="row" spacing={{ xs: 1.5, sm: 2 }} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
-        {console.log(trip.createdBy,'trip.createdBy')}
         <ProtectedAvatar
           src={trip.createdBy?.profileImageUrl || ""} alt={userName}
           sx={{ width: { xs: 42, sm: 48 }, height: { xs: 42, sm: 48 }, flexShrink: 0, bgcolor: isParent ? "#DCEBFA" : "#DDF4E4" }}
@@ -368,7 +393,6 @@ function TripDetailsDialog({ trip, onClose, onAction, currentUserId }) {
   );
 }
 
-/* ── Main ── */
 export default function TravelBuddy() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -379,6 +403,8 @@ export default function TravelBuddy() {
   const requestedTab = location.state?.activeTab;
   const [activeTab, setActiveTab] = useState(requestedTab || "browse");
   const [selectedTrip, setSelectedTrip] = useState(null);
+  const [cancelTarget, setCancelTarget] = useState(null);
+  const [cancelling, setCancelling] = useState(false);
   const token = localStorage.getItem("token");
   const currentUser = JSON.parse(localStorage.getItem("user") || "null");
   const currentUserId = currentUser?.id || currentUser?._id;
@@ -407,22 +433,50 @@ export default function TravelBuddy() {
     return () => { cancelled = true; clearTimeout(timer); };
   }, [search, token]);
 
+  const reloadTrips = async () => {
+    try {
+      const headers = { Authorization: `Bearer ${token}` };
+      const [myRes, globalRes] = await Promise.all([
+        axios.get(`${Api}/travel-buddy/my-trips`, { headers }),
+        axios.get(`${Api}/travel-buddy`, { headers, params: { search } }),
+      ]);
+      setMyTrips(Array.isArray(myRes.data?.data) ? myRes.data.data : []);
+      setGlobalTrips(Array.isArray(globalRes.data?.data) ? globalRes.data.data : []);
+    } catch (err) {
+      console.error("Failed to reload trips", err);
+    }
+  };
+
   const handleGlobalAction = (trip) => {
     if (!trip?._id || trip.status !== "OPEN") return;
-
-    
     if (String(trip.createdBy?._id || trip.createdBy) === String(currentUserId)) {
       if (trip.__viewRequests) {
         navigate("/travelbuddy/requests", { state: { tab: "received", targetTripId: trip._id } });
       }
       return;
     }
-
     const targetRole = trip.role === "parent" ? "companion" : "parent";
     setSelectedTrip(null);
     navigate("/post-trip", {
       state: { role: targetRole, prefillTrip: trip, targetTripId: trip._id, requestMode: true },
     });
+  };
+
+  const handleCancelTrip = async () => {
+    if (!cancelTarget) return;
+    setCancelling(true);
+    try {
+      const headers = { Authorization: `Bearer ${token}` };
+      await axios.patch(`${Api}/travel-buddy/${cancelTarget._id}/cancel`, {}, { headers });
+      setCancelTarget(null);
+      setSelectedTrip(null);
+      await reloadTrips();
+    } catch (err) {
+      console.error("Failed to cancel trip", err);
+      alert(err.response?.data?.message || "Failed to cancel trip.");
+    } finally {
+      setCancelling(false);
+    }
   };
 
   const now = Date.now();
@@ -481,8 +535,13 @@ export default function TravelBuddy() {
       <Stack spacing={{ xs: 1.5, sm: 1.75 }} sx={{ mb: 2.5 }}>
         {trips.map((trip) => (
           <MyTripRow
-            key={trip._id} trip={trip} showAction={showAction} currentUserId={currentUserId}
+            key={trip._id}
+            trip={trip}
+            showAction={showAction}
+            currentUserId={currentUserId}
             viewDetails={setSelectedTrip}
+            onEdit={(t) => navigate("/post-trip", { state: { editTrip: t } })}
+            onCancel={setCancelTarget}
             onViewMatches={(id, isMatched) => {
               if (isMatched) { navigate(`/trip-accepted/${id}`); return; }
               navigate("/travelbuddy/requests", { state: { tab: "received", targetTripId: id } });
@@ -587,7 +646,7 @@ export default function TravelBuddy() {
                         value={search} onChange={(e) => setSearch(e.target.value)}
                         InputProps={{
                           startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment>,
-                          sx: { borderRadius: 2, bgcolor: "#FAFAFA", fontSize: { xs: 16, sm: 14 } }, // 16px prevents iOS zoom-on-focus
+                          sx: { borderRadius: 2, bgcolor: "#FAFAFA", fontSize: { xs: 16, sm: 14 } },
                         }}
                       />
                     </Paper>
@@ -625,6 +684,33 @@ export default function TravelBuddy() {
           )}
 
           <TripDetailsDialog trip={selectedTrip} onClose={() => setSelectedTrip(null)} onAction={handleGlobalAction} currentUserId={currentUserId} />
+
+          <Dialog open={Boolean(cancelTarget)} onClose={() => !cancelling && setCancelTarget(null)} fullWidth maxWidth="xs">
+            <DialogTitle sx={{ fontWeight: 800 }}>
+              {cancelTarget?.status === "MATCHED" ? "Cancel matched trip?" : "Cancel trip?"}
+            </DialogTitle>
+            <DialogContent>
+              <Typography sx={{ fontSize: 14 }}>
+                {cancelTarget?.status === "MATCHED"
+                  ? "This will cancel the match. The other member's trip will go back to OPEN and they'll be notified that you cancelled. Your trip will be marked CANCELLED."
+                  : "This will cancel your trip. Any pending requests aimed at this trip will be declined automatically."}
+              </Typography>
+            </DialogContent>
+            <DialogActions sx={{ p: 2, gap: 1, flexDirection: { xs: "column-reverse", sm: "row" } }}>
+              <Button onClick={() => setCancelTarget(null)} disabled={cancelling} sx={{ width: { xs: "100%", sm: "auto" } }}>
+                Keep trip
+              </Button>
+              <Button
+                onClick={handleCancelTrip}
+                disabled={cancelling}
+                variant="contained"
+                sx={{ bgcolor: "#B91C1C", "&:hover": { bgcolor: "#991B1B" }, width: { xs: "100%", sm: "auto" } }}
+              >
+                {cancelling ? "Cancelling..." : "Cancel trip"}
+              </Button>
+            </DialogActions>
+          </Dialog>
+
           <Box sx={{ bgcolor: colors.amberBg, color: colors.amberText, borderRadius: 2.5, px: { xs: 2, sm: 2.5 }, py: { xs: 1.5, sm: 1.75 }, fontSize: { xs: 13, sm: 13.5 }, lineHeight: 1.6, mt: 3 }}>
             <Box component="span" sx={{ fontWeight: 700 }}>Safety basics:</Box>{" "}companions are volunteers, not caregivers or escorts. Nobody should carry items for anyone else. The family approves every helper.
           </Box>

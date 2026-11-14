@@ -195,6 +195,17 @@ export default function NotificationTab({
             },
           });
           break;
+        case "travel_buddy_match_cancelled":
+          navigate("/travelbuddy/requests", {
+            state: { tab: "sent", requestId: item?.data?.requestId },
+          });
+          break;
+
+        case "travel_buddy_request_withdrawn":
+          navigate("/travelbuddy/requests", {
+            state: { tab: "received" },
+          });
+          break;
 
         // Travel Buddy: updates for the person who sent the request
         case "travel_buddy_request_accepted":

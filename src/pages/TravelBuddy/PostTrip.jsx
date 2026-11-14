@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
-import Api from "../../Api"; 
+import Api from "../../Api";
 
 import {
   Alert,
@@ -32,7 +32,6 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 import { IconButton } from "@mui/material";
 
-/* ─────────── Design Tokens ─────────── */
 const c = {
   rust: "#C4410C",
   rustDark: "#A8360A",
@@ -56,7 +55,6 @@ const theme = createTheme({
   shape: { borderRadius: 12 },
 });
 
-/* ─────────── Responsive style tokens ─────────── */
 const BTN = {
   height: { xs: 44, sm: 46 },
   minHeight: { xs: 44, sm: 46 },
@@ -69,7 +67,6 @@ const BTN = {
   textAlign: "center",
   boxShadow: "none",
 };
-
 
 const inputFontSx = {
   "& .MuiInputBase-input, & .MuiSelect-select": { fontSize: { xs: 16, sm: 14 } },
@@ -107,8 +104,8 @@ const EMPTY_FLIGHT = {
   flightNumber: "",
   from: "",
   to: "",
-  departure: "", 
-  arrival: "",   
+  departure: "",
+  arrival: "",
 };
 
 const INITIAL_FORM = {
@@ -121,7 +118,6 @@ const INITIAL_FORM = {
   pickup: "family",
   agreed: false,
 };
-
 
 const toDateTimeLocal = (value) => {
   if (!value) return "";
@@ -143,9 +139,8 @@ const mapTripFlightsToForm = (trip) => {
   }));
 };
 
-/* ─────────── Validation ─────────── */
 const airportCode = (v) => {
-  const t = v.trim();
+  const t = (v || "").trim();
   const m = t.match(/\(([A-Za-z]{3})\)$/) || t.match(/^([A-Za-z]{3})$/);
   return m ? m[1].toUpperCase() : null;
 };
@@ -195,7 +190,6 @@ const validateTraveller = (form) => {
 const hasErrors = (errs) =>
   Array.isArray(errs) ? errs.some((e) => Object.keys(e).length > 0) : Object.keys(errs).length > 0;
 
-/* ─────────── Shared UI ─────────── */
 const FieldLabel = ({ children, small }) => (
   <Typography sx={{ fontWeight: 700, fontSize: small ? 12 : 13, color: "#111", mb: 0.75, lineHeight: 1.35, overflowWrap: "anywhere" }}>
     {children}
@@ -210,7 +204,6 @@ const fieldSx = {
     "& fieldset": { borderColor: c.border },
     "&.Mui-focused fieldset": { borderColor: c.rust },
   },
-
   "& input[type='datetime-local']": { minWidth: 0, width: "100%", boxSizing: "border-box" },
 };
 
@@ -240,49 +233,43 @@ const SelectField = ({ label, options, error, ...props }) => (
       {...props}
       sx={fieldSx}
     >
-      {options.map((o) => (
-        <MenuItem key={o} value={o}>
-          {o}
-        </MenuItem>
-      ))}
+      {options.map((o) => (<MenuItem key={o} value={o}>{o}</MenuItem>))}
     </TextField>
   </Box>
 );
 
-const MultiSelect = ({ label, options, value, onChange, error, placeholder }) => {
-  return (
-    <Box sx={{ flex: 1, minWidth: 0, width: "100%" }}>
-      <FieldLabel>{label}</FieldLabel>
-      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1 }}>
-        {options.map((opt) => {
-          const selected = value.includes(opt);
-          return (
-            <Chip
-              key={opt}
-              label={opt}
-              clickable
-              onClick={() => {
-                if (selected) onChange(value.filter((v) => v !== opt));
-                else onChange([...value, opt]);
-              }}
-              sx={{
-                height: { xs: 36, sm: 32 },
-                fontSize: { xs: 13.5, sm: 13 },
-                borderRadius: "20px",
-                bgcolor: selected ? c.rust : "#fff",
-                color: selected ? "#fff" : "#333",
-                border: `1px solid ${selected ? c.rust : c.border}`,
-                fontWeight: 600,
-                "&:hover": { bgcolor: selected ? c.rustDark : "#F3EFE6" },
-              }}
-            />
-          );
-        })}
-      </Box>
-      {error && <Typography sx={{ fontSize: 12, color: c.errText, mt: 0.5 }}>{error}</Typography>}
+const MultiSelect = ({ label, options, value, onChange, error }) => (
+  <Box sx={{ flex: 1, minWidth: 0, width: "100%" }}>
+    <FieldLabel>{label}</FieldLabel>
+    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1 }}>
+      {options.map((opt) => {
+        const selected = value.includes(opt);
+        return (
+          <Chip
+            key={opt}
+            label={opt}
+            clickable
+            onClick={() => {
+              if (selected) onChange(value.filter((v) => v !== opt));
+              else onChange([...value, opt]);
+            }}
+            sx={{
+              height: { xs: 36, sm: 32 },
+              fontSize: { xs: 13.5, sm: 13 },
+              borderRadius: "20px",
+              bgcolor: selected ? c.rust : "#fff",
+              color: selected ? "#fff" : "#333",
+              border: `1px solid ${selected ? c.rust : c.border}`,
+              fontWeight: 600,
+              "&:hover": { bgcolor: selected ? c.rustDark : "#F3EFE6" },
+            }}
+          />
+        );
+      })}
     </Box>
-  );
-};
+    {error && <Typography sx={{ fontSize: 12, color: c.errText, mt: 0.5 }}>{error}</Typography>}
+  </Box>
+);
 
 const Row = ({ children }) => (
   <Stack direction={{ xs: "column", sm: "row" }} spacing={{ xs: 1, sm: 2 }} sx={{ mb: 1.5, minWidth: 0 }}>
@@ -309,11 +296,11 @@ const PrimaryButton = (props) => (
   />
 );
 
-const Header = ({ leftLabel, onLeft, step }) => (
+const Header = ({ leftLabel, onLeft, step, totalSteps = 2 }) => (
   <Box sx={{ mb: { xs: 2, sm: 3 }, width: "100%" }}>
     <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1} sx={{ mb: 1, width: "100%" }}>
       <Typography sx={{ fontSize: { xs: 13, sm: 14 }, color: c.muted, textAlign: "left", flex: 1, minWidth: 0 }}>
-        Step {step} of 2: {step === 1 ? "Flights" : "Traveller and review"}
+        Step {step} of {totalSteps}: {step === 1 ? "Flights" : "Traveller and review"}
       </Typography>
       <Button
         onClick={onLeft}
@@ -323,8 +310,17 @@ const Header = ({ leftLabel, onLeft, step }) => (
       </Button>
     </Stack>
     <Stack direction="row" spacing={1} sx={{ width: "100%" }}>
-      {[1, 2].map((i) => (
-        <Box key={i} sx={{ flex: 1, height: 5, borderRadius: 3, bgcolor: i <= step ? c.rust : "#E8E3DA", transition: "background-color 0.3s ease" }} />
+      {Array.from({ length: totalSteps }).map((_, i) => (
+        <Box
+          key={i}
+          sx={{
+            flex: 1,
+            height: 5,
+            borderRadius: 3,
+            bgcolor: i + 1 <= step ? c.rust : "#E8E3DA",
+            transition: "background-color 0.3s ease",
+          }}
+        />
       ))}
     </Stack>
   </Box>
@@ -338,8 +334,7 @@ const pageTitleSx = {
   lineHeight: 1.25,
 };
 
-/* ─────────── Step 1: Flights ─────────── */
-function StepFlights({ form, setForm, onNext, onCancel, isPrefilled }) {
+function StepFlights({ form, setForm, onNext, onCancel, isPrefilled, isEditMode }) {
   const { role, flights } = form;
   const [touched, setTouched] = useState({});
   const [submitted, setSubmitted] = useState(false);
@@ -370,14 +365,29 @@ function StepFlights({ form, setForm, onNext, onCancel, isPrefilled }) {
     if (!invalid) onNext();
   };
 
+  // Edit mode fully unlocks everything — role, flights, traveller prefs.
+  // Only "request mode" (isPrefilled) locks fields, because a request
+  // must match the target trip's exact itinerary and role.
+  const flightsLocked = Boolean(isPrefilled);
+  const roleLocked = Boolean(isPrefilled);
+
   return (
     <>
       <Header leftLabel="Cancel" onLeft={onCancel} step={1} />
       <Typography component="h1" sx={pageTitleSx}>
-        Post a Travel Buddy trip
+        {isEditMode ? "Edit your Travel Buddy trip" : "Post a Travel Buddy trip"}
       </Typography>
 
-      {isPrefilled && (
+      {isEditMode && (
+        <Alert severity="info" sx={{ mb: 2, fontSize: { xs: 13, sm: 14 } }}>
+          You can edit everything on this trip until someone matches with you.
+          If you change the role or flight itinerary, any pending requests
+          against this trip will be closed automatically and their senders
+          will be notified.
+        </Alert>
+      )}
+
+      {isPrefilled && !isEditMode && (
         <Alert severity="info" sx={{ mb: 2, fontSize: { xs: 13, sm: 14 } }}>
           You're requesting to join another trip. The flight details are fixed to match their itinerary. You can only add your traveler details.
         </Alert>
@@ -391,7 +401,7 @@ function StepFlights({ form, setForm, onNext, onCancel, isPrefilled }) {
               key={val}
               fullWidth
               disableElevation
-              disabled={isPrefilled}   // ★ Cannot change role when prefilled
+              disabled={roleLocked}
               onClick={() => setRole(val)}
               sx={{
                 ...BTN,
@@ -414,7 +424,7 @@ function StepFlights({ form, setForm, onNext, onCancel, isPrefilled }) {
         <Box key={i} sx={{ mb: 2.5 }}>
           <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", gap: 2 }}>
             <SectionTitle>Flight segment {i + 1}</SectionTitle>
-            {i > 0 && !isPrefilled && (
+            {i > 0 && !flightsLocked && (
               <IconButton
                 aria-label={`Remove flight segment ${i + 1}`}
                 onClick={() => setForm((prev) => ({ ...prev, flights: prev.flights.filter((_, idx) => idx !== i) }))}
@@ -425,24 +435,24 @@ function StepFlights({ form, setForm, onNext, onCancel, isPrefilled }) {
               </IconButton>
             )}
           </Box>
-          <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: 3, borderColor: c.border, opacity: isPrefilled ? 0.75 : 1 }}>
+          <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: 3, borderColor: c.border, opacity: flightsLocked ? 0.75 : 1 }}>
             <Row>
-              <Field small label="Airline" disabled={isPrefilled} {...bind(i, "airline")} />
-              <Field small label="Flight number" disabled={isPrefilled} {...bind(i, "flightNumber")} />
+              <Field small label="Airline" disabled={flightsLocked} {...bind(i, "airline")} />
+              <Field small label="Flight number" disabled={flightsLocked} {...bind(i, "flightNumber")} />
             </Row>
             <Row>
-              <Field small label="From airport" disabled={isPrefilled} {...bind(i, "from")} />
-              <Field small label="To airport" disabled={isPrefilled} {...bind(i, "to")} />
+              <Field small label="From airport" disabled={flightsLocked} {...bind(i, "from")} />
+              <Field small label="To airport" disabled={flightsLocked} {...bind(i, "to")} />
             </Row>
             <Row>
-              <Field small label={`Departure (local time at ${airportCode(f.from) || "origin"})`} type="datetime-local" disabled={isPrefilled} InputLabelProps={{ shrink: true }} {...bind(i, "departure")} />
-              <Field small label={`Arrival (local time at ${airportCode(f.to) || "destination"})`} type="datetime-local" disabled={isPrefilled} InputLabelProps={{ shrink: true }} {...bind(i, "arrival")} />
+              <Field small label={`Departure (local time at ${airportCode(f.from) || "origin"})`} type="datetime-local" disabled={flightsLocked} InputLabelProps={{ shrink: true }} {...bind(i, "departure")} />
+              <Field small label={`Arrival (local time at ${airportCode(f.to) || "destination"})`} type="datetime-local" disabled={flightsLocked} InputLabelProps={{ shrink: true }} {...bind(i, "arrival")} />
             </Row>
           </Paper>
         </Box>
       ))}
 
-      {!isPrefilled && flights.length < MAX_FLIGHTS && (
+      {!flightsLocked && flights.length < MAX_FLIGHTS && (
         <Link
           component="button"
           type="button"
@@ -454,13 +464,14 @@ function StepFlights({ form, setForm, onNext, onCancel, isPrefilled }) {
         </Link>
       )}
 
-      <PrimaryButton onClick={handleNext}>Next: Traveller details</PrimaryButton>
+      <PrimaryButton onClick={handleNext}>
+        Next: Traveller details
+      </PrimaryButton>
     </>
   );
 }
 
-/* ─────────── Step 2: Traveller ─────────── */
-function StepTraveller({ form, setForm, onBack, onSubmit, submitting, requestMode, publishOnReject, setPublishOnReject }) {
+function StepTraveller({ form, setForm, onBack, onSubmit, submitting, requestMode, isEditMode, publishOnReject, setPublishOnReject }) {
   const isCompanion = form.role === "companion";
   const [submitted, setSubmitted] = useState(false);
 
@@ -474,10 +485,17 @@ function StepTraveller({ form, setForm, onBack, onSubmit, submitting, requestMod
     if (!hasErrors(errors)) onSubmit();
   };
 
-
   const firstFlight = form.flights[0];
   const lastFlight = form.flights[form.flights.length - 1];
   const route = [airportCode(firstFlight.from), ...form.flights.map((f) => airportCode(f.to))].filter(Boolean).join(" → ");
+
+  const submitLabel = submitting
+    ? "Saving..."
+    : isEditMode
+      ? "Save changes"
+      : requestMode
+        ? "Send request"
+        : "Post trip and find matches";
 
   return (
     <>
@@ -486,26 +504,65 @@ function StepTraveller({ form, setForm, onBack, onSubmit, submitting, requestMod
         {isCompanion ? "About you" : "About your traveller"}
       </Typography>
 
+      {isEditMode && (
+        <Alert severity="info" sx={{ mb: 2, fontSize: { xs: 13, sm: 14 } }}>
+          Traveller preferences and languages are safe to edit — they do not
+          affect any pending requests.
+        </Alert>
+      )}
+
       {!isCompanion && (
         <Row>
-          <SelectField label="Relationship" options={RELATIONSHIPS} value={form.relationship} onChange={(e) => setField("relationship")(e.target.value)} />
-          <SelectField label="Traveller age band" options={AGE_BANDS} value={form.ageBand} onChange={(e) => setField("ageBand")(e.target.value)} error={err("ageBand")} />
+          <SelectField
+            label="Relationship"
+            options={RELATIONSHIPS}
+            value={form.relationship}
+            onChange={(e) => setField("relationship")(e.target.value)}
+          />
+          <SelectField
+            label="Traveller age band"
+            options={AGE_BANDS}
+            value={form.ageBand}
+            onChange={(e) => setField("ageBand")(e.target.value)}
+            error={err("ageBand")}
+          />
         </Row>
       )}
 
       <Box sx={{ mb: 2 }}>
-        <MultiSelect label="Languages spoken" options={LANGUAGES} value={form.languages} onChange={setField("languages")} error={err("languages")} />
+        <MultiSelect
+          label="Languages spoken"
+          options={LANGUAGES}
+          value={form.languages}
+          onChange={setField("languages")}
+          error={err("languages")}
+        />
       </Box>
       <Box sx={{ mb: 2 }}>
-        <MultiSelect label={isCompanion ? "Help you can offer (optional)" : "Help needed (optional)"} options={HELP} value={form.help} onChange={setField("help")} />
+        <MultiSelect
+          label={isCompanion ? "Help you can offer (optional)" : "Help needed (optional)"}
+          options={HELP}
+          value={form.help}
+          onChange={setField("help")}
+        />
       </Box>
 
       <Box sx={{ mt: 3, mb: 3 }}>
         <FieldLabel>Who meets them in the US?</FieldLabel>
         <Paper variant="outlined" sx={{ px: { xs: 1.5, sm: 2 }, py: 1, borderRadius: 3, borderColor: c.border }}>
           <RadioGroup value={form.pickup} onChange={(e) => setField("pickup")(e.target.value)}>
-            <FormControlLabel value="family" control={<Radio sx={{ "&.Mui-checked": { color: c.rust } }} />} label={<Typography sx={{ fontSize: 14, overflowWrap: "anywhere" }}>Family member picks up at {airportCode(lastFlight.to) || "US airport"}</Typography>} sx={{ borderBottom: `1px solid ${c.border}`, m: 0, py: 0.5, minHeight: 44, alignItems: "center" }} />
-            <FormControlLabel value="saathi" control={<Radio sx={{ "&.Mui-checked": { color: c.rust } }} />} label={<Typography sx={{ fontSize: 14, overflowWrap: "anywhere" }}>Arrange pickup through Saathi</Typography>} sx={{ m: 0, py: 0.5, minHeight: 44, alignItems: "center" }} />
+            <FormControlLabel
+              value="family"
+              control={<Radio sx={{ "&.Mui-checked": { color: c.rust } }} />}
+              label={<Typography sx={{ fontSize: 14, overflowWrap: "anywhere" }}>Family member picks up at {airportCode(lastFlight.to) || "US airport"}</Typography>}
+              sx={{ borderBottom: `1px solid ${c.border}`, m: 0, py: 0.5, minHeight: 44, alignItems: "center" }}
+            />
+            <FormControlLabel
+              value="saathi"
+              control={<Radio sx={{ "&.Mui-checked": { color: c.rust } }} />}
+              label={<Typography sx={{ fontSize: 14, overflowWrap: "anywhere" }}>Arrange pickup through Saathi</Typography>}
+              sx={{ m: 0, py: 0.5, minHeight: 44, alignItems: "center" }}
+            />
           </RadioGroup>
         </Paper>
       </Box>
@@ -515,20 +572,33 @@ function StepTraveller({ form, setForm, onBack, onSubmit, submitting, requestMod
         <Typography sx={{ fontSize: 13, color: c.muted, mb: 1, overflowWrap: "anywhere" }}>
           {route} · {form.languages.join(", ")}
         </Typography>
-        {!isCompanion && <Typography sx={{ fontSize: 13, color: c.muted, overflowWrap: "anywhere" }}>Traveller {form.ageBand} · {form.relationship}</Typography>}
+        {!isCompanion && (
+          <Typography sx={{ fontSize: 13, color: c.muted, overflowWrap: "anywhere" }}>
+            Traveller {form.ageBand} · {form.relationship}
+          </Typography>
+        )}
         <Typography sx={{ fontSize: 12, color: c.muted, mt: 1 }}>
           Never collected or shown: passport, booking reference (PNR), seat, exact home address.
         </Typography>
       </Paper>
 
-      {requestMode && (
+      {requestMode && !isEditMode && (
         <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, mb: 3, borderRadius: 2.5, borderColor: c.border, bgcolor: "#fff" }}>
           <FormControlLabel
             sx={{ alignItems: "flex-start", mx: 0 }}
-            control={<Checkbox size="small" checked={publishOnReject} onChange={(e) => setPublishOnReject(e.target.checked)} sx={{ p: 0.5, mr: 1, "&.Mui-checked": { color: c.rust } }} />}
+            control={
+              <Checkbox
+                size="small"
+                checked={publishOnReject}
+                onChange={(e) => setPublishOnReject(e.target.checked)}
+                sx={{ p: 0.5, mr: 1, "&.Mui-checked": { color: c.rust } }}
+              />
+            }
             label={<Typography sx={{ fontSize: 13, lineHeight: 1.55, fontWeight: 700 }}>If my offer is rejected, publish my submitted trip as a normal trip.</Typography>}
           />
-          <Typography sx={{ fontSize: 12, color: c.muted, ml: 4, mt: 0.5 }}>If unchecked, your submitted trip stays private and is visible only to you and in the related request history.</Typography>
+          <Typography sx={{ fontSize: 12, color: c.muted, ml: 4, mt: 0.5 }}>
+            If unchecked, your submitted trip stays private and is visible only to you and in the related request history.
+          </Typography>
         </Paper>
       )}
 
@@ -536,7 +606,12 @@ function StepTraveller({ form, setForm, onBack, onSubmit, submitting, requestMod
         <FormControlLabel
           sx={{ alignItems: "flex-start", mx: 0 }}
           control={
-            <Checkbox size="small" checked={form.agreed} onChange={(e) => setField("agreed")(e.target.checked)} sx={{ p: 0.5, mr: 1, "&.Mui-checked": { color: c.rust } }} />
+            <Checkbox
+              size="small"
+              checked={form.agreed}
+              onChange={(e) => setField("agreed")(e.target.checked)}
+              sx={{ p: 0.5, mr: 1, "&.Mui-checked": { color: c.rust } }}
+            />
           }
           label={
             <Typography sx={{ fontSize: 13, lineHeight: 1.55 }}>
@@ -548,13 +623,12 @@ function StepTraveller({ form, setForm, onBack, onSubmit, submitting, requestMod
       </Box>
 
       <PrimaryButton onClick={handleSubmit} disabled={submitting}>
-        {submitting ? "Posting..." : "Post trip and find matches"}
+        {submitLabel}
       </PrimaryButton>
     </>
   );
 }
 
-/* ─────────── Main Component ─────────── */
 export default function PostTrip() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -564,67 +638,108 @@ export default function PostTrip() {
   const [contactConsentOpen, setContactConsentOpen] = useState(false);
 
   const requestedRole = location.state?.role;
-  const initialRole = ROLES.some(([value]) => value === requestedRole) ? requestedRole : "parent";
   const prefillTrip = location.state?.prefillTrip;
+  const editTrip = location.state?.editTrip;
+
+  const isEditMode = Boolean(editTrip?._id);
+  const sourceTrip = editTrip || prefillTrip;
+
+  const initialRole = isEditMode
+    ? editTrip.role
+    : ROLES.some(([value]) => value === requestedRole)
+      ? requestedRole
+      : "parent";
 
   const [form, setForm] = useState(() => ({
     ...INITIAL_FORM,
     role: initialRole,
-    flights: prefillTrip ? mapTripFlightsToForm(prefillTrip) : [{ ...EMPTY_FLIGHT }],
-    relationship: initialRole === "parent" ? (prefillTrip?.relationship || INITIAL_FORM.relationship) : INITIAL_FORM.relationship,
-    ageBand: initialRole === "parent" ? (prefillTrip?.ageBand || "") : "",
-    languages: prefillTrip?.languages?.length ? [...prefillTrip.languages] : [...INITIAL_FORM.languages],
-    help: prefillTrip?.help?.length ? [...prefillTrip.help] : [],
-    pickup: prefillTrip?.pickup || INITIAL_FORM.pickup,
-    agreed: false,
+    flights: sourceTrip ? mapTripFlightsToForm(sourceTrip) : [{ ...EMPTY_FLIGHT }],
+    relationship:
+      initialRole === "parent"
+        ? (sourceTrip?.relationship || INITIAL_FORM.relationship)
+        : INITIAL_FORM.relationship,
+    ageBand:
+      initialRole === "parent"
+        ? (sourceTrip?.ageBand || "")
+        : "",
+    languages: sourceTrip?.languages?.length
+      ? [...sourceTrip.languages]
+      : [...INITIAL_FORM.languages],
+    help: sourceTrip?.help?.length ? [...sourceTrip.help] : [],
+    pickup: sourceTrip?.pickup || INITIAL_FORM.pickup,
+    agreed: isEditMode,
   }));
 
-  const createTrip = async () => {
+  useEffect(() => {
+    if (isEditMode && editTrip.status !== "OPEN") {
+      toast.error("This trip can no longer be edited because it is matched or cancelled.");
+      navigate("/travelbuddy", { replace: true });
+    }
+  }, [isEditMode, editTrip, navigate]);
+
+  const buildPayload = () => ({
+    role: form.role,
+    relationship: form.role === "parent" ? form.relationship : undefined,
+    ageBand: form.role === "parent" ? form.ageBand : undefined,
+    languages: form.languages,
+    help: form.help,
+    pickup: form.pickup,
+    flights: form.flights.map((f) => ({
+      airline: f.airline,
+      flightNumber: f.flightNumber.trim().toUpperCase(),
+      fromCode: airportCode(f.from),
+      toCode: airportCode(f.to),
+      departureTime: f.departure,
+      arrivalTime: f.arrival,
+    })),
+  });
+
+  const createOrUpdateTrip = async () => {
     if (submitting) return;
     setSubmitting(true);
 
     try {
-      // Format payload for backend
-      const payload = {
-        role: form.role,
-        relationship: form.role === "parent" ? form.relationship : undefined,
-        ageBand: form.role === "parent" ? form.ageBand : undefined,
-        languages: form.languages,
-        help: form.help,
-        pickup: form.pickup,
-        flights: form.flights.map((f) => ({
-          airline: f.airline,
-          flightNumber: f.flightNumber.trim().toUpperCase(),
-          fromCode: airportCode(f.from),
-          toCode: airportCode(f.to),
-          departureTime: f.departure,
-          arrivalTime: f.arrival,
-        })),
-      };
+      const payload = buildPayload();
       const token = localStorage.getItem("token");
       if (!token) {
         toast.error("Please log in to continue.");
+        setSubmitting(false);
         return;
       }
       const config = { headers: { Authorization: `Bearer ${token}` } };
 
+      if (isEditMode) {
+        await axios.patch(`${Api}/travel-buddy/${editTrip._id}`, payload, config);
+        toast.success("Trip updated successfully!");
+        navigate("/travelbuddy");
+        return;
+      }
+
       if (prefillTrip?._id) {
-        await axios.post(`${Api}/travel-buddy/requests`, {
-          targetTripId: prefillTrip._id,
-          trip: payload,
-          publishOnReject,
-          contactConsent: true,
-        }, config);
+        await axios.post(
+          `${Api}/travel-buddy/requests`,
+          {
+            targetTripId: prefillTrip._id,
+            trip: payload,
+            publishOnReject,
+            contactConsent: true,
+          },
+          config
+        );
         toast.success("Request sent! The trip owner must approve it.");
         setContactConsentOpen(false);
       } else {
         await axios.post(`${Api}/travel-buddy`, payload, config);
         toast.success("Trip posted successfully!");
       }
+
       navigate("/travelbuddy");
     } catch (error) {
       console.error(error);
-      toast.error(error.response?.data?.message || "Failed to post trip");
+      toast.error(
+        error.response?.data?.message ||
+        (isEditMode ? "Failed to update trip" : "Failed to post trip")
+      );
     } finally {
       setSubmitting(false);
     }
@@ -636,9 +751,34 @@ export default function PostTrip() {
       <Box sx={pageSx}>
         <Box sx={{ width: "100%", maxWidth: { xs: "100%", sm: 600, md: 680 }, mx: "auto" }}>
           {step === 1 ? (
-            <StepFlights form={form} setForm={setForm} onCancel={() => navigate(-1)} isPrefilled={Boolean(prefillTrip)} onNext={() => setStep(2)} />
+            <StepFlights
+              form={form}
+              setForm={setForm}
+              onCancel={() => navigate(-1)}
+              isPrefilled={Boolean(prefillTrip)}
+              isEditMode={isEditMode}
+              onNext={() => setStep(2)}
+            />
           ) : (
-            <StepTraveller form={form} setForm={setForm} onBack={() => setStep(1)} onSubmit={() => { if (prefillTrip?._id) setContactConsentOpen(true); else createTrip(); }} submitting={submitting} requestMode={Boolean(prefillTrip?._id)} publishOnReject={publishOnReject} setPublishOnReject={setPublishOnReject} />
+            <StepTraveller
+              form={form}
+              setForm={setForm}
+              onBack={() => setStep(1)}
+              onSubmit={() => {
+                if (isEditMode) {
+                  createOrUpdateTrip();
+                } else if (prefillTrip?._id) {
+                  setContactConsentOpen(true);
+                } else {
+                  createOrUpdateTrip();
+                }
+              }}
+              submitting={submitting}
+              requestMode={Boolean(prefillTrip?._id) && !isEditMode}
+              isEditMode={isEditMode}
+              publishOnReject={publishOnReject}
+              setPublishOnReject={setPublishOnReject}
+            />
           )}
         </Box>
       </Box>
@@ -687,7 +827,7 @@ export default function PostTrip() {
           <Button
             variant="contained"
             disabled={submitting}
-            onClick={createTrip}
+            onClick={createOrUpdateTrip}
             sx={{ minHeight: 44, width: { xs: "100%", sm: "auto" } }}
           >
             {submitting ? "Sending..." : "Agree & Send Request"}
