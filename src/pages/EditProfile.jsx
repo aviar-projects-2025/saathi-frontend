@@ -39,6 +39,25 @@ import Popper from "@mui/material/Popper";
 import uploadImageToS3 from "../utils/s3Upload.js";
 import ProtectedAvatar from "../components/ProtectedAvatar.jsx";
 
+/* ─────────────────────────────────────────────────────────────
+   Name rules — SINGLE source of truth, used by:
+     • sanitizeName() (input-time filtering)
+     • validateForm() (submit-time check)
+
+   Rules:
+     • Must start with a letter (any script)
+     • Allows letters (\p{L}) + combining marks (\p{M})
+     • Space, apostrophe (' or ’), and hyphen allowed only as
+       separators between letters — never at start or end
+     • Rejects digits, other punctuation, emoji, tabs
+   ───────────────────────────────────────────────────────────── */
+const NAME_PATTERN = new RegExp(
+    String.raw`^\p{L}[\p{L}\p{M}]*(?:[ '\u2019-][\p{L}\p{M}]+)*$`,
+    "u"
+);
+const NAME_STRIP = new RegExp(String.raw`[^\p{L}\p{M} '\u2019-]`, "gu");
+const sanitizeName = (value) => String(value ?? "").replace(NAME_STRIP, "");
+
 const CustomPopper = (props) => {
     return (
         <Popper
@@ -158,11 +177,17 @@ const validateForm = (formData) => {
         errors.firstName = "First name is required";
     } else if (formData.firstName.length < 2) {
         errors.firstName = "Minimum 2 characters required";
+    } else if (!NAME_PATTERN.test(formData.firstName.trim())) {
+        errors.firstName =
+            "First name can contain only letters, spaces, apostrophes, and hyphens";
     }
 
     // Last Name
     if (!formData.lastName?.trim()) {
         errors.lastName = "Last name is required";
+    } else if (!NAME_PATTERN.test(formData.lastName.trim())) {
+        errors.lastName =
+            "Last name can contain only letters, spaces, apostrophes, and hyphens";
     }
 
     // City
@@ -184,11 +209,11 @@ const validateForm = (formData) => {
         errors.zipcode = "Please enter a valid 5-digit ZipCode";
     }
 
-    // ── NEW: DOB 18+ VALIDATION ──
+    // ── DOB 18+ VALIDATION ──
     if (formData.dob) {
         const today = dayjs();
         const birthDate = dayjs(formData.dob);
-        const age = today.diff(birthDate, 'year');
+        const age = today.diff(birthDate, "year");
 
         if (age < 18) {
             errors.dob = "You must be at least 18 years old";
@@ -200,7 +225,7 @@ const validateForm = (formData) => {
 
 const EditProfile = ({ open, onClose }) => {
     const { currentUser, getuserData } = useUser();
-    console.log(currentUser, 'currentUser')
+    console.log(currentUser, "currentUser");
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
     const cropSize = isMobile ? CROP_BOX_SIZE_MOBILE : CROP_BOX_SIZE;
@@ -211,7 +236,6 @@ const EditProfile = ({ open, onClose }) => {
     );
     const [profileFile, setProfileFile] = useState(null);
     const [formData, setFormData] = useState(buildFormData(currentUser));
-
 
     const [photoMenuAnchor, setPhotoMenuAnchor] = useState(null);
     const isPhotoMenuOpen = Boolean(photoMenuAnchor);
@@ -248,19 +272,18 @@ const EditProfile = ({ open, onClose }) => {
             setFormData(buildFormData(currentUser));
             setProfileImage(currentUser?.profileImageUrl || "");
             setProfileFile(null);
-            syncCityUI(currentUser?.city);   // add
+            syncCityUI(currentUser?.city); // add
         }
     }, [currentUser]);
 
     const resetForm = () => {
         setFormData(buildFormData(currentUser));
-        syncCityUI(currentUser?.city);       // add
+        syncCityUI(currentUser?.city); // add
     };
 
     const handleCloseProfile = () => {
         onClose?.();
     };
-
 
     const sendMobileOtp = async () => {
         if (!/^\d{10}$/.test(newMobile)) {
@@ -295,8 +318,7 @@ const EditProfile = ({ open, onClose }) => {
             toast.success("OTP sent successfully");
         } catch (error) {
             setMobileError(
-                error?.response?.data?.message ||
-                "Failed to send OTP"
+                error?.response?.data?.message || "Failed to send OTP"
             );
         } finally {
             setMobileLoading(false);
@@ -432,7 +454,6 @@ const EditProfile = ({ open, onClose }) => {
     const handleZoomChange = (e, value) => {
         const { displayedW: oldW, displayedH: oldH } = getDisplayedSize();
 
-
         if (!oldW || !oldH) {
             setZoom(value);
             return;
@@ -512,8 +533,6 @@ const EditProfile = ({ open, onClose }) => {
         setOffset({ x: 0, y: 0 });
     };
 
-
-
     const handlePhotoMenuOpen = (event) => setPhotoMenuAnchor(event.currentTarget);
     const handlePhotoMenuClose = () => setPhotoMenuAnchor(null);
 
@@ -566,7 +585,6 @@ const EditProfile = ({ open, onClose }) => {
         "Kannada",
         "Malayalam",
         "Punjabi",
-
     ];
 
     const handleChange = (e) => {
@@ -582,6 +600,20 @@ const EditProfile = ({ open, onClose }) => {
             [name]: "",
         }));
     };
+
+    /* ── Sanitizing handler for first/last name only ── */
+    const handleNameChange = (e) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({
+            ...prev,
+            [name]: sanitizeName(value),
+        }));
+        setErrors((prev) => ({
+            ...prev,
+            [name]: "",
+        }));
+    };
+
     const [value, setValue] = useState(null);
     const [isOtherCity, setIsOtherCity] = useState(false);
     const [otherCityState, setOtherCityState] = useState("");
@@ -592,11 +624,17 @@ const EditProfile = ({ open, onClose }) => {
             (o) => o.abbr !== "OTHER" && o.label === saved
         );
         if (match) {
-            setValue(match); setIsOtherCity(false); setOtherCityState("");
+            setValue(match);
+            setIsOtherCity(false);
+            setOtherCityState("");
         } else if (saved) {
-            setValue(OTHER_OPTION); setIsOtherCity(true); setOtherCityState(saved);
+            setValue(OTHER_OPTION);
+            setIsOtherCity(true);
+            setOtherCityState(saved);
         } else {
-            setValue(null); setIsOtherCity(false); setOtherCityState("");
+            setValue(null);
+            setIsOtherCity(false);
+            setOtherCityState("");
         }
     };
     const [languageOpen, setLanguageOpen] = useState(false);
@@ -614,7 +652,6 @@ const EditProfile = ({ open, onClose }) => {
         setFormData((prev) => ({ ...prev, city: e.target.value }));
         setErrors((prev) => ({ ...prev, city: "" }));
     };
-
 
     const handleUpdateProfile = async () => {
         try {
@@ -681,12 +718,10 @@ const EditProfile = ({ open, onClose }) => {
         }
     };
 
-
     const displayed = getDisplayedSize();
 
     return (
         <>
-
             <Modal
                 open={!!open}
                 onClose={(event, reason) => {
@@ -780,7 +815,6 @@ const EditProfile = ({ open, onClose }) => {
                             </IconButton>
                         </Box>
 
-
                         <Box
                             sx={{
                                 mb: 2.5,
@@ -863,7 +897,8 @@ const EditProfile = ({ open, onClose }) => {
                                         bgcolor: SAFFRON,
                                     }}
                                 >
-                                    {formData?.firstName?.[0]}{formData?.lastName?.[0]}
+                                    {formData?.firstName?.[0]}
+                                    {formData?.lastName?.[0]}
                                 </ProtectedAvatar>
 
                                 <Button
@@ -1001,11 +1036,16 @@ const EditProfile = ({ open, onClose }) => {
                                     size="small"
                                     fullWidth
                                     value={formData?.firstName}
-                                    onChange={handleChange}
+                                    onChange={handleNameChange}
                                     InputProps={fieldFont}
                                     InputLabelProps={fieldFont}
                                     error={!!errors.firstName}
                                     helperText={errors.firstName}
+                                    inputProps={{
+                                        maxLength: 40,
+                                        inputMode: "text",
+                                        autoComplete: "given-name",
+                                    }}
                                 />
 
                                 <TextField
@@ -1016,9 +1056,14 @@ const EditProfile = ({ open, onClose }) => {
                                     value={formData?.lastName}
                                     error={!!errors.lastName}
                                     helperText={errors.lastName}
-                                    onChange={handleChange}
+                                    onChange={handleNameChange}
                                     InputProps={fieldFont}
                                     InputLabelProps={fieldFont}
+                                    inputProps={{
+                                        maxLength: 40,
+                                        inputMode: "text",
+                                        autoComplete: "family-name",
+                                    }}
                                 />
                             </Stack>
 
@@ -1286,7 +1331,6 @@ const EditProfile = ({ open, onClose }) => {
                                 </InputLabel>
 
                                 <Select
-
                                     multiple
                                     open={languageOpen}
                                     onOpen={() => setLanguageOpen(true)}
@@ -1412,41 +1456,7 @@ const EditProfile = ({ open, onClose }) => {
                                     </Box>
                                 </Select>
                             </FormControl>
-                            {/* {formData?.language?.includes("Other") && (
-                                <TextField
-                                    fullWidth
-                                    size="small"
-                                    label="Other Language"
-                                    value={otherLanguage}
-                                    onChange={(e) => {
-                                        const value = e.target.value;
 
-                                        setOtherLanguage(value);
-
-                                        const existingLanguages = (
-                                            formData?.language || []
-                                        ).filter(
-                                            (lang) =>
-                                                languages.includes(lang) ||
-                                                lang === "Other"
-                                        );
-
-                                        if (value.trim()) {
-                                            update("language", [
-                                                ...existingLanguages.filter(
-                                                    (lang) => lang !== "Other"
-                                                ),
-                                                value.trim(),
-                                            ]);
-                                        }
-                                    }}
-                                    sx={{
-                                        mt: 1.5,
-                                    }}
-                                    InputProps={fieldFont}
-                                    InputLabelProps={fieldFont}
-                                />
-                            )} */}
                             <Stack
                                 direction={{
                                     xs: "column",
@@ -1472,12 +1482,12 @@ const EditProfile = ({ open, onClose }) => {
                                             // Clear the error when they change the date
                                             setErrors((prev) => ({ ...prev, dob: "" }));
                                         }}
-                                        maxDate={dayjs().subtract(18, 'year')} // <-- Restricts calendar to 18+ years ago
+                                        maxDate={dayjs().subtract(18, "year")}
                                         slotProps={{
                                             textField: {
                                                 size: "small",
-                                                error: !!errors.dob,          // <-- Shows red border if error
-                                                helperText: errors.dob,       // <-- Shows the error message
+                                                error: !!errors.dob,
+                                                helperText: errors.dob,
                                                 fullWidth: true,
                                                 InputProps: fieldFont,
                                                 InputLabelProps: fieldFont,
@@ -1598,6 +1608,7 @@ const EditProfile = ({ open, onClose }) => {
                             <TextField
                                 label="ZipCode"
                                 name="zipcode"
+                                type="number"
                                 fullWidth
                                 value={formData?.zipcode || ""}
                                 error={!!errors.zipcode}
@@ -1707,7 +1718,6 @@ const EditProfile = ({ open, onClose }) => {
                 </Box>
             </Modal>
 
-
             <Modal open={showAdjustModal} onClose={handleAdjustCancel}>
                 <Box
                     sx={{
@@ -1753,7 +1763,6 @@ const EditProfile = ({ open, onClose }) => {
                         <CloseIcon />
                     </IconButton>
 
-
                     <Box
                         onMouseDown={handleMouseDown}
                         onMouseMove={handleMouseMove}
@@ -1794,7 +1803,6 @@ const EditProfile = ({ open, onClose }) => {
                             />
                         )}
                     </Box>
-
 
                     <Box sx={{ px: 1, mt: 2 }}>
                         <Typography variant="caption" color="text.secondary">

@@ -11,6 +11,8 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 import MessageIcon from "@mui/icons-material/Message";
 import ProtectedAvatar from "../components/ProtectedAvatar";
+import { useUser } from "../context/userConetext";
+import { useChatModal } from "../context/ChatModalContext";
 
 const SAFFRON = "#FF9933";
 
@@ -21,15 +23,17 @@ const ProfileModal = ({
     onMessage,
     currentUser,
 }) => {
+
+    const user = useUser();
+    const { openChatWith } = useChatModal();
     const isOwnProfile =
-        selectedProfile?._id === currentUser?._id;
+        selectedProfile?._id === user?.currentUser?._id;
 
 
 
     const getProfileName = () => {
-        const fullName = `${selectedProfile?.firstName || ""} ${
-            selectedProfile?.lastName || ""
-        }`.trim();
+        const fullName = `${selectedProfile?.firstName || ""} ${selectedProfile?.lastName || ""
+            }`.trim();
 
         return fullName || selectedProfile?.name || "";
     };
@@ -105,7 +109,7 @@ const ProfileModal = ({
                     overflow: "visible",
                 }}
             >
-                <Avatar
+                <ProtectedAvatar
                     src={selectedProfile?.profileImageUrl || ""}
                     alt={fullName}
                     sx={{
@@ -139,7 +143,7 @@ const ProfileModal = ({
                     {!selectedProfile?.profileImageUrl &&
                         `${selectedProfile?.firstName?.[0] || ""}${selectedProfile?.lastName?.[0] || selectedProfile?.name?.[0] || ""
                         }`}
-                </Avatar>
+                </ProtectedAvatar>
 
                 {/* NAME */}
 
@@ -163,7 +167,9 @@ const ProfileModal = ({
                             variant="contained"
                             startIcon={<MessageIcon />}
                             onClick={() => {
-                                onMessage(selectedProfile);
+                                onMessage?.(selectedProfile);  
+                                openChatWith(selectedProfile); 
+                                onClose?.();                   
                             }}
                             sx={{
                                 mt: 1.5,

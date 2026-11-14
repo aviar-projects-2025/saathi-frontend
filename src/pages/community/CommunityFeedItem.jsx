@@ -22,6 +22,7 @@ import CommunityComments from "../CommunityComments.jsx";
 import CommunityImage from "../../components/CommunityImage.jsx";
 import ImagePicker from "./ImagePicker.jsx";
 import { getRoom } from "./rooms.js";
+import ProtectedAvatar from "../../components/ProtectedAvatar.jsx";
 
 const SAFFRON = "#E8650A";
 const RUST = "#B33A00";
@@ -49,7 +50,7 @@ const AuthorAvatar = ({ author, onClick }) => {
     useEffect(() => { setBroken(false); }, [src]);
 
     return (
-        <Avatar
+        <ProtectedAvatar
             src={!broken && src ? src : undefined}
             alt={`${author?.firstName || ""} ${author?.lastName || ""}`}
             onClick={onClick}
@@ -66,7 +67,7 @@ const AuthorAvatar = ({ author, onClick }) => {
             }}
         >
             {initials}
-        </Avatar>
+        </ProtectedAvatar>
     );
 };
 

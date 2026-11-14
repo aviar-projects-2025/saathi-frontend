@@ -11,7 +11,7 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutlineOutlined";
 import axios from "axios";
-import socket from "../../socket"; 
+import socket from "../../socket";
 import {
   API_BASE,
   authHeaders,
@@ -21,6 +21,7 @@ import {
   SAFFRON,
   normalizeMessage,
 } from "./chatUtils";
+import ProtectedAvatar from "../../components/ProtectedAvatar";
 
 // ★ NEW: Skeleton component for the list
 const ChatListSkeleton = () => (
@@ -57,7 +58,7 @@ export default function ChatList({
       try {
         // Only trigger full spinner if it's the FIRST load
         if (people.length === 0) setInitialLoading(true);
-        
+
         const res = await axios.get(`${API_BASE}/chat/users`, {
           headers: authHeaders(),
           params: { search, page: 1, limit: 50 },
@@ -83,10 +84,10 @@ export default function ChatList({
     const handleIncoming = (raw) => {
       const myId = localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user"))._id : null;
       const m = normalizeMessage(raw, myId);
-      
+
       setPeople((prev) => {
         const senderId = typeof raw.senderId === "object" ? raw.senderId._id : raw.senderId;
-        
+
         const updated = prev.map((p) => {
           if (String(p._id) === String(senderId)) {
             return {
@@ -114,7 +115,7 @@ export default function ChatList({
   return (
     // height 100% fills the modal
     <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      
+
       {/* Search Bar */}
       <Box sx={{ px: 2.5, py: 2, flexShrink: 0 }}>
         <TextField
@@ -157,8 +158,7 @@ export default function ChatList({
           </Box>
         ) : (
           people.map((p) => {
-            const unreadCount = unreadByChat[p._id] || unreadByChat[p.chatId] || 0;
-            console.log(p,'pr')
+            const unreadCount = unreadByChat[p._id] || 0;
             return (
               <Box
                 key={p._id}
@@ -192,7 +192,7 @@ export default function ChatList({
                     },
                   }}
                 >
-                  <Avatar
+                  <ProtectedAvatar
                     src={p.profileImageUrl || ""}
                     sx={{
                       width: 52,
@@ -205,7 +205,7 @@ export default function ChatList({
                     }}
                   >
                     {!p.profileImageUrl && getInitials(p)}
-                  </Avatar>
+                  </ProtectedAvatar>
                 </Badge>
 
                 <Box sx={{ ml: 2, flex: 1, minWidth: 0 }}>

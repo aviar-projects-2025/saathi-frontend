@@ -39,31 +39,40 @@ export default function NotificationTab({
   const navigate = useNavigate();
 
   /*
-   * Deduplicate notifications by database ID.
-   * Supports notification objects using either id or _id.
+ * Single source of truth for "what is this notification's identity?".
+ * Matches the fallback order used by NotificationContext so the badge
+ * and the list can never disagree about which items exist.
+ */
+  const getNotificationId = useCallback(
+    (item) =>
+      String(
+        item?._id ||
+        item?.id ||
+        item?.data?._id ||
+        item?.data?.rideId ||
+        item?.data?.requestId ||
+        ""
+      ),
+    []
+  );
+
+  /*
+   * Deduplicate notifications by canonical ID.
    */
   const uniqueNotifications = useMemo(() => {
     const notificationMap = new Map();
-
-    (Array.isArray(tabNotification) ? tabNotification : []).forEach(
-      (item) => {
-        const id = item?._id || item?.id;
-
-        if (id) {
-          notificationMap.set(String(id), item);
-        }
+    (Array.isArray(tabNotification) ? tabNotification : []).forEach((item) => {
+      const id = getNotificationId(item);
+      if (id) {
+        notificationMap.set(id, item);
       }
-    );
-
+    });
     return Array.from(notificationMap.values()).sort(
       (a, b) =>
         new Date(b.createdAt || 0).getTime() -
         new Date(a.createdAt || 0).getTime()
     );
-  }, [tabNotification]);
-
-  const getNotificationId = (item) =>
-    item?._id || item?.id;
+  }, [tabNotification, getNotificationId]);
 
   /*
    * Safely extract the ride ID from different event payload shapes.
@@ -133,7 +142,7 @@ export default function NotificationTab({
           navigate("/myride", {
             state: {
               tab: 2,
-              offersOpen : true,
+              offersOpen: true,
               // ...(rideId ? { rideId } : {}),
               // notificationType: type,
               // helpProposalId:

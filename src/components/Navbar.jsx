@@ -43,7 +43,8 @@ import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutlineOutlined
 import axios from "axios";
 import Api from "../Api.jsx";
 import ChatModal from "../pages/ChatModal";
-import { useChatSocket } from "../hooks/useChatSocket";
+import { useChatSocket } from "../context/ChatSocketContext";
+import { useChatModal } from "../context/ChatModalContext.jsx";
 
 const TopNav = ({ onMenuClick }) => {
   const theme = useTheme();
@@ -54,18 +55,33 @@ const TopNav = ({ onMenuClick }) => {
 
   const { logout } = useAuth();
 
-  const { tabNotification, fetchNotifications } = useNotifications();
+  const { tabNotification, fetchNotifications, markAllNotificationsRead } = useNotifications();
 
   const [moreAnchorEl, setMoreAnchorEl] = useState(null);
-  const [messagesOpen, setMessagesOpen] = useState(false);
+  // const [messagesOpen, setMessagesOpen] = useState(false);
+  const { isOpen: messagesOpen, pendingUser, openChat, closeChat } = useChatModal();
 
-  const { unreadChats, resetUnread } = useChatSocket();
+  const { unreadChats } = useChatSocket();
 
   const openMoreMenu = Boolean(moreAnchorEl);
 
+  // Canonical ID — matches NotificationContext + NotificationTab so all
+  // three agree on which items exist. Prevents socket-only items with a
+  // missing top-level `_id` from being silently dropped.
+  const idOf = (item) =>
+    String(
+      item?._id ||
+      item?.id ||
+      item?.data?._id ||
+      item?.data?.rideId ||
+      item?.data?.requestId ||
+      ""
+    );
+
   const uniqueNotifications = Object.values(
     (tabNotification || []).reduce((acc, curr) => {
-      acc[curr._id] = curr;
+      const id = idOf(curr);
+      if (id) acc[id] = curr;
       return acc;
     }, {})
   );
@@ -73,11 +89,10 @@ const TopNav = ({ onMenuClick }) => {
   const unreadCount = Object.values(
     (tabNotification || []).reduce((acc, curr) => {
       if (curr.type === "ride_started") return acc;
-
       if (!curr?.isRead) {
-        acc[curr?.data?.rideId || curr._id] = curr;
+        const id = idOf(curr);
+        if (id) acc[id] = curr;
       }
-
       return acc;
     }, {})
   ).length;
@@ -100,13 +115,7 @@ const TopNav = ({ onMenuClick }) => {
 
   const handleMarkAllAsRead = async () => {
     try {
-      const res = await axios.patch(
-        `${Api}/notification/${currentUser?._id}`
-      );
-
-      if (res?.data?.success === true) {
-        fetchNotifications();
-      }
+      await markAllNotificationsRead();
     } catch (error) {
       console.log(error);
     } finally {
@@ -283,7 +292,8 @@ const TopNav = ({ onMenuClick }) => {
 
           {/* CHAT ICON */}
           <IconButton
-            onClick={() => setMessagesOpen(true)}
+            // onClick={() => setMessagesOpen(true)}
+            onClick={openChat}
             sx={{
               color: "#5f4632",
               p: 0.8,
@@ -557,8 +567,8 @@ const TopNav = ({ onMenuClick }) => {
           {/* PROFILE AVATAR */}
           <Stack>
             <Box
-             sx={{ position: "relative", width: 44, height: 44 }}
-             >
+              sx={{ position: "relative", width: 44, height: 44 }}
+            >
               <CircularProgress
                 variant="determinate"
                 value={completion}
@@ -658,8 +668,8 @@ const TopNav = ({ onMenuClick }) => {
         {/* CHAT MODAL */}
         <ChatModal
           open={messagesOpen}
-          onClose={() => setMessagesOpen(false)}
-          onResetUnread={resetUnread}
+          onClose={closeChat}
+          selectedUser={pendingUser}
         />
 
         {/* LOGOUT CONFIRMATION DIALOG */}

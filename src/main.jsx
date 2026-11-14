@@ -8,23 +8,29 @@ import { AppProvider } from "./context/AppContext";
 import { ReferralProvider } from "./context/ReferralContext";
 import { UserProvider } from "./context/userConetext";
 import { NotificationProvider } from "./context/NotificationContext";
-import {RatingProvider} from "./context/RatingContext"
+import { RatingProvider } from "./context/RatingContext"
 import './utils/axiosInterceptor'
+import { ChatSocketProvider } from "./context/ChatSocketContext";
+import { ChatModalProvider } from "./context/ChatModalContext";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <AuthProvider>
       <UserProvider>
         <NotificationProvider>
-          <RideProvider>
-            <ReferralProvider>
-              <AppProvider>
-                <RatingProvider> 
-                <App />
-                </RatingProvider> 
-              </AppProvider>
-            </ReferralProvider>
-          </RideProvider>
+          <ChatSocketProvider>
+            <ChatModalProvider>
+              <RideProvider>
+                <ReferralProvider>
+                  <AppProvider>
+                    <RatingProvider>
+                      <App />
+                    </RatingProvider>
+                  </AppProvider>
+                </ReferralProvider>
+              </RideProvider>
+            </ChatModalProvider>
+          </ChatSocketProvider>
         </NotificationProvider>
       </UserProvider>
     </AuthProvider>

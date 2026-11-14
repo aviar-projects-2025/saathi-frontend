@@ -33,6 +33,7 @@ import ToastConfig from "../components/ToastConfig.jsx";
 import { useRide } from "../context/RideContext";
 // ★ ADDED: Import ChatModal
 import ChatModal from "./ChatModal";
+import ProtectedAvatar from "../components/ProtectedAvatar.jsx";
 
 /* ───────────── Design tokens (same as RideCard) ───────────── */
 const FONT = '"DM Sans", "Inter", "Segoe UI", Roboto, Arial, sans-serif';
@@ -340,7 +341,7 @@ const RequestRide = () => {
                         overflow: "hidden",
                     }}
                 >
-                    <Avatar
+                    <ProtectedAvatar
                         src={creator?.profileImageUrl || ""}
                         alt={userName}
                         onClick={(event) => {
@@ -362,7 +363,7 @@ const RequestRide = () => {
                         }}
                     >
                         {initials}
-                    </Avatar>
+                    </ProtectedAvatar>
 
                     {/* Middle: route, subtitle, status chips */}
                     <Box

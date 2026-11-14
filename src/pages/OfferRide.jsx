@@ -19,6 +19,7 @@ import {
   CircularProgress,
   InputAdornment,
   Tooltip,
+  Avatar,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import {
@@ -41,6 +42,7 @@ import { toast } from "react-toastify";
 import ToastConfig from "../components/ToastConfig";
 import RideLocationPicker from "../components/RideLocationPicker";
 import dayjs from "dayjs";
+import { useUser } from "../context/userConetext";
 
 /* ═══════════════════════════════════════════════════════
    THEME
@@ -396,6 +398,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const inputSize = isMobile ? "small" : "medium";
   const isEditMode = Boolean(ride);
+  const currentUser = useUser();
 
   const user = JSON.parse(localStorage.getItem("user") || "null");
   const { refreshRides } = useRide();
@@ -1774,7 +1777,8 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                 alignItems="flex-start"
                 sx={{ minWidth: 0 }}
               >
-                <Box
+                <Avatar
+                  src={currentUser?.currentUser?.profileImageUrl}
                   sx={{
                     width: { xs: 40, sm: 48 },
                     height: { xs: 40, sm: 48 },
@@ -1790,7 +1794,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                 >
                   {(user?.firstName?.[0] || "U") +
                     (user?.lastName?.[0] || "").toUpperCase()}
-                </Box>
+                </Avatar>
 
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Typography

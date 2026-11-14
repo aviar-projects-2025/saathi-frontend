@@ -143,8 +143,9 @@ function MyTripRow({ trip, onViewMatches, showAction = true, viewDetails, curren
       onClick={() => viewDetails(trip)}
       sx={{ ...rowPaperSx, transition: "box-shadow 0.2s", "&:hover": { boxShadow: "0px 4px 12px rgba(0,0,0,0.05)" } }}
     >
+      {/* {console.log(trip?.createdBy?.profileImageUrl,'trip')} */}
       <Stack direction="row" spacing={{ xs: 1.5, sm: 2 }} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
-        <Avatar sx={{ bgcolor: isMatched ? "#DDF4E4" : "#DCEBFA", width: { xs: 40, sm: 44 }, height: { xs: 40, sm: 44 }, flexShrink: 0 }}>
+        <Avatar src={trip?.createdBy?.profileImageUrl} sx={{ bgcolor: isMatched ? "#DDF4E4" : "#DCEBFA", width: { xs: 40, sm: 44 }, height: { xs: 40, sm: 44 }, flexShrink: 0 }}>
           <FlightIcon sx={{ color: "#1E293B", transform: "rotate(45deg)", fontSize: 20 }} />
         </Avatar>
         <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -207,8 +208,9 @@ function GlobalTripRow({ trip, onViewDetails, currentUserId }) {
       }}
     >
       <Stack direction="row" spacing={{ xs: 1.5, sm: 2 }} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
+        {console.log(trip.createdBy,'trip.createdBy')}
         <ProtectedAvatar
-          src={trip.createdBy?.profileImage || ""} alt={userName}
+          src={trip.createdBy?.profileImageUrl || ""} alt={userName}
           sx={{ width: { xs: 42, sm: 48 }, height: { xs: 42, sm: 48 }, flexShrink: 0, bgcolor: isParent ? "#DCEBFA" : "#DDF4E4" }}
         >
           <FlightIcon sx={{ color: "#1E293B", transform: "rotate(45deg)", fontSize: 20 }} />
@@ -270,7 +272,7 @@ function TripDetailsDialog({ trip, onClose, onAction, currentUserId }) {
       <DialogTitle sx={{ pr: 7, pb: 1, pt: { xs: "calc(16px + env(safe-area-inset-top, 0px))", sm: 2 }, px: { xs: 2, sm: 3 } }}>
         <Stack direction="row" spacing={1.5} alignItems="center">
           <ProtectedAvatar
-            src={trip.createdBy?.profileImage || ""} alt={userName}
+            src={trip.createdBy?.profileImageUrl|| ""} alt={userName}
             sx={{ width: { xs: 44, sm: 52 }, height: { xs: 44, sm: 52 }, flexShrink: 0, bgcolor: "#DCEBFA" }}
           >
             <FlightIcon />

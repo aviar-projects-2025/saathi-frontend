@@ -41,11 +41,11 @@ const getUserIdFromToken = () => {
 const getNotificationId = (item) =>
   String(
     item?._id ||
-      item?.id ||
-      item?.data?._id ||
-      item?.data?.rideId ||
-      item?.data?.requestId ||
-      ""
+    item?.id ||
+    item?.data?._id ||
+    item?.data?.rideId ||
+    item?.data?.requestId ||
+    ""
   );
 
 function normalizeList(payload) {
@@ -56,9 +56,12 @@ function normalizeList(payload) {
   return [];
 }
 
-function mergeNotifications(existing, incoming) {
+function mergeNotifications(existing, incoming, { incomingWins = false } = {}) {
   const byId = new Map();
-  [...incoming, ...existing].forEach((item) => {
+  const ordered = incomingWins
+    ? [...existing, ...incoming]   // incoming applied last → overwrites
+    : [...incoming, ...existing];  // existing applied last → keeps local isRead etc.
+  ordered.forEach((item) => {
     const id = getNotificationId(item);
     if (id) {
       byId.set(id, { ...byId.get(id), ...item });
@@ -114,14 +117,14 @@ export function NotificationProvider({ children }) {
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       });
       const list = normalizeList(response.data);
-      setNotifications((previous) => mergeNotifications(previous, list));
+      setNotifications((previous) => mergeNotifications(previous, list, { incomingWins: true }));
       console.log("📥 [NOTIFICATIONS] fetched:", list.length, "items");
       return list;
     } catch (error) {
       setNotificationError(
         error?.response?.data?.message ||
-          error.message ||
-          "Unable to load notifications"
+        error.message ||
+        "Unable to load notifications"
       );
       console.error(
         "❌ [NOTIFICATIONS] fetch error:",
@@ -137,14 +140,14 @@ export function NotificationProvider({ children }) {
   const playNotificationSound = useCallback(() => {
     if (!audioRef.current) return;
     audioRef.current.currentTime = 0;
-    audioRef.current.play().catch(() => {});
+    audioRef.current.play().catch(() => { });
   }, []);
 
   /* ─── Realtime handler ─── */
   const handleIncomingNotification = useCallback(
     (incoming) => {
       if (!incoming || typeof incoming !== "object") return;
-      
+
       const id = getNotificationId(incoming);
       console.log("📨 [NOTIFICATIONS] SOCKET received:", incoming.type, "id =", id);
 
@@ -154,8 +157,19 @@ export function NotificationProvider({ children }) {
       }
       if (id) handledRealtimeIds.current.add(id);
 
+      const normalizedId = String(
+        incoming._id ||
+        incoming.id ||
+        incoming.data?._id ||
+        incoming.data?.rideId ||
+        incoming.data?.requestId ||
+        `_sock_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+      );
+
       const enriched = {
         ...incoming,
+        _id: normalizedId,
+        isRead: incoming.isRead ?? false,
         createdAt: incoming.createdAt || new Date().toISOString(),
       };
 
@@ -245,24 +259,27 @@ export function NotificationProvider({ children }) {
     }
   }, []);
 
-  /* ─── Mark all read ─── */
   const markAllNotificationsRead = useCallback(async () => {
     if (!userId) return;
     const unread = notifications.filter((item) => !item.isRead);
     if (!unread.length) return;
 
+    // Optimistic update — every item looks read right now
     setNotifications((previous) =>
       previous.map((item) => ({ ...item, isRead: true }))
     );
+
     try {
       const token =
         localStorage.getItem("token") || localStorage.getItem("accessToken");
+      // This is the endpoint your backend registers.
       await axios.patch(
-        `${Api}/notification/read-all/${userId}`,
+        `${Api}/notification/${userId}`,
         {},
         { headers: token ? { Authorization: `Bearer ${token}` } : undefined }
       );
     } catch (error) {
+      // Roll back — server rejected, restore unread
       setNotifications((previous) =>
         previous.map((item) => ({ ...item, isRead: false }))
       );

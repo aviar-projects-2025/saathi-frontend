@@ -439,8 +439,10 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
                   spacing={{ xs: 0.75, sm: 1 }}
                   sx={{ py: 0.75 }}
                 >
+                  {console.log(item,'item')}
+
                   <ProtectedAvatar
-                    src={item.userId?.profileImageurl}
+                    src={item.userId?.profileImageUrl}
                     onClick={() => {
                       setSelectedProfile(item.userId);
                       setProfileModalOpen(true);

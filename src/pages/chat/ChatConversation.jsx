@@ -34,9 +34,12 @@ import {
   getInitials,
   SAFFRON,
 } from "./chatUtils";
+import { useChatSocket } from "../../context/ChatSocketContext";
+import ProtectedAvatar from "../../components/ProtectedAvatar";
 
 export default function ChatConversation({ user, onBack, onClose }) {
   const myId = getCurrentUserId();
+  const { clearChatUnread } = useChatSocket();
 
   const [chatId, setChatId] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -51,12 +54,16 @@ export default function ChatConversation({ user, onBack, onClose }) {
   const [msgMenuAnchor, setMsgMenuAnchor] = useState(null);
   const [msgMenuTarget, setMsgMenuTarget] = useState(null);
 
-  const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
   const activeChatIdRef = useRef(null);
 
-  const scrollToBottom = useCallback((behavior = "smooth") => {
+  const scrollToBottom = useCallback((behavior = "auto") => {
+    // requestAnimationFrame ensures the DOM has laid out the new message
+    // before we set scrollTop. Without it, we scroll to the PREVIOUS bottom.
     requestAnimationFrame(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior, block: "end" });
+      const el = messagesContainerRef.current;
+      if (!el) return;
+      el.scrollTo({ top: el.scrollHeight, behavior });
     });
   }, []);
 
@@ -124,6 +131,7 @@ export default function ChatConversation({ user, onBack, onClose }) {
           {},
           { headers: authHeaders() }
         );
+        clearChatUnread(user._id);
         setChatError("");
       } catch (err) {
         if (!cancelled) {
@@ -141,9 +149,10 @@ export default function ChatConversation({ user, onBack, onClose }) {
     };
   }, [chatId, myId, scrollToBottom]);
 
+  // New messages → jump to bottom (instant, not smooth — smooth feels laggy).
   useEffect(() => {
-    if (messages.length) scrollToBottom();
-  }, [messages, scrollToBottom]);
+    if (messages.length) scrollToBottom("auto");
+  }, [messages.length, scrollToBottom]);
 
   /* ─── Realtime ─── */
   useEffect(() => {
@@ -160,6 +169,7 @@ export default function ChatConversation({ user, onBack, onClose }) {
             {},
             { headers: authHeaders() }
           )
+          .then(() => clearChatUnread(user._id))
           .catch(() => {});
       }
     };
@@ -213,7 +223,7 @@ export default function ChatConversation({ user, onBack, onClose }) {
       socket.off("chat:blocked", onBlocked);
       socket.off("chat:unblocked", onUnblocked);
     };
-  }, [chatId, myId, user?._id]);
+  }, [chatId, myId, user?._id, clearChatUnread]);
 
   /* ─── Send ─── */
   const handleSend = async () => {
@@ -235,7 +245,7 @@ export default function ChatConversation({ user, onBack, onClose }) {
         mergeMessages(prev, [normalizeMessage(saved, myId)])
       );
       setMessageText("");
-      scrollToBottom();
+      scrollToBottom("auto");
     } catch (err) {
       setChatError(
         err.response?.data?.message ||
@@ -330,10 +340,11 @@ export default function ChatConversation({ user, onBack, onClose }) {
         display: "flex",
         flexDirection: "column",
         height: "100%",
+        minHeight: 0,        // ★ FIX — prevents the flex item from growing past its parent
         backgroundColor: "#EFEAE2",
       }}
     >
-      {/* ─── Header ─── */}
+      {/* ─── Header (fixed) ─── */}
       <Box
         sx={{
           height: 64,
@@ -349,7 +360,7 @@ export default function ChatConversation({ user, onBack, onClose }) {
         <IconButton onClick={onBack} sx={{ ml: -0.5, mr: 0.5 }}>
           <ArrowBackIcon />
         </IconButton>
-        <Avatar
+        <ProtectedAvatar
           src={user?.profileImageUrl || ""}
           sx={{
             width: 42,
@@ -361,7 +372,7 @@ export default function ChatConversation({ user, onBack, onClose }) {
           }}
         >
           {!user?.profileImageUrl && getInitials(user)}
-        </Avatar>
+        </ProtectedAvatar>
         <Box sx={{ ml: 1.5, flex: 1, minWidth: 0 }}>
           <Typography
             fontWeight={700}
@@ -371,7 +382,7 @@ export default function ChatConversation({ user, onBack, onClose }) {
             {getUserName(user)}
           </Typography>
           <Typography sx={{ fontSize: "0.72rem", color: "#888" }}>
-            {blockedByMe ? "Blocked" : blockedMe && "Unavailable" }
+            {blockedByMe ? "Blocked" : blockedMe && "Unavailable"}
           </Typography>
         </Box>
         <IconButton
@@ -382,12 +393,14 @@ export default function ChatConversation({ user, onBack, onClose }) {
         </IconButton>
       </Box>
 
-      {/* ─── Messages Scroll Area ─── */}
+      {/* ─── Messages scroll area (flex: 1) ─── */}
       <Box
+        ref={messagesContainerRef}
         sx={{
           flex: 1,
           minHeight: 0,
           overflowY: "auto",
+          overflowX: "hidden",
           px: { xs: 1.5, sm: 2.5 },
           py: 2,
           backgroundColor: "#EFEAE2",
@@ -396,10 +409,9 @@ export default function ChatConversation({ user, onBack, onClose }) {
           backgroundSize: "22px 22px",
           display: "flex",
           flexDirection: "column",
-          justifyContent: messages.length === 0 ? "center" : "flex-end",
+          justifyContent: messages.length === 0 ? "center" : "flex-start",
         }}
       >
-        {/* Forces height during loading so modal doesn't shrink */}
         {loadingMessages && messages.length === 0 && (
           <Box
             sx={{
@@ -447,8 +459,7 @@ export default function ChatConversation({ user, onBack, onClose }) {
                 mt: prevSame ? 0 : 0.6,
               }}
             >
-              {/* Avatar for received messages (last of group only) */}
-              {!isMine && (
+              {/* {!isMine && (
                 <Avatar
                   src={!nextSame ? user?.profileImageUrl || "" : ""}
                   sx={{
@@ -463,7 +474,7 @@ export default function ChatConversation({ user, onBack, onClose }) {
                 >
                   {!nextSame && !user?.profileImageUrl && getInitials(user)}
                 </Avatar>
-              )}
+              )} */}
 
               <Paper
                 elevation={0}
@@ -526,11 +537,9 @@ export default function ChatConversation({ user, onBack, onClose }) {
             No messages yet. Say hello! 👋
           </Typography>
         )}
-
-        <div ref={messagesEndRef} />
       </Box>
 
-      {/* Block warning bar */}
+      {/* ─── Block warning bar (fixed) ─── */}
       {(blockedByMe || blockedMe) && (
         <Box
           sx={{
@@ -567,7 +576,7 @@ export default function ChatConversation({ user, onBack, onClose }) {
         </Box>
       )}
 
-      {/* ─── Composer ─── */}
+      {/* ─── Composer (fixed) ─── */}
       <Box
         sx={{
           p: 1.2,

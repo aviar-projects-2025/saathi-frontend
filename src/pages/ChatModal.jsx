@@ -13,13 +13,15 @@ import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutlineOutlined
 import { SAFFRON } from "./chat/chatUtils";
 import ChatList from "./chat/ChatList";
 import ChatConversation from "./chat/ChatConversation";
-import { useChatSocket } from "../hooks/useChatSocket";
+import { useChatSocket } from "../context/ChatSocketContext";
+
+
 
 export default function ChatModal({
   open,
   onClose,
   selectedUser: initialUser,
-  onResetUnread,
+  // onResetUnread,
 }) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -42,9 +44,9 @@ export default function ChatModal({
   }, [open]);
 
   // When the modal opens, clear the outer unread badge on the 💬 icon
-  useEffect(() => {
-    if (open) onResetUnread?.();
-  }, [open, onResetUnread]);
+  // useEffect(() => {
+  //   if (open) onResetUnread?.();
+  // }, [open, onResetUnread]);
 
   const handleClose = () => {
     setSelectedUser(null);
@@ -95,7 +97,7 @@ export default function ChatModal({
             gap: 1.5,
             background: "linear-gradient(135deg, #FFF8EE 0%, #FFFFFF 100%)",
             borderBottom: "1px solid #F1E4D7",
-            flexShrink: 0, 
+            flexShrink: 0,
           }}
         >
           <Avatar
@@ -150,7 +152,7 @@ export default function ChatModal({
       <Box
         sx={{
           flex: 1,
-          minHeight: 0, 
+          minHeight: 0,
           display: "flex",
           flexDirection: "column",
           backgroundColor: "#FFFFFF",
@@ -169,7 +171,8 @@ export default function ChatModal({
             setSearch={setSearch}
             onSelectUser={(user) => {
               setSelectedUser(user);
-              clearChatUnread(user?.chatId || user?._id);
+              if (user?.chatId) clearChatUnread(user.chatId);
+              if (user?._id) clearChatUnread(user._id);
             }}
             unreadByChat={unreadByChat}
           />
