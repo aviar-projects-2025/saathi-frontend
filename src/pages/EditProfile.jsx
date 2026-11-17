@@ -225,7 +225,7 @@ const validateForm = (formData) => {
 
 const EditProfile = ({ open, onClose }) => {
     const { currentUser, getuserData } = useUser();
-    console.log(currentUser, "currentUser");
+    // console.log(currentUser, "currentUser");
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
     const cropSize = isMobile ? CROP_BOX_SIZE_MOBILE : CROP_BOX_SIZE;

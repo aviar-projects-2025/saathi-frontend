@@ -74,7 +74,7 @@ const ResetPassword = () => {
                 }
             );
 
-            console.log("Reset password response:", response.data);
+            // console.log("Reset password response:", response.data);
 
             toast.success(
                 response.data.message ||

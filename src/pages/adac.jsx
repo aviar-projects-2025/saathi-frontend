@@ -1611,7 +1611,9 @@ const MyRides = () => {
 
         <Box sx={{ flex: 1, minWidth: 0, overflowY: { xs: "auto", sm: "visible" }, overflowX: "hidden", px: { xs: 0.5, sm: 0 }, pt: 1.5, pb: { xs: 3, sm: 0 }, "&::-webkit-scrollbar": { width: "4px" }, "&::-webkit-scrollbar-track": { bgcolor: "transparent" }, "&::-webkit-scrollbar-thumb": { bgcolor: "divider", borderRadius: "4px" } }}>
           {(initialLoading && active.key === "current" && !activeData.loaded) || (activeData.loading && !activeData.loaded) ? (
-            <Box sx={{ width: "100%", mt: "5rem", display: "flex", justifyContent: "center" }}><CircularProgress size={50} sx={{ color: "#FF9933" }} /></Box>
+            <Box sx={{ width: "100%", mt: "5rem", display: "flex", justifyContent: "center" }}>
+              <CircularProgress size={50} sx={{ color: "#FF9933" }} />
+            </Box>
           ) : activeData.rides.length === 0 && !activeData.loading ? (
             <EmptyState message1={active.empty1} message2={active.empty2} />
           ) : (
@@ -1619,7 +1621,9 @@ const MyRides = () => {
               {renderList(activeData.rides)}
               <Box ref={sentinelRef} sx={{ minHeight: activeData.hasMore ? 80 : 24, display: "flex", alignItems: "center", justifyContent: "center", py: 1 }}>
                 {activeData.loading && <CircularProgress size={28} sx={{ color: "#FF9933" }} />}
-                {!activeData.loading && !activeData.hasMore && activeData.rides.length > 0 && <Typography sx={{ fontSize: { xs: "0.7rem", sm: "0.78rem" }, color: "text.secondary", py: 1 }}>No more rides</Typography>}
+                {!activeData.loading && !activeData.hasMore && activeData.rides.length > 0 && (
+                  <Typography sx={{ fontSize: { xs: "0.7rem", sm: "0.78rem" }, color: "text.secondary", py: 1 }}>No more rides</Typography>
+                )}
               </Box>
             </>
           )}
@@ -1628,19 +1632,32 @@ const MyRides = () => {
         {editRide && <EditRideModal ride={editRide} onSave={handleEdit} onClose={() => setEditRide(null)} />}
         {deleteRide && <DeleteConfirmDialog ride={deleteRide} onConfirm={handleDelete} onClose={() => setDeleteRide(null)} />}
 
-        <Dialog open={!!confirmRide} onClose={(e, reason) => { if (reason === "backdropClick") return; setConfirmRide(null); }} PaperProps={{ sx: { borderRadius: { xs: 2, sm: 3 }, mx: { xs: 2, sm: "auto" }, width: { xs: "calc(100% - 32px)", sm: "100%" }, maxWidth: { xs: "calc(100% - 32px)", sm: 450 } } }}>
-          <DialogContent sx={{ pb: { xs: 1, sm: 1.5 }, px: { xs: 2, sm: 3 } }}><Typography sx={{ fontSize: { xs: "0.9rem", sm: "1rem" }, fontWeight: 600 }}>Looks like your ride is starting</Typography></DialogContent>
+        <Dialog
+          open={!!confirmRide}
+          onClose={(e, reason) => {
+            if (reason === "backdropClick") return;
+            setConfirmRide(null);
+          }}
+          PaperProps={{ sx: { borderRadius: { xs: 2, sm: 3 }, mx: { xs: 2, sm: "auto" }, width: { xs: "calc(100% - 32px)", sm: "100%" }, maxWidth: { xs: "calc(100% - 32px)", sm: 450 } } }}
+        >
+          <DialogContent sx={{ pb: { xs: 1, sm: 1.5 }, px: { xs: 2, sm: 3 } }}>
+            <Typography sx={{ fontSize: { xs: "0.9rem", sm: "1rem" }, fontWeight: 600 }}>Looks like your ride is starting</Typography>
+          </DialogContent>
           <DialogContent sx={{ pt: 0, px: { xs: 2, sm: 3 } }}>
             <Typography sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem" }, mb: 0.5 }}>From : {confirmRide?.from || "—"}</Typography>
             <Typography sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem" }, mb: 0.5 }}>To : {confirmRide?.destination || "—"}</Typography>
-            <Typography sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem" } }}>Time : {confirmRide?.startTime ? moment(confirmRide.startTime).format("DD MMM YYYY, hh:mm A") : "—"}</Typography>
+            <Typography sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem" } }}>
+              Time : {confirmRide?.startTime ? moment(confirmRide.startTime).format("DD MMM YYYY, hh:mm A") : "—"}
+            </Typography>
           </DialogContent>
           <DialogActions sx={{ px: { xs: 2, sm: 3 }, pb: { xs: 2, sm: 2.5 }, pt: { xs: 0.5, sm: 1 }, gap: { xs: 1, sm: 1.5 }, flexWrap: "nowrap" }}>
-            <Button variant="contained" onClick={() => setConfirmRide(null)} sx={{ flex: 1, minWidth: 0, minHeight: { xs: 36, sm: 40 }, bgcolor: "#757575", color: "#fff", textTransform: "none", borderRadius: 2 }}>Not yet</Button>
-            <Button variant="contained" onClick={() => handleStartOrComplete(confirmRide?._id, confirmRide?.travelStatus)} sx={{ flex: 1, minWidth: 0, minHeight: { xs: 36, sm: 40 }, bgcolor: "#f89b04", color: "#fff", textTransform: "none", borderRadius: 2 }}>Started</Button>
+            <Button variant="contained" onClick={() => setConfirmRide(null)} sx={{ flex: 1, minWidth: 0, minHeight: { xs: 36, sm: 40 }, bgcolor: "#757575", color: "#fff", textTransform: "none", borderRadius: 2 }}>
+              Not yet
+            </Button>
+            <Button variant="contained" onClick={() => handleStartOrComplete(confirmRide?._id, confirmRide?.travelStatus)} sx={{ flex: 1, minWidth: 0, minHeight: { xs: 36, sm: 40 }, bgcolor: "#f89b04", color: "#fff", textTransform: "none", borderRadius: 2 }}>
+              Started
+            </Button>
           </DialogActions>
-        </Dialog>
-
         </Dialog>
       </Box>
     </Box>

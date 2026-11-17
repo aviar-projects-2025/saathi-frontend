@@ -33,7 +33,7 @@ const ForgotPassword = () => {
             .matches(/^[0-9]{10}$/, "Please enter a valid 10-digit mobile number")
             .required("Mobile number is required"),
     });
-       
+
     const handleSubmit = async (values, { setFieldError }) => {
         setIsSubmitting(true);
         setError(null);
@@ -41,7 +41,7 @@ const ForgotPassword = () => {
         try {
             const fullMobileNumber =
                 `${countryCode}${values.mobileNumber}`;
-        
+
             const response = await axios.post(
                 `${Api}/auth/forgot-password`,
                 {
@@ -140,7 +140,7 @@ const ForgotPassword = () => {
                         initialValues={{
                             mobileNumber: "",
                         }}
-                         validationSchema={validationSchema}
+                        validationSchema={validationSchema}
                         onSubmit={handleSubmit}
                     >
                         {({
@@ -222,15 +222,15 @@ const ForgotPassword = () => {
                                             setFieldValue("mobileNumber", value);
                                         }}
                                         onBlur={handleBlur}
-                                        // error={
-                                        //     touched.mobileNumber &&
-                                        //     Boolean(errors.mobileNumber)
-                                        // }
-                                        // helperText={
-                                        //     touched.mobileNumber
-                                        //         ? errors.mobileNumber
-                                        //         : ""
-                                        // }
+                                    // error={
+                                    //     touched.mobileNumber &&
+                                    //     Boolean(errors.mobileNumber)
+                                    // }
+                                    // helperText={
+                                    //     touched.mobileNumber
+                                    //         ? errors.mobileNumber
+                                    //         : ""
+                                    // }
                                     />
                                 </Stack>
 

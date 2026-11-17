@@ -122,7 +122,7 @@ export default function CommunityFeedItem({
         return () => { cancelled = true; };
     }, [post._id, commentUser.id]);
 
-    {console.log('post', post)}
+    // {console.log('post', post)}
     const hasTitle = !!post.title;
     const description = !!post.description;
     const hasWhen = !!post.timeframe;
@@ -148,7 +148,7 @@ export default function CommunityFeedItem({
 
     const handleSave = async () => {
         setUpdating(true);
-        console.log(editWhen,'editWhen')
+        // console.log(editWhen,'editWhen')
         const ok = await onUpdatePost(post._id, {
             title: hasTitle ? editTitle.trim() : undefined,
             when: hasWhen ? editWhen.trim() : undefined,

@@ -74,10 +74,12 @@ const CATEGORY_OPTIONS = [
   { label: "All categories", value: "" },
   { label: "Airport pickup / drop", value: "Airport pickup / drop" },
   { label: "Temple / event", value: "Temple / event" },
-  { label: "Ride request", value: "Ride request" },
-];
+  { label: "Grocery / shopping", value: "Grocery / shopping" },
+  { label: "Regular commute", value: "Regular commute" },
+  // { label: "Ride request", value: "Ride request" },
+];;
 
-const LANGUAGE_OPTIONS = ["Tamil", "Hindi", "Telugu", "English"];
+const LANGUAGE_OPTIONS = ["Tamil", "English", "Hindi", "Telugu"];
 
 const RADIUS_OPTIONS = [
   { label: "Any", value: null },
@@ -208,7 +210,7 @@ const matchesFilters = (ride, filters, searchFrom, searchDestination, userLocati
 
 /* ─────────── Welcome Banner Component ─────────── */
 function WelcomeBanner({ firstName, onPostRide, onFindRide, onDismiss, postDisabled = false }) {
-  // Shared pill-button sizing: full width + 44px touch target on phones, auto width from sm up
+
   const pillBtn = {
     textTransform: "none",
     fontWeight: 700,
@@ -258,7 +260,6 @@ function WelcomeBanner({ firstName, onPostRide, onFindRide, onDismiss, postDisab
       <Box
         sx={{
           p: { xs: 2, sm: 2.5, md: 3 },
-          // keep text clear of the dismiss button
           pr: { xs: 6.5, sm: 7, md: 8 },
           maxWidth: { md: 820 },
         }}
@@ -403,9 +404,9 @@ export default function FindRides() {
   const [showWelcomeBanner, setShowWelcomeBanner] = useState(false);
   const hasCheckedWelcomeRef = useRef(false);
 
-  console.log("currentUser:", currentUser);
-  console.log("createdAt raw:", currentUser?.createdAt);
-  console.log("createdAt parsed:", new Date(currentUser?.createdAt));
+  // console.log("currentUser:", currentUser);
+  // console.log("createdAt raw:", currentUser?.createdAt);
+  // console.log("createdAt parsed:", new Date(currentUser?.createdAt));
 
   /* ─────────── Fetch rides ─────────── */
   const fetchRides = async ({ pageNumber = 1, reset = false } = {}) => {
@@ -868,20 +869,34 @@ export default function FindRides() {
 
       {/* ─── Language ─── */}
       <Typography sx={sectionLabelSx}>Language</Typography>
-      <Stack direction="row" spacing={0.75} sx={{ mb: 2, flexWrap: "wrap", gap: 0.75 }}>
+      <Box
+        sx={{
+          mb: 2,
+          width: "100%",
+          minWidth: 0,
+          display: "flex",
+          flexDirection: "row",
+          flexWrap: "wrap",
+          alignItems: "center",
+          gap: 0.75,
+        }}
+      >
         {LANGUAGE_OPTIONS.map((lang) => {
           const selected = draftFilters.language === lang;
+
           return (
             <Chip
               key={lang}
               label={lang}
               clickable
-              onClick={() => updateFilterAndApply("language", selected ? "" : lang)}
+              onClick={() =>
+                updateFilterAndApply("language", selected ? "" : lang)
+              }
               sx={pillChipSx(selected)}
             />
           );
         })}
-      </Stack>
+      </Box>
 
       {/* ─── Toggles ─── */}
       <FormGroup sx={{ mb: 2 }}>
@@ -1067,7 +1082,7 @@ export default function FindRides() {
               Find a ride
             </Typography>
           </Stack>
-          {console.log(showWelcomeBanner, 'showWelcomeBanner')}
+          {/* {console.log(showWelcomeBanner, 'showWelcomeBanner')} */}
 
           {showWelcomeBanner && (
             <WelcomeBanner

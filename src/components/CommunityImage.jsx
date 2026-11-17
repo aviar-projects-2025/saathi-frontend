@@ -258,10 +258,10 @@ const CommunityImage = ({ src, postImageUrl }) => {
                     ? "default"
                     : "zoom-in"
                   : zoomed
-                  ? isDraggingRef.current
-                    ? "grabbing"
-                    : "grab"
-                  : "zoom-in",
+                    ? isDraggingRef.current
+                      ? "grabbing"
+                      : "grab"
+                    : "zoom-in",
                 transform: zoomed
                   ? `translate(${position.x}px, ${position.y}px) scale(2.5)`
                   : "translate(0px, 0px) scale(1)",

@@ -284,66 +284,66 @@ function RideCard({
             },
           }}
         >
-        <Chip
-          size="small"
-          variant="outlined"
-          icon={<CalendarTodayIcon />}
-          label={`${fmtDate(ride.startTime)} · ${fmtTime(ride.startTime)}`}
-        />
-
-        <Chip
-          size="small"
-          variant="outlined"
-          icon={<Mode />}
-          label={ride.modeOfTravel || "Car"}
-        />
-
-        {ride.kind === "offer" && ride.modeOfTravel !== "Flight" && (
-          <>
-            <Chip
-              size="small"
-              variant="outlined"
-              icon={<EventSeatIcon />}
-              label={`${ride.totalSeats} Total seat${ride.totalSeats === 1 ? "" : "s"}`}
-            />
-
-            <Chip
-              size="small"
-              variant="outlined"
-              icon={<EventSeatIcon />}
-              label={`${ride.availableSeats} Available seat${ride.availableSeats === 1 ? "" : "s"}`}
-            />
-          </>
-        )}
-
-        {ride.kind === "request" && (
           <Chip
             size="small"
             variant="outlined"
-            icon={<EventSeatIcon />}
-            label={`${ride.passengers || 1} passenger${(ride.passengers || 1) === 1 ? "" : "s"}`}
+            icon={<CalendarTodayIcon />}
+            label={`${fmtDate(ride.startTime)} · ${fmtTime(ride.startTime)}`}
           />
-        )}
-      </Stack>
 
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 1, bgcolor: k.bg, px: 2, py: 1.25, flexWrap: "wrap" }}>
-        <Typography sx={{ fontSize: "0.84rem", flex: "1 1 140px" }}>{footerText}</Typography>
-        <Stack direction="row" spacing={1}>
-          {isCurrentRide && canManageTravel && !isCompleted && !isCancelled && (
-            <Button size="small" variant="contained" disabled={busy} onClick={() => onTravelAction(ride)}
-              sx={{ bgcolor: isStarted ? "#C62828" : "#E8650A", boxShadow: "none", whiteSpace: "nowrap", "&:hover": { bgcolor: isStarted ? "#9B1C1C" : "#C85508" } }}>
-              {busy ? "Please wait…" : isStarted ? "Complete Ride" : "Start Ride"}
-            </Button>
+          <Chip
+            size="small"
+            variant="outlined"
+            icon={<Mode />}
+            label={ride.modeOfTravel || "Car"}
+          />
+
+          {ride.kind === "offer" && ride.modeOfTravel !== "Flight" && (
+            <>
+              <Chip
+                size="small"
+                variant="outlined"
+                icon={<EventSeatIcon />}
+                label={`${ride.totalSeats} Total seat${ride.totalSeats === 1 ? "" : "s"}`}
+              />
+
+              <Chip
+                size="small"
+                variant="outlined"
+                icon={<EventSeatIcon />}
+                label={`${ride.availableSeats} Available seat${ride.availableSeats === 1 ? "" : "s"}`}
+              />
+            </>
           )}
-          <Button size="small" variant="contained" onClick={() => setDetailsOpen(true)}
-            sx={{ bgcolor: k.color, boxShadow: "none", whiteSpace: "nowrap", "&:hover": { bgcolor: k.color, opacity: 0.9 } }}>
-            {isOffer && pendingCount > 0 ? "Review" : "View"}
-          </Button>
-        </Stack>
-      </Box>
-    </Box >
 
-      { detailsOpen && (
+          {ride.kind === "request" && (
+            <Chip
+              size="small"
+              variant="outlined"
+              icon={<EventSeatIcon />}
+              label={`${ride.passengers || 1} passenger${(ride.passengers || 1) === 1 ? "" : "s"}`}
+            />
+          )}
+        </Stack>
+
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 1, bgcolor: k.bg, px: 2, py: 1.25, flexWrap: "wrap" }}>
+          <Typography sx={{ fontSize: "0.84rem", flex: "1 1 140px" }}>{footerText}</Typography>
+          <Stack direction="row" spacing={1}>
+            {isCurrentRide && canManageTravel && !isCompleted && !isCancelled && (
+              <Button size="small" variant="contained" disabled={busy} onClick={() => onTravelAction(ride)}
+                sx={{ bgcolor: isStarted ? "#C62828" : "#E8650A", boxShadow: "none", whiteSpace: "nowrap", "&:hover": { bgcolor: isStarted ? "#9B1C1C" : "#C85508" } }}>
+                {busy ? "Please wait…" : isStarted ? "Complete Ride" : "Start Ride"}
+              </Button>
+            )}
+            <Button size="small" variant="contained" onClick={() => setDetailsOpen(true)}
+              sx={{ bgcolor: k.color, boxShadow: "none", whiteSpace: "nowrap", "&:hover": { bgcolor: k.color, opacity: 0.9 } }}>
+              {isOffer && pendingCount > 0 ? "Review" : "View"}
+            </Button>
+          </Stack>
+        </Box>
+      </Box >
+
+      {detailsOpen && (
         <RideDetailsModal
           ride={ride} user={user} showEdit={showEdit} showDelete={showDelete}
           onEdit={onEdit} onDelete={onDelete} onClose={() => setDetailsOpen(false)}
@@ -351,7 +351,7 @@ function RideCard({
           onRequestUpdated={onRequestUpdated} approveLoading={approveLoading} rejectLoading={rejectLoading}
         />
       )
-}
+      }
     </>
   );
 }
@@ -416,7 +416,7 @@ const MyRides = () => {
       setLoadingHelpProposals(true);
       const res = await axios.get(`${Api}/help-proposals/received`, authConfig());
       const body = res?.data;
-      console.log(body,'body')
+      // console.log(body, 'body')
       setHelpProposals(Array.isArray(body?.data) ? body.data : Array.isArray(body?.proposals) ? body.proposals : Array.isArray(body) ? body : []);
     } catch (error) {
       toast.error(error?.response?.data?.message || "Unable to load help proposals", toasts);
@@ -651,12 +651,12 @@ const MyRides = () => {
     // Only fire when the count grows (a new notification was added)
     if (notifications.length > lastNotificationCount.current) {
       const newest = notifications[0];
-      console.log(
-        "[MY_RIDES] refreshing due to new notification:",
-        newest?.type,
-        "| total:",
-        notifications.length
-      );
+      // console.log(
+      //   "[MY_RIDES] refreshing due to new notification:",
+      //   newest?.type,
+      //   "| total:",
+      //   notifications.length
+      // );
       refreshAllCategories();
     }
 
@@ -687,7 +687,7 @@ const MyRides = () => {
       const t = payload?.type;
       if (!t || !REFRESH_TYPES.has(t)) return;
 
-      console.log("[MY_RIDES][SOCKET] realtime refresh on:", t);
+      // console.log("[MY_RIDES][SOCKET] realtime refresh on:", t);
       refreshAllCategories();
     };
 
@@ -809,7 +809,7 @@ const MyRides = () => {
               <Typography sx={{ fontWeight: 800, fontSize: "0.95rem" }}>People offered to help you</Typography>
               <Typography variant="body2" color="text.secondary">On your ride requests · tap to review</Typography>
             </Box>
-            {console.log(offersOpen ,'offersOpen ')}
+            {/* {console.log(offersOpen, 'offersOpen ')} */}
             <ExpandMoreIcon sx={{ transform: offersOpen ? "rotate(180deg)" : "none", transition: "transform .2s", color: "text.secondary" }} />
           </Box>
           <Collapse in={offersOpen} unmountOnExit>
@@ -827,7 +827,7 @@ const MyRides = () => {
                 const responding = respondingProposalId === proposal._id;
                 return (
                   <Box key={proposal._id} sx={{ p: { xs: 1.5, sm: 2 } }}>
-                    {console.log(helper,'helper')}
+                    {/* {console.log(helper, 'helper')} */}
                     <Stack direction="row" spacing={1.25} alignItems="center" sx={{ mb: 1.25 }}>
                       <ProtectedAvatar src={helper.profileImageUrl || ""} sx={{ width: 40, height: 40, bgcolor: "#FFF0E3", color: "#C65B00", fontWeight: 800 }}>
                         {`${helper.firstName?.[0] || ""}${helper.lastName?.[0] || ""}` || "U"}

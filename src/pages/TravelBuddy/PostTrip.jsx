@@ -216,7 +216,14 @@ const Field = ({ label, small, error, ...props }) => (
       error={Boolean(error)}
       helperText={error || " "}
       {...props}
-      sx={fieldSx}
+      sx={{
+        "& .MuiOutlinedInput-root": {
+          bgcolor: "#fff",
+          borderRadius: 1.5,
+          "& fieldset": { borderColor: c.border },
+          "&.Mui-focused fieldset": { borderColor: c.rust },
+        },
+      }}
     />
   </Box>
 );
@@ -365,9 +372,6 @@ function StepFlights({ form, setForm, onNext, onCancel, isPrefilled, isEditMode 
     if (!invalid) onNext();
   };
 
-  // Edit mode fully unlocks everything — role, flights, traveller prefs.
-  // Only "request mode" (isPrefilled) locks fields, because a request
-  // must match the target trip's exact itinerary and role.
   const flightsLocked = Boolean(isPrefilled);
   const roleLocked = Boolean(isPrefilled);
 

@@ -118,7 +118,7 @@ export function NotificationProvider({ children }) {
       });
       const list = normalizeList(response.data);
       setNotifications((previous) => mergeNotifications(previous, list, { incomingWins: true }));
-      console.log("📥 [NOTIFICATIONS] fetched:", list.length, "items");
+      // console.log("📥 [NOTIFICATIONS] fetched:", list.length, "items");
       return list;
     } catch (error) {
       setNotificationError(
@@ -149,7 +149,7 @@ export function NotificationProvider({ children }) {
       if (!incoming || typeof incoming !== "object") return;
 
       const id = getNotificationId(incoming);
-      console.log("📨 [NOTIFICATIONS] SOCKET received:", incoming.type, "id =", id);
+      // console.log("📨 [NOTIFICATIONS] SOCKET received:", incoming.type, "id =", id);
 
       if (id && handledRealtimeIds.current.has(id)) {
         console.log("⏭️ [NOTIFICATIONS] duplicate ignored:", id);
@@ -205,19 +205,19 @@ export function NotificationProvider({ children }) {
       return undefined;
     }
 
-    console.log("🔌 [NOTIFICATIONS] connecting socket...");
+    // console.log("🔌 [NOTIFICATIONS] connecting socket...");
     connectSocket();
 
     socket.on("notification", handleIncomingNotification);
 
     const onConnect = () => {
-      console.log("🔗 [NOTIFICATIONS] socket connected, id =", socket.id);
+      // console.log("🔗 [NOTIFICATIONS] socket connected, id =", socket.id);
       fetchNotifications();
     };
     socket.on("connect", onConnect);
 
     if (socket.connected) {
-      console.log("🔗 [NOTIFICATIONS] already connected, fetching now");
+      // console.log("🔗 [NOTIFICATIONS] already connected, fetching now");
       fetchNotifications();
     }
 

@@ -53,7 +53,6 @@ export default function RoomDetails() {
           maxWidth: "100%",
           minWidth: 0,
           boxSizing: "border-box",
-          // ★ Added extra bottom padding so the last post is never hidden behind the floating button
           pb: { xs: 18, sm: 16, md: 14 },
         }}
       >
@@ -61,23 +60,36 @@ export default function RoomDetails() {
         <Box
           sx={{
             bgcolor: roomInfo.color,
-            p: { xs: 1.5, sm: 2, md: 2.5 },
-            borderRadius: { xs: 2.5, sm: 3 },
+            p: { xs: 1.5, sm: 2, md: 2.5, lg: 3 },
+            borderRadius: { xs: 2, sm: 2.5, md: 3 },
             mb: { xs: 1.5, sm: 2 },
             position: "relative",
+            width: "100%",
+            maxWidth: "100%",
+            minWidth: 0,
+            boxSizing: "border-box",
+            overflow: "hidden",
           }}
         >
           <Button
             onClick={() => navigate("/community")}
-            startIcon={<ArrowBackIcon sx={{ fontSize: { xs: 18, sm: 20, md: 22 } }} />}
+            startIcon={
+              <ArrowBackIcon
+                sx={{ fontSize: { xs: 18, sm: 20, md: 22 }, mr: { xs: 0.2 } }}
+              />
+            }
             sx={{
               textTransform: "none",
               color: "#333",
-              mb: { xs: 1.25, sm: 2 },
+              mb: { xs: 1.25, sm: 1.5, md: 2 },
               p: 0,
               minWidth: 0,
-              fontSize: { xs: "0.85rem", sm: "0.9rem", md: "0.95rem" },
-              "& .MuiButton-startIcon": { mr: { xs: 0.5, sm: 1 }, ml: 0 },
+              fontSize: { xs: "0.8rem", sm: "0.875rem", md: "0.95rem" },
+              whiteSpace: "nowrap",
+              "& .MuiButton-startIcon": {
+                mr: { xs: 0.5, sm: 1 },
+                ml: 0,
+              },
               "&:hover": { bgcolor: "transparent" },
             }}
           >
@@ -87,21 +99,41 @@ export default function RoomDetails() {
           <Typography
             fontWeight={800}
             color="#1A1A1A"
-            mb={{ xs: 0.5, sm: 1 }}
+            mb={{ xs: 0.5, sm: 0.75, md: 1 }}
             sx={{
-              fontSize: { xs: "1.5rem", sm: "1.9rem", md: "2.125rem" },
-              lineHeight: 1.2,
-              wordBreak: "break-word",
+              fontSize: {
+                xs: "1.25rem",
+                sm: "1.5rem",
+                md: "1.9rem",
+                lg: "2.125rem",
+                xl: "2.25rem",
+              },
+              lineHeight: { xs: 1.25, sm: 1.2 },
+              width: "100%",
+              minWidth: 0,
+              whiteSpace: "normal",
+              overflowWrap: "anywhere",
+              wordBreak: "normal",
             }}
           >
             {roomInfo.label}
           </Typography>
+
           <Typography
             color="text.secondary"
             sx={{
-              fontSize: { xs: "0.8rem", sm: "0.86rem", md: "0.9rem" },
-              lineHeight: 1.5,
-              wordBreak: "break-word",
+              fontSize: {
+                xs: "0.78rem",
+                sm: "0.84rem",
+                md: "0.9rem",
+                lg: "0.95rem",
+              },
+              lineHeight: { xs: 1.45, sm: 1.5, md: 1.6 },
+              width: "100%",
+              minWidth: 0,
+              whiteSpace: "normal",
+              overflowWrap: "anywhere",
+              wordBreak: "normal",
             }}
           >
             {subtitle}
@@ -160,31 +192,50 @@ export default function RoomDetails() {
       <Button
         variant="contained"
         onClick={handleCreate}
-        startIcon={<AddIcon sx={{ fontSize: { xs: 20, sm: 22 } }} />}
+        startIcon={<AddIcon sx={{ fontSize: { xs: 19, sm: 22 } }} />}
         sx={{
           position: "fixed",
           zIndex: 1100,
+
           bgcolor: "#B33A00",
           color: "#fff",
           borderRadius: 99,
-          px: { xs: 2.5, sm: 3 },
-          py: { xs: 1.2, sm: 1.5 },
+
+          px: { xs: 2, sm: 2.5, md: 3 },
+          py: { xs: 1.1, sm: 1.3, md: 1.5 },
           fontWeight: 700,
-          fontSize: { xs: "0.85rem", sm: "0.95rem" },
+          fontSize: {
+            xs: "0.78rem",
+            sm: "0.88rem",
+            md: "0.95rem",
+          },
+
+          whiteSpace: "nowrap",
+          width: "max-content",
+          maxWidth: "calc(100vw - 24px)",
+          minWidth: "fit-content",
+
           textTransform: "none",
+          boxSizing: "border-box",
           boxShadow: "0 4px 12px rgba(179,58,0,0.4)",
-          "& .MuiButton-startIcon": { mr: { xs: 0.5, sm: 1 }, ml: 0, flexShrink: 0 },
-          "&:hover": { bgcolor: "#8f2e00" },
-          
-          // Center on mobile, anchor to the right on desktop
+
+          "& .MuiButton-startIcon": {
+            mr: { xs: 0.5, sm: 1 },
+            ml: 0,
+            flexShrink: 0,
+          },
+
+          "&:hover": {
+            bgcolor: "#8f2e00",
+          },
+
           left: { xs: "50%", md: "auto" },
           right: { xs: "auto", md: "32px" },
           transform: { xs: "translateX(-50%)", md: "none" },
-          
-          // Sit high enough above the bottom nav
-          bottom: { 
-            xs: "calc(90px + env(safe-area-inset-bottom, 0px))", 
-            md: "40px" 
+
+          bottom: {
+            xs: "calc(90px + env(safe-area-inset-bottom, 0px))",
+            md: "40px",
           },
         }}
       >

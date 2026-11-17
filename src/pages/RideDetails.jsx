@@ -1043,7 +1043,7 @@ export default function RideDetailsModal({
   const isXs = useMediaQuery(theme.breakpoints.down("sm"));
   const isMd = useMediaQuery(theme.breakpoints.up("md"));
 
-  console.log(requests, 'requests')
+  // console.log(requests, 'requests')
   const pendingMember = requests.flatMap((item) => item?.pendingMembers || []);
   const isStarted = ride?.travelStatus === "Started";
   const startDate = new Date(ride?.startTime);
@@ -1073,7 +1073,7 @@ export default function RideDetailsModal({
     (r) => r?.status?.toUpperCase() === "PENDING",
   ).length;
 
-  console.log("Ride Details : ", ride);
+  // console.log("Ride Details : ", ride);
 
   return (
     <Dialog
@@ -1568,7 +1568,7 @@ export default function RideDetailsModal({
             <Field
               icon={LuggageIcon}
               label="Luggage Space"
-              value={ride.luggageSpace === "None" ? "No bags" : ride.luggageSpace}
+              value={ride.luggageSpace === "None" ? "No luggage Space" : ride.luggageSpace}
             />
           )}
 

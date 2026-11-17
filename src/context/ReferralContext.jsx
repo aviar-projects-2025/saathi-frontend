@@ -35,7 +35,7 @@ export const ReferralProvider = ({ children }) => {
     }
   }, [user?.id]);
 
-  
+
   useEffect(() => {
     const waitingIds = pendingReferral.map((item) => item._id);
 

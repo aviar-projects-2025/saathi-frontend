@@ -297,7 +297,7 @@ function TripDetailsDialog({ trip, onClose, onAction, currentUserId }) {
       <DialogTitle sx={{ pr: 7, pb: 1, pt: { xs: "calc(16px + env(safe-area-inset-top, 0px))", sm: 2 }, px: { xs: 2, sm: 3 } }}>
         <Stack direction="row" spacing={1.5} alignItems="center">
           <ProtectedAvatar
-            src={trip.createdBy?.profileImageUrl|| ""} alt={userName}
+            src={trip.createdBy?.profileImageUrl || ""} alt={userName}
             sx={{ width: { xs: 44, sm: 52 }, height: { xs: 44, sm: 52 }, flexShrink: 0, bgcolor: "#DCEBFA" }}
           >
             <FlightIcon />

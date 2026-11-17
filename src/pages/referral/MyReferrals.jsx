@@ -127,7 +127,7 @@ const PendingCard = memo(
     const userId = u?._id || u?.id || u?.data?.userId;
     const profileImage = u?.profileImageUrl || "";
 
-    console.log(u,'u')
+    // console.log(u,'u')
     const city = u?.city || "";
     const language = Array.isArray(u?.language)
       ? u.language.join(", ")
@@ -310,7 +310,7 @@ const StatusRow = memo(({ user: u, status }) => {
   const profileImage = u?.data?.profileImage || u?.profileImageUrl || "";
   const phone = u?.mobile || u?.mobileNumber || "";
 
-  console.log(u,'u')
+  // console.log(u,'u')
   const { bg, color } = colorFor(`${firstName}${lastName}`);
   const isApproved = status === "Approved";
 
@@ -556,7 +556,7 @@ const MyReferrals = () => {
       } = res.data?.data || {};
 
       setMyReferrals(pending);
-      console.log(pending,'pending')
+      // console.log(pending,'pending')
       setApprovedReferrals(approved);
       setRejectedReferrals(rejected);
 
@@ -662,7 +662,7 @@ const MyReferrals = () => {
     } catch (error) {
       toast.error(
         error.response?.data?.message ||
-          "Failed to send referral invitation",
+        "Failed to send referral invitation",
         toasts
       );
     } finally {
