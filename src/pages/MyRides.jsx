@@ -345,7 +345,7 @@ function RideCard({
 
       {detailsOpen && (
         <RideDetailsModal
-          isCurrentRide = {isCurrentRide}
+          isCurrentRide={isCurrentRide}
           ride={ride} user={user} showEdit={showEdit} showDelete={showDelete}
           onEdit={onEdit} onDelete={onDelete} onClose={() => setDetailsOpen(false)}
           requests={rideRequests} onApprove={onApprove} onReject={onReject}
@@ -511,10 +511,16 @@ const MyRides = () => {
   const handleApprove = async (requestId) => {
     try {
       setApproveLoading(requestId);
-      await axios.patch(`${Api}/bookride/${requestId}/status?type=Approve`, { status: "ACCEPTED" }, authConfig());
-      setAllRequests((prev) => prev.map((r) => (r._id === requestId ? { ...r, status: "ACCEPTED" } : r)));
-      refreshCategory(active.key);
-      fetchAllRequests();
+      await axios.patch(
+        `${Api}/bookride/${requestId}/status?type=Approve`,
+        { status: "ACCEPTED" },
+        authConfig()
+      );
+      setAllRequests((prev) =>
+        prev.map((r) => (r._id === requestId ? { ...r, status: "ACCEPTED" } : r))
+      );
+      await fetchAllRequests();
+      await refreshCategory(active.key);
       toast.success("Request approved successfully!", toasts);
     } catch (error) {
       toast.error(error?.response?.data?.message || "Failed to approve request", toasts);
@@ -523,16 +529,69 @@ const MyRides = () => {
     }
   };
 
-  const handleReject = async (requestId) => {
+  const handleReject = async (requestId, scope = "pending") => {
     try {
       setRejectLoading(requestId);
-      await axios.patch(`${Api}/bookride/${requestId}/status?type=Reject`, { status: "REJECTED" }, authConfig());
-      setAllRequests((prev) => prev.map((r) => (r._id === requestId ? { ...r, status: "REJECTED" } : r)));
-      toast.success("Request rejected", toasts);
-      refreshCategory(active.key);
-      fetchAllRequests();
+      await axios.patch(
+        `${Api}/bookride/${requestId}/status?type=Reject&scope=${scope}`,
+        { status: "REJECTED" },
+        authConfig()
+      );
+
+      setAllRequests((prev) =>
+        prev.map((r) => {
+          if (r._id !== requestId) return r;
+
+          if (scope === "pending") {
+            const approvedSeats = Number(r.approvedSeats || 0);
+            const rejectedSeats =
+              Number(r.rejectedSeats || 0) + Number(r.pendingReqSeats || 0);
+            return {
+              ...r,
+              pendingReqSeats: 0,
+              rejectedSeats,
+              // If approved seats still exist, the request stays ACCEPTED.
+              status: approvedSeats > 0 ? "ACCEPTED" : "REJECTED",
+            };
+          }
+
+          if (scope === "approved") {
+            const pendingReqSeats = Number(r.pendingReqSeats || 0);
+            const rejectedSeats =
+              Number(r.rejectedSeats || 0) + Number(r.approvedSeats || 0);
+            return {
+              ...r,
+              approvedSeats: 0,
+              rejectedSeats,
+              status: pendingReqSeats > 0 ? "PENDING" : "REJECTED",
+            };
+          }
+
+          // scope=all
+          return {
+            ...r,
+            approvedSeats: 0,
+            pendingReqSeats: 0,
+            status: "REJECTED",
+          };
+        })
+      );
+
+      toast.success(
+        scope === "pending"
+          ? "Pending seats rejected"
+          : scope === "approved"
+            ? "Approved seats rejected"
+            : "Request rejected (approved + pending)",
+        toasts
+      );
+      await fetchAllRequests();
+      await refreshCategory(active.key);
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to reject request", toasts);
+      toast.error(
+        error?.response?.data?.message || "Failed to reject request",
+        toasts
+      );
     } finally {
       setRejectLoading(null);
     }

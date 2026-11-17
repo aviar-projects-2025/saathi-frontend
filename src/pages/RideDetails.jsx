@@ -293,13 +293,11 @@ function Field({ icon: Icon, label, value, span }) {
 function PassengerStub({
   request,
   onApprove,
-  isCurrentRide,
   onReject,
   onRequestUpdated,
   approveLoading,
   rejectLoading,
   dense,
-  isRideFinished,
 }) {
   const [open, setOpen] = useState(false);
   const v = requestVisual(request);
@@ -329,7 +327,6 @@ function PassengerStub({
   const isApproveBusy = approveLoading === request._id;
   const isRejectBusy = rejectLoading === request._id;
   const isBusy = isApproveBusy || isRejectBusy;
-  const [someState, setSomeState] = useState([]);
   const [approvalRejectionLoading, setApprovalRejectionLoading] =
     useState(false);
 
@@ -342,35 +339,16 @@ function PassengerStub({
       hasStartedBusyRef.current = false;
       return;
     }
-
     if (isBusy) {
       hasStartedBusyRef.current = true;
       return;
     }
-
     if (hasStartedBusyRef.current) {
       setConfirmState({ open: false, action: null });
       setApprovalRejectionLoading(false);
       hasStartedBusyRef.current = false;
     }
-
-
-    // if (confirmState.action === "approve" && !isApproveBusy) {
-    //   setConfirmState({ open: false, action: null });
-    //   setApprovalRejectionLoading(false);
-    // }
-    // if (confirmState.action === "reject" && !isRejectBusy) {
-    //   setConfirmState({ open: false, action: null });
-    //   setApprovalRejectionLoading(false);
-    // }
-
-  }, [
-    approvalRejectionLoading,
-    isApproveBusy,
-    isRejectBusy,
-    isBusy,
-    confirmState.action,
-  ]);
+  }, [approvalRejectionLoading, isApproveBusy, isRejectBusy, isBusy, confirmState.action]);
 
   const handleMenuOpen = (event, request) => {
     event.stopPropagation();
@@ -389,48 +367,55 @@ function PassengerStub({
     setEditApproval(true);
     handleMenuClose();
   };
-  const handleRejectApproved = async () => {
 
+  const closeConfirm = () => {
+    if (isBusy) return;
+    setConfirmState({ open: false, action: null });
+  };
+
+  // ⋮ menu → "Approved Seat Rejection" dialog.
+  // Rejects BOTH approved AND pending (scope=all), so the request fully closes.
+  const handleRejectApproved = async () => {
     if (!selectedRequest || rejectApprovedLoading) return;
 
     const prevSnapshot = { ...selectedRequest };
     setRejectApprovedLoading(true);
 
+    const approved = Number(selectedRequest.approvedSeats || 0);
+    const pending = Number(selectedRequest.pendingReqSeats || 0);
+    const totalToReject = approved + pending;
+
+    // Optimistic: clear BOTH pools + status REJECTED
     onRequestUpdated?.(selectedRequest._id, {
       status: "REJECTED",
       approvedSeats: 0,
-      rejectedSeats:
-        (selectedRequest.approvedSeats || 0) +
-        (selectedRequest.rejectedSeats || 0),
       pendingReqSeats: 0,
+      members: [],
+      pendingMembers: [],
+      rejectedSeats: totalToReject + Number(selectedRequest.rejectedSeats || 0),
     });
     setEditApproval(false);
     closeConfirm();
 
     try {
       const res = await axios.patch(
-        `${Api}/bookride/${selectedRequest._id}/status?type=Reject`,
+        `${Api}/bookride/${selectedRequest._id}/status?type=Reject&scope=all`
       );
       const updatedRequest = res.data?.data?.request;
-
       if (updatedRequest) {
         onRequestUpdated?.(selectedRequest._id, updatedRequest);
       }
-
-      toast.success(res.data.message || "Ride request rejected successfully");
+      toast.success(
+        res.data.message || "Request rejected successfully (approved + pending)"
+      );
     } catch (error) {
       onRequestUpdated?.(prevSnapshot._id, prevSnapshot);
       toast.error(
-        error?.response?.data?.message || "Failed to reject ride request",
+        error?.response?.data?.message || "Failed to reject request"
       );
     } finally {
       setRejectApprovedLoading(false);
     }
-  };
-
-  const closeConfirm = () => {
-    if (isBusy) return;
-    setConfirmState({ open: false, action: null });
   };
 
   const handleConfirm = () => {
@@ -438,25 +423,32 @@ function PassengerStub({
 
     if (confirmState.action === "approve") {
       onApprove(request._id);
-    } else if (confirmState.action === "reject") {
-      onReject(request._id);
+      return;
     }
+
+    if (confirmState.action === "rejectPending") {
+      // Banner reject → ONLY pending seats
+      onReject(request._id, "pending");
+      return;
+    }
+
+    // "reject" — main row reject button
+    //   - If approved seats exist, this rejects everything (scope=all)
+    //   - If only pending exists, scope=pending is enough
+    const scope = approvedSeats > 0 ? "all" : "pending";
+    onReject(request._id, scope);
   };
 
   const handleExited = () => {
     setConfirmState({ open: false, action: null });
   };
 
-  // useEffect(() => {
-  //   if (!confirmState.open) return;
-  //   if (confirmState.action === 'approve' && !isApproveBusy) {
-  //     setConfirmState({ open: false, action: null });
-  //   }
-  //   if (confirmState.action === 'reject' && !isRejectBusy) {
-  //     setConfirmState({ open: false, action: null });
-  //   }
-
-  // }, [isApproveBusy, isRejectBusy]);
+  // Determine dialog text
+  const isRejectPending = confirmState.action === "rejectPending";
+  const isRejectAll =
+    confirmState.action === "reject" && approvedSeats > 0;
+  const isRejectOnlyPending =
+    confirmState.action === "reject" && approvedSeats === 0;
 
   return (
     <>
@@ -513,77 +505,30 @@ function PassengerStub({
                 {firstName} {lastName}
               </Typography>
 
-              <Stack
-                direction="row"
-                spacing={0.6}
-                alignItems="center"
-                sx={{ mt: 0.3 }}
-              >
-                <EventSeatIcon
-                  sx={{ fontSize: { xs: 12, sm: 13 }, color: TOKENS.inkSoft }}
-                />
-                <Typography
-                  sx={{
-                    fontFamily: TOKENS.monoFont,
-                    fontSize: { xs: "0.64rem", sm: "0.7rem" },
-                    color: TOKENS.inkSoft,
-                  }}
-                >
+              <Stack direction="row" spacing={0.6} alignItems="center" sx={{ mt: 0.3 }}>
+                <EventSeatIcon sx={{ fontSize: { xs: 12, sm: 13 }, color: TOKENS.inkSoft }} />
+                <Typography sx={{ fontFamily: TOKENS.monoFont, fontSize: { xs: "0.64rem", sm: "0.7rem" }, color: TOKENS.inkSoft }}>
                   Approved Seats × {approvedSeats}
                 </Typography>
               </Stack>
 
-              <Stack
-                direction="row"
-                spacing={0.6}
-                alignItems="center"
-                sx={{ mt: 0.3 }}
-              >
-                <EventSeatIcon
-                  sx={{ fontSize: { xs: 12, sm: 13 }, color: TOKENS.inkSoft }}
-                />
-                <Typography
-                  sx={{
-                    fontFamily: TOKENS.monoFont,
-                    fontSize: { xs: "0.64rem", sm: "0.7rem" },
-                    color: TOKENS.inkSoft,
-                  }}
-                >
+              <Stack direction="row" spacing={0.6} alignItems="center" sx={{ mt: 0.3 }}>
+                <EventSeatIcon sx={{ fontSize: { xs: 12, sm: 13 }, color: TOKENS.inkSoft }} />
+                <Typography sx={{ fontFamily: TOKENS.monoFont, fontSize: { xs: "0.64rem", sm: "0.7rem" }, color: TOKENS.inkSoft }}>
                   Pending Seat Req × {pendingReq}
                 </Typography>
               </Stack>
 
-              <Stack
-                direction="row"
-                spacing={0.6}
-                alignItems="center"
-                sx={{ mt: 0.3 }}
-              >
-                <EventSeatIcon
-                  sx={{ fontSize: { xs: 12, sm: 13 }, color: TOKENS.inkSoft }}
-                />
-                <Typography
-                  sx={{
-                    fontFamily: TOKENS.monoFont,
-                    fontSize: { xs: "0.64rem", sm: "0.7rem" },
-                    color: TOKENS.inkSoft,
-                  }}
-                >
+              <Stack direction="row" spacing={0.6} alignItems="center" sx={{ mt: 0.3 }}>
+                <EventSeatIcon sx={{ fontSize: { xs: 12, sm: 13 }, color: TOKENS.inkSoft }} />
+                <Typography sx={{ fontFamily: TOKENS.monoFont, fontSize: { xs: "0.64rem", sm: "0.7rem" }, color: TOKENS.inkSoft }}>
                   Rejected Seat Req × {rejectedReq}
                 </Typography>
               </Stack>
             </Box>
           </Stack>
 
-          <Stack
-            direction="row"
-            spacing={1.5}
-            sx={{
-              flexShrink: 0,
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
+          <Stack direction="row" spacing={1.5} sx={{ flexShrink: 0, display: "flex", alignItems: "center" }}>
             {isPending ? (
               dense ? (
                 <>
@@ -667,41 +612,24 @@ function PassengerStub({
             ) : (
               <>
                 {v?.label && (
-                  <>
-                    <Chip
-                      label={v.label}
-                      size="small"
-                      sx={{
-                        bgcolor: v.bg,
-                        color: v.color,
-                        fontFamily: TOKENS.bodyFont,
-                        fontWeight: 700,
-                        fontSize: {
-                          xs: "0.62rem",
-                          sm: "0.65rem",
-                          md: "0.68rem",
-                          lg: "0.7rem",
-                        },
-                        height: {
-                          xs: 20,
-                          sm: 22,
-                          md: 23,
-                          lg: 24,
-                        },
-                        "& .MuiChip-label": {
-                          px: {
-                            xs: 0.75,
-                            sm: 1,
-                            md: 1.25,
-                          },
-                        },
-                      }}
-                    />
-                  </>
+                  <Chip
+                    label={v.label}
+                    size="small"
+                    sx={{
+                      bgcolor: v.bg,
+                      color: v.color,
+                      fontFamily: TOKENS.bodyFont,
+                      fontWeight: 700,
+                      fontSize: { xs: "0.62rem", sm: "0.65rem", md: "0.68rem", lg: "0.7rem" },
+                      height: { xs: 20, sm: 22, md: 23, lg: 24 },
+                      "& .MuiChip-label": { px: { xs: 0.75, sm: 1, md: 1.25 } },
+                    }}
+                  />
                 )}
               </>
             )}
-            {v.label === "Approved" && !isCurrentRide && !isRideFinished &&(
+
+            {v.label === "Approved" && (
               <IconButton
                 onClick={(event) => handleMenuOpen(event, request)}
                 sx={{
@@ -722,42 +650,28 @@ function PassengerStub({
           onClose={handleMenuClose}
           anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
           transformOrigin={{ vertical: "top", horizontal: "right" }}
-          PaperProps={{
-            sx: {
-              borderRadius: 2,
-              minWidth: 140,
-              boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
-            },
-          }}
+          PaperProps={{ sx: { borderRadius: 2, minWidth: 140, boxShadow: "0 4px 20px rgba(0,0,0,0.15)" } }}
         >
           <MenuItem
             onClick={handleRejectClick}
-            sx={{
-              fontFamily: TOKENS.bodyFont,
-              fontSize: "0.85rem",
-              color: TOKENS.red,
-              fontWeight: 600,
-            }}
+            sx={{ fontFamily: TOKENS.bodyFont, fontSize: "0.85rem", color: TOKENS.red, fontWeight: 600 }}
           >
             Reject
           </MenuItem>
         </Menu>
 
         <Dialog open={editApproval} onClose={() => setEditApproval(false)}>
-          <DialogTitle>Approved Seat Rejection</DialogTitle>
-          <DialogContent>Do you want to reject the approved seat?</DialogContent>
-          <DialogActions
-            sx={{ px: { xs: 2, sm: 3 }, pb: { xs: 2, sm: 2.5 }, gap: 1 }}
-          >
+          <DialogTitle>Reject Request</DialogTitle>
+          <DialogContent>
+            {pendingReq > 0
+              ? `This will reject ${approvedSeats} approved seat(s) AND ${pendingReq} pending seat(s).`
+              : `Do you want to reject the ${approvedSeats} approved seat(s)?`}
+          </DialogContent>
+          <DialogActions sx={{ px: { xs: 2, sm: 3 }, pb: { xs: 2, sm: 2.5 }, gap: 1 }}>
             <Button
               onClick={() => setEditApproval(false)}
               disabled={isBusy || rejectApprovedLoading}
-              sx={{
-                fontFamily: TOKENS.bodyFont,
-                textTransform: "none",
-                fontWeight: 700,
-                color: TOKENS.inkSoft,
-              }}
+              sx={{ fontFamily: TOKENS.bodyFont, textTransform: "none", fontWeight: 700, color: TOKENS.inkSoft }}
             >
               Cancel
             </Button>
@@ -771,64 +685,30 @@ function PassengerStub({
                 fontWeight: 700,
                 minWidth: 96,
                 bgcolor: TOKENS.red,
-                "&:hover": {
-                  bgcolor: TOKENS.red,
-                  opacity: 0.9,
-                },
+                "&:hover": { bgcolor: TOKENS.red, opacity: 0.9 },
               }}
             >
-              {rejectApprovedLoading ? "Rejecting..." : "Reject"}
+              {rejectApprovedLoading ? "Rejecting..." : "Reject All"}
             </Button>
           </DialogActions>
         </Dialog>
+
         <Collapse in={open}>
-          <Box
-            sx={{
-              px: { xs: 1.4, sm: 1.8 },
-              pb: 1.4,
-              pt: 0,
-              borderTop: `1px dashed ${TOKENS.line}`,
-            }}
-          >
+          <Box sx={{ px: { xs: 1.4, sm: 1.8 }, pb: 1.4, pt: 0, borderTop: `1px dashed ${TOKENS.line}` }}>
             <Stack spacing={0.6} sx={{ mt: 1.2 }}>
-              <Typography
-                sx={{
-                  fontFamily: TOKENS.bodyFont,
-                  fontSize: "0.8rem",
-                  color: TOKENS.ink,
-                }}
-              >
+              <Typography sx={{ fontFamily: TOKENS.bodyFont, fontSize: "0.8rem", color: TOKENS.ink }}>
                 <strong>Message:</strong> {request.message || "No message"}
               </Typography>
-              <Typography
-                sx={{
-                  fontFamily: TOKENS.bodyFont,
-                  fontSize: "0.8rem",
-                  color: TOKENS.ink,
-                }}
-              >
+              <Typography sx={{ fontFamily: TOKENS.bodyFont, fontSize: "0.8rem", color: TOKENS.ink }}>
                 <strong>Phone:</strong> {request.phone || "Not provided"}
               </Typography>
               {request?.members?.length > 0 && (
                 <>
-                  <Typography
-                    sx={{
-                      fontFamily: TOKENS.bodyFont,
-                      fontSize: "0.8rem",
-                      fontWeight: 700,
-                    }}
-                  >
+                  <Typography sx={{ fontFamily: TOKENS.bodyFont, fontSize: "0.8rem", fontWeight: 700 }}>
                     Members:
                   </Typography>
                   {request.members.map((m, i) => (
-                    <Typography
-                      key={i}
-                      sx={{
-                        fontFamily: TOKENS.bodyFont,
-                        fontSize: "0.78rem",
-                        ml: 2,
-                      }}
-                    >
+                    <Typography key={i} sx={{ fontFamily: TOKENS.bodyFont, fontSize: "0.78rem", ml: 2 }}>
                       • {m.name} ({m.age} yrs)
                     </Typography>
                   ))}
@@ -836,25 +716,11 @@ function PassengerStub({
               )}
               {request?.pendingMembers?.length > 0 && (
                 <>
-                  <Typography
-                    sx={{
-                      fontFamily: TOKENS.bodyFont,
-                      fontSize: "0.8rem",
-                      fontWeight: 700,
-                      color: "red",
-                    }}
-                  >
+                  <Typography sx={{ fontFamily: TOKENS.bodyFont, fontSize: "0.8rem", fontWeight: 700, color: "red" }}>
                     Pending Members:
                   </Typography>
                   {request?.pendingMembers?.map((m, i) => (
-                    <Typography
-                      key={i}
-                      sx={{
-                        fontFamily: TOKENS.bodyFont,
-                        fontSize: "0.78rem",
-                        ml: 2,
-                      }}
-                    >
+                    <Typography key={i} sx={{ fontFamily: TOKENS.bodyFont, fontSize: "0.78rem", ml: 2 }}>
                       • {m.name} ({m.age} yrs)
                     </Typography>
                   ))}
@@ -880,50 +746,27 @@ function PassengerStub({
         >
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <WarningAmberIcon sx={{ color: "error.main" }} />
-
-            <Typography
-              sx={{
-                fontWeight: 700,
-                fontSize: "0.85rem",
-                color: "error.main",
-              }}
-            >
-              {firstName} {lastName} requested +{pendingReq}{" "}
-              {pendingReq > 1 ? "seats" : "seat"}
+            <Typography sx={{ fontWeight: 700, fontSize: "0.85rem", color: "error.main" }}>
+              {firstName} {lastName} requested +{pendingReq} {pendingReq > 1 ? "seats" : "seat"}
             </Typography>
           </Box>
 
           <Box sx={{ display: "flex", gap: 0.5 }}>
             <IconButton
-              sx={{
-                color: "green",
-                bgcolor: "rgba(0,200,0,0.1)",
-                "&:hover": { bgcolor: "rgba(0,200,0,0.2)" },
-              }}
+              sx={{ color: "green", bgcolor: "rgba(0,200,0,0.1)", "&:hover": { bgcolor: "rgba(0,200,0,0.2)" } }}
               onClick={(e) => askConfirm("approve", e)}
               disabled={isBusy}
             >
-              {isApproveBusy ? (
-                <CircularProgress size={16} color="inherit" />
-              ) : (
-                <CheckCircleIcon sx={{ fontSize: 16 }} />
-              )}
+              {isApproveBusy ? <CircularProgress size={16} color="inherit" /> : <CheckCircleIcon sx={{ fontSize: 16 }} />}
             </IconButton>
 
+            {/* Banner reject → reject ONLY the pending seats (approved stays intact) */}
             <IconButton
-              sx={{
-                color: "red",
-                bgcolor: "rgba(255,0,0,0.1)",
-                "&:hover": { bgcolor: "rgba(255,0,0,0.2)" },
-              }}
-              onClick={(e) => askConfirm("reject", e)}
+              sx={{ color: "red", bgcolor: "rgba(255,0,0,0.1)", "&:hover": { bgcolor: "rgba(255,0,0,0.2)" } }}
+              onClick={(e) => askConfirm("rejectPending", e)}
               disabled={isBusy}
             >
-              {isRejectBusy ? (
-                <CircularProgress size={16} color="inherit" />
-              ) : (
-                <CancelIcon sx={{ fontSize: 16 }} />
-              )}
+              {isRejectBusy ? <CircularProgress size={16} color="inherit" /> : <CancelIcon sx={{ fontSize: 16 }} />}
             </IconButton>
           </Box>
         </Box>
@@ -936,59 +779,57 @@ function PassengerStub({
           if (reason === "backdropClick") return;
           closeConfirm();
         }}
-        TransitionProps={{
-          onExited: handleExited,
-        }}
+        TransitionProps={{ onExited: handleExited }}
         fullWidth
         maxWidth="xs"
-        PaperProps={{
-          sx: {
-            borderRadius: fullScreen ? 0 : 2.5,
-            m: { xs: 0, sm: 2 },
-          },
-        }}
+        PaperProps={{ sx: { borderRadius: fullScreen ? 0 : 2.5, m: { xs: 0, sm: 2 } } }}
       >
-        <DialogTitle
-          sx={{
-            fontFamily: TOKENS.bodyFont,
-            fontWeight: 700,
-            fontSize: { xs: "1rem", sm: "1.1rem" },
-          }}
-        >
+        <DialogTitle sx={{ fontFamily: TOKENS.bodyFont, fontWeight: 700, fontSize: { xs: "1rem", sm: "1.1rem" } }}>
           {confirmState.action === "approve"
             ? "Approve request ?"
-            : "Reject request ?"}
+            : isRejectPending
+              ? "Reject pending seats ?"
+              : isRejectAll
+                ? "Reject request ?"
+                : "Reject request ?"}
         </DialogTitle>
 
         <DialogContent>
-          <DialogContentText
-            sx={{
-              fontFamily: TOKENS.bodyFont,
-              fontSize: { xs: "0.85rem", sm: "1rem" },
-            }}
-          >
-            Are you sure you want to{" "}
-            {confirmState.action === "approve" ? "approve" : "reject"} the
-            request from{" "}
-            <strong>
-              {firstName} {lastName}
-            </strong>{" "}
-            ?
+          <DialogContentText sx={{ fontFamily: TOKENS.bodyFont, fontSize: { xs: "0.85rem", sm: "1rem" } }}>
+            {confirmState.action === "approve" && (
+              <>
+                Are you sure you want to approve the request from{" "}
+                <strong>{firstName} {lastName}</strong> ?
+              </>
+            )}
+            {isRejectPending && (
+              <>
+                Reject only the <strong>{pendingReq}</strong> pending seat(s) for{" "}
+                <strong>{firstName} {lastName}</strong>? The {approvedSeats} approved
+                seat(s) will remain intact.
+              </>
+            )}
+            {isRejectAll && (
+              <>
+                This will reject <strong>{approvedSeats} approved</strong> and{" "}
+                <strong>{pendingReq} pending</strong> seat(s) for{" "}
+                <strong>{firstName} {lastName}</strong>. The request will be fully rejected.
+              </>
+            )}
+            {isRejectOnlyPending && (
+              <>
+                Are you sure you want to reject the request from{" "}
+                <strong>{firstName} {lastName}</strong> ?
+              </>
+            )}
           </DialogContentText>
         </DialogContent>
 
-        <DialogActions
-          sx={{ px: { xs: 2, sm: 3 }, pb: { xs: 2, sm: 2.5 }, gap: 1 }}
-        >
+        <DialogActions sx={{ px: { xs: 2, sm: 3 }, pb: { xs: 2, sm: 2.5 }, gap: 1 }}>
           <Button
             onClick={closeConfirm}
             disabled={isBusy}
-            sx={{
-              fontFamily: TOKENS.bodyFont,
-              textTransform: "none",
-              fontWeight: 700,
-              color: TOKENS.inkSoft,
-            }}
+            sx={{ fontFamily: TOKENS.bodyFont, textTransform: "none", fontWeight: 700, color: TOKENS.inkSoft }}
           >
             Cancel
           </Button>
@@ -1002,22 +843,16 @@ function PassengerStub({
               textTransform: "none",
               fontWeight: 700,
               minWidth: 110,
-              bgcolor:
-                confirmState.action === "approve" ? TOKENS.green : TOKENS.red,
+              bgcolor: confirmState.action === "approve" ? TOKENS.green : TOKENS.red,
               "&:hover": {
-                bgcolor:
-                  confirmState.action === "approve" ? TOKENS.green : TOKENS.red,
+                bgcolor: confirmState.action === "approve" ? TOKENS.green : TOKENS.red,
                 opacity: 0.9,
               },
             }}
           >
             {confirmState.action === "approve"
-              ? isApproveBusy
-                ? "Approving..."
-                : "Approve"
-              : isRejectBusy
-                ? "Rejecting..."
-                : "Reject"}
+              ? isApproveBusy ? "Approving..." : "Approve"
+              : isRejectBusy ? "Rejecting..." : "Reject"}
           </Button>
         </DialogActions>
       </Dialog>
