@@ -345,6 +345,7 @@ function RideCard({
 
       {detailsOpen && (
         <RideDetailsModal
+          isCurrentRide = {isCurrentRide}
           ride={ride} user={user} showEdit={showEdit} showDelete={showDelete}
           onEdit={onEdit} onDelete={onDelete} onClose={() => setDetailsOpen(false)}
           requests={rideRequests} onApprove={onApprove} onReject={onReject}

@@ -216,6 +216,8 @@ function stationCode(name = "") {
     .toUpperCase();
 }
 
+
+
 const formFrom = (ride) => ride?.from || "—";
 const formTo = (ride) => ride?.destination || "—";
 
@@ -291,11 +293,13 @@ function Field({ icon: Icon, label, value, span }) {
 function PassengerStub({
   request,
   onApprove,
+  isCurrentRide,
   onReject,
   onRequestUpdated,
   approveLoading,
   rejectLoading,
   dense,
+  isRideFinished,
 }) {
   const [open, setOpen] = useState(false);
   const v = requestVisual(request);
@@ -697,8 +701,7 @@ function PassengerStub({
                 )}
               </>
             )}
-
-            {v.label === "Approved" && (
+            {v.label === "Approved" && !isCurrentRide && !isRideFinished &&(
               <IconButton
                 onClick={(event) => handleMenuOpen(event, request)}
                 sx={{
@@ -1026,6 +1029,7 @@ function PassengerStub({
 export default function RideDetailsModal({
   ride,
   requests = [],
+  isCurrentRide,
   setPendingMembers,
   showEdit,
   user,
@@ -1042,6 +1046,9 @@ export default function RideDetailsModal({
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down("sm"));
   const isMd = useMediaQuery(theme.breakpoints.up("md"));
+
+  const isRideFinished =
+  ride?.travelStatus === "Completed" || ride?.travelStatus === "Cancelled";
 
   // console.log(requests, 'requests')
   const pendingMember = requests.flatMap((item) => item?.pendingMembers || []);
@@ -1462,6 +1469,8 @@ export default function RideDetailsModal({
                       >
                         <PassengerStub
                           request={req}
+                          isCurrentRide={isCurrentRide}
+                          isRideFinished={isRideFinished}
                           onApprove={onApprove}
                           onReject={onReject}
                           onRequestUpdated={onRequestUpdated}
