@@ -97,10 +97,10 @@ const SmsNotifications = () => {
                 }
             );
 
-            console.log(
-                "Saathi Rides SMS opt-in updated:",
-                res.data
-            );
+            // console.log(
+            //     "Saathi Rides SMS opt-in updated:",
+            //     res.data
+            // );
 
             const updatedUser = {
                 ...user,

@@ -2,7 +2,7 @@ import React, { memo, useState, useEffect } from "react";
 import { useParams, useNavigate, Link as RouterLink } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
-import Api from "../../Api"; 
+import Api from "../../Api";
 
 import {
   Avatar,
@@ -371,7 +371,7 @@ export default function TripMatches() {
     },
   ].filter((g) => g.matches.length > 0);
 
-  
+
   const route = trip?.flights?.length > 0
     ? [trip.flights[0].fromCode, ...trip.flights.map(f => f.toCode)].join(" → ")
     : "";

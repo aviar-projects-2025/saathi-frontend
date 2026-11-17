@@ -41,7 +41,7 @@ export const RatingProvider = ({ children }) => {
       const existing = new Set(JSON.parse(localStorage.getItem(key) || "[]"));
       existing.add(rideId);
       localStorage.setItem(key, JSON.stringify([...existing]));
-    } catch {}
+    } catch { }
   }, [currentUserId]);
 
   // ───────────────────────────────────────────────────────────
@@ -54,7 +54,7 @@ export const RatingProvider = ({ children }) => {
       const existing = JSON.parse(localStorage.getItem(key) || "{}");
       existing[rideId] = Date.now();
       localStorage.setItem(key, JSON.stringify(existing));
-    } catch {}
+    } catch { }
   }, [currentUserId]);
 
   // ───────────────────────────────────────────────────────────
@@ -132,13 +132,13 @@ export const RatingProvider = ({ children }) => {
         // ★ GUARD: skip if candidate is missing or is myself
         const candidateId = String(candidate?._id || candidate?.id || "");
         if (!candidate || !candidateId || candidateId === selfId) {
-          console.log("[RATING] no valid counterparty — dismissing ride", {
-            rideId: ride._id,
-            ownerId,
-            driverId,
-            candidateId,
-            selfId,
-          });
+          // console.log("[RATING] no valid counterparty — dismissing ride", {
+          //   rideId: ride._id,
+          //   ownerId,
+          //   driverId,
+          //   candidateId,
+          //   selfId,
+          // });
           // Dismiss so we don't keep retrying the same ride
           markDismissed(ride._id);
           continue;

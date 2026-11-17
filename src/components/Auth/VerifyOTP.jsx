@@ -72,7 +72,7 @@ const VerifyOTP = () => {
                 }
             );
 
-            console.log("OTP verification:", response.data);
+            // console.log("OTP verification:", response.data);
 
             toast.success(
                 response.data.message || "OTP verified successfully!",

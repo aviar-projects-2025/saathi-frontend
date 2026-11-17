@@ -48,7 +48,7 @@ export default function PeopleNearYou() {
     try {
       setLoading(true);
 
-      console.log(currentUser, 'currentUser')
+      // console.log(currentUser, 'currentUser')
       const response = await axios.get(Api + `/users/nearby/user/${currentUser._id}`);
 
       setPeople(response.data?.data || []);
@@ -547,7 +547,7 @@ export default function PeopleNearYou() {
                   },
                 }}
               >
-                {console.log(person,'person')}
+                {/* {console.log(person, 'person')} */}
                 {/* PROFILE IMAGE */}
                 <ProtectedAvatar
                   src={person.profileImageUrl || ""}

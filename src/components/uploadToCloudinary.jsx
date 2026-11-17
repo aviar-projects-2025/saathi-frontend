@@ -9,7 +9,7 @@ const uploadToCloudinary = async (file) => {
       `${Api}/users/upload-signature`
     );
 
-    console.log(data,'data from db')
+    console.log(data, 'data from db')
 
     const formData = new FormData();
 

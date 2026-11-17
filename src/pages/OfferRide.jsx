@@ -81,6 +81,8 @@ const OFFER_CATEGORIES = [
 const REQUEST_CATEGORIES = [
   "Airport pickup / drop",
   "Temple / event",
+  "Grocery / shopping",
+  "Regular commute",
   "Other",
 ];
 
@@ -422,11 +424,9 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
   const [submitted, setSubmitted] = useState(false);
   const [serverError, setServerError] = useState("");
 
-
-  /* ★ NEW: State to hold user's existing rides for conflict checking */
+  /* State to hold user's existing rides for conflict checking */
   const [existingRides, setExistingRides] = useState([]);
   const [timeConflictMsg, setTimeConflictMsg] = useState("");
-
 
   /* Fetch existing rides on mount */
   useEffect(() => {
@@ -452,7 +452,6 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
   useEffect(() => {
     if (!ride) return;
 
-    // If the ride is a request, switch mode to request and populate requestForm
     if (ride.kind === "request") {
       setMode("request");
       const start = ride.startTime ? new Date(ride.startTime) : null;
@@ -471,7 +470,6 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
       return;
     }
 
-    // Otherwise, handle it as an offer
     if (ride.kind === "offer" || !ride.kind) {
       setMode("offer");
       const start = ride.startTime ? new Date(ride.startTime) : null;
@@ -575,7 +573,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
   const costEntered = Number(offerForm.costPerSeat || 0);
   const costExceedsCap = costEntered > costCap;
 
-  /* ★ NEW: Conflict Checking Logic */
+  /* ★ FIXED: conflict check skips the ride being edited correctly */
   const checkTimeConflict = (startTimeStr, durationMin) => {
     if (!startTimeStr) return null;
 
@@ -584,8 +582,17 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
     const newEnd = newStart + newDurationMs;
     const BUFFER_MS = 60 * 60 * 1000;
 
+    // Which ride are we editing? Compare by _id, coerced to string.
+    const editingId = isEditMode ? String(ride?._id || ride?.id || "") : "";
+
     for (const existing of existingRides) {
-      if (isEditMode && (existing._id === ride?._id || existing.id === ride?.id)) continue;
+      // Skip the ride being edited — but ONLY by matching _id.
+      // The previous code used `existing.id === ride?.id` which was
+      // `undefined === undefined` → true for every ride in edit mode,
+      // so every ride was skipped and no conflict was ever detected.
+      const existingId = String(existing._id || existing.id || "");
+      if (isEditMode && editingId && existingId === editingId) continue;
+
       if (["Cancelled", "Completed"].includes(existing.travelStatus)) continue;
 
       const exStart = new Date(existing.startTime).getTime();
@@ -597,9 +604,8 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
       const isTooCloseBefore = exStart >= newEnd && exStart < (newEnd + BUFFER_MS);
 
       if (isOverlapping || isTooCloseAfter || isTooCloseBefore) {
-        const fmt = (ts) => new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const fmt = (ts) => new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
-        // ★ NEW: Include the end time of the existing ride in the message
         return `Time conflict: You already have a ride from ${existing.from} to ${existing.destination} at ${fmt(exStart)} that ends at ${fmt(exEnd)}. Please leave at least 1 hour gap after it.`;
       }
     }
@@ -623,17 +629,10 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
         const d = new Date(`${offerForm.date}T${offerForm.time}:00`);
         if (d.getTime() <= Date.now()) e.time = "Departure can't be in the past";
 
-        // ★ NEW: Check for conflicts
-        if (offerForm.date && offerForm.time) {
-          const d = new Date(`${offerForm.date}T${offerForm.time}:00`);
-          if (d.getTime() <= Date.now()) e.time = "Departure can't be in the past";
-
-          // ★ NEW: Check conflicts
-          if (!e.time) {
-            const conflictMsg = checkTimeConflict(d.toISOString(), offerForm.duration);
-            setTimeConflictMsg(conflictMsg || ""); // Set the new state
-            if (conflictMsg) e._hasConflict = true; // Flag to stop proceeding
-          }
+        if (!e.time) {
+          const conflictMsg = checkTimeConflict(d.toISOString(), offerForm.duration);
+          setTimeConflictMsg(conflictMsg || "");
+          if (conflictMsg) e._hasConflict = true;
         }
       }
     }
@@ -672,7 +671,6 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
       const d = new Date(`${requestForm.date}T${requestForm.neededBy}`);
       if (d.getTime() <= Date.now()) e.neededBy = "Needed-by time can't be in the past";
 
-      // ★ NEW: Check conflicts
       if (!e.neededBy) {
         const conflictMsg = checkTimeConflict(d.toISOString(), 60);
         setTimeConflictMsg(conflictMsg || "");
@@ -748,7 +746,6 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
   };
 
   /* ─────── SUBMIT ─────── */
-
   const createOffer = async () => {
     try {
       setSaving(true);
@@ -761,43 +758,28 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
       }
 
       const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       };
 
       if (requestRide) {
         const response = await axios.post(
           `${Api}/help-proposals`,
-          {
-            requestRideId: requestRide._id,
-            offerDetails: payload,
-          },
+          { requestRideId: requestRide._id, offerDetails: payload },
           config
         );
-
-        toast.success(
-          response.data?.message ||
-          "Your offer has been sent to the passenger"
-        );
-
+        toast.success(response.data?.message || "Your offer has been sent to the passenger");
         onClose();
         return;
       }
 
       await axios.post(`${Api}/rides/`, payload, config);
-
       toast.success("Ride posted successfully");
       if (onClose) onClose();
       navigate("/myride", { state: { tab: 2, refresh: true, refreshKey: Date.now() } });
     } catch (error) {
       console.error("Unable to submit offer:", error);
-      toast.error(
-        error.response?.data?.message ||
-        "Unable to submit your offer"
-      );
-    }
-    finally {
+      toast.error(error.response?.data?.message || "Unable to submit your offer");
+    } finally {
       setSaving(false);
     }
   };
@@ -875,6 +857,18 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
     setTimeConflictMsg("");
   };
 
+  const formatTime12Hour = (time) => {
+    if (!time) return "";
+    const [hours, minutes] = time.split(":");
+    const date = new Date();
+    date.setHours(Number(hours), Number(minutes), 0, 0);
+    return date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
+
   /* ─────── SUCCESS SCREEN ─────── */
   if (submitted) {
     return (
@@ -910,16 +904,10 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
               sx={{ fontSize: { xs: 20, sm: 24, md: 26 }, fontWeight: 800, color: NAVY, mb: 1 }}
             >
               {mode === "offer"
-                ? isEditMode
-                  ? "Changes saved!"
-                  : "Ride posted!"
-                : isEditMode
-                  ? "Changes saved!"
-                  : "Request posted!"}
+                ? isEditMode ? "Changes saved!" : "Ride posted!"
+                : isEditMode ? "Changes saved!" : "Request posted!"}
             </Typography>
-            <Typography
-              sx={{ color: MUTED, fontSize: { xs: 14, sm: 15 }, lineHeight: 1.55 }}
-            >
+            <Typography sx={{ color: MUTED, fontSize: { xs: 14, sm: 15 }, lineHeight: 1.55 }}>
               {mode === "offer"
                 ? "We'll text you when someone requests a seat."
                 : "Drivers going your way will see your request and can offer to drive."}
@@ -940,17 +928,9 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
           width: "100%",
           maxWidth: { xs: "100%", sm: 600, md: 720, lg: 780, xl: 840 },
           mx: "auto",
-          px: {
-            xs: "max(16px, env(safe-area-inset-left))",
-            sm: 3,
-            md: 4,
-          },
+          px: { xs: "max(16px, env(safe-area-inset-left))", sm: 3, md: 4 },
           pt: { xs: 1.5, sm: 2.5, md: 3.5 },
-          pb: {
-            xs: "calc(40px + env(safe-area-inset-bottom))",
-            sm: 8,
-            md: 10,
-          },
+          pb: { xs: "calc(40px + env(safe-area-inset-bottom))", sm: 8, md: 10 },
           bgcolor: BG,
           minHeight: "100vh",
           "@supports (height: 100dvh)": { minHeight: "100dvh" },
@@ -959,58 +939,58 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
         }}
       >
         {/* ─── Header ─── */}
-        <Stack
-          direction="row"
-          alignItems="center"
-          justifyContent="space-between"
-          sx={{ mb: 1.5, minHeight: 40 }}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            width: "100%",
+            minHeight: 44,
+            mb: 1.5,
+            position: "relative",
+          }}
         >
-          {/* Back Button */}
-          {(mode === "offer" || isEditMode) && (
-            <IconButton
-              onClick={() => {
-                if (mode === "offer" && step > 0) {
-                  setStep((prev) => prev - 1);
-                } else {
-                  if (onClose) onClose();
-                  else navigate(-1);
-                }
-              }}
-              sx={{
-                bgcolor: "#fff",
-                border: `1px solid ${BORDER}`,
-                color: INK,
-                "&:hover": { bgcolor: "#F4F0EA" },
-                width: 36,
-                height: 36,
-              }}
-            >
-              <ArrowLeft size={18} />
-            </IconButton>
-          )}
+          <Box sx={{ width: 40, display: "flex", alignItems: "center" }}>
+            {(mode === "offer" || isEditMode) && (
+              <IconButton
+                onClick={() => {
+                  if (mode === "offer" && step > 0) setStep((prev) => prev - 1);
+                  else onClose ? onClose() : navigate(-1);
+                }}
+                sx={{
+                  width: 36,
+                  height: 36,
+                  bgcolor: "#FFFFFF",
+                  border: `1px solid ${BORDER}`,
+                  color: INK,
+                  borderRadius: "50%",
+                  "&:hover": { bgcolor: "#F4F0EA" },
+                }}
+              >
+                <ArrowLeft size={18} />
+              </IconButton>
+            )}
+          </Box>
 
-          {/* Step Counter */}
-          {mode === "offer" ? (
+          {mode === "offer" && (
             <Typography
               sx={{
-                fontSize: { xs: 12.5, sm: 13 },
+                position: "absolute",
+                left: "50%",
+                transform: "translateX(-50%)",
+                fontSize: { xs: 12.5, sm: 13, md: 14 },
                 color: MUTED,
                 fontWeight: 600,
-                flex: 1,
-                textAlign: "center",
-                pr: mode === "offer" ? 4.5 : 0,
+                whiteSpace: "nowrap",
               }}
             >
               Step {step + 1} of {OFFER_STEPS.length}
             </Typography>
-          ) : (
-            <Box sx={{ flex: 1 }} />
           )}
 
-          <Box sx={{ width: { xs: 36, sm: 0 }, display: { xs: "block", sm: "none" } }} />
-        </Stack>
+          <Box sx={{ width: 40 }} />
+        </Box>
 
-        {/* ─── Progress ─── */}
         {mode === "offer" && <StepProgress steps={OFFER_STEPS} step={step} />}
 
         {/* ─── Title ─── */}
@@ -1033,13 +1013,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                 : "Review your ride"
             : isEditMode ? "Edit your request" : "Post a ride"}
         </Typography>
-        <Typography
-          sx={{
-            color: MUTED,
-            fontSize: { xs: 13.5, sm: 14.5, md: 15 },
-            mb: { xs: 2.5, sm: 3 },
-          }}
-        >
+        <Typography sx={{ color: MUTED, fontSize: { xs: 13.5, sm: 14.5, md: 15 }, mb: { xs: 2.5, sm: 3 } }}>
           {mode === "offer"
             ? step === 0
               ? requestRide ? "Review the requested trip details and add your ride options." : "Share your journey with the community."
@@ -1053,48 +1027,30 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
           <Stack direction="row" spacing={1} sx={{ mb: 3 }}>
             <Button
               fullWidth
-              onClick={() => {
-                setMode("offer");
-                formReset();
-              }}
+              onClick={() => { setMode("offer"); formReset(); }}
               sx={{
-                textTransform: "none",
-                fontWeight: 700,
-                fontSize: { xs: 13.5, sm: 14 },
-                py: 1.25,
-                borderRadius: 2,
+                textTransform: "none", fontWeight: 700, fontSize: { xs: 13.5, sm: 14 },
+                py: 1.25, borderRadius: 2,
                 bgcolor: mode === "offer" ? RUST : "#fff",
                 color: mode === "offer" ? "#fff" : INK,
                 border: `1px solid ${mode === "offer" ? RUST : BORDER}`,
                 boxShadow: "none",
-                "&:hover": {
-                  bgcolor: mode === "offer" ? RUST_DARK : "#F4F0EA",
-                  boxShadow: "none",
-                },
+                "&:hover": { bgcolor: mode === "offer" ? RUST_DARK : "#F4F0EA", boxShadow: "none" },
               }}
             >
               I'm offering a ride
             </Button>
             <Button
               fullWidth
-              onClick={() => {
-                setMode("request");
-                formReset();
-              }}
+              onClick={() => { setMode("request"); formReset(); }}
               sx={{
-                textTransform: "none",
-                fontWeight: 700,
-                fontSize: { xs: 13.5, sm: 14 },
-                py: 1.25,
-                borderRadius: 2,
+                textTransform: "none", fontWeight: 700, fontSize: { xs: 13.5, sm: 14 },
+                py: 1.25, borderRadius: 2,
                 bgcolor: mode === "request" ? RUST : "#fff",
                 color: mode === "request" ? "#fff" : INK,
                 border: `1px solid ${mode === "request" ? RUST : BORDER}`,
                 boxShadow: "none",
-                "&:hover": {
-                  bgcolor: mode === "request" ? RUST_DARK : "#F4F0EA",
-                  boxShadow: "none",
-                },
+                "&:hover": { bgcolor: mode === "request" ? RUST_DARK : "#F4F0EA", boxShadow: "none" },
               }}
             >
               I need a ride
@@ -1114,23 +1070,11 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                 destinationLocation={requestForm.destinationLocation}
                 onFromChange={(loc) => {
                   setRequestForm((p) => ({ ...p, from: loc.address, fromLocation: loc }));
-                  setRequestErrors((p) => {
-                    const n = { ...p };
-                    delete n.from;
-                    return n;
-                  });
+                  setRequestErrors((p) => { const n = { ...p }; delete n.from; return n; });
                 }}
                 onDestinationChange={(loc) => {
-                  setRequestForm((p) => ({
-                    ...p,
-                    destination: loc.address,
-                    destinationLocation: loc,
-                  }));
-                  setRequestErrors((p) => {
-                    const n = { ...p };
-                    delete n.destination;
-                    return n;
-                  });
+                  setRequestForm((p) => ({ ...p, destination: loc.address, destinationLocation: loc }));
+                  setRequestErrors((p) => { const n = { ...p }; delete n.destination; return n; });
                 }}
                 onRouteCalculated={(route) => {
                   setRequestForm((p) => ({ ...p, distanceKm: route?.distanceKm ?? null }));
@@ -1147,9 +1091,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
               <Box sx={{ minWidth: 0 }}>
                 <Typography sx={labelSx}>Date</Typography>
                 <TextField
-                  fullWidth
-                  size={inputSize}
-                  type="date"
+                  fullWidth size={inputSize} type="date"
                   value={requestForm.date}
                   onChange={(e) => updateRequest("date", e.target.value)}
                   error={!!requestErrors.date}
@@ -1161,9 +1103,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
               <Box sx={{ minWidth: 0 }}>
                 <Typography sx={labelSx}>Needed by</Typography>
                 <TextField
-                  fullWidth
-                  size={inputSize}
-                  type="time"
+                  fullWidth size={inputSize} type="time"
                   value={requestForm.neededBy}
                   onChange={(e) => updateRequest("neededBy", e.target.value)}
                   error={!!requestErrors.neededBy}
@@ -1181,9 +1121,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                     sx={selectSx}
                   >
                     {FLEXIBILITY_OPTIONS.map((f) => (
-                      <MenuItem key={f} value={f} sx={{ fontSize: 14 }}>
-                        {f}
-                      </MenuItem>
+                      <MenuItem key={f} value={f} sx={{ fontSize: 14 }}>{f}</MenuItem>
                     ))}
                   </Select>
                 </FormControl>
@@ -1194,9 +1132,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
               <Box sx={{ minWidth: 0 }}>
                 <Typography sx={labelSx}>Passengers</Typography>
                 <TextField
-                  fullWidth
-                  size={inputSize}
-                  type="number"
+                  fullWidth size={inputSize} type="number"
                   value={requestForm.passengers}
                   onChange={(e) => {
                     const v = e.target.value;
@@ -1211,9 +1147,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
               <Box sx={{ minWidth: 0 }}>
                 <Typography sx={labelSx}>Bags</Typography>
                 <TextField
-                  fullWidth
-                  size={inputSize}
-                  type="number"
+                  fullWidth size={inputSize} type="number"
                   value={requestForm.bags}
                   onChange={(e) => {
                     const v = e.target.value;
@@ -1229,13 +1163,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
 
             <Box>
               <Typography sx={labelSx}>Category</Typography>
-              <Box
-                sx={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: 1,
-                }}
-              >
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
                 {REQUEST_CATEGORIES.map((c) => (
                   <ChipToggle
                     key={c}
@@ -1247,8 +1175,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
               </Box>
               {requestForm.category === "Other" && (
                 <TextField
-                  fullWidth
-                  size={inputSize}
+                  fullWidth size={inputSize}
                   placeholder="Describe your category"
                   value={requestForm.customCategory}
                   onChange={(e) => updateRequest("customCategory", e.target.value)}
@@ -1260,10 +1187,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
               )}
             </Box>
 
-            <Paper
-              variant="outlined"
-              sx={{ borderRadius: 2, borderColor: BORDER, bgcolor: CARD, overflow: "hidden" }}
-            >
+            <Paper variant="outlined" sx={{ borderRadius: 2, borderColor: BORDER, bgcolor: CARD, overflow: "hidden" }}>
               <Box sx={{ px: { xs: 1.75, sm: 2.5 } }}>
                 <ToggleRow
                   icon={ShieldCheck}
@@ -1285,11 +1209,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                 Notes <span style={{ fontWeight: 400, textTransform: "none", color: MUTED }}>(optional)</span>
               </Typography>
               <TextField
-                fullWidth
-                multiline
-                minRows={3}
-                maxRows={8}
-                size={inputSize}
+                fullWidth multiline minRows={3} maxRows={8} size={inputSize}
                 placeholder="Anything drivers should know?"
                 value={requestForm.notes}
                 onChange={(e) => updateRequest("notes", e.target.value)}
@@ -1308,7 +1228,6 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
               </Alert>
             )}
 
-            {/* ★ NEW: Show conflict error above the button */}
             {timeConflictMsg && (
               <Alert severity="error" sx={{ borderRadius: 2, fontWeight: 500 }}>
                 {timeConflictMsg}
@@ -1317,11 +1236,8 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
 
             <Button
               onClick={() => {
-                if (isEditMode) {
-                  updateRequestRide();
-                } else {
-                  createRequest();
-                }
+                if (isEditMode) updateRequestRide();
+                else createRequest();
               }}
               disabled={saving}
               startIcon={saving ? <CircularProgress size={18} sx={{ color: "#fff" }} /> : null}
@@ -1343,37 +1259,22 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
               Trip details
             </Typography>
 
-            <Stack
-              direction="row"
-              spacing={1.25}
-              alignItems="center"
-              sx={{ p: { xs: 1.25, sm: 1.5 }, borderRadius: 2, bgcolor: "#EAF3FB", minWidth: 0 }}
-            >
+            <Stack direction="row" spacing={1.25} alignItems="center"
+              sx={{ p: { xs: 1.25, sm: 1.5 }, borderRadius: 2, bgcolor: "#EAF3FB", minWidth: 0 }}>
               <Box
                 sx={{
-                  bgcolor: "#fff",
-                  px: 1.1,
-                  py: 0.45,
-                  borderRadius: 1.5,
-                  fontSize: 12,
-                  fontWeight: 700,
-                  color: "#1A3E8A",
-                  flexShrink: 0,
-                  alignItems: "center",
-                  display: "flex",
-                  justifyContent: "center",
-                  minWidth: 0,
+                  bgcolor: "#fff", px: 1.1, py: 0.45, borderRadius: 1.5,
+                  fontSize: 12, fontWeight: 700, color: "#1A3E8A",
+                  flexShrink: 0, alignItems: "center", display: "flex",
+                  justifyContent: "center", minWidth: 0,
                 }}
               >
                 Car
               </Box>
               <Typography
                 sx={{
-                  fontSize: { xs: 12, sm: 12.5 },
-                  color: "#1A3E8A",
-                  lineHeight: 1.5,
-                  minWidth: 0,
-                  overflowWrap: "anywhere",
+                  fontSize: { xs: 12, sm: 12.5 }, color: "#1A3E8A",
+                  lineHeight: 1.5, minWidth: 0, overflowWrap: "anywhere",
                 }}
               >
                 Rides are car-only and within the US. Flying with a parent? Use Travel Buddy.
@@ -1388,23 +1289,11 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                 disabled={Boolean(requestRide)}
                 onFromChange={(loc) => {
                   setOfferForm((p) => ({ ...p, from: loc.address, fromLocation: loc }));
-                  setErrors((p) => {
-                    const n = { ...p };
-                    delete n.from;
-                    return n;
-                  });
+                  setErrors((p) => { const n = { ...p }; delete n.from; return n; });
                 }}
                 onDestinationChange={(loc) => {
-                  setOfferForm((p) => ({
-                    ...p,
-                    destination: loc.address,
-                    destinationLocation: loc,
-                  }));
-                  setErrors((p) => {
-                    const n = { ...p };
-                    delete n.destination;
-                    return n;
-                  });
+                  setOfferForm((p) => ({ ...p, destination: loc.address, destinationLocation: loc }));
+                  setErrors((p) => { const n = { ...p }; delete n.destination; return n; });
                 }}
                 onRouteCalculated={(route) => {
                   setOfferForm((p) => ({
@@ -1425,9 +1314,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
               <Box sx={{ minWidth: 0 }}>
                 <Typography sx={labelSx}>Date</Typography>
                 <TextField
-                  fullWidth
-                  size={inputSize}
-                  type="date"
+                  fullWidth size={inputSize} type="date"
                   value={offerForm.date}
                   onChange={(e) => updateOffer("date", e.target.value)}
                   error={showErrors && !!errors.date}
@@ -1440,9 +1327,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
               <Box sx={{ minWidth: 0 }}>
                 <Typography sx={labelSx}>Departure time</Typography>
                 <TextField
-                  fullWidth
-                  size={inputSize}
-                  type="time"
+                  fullWidth size={inputSize} type="time"
                   value={offerForm.time}
                   onChange={(e) => updateOffer("time", e.target.value)}
                   error={showErrors && !!errors.time}
@@ -1454,21 +1339,14 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
               </Box>
               <Box sx={{ minWidth: 0 }}>
                 <Typography sx={labelSx}>Time zone</Typography>
-                <FormControl
-                  fullWidth
-                  size={inputSize}
-                  error={showErrors && !!errors.timeZone}
-                  disabled={Boolean(requestRide)}
-                >
+                <FormControl fullWidth size={inputSize} error={showErrors && !!errors.timeZone} disabled={Boolean(requestRide)}>
                   <Select
                     value={offerForm.timeZone}
                     onChange={(e) => updateOffer("timeZone", e.target.value)}
                     sx={selectSx}
                   >
                     {TIME_ZONES.map((tz) => (
-                      <MenuItem key={tz} value={tz} sx={{ fontSize: 14 }}>
-                        {tz}
-                      </MenuItem>
+                      <MenuItem key={tz} value={tz} sx={{ fontSize: 14 }}>{tz}</MenuItem>
                     ))}
                   </Select>
                 </FormControl>
@@ -1477,13 +1355,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
 
             <Box>
               <Typography sx={labelSx}>Category</Typography>
-              <Box
-                sx={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: 1,
-                }}
-              >
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
                 {OFFER_CATEGORIES.map((c) => (
                   <ChipToggle
                     key={c}
@@ -1495,8 +1367,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
               </Box>
               {offerForm.category === "Other" && (
                 <TextField
-                  fullWidth
-                  size={inputSize}
+                  fullWidth size={inputSize}
                   placeholder="Describe your category"
                   value={offerForm.customCategory}
                   onChange={(e) => updateOffer("customCategory", e.target.value)}
@@ -1521,11 +1392,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
             <Box>
               <Typography sx={labelSx}>Description</Typography>
               <TextField
-                fullWidth
-                multiline
-                minRows={3}
-                maxRows={8}
-                size={inputSize}
+                fullWidth multiline minRows={3} maxRows={8} size={inputSize}
                 placeholder="Add details — pickup spot, what you're offering, etc."
                 value={offerForm.description}
                 onChange={(e) => updateOffer("description", e.target.value)}
@@ -1539,7 +1406,6 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
               </Alert>
             )}
 
-            {/* ★ NEW: Show conflict error above the button */}
             {timeConflictMsg && (
               <Alert severity="error" sx={{ borderRadius: 2, fontWeight: 500 }}>
                 {timeConflictMsg}
@@ -1567,11 +1433,8 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
           <Stack spacing={{ xs: 2.5, sm: 3, md: 3.5 }}>
             <Box>
               <Stack
-                direction="row"
-                spacing={1}
-                alignItems="baseline"
-                flexWrap="wrap"
-                useFlexGap
+                direction="row" spacing={1} alignItems="baseline"
+                flexWrap="wrap" useFlexGap
                 sx={{ mb: 0.9, columnGap: 1, rowGap: 0.25 }}
               >
                 <Typography sx={{ ...labelSx, mb: 0 }}>Cost share per passenger</Typography>
@@ -1580,48 +1443,30 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                 </Typography>
               </Stack>
               <TextField
-                size={inputSize}
-                type="number"
-                placeholder="$ 12"
+                size={inputSize} type="number" placeholder="$ 12"
                 value={offerForm.costPerSeat}
                 onChange={(e) => {
                   const v = e.target.value;
                   if (/^\d*\.?\d*$/.test(v)) updateOffer("costPerSeat", v);
                 }}
                 error={costExceedsCap}
-                InputProps={{
-                  startAdornment: <InputAdornment position="start">$</InputAdornment>,
-                }}
+                InputProps={{ startAdornment: <InputAdornment position="start">$</InputAdornment> }}
                 sx={{
-                  ...tfSx,
-                  width: { xs: "100%", sm: 240 },
-                  maxWidth: "100%",
+                  ...tfSx, width: { xs: "100%", sm: 240 }, maxWidth: "100%",
                   "& input": { fontSize: 16, fontWeight: 700 },
                 }}
                 inputProps={{ min: 0, step: "0.5", inputMode: "decimal" }}
               />
-              <Typography
-                sx={{
-                  fontSize: { xs: 12, sm: 12.5 },
-                  color: MUTED,
-                  mt: 0.9,
-                  lineHeight: 1.5,
-                  overflowWrap: "anywhere",
-                }}
-              >
+              <Typography sx={{ fontSize: { xs: 12, sm: 12.5 }, color: MUTED, mt: 0.9, lineHeight: 1.5, overflowWrap: "anywhere" }}>
                 Max for this trip: <strong>${costCap}</strong>{" "}
                 {distanceMiles > 0 && (
                   <>
-                    ({distanceMiles} mi × ${COST_RATE_PER_MILE.toFixed(2)} + ${COST_BUFFER}
-                    , floor ${COST_FLOOR})
+                    ({distanceMiles} mi × ${COST_RATE_PER_MILE.toFixed(2)} + ${COST_BUFFER}, floor ${COST_FLOOR})
                   </>
                 )}
               </Typography>
               {costExceedsCap && (
-                <Alert
-                  severity="error"
-                  sx={{ mt: 1.25, borderRadius: 2, fontSize: { xs: 12, sm: 12.5 } }}
-                >
+                <Alert severity="error" sx={{ mt: 1.25, borderRadius: 2, fontSize: { xs: 12, sm: 12.5 } }}>
                   ${costEntered} is above the ${costCap} cap for this distance. Saathi is for
                   sharing costs, not for profit.
                 </Alert>
@@ -1630,13 +1475,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
 
             <Box>
               <Typography sx={labelSx}>Luggage space</Typography>
-              <Box
-                sx={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: 1,
-                }}
-              >
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
                 {LUGGAGE_OPTIONS.map((l) => (
                   <ChipToggle
                     key={l}
@@ -1650,10 +1489,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
 
             <Box>
               <Typography sx={labelSx}>Preferences</Typography>
-              <Paper
-                variant="outlined"
-                sx={{ borderRadius: 2, borderColor: BORDER, bgcolor: CARD, overflow: "hidden" }}
-              >
+              <Paper variant="outlined" sx={{ borderRadius: 2, borderColor: BORDER, bgcolor: CARD, overflow: "hidden" }}>
                 <Box sx={{ px: { xs: 1.75, sm: 2.5 } }}>
                   <ToggleRow
                     icon={Baby}
@@ -1680,25 +1516,14 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
 
             <Box>
               <Stack
-                direction="row"
-                spacing={1}
-                alignItems="baseline"
-                flexWrap="wrap"
-                useFlexGap
+                direction="row" spacing={1} alignItems="baseline"
+                flexWrap="wrap" useFlexGap
                 sx={{ mb: 0.9, columnGap: 1, rowGap: 0.25 }}
               >
                 <Typography sx={{ ...labelSx, mb: 0 }}>Help I can offer</Typography>
-                <Typography sx={{ fontSize: { xs: 12, sm: 12.5 }, color: MUTED }}>
-                  (optional)
-                </Typography>
+                <Typography sx={{ fontSize: { xs: 12, sm: 12.5 }, color: MUTED }}>(optional)</Typography>
               </Stack>
-              <Box
-                sx={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: 1,
-                }}
-              >
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
                 {HELP_OPTIONS.map((h) => (
                   <ChipToggle
                     key={h}
@@ -1712,11 +1537,8 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
 
             <Box>
               <Stack
-                direction="row"
-                spacing={1}
-                alignItems="baseline"
-                flexWrap="wrap"
-                useFlexGap
+                direction="row" spacing={1} alignItems="baseline"
+                flexWrap="wrap" useFlexGap
                 sx={{ mb: 0.9, columnGap: 1, rowGap: 0.25 }}
               >
                 <Typography sx={{ ...labelSx, mb: 0 }}>Notes</Typography>
@@ -1725,11 +1547,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                 </Typography>
               </Stack>
               <TextField
-                fullWidth
-                multiline
-                minRows={3}
-                maxRows={8}
-                size={inputSize}
+                fullWidth multiline minRows={3} maxRows={8} size={inputSize}
                 placeholder="Leaving from the Metro station lot."
                 value={offerForm.notes}
                 onChange={(e) => updateOffer("notes", e.target.value)}
@@ -1762,188 +1580,68 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
               </Alert>
             )}
 
-            <Paper
-              variant="outlined"
-              sx={{
-                p: { xs: 1.75, sm: 2.5 },
-                borderRadius: 2.5,
-                borderColor: BORDER,
-                bgcolor: CARD,
-              }}
-            >
-              <Stack
-                direction="row"
-                spacing={{ xs: 1.5, sm: 2 }}
-                alignItems="flex-start"
-                sx={{ minWidth: 0 }}
-              >
+            <Paper variant="outlined" sx={{ p: { xs: 1.75, sm: 2.5 }, borderRadius: 2.5, borderColor: BORDER, bgcolor: CARD }}>
+              <Stack direction="row" spacing={{ xs: 1.5, sm: 2 }} alignItems="flex-start" sx={{ minWidth: 0 }}>
                 <Avatar
                   src={currentUser?.currentUser?.profileImageUrl}
                   sx={{
-                    width: { xs: 40, sm: 48 },
-                    height: { xs: 40, sm: 48 },
-                    borderRadius: "50%",
-                    bgcolor: "#FEF7E0",
-                    color: "#B06000",
-                    display: "grid",
-                    placeItems: "center",
-                    fontWeight: 800,
-                    fontSize: { xs: 13, sm: 15 },
-                    flexShrink: 0,
+                    width: { xs: 40, sm: 48 }, height: { xs: 40, sm: 48 },
+                    borderRadius: "50%", bgcolor: "#FEF7E0", color: "#B06000",
+                    display: "grid", placeItems: "center",
+                    fontWeight: 800, fontSize: { xs: 13, sm: 15 }, flexShrink: 0,
                   }}
                 >
-                  {(user?.firstName?.[0] || "U") +
-                    (user?.lastName?.[0] || "").toUpperCase()}
+                  {(user?.firstName?.[0] || "U") + (user?.lastName?.[0] || "").toUpperCase()}
                 </Avatar>
 
                 <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography
-                    sx={{
-                      fontSize: { xs: 14.5, sm: 16 },
-                      fontWeight: 700,
-                      lineHeight: 1.35,
-                      color: INK,
-                      overflowWrap: "anywhere",
-                      wordBreak: "break-word",
-                    }}
-                  >
+                  <Typography sx={{ fontSize: { xs: 14.5, sm: 16 }, fontWeight: 700, lineHeight: 1.35, color: INK, overflowWrap: "anywhere", wordBreak: "break-word" }}>
                     {offerForm.from || "—"} → {offerForm.destination || "—"}
                   </Typography>
-                  <Typography
-                    sx={{
-                      fontSize: { xs: 12, sm: 12.5 },
-                      color: MUTED,
-                      mt: 0.4,
-                      overflowWrap: "anywhere",
-                    }}
-                  >
-                    {offerForm.date} · {offerForm.time} {offerForm.timeZone} ·{" "}
-                    {offerForm.availableSeats} seat
-                    {offerForm.availableSeats === 1 ? "" : "s"}
+                  <Typography sx={{ fontSize: { xs: 12, sm: 12.5 }, color: MUTED, mt: 0.4, overflowWrap: "anywhere" }}>
+                    {offerForm.date} · {formatTime12Hour(offerForm.time)} {offerForm.timeZone} · {offerForm.availableSeats} seat{offerForm.availableSeats === 1 ? "" : "s"}
                   </Typography>
 
-                  <Box
-                    sx={{
-                      display: "flex",
-                      flexWrap: "wrap",
-                      gap: 0.75,
-                      mt: 1.25,
-                    }}
-                  >
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, mt: 1.25 }}>
                     {offerForm.category && (
-                      <Chip
-                        size="small"
-                        label={
-                          offerForm.category === "Other"
-                            ? offerForm.customCategory
-                            : offerForm.category
-                        }
-                        sx={{
-                          borderRadius: 999,
-                          fontSize: 11.5,
-                          maxWidth: "100%",
-                          bgcolor: "#EAF3FB",
-                          color: "#1A3E8A",
-                        }}
-                      />
+                      <Chip size="small" label={offerForm.category === "Other" ? offerForm.customCategory : offerForm.category}
+                        sx={{ borderRadius: 999, fontSize: 11.5, maxWidth: "100%", bgcolor: "#EAF3FB", color: "#1A3E8A" }} />
                     )}
-
                     {offerForm.costPerSeat && (
-                      <Chip
-                        size="small"
-                        label={`Cost share $${offerForm.costPerSeat}`}
-                        sx={{
-                          borderRadius: 999,
-                          fontSize: 11.5,
-                          bgcolor: "#E6F4EA",
-                          color: "#14532D",
-                        }}
-                      />
+                      <Chip size="small" label={`Cost share $${offerForm.costPerSeat}`}
+                        sx={{ borderRadius: 999, fontSize: 11.5, bgcolor: "#E6F4EA", color: "#14532D" }} />
                     )}
-
                     {offerForm.childFriendly && (
-                      <Chip
-                        size="small"
-                        label="Child-friendly"
-                        sx={{
-                          borderRadius: 999,
-                          fontSize: 11.5,
-                          bgcolor: "#FEF7E0",
-                          color: "#B06000",
-                        }}
-                      />
+                      <Chip size="small" label="Child-friendly"
+                        sx={{ borderRadius: 999, fontSize: 11.5, bgcolor: "#FEF7E0", color: "#B06000" }} />
                     )}
-
-                    {offerForm.luggageSpace &&
-                      offerForm.luggageSpace !== "None" && (
-                        <Chip
-                          size="small"
-                          label={offerForm.luggageSpace}
-                          sx={{
-                            borderRadius: 999,
-                            fontSize: 11.5,
-                            bgcolor: "#EAF3FB",
-                            color: "#1A3E8A",
-                          }}
-                        />
-                      )}
-
+                    {offerForm.luggageSpace && offerForm.luggageSpace !== "None" && (
+                      <Chip size="small" label={offerForm.luggageSpace}
+                        sx={{ borderRadius: 999, fontSize: 11.5, bgcolor: "#EAF3FB", color: "#1A3E8A" }} />
+                    )}
                     {(offerForm.helpCanOffer || []).map((h) => (
-                      <Chip
-                        key={h}
-                        size="small"
-                        label={h}
-                        sx={{
-                          borderRadius: 999,
-                          fontSize: 11.5,
-                          bgcolor: "#FFF3E8",
-                          color: "#A85F00",
-                        }}
-                      />
+                      <Chip key={h} size="small" label={h}
+                        sx={{ borderRadius: 999, fontSize: 11.5, bgcolor: "#FFF3E8", color: "#A85F00" }} />
                     ))}
                   </Box>
                 </Box>
               </Stack>
             </Paper>
 
-            <Paper
-              variant="outlined"
-              sx={{ p: { xs: 1.75, sm: 2.25 }, borderRadius: 2, borderColor: BORDER, bgcolor: CARD }}
-            >
+            <Paper variant="outlined" sx={{ p: { xs: 1.75, sm: 2.25 }, borderRadius: 2, borderColor: BORDER, bgcolor: CARD }}>
               <Typography sx={{ fontSize: { xs: 13.5, sm: 14 }, fontWeight: 700, color: INK, mb: 0.5 }}>
                 Exact pickup address (private)
               </Typography>
-              <Typography
-                sx={{
-                  fontSize: { xs: 13, sm: 13.5 },
-                  color: MUTED,
-                  mb: 1.5,
-                  lineHeight: 1.5,
-                  overflowWrap: "anywhere",
-                }}
-              >
-                {offerForm.exactPickup ||
-                  offerForm.fromLocation?.address ||
-                  "Will be shared after you accept"}
+              <Typography sx={{ fontSize: { xs: 13, sm: 13.5 }, color: MUTED, mb: 1.5, lineHeight: 1.5, overflowWrap: "anywhere" }}>
+                {offerForm.exactPickup || offerForm.fromLocation?.address || "Will be shared after you accept"}
               </Typography>
 
               {offerForm.notes && (
                 <>
-                  <Typography
-                    sx={{ fontSize: { xs: 13.5, sm: 14 }, fontWeight: 700, color: INK, mb: 0.5 }}
-                  >
+                  <Typography sx={{ fontSize: { xs: 13.5, sm: 14 }, fontWeight: 700, color: INK, mb: 0.5 }}>
                     Notes
                   </Typography>
-                  <Typography
-                    sx={{
-                      fontSize: { xs: 13, sm: 13.5 },
-                      color: MUTED,
-                      mb: 1.5,
-                      lineHeight: 1.5,
-                      overflowWrap: "anywhere",
-                      whiteSpace: "pre-wrap",
-                    }}
-                  >
+                  <Typography sx={{ fontSize: { xs: 13, sm: 13.5 }, color: MUTED, mb: 1.5, lineHeight: 1.5, overflowWrap: "anywhere", whiteSpace: "pre-wrap" }}>
                     {offerForm.notes}
                   </Typography>
                 </>
@@ -1960,22 +1658,11 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                 <Checkbox
                   checked={offerForm.confirmCostSharing}
                   onChange={(e) => updateOffer("confirmCostSharing", e.target.checked)}
-                  sx={{
-                    "&.Mui-checked": { color: RUST },
-                    color: "#BBB",
-                    pt: 0.5,
-                  }}
+                  sx={{ "&.Mui-checked": { color: RUST }, color: "#BBB", pt: 0.5 }}
                 />
               }
               label={
-                <Typography
-                  sx={{
-                    fontSize: { xs: 12.5, sm: 13.5 },
-                    lineHeight: 1.5,
-                    color: INK,
-                    pt: 0.5,
-                  }}
-                >
+                <Typography sx={{ fontSize: { xs: 12.5, sm: 13.5 }, lineHeight: 1.5, color: INK, pt: 0.5 }}>
                   I confirm this is a cost-sharing trip I am already making. I hold a valid
                   license and insurance for this vehicle.
                 </Typography>
@@ -2003,12 +1690,8 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
               sx={primaryBtn}
             >
               {saving
-                ? isEditMode
-                  ? "Updating..."
-                  : "Posting..."
-                : isEditMode
-                  ? "Update ride"
-                  : "Post ride"}
+                ? isEditMode ? "Updating..." : "Posting..."
+                : isEditMode ? "Update ride" : "Post ride"}
             </Button>
           </Stack>
         )}

@@ -167,9 +167,9 @@ const ProfileModal = ({
                             variant="contained"
                             startIcon={<MessageIcon />}
                             onClick={() => {
-                                onMessage?.(selectedProfile);  
-                                openChatWith(selectedProfile); 
-                                onClose?.();                   
+                                onMessage?.(selectedProfile);
+                                openChatWith(selectedProfile);
+                                onClose?.();
                             }}
                             sx={{
                                 mt: 1.5,

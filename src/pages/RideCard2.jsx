@@ -50,7 +50,7 @@ export default function RideList({ ride, onIcanHelp }) {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [openEditModal, setOpenEditModal] = useState(false);
   const [selectedRideModal, setSelectedRideModal] = useState(null);
-  
+
   // Profile and Chat Modals
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null);
@@ -233,12 +233,12 @@ export default function RideList({ ride, onIcanHelp }) {
     if (Number(ride.costPerSeat) === 0) chips.push({ label: "Free", ...CHIP.green });
     else if (Number(ride.costPerSeat) > 0) chips.push({ label: `Cost share $${ride.costPerSeat}`, ...CHIP.green });
 
-    chips.push(
-      noSeats
-        ? { label: "Required seats", ...CHIP.amber }
-        : { label: `${availableSeats} seat${availableSeats > 1 ? "s" : ""}${totalSeat ? ` of ${totalSeat}` : ""}`, ...CHIP.slate },
-    );
-
+    if (!noSeats) {
+      chips.push({
+        label: `${availableSeats} seat${availableSeats > 1 ? "s" : ""}${totalSeat ? ` of ${totalSeat}` : ""}`,
+        ...CHIP.slate,
+      });
+    }
     if (
       ride.luggageSpace &&
       ride.luggageSpace.trim().toLowerCase() !== "none"

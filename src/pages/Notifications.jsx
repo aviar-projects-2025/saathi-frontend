@@ -34,11 +34,11 @@ const Notifications = () => {
     (Array.isArray(tabNotification) ? tabNotification : []).forEach((item) => {
       const id = String(
         item?._id ||
-          item?.id ||
-          item?.data?._id ||
-          item?.data?.rideId ||
-          item?.data?.requestId ||
-          ""
+        item?.id ||
+        item?.data?._id ||
+        item?.data?.rideId ||
+        item?.data?.requestId ||
+        ""
       );
       if (!id) return;
       map.set(id, item);
@@ -53,11 +53,11 @@ const Notifications = () => {
   const getNotificationId = (item) =>
     String(
       item?._id ||
-        item?.id ||
-        item?.data?._id ||
-        item?.data?.rideId ||
-        item?.data?.requestId ||
-        ""
+      item?.id ||
+      item?.data?._id ||
+      item?.data?.rideId ||
+      item?.data?.requestId ||
+      ""
     );
 
   const getRideId = (item) =>

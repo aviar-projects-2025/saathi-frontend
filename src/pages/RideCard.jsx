@@ -940,7 +940,7 @@ export default function RideCard({ ride }) {
                         arrow
                       >
                         <Box component="span">
-                          {console.log(remainingSeatsForUser,'remainingSeatsForUser')}
+                          {/* {console.log(remainingSeatsForUser, 'remainingSeatsForUser')} */}
                           <Button
                             disabled={
                               genderMismatch ||

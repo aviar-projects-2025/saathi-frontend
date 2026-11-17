@@ -96,14 +96,14 @@ export default function NotificationTab({
       const type = item?.type;
       const rideId = getRideId(item);
 
-      console.log("[NotificationTab] Opening notification:", {
-        type,
-        notificationId: getNotificationId(item),
-        rideId,
-        data: item?.data,
-      });
-      console.log(type, 'type')
-      console.log(item, 'item')
+      // console.log("[NotificationTab] Opening notification:", {
+      //   type,
+      //   notificationId: getNotificationId(item),
+      //   rideId,
+      //   data: item?.data,
+      // });
+      // console.log(type, 'type')
+      // console.log(item, 'item')
 
       switch (type) {
 
@@ -193,6 +193,17 @@ export default function NotificationTab({
               requestId: item?.data?.requestId,
               tab: "received",
             },
+          });
+          break;
+        case "travel_buddy_match_cancelled":
+          navigate("/travelbuddy/requests", {
+            state: { tab: "sent", requestId: item?.data?.requestId },
+          });
+          break;
+
+        case "travel_buddy_request_withdrawn":
+          navigate("/travelbuddy/requests", {
+            state: { tab: "received" },
           });
           break;
 

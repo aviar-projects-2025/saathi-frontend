@@ -5,10 +5,7 @@ import CommunityFeedItem from "./CommunityFeedItem.jsx";
 import ProfileModal from "../Avatar.jsx";
 import ChatModal from "../ChatModal";
 
-/**
- * Renders a feed returned by useCommunityFeed():
- * loading / empty states, items, infinite scroll, and the profile + chat modals.
- */
+
 export default function FeedList({ feed, emptyText = "No posts yet. Be the first!" }) {
   const {
     currentUser, posts, loading, loadingMore, hasMore, loadMore,
@@ -48,20 +45,47 @@ export default function FeedList({ feed, emptyText = "No posts yet. Be the first
 
   return (
     <>
-      {/* Full-width wrapper so feed items fill the available space at every breakpoint */}
+
       <Box sx={{ width: "100%", maxWidth: "100%", minWidth: 0, boxSizing: "border-box" }}>
         {loading ? (
           <Box sx={{ display: "flex", justifyContent: "center", py: { xs: 3, sm: 4 } }}>
             <CircularProgress sx={{ color: "#E8650A", width: { xs: "28px !important", sm: "34px !important" }, height: { xs: "28px !important", sm: "34px !important" } }} />
           </Box>
         ) : posts.length === 0 ? (
-          <Box sx={{ textAlign: "center", py: { xs: 4, sm: 6 }, px: { xs: 2, sm: 3 } }}>
-            <Typography fontWeight={600} sx={{ fontSize: { xs: "0.95rem", sm: "1rem", md: "1.05rem" } }}>
+          <Box
+            sx={{
+              width: "100%",
+              minHeight: { xs: "180px", sm: "220px" },
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+              py: { xs: 4, sm: 6 },
+              px: { xs: 2, sm: 3 },
+              boxSizing: "border-box",
+            }}
+          >
+            <Typography
+              fontWeight={600}
+              sx={{
+                fontSize: { xs: "0.95rem", sm: "1rem", md: "1.05rem" },
+                textAlign: "center",
+                width: "100%",
+              }}
+            >
               Nothing here yet
             </Typography>
+
             <Typography
               color="text.secondary"
-              sx={{ mt: 0.5, fontSize: { xs: "0.84rem", sm: "0.92rem", md: "1rem" }, wordBreak: "break-word" }}
+              sx={{
+                mt: 0.5,
+                fontSize: { xs: "0.84rem", sm: "0.92rem", md: "1rem" },
+                textAlign: "center",
+                width: "100%",
+                overflowWrap: "anywhere",
+              }}
             >
               {emptyText}
             </Typography>

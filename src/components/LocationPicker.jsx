@@ -348,7 +348,7 @@ export default function RideLocationPicker({
     if (
       selectedCountry &&
       selectedCountry !==
-        currentFromCountry
+      currentFromCountry
     ) {
       setLocationError(
         "Destination must be in the same country as the From location."
@@ -476,8 +476,8 @@ export default function RideLocationPicker({
                   const address =
                     cleanAddress(
                       place.formattedAddress ||
-                        place.displayName ||
-                        ""
+                      place.displayName ||
+                      ""
                     );
 
                   const countryCode =
@@ -521,8 +521,8 @@ export default function RideLocationPicker({
           destinationAutocomplete.includedRegionCodes =
             fromCountryCodeRef.current
               ? [
-                  fromCountryCodeRef.current,
-                ]
+                fromCountryCodeRef.current,
+              ]
               : ["us", "in"];
 
           /*
@@ -577,8 +577,8 @@ export default function RideLocationPicker({
                   const address =
                     cleanAddress(
                       place.formattedAddress ||
-                        place.displayName ||
-                        ""
+                      place.displayName ||
+                      ""
                     );
 
                   const countryCode =
@@ -666,7 +666,7 @@ export default function RideLocationPicker({
     setAutocompleteValue(
       destinationAutocompleteRef,
       destinationLocation?.address ||
-        ""
+      ""
     );
   }, [
     destinationLocation?.address,
@@ -693,8 +693,7 @@ export default function RideLocationPicker({
       autocomplete.disabled = false;
 
       autocomplete.placeholder =
-        `Search destination in ${
-          fromCountryCode.toUpperCase()
+        `Search destination in ${fromCountryCode.toUpperCase()
         }`;
     } else {
       autocomplete.includedRegionCodes =
@@ -755,7 +754,7 @@ export default function RideLocationPicker({
         if (
           result.address &&
           result.address !==
-            fromLocation.address
+          fromLocation.address
         ) {
           setAutocompleteValue(
             fromAutocompleteRef,
@@ -1126,9 +1125,9 @@ export default function RideLocationPicker({
    */
   const center = hasFrom
     ? {
-        lat: fromLocation.latitude,
-        lng: fromLocation.longitude,
-      }
+      lat: fromLocation.latitude,
+      lng: fromLocation.longitude,
+    }
     : defaultCenter;
 
   /*
