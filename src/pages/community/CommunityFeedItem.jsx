@@ -246,73 +246,76 @@ export default function CommunityFeedItem({
                 </Stack>
 
                 {/* Content: bold title only when the post has a real title; otherwise plain body text */}
-                {hasTitle ? (
-                    <Typography
-                        fontWeight={700}
-                        lineHeight={1.35}
-                        mb={body && !isOffering ? 0.75 : { xs: 1, sm: 1.5 }}
-                        sx={{ fontSize: { xs: "0.98rem", sm: "1.05rem", md: "1.1rem" }, wordBreak: "break-word", m: { xs: 0.25, sm: 0.5 } }}
-                    >
-                        {post.title}
-                    </Typography>
-                ) : (
-                    <Typography
-                        sx={{
-                            fontSize: { xs: "0.92rem", sm: "0.97rem", md: "1rem" },
-                            lineHeight: 1.65,
-                            mb: { xs: 1, sm: 1.5 },
-                            whiteSpace: "pre-wrap",
-                            wordBreak: "break-word",
-                        }}
-                    >
-                        {post.description}
-                    </Typography>
-                )}
-                {/* {description && (
-                    <Typography
-                        sx={{
-                            fontSize: { xs: "0.92rem", sm: "0.97rem", md: "1rem" },
-                            lineHeight: 1.65,
-                            mb: { xs: 1, sm: 1.5 },
-                            whiteSpace: "pre-wrap",
-                            wordBreak: "break-word",
-                        }}
-                    >
-                        {post.description}
-                    </Typography>
-                )} */}
-
-                {hasTitle && body && (
-                    <Box mb={{ xs: 1, sm: 1.5 }}>
+                <Box
+                    sx={{
+                        width: "100%",
+                        minWidth: 0,
+                        boxSizing: "border-box",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "flex-start",
+                        // gap: 0.75,
+                        // px: 1,
+                        // py: 0.5,
+                        mt: { xs: 0.5, sm: 0.75 },
+                        mb: { xs: 0.7, sm: 0.85 },
+                    }}
+                >
+                    {hasTitle && (
                         <Typography
+                            fontWeight={700}
                             sx={{
-                                fontSize: { xs: "0.86rem", sm: "0.92rem", md: "0.95rem" },
-                                lineHeight: 1.65,
-                                color: "#444",
-                                whiteSpace: "pre-wrap",
-                                wordBreak: "break-word",
-                                overflow: "hidden",
-                                display: "-webkit-box",
-                                WebkitLineClamp: expanded ? "unset" : 3,
-                                WebkitBoxOrient: "vertical",
+                                width: "100%",
+                                m: 0,
+                                fontSize: { xs: "0.9rem", sm: "1rem", md: "1.03em" },
+                                overflowWrap: "anywhere",
+                                textAlign: "left",
                             }}
                         >
-                            {body}
+                            {post.title}
                         </Typography>
-                        {isLong && (
-                            <Button
-                                size="small"
-                                onClick={() => setExpanded((v) => !v)}
+                    )}
+
+                    {body && (
+                        <>
+                            <Typography
                                 sx={{
-                                    p: 0, mt: 0.25, minWidth: "auto", textTransform: "none",
-                                    fontSize: { xs: "0.75rem", sm: "0.8rem" }, fontWeight: 600, color: SAFFRON,
+                                    width: "100%",
+                                    m: 0,
+                                    fontSize: { xs: "0.75rem", sm: "0.87rem", md: "0.98rem" },
+                                    // lineHeight: 1.6,
+                                    color: "#444",
+                                    whiteSpace: "pre-wrap",
+                                    overflowWrap: "anywhere",
+                                    textAlign: "left",
+                                    display: "-webkit-box",
+                                    WebkitBoxOrient: "vertical",
+                                    WebkitLineClamp: expanded ? "unset" : 3,
+                                    overflow: "hidden",
                                 }}
                             >
-                                {expanded ? "See less" : "See more"}
-                            </Button>
-                        )}
-                    </Box>
-                )}
+                                {body}
+                            </Typography>
+
+                            {isLong && (
+                                <Button
+                                    size="small"
+                                    onClick={() => setExpanded((v) => !v)}
+                                    sx={{
+                                        p: 0,
+                                        minWidth: "auto",
+                                        textTransform: "none",
+                                        fontSize: { xs: "0.7rem", sm: "0.8rem" },
+                                        fontWeight: 600,
+                                        color: SAFFRON,
+                                    }}
+                                >
+                                    {expanded ? "See less" : "See more"}
+                                </Button>
+                            )}
+                        </>
+                    )}
+                </Box>
 
                 {/* Tags */}
                 {(post.subCategory || post.timeframe || post.zipcode || post.tags?.length > 0) && (

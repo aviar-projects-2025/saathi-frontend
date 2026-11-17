@@ -816,29 +816,39 @@ export default function Ridebook({
                     error={!isLockedSelfSlot && !!memberErrors[index]?.name}
                     helperText={
                       !isLockedSelfSlot && memberErrors[index]?.name
-                        ? isMobile ? "Required" : "Name is required"
+                        ? isMobile
+                          ? "Required"
+                          : "Name is required"
                         : ""
                     }
+                    onChange={(e) => {
+                      if (!isLockedSelfSlot) {
+                        const value = e.target.value;
+
+                        // Allow only letters and spaces (English, Tamil, etc.)
+                        if (/^[\p{L}\s]*$/u.test(value)) {
+                          handleMemberChange(index, "name", value);
+                        }
+                      }
+                    }}
                     sx={{
-                      // ★ FIX: Keep name input aligned
                       mt: 0.5,
+
                       "& .MuiInputBase-input": {
                         fontSize: "0.85rem",
                         fontFamily: "'Inter', sans-serif",
                         fontWeight: 500,
                       },
+
                       "& .MuiInputBase-input.Mui-disabled": {
                         WebkitTextFillColor: "#555",
                         opacity: 1,
                       },
+
                       "& .MuiFormHelperText-root": {
                         marginLeft: 0,
-                      }
+                      },
                     }}
-                    onChange={(e) =>
-                      !isLockedSelfSlot &&
-                      handleMemberChange(index, "name", e.target.value)
-                    }
                   />
 
                   <Box sx={{ width: 80, flexShrink: 0 }}>
