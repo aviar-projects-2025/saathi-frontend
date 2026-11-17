@@ -141,7 +141,7 @@ function PostDetailDialog({
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="md"
+      maxWidth="sm"
       fullWidth
       // Disable scroll-lock on the body to avoid layout shift; keep the close
       // behaviour intact. This also prevents the modal from being unexpectedly
@@ -171,7 +171,7 @@ function PostDetailDialog({
           justifyContent: "space-between",
           fontFamily: SERIF,
           fontWeight: 600,
-          pb: 1,
+          pb: { xs: 1.5, sm: 2 },
         }}
       >
         <Box sx={{ minWidth: 0 }}>
@@ -200,7 +200,7 @@ function PostDetailDialog({
               width: "100%",
               maxHeight: "60vh",
               objectFit: "contain",
-              bgcolor: "#000",
+              bgcolor: "#ffff",
             }}
           />
         ) : (
@@ -940,7 +940,7 @@ const UserProfile = () => {
             >
               <Box sx={{ position: "relative", pointerEvents: "none" }}>
                 {image ? (
-                  <Box component="img" src={image} alt="Community post" loading="lazy" sx={{ width: "100%", aspectRatio: "1 / 1", objectFit: "cover", display: "block", bgcolor: C.canvas }} />
+                  <Box component="img" src={image} alt="Community post" loading="lazy" sx={{ width: "100%", aspectRatio: "1 / 1", objectFit: "fill", display: "block", bgcolor: C.canvas }} />
                 ) : (
                   <Box sx={{ aspectRatio: "1 / 1", bgcolor: C.tint }} />
                 )}
@@ -1232,13 +1232,90 @@ const UserProfile = () => {
             </DialogActions>
           </Dialog>
 
-          <Dialog open={deletePostOpen} onClose={() => !postDeleting && setDeletePostOpen(false)} PaperProps={{ sx: { borderRadius: RADIUS.card } }}>
-            <DialogTitle sx={{ fontFamily: SERIF, fontWeight: 600 }}>Delete this post?</DialogTitle>
-            <DialogContent><Typography sx={{ color: C.muted }}>This can't be undone.</Typography></DialogContent>
-            <DialogActions sx={{ p: 2.5 }}>
-              <Button onClick={() => setDeletePostOpen(false)} disabled={postDeleting} sx={{ textTransform: "none", color: C.muted }}>Cancel</Button>
-              <Button color="error" variant="contained" disableElevation onClick={deletePost} disabled={postDeleting} sx={{ textTransform: "none", borderRadius: "999px", px: 3, fontWeight: 650 }}>
-                {postDeleting ? <CircularProgress size={20} color="inherit" /> : "Delete post"}
+          <Dialog
+            open={deletePostOpen}
+            onClose={() => !postDeleting && setDeletePostOpen(false)}
+            fullWidth
+            maxWidth="xs"
+            PaperProps={{
+              sx: {
+                width: "100%",
+                maxWidth: { xs: "calc(100% - 32px)", sm: 400 },
+                borderRadius: "16px",
+                m: 2,
+                overflow: "hidden",
+              },
+            }}
+          >
+            <DialogTitle
+              sx={{
+                fontFamily: SERIF,
+                fontWeight: 600,
+                fontSize: { xs: "1.1rem", sm: "1.25rem" },
+                px: 3,
+                pt: 3,
+                pb: 1,
+              }}
+            >
+              Delete this post?
+            </DialogTitle>
+
+            <DialogContent sx={{ px: 3, py: 1.5 }}>
+              <Typography
+                sx={{
+                  color: C.muted,
+                  fontSize: { xs: "0.875rem", sm: "0.95rem" },
+                  lineHeight: 1.6,
+                }}
+              >
+                Are you sure you want to delete this post? This action cannot be undone.
+              </Typography>
+            </DialogContent>
+
+            <DialogActions
+              sx={{
+                px: 3,
+                pb: 3,
+                pt: 2,
+                gap: 1,
+              }}
+            >
+              <Button
+                onClick={() => setDeletePostOpen(false)}
+                disabled={postDeleting}
+                sx={{
+                  textTransform: "none",
+                  color: C.muted,
+                  borderRadius: "999px",
+                  px: 2.5,
+                  minHeight: 40,
+                  fontWeight: 600,
+                }}
+              >
+                Cancel
+              </Button>
+
+              <Button
+                color="error"
+                variant="contained"
+                disableElevation
+                onClick={deletePost}
+                disabled={postDeleting}
+                sx={{
+                  textTransform: "none",
+                  borderRadius: "999px",
+                  px: 3,
+                  minHeight: 40,
+                  minWidth: 115,
+                  fontWeight: 650,
+                  fontSize: "0.875rem",
+                }}
+              >
+                {postDeleting ? (
+                  "Deleting..."
+                ) : (
+                  "Delete post"
+                )}
               </Button>
             </DialogActions>
           </Dialog>
