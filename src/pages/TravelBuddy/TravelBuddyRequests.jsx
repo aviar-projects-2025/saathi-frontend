@@ -307,14 +307,15 @@ const TravelBuddyRequests = () => {
                 )}
                 {request.status === "REJECTED" && (
                   <Alert severity="info" sx={{ mt: 2, fontSize: { xs: 13, sm: 14 }, ...wrapText }}>
-                    {request.publishOnReject
-                      ? "This request was declined. Your submitted trip was set to public, as requested."
-                      : "This request was declined. Your submitted trip remains private."}
+                    This request was declined. You cannot request this trip again. You can
+                    still post a new trip from the Travel Buddy page, and the declined entry
+                    will appear under <strong>History</strong> on your Travel Buddy dashboard.
                   </Alert>
                 )}
                 {request.status === "CANCELLED" && (
                   <Alert severity="warning" sx={{ mt: 2, fontSize: { xs: 13, sm: 14 }, ...wrapText }}>
-                    This match has been cancelled. Both trips are back in the search pool.
+                    This request was cancelled. Your trip is back in the search pool — you
+                    can browse again or post a fresh trip.
                   </Alert>
                 )}
               </Paper>
