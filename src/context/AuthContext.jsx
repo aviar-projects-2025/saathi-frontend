@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }) => {
                     }
                 );
 
-                console.log(res,'res user me')
+                // console.log(res,'res user me')
                 setUser(res.data);
 
             } catch (err) {
@@ -131,9 +131,9 @@ export const AuthProvider = ({ children }) => {
             const user = res.data.user;
             const token = res?.data?.token;
 
-            console.log("Response:", res);
-            console.log("OTP Login Response:", res.data);
-            console.log("TOKEN:", res.data.token);
+            // console.log("Response:", res);
+            // console.log("OTP Login Response:", res.data);
+            // console.log("TOKEN:", res.data.token);
 
             if (!token) {
                 throw new Error("Token was not returned by the server");

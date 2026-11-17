@@ -96,14 +96,14 @@ export default function NotificationTab({
       const type = item?.type;
       const rideId = getRideId(item);
 
-      console.log("[NotificationTab] Opening notification:", {
-        type,
-        notificationId: getNotificationId(item),
-        rideId,
-        data: item?.data,
-      });
-      console.log(type, 'type')
-      console.log(item, 'item')
+      // console.log("[NotificationTab] Opening notification:", {
+      //   type,
+      //   notificationId: getNotificationId(item),
+      //   rideId,
+      //   data: item?.data,
+      // });
+      // console.log(type, 'type')
+      // console.log(item, 'item')
 
       switch (type) {
 

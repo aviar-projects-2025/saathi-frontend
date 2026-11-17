@@ -380,7 +380,7 @@ export default function RideLocationPicker({
         ];
 
         fromAutocomplete.style.width = "100%";
-        
+
         // ★ Disable input interactions when in help mode
         if (disabled) {
           fromAutocomplete.style.pointerEvents = "none";
@@ -692,13 +692,13 @@ export default function RideLocationPicker({
       setAutocompleteValue(
         fromAutocompleteRef,
         fromLocation.address ||
-          ride?.from
+        ride?.from
       );
 
       setAutocompleteValue(
         destinationAutocompleteRef,
         destinationLocation?.address ||
-          ride?.destination
+        ride?.destination
       );
     };
 
@@ -996,9 +996,9 @@ export default function RideLocationPicker({
 
   const center = hasFrom
     ? {
-        lat: fromLocation.latitude,
-        lng: fromLocation.longitude,
-      }
+      lat: fromLocation.latitude,
+      lng: fromLocation.longitude,
+    }
     : userLocation || defaultCenter;
 
   if (loadError) {
@@ -1110,12 +1110,12 @@ export default function RideLocationPicker({
                 borderRadius: "6px",
                 border:
                   mapSelectionMode ===
-                  "destination"
+                    "destination"
                     ? "2px solid #E8650A"
                     : "1px solid #ccc",
                 background:
                   mapSelectionMode ===
-                  "destination"
+                    "destination"
                     ? "#fff3eb"
                     : "#fff",
                 cursor: "pointer",

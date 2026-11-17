@@ -118,9 +118,9 @@ const normalizeMessage = (message, currentUserId) => {
                 : "other",
         time: message?.createdAt
             ? new Date(message.createdAt).toLocaleTimeString("en-IN", {
-                  hour: "numeric",
-                  minute: "2-digit",
-              })
+                hour: "numeric",
+                minute: "2-digit",
+            })
             : "",
         createdAt: message?.createdAt || null,
         status: String(message?.status || "SENT").toLowerCase(),
@@ -166,7 +166,7 @@ const normalizeConversation = (chat, currentUserId) => {
 
     const lastMessage =
         chat?.lastMessage &&
-        typeof chat.lastMessage === "object"
+            typeof chat.lastMessage === "object"
             ? chat.lastMessage
             : null;
 
@@ -217,9 +217,8 @@ const MessagesModal = ({
     const currentUserId = getCurrentUserId();
 
     const getUserName = (user) => {
-        const name = `${user?.firstName || ""} ${
-            user?.lastName || ""
-        }`.trim();
+        const name = `${user?.firstName || ""} ${user?.lastName || ""
+            }`.trim();
 
         return name || user?.name || "User";
     };
@@ -276,7 +275,7 @@ const MessagesModal = ({
 
             setError(
                 err.response?.data?.message ||
-                    "Unable to load conversations."
+                "Unable to load conversations."
             );
         } finally {
             setLoadingConversations(false);
@@ -363,7 +362,7 @@ const MessagesModal = ({
 
             setError(
                 err.response?.data?.message ||
-                    "Unable to open this conversation."
+                "Unable to open this conversation."
             );
         }
     };
@@ -419,10 +418,10 @@ const MessagesModal = ({
                             previous.map((conversation) =>
                                 conversation.chatId === chatId
                                     ? {
-                                          ...conversation,
-                                          unread: false,
-                                          unreadCount: 0,
-                                      }
+                                        ...conversation,
+                                        unread: false,
+                                        unreadCount: 0,
+                                    }
                                     : conversation
                             )
                         );
@@ -445,7 +444,7 @@ const MessagesModal = ({
 
                 setError(
                     err.response?.data?.message ||
-                        "Unable to load message history."
+                    "Unable to load message history."
                 );
             } finally {
                 if (!cancelled) setLoadingMessages(false);
@@ -560,7 +559,7 @@ const MessagesModal = ({
 
             setError(
                 err.response?.data?.message ||
-                    "Failed to send message. Please try again."
+                "Failed to send message. Please try again."
             );
         } finally {
             setSending(false);
@@ -739,7 +738,7 @@ const MessagesModal = ({
                         }}
                     >
                         {loadingConversations &&
-                        conversationsToDisplay.length === 0 ? (
+                            conversationsToDisplay.length === 0 ? (
                             <Box sx={{ display: "flex", justifyContent: "center", py: 5 }}>
                                 <CircularProgress
                                     size={28}

@@ -59,11 +59,9 @@ const UserLayout = () => {
             height: "100%",
             display: "flex",
             justifyContent: "center",
-            alignItems: "flex-start",
+            alignItems: "stretch",
             px: {
               xs: 0,
-              // sm: "2%",
-              // md: "3%",
               lg: "1%",
             },
             boxSizing: "border-box",
@@ -75,37 +73,41 @@ const UserLayout = () => {
               width: "100%",
               maxWidth: { xs: "100%", sm: "1800px" },
               height: "100%",
-              py: { xs: 1, sm: 2 },
-              mx: "auto", // explicit centering, don't rely only on parent flex
+              py: { xs: 1, sm: 2, lg: 0 },
+              mx: "auto",
+              boxSizing: "border-box",
             }}
           >
-            {/* Box 3 */}
+            {/* Box 3 (grid) */}
             <Box
               sx={{
                 width: "100%",
-                maxWidth: { xs: "100%", lg: "1535px" }, // cap width so it can center
-                mx: "auto", // centers the grid itself within Box 2
+                maxWidth: { xs: "100%", lg: "1535px" },
+                mx: "auto",
                 height: "100%",
                 display: "grid",
                 gridTemplateColumns: {
                   xs: "1fr",
                   lg: "20% 80%",
                 },
+                gridTemplateRows: "minmax(0, 1fr)",
                 gap: {
                   xs: 0,
                   lg: "2%",
                 },
-                alignItems: "start",
+                alignItems: "stretch", // was "start"
                 justifyContent: "center",
               }}
             >
               {/* Desktop Sidebar */}
+
               {isDesktop ? (
                 <Box
                   sx={{
                     width: "100%",
-                    height: "98%",
-                    overflowY: "auto",
+                    height: "100%",
+                    minHeight: 0,
+                    overflow: "hidden",
                   }}
                 >
                   <Sidebar />
@@ -134,6 +136,7 @@ const UserLayout = () => {
                 sx={{
                   width: "100%",
                   minWidth: 0,
+                  minHeight: 0,
                   height: "100%",
                   overflowY: "auto",
                   pb: 3,
@@ -145,9 +148,9 @@ const UserLayout = () => {
                 <Box
                   sx={{
                     width: "100%",
-                    maxWidth: { xs: "100%", sm: "100%" },
-                    mx: "auto", // explicit centering for the outlet content too
-                    p: { xs: 1, sm: 1.5, md: 2 },
+                    maxWidth: "100%",
+                    mx: "auto",
+                    p: { xs: 1, sm: 2, md: 3 },
                   }}
                 >
                   <Outlet />

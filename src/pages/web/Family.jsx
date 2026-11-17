@@ -450,7 +450,7 @@ export default function Family() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                textAlign:'center',
+                textAlign: 'center',
                 minWidth: 0,
                 overflow: "hidden",
               }}

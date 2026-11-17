@@ -10,6 +10,7 @@ import {
   TextField,
   Menu,
   MenuItem,
+  ListItemIcon,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -135,7 +136,7 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
   const bodyFontSize = isMobile ? "0.7rem" : "0.8rem";
   const captionSize = isMobile ? "0.6rem" : "0.6rem";
   const avatarFontSize = isMobile ? "0.6rem" : "1.1rem";
-  // three-dot menu state: which comment's menu is open + its anchor element
+
   const [menuAnchor, setMenuAnchor] = useState(null);
   const [menuComment, setMenuComment] = useState(null);
 
@@ -439,7 +440,7 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
                   spacing={{ xs: 0.75, sm: 1 }}
                   sx={{ py: 0.75 }}
                 >
-                  {console.log(item,'item')}
+                  {/* {console.log(item, 'item')} */}
 
                   <ProtectedAvatar
                     src={item.userId?.profileImageUrl}
@@ -646,20 +647,97 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
       />
 
       {/* three-dot menu (shared across all comments/replies) */}
+
       <Menu
         anchorEl={menuAnchor}
         open={Boolean(menuAnchor)}
         onClose={handleMenuClose}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "left",
+        }}
+        transformOrigin={{
+          vertical: "top",
+          horizontal: "left",
+        }}
+        slotProps={{
+          paper: {
+            elevation: 0,
+            sx: {
+              borderRadius: "12px",
+              minWidth: { xs: 110, sm: 140 },
+              bgcolor: "#F8FAFC",
+              border: "1px solid #E2E8F0",
+              boxShadow: "0px 12px 32px rgba(0, 0, 0, 0.14)",
+              p: 0.5,
+            },
+          },
+        }}
       >
-        <MenuItem onClick={handleEditClick}>
-          <EditIcon fontSize="small" sx={{ mr: 1 }} />
-          Edit
+        {/* Edit */}
+        <MenuItem
+          onClick={handleEditClick}
+          sx={{
+            borderRadius: "10px",
+            bgcolor: "#FFFFFF",
+            mb: 0.5,
+            "&:hover": {
+              bgcolor: "#EEF2FF",
+            },
+          }}
+        >
+          <ListItemIcon sx={{ minWidth: { xs: 24, sm: 30 } }}>
+            <EditIcon
+              sx={{
+                color: "#6C63FF",
+                fontSize: { xs: 15, sm: 18, md: 20 },
+              }}
+            />
+          </ListItemIcon>
+
+          <Typography
+            fontWeight={600}
+            sx={{ fontSize: { xs: 12, sm: 13, md: 14 } }}
+            color="text.primary"
+          >
+            Edit
+          </Typography>
         </MenuItem>
-        <MenuItem onClick={handleDeleteClick} sx={{ color: "error.main" }} disabled={deleteLoading}>
-          <DeleteIcon fontSize="small" sx={{ mr: 1 }} />
-          {deleteLoading ? "Deleting..." : "Delete"}
+
+        {/* Delete */}
+        <MenuItem
+          onClick={handleDeleteClick}
+          disabled={deleteLoading}
+          sx={{
+            borderRadius: "10px",
+            bgcolor: "#FFFFFF",
+            "&:hover": {
+              bgcolor: "#FFF1F2",
+            },
+            "&.Mui-disabled": {
+              opacity: 0.6,
+            },
+          }}
+        >
+          <ListItemIcon sx={{ minWidth: { xs: 24, sm: 30 } }}>
+            <DeleteIcon
+              sx={{
+                color: "#E53935",
+                fontSize: { xs: 15, sm: 18, md: 20 },
+              }}
+            />
+          </ListItemIcon>
+
+          <Typography
+            fontWeight={600}
+            sx={{ fontSize: { xs: 12, sm: 13, md: 14 } }}
+            color="error.main"
+          >
+            {deleteLoading ? "Deleting..." : "Delete"}
+          </Typography>
         </MenuItem>
       </Menu>
+
     </Box>
   );
 };

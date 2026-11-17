@@ -119,7 +119,7 @@ const RequestRide = ({ ride }) => {
 
       if (!user?.id) return;
       const res = await axios.get(`${Api}/bookride/send/${user.id}`);
-      console.log(res, 'res')
+      // console.log(res, 'res')
       const requestUser = res.data.data.map((item) => item.members);
       const rejectedreq = res.data.data.map((item) => item.rejectedSeats);
       setRejectedSeats(res.data.data.map((item) => item.rejectedSeats))
@@ -612,8 +612,8 @@ const RequestRide = ({ ride }) => {
                                 },
                               }}
                             />
-                            {console.log(request?.rideId?.travelStatus)}
-                            {console.log(request?.status)}
+                            {/* {console.log(request?.rideId?.travelStatus)}
+                            {console.log(request?.status)} */}
 
                             {(
                               (

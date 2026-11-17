@@ -125,7 +125,7 @@ const RequestRide = () => {
     const [anchorEl, setAnchorEl] = useState(null);
     const [isCancelling, setIsCancelling] = useState(false);
     const [selectedRideDetails, setSelectedRideDetails] = useState(null);
-    
+
     // Profile and Chat Modals
     const [profileModalOpen, setProfileModalOpen] = useState(false);
     const [selectedProfile, setSelectedProfile] = useState(null);

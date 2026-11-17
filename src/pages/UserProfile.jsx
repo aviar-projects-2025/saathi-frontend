@@ -216,7 +216,7 @@ const UserProfile = () => {
       const payload = ridesGivenResult.value?.data;
       const ridesList = toArray(payload?.data ?? payload?.rides ?? payload);
       const completedGiven = ridesList.filter((ride) => isCompleted(ride));
-      console.log("[PROFILE] rides given (raw):", ridesList.length, "completed:", completedGiven.length);
+      // console.log("[PROFILE] rides given (raw):", ridesList.length, "completed:", completedGiven.length);
       setOfferedRides(completedGiven);
     } else {
       console.warn("[PROFILE] rides given failed:", ridesGivenResult.reason?.response?.data || ridesGivenResult.reason?.message);
@@ -226,7 +226,7 @@ const UserProfile = () => {
     // 4. Rides TAKEN
     if (ridesTakenResult.status === "fulfilled") {
       const requests = toArray(ridesTakenResult.value?.data?.data ?? ridesTakenResult.value?.data);
-      console.log("[PROFILE] ride bookings raw:", requests.length);
+      // console.log("[PROFILE] ride bookings raw:", requests.length);
 
       const completedTaken = requests.filter((request) => {
         if (String(request?.status || "").toUpperCase() !== "ACCEPTED") return false;
@@ -238,7 +238,7 @@ const UserProfile = () => {
         return true;
       });
 
-      console.log("[PROFILE] rides taken (completed, deduped):", completedTaken.length);
+      // console.log("[PROFILE] rides taken (completed, deduped):", completedTaken.length);
       setTakenRides(completedTaken);
     } else {
       console.warn("[PROFILE] rides taken failed:", ridesTakenResult.reason?.response?.data || ridesTakenResult.reason?.message);

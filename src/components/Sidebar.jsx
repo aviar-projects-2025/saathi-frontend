@@ -6,10 +6,8 @@ import {
   Box,
   Button,
   CircularProgress,
-  Avatar,
   Collapse,
   Dialog,
-  DialogTitle,
   DialogContent,
   DialogActions,
 } from "@mui/material";
@@ -64,7 +62,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
     {
       id: "travel-buddy",
       label: "Travel Buddy",
-      icon: <TelegramIcon/>,
+      icon: <TelegramIcon />,
       link: "/travelbuddy",
     },
     {
@@ -121,19 +119,18 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
     },
   ];
 
-  // Automatically open dropdown when one of its children is active
+
   useEffect(() => {
     const activeDropdown = menuItems.find(
       (item) =>
         item.children &&
-        item.children.some(
-          (child) => child.link === location.pathname
-        )
+        item.children.some((child) => child.link === location.pathname)
     );
 
     if (activeDropdown) {
       setOpenDropdown(activeDropdown.id);
     }
+
   }, [location.pathname]);
 
   const goTo = (link) => {
@@ -143,7 +140,6 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
 
   const handleLogout = () => {
     setLogoutDialogOpen(true);
-    // onItemClick?.();
   };
 
   const confirmLogout = () => {
@@ -162,8 +158,8 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
       sx={{
         width: isMobile ? "100%" : { sm: 220, md: 240, lg: 260 },
         minWidth: isMobile ? "100%" : { sm: 220, md: 240, lg: 260 },
-        height: isMobile ? "100dvh" : "100%",
-        maxHeight: isMobile ? "100dvh" : "100vh",
+        height: "100%",
+        maxHeight: "100%",
         bgcolor: "#ffffff",
         borderRadius: 0,
         display: "flex",
@@ -171,6 +167,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
         borderRight: isMobile ? "none" : "1px solid #f1e4d7",
         zIndex: 200,
         overflow: "hidden",
+        boxSizing: "border-box",
       }}
     >
       {/* ---------- HEADER ---------- */}
@@ -184,7 +181,12 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
           },
         }}
       >
-        <Stack direction="row" spacing={2} alignItems="center" sx={{ cursor: "pointer" }}>
+        <Stack
+          direction="row"
+          spacing={2}
+          alignItems="center"
+          sx={{ cursor: "pointer", mt: { xs: 0.5, sm: 1.5 } }}
+        >
           <Box
             sx={{
               position: "relative",
@@ -232,9 +234,9 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
                 height: 52,
                 bgcolor: SAFFRON,
               }}
-
             >
-              {currentUser?.firstName?.[0]}{currentUser?.lastName?.[0]}
+              {currentUser?.firstName?.[0]}
+              {currentUser?.lastName?.[0]}
             </ProtectedAvatar>
           </Box>
 
@@ -281,6 +283,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
             >
               {currentUser?.city}
             </Typography>
+
             <Typography
               sx={{
                 fontSize: { xs: "0.75rem", sm: "0.7rem" },
@@ -295,20 +298,22 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
                 ? currentUser.language.join(", ")
                 : currentUser?.language || ""}
             </Typography>
-       
-           { completion !== 100 && <Typography
-              sx={{
-                fontSize: {
-                  xs: "0.7rem",
-                  sm: "0.75rem",
-                },
-                fontWeight: 700,
-                color: completion === 100 ? "#119200" : "#f74040",
-                mt: 0.5,
-              }}
-            >
-              {Math.round(completion)}% completed
-            </Typography>}
+
+            {completion !== 100 && (
+              <Typography
+                sx={{
+                  fontSize: {
+                    xs: "0.7rem",
+                    sm: "0.75rem",
+                  },
+                  fontWeight: 700,
+                  color: "#f74040",
+                  mt: 0.5,
+                }}
+              >
+                {Math.round(completion)}% completed
+              </Typography>
+            )}
           </Box>
 
           <ProfileModal
@@ -320,10 +325,9 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
             }}
           />
         </Stack>
-
       </Box>
 
-      {/* ---------- MENU ---------- */}
+      {/* ---------- MENU (scrolls) ---------- */}
       <Box
         sx={{
           flex: 1,
@@ -336,36 +340,30 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
           py: 1,
         }}
       >
-        <Stack spacing={{ xs: 2, sm: 2 }}>
+        <Stack spacing={2}>
           {menuItems.map((item) => {
             const isDropdown = Boolean(item.children);
 
-            // Check whether one of the children is active
+
             const hasActiveChild =
               isDropdown &&
-              item.children.some(
-                (child) => child.link === location.pathname
-              );
+              item.children.some((child) => child.link === location.pathname);
 
-            // Dropdown stays open when child is active
-            const isOpen =
-              openDropdown === item.id || hasActiveChild;
+
+            const isOpen = openDropdown === item.id || hasActiveChild;
 
             const isParentActive =
               location.pathname === item.link || hasActiveChild;
 
             const handleMenuClick = () => {
               if (isDropdown) {
-                // Do not close if one of the children is active
+
                 if (hasActiveChild) {
                   setOpenDropdown(item.id);
                   return;
                 }
 
-                // Toggle dropdown for non-active dropdown
-                setOpenDropdown(
-                  openDropdown === item.id ? null : item.id
-                );
+                setOpenDropdown(openDropdown === item.id ? null : item.id);
               } else {
                 goTo(item.link);
               }
@@ -373,7 +371,9 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
 
             return (
               <Box key={item.id}>
+
                 {/* ---------- PARENT MENU ---------- */}
+
                 <Box
                   onClick={handleMenuClick}
                   sx={{
@@ -385,9 +385,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
                     py: 1,
                     borderRadius: 7,
                     cursor: "pointer",
-                    bgcolor: isParentActive
-                      ? "#fff0df"
-                      : "transparent",
+                    bgcolor: isParentActive ? "#fff0df" : "transparent",
                     transition: "background-color 0.2s ease",
                     "&:hover": {
                       bgcolor: "#fff0df",
@@ -404,6 +402,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
                     {item.icon}
 
                     <Typography
+                      component="div"
                       sx={{
                         fontSize: 12,
                         fontWeight: 700,
@@ -422,11 +421,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
 
                 {/* ---------- DROPDOWN CHILDREN ---------- */}
                 {isDropdown && (
-                  <Collapse
-                    in={isOpen}
-                    timeout={250}
-                    unmountOnExit
-                  >
+                  <Collapse in={isOpen} timeout={250} unmountOnExit>
                     <Stack
                       sx={{
                         pl: 2,
@@ -437,8 +432,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
                       }}
                     >
                       {item.children.map((sub) => {
-                        const active =
-                          location.pathname === sub.link;
+                        const active = location.pathname === sub.link;
 
                         return (
                           <Box
@@ -475,9 +469,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
                             <Typography
                               sx={{
                                 fontSize: 12.5,
-                                color: active
-                                  ? "#d97706"
-                                  : "#5f4632",
+                                color: active ? "#d97706" : "#5f4632",
                                 fontWeight: active ? 700 : 500,
                               }}
                             >
@@ -495,7 +487,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
         </Stack>
       </Box>
 
-      {/* ---------- FOOTER ---------- */}
+      {/* ---------- FOOTER (pinned) ---------- */}
       <Box
         onClick={handleLogout}
         sx={{
@@ -567,28 +559,9 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
               xs: 3,
               sm: 4,
             },
-            background:
-              "linear-gradient(90deg, #f97316, #dc2626)",
+            background: "linear-gradient(90deg, #f97316, #dc2626)",
           }}
         />
-
-        {/* <DialogTitle
-          sx={{
-            fontWeight: 800,
-            fontSize: {
-              xs: "0.95rem",
-              sm: "1.25rem",
-            },
-            pt: {
-              xs: 2.5,
-              sm: 4,
-            },
-            pb: 0,
-            textAlign: "center",
-          }}
-        >
-          Logout
-        </DialogTitle> */}
 
         <DialogContent
           sx={{

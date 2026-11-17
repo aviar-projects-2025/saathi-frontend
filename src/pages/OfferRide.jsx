@@ -81,6 +81,8 @@ const OFFER_CATEGORIES = [
 const REQUEST_CATEGORIES = [
   "Airport pickup / drop",
   "Temple / event",
+  "Grocery / shopping",
+  "Regular commute",
   "Other",
 ];
 
@@ -875,6 +877,20 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
     setTimeConflictMsg("");
   };
 
+  const formatTime12Hour = (time) => {
+    if (!time) return "";
+
+    const [hours, minutes] = time.split(":");
+    const date = new Date();
+    date.setHours(Number(hours), Number(minutes), 0, 0);
+
+    return date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
+
   /* ─────── SUCCESS SCREEN ─────── */
   if (submitted) {
     return (
@@ -959,56 +975,65 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
         }}
       >
         {/* ─── Header ─── */}
-        <Stack
-          direction="row"
-          alignItems="center"
-          justifyContent="space-between"
-          sx={{ mb: 1.5, minHeight: 40 }}
+
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            width: "100%",
+            minHeight: 44,
+            mb: 1.5,
+            position: "relative",
+          }}
         >
           {/* Back Button */}
-          {(mode === "offer" || isEditMode) && (
-            <IconButton
-              onClick={() => {
-                if (mode === "offer" && step > 0) {
-                  setStep((prev) => prev - 1);
-                } else {
-                  if (onClose) onClose();
-                  else navigate(-1);
-                }
-              }}
-              sx={{
-                bgcolor: "#fff",
-                border: `1px solid ${BORDER}`,
-                color: INK,
-                "&:hover": { bgcolor: "#F4F0EA" },
-                width: 36,
-                height: 36,
-              }}
-            >
-              <ArrowLeft size={18} />
-            </IconButton>
-          )}
+          <Box sx={{ width: 40, display: "flex", alignItems: "center" }}>
+            {(mode === "offer" || isEditMode) && (
+              <IconButton
+                onClick={() => {
+                  if (mode === "offer" && step > 0) {
+                    setStep((prev) => prev - 1);
+                  } else {
+                    onClose ? onClose() : navigate(-1);
+                  }
+                }}
+                sx={{
+                  width: 36,
+                  height: 36,
+                  bgcolor: "#FFFFFF",
+                  border: `1px solid ${BORDER}`,
+                  color: INK,
+                  borderRadius: "50%",
+                  "&:hover": { bgcolor: "#F4F0EA" },
+                }}
+              >
+                <ArrowLeft size={18} />
+              </IconButton>
+            )}
+          </Box>
 
           {/* Step Counter */}
-          {mode === "offer" ? (
+          {mode === "offer" && (
             <Typography
               sx={{
-                fontSize: { xs: 12.5, sm: 13 },
+                position: "absolute",
+                left: "50%",
+                transform: "translateX(-50%)",
+                fontSize: { xs: 12.5, sm: 13, md: 14 },
                 color: MUTED,
                 fontWeight: 600,
-                flex: 1,
-                textAlign: "center",
-                pr: mode === "offer" ? 4.5 : 0,
+                whiteSpace: "nowrap",
               }}
             >
               Step {step + 1} of {OFFER_STEPS.length}
             </Typography>
-          ) : (
-            <Box sx={{ flex: 1 }} />
           )}
 
-          <Box sx={{ width: { xs: 36, sm: 0 }, display: { xs: "block", sm: "none" } }} />
-        </Stack>
+          {/* Right Spacer */}
+          <Box sx={{ width: 40 }} />
+        </Box>
+
 
         {/* ─── Progress ─── */}
         {mode === "offer" && <StepProgress steps={OFFER_STEPS} step={step} />}
@@ -1817,7 +1842,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                       overflowWrap: "anywhere",
                     }}
                   >
-                    {offerForm.date} · {offerForm.time} {offerForm.timeZone} ·{" "}
+                    {offerForm.date} · {formatTime12Hour(offerForm.time)} {offerForm.timeZone} ·
                     {offerForm.availableSeats} seat
                     {offerForm.availableSeats === 1 ? "" : "s"}
                   </Typography>
