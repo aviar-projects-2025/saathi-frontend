@@ -1,11 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
-    Paper, Typography, Chip, Stack, Divider, Button, Box, IconButton, Avatar,
+    Paper, Typography, Chip, Stack, Divider, Button, Box, IconButton,
     Menu, MenuItem, ListItemIcon, ListItemText,
-    Dialog, DialogTitle, DialogContent, DialogActions, TextField,
 } from "@mui/material";
 import axios from "axios";
-import StarIcon from "@mui/icons-material/Star";
 import ThumbUpOffAltIcon from "@mui/icons-material/ThumbUpOffAlt";
 import ThumbUpIcon from "@mui/icons-material/ThumbUp";
 import ChatIcon from "@mui/icons-material/Chat";
@@ -14,20 +12,16 @@ import BookmarkIcon from "@mui/icons-material/Bookmark";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import CloseIcon from "@mui/icons-material/Close";
-import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 
 import Api from "../../Api.jsx";
 import CommunityComments from "../CommunityComments.jsx";
 import CommunityImage from "../../components/CommunityImage.jsx";
-import ImagePicker from "./ImagePicker.jsx";
 import { getRoom } from "./rooms.js";
 import ProtectedAvatar from "../../components/ProtectedAvatar.jsx";
+import { usePost } from "../../context/PostContext.jsx";
 
 const SAFFRON = "#E8650A";
 const RUST = "#B33A00";
-
-/* Card padding is reused so the image can bleed edge-to-edge on mobile */
 const CARD_PX = { xs: 1.5, sm: 2, md: 2.5 };
 
 const formatTimeAgo = (date) => {
@@ -36,12 +30,13 @@ const formatTimeAgo = (date) => {
     if (mins < 60) return `${mins}m`;
     if (mins < 1440) return `${Math.floor(mins / 60)}h`;
     if (mins < 10080) return `${Math.floor(mins / 1440)}d`;
-    return new Date(date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+    return new Date(date).toLocaleDateString("en-IN", {
+        day: "numeric", month: "short", year: "numeric",
+    });
 };
 
 const isHttp = (v) => typeof v === "string" && /^https?:\/\//i.test(v);
 
-// Uses the signed URL the API returns (profileImageUrl); falls back to initials if missing / broken.
 const AuthorAvatar = ({ author, onClick }) => {
     const [broken, setBroken] = useState(false);
     const src = author?.profileImageUrl || (isHttp(author?.profileImage) ? author.profileImage : "");
@@ -58,12 +53,9 @@ const AuthorAvatar = ({ author, onClick }) => {
             sx={{
                 width: { xs: 36, sm: 40, md: 44 },
                 height: { xs: 36, sm: 40, md: 44 },
-                bgcolor: SAFFRON,
-                color: "#fff",
-                fontWeight: 800,
+                bgcolor: SAFFRON, color: "#fff", fontWeight: 800,
                 fontSize: { xs: "0.85rem", sm: "0.95rem", md: "1.05rem" },
-                cursor: "pointer",
-                flexShrink: 0,
+                cursor: "pointer", flexShrink: 0,
             }}
         >
             {initials}
@@ -79,94 +71,75 @@ export default function CommunityFeedItem({
     onToggleSave,
     onUserClick,
     onMessage,
+    // Kept for backward compatibility; no longer used for edit/delete flow.
     onDeletePost,
     onUpdatePost,
 }) {
-    const author = post?.authorId;
-    const isOffering = post.postType === "offering";
-    const isAuthor = !!author?._id && author._id === currentUser?._id;
-    const saved = isPostSaved(post._id);
-    const room = getRoom(post.room);
+    const { openEdit, openDelete, onPostUpdated, onPostDeleted } = usePost();
+
+    // ─── Local mirror so this card reacts to edits/deletes made elsewhere ───
+    const [livePost, setLivePost] = useState(post);
+    useEffect(() => { setLivePost(post); }, [post]);
+
+    useEffect(() => {
+        if (!post?._id) return;
+        const offUpdate = onPostUpdated((updated) => {
+            if (String(updated?._id) === String(post._id)) {
+                setLivePost((prev) => ({ ...prev, ...updated }));
+            }
+        });
+        const offDelete = onPostDeleted((deletedId) => {
+            if (String(deletedId) === String(post._id)) {
+                setLivePost((prev) => ({ ...prev, __deleted: true }));
+            }
+        });
+        return () => { offUpdate(); offDelete(); };
+    }, [post?._id, onPostUpdated, onPostDeleted]);
 
     const [showComments, setShowComments] = useState(false);
-    const [commentCount, setCommentCount] = useState(post.commentCount || 0);
+    const [commentCount, setCommentCount] = useState(livePost?.commentCount || 0);
     const [expanded, setExpanded] = useState(false);
-
     const [menuAnchor, setMenuAnchor] = useState(null);
-    const [editOpen, setEditOpen] = useState(false);
-    const [deleteOpen, setDeleteOpen] = useState(false);
-    const [editTitle, setEditTitle] = useState("");
-    const [editWhen, setEditWhen] = useState("");
-    const [editDesc, setEditDesc] = useState("");
-    const [editImage, setEditImage] = useState(null);
-    const [updating, setUpdating] = useState(false);
-    const [deleting, setDeleting] = useState(false);
 
-    // CommunityComments expects the localStorage-style user ({ id, ... }); give it both shapes.
+    // CommunityComments expects { id, ...user }
     const commentUser = useMemo(() => {
         let stored = null;
         try { stored = JSON.parse(localStorage.getItem("user")); } catch { /* ignore */ }
-        return { ...(stored || {}), ...(currentUser || {}), id: stored?.id || currentUser?._id };
+        return {
+            ...(stored || {}),
+            ...(currentUser || {}),
+            id: stored?.id || currentUser?._id,
+        };
     }, [currentUser]);
 
-    // Real comment count (same endpoint the old page used)
     useEffect(() => {
-        if (!commentUser.id) return;
+        if (!livePost?._id || !commentUser.id) return;
         let cancelled = false;
         axios
-            .get(`${Api}/community/comments/${post._id}/${commentUser.id}`)
+            .get(`${Api}/community/comments/${livePost._id}/${commentUser.id}`)
             .then((res) => {
                 if (!cancelled) setCommentCount(res.data?.data?.comments?.length ?? 0);
             })
             .catch(() => { });
         return () => { cancelled = true; };
-    }, [post._id, commentUser.id]);
+    }, [livePost?._id, commentUser.id]);
 
-    // {console.log('post', post)}
-    const hasTitle = !!post.title;
-    const description = !!post.description;
-    const hasWhen = !!post.timeframe;
-    const body = post.description || "";
+    // If the post was deleted from elsewhere, stop rendering it.
+    if (livePost?.__deleted) return null;
+
+    const author = livePost?.authorId;
+    const isOffering = livePost?.postType === "offering";
+    const isAuthor = !!author?._id && author._id === currentUser?._id;
+    const saved = isPostSaved(livePost?._id);
+    const room = getRoom(livePost?.room);
+
+    const hasTitle = !!livePost?.title;
+    const body = livePost?.description || "";
     const isLong = body.length > 120;
 
-    /* ── edit / delete ── */
-    const openEdit = () => {
-        setMenuAnchor(null);
-        setEditTitle(post.title || "");
-        setEditWhen(post.timeframe || "")
-        setEditDesc(post.description || "");
-        setEditImage(null);
-        setEditOpen(true);
-    };
-
-    const resetEdit = () => {
-        setEditTitle(post.title || "");
-        setEditWhen(post.timeframe || "")
-        setEditDesc(post.description || "");
-        setEditImage(null);
-    };
-
-    const handleSave = async () => {
-        setUpdating(true);
-        // console.log(editWhen,'editWhen')
-        const ok = await onUpdatePost(post._id, {
-            title: hasTitle ? editTitle.trim() : undefined,
-            when: hasWhen ? editWhen.trim() : undefined,
-            description: editDesc,
-            imageFile: editImage,
-        });
-        setUpdating(false);
-        if (ok) setEditOpen(false);
-    };
-
-    const handleDelete = async () => {
-        setDeleting(true);
-        const ok = await onDeletePost(post._id);
-        setDeleting(false);
-        if (ok) setDeleteOpen(false);
-    };
-
-    const openProfile = () => onUserClick(author);
+    const openProfile = () => onUserClick?.(author);
+    const handleEdit = () => { setMenuAnchor(null); openEdit(livePost); };
+    const handleDelete = () => { setMenuAnchor(null); openDelete(livePost); };
 
     return (
         <>
@@ -184,7 +157,7 @@ export default function CommunityFeedItem({
                     boxShadow: "0 1px 2px rgba(60,30,10,0.04)",
                 }}
             >
-                {/* Header: author on top, like a social post */}
+                {/* Header */}
                 <Stack
                     direction="row"
                     justifyContent="space-between"
@@ -223,11 +196,13 @@ export default function CommunityFeedItem({
                                 }}
                                 noWrap
                             >
-                                {formatTimeAgo(post.createdAt)}
+                                {formatTimeAgo(livePost?.createdAt)}
                                 <Box component="span" sx={{ mx: { xs: 0.5, sm: 0.75 }, opacity: 0.5 }}>•</Box>
                                 <Box component="span" sx={{ color: RUST, fontWeight: 600 }}>{room.label}</Box>
                                 <Box component="span" sx={{ mx: { xs: 0.5, sm: 0.75 }, opacity: 0.5 }}>•</Box>
-                                <Box component="span" sx={{ textTransform: "capitalize" }}>{post.postType?.replace("_", " ")}</Box>
+                                <Box component="span" sx={{ textTransform: "capitalize" }}>
+                                    {livePost?.postType?.replace("_", " ")}
+                                </Box>
                             </Typography>
                         </Box>
                     </Stack>
@@ -245,15 +220,19 @@ export default function CommunityFeedItem({
                     )}
                 </Stack>
 
-                {/* Content: bold title only when the post has a real title; otherwise plain body text */}
+                {/* Title / body */}
                 {hasTitle ? (
                     <Typography
                         fontWeight={700}
                         lineHeight={1.35}
                         mb={body && !isOffering ? 0.75 : { xs: 1, sm: 1.5 }}
-                        sx={{ fontSize: { xs: "0.98rem", sm: "1.05rem", md: "1.1rem" }, wordBreak: "break-word", m: { xs: 0.25, sm: 0.5 } }}
+                        sx={{
+                            fontSize: { xs: "0.98rem", sm: "1.05rem", md: "1.1rem" },
+                            wordBreak: "break-word",
+                            m: { xs: 0.25, sm: 0.5 },
+                        }}
                     >
-                        {post.title}
+                        {livePost.title}
                     </Typography>
                 ) : (
                     <Typography
@@ -265,22 +244,9 @@ export default function CommunityFeedItem({
                             wordBreak: "break-word",
                         }}
                     >
-                        {post.description}
+                        {livePost.description}
                     </Typography>
                 )}
-                {/* {description && (
-                    <Typography
-                        sx={{
-                            fontSize: { xs: "0.92rem", sm: "0.97rem", md: "1rem" },
-                            lineHeight: 1.65,
-                            mb: { xs: 1, sm: 1.5 },
-                            whiteSpace: "pre-wrap",
-                            wordBreak: "break-word",
-                        }}
-                    >
-                        {post.description}
-                    </Typography>
-                )} */}
 
                 {hasTitle && body && (
                     <Box mb={{ xs: 1, sm: 1.5 }}>
@@ -305,7 +271,8 @@ export default function CommunityFeedItem({
                                 onClick={() => setExpanded((v) => !v)}
                                 sx={{
                                     p: 0, mt: 0.25, minWidth: "auto", textTransform: "none",
-                                    fontSize: { xs: "0.75rem", sm: "0.8rem" }, fontWeight: 600, color: SAFFRON,
+                                    fontSize: { xs: "0.75rem", sm: "0.8rem" },
+                                    fontWeight: 600, color: SAFFRON,
                                 }}
                             >
                                 {expanded ? "See less" : "See more"}
@@ -315,29 +282,38 @@ export default function CommunityFeedItem({
                 )}
 
                 {/* Tags */}
-                {(post.subCategory || post.timeframe || post.zipcode || post.tags?.length > 0) && (
-                    <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap sx={{ mb: { xs: 1, sm: 1.75 } }}>
-                        {[post.subCategory, post.timeframe, post.zipcode, ...(post.tags || [])].filter(Boolean).map((t) => (
-                            <Chip
-                                key={t}
-                                label={t}
-                                size="small"
-                                sx={{
-                                    bgcolor: "#FAF5F0", color: "#6B5B4E",
-                                    fontSize: { xs: "0.68rem", sm: "0.72rem" },
-                                    fontWeight: 500,
-                                    height: { xs: 22, sm: 24 },
-                                    maxWidth: "100%",
-                                    border: "1px solid #F0E6DC",
-                                    "& .MuiChip-label": { px: { xs: 0.9, sm: 1.1 } },
-                                }}
-                            />
-                        ))}
+                {(livePost?.subCategory || livePost?.timeframe || livePost?.zipcode || livePost?.tags?.length > 0) && (
+                    <Stack
+                        direction="row"
+                        spacing={0.75}
+                        flexWrap="wrap"
+                        useFlexGap
+                        sx={{ mb: { xs: 1, sm: 1.75 } }}
+                    >
+                        {[livePost?.subCategory, livePost?.timeframe, livePost?.zipcode, ...(livePost?.tags || [])]
+                            .filter(Boolean)
+                            .map((t) => (
+                                <Chip
+                                    key={t}
+                                    label={t}
+                                    size="small"
+                                    sx={{
+                                        bgcolor: "#FAF5F0",
+                                        color: "#6B5B4E",
+                                        fontSize: { xs: "0.68rem", sm: "0.72rem" },
+                                        fontWeight: 500,
+                                        height: { xs: 22, sm: 24 },
+                                        maxWidth: "100%",
+                                        border: "1px solid #F0E6DC",
+                                        "& .MuiChip-label": { px: { xs: 0.9, sm: 1.1 } },
+                                    }}
+                                />
+                            ))}
                     </Stack>
                 )}
 
-                {/* Image: full width — edge-to-edge on mobile, rounded inside the card on larger screens */}
-                {post.postImage && (
+                {/* Image */}
+                {livePost?.postImage && (
                     <Box
                         sx={{
                             mb: { xs: 1.25, sm: 1.75 },
@@ -358,65 +334,9 @@ export default function CommunityFeedItem({
                             },
                         }}
                     >
-                        <CommunityImage src={post.postImage} postImageUrl={post.postImageUrl} />
+                        <CommunityImage src={livePost.postImage} postImageUrl={livePost.postImageUrl} />
                     </Box>
                 )}
-
-                {/* Offering layout vs standard author row */}
-                {/* {isOffering && (
-                    <Box sx={{ bgcolor: "#F9F9F9", p: { xs: 1.5, sm: 2 }, borderRadius: 2, mb: { xs: 1.5, sm: 2 } }}>
-                        {hasTitle && body && (
-                            <Typography
-                                color="text.secondary"
-                                mb={{ xs: 1.5, sm: 2 }}
-                                sx={{ fontSize: { xs: "0.8rem", sm: "0.85rem" }, wordBreak: "break-word" }}
-                            >
-                                {body}
-                            </Typography>
-                        )}
-                        <Stack
-                            direction="row"
-                            spacing={{ xs: 1.5, sm: 2 }}
-                            alignItems="center"
-                            sx={{ mt: { xs: 1, sm: 1.5 } }}
-                            flexWrap="wrap"
-                            useFlexGap
-                        >
-                            <Stack direction="row" alignItems="center" spacing={0.5}>
-                                <StarIcon sx={{ fontSize: { xs: 15, sm: 16 }, color: "#FFB300" }} />
-                                <Typography fontWeight={700} sx={{ fontSize: { xs: "0.82rem", sm: "0.9rem" } }}>
-                                    {post.providerDetails?.rating || "New"}
-                                </Typography>
-                                <Typography sx={{ fontSize: { xs: "0.7rem", sm: "0.75rem" } }} color="text.secondary">
-                                    ({post.providerDetails?.reviewCount || 0} jobs)
-                                </Typography>
-                            </Stack>
-                            <Typography fontWeight={700} sx={{ fontSize: { xs: "0.82rem", sm: "0.9rem" } }}>
-                                {post.providerDetails?.price || "Contact for price"}
-                            </Typography>
-                            {post.providerDetails?.isInsured && (
-                                <Typography sx={{ fontSize: { xs: "0.82rem", sm: "0.9rem" } }} color="#2E7D32" fontWeight={600}>
-
-                                    ✓ Insured
-                                </Typography>
-                            )}
-                        </Stack>
-                        {!isAuthor && (
-                            <Button
-                                fullWidth
-                                variant="outlined"
-                                onClick={() => onMessage?.(author)}
-                                sx={{
-                                    textTransform: "none", borderColor: RUST, color: RUST, fontWeight: 600, borderRadius: 2,
-                                    py: { xs: 0.6, sm: 0.8 },
-                                    fontSize: { xs: "0.82rem", sm: "0.9rem" },
-                                }}
-                            >
-                                Message {author?.firstName}
-                            </Button>
-                        )}
-                    </Box>
-                )} */}
 
                 {/* Actions */}
                 <Divider sx={{ borderColor: "#F3ECE5" }} />
@@ -424,10 +344,10 @@ export default function CommunityFeedItem({
                     {[
                         {
                             key: "like",
-                            active: post.isLiked,
-                            onClick: () => onToggleLike(post._id, post.isLiked),
-                            icon: post.isLiked ? <ThumbUpIcon /> : <ThumbUpOffAltIcon />,
-                            label: `${post.likes || 0} Useful`,
+                            active: livePost?.isLiked,
+                            onClick: () => onToggleLike?.(livePost._id, livePost.isLiked),
+                            icon: livePost?.isLiked ? <ThumbUpIcon /> : <ThumbUpOffAltIcon />,
+                            label: `${livePost?.likes || 0} Useful`,
                         },
                         {
                             key: "answer",
@@ -439,7 +359,7 @@ export default function CommunityFeedItem({
                         {
                             key: "save",
                             active: saved,
-                            onClick: () => onToggleSave(post),
+                            onClick: () => onToggleSave?.(livePost),
                             icon: saved ? <BookmarkIcon /> : <BookmarkBorderIcon />,
                             label: saved ? "Saved" : "Save",
                         },
@@ -472,27 +392,31 @@ export default function CommunityFeedItem({
                     ))}
                 </Stack>
 
-                {/* Comments */}
                 {showComments && (
-                    <Box sx={{ mt: { xs: 1, sm: 1.5 }, pt: { xs: 1.5, sm: 2 }, borderTop: "1px solid #F3ECE5", minWidth: 0 }}>
-                        <CommunityComments post={post} user={commentUser} onCommentsChanged={setCommentCount} />
+                    <Box
+                        sx={{
+                            mt: { xs: 1, sm: 1.5 },
+                            pt: { xs: 1.5, sm: 2 },
+                            borderTop: "1px solid #F3ECE5",
+                            minWidth: 0,
+                        }}
+                    >
+                        <CommunityComments
+                            post={livePost}
+                            user={commentUser}
+                            onCommentsChanged={setCommentCount}
+                        />
                     </Box>
                 )}
-            </Paper >
+            </Paper>
 
-            {/* Edit / Delete menu */}
+            {/* Author menu (Edit / Delete) — the actual dialogs live in PostProvider */}
             <Menu
                 anchorEl={menuAnchor}
                 open={Boolean(menuAnchor)}
                 onClose={() => setMenuAnchor(null)}
-                anchorOrigin={{
-                    vertical: "bottom",
-                    horizontal: "left",
-                }}
-                transformOrigin={{
-                    vertical: "top",
-                    horizontal: "left",
-                }}
+                anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+                transformOrigin={{ vertical: "top", horizontal: "left" }}
                 slotProps={{
                     paper: {
                         elevation: 0,
@@ -507,207 +431,39 @@ export default function CommunityFeedItem({
                     },
                 }}
             >
-                {/* Edit */}
                 <MenuItem
-                    onClick={openEdit}
-                    sx={{
-                        borderRadius: "10px",
-                        bgcolor: "#FFFFFF",
-                        mb: 0.5,
-                        "&:hover": {
-                            bgcolor: "#EEF2FF",
-                        },
-                    }}
+                    onClick={handleEdit}
+                    sx={{ borderRadius: "10px", bgcolor: "#FFFFFF", mb: 0.5, "&:hover": { bgcolor: "#EEF2FF" } }}
                 >
-                    <ListItemIcon
-                        sx={{
-                            minWidth: { xs: 24, sm: 30 },
-                        }}
-                    >
-                        <EditIcon
-                            sx={{
-                                color: "#6C63FF",
-                                fontSize: { xs: 15, sm: 18, md: 20 },
-                            }}
-                        />
+                    <ListItemIcon sx={{ minWidth: { xs: 24, sm: 30 } }}>
+                        <EditIcon sx={{ color: "#6C63FF", fontSize: { xs: 15, sm: 18, md: 20 } }} />
                     </ListItemIcon>
-
                     <ListItemText
                         primary="Edit"
                         primaryTypographyProps={{
                             fontWeight: 600,
-                            color: "text.primary",
-                            sx: {
-                                fontSize: { xs: 12, sm: 13, md: 14 },
-                            },
+                            sx: { fontSize: { xs: 12, sm: 13, md: 14 } },
                         }}
                     />
                 </MenuItem>
 
-                {/* Delete */}
                 <MenuItem
-                    onClick={() => {
-                        setMenuAnchor(null);
-                        setDeleteOpen(true);
-                    }}
-                    sx={{
-                        borderRadius: "10px",
-                        bgcolor: "#FFFFFF",
-                        "&:hover": {
-                            bgcolor: "#FFF1F2",
-                        },
-                    }}
+                    onClick={handleDelete}
+                    sx={{ borderRadius: "10px", bgcolor: "#FFFFFF", "&:hover": { bgcolor: "#FFF1F2" } }}
                 >
-                    <ListItemIcon
-                        sx={{
-                            minWidth: { xs: 24, sm: 30 },
-                        }}
-                    >
-                        <DeleteIcon
-                            sx={{
-                                color: "#E53935",
-                                fontSize: { xs: 15, sm: 18, md: 20 },
-                            }}
-                        />
+                    <ListItemIcon sx={{ minWidth: { xs: 24, sm: 30 } }}>
+                        <DeleteIcon sx={{ color: "#E53935", fontSize: { xs: 15, sm: 18, md: 20 } }} />
                     </ListItemIcon>
-
                     <ListItemText
                         primary="Delete"
                         primaryTypographyProps={{
                             fontWeight: 600,
                             color: "error.main",
-                            sx: {
-                                fontSize: { xs: 12, sm: 13, md: 14 },
-                            },
+                            sx: { fontSize: { xs: 12, sm: 13, md: 14 } },
                         }}
                     />
                 </MenuItem>
             </Menu>
-
-            {/* Edit dialog */}
-            < Dialog
-                open={editOpen}
-                fullWidth
-                maxWidth="sm"
-                scroll="paper"
-                disableRestoreFocus
-                onClose={(e, reason) => { if (reason !== "backdropClick") setEditOpen(false); }}
-                PaperProps={{
-                    sx: {
-                        borderRadius: { xs: 0, sm: 3 },
-                        m: { xs: 0, sm: 2 },
-                        width: { xs: "100%", sm: "calc(100% - 32px)" },
-                        maxWidth: { xs: "100%", sm: 600 },
-                        height: { xs: "100dvh", sm: "auto" },
-                        maxHeight: { xs: "100dvh", sm: "calc(100% - 64px)" },
-                    },
-                }}
-            >
-                <DialogTitle
-                    sx={{
-                        display: "flex", alignItems: "center", justifyContent: "space-between",
-                        fontWeight: 600, py: 1.5, px: { xs: 1.5, sm: 2 },
-                        fontSize: { xs: "1rem", sm: "1.15rem" },
-                    }}
-                >
-                    Edit post
-                    <IconButton size="small" onClick={() => setEditOpen(false)} sx={{ p: { xs: 0.75, sm: 0.5 } }}>
-                        <CloseIcon fontSize="small" />
-                    </IconButton>
-                </DialogTitle>
-                <DialogContent dividers sx={{ px: { xs: 1.5, sm: 3 }, py: { xs: 1.5, sm: 2 } }}>
-                    {hasTitle && (
-                        <TextField
-                            fullWidth size="small" margin="dense" label="Title"
-                            value={editTitle} onChange={(e) => setEditTitle(e.target.value)} sx={{ mb: 1 }}
-                        />
-                    )}
-                    {hasWhen && (
-                        <TextField
-                            fullWidth size="small" margin="dense" label="When"
-                            value={editWhen} onChange={(e) => setEditWhen(e.target.value)} sx={{ mb: 1 }}
-                        />
-                    )}
-                    <TextField
-                        fullWidth multiline minRows={3} size="small" margin="dense"
-                        label={hasTitle ? "Details" : "Description"}
-                        value={editDesc} onChange={(e) => setEditDesc(e.target.value)}
-                    />
-                    <Box
-                        sx={{
-                            mt: 2,
-                            width: "100%",
-                            "& img": { maxWidth: "100%", height: "auto" },
-                        }}
-                    >
-                        <ImagePicker
-                            file={editImage}
-                            onChange={setEditImage}
-                            existingUrl={post.postImageUrl || post.postImage || ""}
-                        />
-                    </Box>
-                </DialogContent>
-                <DialogActions sx={{ p: { xs: 1.5, sm: 2 }, gap: 1 }}>
-                    <Button
-                        onClick={resetEdit}
-                        sx={{ textTransform: "none", color: "#666", fontSize: { xs: "0.85rem", sm: "0.9rem" } }}
-                    >
-                        Reset
-                    </Button>
-                    <Button
-                        variant="contained"
-                        disabled={updating || (!editDesc.trim() && !editTitle.trim())}
-                        onClick={handleSave}
-                        sx={{
-                            textTransform: "none", bgcolor: "#FF9933", fontWeight: 600,
-                            fontSize: { xs: "0.85rem", sm: "0.9rem" },
-                            "&:hover": { bgcolor: "#E68A00" },
-                        }}
-                    >
-                        {updating ? "Saving..." : "Save"}
-                    </Button>
-                </DialogActions>
-            </Dialog >
-
-            {/* Delete confirmation */}
-            < Dialog
-                open={deleteOpen}
-                fullWidth
-                maxWidth="xs"
-                onClose={(e, reason) => { if (reason !== "backdropClick") setDeleteOpen(false); }}
-                PaperProps={{ sx: { m: { xs: 2, sm: 4 }, width: { xs: "calc(100% - 32px)", sm: "100%" }, borderRadius: 3 } }}
-            >
-                <DialogTitle
-                    sx={{
-                        display: "flex", alignItems: "center", gap: 1, fontWeight: 600,
-                        fontSize: { xs: "1.05rem", sm: "1.2rem" }, px: { xs: 2, sm: 3 },
-                    }}
-                >
-                    <WarningAmberRoundedIcon color="error" /> Delete post?
-                </DialogTitle>
-                <DialogContent sx={{ px: { xs: 2, sm: 3 } }}>
-                    <Typography color="text.secondary" sx={{ fontSize: { xs: "0.88rem", sm: "1rem" } }}>
-                        Are you sure you want to delete this post? This can't be undone.
-                    </Typography>
-                </DialogContent>
-                <DialogActions sx={{ px: { xs: 2, sm: 3 }, pb: 2 }}>
-                    <Button
-                        onClick={() => setDeleteOpen(false)}
-                        sx={{ textTransform: "none", fontSize: { xs: "0.85rem", sm: "0.9rem" } }}
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        color="error"
-                        variant="contained"
-                        disabled={deleting}
-                        onClick={handleDelete}
-                        sx={{ textTransform: "none", fontSize: { xs: "0.85rem", sm: "0.9rem" } }}
-                    >
-                        {deleting ? "Deleting..." : "Delete"}
-                    </Button>
-                </DialogActions>
-            </Dialog >
         </>
     );
 }

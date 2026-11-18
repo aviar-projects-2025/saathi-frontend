@@ -12,6 +12,7 @@ import { RatingProvider } from "./context/RatingContext"
 import './utils/axiosInterceptor'
 import { ChatSocketProvider } from "./context/ChatSocketContext";
 import { ChatModalProvider } from "./context/ChatModalContext";
+import { PostProvider } from "./context/PostContext";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
@@ -22,11 +23,13 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             <ChatModalProvider>
               <RideProvider>
                 <ReferralProvider>
-                  <AppProvider>
-                    <RatingProvider>
-                      <App />
-                    </RatingProvider>
-                  </AppProvider>
+                  <PostProvider>
+                    <AppProvider>
+                      <RatingProvider>
+                        <App />
+                      </RatingProvider>
+                    </AppProvider>
+                  </PostProvider>
                 </ReferralProvider>
               </RideProvider>
             </ChatModalProvider>

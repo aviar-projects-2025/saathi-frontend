@@ -19,6 +19,8 @@ const commonPrefixLen = (a, b) => {
   return i;
 };
 
+
+
 const proximityScore = (postZip, userZip) => {
   const a = normalizePostal(postZip);
   const b = normalizePostal(userZip);
@@ -49,6 +51,10 @@ export default function useCommunityFeed({
   const toasts = ToastConfig();
   const userId = currentUser?._id;
   const userZip = currentUser?.zipcode;
+
+  const authConfig = useCallback(() => ({
+    headers: { Authorization: `Bearer ${localStorage.getItem("token") || ""}` },
+  }), []);
 
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -176,26 +182,43 @@ export default function useCommunityFeed({
   const toggleSave = useCallback(
     async (post) => {
       if (isPostSaved(post._id)) {
-        removeSavedPost(post._id);
+        await removeSavedPost(post._id);
         return;
       }
+
       try {
-        const res = await axios.post(`${Api}/save-post/${post._id}/${userId}`);
-        setSavedPost((prev) => [...prev, { _id: res.data.data._id, postId: post, userId }]);
+        const res = await axios.post(
+          `${Api}/save-post/${post._id}/${userId}`,
+          {},
+          authConfig()
+        );
+
+        setSavedPost((prev) => [
+          ...prev,
+          {
+            _id: res.data.data._id,
+            postId: post,
+            userId,
+          },
+        ]);
       } catch (error) {
-        console.error(error);
+        console.error(
+          "Save post error:",
+          error.response?.status,
+          error.response?.data || error.message
+        );
+
         toast.error("Failed to save post", toasts);
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [isPostSaved, removeSavedPost, setSavedPost, userId]
+    [isPostSaved, removeSavedPost, setSavedPost, userId, authConfig, toasts]
   );
 
   /* ── delete ── returns true / false */
   const deletePost = useCallback(
     async (postId) => {
       try {
-        const res = await axios.delete(`${Api}/community/${postId}`, { data: { userId } });
+        const res = await axios.delete(`${Api}/community/${postId}/delete`, authConfig());
         setPosts((prev) => prev.filter((p) => p._id !== postId));
         toast.success(res.data.message, toasts);
         return true;
@@ -227,18 +250,18 @@ export default function useCommunityFeed({
         });
 
         const updated = res.data.data;
-        console.log(updated,'updated')
+        console.log(updated, 'updated')
         setPosts((prev) =>
-          prev.map((p) =>(
+          prev.map((p) => (
             p._id === postId
               ? {
-                  ...p,
-                  title: updated.title,
-                  timeframe : updated.timeframe,
-                  description: updated.description,
-                  postImage: updated.postImage,
-                  postImageUrl: updated.postImageUrl,
-                }
+                ...p,
+                title: updated.title,
+                timeframe: updated.timeframe,
+                description: updated.description,
+                postImage: updated.postImage,
+                postImageUrl: updated.postImageUrl,
+              }
               : p
           ))
         );

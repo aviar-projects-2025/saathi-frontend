@@ -569,7 +569,7 @@ const CommunityComments = ({ post, user, onCommentsChanged }) => {
                     >
                       <Stack direction="row" spacing={{ xs: 0.5, sm: 0.75 }}>
                         <ProtectedAvatar
-                          src={replyItem?.userId?.profileImage}
+                          src={replyItem?.userId?.profileImageUrl}
                           sx={{
                             width: { xs: 20, sm: 22, md: 24 },
                             height: { xs: 20, sm: 22, md: 24 },

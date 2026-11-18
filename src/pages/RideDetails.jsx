@@ -298,6 +298,8 @@ function PassengerStub({
   approveLoading,
   rejectLoading,
   dense,
+  isRideFinished,
+  isCurrentRide,
 }) {
   const [open, setOpen] = useState(false);
   const v = requestVisual(request);
@@ -629,7 +631,7 @@ function PassengerStub({
               </>
             )}
 
-            {v.label === "Approved" && (
+            {v.label === "Approved" && !isCurrentRide && !isRideFinished &&(
               <IconButton
                 onClick={(event) => handleMenuOpen(event, request)}
                 sx={{
