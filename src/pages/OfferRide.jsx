@@ -1189,12 +1189,12 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
 
             <Paper variant="outlined" sx={{ borderRadius: 2, borderColor: BORDER, bgcolor: CARD, overflow: "hidden" }}>
               <Box sx={{ px: { xs: 1.75, sm: 2.5 } }}>
-                <ToggleRow
+                {/* <ToggleRow
                   icon={ShieldCheck}
                   title="Women drivers only"
                   checked={requestForm.womenDriversOnly}
                   onChange={(v) => updateRequest("womenDriversOnly", v)}
-                />
+                /> */}
                 <ToggleRow
                   icon={Baby}
                   title="Traveling with a child"

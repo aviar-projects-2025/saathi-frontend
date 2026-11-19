@@ -55,7 +55,35 @@ const roleOf = (ride, userId) => {
 const personName = (p) =>
   [p?.firstName, p?.lastName].filter(Boolean).join(" ") || "a community member";
 
-const statusLabelOf = (ride) => {
+// A request is "pending" if it still has unhandled seats.
+// Falls back to status for requests without seat fields.
+const isPendingRequest = (r) => {
+  if (r?.pendingReqSeats != null) return Number(r.pendingReqSeats) > 0;
+  return String(r?.status || "").toUpperCase() === "PENDING";
+};
+
+// Totals of approved / rejected / pending across all requests on a ride.
+// Uses seat counts when the backend sends them, otherwise counts one per request by status.
+const requestStats = (reqs = []) =>
+  reqs.reduce(
+    (acc, r) => {
+      const hasSeats = r?.approvedSeats != null || r?.rejectedSeats != null || r?.pendingReqSeats != null;
+      if (hasSeats) {
+        acc.approved += Number(r.approvedSeats || 0);
+        acc.rejected += Number(r.rejectedSeats || 0);
+        acc.pending += Number(r.pendingReqSeats || 0);
+      } else {
+        const s = String(r?.status || "").toUpperCase();
+        if (["ACCEPTED", "APPROVED"].includes(s)) acc.approved += 1;
+        else if (["REJECTED", "AUTO_REJECTED"].includes(s)) acc.rejected += 1;
+        else if (s === "PENDING") acc.pending += 1;
+      }
+      return acc;
+    },
+    { approved: 0, rejected: 0, pending: 0 }
+  );
+
+const statusLabelOf = (ride, { pendingCount = 0, requestCount = 0 } = {}) => {
   if (ride?.travelStatus === "Cancelled") return "Cancelled";
   if (ride?.travelStatus === "Completed") return "Completed";
   if (ride?.travelStatus === "Started") return "Ongoing";
@@ -63,7 +91,11 @@ const statusLabelOf = (ride) => {
     if (isMatched(ride)) return "Driver confirmed";
     return ride?.status === "CLOSED" ? "Request closed" : "Waiting for a driver";
   }
-  return ride?.status === "FULL" ? "Filled" : "Open for requests";
+  // offered ride
+  if (ride?.status === "FULL") return "Filled";
+  if (pendingCount > 0) return `${pendingCount} pending request${pendingCount > 1 ? "s" : ""}`;
+  if (requestCount > 0) return "All requests handled";
+  return "Open for requests";
 };
 const travelIcons = {
   Car: DirectionsCarIcon, Bus: DirectionsBusIcon, Bike: TwoWheelerIcon,
@@ -186,7 +218,7 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
 /* ───────────── ride card ───────────── */
 function RideCard({
   ride, user, isCurrentRide, showEdit, showDelete, onEdit, onDelete,
-  rideRequests, pendingCount, offersCount,
+  rideRequests, pendingCount, offersCount, stats,
   notificationRide, setNotificationRide,
   onApprove, onReject, onRequestUpdated, approveLoading, rejectLoading,
   onTravelAction, actionLoading,
@@ -208,6 +240,7 @@ function RideCard({
   const isCompleted = ride?.travelStatus === "Completed";
   const isCancelled = ride?.travelStatus === "Cancelled";
   const busy = actionLoading === idOf(ride);
+  const hasPendingStatus = !isCompleted && !isCancelled && !isStarted && isOffer && !matched && pendingCount > 0;
 
   useEffect(() => {
     if (!notificationRide) return;
@@ -220,16 +253,25 @@ function RideCard({
 
   const strong = (t) => <b style={{ color: k.color }}>{t}</b>;
   let footerText;
+
   if (isCompleted || isCancelled) {
-    footerText = isCompleted ? "This ride is complete" : "This ride was cancelled";
+    footerText = isCompleted
+      ? "This ride is complete"
+      : "This ride was cancelled";
   } else if (matched) {
     footerText = isOffer
       ? <>Passenger: {strong(personName(ride.createdBy))}</>
       : <>Driver: {strong(personName(ride.actualDriver))}</>;
   } else if (isOffer) {
-    footerText = pendingCount > 0
-      ? <>{strong(`${pendingCount} new request${pendingCount > 1 ? "s" : ""}`)} waiting for you</>
-      : rideRequests.length > 0 ? "All requests handled" : "No requests yet";
+    footerText = rideRequests.length > 0 && stats ? (
+      <>
+        <b style={{ color: "#2D6A4F" }}>{stats.approved} Approved</b>
+        {" · "}
+        <b style={{ color: "#9B2226" }}>{stats.rejected} Rejected</b>
+        {" · "}
+        <b style={{ color: "#C65B00" }}>{stats.pending} Pending</b>
+      </>
+    ) : "No requests yet";
   } else {
     footerText = offersCount > 0
       ? <>{strong(`${offersCount} offer${offersCount > 1 ? "s" : ""}`)} to help you</>
@@ -243,8 +285,14 @@ function RideCard({
           <Stack direction="row" spacing={0.75} alignItems="center" useFlexGap flexWrap="wrap">
             <Chip size="small" label={k.label} sx={{ bgcolor: k.bg, color: k.color, fontWeight: 700, borderRadius: "8px" }} />
           </Stack>
-          <Typography sx={{ fontSize: "0.76rem", fontWeight: 600, color: isCompleted ? "#2D6A4F" : isCancelled ? "#9B2226" : "text.secondary" }}>
-            {statusLabelOf(ride)}
+          <Typography
+            sx={{
+              fontSize: "0.76rem",
+              fontWeight: 600,
+              color: isCompleted ? "#2D6A4F" : isCancelled ? "#9B2226" : hasPendingStatus ? "#C65B00" : "text.secondary",
+            }}
+          >
+            {statusLabelOf(ride, { pendingCount, requestCount: rideRequests.length })}
           </Typography>
         </Box>
 
@@ -417,7 +465,6 @@ const MyRides = () => {
       setLoadingHelpProposals(true);
       const res = await axios.get(`${Api}/help-proposals/received`, authConfig());
       const body = res?.data;
-      // console.log(body, 'body')
       setHelpProposals(Array.isArray(body?.data) ? body.data : Array.isArray(body?.proposals) ? body.proposals : Array.isArray(body) ? body : []);
     } catch (error) {
       toast.error(error?.response?.data?.message || "Unable to load help proposals", toasts);
@@ -516,8 +563,18 @@ const MyRides = () => {
         { status: "ACCEPTED" },
         authConfig()
       );
+      // Optimistic update: move pending seats to approved so the card updates immediately
       setAllRequests((prev) =>
-        prev.map((r) => (r._id === requestId ? { ...r, status: "ACCEPTED" } : r))
+        prev.map((r) =>
+          r._id === requestId
+            ? {
+              ...r,
+              status: "ACCEPTED",
+              approvedSeats: Number(r.approvedSeats || 0) + Number(r.pendingReqSeats || 0),
+              pendingReqSeats: 0,
+            }
+            : r
+        )
       );
       await fetchAllRequests();
       await refreshCategory(active.key);
@@ -689,11 +746,7 @@ const MyRides = () => {
     refreshAllCategories();
   }, [refreshRide]);
 
-  // ★ Notification-driven refresh (removed dedupe — refetch on ANY notification)
-  // We do NOT dedupe here anymore because:
-  //   1. The backend may legitimately re-emit the same ride's status changes
-  //   2. Dupe notifications for the same ride/request are handled by the server
-  //   3. Firing an extra refresh is cheap; missing a refresh breaks UX
+  // ★ Notification-driven refresh (refetch on ANY new notification)
   const lastNotificationCount = useRef(0);
 
   useEffect(() => {
@@ -710,13 +763,6 @@ const MyRides = () => {
 
     // Only fire when the count grows (a new notification was added)
     if (notifications.length > lastNotificationCount.current) {
-      const newest = notifications[0];
-      // console.log(
-      //   "[MY_RIDES] refreshing due to new notification:",
-      //   newest?.type,
-      //   "| total:",
-      //   notifications.length
-      // );
       refreshAllCategories();
     }
 
@@ -746,8 +792,6 @@ const MyRides = () => {
     const onSocketNotification = (payload) => {
       const t = payload?.type;
       if (!t || !REFRESH_TYPES.has(t)) return;
-
-      // console.log("[MY_RIDES][SOCKET] realtime refresh on:", t);
       refreshAllCategories();
     };
 
@@ -765,6 +809,7 @@ const MyRides = () => {
 
     const interval = setInterval(() => {
       fetchCategory("current", { reset: true });
+      fetchAllRequests();
       fetchRideCounts();
     }, 30_000);
 
@@ -825,9 +870,11 @@ const MyRides = () => {
       const cancelled = ride?.travelStatus === "Cancelled";
       const rideRequests = allRequests.filter((req) => req.rideId?._id?.toString() === ride._id?.toString());
 
-      const pendingCount = rideRequests.filter((r) => r.status?.toUpperCase() === "PENDING").length;
+      // Pending = request still has unhandled seats (falls back to status)
+      const pendingCount = rideRequests.filter(isPendingRequest).length;
+      const stats = requestStats(rideRequests);
 
-      // ★ NEW: Check if any request is already accepted/approved
+      // Check if any request is already accepted/approved
       const hasApprovedRequests = rideRequests.some((r) =>
         ["ACCEPTED", "APPROVED", "AUTO_REJECTED"].includes(r.status?.toUpperCase())
       );
@@ -836,17 +883,17 @@ const MyRides = () => {
       const matched = isMatched(ride);
       const owner = String(getRefId(ride.createdBy) || "") === String(currentUserId || "");
 
-      // ★ NEW: Prevent editing if completed, cancelled, matched, or someone has been approved
+      // Prevent editing if completed, cancelled, matched, or someone has been approved
       const canEdit = active.edit && !completed && !cancelled && !matched && !hasApprovedRequests;
 
       return (
         <RideCard
           key={idOf(ride)} ride={ride} user={currentUser}
           isCurrentRide={active.current}
-          showEdit={canEdit} // <-- Updated
+          showEdit={canEdit}
           showDelete={active.del && !completed && !cancelled && (!matched || owner)}
           onEdit={setEditRide} onDelete={setDeleteRide}
-          rideRequests={rideRequests} pendingCount={pendingCount} offersCount={offersCount}
+          rideRequests={rideRequests} pendingCount={pendingCount} offersCount={offersCount} stats={stats}
           notificationRide={notificationRide} setNotificationRide={setNotificationRide}
           onApprove={handleApprove} onReject={handleReject} onRequestUpdated={handleRequestUpdated}
           approveLoading={approveLoading} rejectLoading={rejectLoading}
@@ -869,7 +916,6 @@ const MyRides = () => {
               <Typography sx={{ fontWeight: 800, fontSize: "0.95rem" }}>People offered to help you</Typography>
               <Typography variant="body2" color="text.secondary">On your ride requests · tap to review</Typography>
             </Box>
-            {/* {console.log(offersOpen, 'offersOpen ')} */}
             <ExpandMoreIcon sx={{ transform: offersOpen ? "rotate(180deg)" : "none", transition: "transform .2s", color: "text.secondary" }} />
           </Box>
           <Collapse in={offersOpen} unmountOnExit>
@@ -887,7 +933,6 @@ const MyRides = () => {
                 const responding = respondingProposalId === proposal._id;
                 return (
                   <Box key={proposal._id} sx={{ p: { xs: 1.5, sm: 2 } }}>
-                    {/* {console.log(helper, 'helper')} */}
                     <Stack direction="row" spacing={1.25} alignItems="center" sx={{ mb: 1.25 }}>
                       <ProtectedAvatar src={helper.profileImageUrl || ""} sx={{ width: 40, height: 40, bgcolor: "#FFF0E3", color: "#C65B00", fontWeight: 800 }}>
                         {`${helper.firstName?.[0] || ""}${helper.lastName?.[0] || ""}` || "U"}
@@ -960,21 +1005,158 @@ const MyRides = () => {
       {editRide && <EditRideModal ride={editRide} onSave={handleEdit} onClose={() => setEditRide(null)} />}
       {deleteRide && <DeleteConfirmDialog ride={deleteRide} onConfirm={handleDelete} onClose={() => setDeleteRide(null)} />}
 
-      <Dialog open={!!confirmRide} onClose={(e, reason) => { if (reason !== "backdropClick") setConfirmRide(null); }}
-        PaperProps={{ sx: { borderRadius: 3, mx: { xs: 2, sm: "auto" }, width: { xs: "calc(100% - 32px)", sm: "100%" }, maxWidth: 450 } }}>
-        <DialogContent sx={{ pb: 1 }}><Typography sx={{ fontWeight: 700 }}>Looks like your ride is starting</Typography></DialogContent>
-        <DialogContent sx={{ pt: 0 }}>
-          <Typography sx={{ fontSize: "0.9rem", mb: 0.5 }}>From: {confirmRide?.from || "—"}</Typography>
-          <Typography sx={{ fontSize: "0.9rem", mb: 0.5 }}>To: {confirmRide?.destination || "—"}</Typography>
-          <Typography sx={{ fontSize: "0.9rem" }}>Time: {confirmRide?.startTime ? moment(confirmRide.startTime).format("DD MMM YYYY, hh:mm A") : "—"}</Typography>
+      <Dialog
+        open={!!confirmRide}
+        onClose={(e, reason) => {
+          if (reason !== "backdropClick") {
+            setConfirmRide(null);
+          }
+        }}
+        PaperProps={{
+          sx: {
+            width: {
+              xs: "calc(100% - 24px)",
+              sm: "90%",
+              md: "850px",
+              lg: "1000px",
+              xl: "1100px",
+            },
+            maxWidth: "1100px",
+            mx: "auto",
+            borderRadius: "14px",
+            overflow: "hidden",
+            border: "1px solid #FFE0B2",
+            boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
+            m: { xs: 1.5, sm: 2 },
+          },
+        }}
+      >
+        {/* HEADER */}
+        <Box
+          sx={{
+            bgcolor: "#FFF4E5",
+            borderTop: "4px solid #F89B04",
+            borderBottom: "1px solid #FFE0B2",
+            px: 2.5,
+            py: 1.75,
+          }}
+        >
+          <Typography sx={{ fontSize: "1rem", fontWeight: 700, color: "#292929" }}>
+            Looks like your ride is starting
+          </Typography>
+
+          <Typography sx={{ fontSize: "0.78rem", color: "#8A7355", mt: 0.4 }}>
+            Please confirm before starting your journey.
+          </Typography>
+        </Box>
+
+        {/* RIDE DETAILS */}
+        <DialogContent sx={{ px: 2.5, py: 2 }}>
+          <Box
+            sx={{
+              bgcolor: "#FFFAF2",
+              border: "1px solid #FFE0B2",
+              borderRadius: "10px",
+              p: 1.75,
+            }}
+          >
+            <Stack spacing={1.5}>
+              <Box>
+                <Typography sx={{ fontSize: "0.7rem", fontWeight: 700, color: "#A08B72", letterSpacing: 0.8 }}>
+                  FROM
+                </Typography>
+                <Typography sx={{ fontSize: "0.88rem", fontWeight: 600, color: "#292929", overflowWrap: "anywhere" }}>
+                  {confirmRide?.from || "—"}
+                </Typography>
+              </Box>
+
+              <Box sx={{ borderLeft: "2px dashed #F89B04", height: 10, ml: 0.5 }} />
+
+              <Box>
+                <Typography sx={{ fontSize: "0.7rem", fontWeight: 700, color: "#A08B72", letterSpacing: 0.8 }}>
+                  TO
+                </Typography>
+                <Typography sx={{ fontSize: "0.88rem", fontWeight: 600, color: "#292929", overflowWrap: "anywhere" }}>
+                  {confirmRide?.destination || "—"}
+                </Typography>
+              </Box>
+
+              <Box sx={{ borderTop: "1px solid #FFE0B2", pt: 1.25 }}>
+                <Typography sx={{ fontSize: "0.7rem", fontWeight: 700, color: "#A08B72", letterSpacing: 0.8 }}>
+                  START TIME
+                </Typography>
+                <Typography sx={{ fontSize: "0.85rem", fontWeight: 600, color: "#75552B" }}>
+                  {confirmRide?.startTime
+                    ? moment(confirmRide.startTime).format("DD MMM YYYY, hh:mm A")
+                    : "—"}
+                </Typography>
+              </Box>
+            </Stack>
+          </Box>
         </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2.5, gap: 1.5 }}>
-          <Button variant="contained" onClick={() => setConfirmRide(null)} sx={{ flex: 1, minHeight: 40, bgcolor: "#757575", boxShadow: "none", "&:hover": { bgcolor: "#616161" } }}>Not yet</Button>
-          <Button variant="contained" disabled={actionLoading === idOf(confirmRide)} onClick={() => handleTravelAction(confirmRide)} sx={{ flex: 1, minHeight: 40, bgcolor: "#f89b04", boxShadow: "none", "&:hover": { bgcolor: "#db8700" } }}>
+
+        {/* ACTION BUTTONS */}
+        <DialogActions
+          sx={{
+            px: 2.5,
+            pb: 2,
+            pt: 0,
+            gap: 1,
+            flexWrap: "nowrap",
+          }}
+        >
+          <Button
+            variant="outlined"
+            onClick={() => setConfirmRide(null)}
+            sx={{
+              flex: 1,
+              minWidth: 0,
+              minHeight: 38,
+              borderRadius: "8px",
+              borderColor: "#D6D6D6",
+              color: "#666",
+              fontSize: "0.82rem",
+              fontWeight: 600,
+              textTransform: "none",
+              "&:hover": {
+                borderColor: "#999",
+                bgcolor: "#F5F5F5",
+              },
+            }}
+          >
+            Not yet
+          </Button>
+
+          <Button
+            variant="contained"
+            disabled={actionLoading === idOf(confirmRide)}
+            onClick={() => handleTravelAction(confirmRide)}
+            sx={{
+              flex: 1,
+              minWidth: 0,
+              minHeight: 38,
+              borderRadius: "8px",
+              bgcolor: "#F89B04",
+              color: "#FFF",
+              fontSize: "0.82rem",
+              fontWeight: 700,
+              textTransform: "none",
+              boxShadow: "none",
+              "&:hover": {
+                bgcolor: "#DB8700",
+                boxShadow: "none",
+              },
+              "&.Mui-disabled": {
+                bgcolor: "#F5C978",
+                color: "#FFF",
+              },
+            }}
+          >
             {actionLoading === idOf(confirmRide) ? "Starting…" : "Start now"}
           </Button>
         </DialogActions>
       </Dialog>
+
     </Box>
   );
 };
