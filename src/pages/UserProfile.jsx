@@ -130,91 +130,312 @@ function PostDetailDialog({
       : "";
 
   return (
+
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="md"
+      maxWidth="sm"
       fullWidth
+      fullScreen={false}
       disableScrollLock
-      slotProps={{ root: { sx: { zIndex: (theme) => theme.zIndex.modal + 10 } } }}
+      // slotProps={{
+      //   root: {
+      //     sx: {
+      //       zIndex: (theme) => theme.zIndex.modal + 10,
+      //     },
+      //   },
+      // }}
       PaperProps={{
         sx: {
-          borderRadius: { xs: 2, sm: RADIUS.card },
+          width: {
+            xs: "calc(100% - 16px)",
+            sm: "100%",
+          },
+          maxWidth: {
+            xs: "100%",
+            sm: "600px",
+          },
+          maxHeight: {
+            xs: "calc(100% - 16px)",
+            sm: "90vh",
+          },
+          borderRadius: {
+            xs: 2,
+            sm: RADIUS.card,
+          },
           overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
           bgcolor: C.paper,
-          m: { xs: 1.5, sm: 3 },
+          m: {
+            xs: 1,
+            sm: 3,
+          },
         },
       }}
     >
-      <DialogTitle sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontFamily: SERIF, fontWeight: 600, pb: 1 }}>
-        <Box sx={{ minWidth: 0 }}>
-          <Typography sx={{ fontFamily: SERIF, fontWeight: 600, fontSize: { xs: "1.05rem", sm: "1.2rem" }, color: C.ink }}>
+      {/* Header */}
+      <DialogTitle
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 1,
+          fontFamily: SERIF,
+          fontWeight: 600,
+          px: { xs: 2, sm: 3 },
+          py: { xs: 1.5, sm: 2 },
+          flexShrink: 0,
+        }}
+      >
+        <Box sx={{ minWidth: 0, flex: 1 }}>
+          <Typography
+            sx={{
+              fontFamily: SERIF,
+              fontWeight: 600,
+              fontSize: {
+                xs: "1rem",
+                sm: "1.15rem",
+                md: "1.2rem",
+              },
+              color: C.ink,
+              overflowWrap: "anywhere",
+            }}
+          >
             Community post
           </Typography>
+
           {ownerName && (
-            <Typography sx={{ fontSize: "0.78rem", color: C.muted, mt: 0.25 }}>
+            <Typography
+              sx={{
+                fontSize: { xs: "0.72rem", sm: "0.78rem" },
+                color: C.muted,
+                mt: 0.25,
+                overflowWrap: "anywhere",
+              }}
+            >
               by {ownerName}
             </Typography>
           )}
         </Box>
-        <IconButton onClick={onClose} aria-label="Close" size="small">
+
+        <IconButton
+          onClick={onClose}
+          aria-label="Close"
+          size="small"
+          sx={{ flexShrink: 0 }}
+        >
           <CloseIcon />
         </IconButton>
       </DialogTitle>
 
-      <DialogContent sx={{ p: 0, bgcolor: C.canvas }}>
+      {/* Content */}
+      <DialogContent
+        sx={{
+          p: 0,
+          bgcolor: C.canvas,
+          overflowY: "auto",
+          overflowX: "hidden",
+          flex: 1,
+          minHeight: 0,
+          WebkitOverflowScrolling: "touch",
+        }}
+      >
         {image ? (
-          <Box component="img" src={image} alt={post.description || "Community post"} sx={{ display: "block", width: "100%", maxHeight: "60vh", objectFit: "contain", bgcolor: "#000" }} />
+          <Box
+            component="img"
+            src={image}
+            alt={post.description || "Community post"}
+            sx={{
+              display: "block",
+              width: "100%",
+              height: {
+                xs: "auto",
+                sm: "auto",
+              },
+              maxHeight: {
+                xs: "45vh",
+                sm: "55vh",
+                md: "60vh",
+              },
+              objectFit: "contain",
+              bgcolor: "#fff",
+            }}
+          />
         ) : (
-          <Box sx={{ width: "100%", aspectRatio: "16 / 10", bgcolor: C.tint, display: "flex", alignItems: "center", justifyContent: "center", color: C.muted, fontSize: "0.85rem" }}>
-            No image
+          <Box
+            sx={{
+              width: "100%",
+              aspectRatio: {
+                xs: "4 / 3",
+                sm: "16 / 10",
+              },
+              bgcolor: C.tint,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+              p: 3,
+              boxSizing: "border-box",
+            }}
+          >
+            <Typography
+              sx={{
+                width: "100%",
+                color: C.body,
+                fontSize: "0.95rem",
+                lineHeight: 1.6,
+                fontWeight: 500,
+                overflowWrap: "anywhere",
+                textAlign: "center",
+                display: "-webkit-box",
+                WebkitLineClamp: 5,
+                WebkitBoxOrient: "vertical",
+                overflow: "hidden",
+              }}
+            >
+              {post.description || "Community post"}
+            </Typography>
           </Box>
         )}
-        <Box sx={{ p: { xs: 2, sm: 3 } }}>
-          {post.description && (
-            <Typography sx={{ color: C.body, fontSize: { xs: "0.92rem", sm: "0.98rem" }, lineHeight: 1.7, whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>
+
+        <Box
+          sx={{
+            p: {
+              xs: 2,
+              sm: 2.5,
+              md: 3,
+            },
+          }}
+        >
+          {image && post.description && (
+            <Typography
+              sx={{
+                color: C.body,
+                fontSize: {
+                  xs: "0.88rem",
+                  sm: "0.95rem",
+                  md: "0.98rem",
+                },
+                lineHeight: 1.7,
+                whiteSpace: "pre-wrap",
+                overflowWrap: "anywhere",
+                wordBreak: "break-word",
+              }}
+            >
               {post.description}
             </Typography>
           )}
           {createdLabel && (
-            <Typography sx={{ mt: 1.5, fontSize: "0.75rem", color: C.muted }}>
+            <Typography
+              sx={{
+                mt: 1.5,
+                fontSize: {
+                  xs: "0.7rem",
+                  sm: "0.75rem",
+                },
+                color: C.muted,
+              }}
+            >
               Posted {createdLabel}
             </Typography>
           )}
         </Box>
       </DialogContent>
 
-      <DialogActions sx={{ p: 2, gap: 1, flexWrap: "wrap", justifyContent: "space-between", borderTop: `1px solid ${C.line}` }}>
+      {/* Actions */}
+      <DialogActions
+        sx={{
+          p: {
+            xs: 1.5,
+            sm: 2,
+          },
+          gap: {
+            xs: 1,
+            sm: 1.5,
+          },
+          flexWrap: "wrap",
+          justifyContent: "space-between",
+          alignItems: "center",
+          borderTop: `1px solid ${C.line}`,
+          flexShrink: 0,
+        }}
+      >
         <Button
           variant="outlined"
           startIcon={isSaved ? <BookmarkIcon /> : <BookmarkBorderIcon />}
           onClick={() => onToggleSave?.(post)}
           disabled={savingPostId === post._id}
           sx={{
-            textTransform: "none", borderRadius: "999px", fontWeight: 650,
+            textTransform: "none",
+            borderRadius: "999px",
+            fontWeight: 650,
+            fontSize: { xs: "0.78rem", sm: "0.875rem" },
+            px: { xs: 1.5, sm: 2 },
+            minWidth: 0,
             color: isSaved ? C.saffron : C.ink,
             borderColor: isSaved ? C.saffron : C.line,
-            "&:hover": { borderColor: C.saffron, bgcolor: C.tint },
+            "&:hover": {
+              borderColor: C.saffron,
+              bgcolor: C.tint,
+            },
           }}
         >
-          {savingPostId === post._id ? "Working..." : isSaved ? "Unsave post" : "Save post"}
+          {savingPostId === post._id
+            ? "Working..."
+            : isSaved
+              ? "Unsave post"
+              : "Save post"}
         </Button>
 
         {isOwner && (
-          <Stack direction="row" spacing={1}>
+          <Stack
+            direction="row"
+            spacing={{ xs: 0.75, sm: 1 }}
+            sx={{
+              flexWrap: "wrap",
+              justifyContent: "flex-end",
+            }}
+          >
             <Button
               variant="outlined"
               startIcon={<EditOutlinedIcon />}
               onClick={() => onEdit?.(post)}
-              sx={{ textTransform: "none", borderRadius: "999px", fontWeight: 650, color: C.ink, borderColor: C.line, "&:hover": { borderColor: C.saffron } }}
+              sx={{
+                textTransform: "none",
+                borderRadius: "999px",
+                fontWeight: 650,
+                fontSize: { xs: "0.78rem", sm: "0.875rem" },
+                px: { xs: 1.5, sm: 2 },
+                minWidth: 0,
+                color: C.ink,
+                borderColor: C.line,
+                "&:hover": {
+                  borderColor: C.saffron,
+                },
+              }}
             >
               Edit
             </Button>
+
             <Button
               variant="outlined"
               startIcon={<DeleteOutlineIcon />}
               onClick={() => onDelete?.(post)}
-              sx={{ textTransform: "none", borderRadius: "999px", fontWeight: 650, color: "#B91C1C", borderColor: "#B91C1C", "&:hover": { bgcolor: "#FEF2F2", borderColor: "#991B1B" } }}
+              sx={{
+                textTransform: "none",
+                borderRadius: "999px",
+                fontWeight: 650,
+                fontSize: { xs: "0.78rem", sm: "0.875rem" },
+                px: { xs: 1.5, sm: 2 },
+                minWidth: 0,
+                color: "#B91C1C",
+                borderColor: "#B91C1C",
+                "&:hover": {
+                  bgcolor: "#FEF2F2",
+                  borderColor: "#991B1B",
+                },
+              }}
             >
               Delete
             </Button>
@@ -222,6 +443,7 @@ function PostDetailDialog({
         )}
       </DialogActions>
     </Dialog>
+
   );
 }
 
@@ -512,10 +734,27 @@ const UserProfile = () => {
     return sum / reviews.length;
   }, [reviews, profile]);
 
+
+
   const ratingCount = reviews.length;
-  const routeAlerts = Array.isArray(profile?.routeAlerts) ? profile.routeAlerts : [];
-  const languageValue = profile?.languages ?? profile?.language ?? profile?.preferredLanguages;
-  const languages = Array.isArray(languageValue) ? languageValue.join(", ") : languageValue || "Not added";
+
+  const routeAlerts = Array.isArray(profile?.routeAlerts)
+    ? profile.routeAlerts
+    : [];
+
+  const languageValue =
+    profile?.language ??
+    profile?.language ??
+    profile?.preferredLanguage;
+
+  const languages = Array.isArray(languageValue)
+    ? languageValue.join(", ")
+    : languageValue || "Not added";
+
+  const referredByLanguage = Array.isArray(profile?.referredBy?.language)
+    ? profile.referredBy.language.join(", ")
+    : profile?.referredBy?.language || "Not added";
+
   const city = profile?.city || profile?.location?.city || "Location not added";
 
   const memberDate = profile?.createdAt || profile?.created_at || profile?.joinedAt;
@@ -780,9 +1019,50 @@ const UserProfile = () => {
             >
               <Box sx={{ position: "relative" }}>
                 {image ? (
-                  <Box component="img" src={image} alt="Community post" loading="lazy" sx={{ width: "100%", aspectRatio: "1 / 1", objectFit: "cover", display: "block", bgcolor: C.canvas }} />
+                  <Box
+                    component="img"
+                    src={image}
+                    alt="Community post"
+                    loading="lazy"
+                    sx={{
+                      width: "100%",
+                      aspectRatio: "1 / 1",
+                      objectFit: "cover",
+                      display: "block",
+                      bgcolor: C.canvas,
+                    }}
+                  />
                 ) : (
-                  <Box sx={{ aspectRatio: "1 / 1", bgcolor: C.tint }} />
+                  <Box
+                    sx={{
+                      width: "100%",
+                      aspectRatio: "1 / 1",
+                      bgcolor: C.tint,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      textAlign: "center",
+                      p: 2,
+                      boxSizing: "border-box",
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        width: "100%",
+                        color: C.body,
+                        fontSize: "0.86rem",
+                        lineHeight: 1.55,
+                        overflowWrap: "anywhere",
+                        textAlign: "center",
+                        display: "-webkit-box",
+                        WebkitLineClamp: 3,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                      }}
+                    >
+                      {post.description || "Community post"}
+                    </Typography>
+                  </Box>
                 )}
 
                 {saved && (
@@ -817,9 +1097,23 @@ const UserProfile = () => {
               </Box>
 
               <Box sx={{ p: 1.75, flex: 1, display: "flex", flexDirection: "column" }}>
-                <Typography sx={{ color: C.body, fontSize: "0.86rem", lineHeight: 1.55, overflowWrap: "anywhere", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-                  {post.description || "Community post"}
-                </Typography>
+                {image && post.description && (
+                  <Typography
+                    sx={{
+                      color: C.body,
+                      fontSize: "0.86rem",
+                      lineHeight: 1.55,
+                      overflowWrap: "anywhere",
+                      textAlign: "center",
+                      display: "-webkit-box",
+                      WebkitLineClamp: 3,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                    }}
+                  >
+                    {post.description}
+                  </Typography>
+                )}
                 {post.createdAt && (
                   <Typography sx={{ mt: "auto", pt: 1, fontSize: "0.75rem", color: C.muted }}>
                     {new Date(post.createdAt).toLocaleDateString()}
@@ -957,13 +1251,79 @@ const UserProfile = () => {
 
             <Box sx={{ display: "grid", mt: 3, gap: 3, alignItems: "start", gridTemplateColumns: { xs: "minmax(0, 1fr)", md: "minmax(0, 1fr) 320px" } }}>
               <Box sx={{ minWidth: 0, order: { xs: 2, md: 1 } }}>
-                <Tabs value={tab} onChange={(_, value) => setTab(value)} variant="scrollable" scrollButtons={isSmall ? "auto" : false} allowScrollButtonsMobile
+                <Tabs
+                  value={tab}
+                  onChange={(_, value) => setTab(value)}
+                  variant="scrollable"
+                  scrollButtons={isSmall ? "auto" : false}
+                  allowScrollButtonsMobile
                   sx={{
-                    mb: 3, minHeight: 44, borderBottom: `1px solid ${C.line}`,
-                    "& .MuiTabs-indicator": { bgcolor: C.saffron, height: 2.5 },
-                    "& .MuiTab-root": { textTransform: "none", fontWeight: 600, fontSize: "0.92rem", color: C.muted, minWidth: "auto", minHeight: 44, px: { xs: 1.5, sm: 2 }, "&.Mui-selected": { color: C.ink } },
-                  }}>
-                  {tabLabels.map((label) => <Tab key={label} label={label} disableRipple />)}
+                    mb: 3,
+                    minHeight: 44,
+                    width: "100%",
+                    maxWidth: "100%",
+                    overflowX: "auto",
+                    borderBottom: `1px solid ${C.line}`,
+
+                    // Horizontal scrolling
+                    "& .MuiTabs-scroller": {
+                      overflowX: "auto !important",
+                      scrollbarWidth: "none",
+                      "&::-webkit-scrollbar": {
+                        display: "none",
+                      },
+                    },
+
+                    "& .MuiTabs-flexContainer": {
+                      flexWrap: "nowrap",
+                    },
+
+                    // Indicator
+                    "& .MuiTabs-indicator": {
+                      bgcolor: C.saffron,
+                      height: 2.5,
+                      borderRadius: "2px",
+                    },
+
+                    // Individual tabs
+                    "& .MuiTab-root": {
+                      textTransform: "none",
+                      fontWeight: 600,
+                      fontSize: {
+                        xs: "0.82rem",
+                        sm: "0.88rem",
+                        md: "0.92rem",
+                      },
+                      color: C.muted,
+                      minWidth: "max-content",
+                      minHeight: 44,
+                      px: {
+                        xs: 1.5,
+                        sm: 2,
+                        md: 2.5,
+                      },
+                      whiteSpace: "nowrap",
+                      flexShrink: 0,
+
+                      "&.Mui-selected": {
+                        color: C.ink,
+                      },
+                    },
+
+                    // Mobile scroll buttons
+                    "& .MuiTabScrollButton-root": {
+                      width: { xs: 24, sm: 32 },
+                      color: C.saffron,
+                    },
+
+                    "& .MuiTabScrollButton-root.Mui-disabled": {
+                      opacity: 0.2,
+                    },
+                  }}
+                >
+                  {tabLabels.map((label) => (
+                    <Tab key={label} label={label} disableRipple />
+                  ))}
                 </Tabs>
                 {tab === 0 && renderAbout()}
                 {tab === 1 && renderReviews()}
@@ -979,7 +1339,7 @@ const UserProfile = () => {
                     <Fact label="Invited by" value={inviterName === "Admin A" ? "Admin" : inviterName} />
                     <Fact label="Vouched for" value={`${referralCounts.total} ${referralCounts.total === 1 ? "member" : "members"}`} />
                     <Fact label="Reports against" value={reportsCount} />
-                    <Fact label="Languages" value={languages} />
+                    <Fact label="Languages" value={referredByLanguage} />
                   </Stack>
                   <Box sx={{ mt: 2.5, p: 2, bgcolor: C.canvas, borderRadius: RADIUS.control }}>
                     <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "baseline", mb: 1.25 }}>

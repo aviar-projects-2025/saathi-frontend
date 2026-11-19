@@ -362,9 +362,28 @@ function StepFlights({ form, setForm, onNext, onCancel, isPrefilled, isEditMode 
 
   const bind = (i, key) => ({
     value: flights[i][key],
-    onChange: (e) => update(i, key, e.target.value),
-    onBlur: () => setTouched((t) => ({ ...t, [`${i}.${key}`]: true })),
-    error: submitted || touched[`${i}.${key}`] ? errors[i][key] : undefined,
+
+    onChange: (e) => {
+      let value = e.target.value;
+
+      if (["airline", "from", "to"].includes(key)) {
+        value = value.replace(/[^a-zA-Z\s]/g, "");
+      }
+
+      if (key === "flightNumber") {
+        value = value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+      }
+
+      update(i, key, value);
+    },
+
+    onBlur: () =>
+      setTouched((t) => ({ ...t, [`${i}.${key}`]: true })),
+
+    error:
+      submitted || touched[`${i}.${key}`]
+        ? errors[i][key]
+        : undefined,
   });
 
   const handleNext = () => {

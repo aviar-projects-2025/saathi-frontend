@@ -220,97 +220,150 @@ export default function CommunityFeedItem({
                     )}
                 </Stack>
 
-                {/* Title / body */}
-                {hasTitle ? (
-                    <Typography
-                        fontWeight={700}
-                        lineHeight={1.35}
-                        mb={body && !isOffering ? 0.75 : { xs: 1, sm: 1.5 }}
-                        sx={{
-                            fontSize: { xs: "0.98rem", sm: "1.05rem", md: "1.1rem" },
-                            wordBreak: "break-word",
-                            m: { xs: 0.25, sm: 0.5 },
-                        }}
-                    >
-                        {livePost.title}
-                    </Typography>
-                ) : (
-                    <Typography
-                        sx={{
-                            fontSize: { xs: "0.92rem", sm: "0.97rem", md: "1rem" },
-                            lineHeight: 1.65,
-                            mb: { xs: 1, sm: 1.5 },
-                            whiteSpace: "pre-wrap",
-                            wordBreak: "break-word",
-                        }}
-                    >
-                        {livePost.description}
-                    </Typography>
-                )}
-
-                {hasTitle && body && (
-                    <Box mb={{ xs: 1, sm: 1.5 }}>
+                {/* Title / Body / Tags */}
+                <Box
+                    sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: { xs: 0.5, sm: 0.65 },
+                        px: { xs: 0.25, sm: 0.5 },
+                        py: 0,
+                        width: "100%",
+                        minWidth: 0,
+                        mt: { xs: 0.5, sm: 0.75 },
+                        mb: { xs: 1, sm: 1.25, md: 1.5 },
+                    }}
+                >
+                    {/* Title */}
+                    {hasTitle && (
                         <Typography
                             sx={{
-                                fontSize: { xs: "0.86rem", sm: "0.92rem", md: "0.95rem" },
-                                lineHeight: 1.65,
-                                color: "#444",
-                                whiteSpace: "pre-wrap",
+                                fontWeight: 600,
+                                fontSize: {
+                                    xs: "0.80rem",
+                                    sm: "0.94rem",
+                                    md: "0.98rem",
+                                },
+                                lineHeight: 1.35,
+                                color: "#222",
                                 wordBreak: "break-word",
-                                overflow: "hidden",
-                                display: "-webkit-box",
-                                WebkitLineClamp: expanded ? "unset" : 3,
-                                WebkitBoxOrient: "vertical",
+                                m: 0,
                             }}
                         >
-                            {body}
+                            {livePost.title}
                         </Typography>
-                        {isLong && (
-                            <Button
-                                size="small"
-                                onClick={() => setExpanded((v) => !v)}
+                    )}
+
+                    {/* Description */}
+                    {hasTitle ? (
+                        body && (
+                            <Box sx={{ width: "100%", minWidth: 0 }}>
+                                <Typography
+                                    sx={{
+                                        fontSize: {
+                                            xs: "0.75rem",
+                                            sm: "0.83rem",
+                                            md: "0.87rem",
+                                        },
+                                        lineHeight: 1.5,
+                                        color: "#555",
+                                        whiteSpace: "pre-wrap",
+                                        wordBreak: "break-word",
+                                        overflowWrap: "anywhere",
+                                        overflow: "hidden",
+                                        display: "-webkit-box",
+                                        WebkitLineClamp: expanded ? "unset" : 3,
+                                        WebkitBoxOrient: "vertical",
+                                    }}
+                                >
+                                    {body}
+                                </Typography>
+
+                                {isLong && (
+                                    <Button
+                                        size="small"
+                                        onClick={() => setExpanded((v) => !v)}
+                                        sx={{
+                                            p: 0,
+                                            mt: 0,
+                                            minWidth: "auto",
+                                            minHeight: "auto",
+                                            textTransform: "none",
+                                            fontSize: "0.72rem",
+                                            fontWeight: 600,
+                                            color: SAFFRON,
+                                        }}
+                                    >
+                                        {expanded ? "See less" : "See more"}
+                                    </Button>
+                                )}
+                            </Box>
+                        )
+                    ) : (
+                        <Typography
+                            sx={{
+                                fontSize: {
+                                    xs: "0.80rem",
+                                    sm: "0.85rem",
+                                    md: "0.88rem",
+                                },
+                                lineHeight: 1.5,
+                                color: "#555",
+                                whiteSpace: "pre-wrap",
+                                wordBreak: "break-word",
+                                m: 0,
+                            }}
+                        >
+                            {livePost.description}
+                        </Typography>
+                    )}
+
+                    {/* Tags */}
+                    {(livePost?.subCategory ||
+                        livePost?.timeframe ||
+                        livePost?.zipcode ||
+                        livePost?.tags?.length > 0) && (
+                            <Stack
+                                direction="row"
+                                spacing={0.5}
+                                flexWrap="wrap"
+                                useFlexGap
                                 sx={{
-                                    p: 0, mt: 0.25, minWidth: "auto", textTransform: "none",
-                                    fontSize: { xs: "0.75rem", sm: "0.8rem" },
-                                    fontWeight: 600, color: SAFFRON,
+                                    alignItems: "center",
+                                    rowGap: 0.5,
+                                    mt: 0.15,
                                 }}
                             >
-                                {expanded ? "See less" : "See more"}
-                            </Button>
+                                {[
+                                    livePost?.subCategory,
+                                    livePost?.timeframe,
+                                    livePost?.zipcode,
+                                    ...(livePost?.tags || []),
+                                ]
+                                    .filter(Boolean)
+                                    .map((t, index) => (
+                                        <Chip
+                                            key={`${t}-${index}`}
+                                            label={t}
+                                            size="small"
+                                            sx={{
+                                                bgcolor: "#FAF5F0",
+                                                color: "#6B5B4E",
+                                                fontSize: "0.65rem",
+                                                fontWeight: 500,
+                                                height: 20,
+                                                maxWidth: "100%",
+                                                border: "1px solid #F0E6DC",
+                                                borderRadius: "5px",
+                                                "& .MuiChip-label": {
+                                                    px: 0.75,
+                                                },
+                                            }}
+                                        />
+                                    ))}
+                            </Stack>
                         )}
-                    </Box>
-                )}
-
-                {/* Tags */}
-                {(livePost?.subCategory || livePost?.timeframe || livePost?.zipcode || livePost?.tags?.length > 0) && (
-                    <Stack
-                        direction="row"
-                        spacing={0.75}
-                        flexWrap="wrap"
-                        useFlexGap
-                        sx={{ mb: { xs: 1, sm: 1.75 } }}
-                    >
-                        {[livePost?.subCategory, livePost?.timeframe, livePost?.zipcode, ...(livePost?.tags || [])]
-                            .filter(Boolean)
-                            .map((t) => (
-                                <Chip
-                                    key={t}
-                                    label={t}
-                                    size="small"
-                                    sx={{
-                                        bgcolor: "#FAF5F0",
-                                        color: "#6B5B4E",
-                                        fontSize: { xs: "0.68rem", sm: "0.72rem" },
-                                        fontWeight: 500,
-                                        height: { xs: 22, sm: 24 },
-                                        maxWidth: "100%",
-                                        border: "1px solid #F0E6DC",
-                                        "& .MuiChip-label": { px: { xs: 0.9, sm: 1.1 } },
-                                    }}
-                                />
-                            ))}
-                    </Stack>
-                )}
+                </Box>
 
                 {/* Image */}
                 {livePost?.postImage && (

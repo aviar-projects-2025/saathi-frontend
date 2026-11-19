@@ -295,11 +295,53 @@ export default function CreatePostModal({
           ) : (
             <Stack spacing={{ xs: 2.25, sm: 3 }}>
               <Box>
-                <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap mb={{ xs: 1, sm: 1.5 }}>
-                  <Chip size="small" label={typeInfo?.label.replace("...", "")} sx={{ bgcolor: "#FFF0E5", color: "#B33A00", fontWeight: 700, maxWidth: "100%", fontSize: { xs: "0.72rem", sm: "0.8125rem" } }} />
-                  <Chip size="small" label={roomLabel} sx={{ bgcolor: "#E8F5E9", fontWeight: 600, maxWidth: "100%", fontSize: { xs: "0.72rem", sm: "0.8125rem" } }} />
-                  {subCategory && <Chip size="small" label={subCategory} sx={{ bgcolor: "#F5F5F5", fontWeight: 600, maxWidth: "100%", fontSize: { xs: "0.72rem", sm: "0.8125rem" } }} />}
-                </Stack>
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: "row",
+                    flexWrap: "wrap",
+                    alignItems: "center",
+                    gap: 0.75,
+                    mb: { xs: 1, sm: 1.5 },
+                    width: "100%",
+                  }}
+                >
+                  <Chip
+                    size="small"
+                    label={typeInfo?.label.replace("...", "")}
+                    sx={{
+                      bgcolor: "#FFF0E5",
+                      color: "#B33A00",
+                      fontWeight: 700,
+                      maxWidth: "100%",
+                      fontSize: { xs: "0.72rem", sm: "0.8125rem" },
+                    }}
+                  />
+
+                  <Chip
+                    size="small"
+                    label={roomLabel}
+                    sx={{
+                      bgcolor: "#E8F5E9",
+                      fontWeight: 600,
+                      maxWidth: "100%",
+                      fontSize: { xs: "0.72rem", sm: "0.8125rem" },
+                    }}
+                  />
+
+                  {subCategory && (
+                    <Chip
+                      size="small"
+                      label={subCategory}
+                      sx={{
+                        bgcolor: "#F5F5F5",
+                        fontWeight: 600,
+                        maxWidth: "100%",
+                        fontSize: { xs: "0.72rem", sm: "0.8125rem" },
+                      }}
+                    />
+                  )}
+                </Box>
                 <Typography fontWeight={800} sx={{ fontSize: H_SIZE, lineHeight: 1.25, wordBreak: "break-word" }}>
                   Tell {currentUser?.city || "your city"} what you need
                 </Typography>
