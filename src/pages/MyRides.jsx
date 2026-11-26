@@ -84,6 +84,7 @@ const requestStats = (reqs = []) =>
 const statusLabelOf = (ride, { pendingCount = 0, requestCount = 0 } = {}) => {
   if (ride?.travelStatus === "Cancelled") return "Cancelled";
   if (ride?.travelStatus === "Completed") return "Completed";
+  if (ride?.travelStatus === "Expired") return "Expired";
   if (ride?.travelStatus === "Started") return "Ongoing";
   if (ride?.kind === "request") {
     if (isMatched(ride)) return "Driver confirmed";
@@ -273,7 +274,13 @@ function RideCard({
             sx={{
               fontSize: "0.76rem",
               fontWeight: 600,
-              color: isCompleted ? "#2D6A4F" : isCancelled ? "#9B2226" : hasPendingStatus ? "#C65B00" : "text.secondary",
+              color: isCompleted
+                ? "#2D6A4F"
+                : isCancelled || ride?.travelStatus === "Expired"
+                  ? "#9B2226"
+                  : hasPendingStatus
+                    ? "#C65B00"
+                    : "text.secondary",
             }}
           >
             {statusLabelOf(ride, { pendingCount, requestCount: rideRequests.length })}
@@ -759,7 +766,7 @@ const MyRides = () => {
       const owner = String(getRefId(ride.createdBy) || "") === String(currentUserId || "");
 
       // Prevent editing if completed, cancelled, matched, or someone has been approved
-      const canEdit = active.edit && !completed && !cancelled && !matched && !hasApprovedRequests;
+      const canEdit = active.edit && !completed && !cancelled && ride?.travelStatus !== "Expired" && !matched && !hasApprovedRequests;
 
       return (
         <RideCard

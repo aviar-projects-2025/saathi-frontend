@@ -1,3 +1,4 @@
+// components/RideCard2.jsx
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import {
@@ -11,8 +12,8 @@ import { useRide } from "../context/RideContext";
 import Api from "../Api";
 import ProtectedAvatar from "../components/ProtectedAvatar.jsx";
 import ChatModal from "./ChatModal";
-// ★ TC-11: shared MM/DD/YYYY formatter
 import { formatDate } from "../utils/formatDate";
+import { derivePublicLocationLabel } from "../utils/location";
 
 const FONT = '"DM Sans", "Inter", "Segoe UI", Roboto, Arial, sans-serif';
 const BRAND = "#B5440F";
@@ -109,10 +110,15 @@ export default function RideList({ ride, onIcanHelp }) {
   const initials = `${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`;
   const userProfile = user?.profileImageUrl;
 
-  const routeFrom = isFlight ? ride.fromAirport || ride.from : ride.from;
-  const routeTo = isFlight ? ride.toAirport || ride.destination : ride.destination;
+  // ★ TC-1: public labels only, never the street address
+  const routeFrom = isFlight
+    ? ride.fromAirport || ride.fromPublic || derivePublicLocationLabel(ride.from)
+    : ride.fromPublic || derivePublicLocationLabel(ride.from);
+  const routeTo = isFlight
+    ? ride.toAirport || ride.destinationPublic || derivePublicLocationLabel(ride.destination)
+    : ride.destinationPublic || derivePublicLocationLabel(ride.destination);
 
-  // ★ TC-11 fix: shared MM/DD/YYYY formatter + US-style time
+  // ★ TC-11: MM/DD/YYYY
   const dateStr = formatDate(ride.startTime) || "No date";
   const timeStr =
     ride.startTime && !isNaN(new Date(ride.startTime).getTime())
@@ -277,52 +283,32 @@ export default function RideList({ ride, onIcanHelp }) {
   let baseLabel = isOffer ? "Request seat" : "I can drive";
 
   let buttonLabel;
-  if (womenOnlyMismatch) {
-    buttonLabel = "Women riders only";
-  } else if (genderMismatch) {
-    buttonLabel = `Only ${ride.genderPreference} allowed`;
-  } else if (isRejected) {
-    buttonLabel = "Rejected";
-  } else if (isBlocked) {
-    buttonLabel = "You cancelled too many times";
-  } else if (isFlightBookingClosed) {
-    buttonLabel = "Booking closed";
-  } else if (isRequest && alreadyOfferedHelp) {
-    buttonLabel = myProposalStatus === "ACCEPTED" ? "Offer accepted" : "Offer sent";
-  } else if (isRequest && isRequestClosed) {
-    buttonLabel = "Request closed";
-  } else if (isRequest && myHelpWasRejected) {
-    buttonLabel = "Offer rejected";
-  } else if (isRequest && myHelpWasCancelled) {
-    buttonLabel = "Offer cancelled";
-  } else if (alreadyRequested) {
+  if (womenOnlyMismatch) buttonLabel = "Women riders only";
+  else if (genderMismatch) buttonLabel = `Only ${ride.genderPreference} allowed`;
+  else if (isRejected) buttonLabel = "Rejected";
+  else if (isBlocked) buttonLabel = "You cancelled too many times";
+  else if (isFlightBookingClosed) buttonLabel = "Booking closed";
+  else if (isRequest && alreadyOfferedHelp) buttonLabel = myProposalStatus === "ACCEPTED" ? "Offer accepted" : "Offer sent";
+  else if (isRequest && isRequestClosed) buttonLabel = "Request closed";
+  else if (isRequest && myHelpWasRejected) buttonLabel = "Offer rejected";
+  else if (isRequest && myHelpWasCancelled) buttonLabel = "Offer cancelled";
+  else if (alreadyRequested) {
     if (isOffer) {
-      buttonLabel = availableSeats > 0
-        ? `Edit request (${availableSeats} left)`
-        : "View request";
+      buttonLabel = availableSeats > 0 ? `Edit request (${availableSeats} left)` : "View request";
     } else {
       buttonLabel = "View request";
     }
-  } else if (isFlight) {
-    buttonLabel = "Request companion";
-  } else if (!isOffer && !isRequest) {
-    buttonLabel = "Request seat";
-  } else if (isOffer && availableSeats <= 0) {
-    buttonLabel = "No seats available";
-  } else {
-    buttonLabel = baseLabel;
-  }
+  } else if (isFlight) buttonLabel = "Request companion";
+  else if (!isOffer && !isRequest) buttonLabel = "Request seat";
+  else if (isOffer && availableSeats <= 0) buttonLabel = "No seats available";
+  else buttonLabel = baseLabel;
 
   const handleButtonClick = (event) => {
     event.stopPropagation();
-
     if (isRequest) {
-      if (typeof onIcanHelp === "function") {
-        onIcanHelp(ride);
-      }
+      if (typeof onIcanHelp === "function") onIcanHelp(ride);
       return;
     }
-
     setSelectedRide(ride);
     setSelectedRequest(alreadyRequested ? currentRequest : null);
     setOpenEditModal(true);
@@ -394,24 +380,11 @@ export default function RideList({ ride, onIcanHelp }) {
               {`${routeFrom || "—"} → ${routeTo || "—"}`}
             </Typography>
 
-            <Typography
-              noWrap
-              sx={{ fontFamily: FONT, fontSize: FS.subtitle, color: "#6B6B6B" }}
-            >
+            <Typography noWrap sx={{ fontFamily: FONT, fontSize: FS.subtitle, color: "#6B6B6B" }}>
               {subtitle}
             </Typography>
 
-            <Box
-              sx={{
-                display: "flex",
-                flexWrap: "wrap",
-                alignItems: "center",
-                mt: 0.5,
-                gap: { xs: 0.55, md: 0.85 },
-                width: "100%",
-                minWidth: 0,
-              }}
-            >
+            <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", mt: 0.5, gap: { xs: 0.55, md: 0.85 }, width: "100%", minWidth: 0 }}>
               {chips.map((chip) => (
                 <Chip
                   key={chip.label}
@@ -442,18 +415,7 @@ export default function RideList({ ride, onIcanHelp }) {
             </Box>
           </Box>
 
-          <Box
-            sx={{
-              flexShrink: 0,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "flex-end",
-              justifyContent: "space-between",
-              gap: 0.75,
-              textAlign: "right",
-              whiteSpace: "nowrap",
-            }}
-          >
+          <Box sx={{ flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "flex-end", justifyContent: "space-between", gap: 0.75, textAlign: "right", whiteSpace: "nowrap" }}>
             <Box>
               <Typography sx={{ fontFamily: FONT, fontSize: FS.date, fontWeight: 700, color: "#1A1A1A", lineHeight: 1.3 }}>
                 {dateStr}
@@ -463,10 +425,7 @@ export default function RideList({ ride, onIcanHelp }) {
               </Typography>
             </Box>
 
-            <Tooltip
-              title={!isProfileComplete ? "Complete your profile to 100% before requesting a ride." : ""}
-              arrow
-            >
+            <Tooltip title={!isProfileComplete ? "Complete your profile to 100% before requesting a ride." : ""} arrow>
               <Box component="span">
                 <Button
                   variant="contained"
@@ -521,16 +480,14 @@ export default function RideList({ ride, onIcanHelp }) {
       <ChatModal
         open={chatModalOpen}
         selectedUser={chatUser}
-        onClose={() => {
-          setChatModalOpen(false);
-          setChatUser(null);
-        }}
+        onClose={() => { setChatModalOpen(false); setChatUser(null); }}
       />
 
       {selectedRideModal && (
         <RideDetailsModal
           onClose={() => setSelectedRideModal(null)}
           ride={selectedRideModal}
+          viewerIsAcceptedPassenger={isAccepted}
         />
       )}
 

@@ -1,20 +1,8 @@
+// components/RideDetailsModal.jsx
 import { useState, useEffect, useRef } from "react";
 import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogContentText,
-  DialogActions,
-  Box,
-  Typography,
-  Chip,
-  Button,
-  IconButton,
-  Avatar,
-  Stack,
-  Collapse,
-  useTheme,
-  useMediaQuery,
+  Dialog, DialogContent, DialogTitle, DialogContentText, DialogActions, Box,
+  Typography, Chip, Button, IconButton, Avatar, Stack, Collapse, useTheme, useMediaQuery,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import EditIcon from "@mui/icons-material/Edit";
@@ -23,14 +11,9 @@ import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import EventSeatIcon from "@mui/icons-material/EventSeat";
 import Diversity3Icon from "@mui/icons-material/Diversity3";
-import WcIcon from "@mui/icons-material/Wc";
-import LocalGasStationIcon from "@mui/icons-material/LocalGasStation";
 import DescriptionIcon from "@mui/icons-material/Description";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ExpandLessIcon from "@mui/icons-material/ExpandLess";
-import FlightTakeoffIcon from "@mui/icons-material/FlightTakeoff";
 import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
 import CircularProgress from "@mui/material/CircularProgress";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
@@ -46,80 +29,41 @@ import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
 import FlightIcon from "@mui/icons-material/Flight";
 import DirectionsBoatIcon from "@mui/icons-material/DirectionsBoat";
 import TrainIcon from "@mui/icons-material/Train";
-
 import ExploreIcon from "@mui/icons-material/Explore";
 import ElderlyIcon from "@mui/icons-material/Elderly";
 import SchoolIcon from "@mui/icons-material/School";
 import FamilyRestroomIcon from "@mui/icons-material/FamilyRestroom";
 import TranslateIcon from "@mui/icons-material/Translate";
-import BadgeIcon from "@mui/icons-material/Badge";
-import axios from "axios";
-import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
-import LanguageIcon from "@mui/icons-material/Language";
 import LuggageIcon from "@mui/icons-material/Luggage";
-import TransferWithinAStationIcon from "@mui/icons-material/TransferWithinAStation";
-import Api from "../Api";
-import { toast } from "react-toastify";
-
-import LocationOnIcon from "@mui/icons-material/LocationOn";
 import RouteIcon from "@mui/icons-material/Route";
 import CategoryIcon from "@mui/icons-material/Category";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import PeopleIcon from "@mui/icons-material/People";
-import SupportAgentIcon from "@mui/icons-material/SupportAgent";
 import ChildCareIcon from "@mui/icons-material/ChildCare";
 import ScheduleIcon from "@mui/icons-material/Schedule";
 import PhoneIcon from "@mui/icons-material/Phone";
-import FlagIcon from "@mui/icons-material/Flag";
 import FemaleIcon from "@mui/icons-material/Female";
+import axios from "axios";
+import { toast } from "react-toastify";
+import Api from "../Api";
 import ProtectedAvatar from "../components/ProtectedAvatar";
-
-// ★ TC-11: shared MM/DD/YYYY formatter
 import { formatDate } from "../utils/formatDate";
+import { derivePublicLocationLabel } from "../utils/location";
 import dayjs from "dayjs";
 
-// ── Design tokens ────────────────────────────────────────────────────────
 const TOKENS = {
-  paper: "#ffffff",
-  paperDim: "#fdfcfb",
-  ink: "#1C2B33",
-  inkSoft: "#5B6B72",
-  accent: "#C9622A",
-  accentSoft: "#F3E1D2",
-  amber: "#D69A2D",
-  amberSoft: "#FBEFD7",
-  green: "#4a8d54",
-  greenSoft: "#E4EFDD",
-  red: "#B23B3B",
-  redSoft: "#F8E4E1",
+  paper: "#ffffff", paperDim: "#fdfcfb", ink: "#1C2B33", inkSoft: "#5B6B72",
+  accent: "#C9622A", accentSoft: "#F3E1D2", amber: "#D69A2D", amberSoft: "#FBEFD7",
+  green: "#4a8d54", greenSoft: "#E4EFDD", red: "#B23B3B", redSoft: "#F8E4E1",
   line: "#E2D7C3",
   displayFont: "'Space Grotesk', 'Inter', sans-serif",
   bodyFont: "'Inter', sans-serif",
   monoFont: "'IBM Plex Mono', monospace",
 };
 
-const travelIcons = {
-  Car: DirectionsCarIcon,
-  Bus: DirectionsBusIcon,
-  Bike: TwoWheelerIcon,
-  Flight: FlightIcon,
-  Ship: DirectionsBoatIcon,
-  Train: TrainIcon,
-};
-
-const travellerTypeIcons = {
-  "First-time traveller": ExploreIcon,
-  "Senior citizen support": ElderlyIcon,
-  "Student travel companion": SchoolIcon,
-  "Women-only companion": WomanIcon,
-  "Family companion": FamilyRestroomIcon,
-};
-
-const genderIcon = {
-  Male: PersonIcon,
-  Female: WomanIcon,
-  Any: GroupsIcon,
-};
+const travelIcons = { Car: DirectionsCarIcon, Bus: DirectionsBusIcon, Bike: TwoWheelerIcon, Flight: FlightIcon, Ship: DirectionsBoatIcon, Train: TrainIcon };
+const travellerTypeIcons = { "First-time traveller": ExploreIcon, "Senior citizen support": ElderlyIcon, "Student travel companion": SchoolIcon, "Women-only companion": WomanIcon, "Family companion": FamilyRestroomIcon };
+const genderIcon = { Male: PersonIcon, Female: WomanIcon, Any: GroupsIcon };
 
 const statusStamp = {
   OPEN: { label: "OPENED", color: TOKENS.accent, bg: TOKENS.accentSoft },
@@ -131,59 +75,13 @@ const requestVisual = (request) => {
   const status = request?.status;
   const travelStatus = request?.rideId?.travelStatus;
   const pendingReqSeats = request?.pendingReqSeats;
-
-  if (status === "CANCELLED") {
-    return {
-      label: `${request?.requestedBy?.firstName} Cancelled`,
-      color: TOKENS.red,
-      bg: TOKENS.redSoft,
-    };
-  }
-
-  if (travelStatus === "Cancelled") {
-    return {
-      label: "Rider Cancelled",
-      color: TOKENS.red,
-      bg: TOKENS.redSoft,
-    };
-  }
-
-  if (pendingReqSeats > 0 && request?.rideId?.travelStatus === "Completed") {
-    return {
-      label: "Auto Rejected",
-      color: TOKENS.red,
-      bg: TOKENS.redSoft,
-    };
-  }
-
-  if (status === "ACCEPTED" || status === "APPROVED") {
-    return {
-      label: "Approved",
-      color: TOKENS.green,
-      bg: TOKENS.greenSoft,
-    };
-  }
-
-  if (status === "REJECTED") {
-    return {
-      label: "Rejected",
-      color: TOKENS.red,
-      bg: TOKENS.redSoft,
-    };
-  }
-  if (status === "AUTO_REJECTED") {
-    return {
-      label: "Auto Rejected",
-      color: TOKENS.red,
-      bg: TOKENS.redSoft,
-    };
-  }
-
-  return {
-    label: "",
-    color: "transparent",
-    bg: "transparent",
-  };
+  if (status === "CANCELLED") return { label: `${request?.requestedBy?.firstName} Cancelled`, color: TOKENS.red, bg: TOKENS.redSoft };
+  if (travelStatus === "Cancelled") return { label: "Rider Cancelled", color: TOKENS.red, bg: TOKENS.redSoft };
+  if (pendingReqSeats > 0 && request?.rideId?.travelStatus === "Completed") return { label: "Auto Rejected", color: TOKENS.red, bg: TOKENS.redSoft };
+  if (status === "ACCEPTED" || status === "APPROVED") return { label: "Approved", color: TOKENS.green, bg: TOKENS.greenSoft };
+  if (status === "REJECTED") return { label: "Rejected", color: TOKENS.red, bg: TOKENS.redSoft };
+  if (status === "AUTO_REJECTED") return { label: "Auto Rejected", color: TOKENS.red, bg: TOKENS.redSoft };
+  return { label: "", color: "transparent", bg: "transparent" };
 };
 
 function stationCode(name = "") {
@@ -191,140 +89,65 @@ function stationCode(name = "") {
   if (!clean) return "—";
   const words = clean.split(/\s+/);
   if (words.length === 1) return clean.slice(0, 3).toUpperCase();
-  return words
-    .slice(0, 3)
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase();
+  return words.slice(0, 3).map((w) => w[0]).join("").toUpperCase();
 }
 
 const formFrom = (ride) => ride?.from || "—";
 const formTo = (ride) => ride?.destination || "—";
 
-// ── Perforated tear-line ────────────────────────────────────────────────
 function Perforation() {
   return (
     <Box sx={{ position: "relative", my: { xs: 2, sm: 2.5 } }}>
-      <Box
-        sx={{
-          borderTop: `2px dashed ${TOKENS.line}`,
-          mx: { xs: -2.5, sm: -4 },
-        }}
-      />
+      <Box sx={{ borderTop: `2px dashed ${TOKENS.line}`, mx: { xs: -2.5, sm: -4 } }} />
       {[0, 1].map((side) => (
-        <Box
-          key={side}
-          sx={{
-            position: "absolute",
-            top: "50%",
-            [side === 0 ? "left" : "right"]: { xs: -27, sm: -39 },
-            transform: "translateY(-50%)",
-            width: 14,
-            height: 14,
-            borderRadius: "50%",
-            bgcolor: "background.default",
-            boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.06)",
-          }}
-        />
+        <Box key={side} sx={{ position: "absolute", top: "50%", [side === 0 ? "left" : "right"]: { xs: -27, sm: -39 }, transform: "translateY(-50%)", width: 14, height: 14, borderRadius: "50%", bgcolor: "background.default", boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.06)" }} />
       ))}
     </Box>
   );
 }
 
-// ── A single ticket field ────────────────────────────────────────────────
 function Field({ icon: Icon, label, value, span }) {
   return (
     <Box sx={{ gridColumn: span ? "1 / -1" : "auto" }}>
-      <Stack
-        direction="row"
-        spacing={0.75}
-        alignItems="center"
-        sx={{ mb: 0.4 }}
-      >
+      <Stack direction="row" spacing={0.75} alignItems="center" sx={{ mb: 0.4 }}>
         <Icon sx={{ fontSize: { xs: 13, sm: 14 }, color: TOKENS.accent }} />
-        <Typography
-          sx={{
-            fontFamily: TOKENS.bodyFont,
-            fontSize: { xs: "0.62rem", sm: "0.66rem" },
-            fontWeight: 700,
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-            color: TOKENS.inkSoft,
-          }}
-        >
+        <Typography sx={{ fontFamily: TOKENS.bodyFont, fontSize: { xs: "0.62rem", sm: "0.66rem" }, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: TOKENS.inkSoft }}>
           {label}
         </Typography>
       </Stack>
-      <Typography
-        sx={{
-          fontFamily: TOKENS.monoFont,
-          fontWeight: 600,
-          fontSize: { xs: "0.85rem", sm: "0.95rem" },
-          color: TOKENS.ink,
-          wordBreak: "break-word",
-        }}
-      >
+      <Typography sx={{ fontFamily: TOKENS.monoFont, fontWeight: 600, fontSize: { xs: "0.85rem", sm: "0.95rem" }, color: TOKENS.ink, wordBreak: "break-word" }}>
         {value}
       </Typography>
     </Box>
   );
 }
 
-function PassengerStub({
-  request,
-  onApprove,
-  onReject,
-  onRequestUpdated,
-  approveLoading,
-  rejectLoading,
-  dense,
-  isRideFinished,
-  isCurrentRide,
-}) {
+function PassengerStub({ request, onApprove, onReject, onRequestUpdated, approveLoading, rejectLoading, dense, isRideFinished, isCurrentRide }) {
   const [open, setOpen] = useState(false);
   const v = requestVisual(request);
-
   const isPending = request?.status?.toUpperCase() === "PENDING";
   const [anchorEl, setAnchorEl] = useState(null);
-  const [selectedPost, setSelectedPost] = useState(null);
-  const firstName =
-    request.requestedBy?.firstName ||
-    request?.data?.requestBy?.requestedBy?.firstName ||
-    "U";
+  const firstName = request.requestedBy?.firstName || request?.data?.requestBy?.requestedBy?.firstName || "U";
   const lastName = request.requestedBy?.lastName || "";
   const profilePic = request.requestedBy?.profileImageUrl;
   const rejectedReq = Number(request?.rejectedSeats ?? 0);
   const pendingReq = Number(request?.pendingReqSeats ?? 0);
   const approvedSeats = Number(request?.approvedSeats ?? 0);
-  const membersCount = request?.membersCount || 0;
-  const [requests, setRequests] = useState([]);
   const [editApproval, setEditApproval] = useState(false);
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
-  const [confirmState, setConfirmState] = useState({
-    open: false,
-    action: null,
-  });
+  const [confirmState, setConfirmState] = useState({ open: false, action: null });
   const [selectedRequest, setSelectedRequest] = useState(null);
   const isApproveBusy = approveLoading === request._id;
   const isRejectBusy = rejectLoading === request._id;
   const isBusy = isApproveBusy || isRejectBusy;
-  const [approvalRejectionLoading, setApprovalRejectionLoading] =
-    useState(false);
-
+  const [approvalRejectionLoading, setApprovalRejectionLoading] = useState(false);
   const hasStartedBusyRef = useRef(false);
-
   const [rejectApprovedLoading, setRejectApprovedLoading] = useState(false);
 
   useEffect(() => {
-    if (!approvalRejectionLoading) {
-      hasStartedBusyRef.current = false;
-      return;
-    }
-    if (isBusy) {
-      hasStartedBusyRef.current = true;
-      return;
-    }
+    if (!approvalRejectionLoading) { hasStartedBusyRef.current = false; return; }
+    if (isBusy) { hasStartedBusyRef.current = true; return; }
     if (hasStartedBusyRef.current) {
       setConfirmState({ open: false, action: null });
       setApprovalRejectionLoading(false);
@@ -332,172 +155,67 @@ function PassengerStub({
     }
   }, [approvalRejectionLoading, isApproveBusy, isRejectBusy, isBusy, confirmState.action]);
 
-  const handleMenuOpen = (event, request) => {
-    event.stopPropagation();
-    setAnchorEl(event.currentTarget);
-    setSelectedRequest(request);
-  };
-  const askConfirm = (action, e) => {
-    e?.stopPropagation?.();
-    setConfirmState({ open: true, action });
-  };
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
-
-  const handleRejectClick = () => {
-    setEditApproval(true);
-    handleMenuClose();
-  };
-
-  const closeConfirm = () => {
-    if (isBusy) return;
-    setConfirmState({ open: false, action: null });
-  };
+  const handleMenuOpen = (event, request) => { event.stopPropagation(); setAnchorEl(event.currentTarget); setSelectedRequest(request); };
+  const askConfirm = (action, e) => { e?.stopPropagation?.(); setConfirmState({ open: true, action }); };
+  const handleMenuClose = () => { setAnchorEl(null); };
+  const handleRejectClick = () => { setEditApproval(true); handleMenuClose(); };
+  const closeConfirm = () => { if (isBusy) return; setConfirmState({ open: false, action: null }); };
 
   const handleRejectApproved = async () => {
     if (!selectedRequest || rejectApprovedLoading) return;
-
     const prevSnapshot = { ...selectedRequest };
     setRejectApprovedLoading(true);
-
     const approved = Number(selectedRequest.approvedSeats || 0);
     const pending = Number(selectedRequest.pendingReqSeats || 0);
     const totalToReject = approved + pending;
-
-    onRequestUpdated?.(selectedRequest._id, {
-      status: "REJECTED",
-      approvedSeats: 0,
-      pendingReqSeats: 0,
-      members: [],
-      pendingMembers: [],
-      rejectedSeats: totalToReject + Number(selectedRequest.rejectedSeats || 0),
-    });
+    onRequestUpdated?.(selectedRequest._id, { status: "REJECTED", approvedSeats: 0, pendingReqSeats: 0, members: [], pendingMembers: [], rejectedSeats: totalToReject + Number(selectedRequest.rejectedSeats || 0) });
     setEditApproval(false);
     closeConfirm();
-
     try {
-      const res = await axios.patch(
-        `${Api}/bookride/${selectedRequest._id}/status?type=Reject&scope=all`
-      );
+      const res = await axios.patch(`${Api}/bookride/${selectedRequest._id}/status?type=Reject&scope=all`);
       const updatedRequest = res.data?.data?.request;
-      if (updatedRequest) {
-        onRequestUpdated?.(selectedRequest._id, updatedRequest);
-      }
-      toast.success(
-        res.data.message || "Request rejected successfully (approved + pending)"
-      );
+      if (updatedRequest) onRequestUpdated?.(selectedRequest._id, updatedRequest);
+      toast.success(res.data.message || "Request rejected successfully (approved + pending)");
     } catch (error) {
       onRequestUpdated?.(prevSnapshot._id, prevSnapshot);
-      toast.error(
-        error?.response?.data?.message || "Failed to reject request"
-      );
-    } finally {
-      setRejectApprovedLoading(false);
-    }
+      toast.error(error?.response?.data?.message || "Failed to reject request");
+    } finally { setRejectApprovedLoading(false); }
   };
 
   const handleConfirm = () => {
     setApprovalRejectionLoading(true);
-
-    if (confirmState.action === "approve") {
-      onApprove(request._id);
-      return;
-    }
-
-    if (confirmState.action === "rejectPending") {
-      onReject(request._id, "pending");
-      return;
-    }
-
+    if (confirmState.action === "approve") { onApprove(request._id); return; }
+    if (confirmState.action === "rejectPending") { onReject(request._id, "pending"); return; }
     const scope = approvedSeats > 0 ? "all" : "pending";
     onReject(request._id, scope);
   };
 
-  const handleExited = () => {
-    setConfirmState({ open: false, action: null });
-  };
-
+  const handleExited = () => setConfirmState({ open: false, action: null });
   const isRejectPending = confirmState.action === "rejectPending";
-  const isRejectAll =
-    confirmState.action === "reject" && approvedSeats > 0;
-  const isRejectOnlyPending =
-    confirmState.action === "reject" && approvedSeats === 0;
+  const isRejectAll = confirmState.action === "reject" && approvedSeats > 0;
+  const isRejectOnlyPending = confirmState.action === "reject" && approvedSeats === 0;
 
   return (
     <>
-      <Box
-        sx={{
-          position: "relative",
-          borderRadius: 1.5,
-          bgcolor: "background.default",
-          border: `1px solid ${TOKENS.line}`,
-          overflow: "hidden",
-        }}
-      >
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 1,
-            p: { xs: 1.1, sm: 1.4 },
-          }}
-          onClick={() => setOpen((o) => !o)}
-        >
-          <Stack
-            direction="row"
-            spacing={1.2}
-            alignItems="center"
-            sx={{ minWidth: 0 }}
-          >
-            <ProtectedAvatar
-              src={profilePic}
-              sx={{
-                width: { xs: 32, sm: 38 },
-                height: { xs: 32, sm: 38 },
-                bgcolor: TOKENS.ink,
-                color: TOKENS.paper,
-                fontFamily: TOKENS.displayFont,
-                fontWeight: 700,
-                fontSize: { xs: "0.8rem", sm: "0.9rem" },
-              }}
-            >
-              {firstName?.[0]}
-              {lastName?.[0]}
+      <Box sx={{ position: "relative", borderRadius: 1.5, bgcolor: "background.default", border: `1px solid ${TOKENS.line}`, overflow: "hidden" }}>
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1, p: { xs: 1.1, sm: 1.4 } }} onClick={() => setOpen((o) => !o)}>
+          <Stack direction="row" spacing={1.2} alignItems="center" sx={{ minWidth: 0 }}>
+            <ProtectedAvatar src={profilePic} sx={{ width: { xs: 32, sm: 38 }, height: { xs: 32, sm: 38 }, bgcolor: TOKENS.ink, color: TOKENS.paper, fontFamily: TOKENS.displayFont, fontWeight: 700, fontSize: { xs: "0.8rem", sm: "0.9rem" } }}>
+              {firstName?.[0]}{lastName?.[0]}
             </ProtectedAvatar>
             <Box sx={{ minWidth: 0 }}>
-              <Typography
-                noWrap
-                sx={{
-                  fontFamily: TOKENS.bodyFont,
-                  fontWeight: 700,
-                  fontSize: { xs: "0.82rem", sm: "0.9rem" },
-                  color: TOKENS.ink,
-                }}
-              >
-                {firstName} {lastName}
-              </Typography>
-
+              <Typography noWrap sx={{ fontFamily: TOKENS.bodyFont, fontWeight: 700, fontSize: { xs: "0.82rem", sm: "0.9rem" }, color: TOKENS.ink }}>{firstName} {lastName}</Typography>
               <Stack direction="row" spacing={0.6} alignItems="center" sx={{ mt: 0.3 }}>
                 <EventSeatIcon sx={{ fontSize: { xs: 12, sm: 13 }, color: TOKENS.inkSoft }} />
-                <Typography sx={{ fontFamily: TOKENS.monoFont, fontSize: { xs: "0.64rem", sm: "0.7rem" }, color: TOKENS.inkSoft }}>
-                  Approved Seats × {approvedSeats}
-                </Typography>
+                <Typography sx={{ fontFamily: TOKENS.monoFont, fontSize: { xs: "0.64rem", sm: "0.7rem" }, color: TOKENS.inkSoft }}>Approved Seats × {approvedSeats}</Typography>
               </Stack>
-
               <Stack direction="row" spacing={0.6} alignItems="center" sx={{ mt: 0.3 }}>
                 <EventSeatIcon sx={{ fontSize: { xs: 12, sm: 13 }, color: TOKENS.inkSoft }} />
-                <Typography sx={{ fontFamily: TOKENS.monoFont, fontSize: { xs: "0.64rem", sm: "0.7rem" }, color: TOKENS.inkSoft }}>
-                  Pending Seat Req × {pendingReq}
-                </Typography>
+                <Typography sx={{ fontFamily: TOKENS.monoFont, fontSize: { xs: "0.64rem", sm: "0.7rem" }, color: TOKENS.inkSoft }}>Pending Seat Req × {pendingReq}</Typography>
               </Stack>
-
               <Stack direction="row" spacing={0.6} alignItems="center" sx={{ mt: 0.3 }}>
                 <EventSeatIcon sx={{ fontSize: { xs: 12, sm: 13 }, color: TOKENS.inkSoft }} />
-                <Typography sx={{ fontFamily: TOKENS.monoFont, fontSize: { xs: "0.64rem", sm: "0.7rem" }, color: TOKENS.inkSoft }}>
-                  Rejected Seat Req × {rejectedReq}
-                </Typography>
+                <Typography sx={{ fontFamily: TOKENS.monoFont, fontSize: { xs: "0.64rem", sm: "0.7rem" }, color: TOKENS.inkSoft }}>Rejected Seat Req × {rejectedReq}</Typography>
               </Stack>
             </Box>
           </Stack>
@@ -506,197 +224,64 @@ function PassengerStub({
             {isPending ? (
               dense ? (
                 <>
-                  <IconButton
-                    aria-label="Approve request"
-                    onClick={(e) => askConfirm("approve", e)}
-                    disabled={isBusy}
-                    sx={{
-                      width: { xs: 28, sm: 32 },
-                      height: { xs: 28, sm: 32 },
-                      bgcolor: TOKENS.greenSoft,
-                      color: TOKENS.green,
-                      "&:hover": { bgcolor: TOKENS.green, color: "#fff" },
-                    }}
-                  >
-                    {isApproveBusy ? (
-                      <CircularProgress size={16} color="inherit" />
-                    ) : (
-                      <CheckCircleIcon sx={{ fontSize: { xs: 14, sm: 16 } }} />
-                    )}
+                  <IconButton aria-label="Approve request" onClick={(e) => askConfirm("approve", e)} disabled={isBusy} sx={{ width: { xs: 28, sm: 32 }, height: { xs: 28, sm: 32 }, bgcolor: TOKENS.greenSoft, color: TOKENS.green, "&:hover": { bgcolor: TOKENS.green, color: "#fff" } }}>
+                    {isApproveBusy ? <CircularProgress size={16} color="inherit" /> : <CheckCircleIcon sx={{ fontSize: { xs: 14, sm: 16 } }} />}
                   </IconButton>
-                  <IconButton
-                    aria-label="Reject request"
-                    onClick={(e) => askConfirm("reject", e)}
-                    disabled={isBusy}
-                    sx={{
-                      width: { xs: 28, sm: 32 },
-                      height: { xs: 28, sm: 32 },
-                      bgcolor: TOKENS.redSoft,
-                      color: TOKENS.red,
-                      "&:hover": { bgcolor: TOKENS.red, color: "#fff" },
-                    }}
-                  >
-                    {isRejectBusy ? (
-                      <CircularProgress size={16} color="inherit" />
-                    ) : (
-                      <CancelIcon sx={{ fontSize: { xs: 14, sm: 16 } }} />
-                    )}
+                  <IconButton aria-label="Reject request" onClick={(e) => askConfirm("reject", e)} disabled={isBusy} sx={{ width: { xs: 28, sm: 32 }, height: { xs: 28, sm: 32 }, bgcolor: TOKENS.redSoft, color: TOKENS.red, "&:hover": { bgcolor: TOKENS.red, color: "#fff" } }}>
+                    {isRejectBusy ? <CircularProgress size={16} color="inherit" /> : <CancelIcon sx={{ fontSize: { xs: 14, sm: 16 } }} />}
                   </IconButton>
                 </>
               ) : (
                 <>
-                  <Button
-                    size="small"
-                    onClick={(e) => askConfirm("approve", e)}
-                    disabled={isBusy}
-                    sx={{
-                      fontFamily: TOKENS.bodyFont,
-                      textTransform: "none",
-                      fontWeight: 700,
-                      fontSize: { xs: "0.68rem", sm: "0.75rem" },
-                      color: TOKENS.green,
-                      bgcolor: TOKENS.greenSoft,
-                      borderRadius: 5,
-                      px: { xs: 1, sm: 1.4 },
-                      "&:hover": { bgcolor: TOKENS.green, color: "#fff" },
-                    }}
-                  >
-                    {isApproveBusy ? "Approving..." : "Approve"}
-                  </Button>
-                  <Button
-                    size="small"
-                    onClick={(e) => askConfirm("reject", e)}
-                    disabled={isBusy}
-                    sx={{
-                      fontFamily: TOKENS.bodyFont,
-                      textTransform: "none",
-                      fontWeight: 700,
-                      fontSize: { xs: "0.68rem", sm: "0.75rem" },
-                      color: TOKENS.red,
-                      bgcolor: TOKENS.redSoft,
-                      borderRadius: 5,
-                      px: { xs: 1, sm: 1.4 },
-                      "&:hover": { bgcolor: TOKENS.red, color: "#fff" },
-                    }}
-                  >
-                    {isRejectBusy ? "Rejecting..." : "Reject"}
-                  </Button>
+                  <Button size="small" onClick={(e) => askConfirm("approve", e)} disabled={isBusy} sx={{ fontFamily: TOKENS.bodyFont, textTransform: "none", fontWeight: 700, fontSize: { xs: "0.68rem", sm: "0.75rem" }, color: TOKENS.green, bgcolor: TOKENS.greenSoft, borderRadius: 5, px: { xs: 1, sm: 1.4 }, "&:hover": { bgcolor: TOKENS.green, color: "#fff" } }}>{isApproveBusy ? "Approving..." : "Approve"}</Button>
+                  <Button size="small" onClick={(e) => askConfirm("reject", e)} disabled={isBusy} sx={{ fontFamily: TOKENS.bodyFont, textTransform: "none", fontWeight: 700, fontSize: { xs: "0.68rem", sm: "0.75rem" }, color: TOKENS.red, bgcolor: TOKENS.redSoft, borderRadius: 5, px: { xs: 1, sm: 1.4 }, "&:hover": { bgcolor: TOKENS.red, color: "#fff" } }}>{isRejectBusy ? "Rejecting..." : "Reject"}</Button>
                 </>
               )
-            ) : (
-              <>
-                {v?.label && (
-                  <Chip
-                    label={v.label}
-                    size="small"
-                    sx={{
-                      bgcolor: v.bg,
-                      color: v.color,
-                      fontFamily: TOKENS.bodyFont,
-                      fontWeight: 700,
-                      fontSize: { xs: "0.62rem", sm: "0.65rem", md: "0.68rem", lg: "0.7rem" },
-                      height: { xs: 20, sm: 22, md: 23, lg: 24 },
-                      "& .MuiChip-label": { px: { xs: 0.75, sm: 1, md: 1.25 } },
-                    }}
-                  />
-                )}
-              </>
-            )}
+            ) : v?.label ? (
+              <Chip label={v.label} size="small" sx={{ bgcolor: v.bg, color: v.color, fontFamily: TOKENS.bodyFont, fontWeight: 700, fontSize: { xs: "0.62rem", sm: "0.65rem", md: "0.68rem", lg: "0.7rem" }, height: { xs: 20, sm: 22, md: 23, lg: 24 }, "& .MuiChip-label": { px: { xs: 0.75, sm: 1, md: 1.25 } } }} />
+            ) : null}
 
             {v.label === "Approved" && !isCurrentRide && !isRideFinished && (
-              <IconButton
-                onClick={(event) => handleMenuOpen(event, request)}
-                sx={{
-                  color: "#fff",
-                  p: { xs: 0.5, sm: 0.75, md: 1 },
-                  "&:hover": { bgcolor: "rgba(255,255,255,0.1)" },
-                }}
-              >
+              <IconButton onClick={(event) => handleMenuOpen(event, request)} sx={{ color: "#fff", p: { xs: 0.5, sm: 0.75, md: 1 }, "&:hover": { bgcolor: "rgba(255,255,255,0.1)" } }}>
                 <MoreVerIcon sx={{ color: "text.secondary" }} />
               </IconButton>
             )}
           </Stack>
         </Box>
 
-        <Menu
-          anchorEl={anchorEl}
-          open={Boolean(anchorEl)}
-          onClose={handleMenuClose}
-          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-          transformOrigin={{ vertical: "top", horizontal: "right" }}
-          PaperProps={{ sx: { borderRadius: 2, minWidth: 140, boxShadow: "0 4px 20px rgba(0,0,0,0.15)" } }}
-        >
-          <MenuItem
-            onClick={handleRejectClick}
-            sx={{ fontFamily: TOKENS.bodyFont, fontSize: "0.85rem", color: TOKENS.red, fontWeight: 600 }}
-          >
-            Reject
-          </MenuItem>
+        <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose} anchorOrigin={{ vertical: "bottom", horizontal: "right" }} transformOrigin={{ vertical: "top", horizontal: "right" }} PaperProps={{ sx: { borderRadius: 2, minWidth: 140, boxShadow: "0 4px 20px rgba(0,0,0,0.15)" } }}>
+          <MenuItem onClick={handleRejectClick} sx={{ fontFamily: TOKENS.bodyFont, fontSize: "0.85rem", color: TOKENS.red, fontWeight: 600 }}>Reject</MenuItem>
         </Menu>
 
         <Dialog open={editApproval} onClose={() => setEditApproval(false)}>
           <DialogTitle>Reject Request</DialogTitle>
           <DialogContent>
-            {pendingReq > 0
-              ? `This will reject ${approvedSeats} approved seat(s) AND ${pendingReq} pending seat(s).`
-              : `Do you want to reject the ${approvedSeats} approved seat(s)?`}
+            {pendingReq > 0 ? `This will reject ${approvedSeats} approved seat(s) AND ${pendingReq} pending seat(s).` : `Do you want to reject the ${approvedSeats} approved seat(s)?`}
           </DialogContent>
           <DialogActions sx={{ px: { xs: 2, sm: 3 }, pb: { xs: 2, sm: 2.5 }, gap: 1 }}>
-            <Button
-              onClick={() => setEditApproval(false)}
-              disabled={isBusy || rejectApprovedLoading}
-              sx={{ fontFamily: TOKENS.bodyFont, textTransform: "none", fontWeight: 700, color: TOKENS.inkSoft }}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleRejectApproved}
-              disabled={isBusy || rejectApprovedLoading}
-              variant="contained"
-              sx={{
-                fontFamily: TOKENS.bodyFont,
-                textTransform: "none",
-                fontWeight: 700,
-                minWidth: 96,
-                bgcolor: TOKENS.red,
-                "&:hover": { bgcolor: TOKENS.red, opacity: 0.9 },
-              }}
-            >
-              {rejectApprovedLoading ? "Rejecting..." : "Reject All"}
-            </Button>
+            <Button onClick={() => setEditApproval(false)} disabled={isBusy || rejectApprovedLoading} sx={{ fontFamily: TOKENS.bodyFont, textTransform: "none", fontWeight: 700, color: TOKENS.inkSoft }}>Cancel</Button>
+            <Button onClick={handleRejectApproved} disabled={isBusy || rejectApprovedLoading} variant="contained" sx={{ fontFamily: TOKENS.bodyFont, textTransform: "none", fontWeight: 700, minWidth: 96, bgcolor: TOKENS.red, "&:hover": { bgcolor: TOKENS.red, opacity: 0.9 } }}>{rejectApprovedLoading ? "Rejecting..." : "Reject All"}</Button>
           </DialogActions>
         </Dialog>
 
         <Collapse in={open}>
           <Box sx={{ px: { xs: 1.4, sm: 1.8 }, pb: 1.4, pt: 0, borderTop: `1px dashed ${TOKENS.line}` }}>
             <Stack spacing={0.6} sx={{ mt: 1.2 }}>
-              <Typography sx={{ fontFamily: TOKENS.bodyFont, fontSize: "0.8rem", color: TOKENS.ink }}>
-                <strong>Message:</strong> {request.message || "No message"}
-              </Typography>
-              <Typography sx={{ fontFamily: TOKENS.bodyFont, fontSize: "0.8rem", color: TOKENS.ink }}>
-                <strong>Phone:</strong> {request.phone || "Not provided"}
-              </Typography>
+              <Typography sx={{ fontFamily: TOKENS.bodyFont, fontSize: "0.8rem", color: TOKENS.ink }}><strong>Message:</strong> {request.message || "No message"}</Typography>
+              <Typography sx={{ fontFamily: TOKENS.bodyFont, fontSize: "0.8rem", color: TOKENS.ink }}><strong>Phone:</strong> {request.phone || "Not provided"}</Typography>
               {request?.members?.length > 0 && (
                 <>
-                  <Typography sx={{ fontFamily: TOKENS.bodyFont, fontSize: "0.8rem", fontWeight: 700 }}>
-                    Members:
-                  </Typography>
+                  <Typography sx={{ fontFamily: TOKENS.bodyFont, fontSize: "0.8rem", fontWeight: 700 }}>Members:</Typography>
                   {request.members.map((m, i) => (
-                    <Typography key={i} sx={{ fontFamily: TOKENS.bodyFont, fontSize: "0.78rem", ml: 2 }}>
-                      • {m.name} ({m.age} yrs)
-                    </Typography>
+                    <Typography key={i} sx={{ fontFamily: TOKENS.bodyFont, fontSize: "0.78rem", ml: 2 }}>• {m.name} ({m.age} yrs)</Typography>
                   ))}
                 </>
               )}
               {request?.pendingMembers?.length > 0 && (
                 <>
-                  <Typography sx={{ fontFamily: TOKENS.bodyFont, fontSize: "0.8rem", fontWeight: 700, color: "red" }}>
-                    Pending Members:
-                  </Typography>
+                  <Typography sx={{ fontFamily: TOKENS.bodyFont, fontSize: "0.8rem", fontWeight: 700, color: "red" }}>Pending Members:</Typography>
                   {request?.pendingMembers?.map((m, i) => (
-                    <Typography key={i} sx={{ fontFamily: TOKENS.bodyFont, fontSize: "0.78rem", ml: 2 }}>
-                      • {m.name} ({m.age} yrs)
-                    </Typography>
+                    <Typography key={i} sx={{ fontFamily: TOKENS.bodyFont, fontSize: "0.78rem", ml: 2 }}>• {m.name} ({m.age} yrs)</Typography>
                   ))}
                 </>
               )}
@@ -706,125 +291,38 @@ function PassengerStub({
       </Box>
 
       {pendingReq > 0 && approvedSeats > 0 && (
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            p: 1,
-            m: 1,
-            borderRadius: 2,
-            bgcolor: "rgba(255,0,0,0.08)",
-            border: "1px solid rgba(255,0,0,0.4)",
-          }}
-        >
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", p: 1, m: 1, borderRadius: 2, bgcolor: "rgba(255,0,0,0.08)", border: "1px solid rgba(255,0,0,0.4)" }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <WarningAmberIcon sx={{ color: "error.main" }} />
-            <Typography sx={{ fontWeight: 700, fontSize: "0.85rem", color: "error.main" }}>
-              {firstName} {lastName} requested +{pendingReq} {pendingReq > 1 ? "seats" : "seat"}
-            </Typography>
+            <Typography sx={{ fontWeight: 700, fontSize: "0.85rem", color: "error.main" }}>{firstName} {lastName} requested +{pendingReq} {pendingReq > 1 ? "seats" : "seat"}</Typography>
           </Box>
-
           <Box sx={{ display: "flex", gap: 0.5 }}>
-            <IconButton
-              sx={{ color: "green", bgcolor: "rgba(0,200,0,0.1)", "&:hover": { bgcolor: "rgba(0,200,0,0.2)" } }}
-              onClick={(e) => askConfirm("approve", e)}
-              disabled={isBusy}
-            >
+            <IconButton sx={{ color: "green", bgcolor: "rgba(0,200,0,0.1)", "&:hover": { bgcolor: "rgba(0,200,0,0.2)" } }} onClick={(e) => askConfirm("approve", e)} disabled={isBusy}>
               {isApproveBusy ? <CircularProgress size={16} color="inherit" /> : <CheckCircleIcon sx={{ fontSize: 16 }} />}
             </IconButton>
-
-            <IconButton
-              sx={{ color: "red", bgcolor: "rgba(255,0,0,0.1)", "&:hover": { bgcolor: "rgba(255,0,0,0.2)" } }}
-              onClick={(e) => askConfirm("rejectPending", e)}
-              disabled={isBusy}
-            >
+            <IconButton sx={{ color: "red", bgcolor: "rgba(255,0,0,0.1)", "&:hover": { bgcolor: "rgba(255,0,0,0.2)" } }} onClick={(e) => askConfirm("rejectPending", e)} disabled={isBusy}>
               {isRejectBusy ? <CircularProgress size={16} color="inherit" /> : <CancelIcon sx={{ fontSize: 16 }} />}
             </IconButton>
           </Box>
         </Box>
       )}
 
-      <Dialog
-        open={confirmState.open}
-        onClose={(event, reason) => {
-          if (reason === "backdropClick") return;
-          closeConfirm();
-        }}
-        TransitionProps={{ onExited: handleExited }}
-        fullWidth
-        maxWidth="xs"
-        PaperProps={{ sx: { borderRadius: fullScreen ? 0 : 2.5, m: { xs: 0, sm: 2 } } }}
-      >
+      <Dialog open={confirmState.open} onClose={(event, reason) => { if (reason === "backdropClick") return; closeConfirm(); }} TransitionProps={{ onExited: handleExited }} fullWidth maxWidth="xs" PaperProps={{ sx: { borderRadius: fullScreen ? 0 : 2.5, m: { xs: 0, sm: 2 } } }}>
         <DialogTitle sx={{ fontFamily: TOKENS.bodyFont, fontWeight: 700, fontSize: { xs: "1rem", sm: "1.1rem" } }}>
-          {confirmState.action === "approve"
-            ? "Approve request ?"
-            : isRejectPending
-              ? "Reject pending seats ?"
-              : isRejectAll
-                ? "Reject request ?"
-                : "Reject request ?"}
+          {confirmState.action === "approve" ? "Approve request ?" : isRejectPending ? "Reject pending seats ?" : isRejectAll ? "Reject request ?" : "Reject request ?"}
         </DialogTitle>
-
         <DialogContent>
           <DialogContentText sx={{ fontFamily: TOKENS.bodyFont, fontSize: { xs: "0.85rem", sm: "1rem" } }}>
-            {confirmState.action === "approve" && (
-              <>
-                Are you sure you want to approve the request from{" "}
-                <strong>{firstName} {lastName}</strong> ?
-              </>
-            )}
-            {isRejectPending && (
-              <>
-                Reject only the <strong>{pendingReq}</strong> pending seat(s) for{" "}
-                <strong>{firstName} {lastName}</strong>? The {approvedSeats} approved
-                seat(s) will remain intact.
-              </>
-            )}
-            {isRejectAll && (
-              <>
-                This will reject <strong>{approvedSeats} approved</strong> and{" "}
-                <strong>{pendingReq} pending</strong> seat(s) for{" "}
-                <strong>{firstName} {lastName}</strong>. The request will be fully rejected.
-              </>
-            )}
-            {isRejectOnlyPending && (
-              <>
-                Are you sure you want to reject the request from{" "}
-                <strong>{firstName} {lastName}</strong> ?
-              </>
-            )}
+            {confirmState.action === "approve" && (<>Are you sure you want to approve the request from <strong>{firstName} {lastName}</strong> ?</>)}
+            {isRejectPending && (<>Reject only the <strong>{pendingReq}</strong> pending seat(s) for <strong>{firstName} {lastName}</strong>? The {approvedSeats} approved seat(s) will remain intact.</>)}
+            {isRejectAll && (<>This will reject <strong>{approvedSeats} approved</strong> and <strong>{pendingReq} pending</strong> seat(s) for <strong>{firstName} {lastName}</strong>. The request will be fully rejected.</>)}
+            {isRejectOnlyPending && (<>Are you sure you want to reject the request from <strong>{firstName} {lastName}</strong> ?</>)}
           </DialogContentText>
         </DialogContent>
-
         <DialogActions sx={{ px: { xs: 2, sm: 3 }, pb: { xs: 2, sm: 2.5 }, gap: 1 }}>
-          <Button
-            onClick={closeConfirm}
-            disabled={isBusy}
-            sx={{ fontFamily: TOKENS.bodyFont, textTransform: "none", fontWeight: 700, color: TOKENS.inkSoft }}
-          >
-            Cancel
-          </Button>
-
-          <Button
-            onClick={handleConfirm}
-            disabled={isBusy || approvalRejectionLoading}
-            variant="contained"
-            sx={{
-              fontFamily: TOKENS.bodyFont,
-              textTransform: "none",
-              fontWeight: 700,
-              minWidth: 110,
-              bgcolor: confirmState.action === "approve" ? TOKENS.green : TOKENS.red,
-              "&:hover": {
-                bgcolor: confirmState.action === "approve" ? TOKENS.green : TOKENS.red,
-                opacity: 0.9,
-              },
-            }}
-          >
-            {confirmState.action === "approve"
-              ? isApproveBusy ? "Approving..." : "Approve"
-              : isRejectBusy ? "Rejecting..." : "Reject"}
+          <Button onClick={closeConfirm} disabled={isBusy} sx={{ fontFamily: TOKENS.bodyFont, textTransform: "none", fontWeight: 700, color: TOKENS.inkSoft }}>Cancel</Button>
+          <Button onClick={handleConfirm} disabled={isBusy || approvalRejectionLoading} variant="contained" sx={{ fontFamily: TOKENS.bodyFont, textTransform: "none", fontWeight: 700, minWidth: 110, bgcolor: confirmState.action === "approve" ? TOKENS.green : TOKENS.red, "&:hover": { bgcolor: confirmState.action === "approve" ? TOKENS.green : TOKENS.red, opacity: 0.9 } }}>
+            {confirmState.action === "approve" ? isApproveBusy ? "Approving..." : "Approve" : isRejectBusy ? "Rejecting..." : "Reject"}
           </Button>
         </DialogActions>
       </Dialog>
@@ -832,441 +330,108 @@ function PassengerStub({
   );
 }
 
-// ── Main modal ────────────────────────────────────────────────────────────
 export default function RideDetailsModal({
-  ride,
-  requests = [],
-  isCurrentRide,
-  setPendingMembers,
-  showEdit,
-  user,
-  showDelete,
-  onEdit,
-  onDelete,
-  onClose,
-  onRequestUpdated,
-  onApprove = () => { },
-  onReject = () => { },
-  approveLoading,
-  rejectLoading,
+  ride, requests = [], isCurrentRide, setPendingMembers, showEdit, user, showDelete,
+  onEdit, onDelete, onClose, onRequestUpdated, onApprove = () => { }, onReject = () => { },
+  approveLoading, rejectLoading, viewerIsAcceptedPassenger,
 }) {
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down("sm"));
   const isMd = useMediaQuery(theme.breakpoints.up("md"));
 
-  const isRideFinished =
-    ride?.travelStatus === "Completed" || ride?.travelStatus === "Cancelled";
-
+  const isRideFinished = ride?.travelStatus === "Completed" || ride?.travelStatus === "Cancelled" || ride?.travelStatus === "Expired";
   const pendingMember = requests.flatMap((item) => item?.pendingMembers || []);
-  const isStarted = ride?.travelStatus === "Started";
 
-  // ★ TC-11 fix: shared MM/DD/YYYY formatter + US-style 12-hour time.
+  // ★ TC-1 — public vs private route
+  const isOwner =
+    String(ride?.createdBy?._id || ride?.createdBy || "") ===
+    String(user?.id || user?._id || "");
+  const canSeePrivate = isOwner || Boolean(viewerIsAcceptedPassenger);
+
+  const displayFrom = canSeePrivate
+    ? ride?.from
+    : ride?.fromPublic || derivePublicLocationLabel(ride?.from);
+  const displayTo = canSeePrivate
+    ? ride?.destination
+    : ride?.destinationPublic || derivePublicLocationLabel(ride?.destination);
+
+  // ★ TC-11 — MM/DD/YYYY + 12h time
   const dateLabel = formatDate(ride?.startTime) || "—";
-
   const startDayjs = dayjs(ride?.startTime);
   const timeLabel = startDayjs.isValid() ? startDayjs.format("h:mm A") : "—";
 
   const stamp = statusStamp[ride?.status];
-
   const TravelIcon = travelIcons[ride?.modeOfTravel] || DirectionsCarIcon;
   const GenderIcon = genderIcon[ride?.genderPreference] || Diversity3Icon;
-  const TravellerTypeIcon =
-    travellerTypeIcons[ride?.travellerType] || ExploreIcon;
-
-  const pendingCount = requests.filter(
-    (r) => r?.status?.toUpperCase() === "PENDING",
-  ).length;
+  const TravellerTypeIcon = travellerTypeIcons[ride?.travellerType] || ExploreIcon;
+  const pendingCount = requests.filter((r) => r?.status?.toUpperCase() === "PENDING").length;
 
   return (
-    <Dialog
-      open
-      onClose={(event, reason) => {
-        if (reason === "backdropClick") {
-          return;
-        }
-        onClose();
-      }}
-      fullWidth
-      maxWidth="sm"
-      fullScreen={isXs}
-      PaperProps={{
-        sx: {
-          borderRadius: { xs: 3, sm: 4 },
-          bgcolor: TOKENS.paper,
-          backgroundImage: "none",
-        },
-      }}
-      sx={{ p: 1.5 }}
-    >
-      {/* ── Ticket header ── */}
-      <Box
-        sx={{
-          position: "relative",
-          px: { xs: 2.5, sm: 4 },
-          pt: { xs: 2.5, sm: 3 },
-          pb: { xs: 2, sm: 2.5 },
-          bgcolor: TOKENS.ink,
-          color: TOKENS.paper,
-        }}
-      >
-        <IconButton
-          onClick={onClose}
-          aria-label="Close"
-          sx={{
-            position: "absolute",
-            right: { xs: 10, sm: 16 },
-            top: { xs: 10, sm: 16 },
-            color: TOKENS.paper,
-            width: { xs: 36, sm: 40 },
-            height: { xs: 36, sm: 40 },
-            bgcolor: "rgba(255,255,255,0.08)",
-            "&:hover": { bgcolor: "rgba(255,255,255,0.18)" },
-          }}
-        >
+    <Dialog open onClose={(event, reason) => { if (reason === "backdropClick") return; onClose(); }} fullWidth maxWidth="sm" fullScreen={isXs}
+      PaperProps={{ sx: { borderRadius: { xs: 3, sm: 4 }, bgcolor: TOKENS.paper, backgroundImage: "none" } }} sx={{ p: 1.5 }}>
+      <Box sx={{ position: "relative", px: { xs: 2.5, sm: 4 }, pt: { xs: 2.5, sm: 3 }, pb: { xs: 2, sm: 2.5 }, bgcolor: TOKENS.ink, color: TOKENS.paper }}>
+        <IconButton onClick={onClose} aria-label="Close" sx={{ position: "absolute", right: { xs: 10, sm: 16 }, top: { xs: 10, sm: 16 }, color: TOKENS.paper, width: { xs: 36, sm: 40 }, height: { xs: 36, sm: 40 }, bgcolor: "rgba(255,255,255,0.08)", "&:hover": { bgcolor: "rgba(255,255,255,0.18)" } }}>
           <CloseIcon fontSize="small" />
         </IconButton>
-
-        <Stack
-          direction="row"
-          spacing={0.8}
-          alignItems="center"
-          sx={{ mb: { xs: 1.5, sm: 2 } }}
-        >
-          <ConfirmationNumberIcon
-            sx={{ fontSize: { xs: 15, sm: 17 }, color: TOKENS.accent }}
-          />
-          <Typography
-            sx={{
-              fontFamily: TOKENS.bodyFont,
-              fontSize: { xs: "0.65rem", sm: "0.7rem" },
-              fontWeight: 700,
-              letterSpacing: "0.18em",
-              textTransform: "uppercase",
-              color: "rgba(250,246,236,0.7)",
-            }}
-          >
-            Ride Pass
-          </Typography>
+        <Stack direction="row" spacing={0.8} alignItems="center" sx={{ mb: { xs: 1.5, sm: 2 } }}>
+          <ConfirmationNumberIcon sx={{ fontSize: { xs: 15, sm: 17 }, color: TOKENS.accent }} />
+          <Typography sx={{ fontFamily: TOKENS.bodyFont, fontSize: { xs: "0.65rem", sm: "0.7rem" }, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(250,246,236,0.7)" }}>Ride Pass</Typography>
         </Stack>
 
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: { xs: 2, md: 3 },
-            py: 1,
-          }}
-        >
-          {/* FROM */}
-          <Box
-            sx={{
-              width: { xs: "34%", md: "30%" },
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "flex-start",
-              minWidth: 0,
-            }}
-          >
-            <Typography
-              sx={{
-                fontFamily: TOKENS.displayFont,
-                fontWeight: 800,
-                fontSize: { xs: "1.5rem", md: "2.25rem" },
-                lineHeight: 1,
-                color: "#fff",
-                letterSpacing: "0.04em",
-              }}
-            >
-              {stationCode(formFrom(ride))}
-            </Typography>
-
-            <Typography
-              noWrap
-              sx={{
-                mt: 0.5,
-                minWidth: 0,
-                maxWidth: "100%",
-                textAlign: "left",
-                fontFamily: TOKENS.bodyFont,
-                fontWeight: 600,
-                fontSize: { xs: "0.82rem", md: "0.9rem" },
-                color: "#F5F5F5",
-                whiteSpace: "normal",
-                overflowWrap: "break-word",
-                wordBreak: "break-word",
-              }}
-            >
-              {formFrom(ride)}
-            </Typography>
-
-            <Typography
-              noWrap
-              sx={{
-                mt: 0.25,
-                minWidth: 0,
-                maxWidth: "100%",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-                fontFamily: TOKENS.bodyFont,
-                fontSize: "0.72rem",
-                color: "rgba(255,255,255,.65)",
-                textTransform: "uppercase",
-                letterSpacing: ".12em",
-              }}
-            >
-              {ride?.fromCountry}
-            </Typography>
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: { xs: 2, md: 3 }, py: 1 }}>
+          <Box sx={{ width: { xs: "34%", md: "30%" }, display: "flex", flexDirection: "column", alignItems: "flex-start", minWidth: 0 }}>
+            <Typography sx={{ fontFamily: TOKENS.displayFont, fontWeight: 800, fontSize: { xs: "1.5rem", md: "2.25rem" }, lineHeight: 1, color: "#fff", letterSpacing: "0.04em" }}>{stationCode(displayFrom || "")}</Typography>
+            <Typography noWrap sx={{ mt: 0.5, minWidth: 0, maxWidth: "100%", textAlign: "left", fontFamily: TOKENS.bodyFont, fontWeight: 600, fontSize: { xs: "0.82rem", md: "0.9rem" }, color: "#F5F5F5", whiteSpace: "normal", overflowWrap: "break-word", wordBreak: "break-word" }}>{displayFrom || "—"}</Typography>
           </Box>
 
-          {/* FLIGHT PATH */}
-          <Box
-            sx={{
-              flex: 1,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              px: 1,
-            }}
-          >
-            <Box
-              sx={{
-                width: "100%",
-                display: "flex",
-                alignItems: "center",
-                mb: { xs: 3, sm: 1.5 },
-              }}
-            >
-              <Box
-                sx={{
-                  flex: 1,
-                  borderTop: "2px dashed rgba(255,255,255,.30)",
-                }}
-              />
-
-              <Box
-                sx={{
-                  width: 38,
-                  height: 38,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <TravelIcon
-                  sx={{
-                    fontSize: 24,
-                    color: "#fff",
-                  }}
-                />
+          <Box sx={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", px: 1 }}>
+            <Box sx={{ width: "100%", display: "flex", alignItems: "center", mb: { xs: 3, sm: 1.5 } }}>
+              <Box sx={{ flex: 1, borderTop: "2px dashed rgba(255,255,255,.30)" }} />
+              <Box sx={{ width: 38, height: 38, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <TravelIcon sx={{ fontSize: 24, color: "#fff" }} />
               </Box>
-
-              <Box
-                sx={{
-                  flex: 1,
-                  borderTop: "2px dashed rgba(255,255,255,.30)",
-                }}
-              />
+              <Box sx={{ flex: 1, borderTop: "2px dashed rgba(255,255,255,.30)" }} />
             </Box>
           </Box>
 
-          {/* TO */}
-          <Box
-            sx={{
-              width: { xs: "34%", md: "30%" },
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "flex-end",
-              textAlign: "right",
-              minWidth: 0,
-            }}
-          >
-            <Typography
-              sx={{
-                fontFamily: TOKENS.displayFont,
-                fontWeight: 800,
-                fontSize: { xs: "1.5rem", md: "2.25rem" },
-                lineHeight: 1,
-                color: "#fff",
-                letterSpacing: "0.04em",
-              }}
-            >
-              {stationCode(formTo(ride))}
-            </Typography>
-
-            <Typography
-              noWrap
-              sx={{
-                mt: 0.5,
-                minWidth: 0,
-                maxWidth: "100%",
-                textAlign: "right",
-                fontFamily: TOKENS.bodyFont,
-                fontWeight: 600,
-                fontSize: { xs: "0.82rem", md: "0.9rem" },
-                color: "#F5F5F5",
-                whiteSpace: "normal",
-                overflowWrap: "break-word",
-                wordBreak: "break-word",
-              }}
-            >
-              {formTo(ride)}
-            </Typography>
-
-            <Typography
-              sx={{
-                mt: 0.25,
-                fontFamily: TOKENS.bodyFont,
-                fontSize: "0.72rem",
-                color: "rgba(255,255,255,.65)",
-                textTransform: "uppercase",
-                letterSpacing: ".12em",
-
-                width: { xs: "120px", sm: "160px", md: "200px" },
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {ride?.toCountry}
-            </Typography>
+          <Box sx={{ width: { xs: "34%", md: "30%" }, display: "flex", flexDirection: "column", alignItems: "flex-end", textAlign: "right", minWidth: 0 }}>
+            <Typography sx={{ fontFamily: TOKENS.displayFont, fontWeight: 800, fontSize: { xs: "1.5rem", md: "2.25rem" }, lineHeight: 1, color: "#fff", letterSpacing: "0.04em" }}>{stationCode(displayTo || "")}</Typography>
+            <Typography noWrap sx={{ mt: 0.5, minWidth: 0, maxWidth: "100%", textAlign: "right", fontFamily: TOKENS.bodyFont, fontWeight: 600, fontSize: { xs: "0.82rem", md: "0.9rem" }, color: "#F5F5F5", whiteSpace: "normal", overflowWrap: "break-word", wordBreak: "break-word" }}>{displayTo || "—"}</Typography>
           </Box>
         </Box>
 
         {stamp && (
-          <Chip
-            label={stamp?.label}
-            size="small"
-            sx={{
-              position: "absolute",
-              right: { xs: 14, sm: 20 },
-              bottom: { xs: -12, sm: -14 },
-              bgcolor: stamp?.bg,
-              color: stamp?.color,
-              fontFamily: TOKENS.monoFont,
-              fontWeight: 700,
-              fontSize: "0.68rem",
-              letterSpacing: "0.05em",
-              border: `1.5px solid ${stamp?.color}`,
-              transform: "rotate(-4deg)",
-              boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
-            }}
-          />
+          <Chip label={stamp?.label} size="small" sx={{ position: "absolute", right: { xs: 14, sm: 20 }, bottom: { xs: -12, sm: -14 }, bgcolor: stamp?.bg, color: stamp?.color, fontFamily: TOKENS.monoFont, fontWeight: 700, fontSize: "0.68rem", letterSpacing: "0.05em", border: `1.5px solid ${stamp?.color}`, transform: "rotate(-4deg)", boxShadow: "0 2px 6px rgba(0,0,0,0.15)" }} />
         )}
       </Box>
 
-      <DialogContent
-        sx={{
-          px: { xs: 2.5, sm: 4 },
-          py: { xs: 3, sm: 3.5 },
-          overflowX: "hidden",
-          boxSizing: "border-box",
-        }}
-      >
+      <DialogContent sx={{ px: { xs: 2.5, sm: 4 }, py: { xs: 3, sm: 3.5 }, overflowX: "hidden", boxSizing: "border-box" }}>
         {requests.length > 0 && (
           <>
             <Box>
               {requests.length === 0 ? (
-                <Box
-                  sx={{
-                    textAlign: "center",
-                    py: 3,
-                    border: `1px dashed ${TOKENS.line}`,
-                    borderRadius: 2,
-                  }}
-                >
-                  <Typography
-                    sx={{
-                      fontFamily: TOKENS.bodyFont,
-                      fontSize: "0.85rem",
-                      color: TOKENS.inkSoft,
-                    }}
-                  >
-                    No requests yet
-                  </Typography>
+                <Box sx={{ textAlign: "center", py: 3, border: `1px dashed ${TOKENS.line}`, borderRadius: 2 }}>
+                  <Typography sx={{ fontFamily: TOKENS.bodyFont, fontSize: "0.85rem", color: TOKENS.inkSoft }}>No requests yet</Typography>
                 </Box>
               ) : (
                 <>
-                  <Stack
-                    direction="row"
-                    alignItems="center"
-                    justifyContent="space-between"
-                    sx={{ mb: 1.6 }}
-                  >
+                  <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.6 }}>
                     <Stack direction="row" spacing={0.8} alignItems="center">
-                      <Typography
-                        sx={{
-                          fontFamily: TOKENS.displayFont,
-                          fontWeight: 700,
-                          fontSize: { xs: "0.95rem", sm: "1.05rem" },
-                          color: TOKENS.ink,
-                        }}
-                      >
-                        Passenger Manifest
-                      </Typography>
+                      <Typography sx={{ fontFamily: TOKENS.displayFont, fontWeight: 700, fontSize: { xs: "0.95rem", sm: "1.05rem" }, color: TOKENS.ink }}>Passenger Manifest</Typography>
                       {pendingCount > 0 && (
-                        <Chip
-                          label={`${pendingCount} pending`}
-                          size="small"
-                          sx={{
-                            bgcolor: TOKENS.amberSoft,
-                            color: TOKENS.amber,
-                            fontFamily: TOKENS.bodyFont,
-                            fontWeight: 700,
-                            fontSize: "0.7rem",
-                          }}
-                        />
+                        <Chip label={`${pendingCount} pending`} size="small" sx={{ bgcolor: TOKENS.amberSoft, color: TOKENS.amber, fontFamily: TOKENS.bodyFont, fontWeight: 700, fontSize: "0.7rem" }} />
                       )}
                     </Stack>
-                    <Typography
-                      sx={{
-                        fontFamily: TOKENS.monoFont,
-                        fontSize: "0.9rem",
-                        color: TOKENS.inkSoft,
-                        mx: 2,
-                        mt: 0.3,
-                      }}
-                    >
-                      {requests.length} Total
-                    </Typography>
+                    <Typography sx={{ fontFamily: TOKENS.monoFont, fontSize: "0.9rem", color: TOKENS.inkSoft, mx: 2, mt: 0.3 }}>{requests.length} Total</Typography>
                   </Stack>
 
-                  <Box
-                    sx={{
-                      borderRadius: 1.5,
-                      maxHeight: { xs: 280, sm: 340 },
-                      overflowY: "auto",
-                      overflowX: "hidden",
-                      pr: 0.5,
-
-                      "&::-webkit-scrollbar": {
-                        width: "5px",
-                      },
-                      "&::-webkit-scrollbar-thumb": {
-                        borderRadius: "10px",
-                        backgroundColor: "rgba(0,0,0,0.2)",
-                      },
-                    }}
-                  >
+                  <Box sx={{ borderRadius: 1.5, maxHeight: { xs: 280, sm: 340 }, overflowY: "auto", overflowX: "hidden", pr: 0.5, "&::-webkit-scrollbar": { width: "5px" }, "&::-webkit-scrollbar-thumb": { borderRadius: "10px", backgroundColor: "rgba(0,0,0,0.2)" } }}>
                     {requests.map((req) => (
-                      <Box
-                        key={req._id}
-                        sx={{
-                          mt: 2,
-                        }}
-                      >
+                      <Box key={req._id} sx={{ mt: 2 }}>
                         <PassengerStub
-                          request={req}
-                          isCurrentRide={isCurrentRide}
-                          isRideFinished={isRideFinished}
-                          onApprove={onApprove}
-                          onReject={onReject}
-                          onRequestUpdated={onRequestUpdated}
-                          approveLoading={approveLoading}
-                          rejectLoading={rejectLoading}
-                          dense={isXs}
+                          request={req} isCurrentRide={isCurrentRide} isRideFinished={isRideFinished}
+                          onApprove={onApprove} onReject={onReject} onRequestUpdated={onRequestUpdated}
+                          approveLoading={approveLoading} rejectLoading={rejectLoading} dense={isXs}
                         />
                       </Box>
                     ))}
@@ -1274,287 +439,91 @@ export default function RideDetailsModal({
                 </>
               )}
             </Box>
-
             <Perforation />
           </>
         )}
 
-        {/* ── Ticket data fields ── */}
-        <Box
-          sx={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 2,
-            width: "100%",
-            alignItems: "stretch",
-            "& > *": {
-              flex: {
-                xs: "1 1 calc(50% - 16px)",
-                sm: "1 1 calc(33.333% - 16px)",
-                md: "1 1 calc(33.333% - 16px)",
-                lg: "1 1 calc(33.333% - 16px)",
-              },
-              minWidth: 0,
-            },
-          }}
-        >
-          {dateLabel && (
-            <Field icon={CalendarTodayIcon} label="Date" value={dateLabel} />
-          )}
-
-          {timeLabel && (
-            <Field icon={AccessTimeIcon} label="Time" value={timeLabel} />
-          )}
-
-          {ride?.timeZone && (
-            <Field icon={ScheduleIcon} label="Time Zone" value={ride.timeZone} />
-          )}
-
-          {ride?.modeOfTravel && (
-            <Field icon={TravelIcon} label="Mode of Travel" value={ride.modeOfTravel} />
-          )}
-
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, width: "100%", alignItems: "stretch", "& > *": { flex: { xs: "1 1 calc(50% - 16px)", sm: "1 1 calc(33.333% - 16px)", md: "1 1 calc(33.333% - 16px)", lg: "1 1 calc(33.333% - 16px)" }, minWidth: 0 } }}>
+          {dateLabel && <Field icon={CalendarTodayIcon} label="Date" value={dateLabel} />}
+          {timeLabel && <Field icon={AccessTimeIcon} label="Time" value={timeLabel} />}
+          {ride?.timeZone && <Field icon={ScheduleIcon} label="Time Zone" value={ride.timeZone} />}
+          {ride?.modeOfTravel && <Field icon={TravelIcon} label="Mode of Travel" value={ride.modeOfTravel} />}
           {ride?.duration != null && (
-            <Field
-              icon={AccessTimeIcon}
-              label="Travel Duration"
-              value={
-                ride.duration >= 60
-                  ? `${Math.floor(ride.duration / 60)} hr ${ride.duration % 60} min`
-                  : `${ride.duration} min`
-              }
-            />
+            <Field icon={AccessTimeIcon} label="Travel Duration" value={ride.duration >= 60 ? `${Math.floor(ride.duration / 60)} hr ${ride.duration % 60} min` : `${ride.duration} min`} />
           )}
-
           {ride?.distanceKm != null && (
-            <Field
-              icon={RouteIcon}
-              label="Distance"
-              value={`${ride.distanceKm ? Math.round(ride.distanceKm * 0.621371) : 0} miles`}
-            />
+            <Field icon={RouteIcon} label="Distance" value={`${ride.distanceKm ? Math.round(ride.distanceKm * 0.621371) : 0} miles`} />
           )}
-
           {ride?.availableSeats != null && (
-            <Field
-              icon={EventSeatIcon}
-              label="Available Seats"
-              value={ride.availableSeats === 0 ? "Seats Filled" : ride.availableSeats}
-            />
+            <Field icon={EventSeatIcon} label="Available Seats" value={ride.availableSeats === 0 ? "Seats Filled" : ride.availableSeats} />
           )}
-
-          {ride?.totalSeats != null && (
-            <Field icon={EventSeatIcon} label="Total Seats" value={ride.totalSeats} />
-          )}
-          {ride && (
-            <Field
-              icon={AttachMoneyIcon}
-              label="Cost Per Seat"
-              value={
-                ride.costPerSeat == null
-                  ? "Free"
-                  : `$ ${ride.costPerSeat}`
-              }
-            />
-          )}
-
-          {ride?.category && (
-            <Field icon={CategoryIcon} label="Category" value={ride.category} />
-          )}
-
-          {ride?.luggageSpace && (
-            <Field
-              icon={LuggageIcon}
-              label="Luggage Space"
-              value={ride.luggageSpace === "None" ? "No luggage Space" : ride.luggageSpace}
-            />
-          )}
-
-          {ride?.childFriendly != null && (
-            <Field
-              icon={ChildCareIcon}
-              label="Child Friendly"
-              value={ride.childFriendly ? "Yes" : "No"}
-            />
-          )}
-
-          {ride?.womenOnly != null && (
-            <Field
-              icon={FemaleIcon}
-              label="Women Only"
-              value={ride.womenOnly ? "Yes" : "No"}
-            />
-          )}
-
-          {ride?.recurringRide != null && (
-            <Field
-              icon={CalendarTodayIcon}
-              label="Recurring Ride"
-              value={ride.recurringRide ? "Yes" : "No"}
-            />
-          )}
-
-          {ride?.confirmCostSharing != null && (
-            <Field
-              icon={CheckCircleIcon}
-              label="Cost Sharing Confirmed"
-              value={ride.confirmCostSharing ? "Yes" : "No"}
-            />
-          )}
-
-          {ride?.kind && (
-            <Field icon={DescriptionIcon} label="Ride Kind" value={ride.kind} />
-          )}
-
-          {ride?.passengers != null && ride.passengers !== "" && (
-            <Field icon={PeopleIcon} label="Passengers" value={ride.passengers} />
-          )}
-
-          {ride?.bags != null && (
-            <Field
-              icon={LuggageIcon}
-              label="Bags"
-              value={ride.bags === 0 ? "No bags" : ride.bags}
-            />
-          )}
-
-          {ride?.travelingWithChild != null && (
-            <Field
-              icon={ChildCareIcon}
-              label="Traveling With Child"
-              value={ride.travelingWithChild ? "Yes" : "No"}
-            />
-          )}
-
-          {ride?.flexibility && (
-            <Field icon={ScheduleIcon} label="Flexibility" value={ride.flexibility} />
-          )}
-
-          {ride?.womenDriversOnly != null && (
-            <Field
-              icon={FemaleIcon}
-              label="Women Drivers Only"
-              value={ride.womenDriversOnly ? "Yes" : "No"}
-            />
-          )}
-
+          {ride?.totalSeats != null && <Field icon={EventSeatIcon} label="Total Seats" value={ride.totalSeats} />}
+          {ride && <Field icon={AttachMoneyIcon} label="Cost Per Seat" value={ride.costPerSeat == null ? "Free" : `$ ${ride.costPerSeat}`} />}
+          {ride?.category && <Field icon={CategoryIcon} label="Category" value={ride.category} />}
+          {ride?.luggageSpace && <Field icon={LuggageIcon} label="Luggage Space" value={ride.luggageSpace === "None" ? "No luggage Space" : ride.luggageSpace} />}
+          {ride?.childFriendly != null && <Field icon={ChildCareIcon} label="Child Friendly" value={ride.childFriendly ? "Yes" : "No"} />}
+          {ride?.womenOnly != null && <Field icon={FemaleIcon} label="Women Only" value={ride.womenOnly ? "Yes" : "No"} />}
+          {ride?.recurringRide != null && <Field icon={CalendarTodayIcon} label="Recurring Ride" value={ride.recurringRide ? "Yes" : "No"} />}
+          {ride?.confirmCostSharing != null && <Field icon={CheckCircleIcon} label="Cost Sharing Confirmed" value={ride.confirmCostSharing ? "Yes" : "No"} />}
+          {ride?.kind && <Field icon={DescriptionIcon} label="Ride Kind" value={ride.kind} />}
+          {ride?.passengers != null && ride.passengers !== "" && <Field icon={PeopleIcon} label="Passengers" value={ride.passengers} />}
+          {ride?.bags != null && <Field icon={LuggageIcon} label="Bags" value={ride.bags === 0 ? "No bags" : ride.bags} />}
+          {ride?.travelingWithChild != null && <Field icon={ChildCareIcon} label="Traveling With Child" value={ride.travelingWithChild ? "Yes" : "No"} />}
+          {ride?.flexibility && <Field icon={ScheduleIcon} label="Flexibility" value={ride.flexibility} />}
+          {ride?.womenDriversOnly != null && <Field icon={FemaleIcon} label="Women Drivers Only" value={ride.womenDriversOnly ? "Yes" : "No"} />}
           {Array.isArray(ride?.helpCanOffer) && ride.helpCanOffer.length > 0 && (
-            <Field
-              icon={TranslateIcon}
-              label="Help Offered"
-              value={ride.helpCanOffer.join(", ")}
-              span
-            />
+            <Field icon={TranslateIcon} label="Help Offered" value={ride.helpCanOffer.join(", ")} span />
           )}
         </Box>
 
+        {/* ★ TC-1: notes are fine to show publicly (no phone numbers enforced already) */}
         {ride?.notes != null && ride.notes !== "" && (
           <Box sx={{ width: "100%", mt: 2, mb: 2 }}>
-            <Field
-              icon={PhoneIcon}
-              label="Contact / Notes"
-              value={ride.notes}
-              span
-            />
+            <Field icon={PhoneIcon} label="Contact / Notes" value={ride.notes} span />
           </Box>
         )}
 
         {ride?.description != null && ride.description !== "" && (
           <Box sx={{ width: "100%", mt: 2 }}>
-            <Field
-              icon={DescriptionIcon}
-              label="Description"
-              value={ride.description}
-              span
-            />
+            <Field icon={DescriptionIcon} label="Description" value={ride.description} span />
+          </Box>
+        )}
+
+        {/* ★ TC-1: exact pickup only for owner / accepted passenger */}
+        {canSeePrivate && ride?.exactPickup && (
+          <Box sx={{ width: "100%", mt: 2 }}>
+            <Field icon={PhoneIcon} label="Exact pickup address (private)" value={ride.exactPickup} span />
           </Box>
         )}
       </DialogContent>
 
-      <Box
-        sx={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: 1,
-          px: { xs: 2.5, sm: 4 },
-          py: { xs: 2, sm: 2.5 },
-          borderTop: `1px solid ${TOKENS.line}`,
-        }}
-      >
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, px: { xs: 2.5, sm: 4 }, py: { xs: 2, sm: 2.5 }, borderTop: `1px solid ${TOKENS.line}` }}>
         {(!pendingMember || pendingMember.length === 0) &&
           showEdit &&
           ride?.travelStatus !== "Started" &&
           ride?.travelStatus !== "Completed" &&
           ride?.travelStatus !== "Cancelled" &&
-          !requests.some(r => ["ACCEPTED", "APPROVED", "AUTO_REJECTED"].includes(r.status?.toUpperCase())) &&
-          (ride?.createdBy?._id === user?.id ||
-            (typeof ride?.createdBy === "string" &&
-              ride?.createdBy === user?.id)) && (
-            <Button
-              onClick={() => onEdit(ride)}
-              startIcon={<EditIcon sx={{ fontSize: { xs: 16, sm: 18 } }} />}
-              size={isMd ? "medium" : "small"}
-              sx={{
-                fontFamily: TOKENS.bodyFont,
-                textTransform: "none",
-                fontWeight: 700,
-                fontSize: { xs: "0.8rem", sm: "0.88rem" },
-                color: TOKENS.ink,
-                border: `1.5px solid ${TOKENS.ink}`,
-                borderRadius: 5,
-                px: { xs: 1.6, sm: 2.2 },
-                minHeight: { xs: 40, sm: 44 },
-                flex: { xs: "1 1 auto", sm: "0 0 auto" },
-                "&:hover": { bgcolor: TOKENS.ink, color: TOKENS.paper },
-              }}
-            >
+          ride?.travelStatus !== "Expired" &&
+          !requests.some((r) => ["ACCEPTED", "APPROVED", "AUTO_REJECTED"].includes(r.status?.toUpperCase())) &&
+          (ride?.createdBy?._id === user?.id || (typeof ride?.createdBy === "string" && ride?.createdBy === user?.id)) && (
+            <Button onClick={() => onEdit(ride)} startIcon={<EditIcon sx={{ fontSize: { xs: 16, sm: 18 } }} />} size={isMd ? "medium" : "small"}
+              sx={{ fontFamily: TOKENS.bodyFont, textTransform: "none", fontWeight: 700, fontSize: { xs: "0.8rem", sm: "0.88rem" }, color: TOKENS.ink, border: `1.5px solid ${TOKENS.ink}`, borderRadius: 5, px: { xs: 1.6, sm: 2.2 }, minHeight: { xs: 40, sm: 44 }, flex: { xs: "1 1 auto", sm: "0 0 auto" }, "&:hover": { bgcolor: TOKENS.ink, color: TOKENS.paper } }}>
               Edit ride
             </Button>
           )}
 
         {showDelete &&
           ride?.travelStatus !== "Started" &&
-          (ride?.createdBy?._id === user?.id ||
-            (typeof ride?.createdBy === "string" &&
-              ride?.createdBy === user?.id)) && (
-            <Button
-              onClick={() => onDelete(ride)}
-              startIcon={<DeleteIcon sx={{ fontSize: { xs: 16, sm: 18 } }} />}
-              size={isMd ? "medium" : "small"}
-              sx={{
-                fontFamily: TOKENS.bodyFont,
-                textTransform: "none",
-                fontWeight: 700,
-                fontSize: { xs: "0.8rem", sm: "0.88rem" },
-                color: TOKENS.red,
-                border: `1.5px solid ${TOKENS.red}`,
-                borderRadius: 5,
-                px: { xs: 1.6, sm: 2.2 },
-                minHeight: { xs: 40, sm: 44 },
-                flex: { xs: "1 1 auto", sm: "0 0 auto" },
-                "&:hover": { bgcolor: TOKENS.red, color: "#fff" },
-              }}
-            >
+          ride?.travelStatus !== "Expired" &&
+          (ride?.createdBy?._id === user?.id || (typeof ride?.createdBy === "string" && ride?.createdBy === user?.id)) && (
+            <Button onClick={() => onDelete(ride)} startIcon={<DeleteIcon sx={{ fontSize: { xs: 16, sm: 18 } }} />} size={isMd ? "medium" : "small"}
+              sx={{ fontFamily: TOKENS.bodyFont, textTransform: "none", fontWeight: 700, fontSize: { xs: "0.8rem", sm: "0.88rem" }, color: TOKENS.red, border: `1.5px solid ${TOKENS.red}`, borderRadius: 5, px: { xs: 1.6, sm: 2.2 }, minHeight: { xs: 40, sm: 44 }, flex: { xs: "1 1 auto", sm: "0 0 auto" }, "&:hover": { bgcolor: TOKENS.red, color: "#fff" } }}>
               Cancel Ride
             </Button>
           )}
         <Box sx={{ flexGrow: 1, display: { xs: "none", sm: "block" } }} />
-        <Button
-          onClick={onClose}
-          size={isMd ? "medium" : "small"}
-          sx={{
-            fontFamily: TOKENS.bodyFont,
-            textTransform: "none",
-            fontWeight: 700,
-            fontSize: { xs: "0.8rem", sm: "0.88rem" },
-            color: "text.secondary",
-            border: `1.5px solid ${TOKENS.line}`,
-            borderRadius: 5,
-            px: { xs: 1.6, sm: 2.2 },
-            minHeight: { xs: 40, sm: 44 },
-            flex: { xs: "1 1 auto", sm: "0 0 auto" },
-            "&:hover": { bgcolor: TOKENS.paperDim },
-          }}
-        >
+        <Button onClick={onClose} size={isMd ? "medium" : "small"}
+          sx={{ fontFamily: TOKENS.bodyFont, textTransform: "none", fontWeight: 700, fontSize: { xs: "0.8rem", sm: "0.88rem" }, color: "text.secondary", border: `1.5px solid ${TOKENS.line}`, borderRadius: 5, px: { xs: 1.6, sm: 2.2 }, minHeight: { xs: 40, sm: 44 }, flex: { xs: "1 1 auto", sm: "0 0 auto" }, "&:hover": { bgcolor: TOKENS.paperDim } }}>
           Close
         </Button>
       </Box>
