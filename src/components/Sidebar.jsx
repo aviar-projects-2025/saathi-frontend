@@ -103,7 +103,7 @@ export default function Sidebar({ onItemClick, isMobile = false }) {
         </Box>
       ),
       icon: <HandshakeIcon />,
-      link: "/my-referalls",
+      link: "/my-referrals",
     },
     {
       id: "my-profile",

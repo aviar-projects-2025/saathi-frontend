@@ -87,6 +87,7 @@ export default function Ridebook({
     name: `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`.trim(),
     age: calculateAge(currentUser?.dob),
   });
+  const selfAge = calculateAge(currentUser?.dob);
   const emptyRequestData = {
     seatsRequested: 1,
     message: "",
@@ -801,6 +802,7 @@ export default function Ridebook({
                     {index + 1}
                   </Avatar>
 
+
                   <TextField
                     placeholder="Full name"
                     fullWidth
@@ -820,7 +822,6 @@ export default function Ridebook({
                         : ""
                     }
                     sx={{
-                      // ★ FIX: Keep name input aligned
                       mt: 0.5,
                       "& .MuiInputBase-input": {
                         fontSize: "0.85rem",
@@ -833,13 +834,17 @@ export default function Ridebook({
                       },
                       "& .MuiFormHelperText-root": {
                         marginLeft: 0,
-                      }
+                      },
                     }}
-                    onChange={(e) =>
-                      !isLockedSelfSlot &&
-                      handleMemberChange(index, "name", e.target.value)
-                    }
+                    onChange={(e) => {
+                      if (isLockedSelfSlot) return;
+
+                      const value = e.target.value.replace(/[^a-zA-Z\s]/g, "");
+
+                      handleMemberChange(index, "name", value);
+                    }}
                   />
+
 
                   <Box sx={{ width: 80, flexShrink: 0 }}>
                     <TextField
@@ -978,7 +983,7 @@ export default function Ridebook({
           rows={isMobile ? 3 : 4}
           size={isMobile ? "small" : "medium"}
           label={
-            "Message to Rider"
+            "Message to Driver"
           }
           value={requestData.message}
           sx={{

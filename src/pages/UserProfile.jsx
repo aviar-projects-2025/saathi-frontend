@@ -1,16 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import {
-  Alert, Avatar, Box, Button, Chip, CircularProgress, Dialog, DialogActions,
+  Alert, Box, Button, Chip, CircularProgress, Dialog, DialogActions,
   DialogContent, DialogTitle, Divider, IconButton, LinearProgress,
-  Menu, MenuItem, Skeleton, Stack, Tab, Tabs, TextField, Typography,
+  Menu, MenuItem, Skeleton, Stack, Tab, Tabs, Typography,
   useMediaQuery, useTheme,
 } from "@mui/material";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import DeleteOutlineIcon from "@mui/icons-material/Delete";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import CloseIcon from "@mui/icons-material/Close";
-import AddPhotoAlternateOutlinedIcon from "@mui/icons-material/AddPhotoAlternateOutlined";
 import VerifiedOutlinedIcon from "@mui/icons-material/VerifiedOutlined";
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
 import StarIcon from "@mui/icons-material/Star";
@@ -25,6 +24,7 @@ import ProfileModal from "./Avatar.jsx";
 import EditProfile from "./EditProfile.jsx";
 import { useLocation } from "react-router-dom";
 import ProtectedAvatar from "../components/ProtectedAvatar.jsx";
+import { usePost } from "../context/PostContext.jsx";
 
 /* ---------- design tokens ---------- */
 const C = {
@@ -104,27 +104,19 @@ const routeParts = (ride) => {
   ];
 };
 
-/* Resolve the displayable image URL — prefer the signed URL if present. */
 const resolvePostImage = (post) => {
   if (!post) return "";
-  const url = post.postImageUrl;
+  const url = post?.postImageUrl;
   if (url) return Array.isArray(url) ? url[0] || "" : url;
-  const raw = post.postImage;
+  const raw = post?.postImage;
   if (!raw) return "";
   return Array.isArray(raw) ? raw[0] || "" : raw;
 };
 
-/* ---------- ★ Post detail modal ---------- */
+/* ---------- Post detail modal ---------- */
 function PostDetailDialog({
-  post,
-  open,
-  onClose,
-  isOwner,
-  isSaved,
-  savingPostId,
-  onToggleSave,
-  onEdit,
-  onDelete,
+  post, open, onClose, isOwner, isSaved, savingPostId,
+  onToggleSave, onEdit, onDelete,
 }) {
   if (!post) return null;
   const image = resolvePostImage(post);
@@ -138,58 +130,117 @@ function PostDetailDialog({
       : "";
 
   return (
+
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="md"
+      maxWidth="sm"
       fullWidth
-      // Disable scroll-lock on the body to avoid layout shift; keep the close
-      // behaviour intact. This also prevents the modal from being unexpectedly
-      // hidden if a parent has odd overflow.
+      fullScreen={false}
       disableScrollLock
-      // Force the modal to render as a direct child of <body>, ignoring any
-      // transformed ancestors (which would otherwise break fixed positioning).
-      // MUI Dialog portals to document.body by default, but this is explicit.
-      slotProps={{
-        root: {
-          sx: { zIndex: (theme) => theme.zIndex.modal + 10 },
-        },
-      }}
+      // slotProps={{
+      //   root: {
+      //     sx: {
+      //       zIndex: (theme) => theme.zIndex.modal + 10,
+      //     },
+      //   },
+      // }}
       PaperProps={{
         sx: {
-          borderRadius: { xs: 2, sm: RADIUS.card },
+          width: {
+            xs: "calc(100% - 16px)",
+            sm: "100%",
+          },
+          maxWidth: {
+            xs: "100%",
+            sm: "600px",
+          },
+          maxHeight: {
+            xs: "calc(100% - 16px)",
+            sm: "90vh",
+          },
+          borderRadius: {
+            xs: 2,
+            sm: RADIUS.card,
+          },
           overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
           bgcolor: C.paper,
-          m: { xs: 1.5, sm: 3 },
+          m: {
+            xs: 1,
+            sm: 3,
+          },
         },
       }}
     >
+      {/* Header */}
       <DialogTitle
         sx={{
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
+          gap: 1,
           fontFamily: SERIF,
           fontWeight: 600,
-          pb: 1,
+          px: { xs: 2, sm: 3 },
+          py: { xs: 1.5, sm: 2 },
+          flexShrink: 0,
         }}
       >
-        <Box sx={{ minWidth: 0 }}>
-          <Typography sx={{ fontFamily: SERIF, fontWeight: 600, fontSize: { xs: "1.05rem", sm: "1.2rem" }, color: C.ink }}>
+        <Box sx={{ minWidth: 0, flex: 1 }}>
+          <Typography
+            sx={{
+              fontFamily: SERIF,
+              fontWeight: 600,
+              fontSize: {
+                xs: "1rem",
+                sm: "1.15rem",
+                md: "1.2rem",
+              },
+              color: C.ink,
+              overflowWrap: "anywhere",
+            }}
+          >
             Community post
           </Typography>
+
           {ownerName && (
-            <Typography sx={{ fontSize: "0.78rem", color: C.muted, mt: 0.25 }}>
+            <Typography
+              sx={{
+                fontSize: { xs: "0.72rem", sm: "0.78rem" },
+                color: C.muted,
+                mt: 0.25,
+                overflowWrap: "anywhere",
+              }}
+            >
               by {ownerName}
             </Typography>
           )}
         </Box>
-        <IconButton onClick={onClose} aria-label="Close" size="small">
+
+        <IconButton
+          onClick={onClose}
+          aria-label="Close"
+          size="small"
+          sx={{ flexShrink: 0 }}
+        >
           <CloseIcon />
         </IconButton>
       </DialogTitle>
 
-      <DialogContent sx={{ p: 0, bgcolor: C.canvas }}>
+      {/* Content */}
+      <DialogContent
+        sx={{
+          p: 0,
+          bgcolor: C.canvas,
+          overflowY: "auto",
+          overflowX: "hidden",
+          flex: 1,
+          minHeight: 0,
+          WebkitOverflowScrolling: "touch",
+        }}
+      >
         {image ? (
           <Box
             component="img"
@@ -198,56 +249,116 @@ function PostDetailDialog({
             sx={{
               display: "block",
               width: "100%",
-              maxHeight: "60vh",
+              height: {
+                xs: "auto",
+                sm: "auto",
+              },
+              maxHeight: {
+                xs: "45vh",
+                sm: "55vh",
+                md: "60vh",
+              },
               objectFit: "contain",
-              bgcolor: "#000",
+              bgcolor: "#fff",
             }}
           />
         ) : (
           <Box
             sx={{
               width: "100%",
-              aspectRatio: "16 / 10",
+              aspectRatio: {
+                xs: "4 / 3",
+                sm: "16 / 10",
+              },
               bgcolor: C.tint,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: C.muted,
-              fontSize: "0.85rem",
+              textAlign: "center",
+              p: 3,
+              boxSizing: "border-box",
             }}
           >
-            No image
+            <Typography
+              sx={{
+                width: "100%",
+                color: C.body,
+                fontSize: "0.95rem",
+                lineHeight: 1.6,
+                fontWeight: 500,
+                overflowWrap: "anywhere",
+                textAlign: "center",
+                display: "-webkit-box",
+                WebkitLineClamp: 5,
+                WebkitBoxOrient: "vertical",
+                overflow: "hidden",
+              }}
+            >
+              {post.description || "Community post"}
+            </Typography>
           </Box>
         )}
-        <Box sx={{ p: { xs: 2, sm: 3 } }}>
-          {post.description && (
+
+        <Box
+          sx={{
+            p: {
+              xs: 2,
+              sm: 2.5,
+              md: 3,
+            },
+          }}
+        >
+          {image && post.description && (
             <Typography
               sx={{
                 color: C.body,
-                fontSize: { xs: "0.92rem", sm: "0.98rem" },
+                fontSize: {
+                  xs: "0.88rem",
+                  sm: "0.95rem",
+                  md: "0.98rem",
+                },
                 lineHeight: 1.7,
                 whiteSpace: "pre-wrap",
                 overflowWrap: "anywhere",
+                wordBreak: "break-word",
               }}
             >
               {post.description}
             </Typography>
           )}
           {createdLabel && (
-            <Typography sx={{ mt: 1.5, fontSize: "0.75rem", color: C.muted }}>
+            <Typography
+              sx={{
+                mt: 1.5,
+                fontSize: {
+                  xs: "0.7rem",
+                  sm: "0.75rem",
+                },
+                color: C.muted,
+              }}
+            >
               Posted {createdLabel}
             </Typography>
           )}
         </Box>
       </DialogContent>
 
+      {/* Actions */}
       <DialogActions
         sx={{
-          p: 2,
-          gap: 1,
+          p: {
+            xs: 1.5,
+            sm: 2,
+          },
+          gap: {
+            xs: 1,
+            sm: 1.5,
+          },
           flexWrap: "wrap",
           justifyContent: "space-between",
+          alignItems: "center",
           borderTop: `1px solid ${C.line}`,
+          flexShrink: 0,
         }}
       >
         <Button
@@ -259,9 +370,15 @@ function PostDetailDialog({
             textTransform: "none",
             borderRadius: "999px",
             fontWeight: 650,
+            fontSize: { xs: "0.78rem", sm: "0.875rem" },
+            px: { xs: 1.5, sm: 2 },
+            minWidth: 0,
             color: isSaved ? C.saffron : C.ink,
             borderColor: isSaved ? C.saffron : C.line,
-            "&:hover": { borderColor: C.saffron, bgcolor: C.tint },
+            "&:hover": {
+              borderColor: C.saffron,
+              bgcolor: C.tint,
+            },
           }}
         >
           {savingPostId === post._id
@@ -272,20 +389,53 @@ function PostDetailDialog({
         </Button>
 
         {isOwner && (
-          <Stack direction="row" spacing={1}>
+          <Stack
+            direction="row"
+            spacing={{ xs: 0.75, sm: 1 }}
+            sx={{
+              flexWrap: "wrap",
+              justifyContent: "flex-end",
+            }}
+          >
             <Button
               variant="outlined"
               startIcon={<EditOutlinedIcon />}
               onClick={() => onEdit?.(post)}
-              sx={{ textTransform: "none", borderRadius: "999px", fontWeight: 650, color: C.ink, borderColor: C.line, "&:hover": { borderColor: C.saffron } }}
+              sx={{
+                textTransform: "none",
+                borderRadius: "999px",
+                fontWeight: 650,
+                fontSize: { xs: "0.78rem", sm: "0.875rem" },
+                px: { xs: 1.5, sm: 2 },
+                minWidth: 0,
+                color: C.ink,
+                borderColor: C.line,
+                "&:hover": {
+                  borderColor: C.saffron,
+                },
+              }}
             >
               Edit
             </Button>
+
             <Button
               variant="outlined"
               startIcon={<DeleteOutlineIcon />}
               onClick={() => onDelete?.(post)}
-              sx={{ textTransform: "none", borderRadius: "999px", fontWeight: 650, color: "#B91C1C", borderColor: "#B91C1C", "&:hover": { bgcolor: "#FEF2F2", borderColor: "#991B1B" } }}
+              sx={{
+                textTransform: "none",
+                borderRadius: "999px",
+                fontWeight: 650,
+                fontSize: { xs: "0.78rem", sm: "0.875rem" },
+                px: { xs: 1.5, sm: 2 },
+                minWidth: 0,
+                color: "#B91C1C",
+                borderColor: "#B91C1C",
+                "&:hover": {
+                  bgcolor: "#FEF2F2",
+                  borderColor: "#991B1B",
+                },
+              }}
             >
               Delete
             </Button>
@@ -293,6 +443,7 @@ function PostDetailDialog({
         )}
       </DialogActions>
     </Dialog>
+
   );
 }
 
@@ -301,7 +452,16 @@ const UserProfile = () => {
   const isSmall = useMediaQuery(theme.breakpoints.down("sm"));
   const location = useLocation();
   const toasts = ToastConfig();
-  const { currentUser, completion, getuserData } = useUser();
+
+  // ★ Context: user data + saved-post state + save/unsave actions
+  const {
+    currentUser, completion, getuserData,
+    savedPost, savedLoading, savedHasNextPage, savedPage, getSavedPost,   // ← add savedPage
+    toggleSave, isSaved, savingPostId,
+  } = useUser();
+
+  // ★ Context: shared edit/delete dialogs + pub-sub for post mutations
+  const { openEdit, openDelete, onPostUpdated, onPostDeleted } = usePost();
 
   const storedUser = useMemo(() => {
     try { return JSON.parse(localStorage.getItem("user") || "null"); } catch { return null; }
@@ -329,6 +489,7 @@ const UserProfile = () => {
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [reviewsError, setReviewsError] = useState("");
 
+  // ★ Local "own posts" list only — savedPost is in context
   const [posts, setPosts] = useState([]);
   const [postsLoading, setPostsLoading] = useState(false);
   const [postsLoadingMore, setPostsLoadingMore] = useState(false);
@@ -337,34 +498,18 @@ const UserProfile = () => {
   const [totalPosts, setTotalPosts] = useState(0);
   const [postMenuAnchor, setPostMenuAnchor] = useState(null);
   const [selectedPost, setSelectedPost] = useState(null);
-  const [editPostOpen, setEditPostOpen] = useState(false);
-  const [deletePostOpen, setDeletePostOpen] = useState(false);
-  const [editDescription, setEditDescription] = useState("");
-  const [editFile, setEditFile] = useState(null);
-  const [editPreview, setEditPreview] = useState("");
-  const [postSaving, setPostSaving] = useState(false);
-  const [postDeleting, setPostDeleting] = useState(false);
   const observerRef = useRef(null);
   const loadMoreRef = useRef(null);
   const fetchingRef = useRef(false);
 
-  // ★ Post detail modal state
+  // Post detail modal
   const [postDetailOpen, setPostDetailOpen] = useState(false);
   const [postDetailPost, setPostDetailPost] = useState(null);
-  const [postDetailSource, setPostDetailSource] = useState("posts"); // "posts" | "saved"
+  const [postDetailSource, setPostDetailSource] = useState("posts");
 
-  const [savedPosts, setSavedPosts] = useState([]);
-  const [savedLoading, setSavedLoading] = useState(false);
-  const [savedError, setSavedError] = useState("");
-  const [savedPage, setSavedPage] = useState(1);
-  const [savedHasMore, setSavedHasMore] = useState(false);
-  const [savedTotal, setSavedTotal] = useState(0);
-  const [savingPostId, setSavingPostId] = useState(null);
   const [savedMenuAnchor, setSavedMenuAnchor] = useState(null);
   const [savedMenuPost, setSavedMenuPost] = useState(null);
-  const savedObserverRef = useRef(null);
   const savedLoadMoreRef = useRef(null);
-  const savedFetchingRef = useRef(false);
 
   /* ---------- data loading ---------- */
   const loadProfileData = useCallback(async () => {
@@ -373,12 +518,7 @@ const UserProfile = () => {
     setProfileLoading(true);
     setProfileError("");
 
-    const [
-      userResult,
-      ridesGivenResult,
-      ridesTakenResult,
-      referralsResult,
-    ] = await Promise.allSettled([
+    const [userResult, ridesGivenResult, ridesTakenResult, referralsResult] = await Promise.allSettled([
       axios.get(`${Api}/users/${userId}`, authConfig()),
       axios.get(`${Api}/rides/get`, {
         ...authConfig(),
@@ -484,7 +624,7 @@ const UserProfile = () => {
 
   useEffect(() => { loadReviews(); }, [loadReviews]);
 
-  /* ---------- posts ---------- */
+  /* ---------- posts (own posts) ---------- */
   const loadPosts = useCallback(async (page = 1) => {
     if (!userId) return;
     if (page === 1) setPostsLoading(true); else setPostsLoadingMore(true);
@@ -527,96 +667,42 @@ const UserProfile = () => {
     return () => observerRef.current?.disconnect();
   }, [hasMorePosts, postsLoading, postsLoadingMore, postPage, loadPosts]);
 
-  /* ---------- saved posts ---------- */
-  const loadSavedPosts = useCallback(async (page = 1) => {
-    if (!userId) return;
-    if (page === 1) setSavedLoading(true);
-    try {
-      const response = await axios.get(
-        `${Api}/save-post/${userId}?page=${page}&limit=12`,
-        authConfig()
-      );
-      const body = response?.data || {};
-      const items = Array.isArray(body.savedPosts) ? body.savedPosts : [];
-      setSavedPosts((previous) =>
-        page === 1
-          ? items
-          : [...previous, ...items.filter((post) => !previous.some((old) => old._id === post._id))]
-      );
-      setSavedPage(page);
-      setSavedHasMore(Boolean(body.hasMore));
-      setSavedTotal(Number(body.totalCount ?? items.length));
-      setSavedError("");
-    } catch (err) {
-      setSavedError(err?.response?.data?.message || "Could not load saved posts.");
-      if (page === 1) setSavedPosts([]);
-    } finally {
-      setSavedLoading(false);
-      savedFetchingRef.current = false;
-    }
-  }, [userId, authConfig]);
-
+  /* ---------- ★ saved posts come from context now ---------- */
   useEffect(() => {
-    if (tab === 4) {
-      setSavedPosts([]);
-      setSavedPage(1);
-      setSavedHasMore(false);
-      loadSavedPosts(1);
+    if (tab === 4 && savedPost.length === 0 && !savedLoading) {
+      getSavedPost(1);
     }
-  }, [tab, loadSavedPosts]);
+  }, [tab, savedPost.length, savedLoading, getSavedPost]);
 
+  // infinite scroll for saved tab
   useEffect(() => {
     const node = savedLoadMoreRef.current;
-    if (!node || !savedHasMore || savedLoading) return;
-    savedObserverRef.current?.disconnect();
-    savedObserverRef.current = new IntersectionObserver((entries) => {
-      if (entries[0]?.isIntersecting && !savedFetchingRef.current && savedHasMore) {
-        savedFetchingRef.current = true;
-        loadSavedPosts(savedPage + 1);
-      }
-    }, { rootMargin: "200px" });
-    savedObserverRef.current.observe(node);
-    return () => savedObserverRef.current?.disconnect();
-  }, [savedHasMore, savedLoading, savedPage, loadSavedPosts]);
-
-  /* ---------- toggle save ---------- */
-  const isPostSaved = useCallback(
-    (postId) =>
-      savedPosts.some((post) => String(post._id) === String(postId)),
-    [savedPosts]
-  );
-
-  const toggleSavePost = useCallback(
-    async (post) => {
-      const postId = post?._id;
-      if (!postId || !userId) return;
-      if (savingPostId === postId) return;
-      setSavingPostId(postId);
-
-      const alreadySaved = isPostSaved(postId);
-
-      try {
-        if (alreadySaved) {
-          await axios.delete(`${Api}/save-post/${postId}/${userId}`, authConfig());
-          setSavedPosts((prev) => prev.filter((item) => String(item._id) !== String(postId)));
-          setSavedTotal((prev) => Math.max(0, prev - 1));
-          toast.success("Removed from saved", toasts);
-        } else {
-          await axios.post(`${Api}/save-post/${postId}/${userId}`, {}, authConfig());
-          setSavedPosts((prev) => {
-            if (prev.some((item) => String(item._id) === String(postId))) return prev;
-            return [{ ...post, isSaved: true, savedAt: new Date().toISOString() }, ...prev];
-          });
-          setSavedTotal((prev) => prev + 1);
-          toast.success("Post saved", toasts);
+    if (!node || !savedHasNextPage || savedLoading) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && savedHasNextPage && !savedLoading) {
+          getSavedPost(savedPage + 1);
         }
-      } catch (err) {
-        toast.error(err?.response?.data?.message || "Could not update save", toasts);
-      } finally {
-        setSavingPostId(null);
+      },
+      { rootMargin: "200px" }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [savedHasNextPage, savedLoading, savedPage, getSavedPost]);
+
+  /* ---------- ★ toggle save — just call the context ---------- */
+  const handleToggleSave = useCallback(
+    async (post) => {
+      if (!post?._id) return;
+      const wasSaved = isSaved(post._id);
+      const ok = await toggleSave(post);
+      if (ok) {
+        toast.success(wasSaved ? "Removed from saved" : "Post saved", toasts);
+      } else {
+        toast.error("Could not update save", toasts);
       }
     },
-    [Api, userId, authConfig, isPostSaved, savingPostId, toasts]
+    [toggleSave, isSaved, toasts]
   );
 
   /* ---------- derived ---------- */
@@ -648,10 +734,27 @@ const UserProfile = () => {
     return sum / reviews.length;
   }, [reviews, profile]);
 
+
+
   const ratingCount = reviews.length;
-  const routeAlerts = Array.isArray(profile?.routeAlerts) ? profile.routeAlerts : [];
-  const languageValue = profile?.languages ?? profile?.language ?? profile?.preferredLanguages;
-  const languages = Array.isArray(languageValue) ? languageValue.join(", ") : languageValue || "Not added";
+
+  const routeAlerts = Array.isArray(profile?.routeAlerts)
+    ? profile.routeAlerts
+    : [];
+
+  const languageValue =
+    profile?.language ??
+    profile?.language ??
+    profile?.preferredLanguage;
+
+  const languages = Array.isArray(languageValue)
+    ? languageValue.join(", ")
+    : languageValue || "Not added";
+
+  const referredByLanguage = Array.isArray(profile?.referredBy?.language)
+    ? profile.referredBy.language.join(", ")
+    : profile?.referredBy?.language || "Not added";
+
   const city = profile?.city || profile?.location?.city || "Location not added";
 
   const memberDate = profile?.createdAt || profile?.created_at || profile?.joinedAt;
@@ -681,68 +784,63 @@ const UserProfile = () => {
   const ridesGiven = offeredRides.length;
   const ridesTaken = takenRides.length;
 
+  /* ---------- listen for cross-component post edits/deletes ---------- */
+  useEffect(() => {
+    const offUpdate = onPostUpdated((updated) => {
+      if (!updated?._id) return;
+      const idStr = String(updated._id);
+
+      // Preserve populated authorId (defensive)
+      const mergeOne = (p) => {
+        if (String(p._id) !== idStr) return p;
+        const nextAuthorId =
+          updated.authorId && typeof updated.authorId === "object"
+            ? updated.authorId
+            : p.authorId;
+        return { ...p, ...updated, authorId: nextAuthorId };
+      };
+
+      setPosts((list) => list.map(mergeOne));
+      setPostDetailPost((prev) =>
+        prev && String(prev._id) === idStr
+          ? { ...prev, ...updated, authorId: updated.authorId && typeof updated.authorId === "object" ? updated.authorId : prev.authorId }
+          : prev
+      );
+      // savedPost lives in context — the context listens to onPostUpdated too
+    });
+
+    const offDelete = onPostDeleted((deletedId) => {
+      if (!deletedId) return;
+      const idStr = String(deletedId);
+      setPosts((list) => list.filter((p) => String(p._id) !== idStr));
+      setTotalPosts((n) => Math.max(0, n - 1));
+      setPostDetailPost((prev) => (prev && String(prev._id) === idStr ? null : prev));
+      setPostDetailOpen(false);
+    });
+
+    return () => { offUpdate(); offDelete(); };
+  }, [onPostUpdated, onPostDeleted]);
+
   /* ---------- post actions ---------- */
   const openPostMenu = (event, post) => { setPostMenuAnchor(event.currentTarget); setSelectedPost(post); };
   const closePostMenu = () => setPostMenuAnchor(null);
+
   const startEditPost = () => {
     if (!selectedPost) return;
-    setEditDescription(selectedPost.description || "");
-    const image = resolvePostImage(selectedPost);
-    setEditPreview(image);
-    setEditFile(null);
-    setEditPostOpen(true);
+    openEdit(selectedPost);
     closePostMenu();
     setPostDetailOpen(false);
   };
-  const startDeletePost = () => { setDeletePostOpen(true); closePostMenu(); setPostDetailOpen(false); };
-  const onEditFileChange = (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    setEditFile(file);
-    setEditPreview(URL.createObjectURL(file));
-  };
-  const savePostEdits = async () => {
-    if (!selectedPost?._id) return;
-    setPostSaving(true);
-    try {
-      const formData = new FormData();
-      formData.append("userId", userId);
-      formData.append("description", editDescription);
-      if (editFile) formData.append("postImage", editFile);
-      const response = await axios.put(`${Api}/community/${selectedPost._id}`, formData, {
-        ...authConfig(), headers: { ...authConfig().headers, "Content-Type": "multipart/form-data" },
-      });
-      const updated = response?.data?.data || {};
-      setPosts((old) => old.map((post) => post._id === selectedPost._id ? { ...post, ...updated, description: updated.description ?? editDescription, postImage: updated.postImage ?? (editFile ? editPreview : post.postImage) } : post));
-      setSavedPosts((old) => old.map((post) => post._id === selectedPost._id ? { ...post, ...updated } : post));
-      setPostDetailPost((prev) => (prev && prev._id === selectedPost._id ? { ...prev, ...updated } : prev));
-      toast.success(response?.data?.message || "Post updated", toasts);
-      setEditPostOpen(false);
-    } catch (error) {
-      toast.error(error?.response?.data?.message || "Could not update post", toasts);
-    } finally { setPostSaving(false); }
-  };
-  const deletePost = async () => {
-    if (!selectedPost?._id) return;
-    setPostDeleting(true);
-    try {
-      const response = await axios.delete(`${Api}/community/${selectedPost._id}`, { ...authConfig(), data: { userId } });
-      setPosts((old) => old.filter((post) => post._id !== selectedPost._id));
-      setSavedPosts((old) => old.filter((post) => post._id !== selectedPost._id));
-      setTotalPosts((count) => Math.max(0, count - 1));
-      setSavedTotal((count) => Math.max(0, count - 1));
-      toast.success(response?.data?.message || "Post deleted", toasts);
-      setDeletePostOpen(false);
-    } catch (error) {
-      toast.error(error?.response?.data?.message || "Could not delete post", toasts);
-    } finally { setPostDeleting(false); }
+  const startDeletePost = () => {
+    if (!selectedPost) return;
+    openDelete(selectedPost);
+    closePostMenu();
+    setPostDetailOpen(false);
   };
 
   /* ---------- open post detail ---------- */
   const openPostDetail = (post, source = "posts") => {
     if (!post || !post._id) return;
-    // Close any other top-level modals/menus so MUI doesn't silently drop the
-    // new Dialog (MUI refuses to stack two Dialog modals in some cases).
     setEditProfileOpen(false);
     setProfileModalOpen(false);
     setPostMenuAnchor(null);
@@ -885,26 +983,6 @@ const UserProfile = () => {
     </Surface>
   );
 
-  const renderRouteAlerts = () => (
-    <Surface sx={{ p: { xs: 2.5, sm: 4 } }}>
-      <SectionTitle title="Route alerts" count={routeAlerts.length} />
-      {routeAlerts.length ? (
-        <Stack spacing={1.5}>
-          {routeAlerts.map((alert, index) => (
-            <Stack key={alert._id || alert.id || index} direction="row" sx={{ justifyContent: "space-between", alignItems: "center", gap: 2, p: 2, bgcolor: C.canvas, borderRadius: RADIUS.control }}>
-              <Typography sx={{ fontWeight: 650, fontSize: "0.92rem", color: C.ink, overflowWrap: "anywhere" }}>
-                {alert.from || alert.origin || alert.source || "Origin"} → {alert.to || alert.destination || alert.target || "Destination"}
-              </Typography>
-              <Typography sx={{ fontSize: "0.8rem", color: C.muted, flexShrink: 0 }}>
-                {alert.frequency || (Array.isArray(alert.days) ? alert.days.join(", ") : alert.days) || "Alert on"}
-              </Typography>
-            </Stack>
-          ))}
-        </Stack>
-      ) : <EmptyState title="No route alerts" hint="Save a route to get notified when a matching ride is posted." />}
-    </Surface>
-  );
-
   const renderPostGrid = (items, { emptyTitle, emptyHint, isOwner = true, source = "posts" } = {}) => {
     if (!items.length) {
       return <Surface><EmptyState title={emptyTitle} hint={emptyHint} /></Surface>;
@@ -913,7 +991,9 @@ const UserProfile = () => {
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(2, minmax(0, 1fr))", md: "repeat(3, minmax(0, 1fr))" }, gap: { xs: 1.5, sm: 2 } }}>
         {items.map((post) => {
           const image = resolvePostImage(post);
-          const saved = isPostSaved(post._id);
+          // console.log(post,'postt')
+          // console.log(image,'image')
+          const saved = isSaved(post._id);
           return (
             <Surface
               key={post._id}
@@ -932,17 +1012,60 @@ const UserProfile = () => {
                 flexDirection: "column",
                 minWidth: 0,
                 cursor: "pointer",
+                position: "relative",
                 transition: "transform 0.15s ease, box-shadow 0.15s ease",
                 "&:hover": { boxShadow: "0 8px 24px rgba(31,26,23,0.08)" },
                 "&:active": { transform: "scale(0.99)" },
                 "&:focus-visible": { outline: `2px solid ${C.saffron}`, outlineOffset: 2 },
               }}
             >
-              <Box sx={{ position: "relative", pointerEvents: "none" }}>
+              {console.log(post,'post')}
+              <Box sx={{ position: "relative" }}>
                 {image ? (
-                  <Box component="img" src={image} alt="Community post" loading="lazy" sx={{ width: "100%", aspectRatio: "1 / 1", objectFit: "cover", display: "block", bgcolor: C.canvas }} />
+                  <Box
+                    component="img"
+                    src={image}
+                    alt="Community post"
+                    loading="lazy"
+                    sx={{
+                      width: "100%",
+                      aspectRatio: "1 / 1",
+                      objectFit: "cover",
+                      display: "block",
+                      bgcolor: C.canvas,
+                    }}
+                  />
                 ) : (
-                  <Box sx={{ aspectRatio: "1 / 1", bgcolor: C.tint }} />
+                  <Box
+                    sx={{
+                      width: "100%",
+                      aspectRatio: "1 / 1",
+                      bgcolor: C.tint,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      textAlign: "center",
+                      p: 2,
+                      boxSizing: "border-box",
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        width: "100%",
+                        color: C.body,
+                        fontSize: "0.86rem",
+                        lineHeight: 1.55,
+                        overflowWrap: "anywhere",
+                        textAlign: "center",
+                        display: "-webkit-box",
+                        WebkitLineClamp: 3,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                      }}
+                    >
+                      {post.description || "Community post"}
+                    </Typography>
+                  </Box>
                 )}
 
                 {saved && (
@@ -950,59 +1073,55 @@ const UserProfile = () => {
                     <BookmarkIcon sx={{ color: C.saffron, fontSize: 16 }} />
                   </Box>
                 )}
+
+                <IconButton
+                  size="small"
+                  aria-label="Post actions"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    if (isOwner) {
+                      openPostMenu(event, post);
+                    } else {
+                      setSavedMenuAnchor(event.currentTarget);
+                      setSavedMenuPost(post);
+                    }
+                  }}
+                  sx={{
+                    position: "absolute",
+                    top: 8,
+                    right: 8,
+                    bgcolor: "rgba(255,255,255,0.92)",
+                    "&:hover": { bgcolor: "#fff" },
+                    zIndex: 2,
+                  }}
+                >
+                  <MoreHorizIcon fontSize="small" sx={{ color: C.ink }} />
+                </IconButton>
               </Box>
 
-              <IconButton
-                size="small"
-                aria-label="Post actions"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  if (isOwner) {
-                    openPostMenu(event, post);
-                  } else {
-                    setSavedMenuAnchor(event.currentTarget);
-                    setSavedMenuPost(post);
-                  }
-                }}
-                sx={{
-                  position: "absolute",
-                  top: 8,
-                  right: 8,
-                  bgcolor: "rgba(255,255,255,0.92)",
-                  "&:hover": { bgcolor: "#fff" },
-                  pointerEvents: "auto",
-                  zIndex: 2,
-                }}
-              />
-
-              <Box sx={{ p: 1.75, flex: 1, display: "flex", flexDirection: "column", pointerEvents: "none" }}>
-                <Typography sx={{ color: C.body, fontSize: "0.86rem", lineHeight: 1.55, overflowWrap: "anywhere", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-                  {post.description || "Community post"}
-                </Typography>
+              <Box sx={{ p: 1.75, flex: 1, display: "flex", flexDirection: "column" }}>
+                {image && post.description && (
+                  <Typography
+                    sx={{
+                      color: C.body,
+                      fontSize: "0.86rem",
+                      lineHeight: 1.55,
+                      overflowWrap: "anywhere",
+                      textAlign: "center",
+                      display: "-webkit-box",
+                      WebkitLineClamp: 3,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                    }}
+                  >
+                    {post.description}
+                  </Typography>
+                )}
                 {post.createdAt && (
                   <Typography sx={{ mt: "auto", pt: 1, fontSize: "0.75rem", color: C.muted }}>
                     {new Date(post.createdAt).toLocaleDateString()}
                   </Typography>
                 )}
-              </Box>
-
-              {/* Re-add the MoreHoriz icon inside the absolutely positioned IconButton
-                  via a pseudo-overlay. Because the wrapper has pointerEvents: none,
-                  the icon itself must be a sibling — done below. */}
-              <Box
-                sx={{
-                  position: "absolute",
-                  top: 8,
-                  right: 8,
-                  width: 34,
-                  height: 34,
-                  display: "grid",
-                  placeItems: "center",
-                  pointerEvents: "none",
-                  zIndex: 3,
-                }}
-              >
-                <MoreHorizIcon fontSize="small" sx={{ color: C.ink, opacity: 0.85 }} />
               </Box>
             </Surface>
           );
@@ -1034,18 +1153,16 @@ const UserProfile = () => {
     </Box>
   );
 
+  // ★ Saved tab — reads from context
   const renderSaved = () => (
     <Box>
-      <SectionTitle title="Saved posts" count={savedTotal} />
-      {savedError && (
-        <Alert severity="warning" sx={{ mb: 2, borderRadius: RADIUS.control }}>{savedError}</Alert>
-      )}
-      {savedLoading ? (
+      <SectionTitle title="Saved posts" count={savedPost.length} />
+      {savedLoading && savedPost.length === 0 ? (
         <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(2, minmax(0, 1fr))", md: "repeat(3, minmax(0, 1fr))" }, gap: { xs: 1.5, sm: 2 } }}>
           {[1, 2, 3].map((n) => <Skeleton key={n} variant="rounded" sx={{ aspectRatio: "1", height: "auto", borderRadius: RADIUS.card }} />)}
         </Box>
       ) : (
-        renderPostGrid(savedPosts, {
+        renderPostGrid(savedPost, {
           emptyTitle: "Nothing saved yet",
           emptyHint: "Tap the ⋯ menu on any post and choose Save. Your bookmarked posts will appear here.",
           isOwner: false,
@@ -1053,7 +1170,7 @@ const UserProfile = () => {
         })
       )}
       <div ref={savedLoadMoreRef} />
-      {savedHasMore && (
+      {savedLoading && savedPost.length > 0 && (
         <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
           <CircularProgress size={24} sx={{ color: C.saffron }} />
         </Box>
@@ -1066,7 +1183,7 @@ const UserProfile = () => {
     `Reviews${ratingCount ? ` (${ratingCount})` : ""}`,
     `Rides${completedRideItems.length ? ` (${completedRideItems.length})` : ""}`,
     `Posts${totalPosts ? ` (${totalPosts})` : ""}`,
-    `Saved${savedTotal ? ` (${savedTotal})` : ""}`,
+    `Saved${savedPost.length ? ` (${savedPost.length})` : ""}`,
   ];
 
   return (
@@ -1137,13 +1254,79 @@ const UserProfile = () => {
 
             <Box sx={{ display: "grid", mt: 3, gap: 3, alignItems: "start", gridTemplateColumns: { xs: "minmax(0, 1fr)", md: "minmax(0, 1fr) 320px" } }}>
               <Box sx={{ minWidth: 0, order: { xs: 2, md: 1 } }}>
-                <Tabs value={tab} onChange={(_, value) => setTab(value)} variant="scrollable" scrollButtons={isSmall ? "auto" : false} allowScrollButtonsMobile
+                <Tabs
+                  value={tab}
+                  onChange={(_, value) => setTab(value)}
+                  variant="scrollable"
+                  scrollButtons={isSmall ? "auto" : false}
+                  allowScrollButtonsMobile
                   sx={{
-                    mb: 3, minHeight: 44, borderBottom: `1px solid ${C.line}`,
-                    "& .MuiTabs-indicator": { bgcolor: C.saffron, height: 2.5 },
-                    "& .MuiTab-root": { textTransform: "none", fontWeight: 600, fontSize: "0.92rem", color: C.muted, minWidth: "auto", minHeight: 44, px: { xs: 1.5, sm: 2 }, "&.Mui-selected": { color: C.ink } },
-                  }}>
-                  {tabLabels.map((label) => <Tab key={label} label={label} disableRipple />)}
+                    mb: 3,
+                    minHeight: 44,
+                    width: "100%",
+                    maxWidth: "100%",
+                    overflowX: "auto",
+                    borderBottom: `1px solid ${C.line}`,
+
+                    // Horizontal scrolling
+                    "& .MuiTabs-scroller": {
+                      overflowX: "auto !important",
+                      scrollbarWidth: "none",
+                      "&::-webkit-scrollbar": {
+                        display: "none",
+                      },
+                    },
+
+                    "& .MuiTabs-flexContainer": {
+                      flexWrap: "nowrap",
+                    },
+
+                    // Indicator
+                    "& .MuiTabs-indicator": {
+                      bgcolor: C.saffron,
+                      height: 2.5,
+                      borderRadius: "2px",
+                    },
+
+                    // Individual tabs
+                    "& .MuiTab-root": {
+                      textTransform: "none",
+                      fontWeight: 600,
+                      fontSize: {
+                        xs: "0.82rem",
+                        sm: "0.88rem",
+                        md: "0.92rem",
+                      },
+                      color: C.muted,
+                      minWidth: "max-content",
+                      minHeight: 44,
+                      px: {
+                        xs: 1.5,
+                        sm: 2,
+                        md: 2.5,
+                      },
+                      whiteSpace: "nowrap",
+                      flexShrink: 0,
+
+                      "&.Mui-selected": {
+                        color: C.ink,
+                      },
+                    },
+
+                    // Mobile scroll buttons
+                    "& .MuiTabScrollButton-root": {
+                      width: { xs: 24, sm: 32 },
+                      color: C.saffron,
+                    },
+
+                    "& .MuiTabScrollButton-root.Mui-disabled": {
+                      opacity: 0.2,
+                    },
+                  }}
+                >
+                  {tabLabels.map((label) => (
+                    <Tab key={label} label={label} disableRipple />
+                  ))}
                 </Tabs>
                 {tab === 0 && renderAbout()}
                 {tab === 1 && renderReviews()}
@@ -1156,10 +1339,10 @@ const UserProfile = () => {
                 <Surface sx={{ p: 3 }}>
                   <Typography sx={{ fontFamily: SERIF, fontWeight: 600, fontSize: "1.15rem", color: C.ink, mb: 1.5 }}>Trust</Typography>
                   <Stack divider={<Divider sx={{ borderColor: C.line }} />}>
-                    <Fact label="Invited by" value={inviterName === "Admin A" ? 'Admin' : inviterName} />
+                    <Fact label="Invited by" value={inviterName === "Admin A" ? "Admin" : inviterName} />
                     <Fact label="Vouched for" value={`${referralCounts.total} ${referralCounts.total === 1 ? "member" : "members"}`} />
                     <Fact label="Reports against" value={reportsCount} />
-                    <Fact label="Languages" value={languages} />
+                    <Fact label="Languages" value={referredByLanguage} />
                   </Stack>
                   <Box sx={{ mt: 2.5, p: 2, bgcolor: C.canvas, borderRadius: RADIUS.control }}>
                     <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "baseline", mb: 1.25 }}>
@@ -1181,15 +1364,16 @@ const UserProfile = () => {
             <EditProfile open={editProfileOpen} onClose={() => { setEditProfileOpen(false); getuserData?.(); loadProfileData(); loadReviews(); }} />
           )}
 
+          {/* Author (own-post) menu — Edit / Save / Delete */}
           <Menu anchorEl={postMenuAnchor} open={Boolean(postMenuAnchor)} onClose={closePostMenu}
             slotProps={{ paper: { sx: { borderRadius: RADIUS.control, border: `1px solid ${C.line}`, boxShadow: "0 8px 24px rgba(31,26,23,0.08)", minWidth: 190 } } }}>
             <MenuItem onClick={startEditPost}><EditOutlinedIcon fontSize="small" sx={{ mr: 1.25 }} /> Edit post</MenuItem>
             {selectedPost && (
               <MenuItem
-                onClick={() => { const p = selectedPost; closePostMenu(); toggleSavePost(p); }}
+                onClick={() => { const p = selectedPost; closePostMenu(); handleToggleSave(p); }}
                 disabled={savingPostId === selectedPost?._id}
               >
-                {isPostSaved(selectedPost?._id) ? (
+                {isSaved(selectedPost?._id) ? (
                   <><BookmarkIcon fontSize="small" sx={{ mr: 1.25, color: C.saffron }} /> Unsave post</>
                 ) : (
                   <><BookmarkBorderIcon fontSize="small" sx={{ mr: 1.25 }} /> Save post</>
@@ -1199,66 +1383,33 @@ const UserProfile = () => {
             <MenuItem onClick={startDeletePost} sx={{ color: "error.main" }}><DeleteOutlineIcon fontSize="small" sx={{ mr: 1.25 }} /> Delete post</MenuItem>
           </Menu>
 
+          {/* Saved-post menu — Unsave */}
           <Menu anchorEl={savedMenuAnchor} open={Boolean(savedMenuAnchor)} onClose={() => { setSavedMenuAnchor(null); setSavedMenuPost(null); }}
             slotProps={{ paper: { sx: { borderRadius: RADIUS.control, border: `1px solid ${C.line}`, boxShadow: "0 8px 24px rgba(31,26,23,0.08)", minWidth: 170 } } }}>
             <MenuItem
-              onClick={() => { const p = savedMenuPost; setSavedMenuAnchor(null); setSavedMenuPost(null); if (p) toggleSavePost(p); }}
+              onClick={() => {
+                const p = savedMenuPost;
+                setSavedMenuAnchor(null);
+                setSavedMenuPost(null);
+                if (p) handleToggleSave(p);
+              }}
             >
               <BookmarkIcon fontSize="small" sx={{ mr: 1.25, color: C.saffron }} /> Unsave post
             </MenuItem>
           </Menu>
-
-          <Dialog open={editPostOpen} onClose={() => !postSaving && setEditPostOpen(false)} fullWidth maxWidth="sm" PaperProps={{ sx: { borderRadius: RADIUS.card } }}>
-            <DialogTitle sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontFamily: SERIF, fontWeight: 600 }}>
-              Edit post
-              <IconButton onClick={() => setEditPostOpen(false)} disabled={postSaving} aria-label="Close"><CloseIcon /></IconButton>
-            </DialogTitle>
-            <DialogContent>
-              <Stack spacing={2} sx={{ pt: 1 }}>
-                {editPreview && <Box component="img" src={editPreview} alt="Post preview" sx={{ width: "100%", maxHeight: 300, objectFit: "contain", borderRadius: RADIUS.control, bgcolor: C.canvas }} />}
-                <Button component="label" variant="outlined" startIcon={<AddPhotoAlternateOutlinedIcon />} sx={{ alignSelf: "flex-start", textTransform: "none", borderRadius: "999px", color: C.ink, borderColor: C.line }}>
-                  Change image
-                  <input hidden type="file" accept="image/*" onChange={onEditFileChange} />
-                </Button>
-                <TextField label="Description" value={editDescription} onChange={(event) => setEditDescription(event.target.value)} multiline minRows={3} fullWidth />
-              </Stack>
-            </DialogContent>
-            <DialogActions sx={{ p: 2.5 }}>
-              <Button onClick={() => setEditPostOpen(false)} disabled={postSaving} sx={{ textTransform: "none", color: C.muted }}>Cancel</Button>
-              <Button variant="contained" disableElevation onClick={savePostEdits} disabled={postSaving}
-                sx={{ bgcolor: C.saffron, textTransform: "none", borderRadius: "999px", px: 3, fontWeight: 650, "&:hover": { bgcolor: C.saffronDark } }}>
-                {postSaving ? <CircularProgress size={20} color="inherit" /> : "Save changes"}
-              </Button>
-            </DialogActions>
-          </Dialog>
-
-          <Dialog open={deletePostOpen} onClose={() => !postDeleting && setDeletePostOpen(false)} PaperProps={{ sx: { borderRadius: RADIUS.card } }}>
-            <DialogTitle sx={{ fontFamily: SERIF, fontWeight: 600 }}>Delete this post?</DialogTitle>
-            <DialogContent><Typography sx={{ color: C.muted }}>This can't be undone.</Typography></DialogContent>
-            <DialogActions sx={{ p: 2.5 }}>
-              <Button onClick={() => setDeletePostOpen(false)} disabled={postDeleting} sx={{ textTransform: "none", color: C.muted }}>Cancel</Button>
-              <Button color="error" variant="contained" disableElevation onClick={deletePost} disabled={postDeleting} sx={{ textTransform: "none", borderRadius: "999px", px: 3, fontWeight: 650 }}>
-                {postDeleting ? <CircularProgress size={20} color="inherit" /> : "Delete post"}
-              </Button>
-            </DialogActions>
-          </Dialog>
         </Box>
       </PageLayout>
 
-      {/* ★ Post detail modal is rendered OUTSIDE <PageLayout> so that any
-          transform / overflow / stacking context inside PageLayout cannot
-          hide or reposition the modal. MUI Dialog portals to document.body,
-          but this is the simplest way to remove all ambiguity. */}
       <PostDetailDialog
         post={postDetailPost}
         open={postDetailOpen}
         onClose={closePostDetail}
         isOwner={postDetailSource === "posts"}
-        isSaved={postDetailPost ? isPostSaved(postDetailPost._id) : false}
+        isSaved={postDetailPost ? isSaved(postDetailPost._id) : false}
         savingPostId={savingPostId}
-        onToggleSave={toggleSavePost}
-        onEdit={(p) => { setSelectedPost(p); startEditPost(); }}
-        onDelete={(p) => { setSelectedPost(p); startDeletePost(); }}
+        onToggleSave={handleToggleSave}
+        onEdit={(p) => { setSelectedPost(p); openEdit(p); }}
+        onDelete={(p) => { setSelectedPost(p); openDelete(p); }}
       />
     </>
   );

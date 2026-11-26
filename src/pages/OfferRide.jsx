@@ -43,6 +43,9 @@ import ToastConfig from "../components/ToastConfig";
 import RideLocationPicker from "../components/RideLocationPicker";
 import dayjs from "dayjs";
 import { useUser } from "../context/userConetext";
+import { formatDate } from "../utils/formatDate";
+import { DatePicker, TimePicker, LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 
 /* ═══════════════════════════════════════════════════════
    THEME
@@ -153,9 +156,8 @@ const INITIAL_REQUEST = {
 };
 
 /* ═══════════════════════════════════════════════════════
-   SHARED STYLES  (RESPONSIVE)
+   SHARED STYLES
    ═══════════════════════════════════════════════════════ */
-
 const tfSx = {
   "& .MuiInputBase-input": {
     fontSize: { xs: "1rem", sm: "0.95rem" },
@@ -487,6 +489,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
         helpCanOffer: ride.helpCanOffer || [],
         exactPickup: ride.exactPickup || "",
         notes: ride.notes || "",
+        description: ride.description || "",
         confirmCostSharing: !!ride.confirmCostSharing,
       });
     }
@@ -573,7 +576,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
   const costEntered = Number(offerForm.costPerSeat || 0);
   const costExceedsCap = costEntered > costCap;
 
-  /* ★ FIXED: conflict check skips the ride being edited correctly */
+  /* Conflict check skips the ride being edited */
   const checkTimeConflict = (startTimeStr, durationMin) => {
     if (!startTimeStr) return null;
 
@@ -582,14 +585,9 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
     const newEnd = newStart + newDurationMs;
     const BUFFER_MS = 60 * 60 * 1000;
 
-    // Which ride are we editing? Compare by _id, coerced to string.
     const editingId = isEditMode ? String(ride?._id || ride?.id || "") : "";
 
     for (const existing of existingRides) {
-      // Skip the ride being edited — but ONLY by matching _id.
-      // The previous code used `existing.id === ride?.id` which was
-      // `undefined === undefined` → true for every ride in edit mode,
-      // so every ride was skipped and no conflict was ever detected.
       const existingId = String(existing._id || existing.id || "");
       if (isEditMode && editingId && existingId === editingId) continue;
 
@@ -626,7 +624,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
       if (!offerForm.category && !offerForm.customCategory?.trim()) e.category = "Pick a category";
       if (Number(offerForm.availableSeats) < 1) e.availableSeats = "At least 1 seat";
       if (offerForm.date && offerForm.time) {
-        const d = new Date(`${offerForm.date}T${offerForm.time}:00`);
+        const d = dayjs(`${offerForm.date}T${offerForm.time}:00`).toDate();
         if (d.getTime() <= Date.now()) e.time = "Departure can't be in the past";
 
         if (!e.time) {
@@ -668,7 +666,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
     if (Number(requestForm.bags) < 0) e.bags = "Cannot be negative";
 
     if (requestForm.date && requestForm.neededBy) {
-      const d = new Date(`${requestForm.date}T${requestForm.neededBy}`);
+      const d = dayjs(`${requestForm.date}T${requestForm.neededBy}`).toDate();
       if (d.getTime() <= Date.now()) e.neededBy = "Needed-by time can't be in the past";
 
       if (!e.neededBy) {
@@ -690,7 +688,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
     return {
       createdBy: user?.id,
       modeOfTravel: "Car",
-      startTime: new Date(`${offerForm.date}T${offerForm.time}`).toISOString(),
+      startTime: dayjs(`${offerForm.date}T${offerForm.time}`).toISOString(),
       from: offerForm.from,
       destination: offerForm.destination,
       fromLocation: offerForm.fromLocation,
@@ -728,7 +726,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
       createdBy: user?.id,
       kind: "request",
       modeOfTravel: "Car",
-      startTime: new Date(`${requestForm.date}T${requestForm.neededBy}`).toISOString(),
+      startTime: dayjs(`${requestForm.date}T${requestForm.neededBy}`).toISOString(),
       from: requestForm.from,
       destination: requestForm.destination,
       fromLocation: requestForm.fromLocation,
@@ -856,6 +854,8 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
     setServerError("");
     setTimeConflictMsg("");
   };
+  // Strip digits — notes must not contain numbers/phone numbers
+  const sanitizeNotes = (value) => value.replace(/[0-9]/g, "");
 
   const formatTime12Hour = (time) => {
     if (!time) return "";
@@ -922,780 +922,845 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
      RENDER
      ═══════════════════════════════════════════════════════ */
   return (
-    <PageLayout>
-      <Box
-        sx={{
-          width: "100%",
-          maxWidth: { xs: "100%", sm: 600, md: 720, lg: 780, xl: 840 },
-          mx: "auto",
-          px: { xs: "max(16px, env(safe-area-inset-left))", sm: 3, md: 4 },
-          pt: { xs: 1.5, sm: 2.5, md: 3.5 },
-          pb: { xs: "calc(40px + env(safe-area-inset-bottom))", sm: 8, md: 10 },
-          bgcolor: BG,
-          minHeight: "100vh",
-          "@supports (height: 100dvh)": { minHeight: "100dvh" },
-          boxSizing: "border-box",
-          overflowX: "hidden",
-        }}
-      >
-        {/* ─── Header ─── */}
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <PageLayout>
         <Box
           sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
             width: "100%",
-            minHeight: 44,
-            mb: 1.5,
-            position: "relative",
+            maxWidth: { xs: "100%", sm: 600, md: 720, lg: 780, xl: 840 },
+            mx: "auto",
+            px: { xs: "max(16px, env(safe-area-inset-left))", sm: 3, md: 4 },
+            pt: { xs: 1.5, sm: 2.5, md: 3.5 },
+            pb: { xs: "calc(40px + env(safe-area-inset-bottom))", sm: 8, md: 10 },
+            bgcolor: BG,
+            minHeight: "100vh",
+            "@supports (height: 100dvh)": { minHeight: "100dvh" },
+            boxSizing: "border-box",
+            overflowX: "hidden",
           }}
         >
-          <Box sx={{ width: 40, display: "flex", alignItems: "center" }}>
-            {(mode === "offer" || isEditMode) && (
-              <IconButton
-                onClick={() => {
-                  if (mode === "offer" && step > 0) setStep((prev) => prev - 1);
-                  else onClose ? onClose() : navigate(-1);
-                }}
-                sx={{
-                  width: 36,
-                  height: 36,
-                  bgcolor: "#FFFFFF",
-                  border: `1px solid ${BORDER}`,
-                  color: INK,
-                  borderRadius: "50%",
-                  "&:hover": { bgcolor: "#F4F0EA" },
-                }}
-              >
-                <ArrowLeft size={18} />
-              </IconButton>
-            )}
-          </Box>
-
-          {mode === "offer" && (
-            <Typography
-              sx={{
-                position: "absolute",
-                left: "50%",
-                transform: "translateX(-50%)",
-                fontSize: { xs: 12.5, sm: 13, md: 14 },
-                color: MUTED,
-                fontWeight: 600,
-                whiteSpace: "nowrap",
-              }}
-            >
-              Step {step + 1} of {OFFER_STEPS.length}
-            </Typography>
-          )}
-
-          <Box sx={{ width: 40 }} />
-        </Box>
-
-        {mode === "offer" && <StepProgress steps={OFFER_STEPS} step={step} />}
-
-        {/* ─── Title ─── */}
-        <Typography
-          sx={{
-            fontSize: { xs: 24, sm: 30, md: 34 },
-            fontWeight: 800,
-            color: NAVY,
-            letterSpacing: -0.4,
-            lineHeight: 1.2,
-            mb: 0.5,
-            overflowWrap: "anywhere",
-          }}
-        >
-          {mode === "offer"
-            ? step === 0
-              ? requestRide ? "Offer a ride for this request" : "Post a ride"
-              : step === 1
-                ? "Ride options"
-                : "Review your ride"
-            : isEditMode ? "Edit your request" : "Post a ride"}
-        </Typography>
-        <Typography sx={{ color: MUTED, fontSize: { xs: 13.5, sm: 14.5, md: 15 }, mb: { xs: 2.5, sm: 3 } }}>
-          {mode === "offer"
-            ? step === 0
-              ? requestRide ? "Review the requested trip details and add your ride options." : "Share your journey with the community."
-              : step === 1
-                ? "Tell riders what to expect."
-                : "This is how members will see it in Find Ride."
-            : "Tell drivers where you need to go."}
-        </Typography>
-
-        {!requestRide && !isEditMode && (
-          <Stack direction="row" spacing={1} sx={{ mb: 3 }}>
-            <Button
-              fullWidth
-              onClick={() => { setMode("offer"); formReset(); }}
-              sx={{
-                textTransform: "none", fontWeight: 700, fontSize: { xs: 13.5, sm: 14 },
-                py: 1.25, borderRadius: 2,
-                bgcolor: mode === "offer" ? RUST : "#fff",
-                color: mode === "offer" ? "#fff" : INK,
-                border: `1px solid ${mode === "offer" ? RUST : BORDER}`,
-                boxShadow: "none",
-                "&:hover": { bgcolor: mode === "offer" ? RUST_DARK : "#F4F0EA", boxShadow: "none" },
-              }}
-            >
-              I'm offering a ride
-            </Button>
-            <Button
-              fullWidth
-              onClick={() => { setMode("request"); formReset(); }}
-              sx={{
-                textTransform: "none", fontWeight: 700, fontSize: { xs: 13.5, sm: 14 },
-                py: 1.25, borderRadius: 2,
-                bgcolor: mode === "request" ? RUST : "#fff",
-                color: mode === "request" ? "#fff" : INK,
-                border: `1px solid ${mode === "request" ? RUST : BORDER}`,
-                boxShadow: "none",
-                "&:hover": { bgcolor: mode === "request" ? RUST_DARK : "#F4F0EA", boxShadow: "none" },
-              }}
-            >
-              I need a ride
-            </Button>
-          </Stack>
-        )}
-
-        {/* ══════════════════════════════════════════════════════
-           REQUEST FLOW
-        ══════════════════════════════════════════════════════ */}
-        {mode === "request" && (
-          <Stack spacing={{ xs: 2.25, sm: 2.5, md: 3 }}>
-            <Box sx={{ minWidth: 0 }}>
-              <Typography sx={labelSx}>From (US city or airport)</Typography>
-              <RideLocationPicker
-                fromLocation={requestForm.fromLocation}
-                destinationLocation={requestForm.destinationLocation}
-                onFromChange={(loc) => {
-                  setRequestForm((p) => ({ ...p, from: loc.address, fromLocation: loc }));
-                  setRequestErrors((p) => { const n = { ...p }; delete n.from; return n; });
-                }}
-                onDestinationChange={(loc) => {
-                  setRequestForm((p) => ({ ...p, destination: loc.address, destinationLocation: loc }));
-                  setRequestErrors((p) => { const n = { ...p }; delete n.destination; return n; });
-                }}
-                onRouteCalculated={(route) => {
-                  setRequestForm((p) => ({ ...p, distanceKm: route?.distanceKm ?? null }));
-                }}
-                ride={null}
-              />
-              {requestErrors.from && <Typography sx={errTextSx}>{requestErrors.from}</Typography>}
-              {requestErrors.destination && (
-                <Typography sx={errTextSx}>{requestErrors.destination}</Typography>
-              )}
-            </Box>
-
-            <Box sx={fieldGridSx}>
-              <Box sx={{ minWidth: 0 }}>
-                <Typography sx={labelSx}>Date</Typography>
-                <TextField
-                  fullWidth size={inputSize} type="date"
-                  value={requestForm.date}
-                  onChange={(e) => updateRequest("date", e.target.value)}
-                  error={!!requestErrors.date}
-                  helperText={requestErrors.date}
-                  InputLabelProps={{ shrink: true }}
-                  sx={tfSx}
-                />
-              </Box>
-              <Box sx={{ minWidth: 0 }}>
-                <Typography sx={labelSx}>Needed by</Typography>
-                <TextField
-                  fullWidth size={inputSize} type="time"
-                  value={requestForm.neededBy}
-                  onChange={(e) => updateRequest("neededBy", e.target.value)}
-                  error={!!requestErrors.neededBy}
-                  helperText={requestErrors.neededBy}
-                  InputLabelProps={{ shrink: true }}
-                  sx={tfSx}
-                />
-              </Box>
-              <Box sx={{ minWidth: 0 }}>
-                <Typography sx={labelSx}>Flexible by</Typography>
-                <FormControl fullWidth size={inputSize}>
-                  <Select
-                    value={requestForm.flexibility}
-                    onChange={(e) => updateRequest("flexibility", e.target.value)}
-                    sx={selectSx}
-                  >
-                    {FLEXIBILITY_OPTIONS.map((f) => (
-                      <MenuItem key={f} value={f} sx={{ fontSize: 14 }}>{f}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Box>
-            </Box>
-
-            <Box sx={pairGridSx}>
-              <Box sx={{ minWidth: 0 }}>
-                <Typography sx={labelSx}>Passengers</Typography>
-                <TextField
-                  fullWidth size={inputSize} type="number"
-                  value={requestForm.passengers}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    if (/^\d*$/.test(v)) updateRequest("passengers", v);
+          {/* ─── Header ─── */}
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              width: "100%",
+              minHeight: 44,
+              mb: 1.5,
+              position: "relative",
+            }}
+          >
+            <Box sx={{ width: 40, display: "flex", alignItems: "center" }}>
+              {(mode === "offer" || isEditMode) && (
+                <IconButton
+                  onClick={() => {
+                    if (mode === "offer" && step > 0) setStep((prev) => prev - 1);
+                    else onClose ? onClose() : navigate(-1);
                   }}
-                  error={!!requestErrors.passengers}
-                  helperText={requestErrors.passengers}
-                  inputProps={{ min: 1, max: 7, inputMode: "numeric" }}
-                  sx={tfSx}
-                />
-              </Box>
-              <Box sx={{ minWidth: 0 }}>
-                <Typography sx={labelSx}>Bags</Typography>
-                <TextField
-                  fullWidth size={inputSize} type="number"
-                  value={requestForm.bags}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    if (/^\d*$/.test(v)) updateRequest("bags", v);
+                  sx={{
+                    width: 36,
+                    height: 36,
+                    bgcolor: "#FFFFFF",
+                    border: `1px solid ${BORDER}`,
+                    color: INK,
+                    borderRadius: "50%",
+                    "&:hover": { bgcolor: "#F4F0EA" },
                   }}
-                  error={!!requestErrors.bags}
-                  helperText={requestErrors.bags}
-                  inputProps={{ min: 0, max: 10, inputMode: "numeric" }}
-                  sx={tfSx}
-                />
-              </Box>
-            </Box>
-
-            <Box>
-              <Typography sx={labelSx}>Category</Typography>
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                {REQUEST_CATEGORIES.map((c) => (
-                  <ChipToggle
-                    key={c}
-                    label={c}
-                    active={requestForm.category === c}
-                    onClick={() => updateRequest("category", c)}
-                  />
-                ))}
-              </Box>
-              {requestForm.category === "Other" && (
-                <TextField
-                  fullWidth size={inputSize}
-                  placeholder="Describe your category"
-                  value={requestForm.customCategory}
-                  onChange={(e) => updateRequest("customCategory", e.target.value)}
-                  sx={{ ...tfSx, mt: 1.5 }}
-                />
-              )}
-              {requestErrors.category && (
-                <Typography sx={errTextSx}>{requestErrors.category}</Typography>
+                >
+                  <ArrowLeft size={18} />
+                </IconButton>
               )}
             </Box>
 
-            <Paper variant="outlined" sx={{ borderRadius: 2, borderColor: BORDER, bgcolor: CARD, overflow: "hidden" }}>
-              <Box sx={{ px: { xs: 1.75, sm: 2.5 } }}>
-                <ToggleRow
-                  icon={ShieldCheck}
-                  title="Women drivers only"
-                  checked={requestForm.womenDriversOnly}
-                  onChange={(v) => updateRequest("womenDriversOnly", v)}
-                />
-                <ToggleRow
-                  icon={Baby}
-                  title="Traveling with a child"
-                  checked={requestForm.travelingWithChild}
-                  onChange={(v) => updateRequest("travelingWithChild", v)}
-                />
-              </Box>
-            </Paper>
-
-            <Box>
-              <Typography sx={labelSx}>
-                Notes <span style={{ fontWeight: 400, textTransform: "none", color: MUTED }}>(optional)</span>
-              </Typography>
-              <TextField
-                fullWidth multiline minRows={3} maxRows={8} size={inputSize}
-                placeholder="Anything drivers should know?"
-                value={requestForm.notes}
-                onChange={(e) => updateRequest("notes", e.target.value)}
-                sx={tfSx}
-              />
-            </Box>
-
-            <Alert icon={<Info size={18} />} severity="info" sx={infoAlertSx}>
-              Drivers going your way will see this request and can offer to drive. You choose who
-              to accept. Your exact address and phone are shared only after you accept.
-            </Alert>
-
-            {serverError && (
-              <Alert severity="error" sx={{ borderRadius: 2, overflowWrap: "anywhere" }}>
-                {serverError}
-              </Alert>
-            )}
-
-            {timeConflictMsg && (
-              <Alert severity="error" sx={{ borderRadius: 2, fontWeight: 500 }}>
-                {timeConflictMsg}
-              </Alert>
-            )}
-
-            <Button
-              onClick={() => {
-                if (isEditMode) updateRequestRide();
-                else createRequest();
-              }}
-              disabled={saving}
-              startIcon={saving ? <CircularProgress size={18} sx={{ color: "#fff" }} /> : null}
-              sx={primaryBtn}
-            >
-              {saving
-                ? (isEditMode ? "Updating..." : "Posting...")
-                : (isEditMode ? "Update request" : "Post request")}
-            </Button>
-          </Stack>
-        )}
-
-        {/* ══════════════════════════════════════════════════════
-           OFFER FLOW — STEP 0
-        ══════════════════════════════════════════════════════ */}
-        {mode === "offer" && step === 0 && (
-          <Stack spacing={{ xs: 2.25, sm: 2.5, md: 3 }}>
-            <Typography sx={{ ...labelSx, fontSize: { xs: 12.5, sm: 13 }, color: NAVY, mt: 0.5 }}>
-              Trip details
-            </Typography>
-
-            <Stack direction="row" spacing={1.25} alignItems="center"
-              sx={{ p: { xs: 1.25, sm: 1.5 }, borderRadius: 2, bgcolor: "#EAF3FB", minWidth: 0 }}>
-              <Box
-                sx={{
-                  bgcolor: "#fff", px: 1.1, py: 0.45, borderRadius: 1.5,
-                  fontSize: 12, fontWeight: 700, color: "#1A3E8A",
-                  flexShrink: 0, alignItems: "center", display: "flex",
-                  justifyContent: "center", minWidth: 0,
-                }}
-              >
-                Car
-              </Box>
+            {mode === "offer" && (
               <Typography
                 sx={{
-                  fontSize: { xs: 12, sm: 12.5 }, color: "#1A3E8A",
-                  lineHeight: 1.5, minWidth: 0, overflowWrap: "anywhere",
+                  position: "absolute",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  fontSize: { xs: 12.5, sm: 13, md: 14 },
+                  color: MUTED,
+                  fontWeight: 600,
+                  whiteSpace: "nowrap",
                 }}
               >
-                Rides are car-only and within the US. Flying with a parent? Use Travel Buddy.
+                Step {step + 1} of {OFFER_STEPS.length}
               </Typography>
-            </Stack>
-
-            <Box sx={{ minWidth: 0 }}>
-              <Typography sx={labelSx}>From (US address, city or airport)</Typography>
-              <RideLocationPicker
-                fromLocation={offerForm.fromLocation}
-                destinationLocation={offerForm.destinationLocation}
-                disabled={Boolean(requestRide)}
-                onFromChange={(loc) => {
-                  setOfferForm((p) => ({ ...p, from: loc.address, fromLocation: loc }));
-                  setErrors((p) => { const n = { ...p }; delete n.from; return n; });
-                }}
-                onDestinationChange={(loc) => {
-                  setOfferForm((p) => ({ ...p, destination: loc.address, destinationLocation: loc }));
-                  setErrors((p) => { const n = { ...p }; delete n.destination; return n; });
-                }}
-                onRouteCalculated={(route) => {
-                  setOfferForm((p) => ({
-                    ...p,
-                    distanceKm: route?.distanceKm ?? null,
-                    duration: route?.durationMinutes ?? null,
-                  }));
-                }}
-                ride={ride}
-              />
-              {showErrors && errors.from && <Typography sx={errTextSx}>{errors.from}</Typography>}
-              {showErrors && errors.destination && (
-                <Typography sx={errTextSx}>{errors.destination}</Typography>
-              )}
-            </Box>
-
-            <Box sx={fieldGridSx}>
-              <Box sx={{ minWidth: 0 }}>
-                <Typography sx={labelSx}>Date</Typography>
-                <TextField
-                  fullWidth size={inputSize} type="date"
-                  value={offerForm.date}
-                  onChange={(e) => updateOffer("date", e.target.value)}
-                  error={showErrors && !!errors.date}
-                  helperText={showErrors ? errors.date : ""}
-                  InputLabelProps={{ shrink: true }}
-                  disabled={Boolean(requestRide)}
-                  sx={tfSx}
-                />
-              </Box>
-              <Box sx={{ minWidth: 0 }}>
-                <Typography sx={labelSx}>Departure time</Typography>
-                <TextField
-                  fullWidth size={inputSize} type="time"
-                  value={offerForm.time}
-                  onChange={(e) => updateOffer("time", e.target.value)}
-                  error={showErrors && !!errors.time}
-                  helperText={showErrors ? errors.time : ""}
-                  InputLabelProps={{ shrink: true }}
-                  disabled={Boolean(requestRide)}
-                  sx={tfSx}
-                />
-              </Box>
-              <Box sx={{ minWidth: 0 }}>
-                <Typography sx={labelSx}>Time zone</Typography>
-                <FormControl fullWidth size={inputSize} error={showErrors && !!errors.timeZone} disabled={Boolean(requestRide)}>
-                  <Select
-                    value={offerForm.timeZone}
-                    onChange={(e) => updateOffer("timeZone", e.target.value)}
-                    sx={selectSx}
-                  >
-                    {TIME_ZONES.map((tz) => (
-                      <MenuItem key={tz} value={tz} sx={{ fontSize: 14 }}>{tz}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Box>
-            </Box>
-
-            <Box>
-              <Typography sx={labelSx}>Category</Typography>
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                {OFFER_CATEGORIES.map((c) => (
-                  <ChipToggle
-                    key={c}
-                    label={c}
-                    active={offerForm.category === c}
-                    onClick={() => updateOffer("category", c)}
-                  />
-                ))}
-              </Box>
-              {offerForm.category === "Other" && (
-                <TextField
-                  fullWidth size={inputSize}
-                  placeholder="Describe your category"
-                  value={offerForm.customCategory}
-                  onChange={(e) => updateOffer("customCategory", e.target.value)}
-                  sx={{ ...tfSx, mt: 1.5 }}
-                />
-              )}
-              {showErrors && errors.category && (
-                <Typography sx={errTextSx}>{errors.category}</Typography>
-              )}
-            </Box>
-
-            <Box>
-              <Typography sx={labelSx}>Seats available</Typography>
-              <SeatStepper
-                value={Number(offerForm.availableSeats)}
-                onChange={(v) => updateOffer("availableSeats", v)}
-                min={1}
-                max={7}
-              />
-            </Box>
-
-            <Box>
-              <Typography sx={labelSx}>Description</Typography>
-              <TextField
-                fullWidth multiline minRows={3} maxRows={8} size={inputSize}
-                placeholder="Add details — pickup spot, what you're offering, etc."
-                value={offerForm.description}
-                onChange={(e) => updateOffer("description", e.target.value)}
-                sx={tfSx}
-              />
-            </Box>
-
-            {showErrors && Object.keys(errors).length > 0 && (
-              <Alert severity="error" sx={{ borderRadius: 2, fontSize: { xs: 12.5, sm: 13 } }}>
-                Please fill the highlighted fields before continuing.
-              </Alert>
             )}
 
-            {timeConflictMsg && (
-              <Alert severity="error" sx={{ borderRadius: 2, fontWeight: 500 }}>
-                {timeConflictMsg}
-              </Alert>
-            )}
+            <Box sx={{ width: 40 }} />
+          </Box>
 
-            <Button
-              onClick={() => {
-                if (validateOfferStep()) {
-                  setShowErrors(false);
-                  setStep(1);
-                }
-              }}
-              sx={primaryBtn}
-            >
-              Next: Ride options
-            </Button>
-          </Stack>
-        )}
+          {mode === "offer" && <StepProgress steps={OFFER_STEPS} step={step} />}
 
-        {/* ══════════════════════════════════════════════════════
-           OFFER FLOW — STEP 1
-        ══════════════════════════════════════════════════════ */}
-        {mode === "offer" && step === 1 && (
-          <Stack spacing={{ xs: 2.5, sm: 3, md: 3.5 }}>
-            <Box>
-              <Stack
-                direction="row" spacing={1} alignItems="baseline"
-                flexWrap="wrap" useFlexGap
-                sx={{ mb: 0.9, columnGap: 1, rowGap: 0.25 }}
-              >
-                <Typography sx={{ ...labelSx, mb: 0 }}>Cost share per passenger</Typography>
-                <Typography sx={{ fontSize: { xs: 12, sm: 12.5 }, color: MUTED }}>
-                  (optional, leave blank for free)
-                </Typography>
-              </Stack>
-              <TextField
-                size={inputSize} type="number" placeholder="$ 12"
-                value={offerForm.costPerSeat}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  if (/^\d*\.?\d*$/.test(v)) updateOffer("costPerSeat", v);
-                }}
-                error={costExceedsCap}
-                InputProps={{ startAdornment: <InputAdornment position="start">$</InputAdornment> }}
+          {/* ─── Title ─── */}
+          <Typography
+            sx={{
+              fontSize: { xs: 24, sm: 30, md: 34 },
+              fontWeight: 800,
+              color: NAVY,
+              letterSpacing: -0.4,
+              lineHeight: 1.2,
+              mb: 0.5,
+              overflowWrap: "anywhere",
+            }}
+          >
+            {mode === "offer"
+              ? step === 0
+                ? requestRide ? "Offer a ride for this request" : "Post a ride"
+                : step === 1
+                  ? "Ride options"
+                  : "Review your ride"
+              : isEditMode ? "Edit your request" : "Post a ride"}
+          </Typography>
+          <Typography sx={{ color: MUTED, fontSize: { xs: 13.5, sm: 14.5, md: 15 }, mb: { xs: 2.5, sm: 3 } }}>
+            {mode === "offer"
+              ? step === 0
+                ? requestRide ? "Review the requested trip details and add your ride options." : "Share your journey with the community."
+                : step === 1
+                  ? "Tell riders what to expect."
+                  : "This is how members will see it in Find Ride."
+              : "Tell drivers where you need to go."}
+          </Typography>
+
+          {!requestRide && !isEditMode && (
+            <Stack direction="row" spacing={1} sx={{ mb: 3 }}>
+              <Button
+                fullWidth
+                onClick={() => { setMode("offer"); formReset(); }}
                 sx={{
-                  ...tfSx, width: { xs: "100%", sm: 240 }, maxWidth: "100%",
-                  "& input": { fontSize: 16, fontWeight: 700 },
+                  textTransform: "none", fontWeight: 700, fontSize: { xs: 13.5, sm: 14 },
+                  py: 1.25, borderRadius: 2,
+                  bgcolor: mode === "offer" ? RUST : "#fff",
+                  color: mode === "offer" ? "#fff" : INK,
+                  border: `1px solid ${mode === "offer" ? RUST : BORDER}`,
+                  boxShadow: "none",
+                  "&:hover": { bgcolor: mode === "offer" ? RUST_DARK : "#F4F0EA", boxShadow: "none" },
                 }}
-                inputProps={{ min: 0, step: "0.5", inputMode: "decimal" }}
-              />
-              <Typography sx={{ fontSize: { xs: 12, sm: 12.5 }, color: MUTED, mt: 0.9, lineHeight: 1.5, overflowWrap: "anywhere" }}>
-                Max for this trip: <strong>${costCap}</strong>{" "}
-                {distanceMiles > 0 && (
-                  <>
-                    ({distanceMiles} mi × ${COST_RATE_PER_MILE.toFixed(2)} + ${COST_BUFFER}, floor ${COST_FLOOR})
-                  </>
+              >
+                I'm offering a ride
+              </Button>
+              <Button
+                fullWidth
+                onClick={() => { setMode("request"); formReset(); }}
+                sx={{
+                  textTransform: "none", fontWeight: 700, fontSize: { xs: 13.5, sm: 14 },
+                  py: 1.25, borderRadius: 2,
+                  bgcolor: mode === "request" ? RUST : "#fff",
+                  color: mode === "request" ? "#fff" : INK,
+                  border: `1px solid ${mode === "request" ? RUST : BORDER}`,
+                  boxShadow: "none",
+                  "&:hover": { bgcolor: mode === "request" ? RUST_DARK : "#F4F0EA", boxShadow: "none" },
+                }}
+              >
+                I need a ride
+              </Button>
+            </Stack>
+          )}
+
+          {/* ══════════════════════════════════════════════════════
+             REQUEST FLOW
+          ══════════════════════════════════════════════════════ */}
+          {mode === "request" && (
+            <Stack spacing={{ xs: 2.25, sm: 2.5, md: 3 }}>
+              <Box sx={{ minWidth: 0 }}>
+                <Typography sx={labelSx}>From (US city or airport)</Typography>
+                <RideLocationPicker
+                  fromLocation={requestForm.fromLocation}
+                  destinationLocation={requestForm.destinationLocation}
+                  onFromChange={(loc) => {
+                    setRequestForm((p) => ({ ...p, from: loc.address, fromLocation: loc }));
+                    setRequestErrors((p) => { const n = { ...p }; delete n.from; return n; });
+                  }}
+                  onDestinationChange={(loc) => {
+                    setRequestForm((p) => ({ ...p, destination: loc.address, destinationLocation: loc }));
+                    setRequestErrors((p) => { const n = { ...p }; delete n.destination; return n; });
+                  }}
+                  onRouteCalculated={(route) => {
+                    setRequestForm((p) => ({ ...p, distanceKm: route?.distanceKm ?? null }));
+                  }}
+                  ride={null}
+                />
+                {requestErrors.from && <Typography sx={errTextSx}>{requestErrors.from}</Typography>}
+                {requestErrors.destination && (
+                  <Typography sx={errTextSx}>{requestErrors.destination}</Typography>
                 )}
-              </Typography>
-              {costExceedsCap && (
-                <Alert severity="error" sx={{ mt: 1.25, borderRadius: 2, fontSize: { xs: 12, sm: 12.5 } }}>
-                  ${costEntered} is above the ${costCap} cap for this distance. Saathi is for
-                  sharing costs, not for profit.
-                </Alert>
-              )}
-            </Box>
-
-            <Box>
-              <Typography sx={labelSx}>Luggage space</Typography>
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                {LUGGAGE_OPTIONS.map((l) => (
-                  <ChipToggle
-                    key={l}
-                    label={l}
-                    active={offerForm.luggageSpace === l}
-                    onClick={() => updateOffer("luggageSpace", l)}
-                  />
-                ))}
               </Box>
-            </Box>
 
-            <Box>
-              <Typography sx={labelSx}>Preferences</Typography>
+              <Box sx={fieldGridSx}>
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography sx={labelSx}>Date</Typography>
+                  <DatePicker
+                    value={requestForm.date ? dayjs(requestForm.date) : null}
+                    onChange={(v) => updateRequest("date", v ? v.format("YYYY-MM-DD") : "")}
+                    format="MM/DD/YYYY"
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        size: inputSize,
+                        error: !!requestErrors.date,
+                        helperText: requestErrors.date,
+                        sx: tfSx,
+                      },
+                    }}
+                  />
+                </Box>
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography sx={labelSx}>Needed by</Typography>
+                  <TimePicker
+                    value={requestForm.neededBy ? dayjs(`2000-01-01T${requestForm.neededBy}`) : null}
+                    onChange={(v) => updateRequest("neededBy", v ? v.format("HH:mm") : "")}
+                    ampm
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        size: inputSize,
+                        error: !!requestErrors.neededBy,
+                        helperText: requestErrors.neededBy,
+                        sx: tfSx,
+                      },
+                    }}
+                  />
+                </Box>
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography sx={labelSx}>Flexible by</Typography>
+                  <FormControl fullWidth size={inputSize}>
+                    <Select
+                      value={requestForm.flexibility}
+                      onChange={(e) => updateRequest("flexibility", e.target.value)}
+                      sx={selectSx}
+                    >
+                      {FLEXIBILITY_OPTIONS.map((f) => (
+                        <MenuItem key={f} value={f} sx={{ fontSize: 14 }}>{f}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Box>
+              </Box>
+
+              <Box sx={pairGridSx}>
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography sx={labelSx}>Passengers</Typography>
+                  <TextField
+                    fullWidth size={inputSize} type="number"
+                    value={requestForm.passengers}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      if (/^\d*$/.test(v)) updateRequest("passengers", v);
+                    }}
+                    error={!!requestErrors.passengers}
+                    helperText={requestErrors.passengers}
+                    inputProps={{ min: 1, max: 7, inputMode: "numeric" }}
+                    sx={tfSx}
+                  />
+                </Box>
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography sx={labelSx}>Bags</Typography>
+                  <TextField
+                    fullWidth size={inputSize} type="number"
+                    value={requestForm.bags}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      if (/^\d*$/.test(v)) updateRequest("bags", v);
+                    }}
+                    error={!!requestErrors.bags}
+                    helperText={requestErrors.bags}
+                    inputProps={{ min: 0, max: 10, inputMode: "numeric" }}
+                    sx={tfSx}
+                  />
+                </Box>
+              </Box>
+
+              <Box>
+                <Typography sx={labelSx}>Category</Typography>
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                  {REQUEST_CATEGORIES.map((c) => (
+                    <ChipToggle
+                      key={c}
+                      label={c}
+                      active={requestForm.category === c}
+                      onClick={() => updateRequest("category", c)}
+                    />
+                  ))}
+                </Box>
+                {requestForm.category === "Other" && (
+                  <TextField
+                    fullWidth size={inputSize}
+                    placeholder="Describe your category"
+                    value={requestForm.customCategory}
+                    onChange={(e) => updateRequest("customCategory", e.target.value)}
+                    sx={{ ...tfSx, mt: 1.5 }}
+                  />
+                )}
+                {requestErrors.category && (
+                  <Typography sx={errTextSx}>{requestErrors.category}</Typography>
+                )}
+              </Box>
+
               <Paper variant="outlined" sx={{ borderRadius: 2, borderColor: BORDER, bgcolor: CARD, overflow: "hidden" }}>
                 <Box sx={{ px: { xs: 1.75, sm: 2.5 } }}>
                   <ToggleRow
                     icon={Baby}
-                    title="Child-friendly"
-                    checked={offerForm.childFriendly}
-                    onChange={(v) => updateOffer("childFriendly", v)}
-                  />
-                  <ToggleRow
-                    title="Recurring ride"
-                    subtitle="weekly, pick days"
-                    checked={offerForm.recurringRide}
-                    onChange={(v) => updateOffer("recurringRide", v)}
-                  />
-                  <ToggleRow
-                    icon={ShieldCheck}
-                    title="Women riders only"
-                    subtitle="Only women who set gender on their profile can request"
-                    checked={offerForm.womenOnly}
-                    onChange={(v) => updateOffer("womenOnly", v)}
+                    title="Traveling with a child"
+                    checked={requestForm.travelingWithChild}
+                    onChange={(v) => updateRequest("travelingWithChild", v)}
                   />
                 </Box>
               </Paper>
-            </Box>
 
-            <Box>
-              <Stack
-                direction="row" spacing={1} alignItems="baseline"
-                flexWrap="wrap" useFlexGap
-                sx={{ mb: 0.9, columnGap: 1, rowGap: 0.25 }}
-              >
-                <Typography sx={{ ...labelSx, mb: 0 }}>Help I can offer</Typography>
-                <Typography sx={{ fontSize: { xs: 12, sm: 12.5 }, color: MUTED }}>(optional)</Typography>
-              </Stack>
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                {HELP_OPTIONS.map((h) => (
-                  <ChipToggle
-                    key={h}
-                    label={h}
-                    active={(offerForm.helpCanOffer || []).includes(h)}
-                    onClick={() => toggleHelp(h)}
-                  />
-                ))}
-              </Box>
-            </Box>
-
-            <Box>
-              <Stack
-                direction="row" spacing={1} alignItems="baseline"
-                flexWrap="wrap" useFlexGap
-                sx={{ mb: 0.9, columnGap: 1, rowGap: 0.25 }}
-              >
-                <Typography sx={{ ...labelSx, mb: 0 }}>Notes</Typography>
-                <Typography sx={{ fontSize: { xs: 12, sm: 12.5 }, color: MUTED }}>
-                  (optional, no phone numbers)
+              <Box>
+                <Typography sx={labelSx}>
+                  Notes <span style={{ fontWeight: 400, textTransform: "none", color: MUTED }}>(optional)</span>
                 </Typography>
-              </Stack>
-              <TextField
-                fullWidth multiline minRows={3} maxRows={8} size={inputSize}
-                placeholder="Leaving from the Metro station lot."
-                value={offerForm.notes}
-                onChange={(e) => updateOffer("notes", e.target.value)}
-                sx={tfSx}
-              />
-            </Box>
+                <TextField
+                  fullWidth multiline minRows={3} maxRows={8} size={inputSize}
+                  placeholder="Anything drivers should know?"
+                  value={requestForm.notes}
+                  onChange={(e) => updateRequest("notes", sanitizeNotes(e.target.value))}
+                  sx={tfSx}
+                />
+              </Box>
 
-            <Button
-              onClick={() => {
-                if (validateOfferStep()) {
-                  setShowErrors(false);
-                  setStep(2);
-                }
-              }}
-              sx={primaryBtn}
-            >
-              Next: Review
-            </Button>
-          </Stack>
-        )}
-
-        {/* ══════════════════════════════════════════════════════
-           OFFER FLOW — STEP 2 (Review)
-        ══════════════════════════════════════════════════════ */}
-        {mode === "offer" && step === 2 && (
-          <Stack spacing={{ xs: 2.25, sm: 2.5, md: 3 }}>
-            {serverError && (
-              <Alert severity="error" sx={{ borderRadius: 2, overflowWrap: "anywhere" }}>
-                {serverError}
+              <Alert icon={<Info size={18} />} severity="info" sx={infoAlertSx}>
+                Drivers going your way will see this request and can offer to drive. You choose who
+                to accept. Your exact address and phone are shared only after you accept.
               </Alert>
-            )}
 
-            <Paper variant="outlined" sx={{ p: { xs: 1.75, sm: 2.5 }, borderRadius: 2.5, borderColor: BORDER, bgcolor: CARD }}>
-              <Stack direction="row" spacing={{ xs: 1.5, sm: 2 }} alignItems="flex-start" sx={{ minWidth: 0 }}>
-                <Avatar
-                  src={currentUser?.currentUser?.profileImageUrl}
-                  sx={{
-                    width: { xs: 40, sm: 48 }, height: { xs: 40, sm: 48 },
-                    borderRadius: "50%", bgcolor: "#FEF7E0", color: "#B06000",
-                    display: "grid", placeItems: "center",
-                    fontWeight: 800, fontSize: { xs: 13, sm: 15 }, flexShrink: 0,
-                  }}
-                >
-                  {(user?.firstName?.[0] || "U") + (user?.lastName?.[0] || "").toUpperCase()}
-                </Avatar>
-
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography sx={{ fontSize: { xs: 14.5, sm: 16 }, fontWeight: 700, lineHeight: 1.35, color: INK, overflowWrap: "anywhere", wordBreak: "break-word" }}>
-                    {offerForm.from || "—"} → {offerForm.destination || "—"}
-                  </Typography>
-                  <Typography sx={{ fontSize: { xs: 12, sm: 12.5 }, color: MUTED, mt: 0.4, overflowWrap: "anywhere" }}>
-                    {offerForm.date} · {formatTime12Hour(offerForm.time)} {offerForm.timeZone} · {offerForm.availableSeats} seat{offerForm.availableSeats === 1 ? "" : "s"}
-                  </Typography>
-
-                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, mt: 1.25 }}>
-                    {offerForm.category && (
-                      <Chip size="small" label={offerForm.category === "Other" ? offerForm.customCategory : offerForm.category}
-                        sx={{ borderRadius: 999, fontSize: 11.5, maxWidth: "100%", bgcolor: "#EAF3FB", color: "#1A3E8A" }} />
-                    )}
-                    {offerForm.costPerSeat && (
-                      <Chip size="small" label={`Cost share $${offerForm.costPerSeat}`}
-                        sx={{ borderRadius: 999, fontSize: 11.5, bgcolor: "#E6F4EA", color: "#14532D" }} />
-                    )}
-                    {offerForm.childFriendly && (
-                      <Chip size="small" label="Child-friendly"
-                        sx={{ borderRadius: 999, fontSize: 11.5, bgcolor: "#FEF7E0", color: "#B06000" }} />
-                    )}
-                    {offerForm.luggageSpace && offerForm.luggageSpace !== "None" && (
-                      <Chip size="small" label={offerForm.luggageSpace}
-                        sx={{ borderRadius: 999, fontSize: 11.5, bgcolor: "#EAF3FB", color: "#1A3E8A" }} />
-                    )}
-                    {(offerForm.helpCanOffer || []).map((h) => (
-                      <Chip key={h} size="small" label={h}
-                        sx={{ borderRadius: 999, fontSize: 11.5, bgcolor: "#FFF3E8", color: "#A85F00" }} />
-                    ))}
-                  </Box>
-                </Box>
-              </Stack>
-            </Paper>
-
-            <Paper variant="outlined" sx={{ p: { xs: 1.75, sm: 2.25 }, borderRadius: 2, borderColor: BORDER, bgcolor: CARD }}>
-              <Typography sx={{ fontSize: { xs: 13.5, sm: 14 }, fontWeight: 700, color: INK, mb: 0.5 }}>
-                Exact pickup address (private)
-              </Typography>
-              <Typography sx={{ fontSize: { xs: 13, sm: 13.5 }, color: MUTED, mb: 1.5, lineHeight: 1.5, overflowWrap: "anywhere" }}>
-                {offerForm.exactPickup || offerForm.fromLocation?.address || "Will be shared after you accept"}
-              </Typography>
-
-              {offerForm.notes && (
-                <>
-                  <Typography sx={{ fontSize: { xs: 13.5, sm: 14 }, fontWeight: 700, color: INK, mb: 0.5 }}>
-                    Notes
-                  </Typography>
-                  <Typography sx={{ fontSize: { xs: 13, sm: 13.5 }, color: MUTED, mb: 1.5, lineHeight: 1.5, overflowWrap: "anywhere", whiteSpace: "pre-wrap" }}>
-                    {offerForm.notes}
-                  </Typography>
-                </>
+              {serverError && (
+                <Alert severity="error" sx={{ borderRadius: 2, overflowWrap: "anywhere" }}>
+                  {serverError}
+                </Alert>
               )}
 
-              <Typography sx={{ fontSize: { xs: 12, sm: 12.5 }, color: MUTED }}>
-                The exact address and your phone number are shown only to passengers you accept.
+              {timeConflictMsg && (
+                <Alert severity="error" sx={{ borderRadius: 2, fontWeight: 500 }}>
+                  {timeConflictMsg}
+                </Alert>
+              )}
+
+              <Button
+                onClick={() => {
+                  if (isEditMode) updateRequestRide();
+                  else createRequest();
+                }}
+                disabled={saving}
+                startIcon={saving ? <CircularProgress size={18} sx={{ color: "#fff" }} /> : null}
+                sx={primaryBtn}
+              >
+                {saving
+                  ? (isEditMode ? "Updating..." : "Posting...")
+                  : (isEditMode ? "Update request" : "Post request")}
+              </Button>
+            </Stack>
+          )}
+
+          {/* ══════════════════════════════════════════════════════
+             OFFER FLOW — STEP 0
+          ══════════════════════════════════════════════════════ */}
+          {mode === "offer" && step === 0 && (
+            <Stack spacing={{ xs: 2.25, sm: 2.5, md: 3 }}>
+              <Typography sx={{ ...labelSx, fontSize: { xs: 12.5, sm: 13 }, color: NAVY, mt: 0.5 }}>
+                Trip details
               </Typography>
-            </Paper>
 
-            <FormControlLabel
-              sx={{ alignItems: "flex-start", mr: 0, ml: { xs: -0.5, sm: -1 } }}
-              control={
-                <Checkbox
-                  checked={offerForm.confirmCostSharing}
-                  onChange={(e) => updateOffer("confirmCostSharing", e.target.checked)}
-                  sx={{ "&.Mui-checked": { color: RUST }, color: "#BBB", pt: 0.5 }}
-                />
-              }
-              label={
-                <Typography sx={{ fontSize: { xs: 12.5, sm: 13.5 }, lineHeight: 1.5, color: INK, pt: 0.5 }}>
-                  I confirm this is a cost-sharing trip I am already making. I hold a valid
-                  license and insurance for this vehicle.
+              <Stack direction="row" spacing={1.25} alignItems="center"
+                sx={{ p: { xs: 1.25, sm: 1.5 }, borderRadius: 2, bgcolor: "#EAF3FB", minWidth: 0 }}>
+                <Box
+                  sx={{
+                    bgcolor: "#fff", px: 1.1, py: 0.45, borderRadius: 1.5,
+                    fontSize: 12, fontWeight: 700, color: "#1A3E8A",
+                    flexShrink: 0, alignItems: "center", display: "flex",
+                    justifyContent: "center", minWidth: 0,
+                  }}
+                >
+                  Car
+                </Box>
+                <Typography
+                  sx={{
+                    fontSize: { xs: 12, sm: 12.5 }, color: "#1A3E8A",
+                    lineHeight: 1.5, minWidth: 0, overflowWrap: "anywhere",
+                  }}
+                >
+                  Rides are car-only and within the US. Flying with a parent? Use Travel Buddy.
                 </Typography>
-              }
-            />
-            {showErrors && errors.confirmCostSharing && (
-              <Typography sx={{ ...errTextSx, mt: -1.5 }}>{errors.confirmCostSharing}</Typography>
-            )}
+              </Stack>
 
-            <Alert icon={<Info size={18} />} severity="info" sx={infoAlertSx}>
-              What happens next: members request seats, you Accept or Decline in My Rides, and we
-              share phone numbers once you accept. If nobody is accepted, the ride moves to
-              Expired after departure; if at least one was accepted, it moves to Completed.
-            </Alert>
+              <Box sx={{ minWidth: 0 }}>
+                <Typography sx={labelSx}>From (US address, city or airport)</Typography>
+                <RideLocationPicker
+                  fromLocation={offerForm.fromLocation}
+                  destinationLocation={offerForm.destinationLocation}
+                  disabled={Boolean(requestRide)}
+                  onFromChange={(loc) => {
+                    setOfferForm((p) => ({ ...p, from: loc.address, fromLocation: loc }));
+                    setErrors((p) => { const n = { ...p }; delete n.from; return n; });
+                  }}
+                  onDestinationChange={(loc) => {
+                    setOfferForm((p) => ({ ...p, destination: loc.address, destinationLocation: loc }));
+                    setErrors((p) => { const n = { ...p }; delete n.destination; return n; });
+                  }}
+                  onRouteCalculated={(route) => {
+                    setOfferForm((p) => ({
+                      ...p,
+                      distanceKm: route?.distanceKm ?? null,
+                      duration: route?.durationMinutes ?? null,
+                    }));
+                  }}
+                  ride={ride}
+                />
+                {showErrors && errors.from && <Typography sx={errTextSx}>{errors.from}</Typography>}
+                {showErrors && errors.destination && (
+                  <Typography sx={errTextSx}>{errors.destination}</Typography>
+                )}
+              </Box>
 
-            <Button
-              onClick={() => {
-                if (validateOfferStep()) {
-                  if (isEditMode) updateOfferRide();
-                  else createOffer();
+              <Box sx={fieldGridSx}>
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography sx={labelSx}>Date</Typography>
+                  <DatePicker
+                    value={offerForm.date ? dayjs(offerForm.date) : null}
+                    onChange={(v) => updateOffer("date", v ? v.format("YYYY-MM-DD") : "")}
+                    format="MM/DD/YYYY"
+                    disabled={Boolean(requestRide)}
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        size: inputSize,
+                        error: showErrors && !!errors.date,
+                        helperText: showErrors ? errors.date : "",
+                        sx: tfSx,
+                      },
+                    }}
+                  />
+                </Box>
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography sx={labelSx}>Departure time</Typography>
+                  <TimePicker
+                    value={offerForm.time ? dayjs(`2000-01-01T${offerForm.time}`) : null}
+                    onChange={(v) => updateOffer("time", v ? v.format("HH:mm") : "")}
+                    ampm
+                    disabled={Boolean(requestRide)}
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        size: inputSize,
+                        error: showErrors && !!errors.time,
+                        helperText: showErrors ? errors.time : "",
+                        sx: tfSx,
+                      },
+                    }}
+                  />
+                </Box>
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography sx={labelSx}>Time zone</Typography>
+                  <FormControl fullWidth size={inputSize} error={showErrors && !!errors.timeZone} disabled={Boolean(requestRide)}>
+                    <Select
+                      value={offerForm.timeZone}
+                      onChange={(e) => updateOffer("timeZone", e.target.value)}
+                      sx={selectSx}
+                    >
+                      {TIME_ZONES.map((tz) => (
+                        <MenuItem key={tz} value={tz} sx={{ fontSize: 14 }}>{tz}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Box>
+              </Box>
+
+              <Box>
+                <Typography sx={labelSx}>Category</Typography>
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                  {OFFER_CATEGORIES.map((c) => (
+                    <ChipToggle
+                      key={c}
+                      label={c}
+                      active={offerForm.category === c}
+                      onClick={() => updateOffer("category", c)}
+                    />
+                  ))}
+                </Box>
+                {offerForm.category === "Other" && (
+                  <TextField
+                    fullWidth size={inputSize}
+                    placeholder="Describe your category"
+                    value={offerForm.customCategory}
+                    onChange={(e) => updateOffer("customCategory", e.target.value)}
+                    sx={{ ...tfSx, mt: 1.5 }}
+                  />
+                )}
+                {showErrors && errors.category && (
+                  <Typography sx={errTextSx}>{errors.category}</Typography>
+                )}
+              </Box>
+
+              <Box>
+                <Typography sx={labelSx}>Seats available</Typography>
+
+                {requestRide ? (
+                  <Box sx={{ p: 2, bgcolor: "#F4F0EA", borderRadius: 2, border: `1px solid ${BORDER}` }}>
+                    <Typography sx={{ fontWeight: 700, fontSize: "1rem", color: INK }}>
+                      {requestRide.passengers} {requestRide.passengers === 1 ? "seat" : "seats"} requested
+                    </Typography>
+                    <Typography sx={{ fontSize: "0.8rem", color: MUTED, mt: 0.5 }}>
+                      You are offering exactly {requestRide.passengers} {requestRide.passengers === 1 ? "seat" : "seats"} for this ride.
+                    </Typography>
+                  </Box>
+                ) : (
+                  <SeatStepper
+                    value={Number(offerForm.availableSeats)}
+                    onChange={(v) => updateOffer("availableSeats", v)}
+                    min={1}
+                    max={7}
+                  />
+                )}
+              </Box>
+
+              {/* ★ TC-16: Description label clarified as public */}
+              <Box>
+                <Typography sx={labelSx}>
+                  Description{" "}
+                  <span style={{ fontWeight: 400, textTransform: "none", color: MUTED }}>
+                    (public — shown on your ride card)
+                  </span>
+                </Typography>
+                <TextField
+                  fullWidth multiline minRows={3} maxRows={8} size={inputSize}
+                  placeholder="Add details — pickup area, what you're offering, etc."
+                  value={offerForm.description}
+                  onChange={(e) => updateOffer("description", e.target.value)}
+                  sx={tfSx}
+                />
+              </Box>
+
+              {showErrors && Object.keys(errors).length > 0 && (
+                <Alert severity="error" sx={{ borderRadius: 2, fontSize: { xs: 12.5, sm: 13 } }}>
+                  Please fill the highlighted fields before continuing.
+                </Alert>
+              )}
+
+              {timeConflictMsg && (
+                <Alert severity="error" sx={{ borderRadius: 2, fontWeight: 500 }}>
+                  {timeConflictMsg}
+                </Alert>
+              )}
+
+              <Button
+                onClick={() => {
+                  if (validateOfferStep()) {
+                    setShowErrors(false);
+                    setStep(1);
+                  }
+                }}
+                sx={primaryBtn}
+              >
+                Next: Ride options
+              </Button>
+            </Stack>
+          )}
+
+          {/* ══════════════════════════════════════════════════════
+             OFFER FLOW — STEP 1
+          ══════════════════════════════════════════════════════ */}
+          {mode === "offer" && step === 1 && (
+            <Stack spacing={{ xs: 2.5, sm: 3, md: 3.5 }}>
+              <Box>
+                <Stack
+                  direction="row" spacing={1} alignItems="baseline"
+                  flexWrap="wrap" useFlexGap
+                  sx={{ mb: 0.9, columnGap: 1, rowGap: 0.25 }}
+                >
+                  <Typography sx={{ ...labelSx, mb: 0 }}>Cost share per passenger</Typography>
+                  <Typography sx={{ fontSize: { xs: 12, sm: 12.5 }, color: MUTED }}>
+                    (optional, leave blank for free)
+                  </Typography>
+                </Stack>
+                <TextField
+                  size={inputSize} type="number" placeholder="$ 12"
+                  value={offerForm.costPerSeat}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (/^\d*\.?\d*$/.test(v)) updateOffer("costPerSeat", v);
+                  }}
+                  error={costExceedsCap}
+                  InputProps={{ startAdornment: <InputAdornment position="start">$</InputAdornment> }}
+                  sx={{
+                    ...tfSx, width: { xs: "100%", sm: 240 }, maxWidth: "100%",
+                    "& input": { fontSize: 16, fontWeight: 700 },
+                  }}
+                  inputProps={{ min: 0, step: "0.5", inputMode: "decimal" }}
+                />
+                <Typography sx={{ fontSize: { xs: 12, sm: 12.5 }, color: MUTED, mt: 0.9, lineHeight: 1.5, overflowWrap: "anywhere" }}>
+                  Max for this trip: <strong>${costCap}</strong>{" "}
+                  {distanceMiles > 0 && (
+                    <>
+                      ({distanceMiles} mi × ${COST_RATE_PER_MILE.toFixed(2)} + ${COST_BUFFER}, floor ${COST_FLOOR})
+                    </>
+                  )}
+                </Typography>
+                {costExceedsCap && (
+                  <Alert severity="error" sx={{ mt: 1.25, borderRadius: 2, fontSize: { xs: 12, sm: 12.5 } }}>
+                    ${costEntered} is above the ${costCap} cap for this distance. Saathi is for
+                    sharing costs, not for profit.
+                  </Alert>
+                )}
+              </Box>
+
+              <Box>
+                <Typography sx={labelSx}>Luggage space</Typography>
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                  {LUGGAGE_OPTIONS.map((l) => (
+                    <ChipToggle
+                      key={l}
+                      label={l}
+                      active={offerForm.luggageSpace === l}
+                      onClick={() => updateOffer("luggageSpace", l)}
+                    />
+                  ))}
+                </Box>
+              </Box>
+
+              {!requestRide && <Box>
+                <Typography sx={labelSx}>Preferences</Typography>
+                <Paper variant="outlined" sx={{ borderRadius: 2, borderColor: BORDER, bgcolor: CARD, overflow: "hidden" }}>
+                  <Box sx={{ px: { xs: 1.75, sm: 2.5 } }}>
+                    <ToggleRow
+                      icon={Baby}
+                      title="Child-friendly"
+                      checked={offerForm.childFriendly}
+                      onChange={(v) => updateOffer("childFriendly", v)}
+                    />
+                    <ToggleRow
+                      title="Recurring ride"
+                      subtitle="weekly, pick days"
+                      checked={offerForm.recurringRide}
+                      onChange={(v) => updateOffer("recurringRide", v)}
+                    />
+                    <ToggleRow
+                      icon={ShieldCheck}
+                      title="Women riders only"
+                      subtitle="Only women who set gender on their profile can request"
+                      checked={offerForm.womenOnly}
+                      onChange={(v) => updateOffer("womenOnly", v)}
+                    />
+                  </Box>
+                </Paper>
+              </Box>}
+
+              <Box>
+                <Stack
+                  direction="row" spacing={1} alignItems="baseline"
+                  flexWrap="wrap" useFlexGap
+                  sx={{ mb: 0.9, columnGap: 1, rowGap: 0.25 }}
+                >
+                  <Typography sx={{ ...labelSx, mb: 0 }}>Help I can offer</Typography>
+                  <Typography sx={{ fontSize: { xs: 12, sm: 12.5 }, color: MUTED }}>(optional)</Typography>
+                </Stack>
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                  {HELP_OPTIONS.map((h) => (
+                    <ChipToggle
+                      key={h}
+                      label={h}
+                      active={(offerForm.helpCanOffer || []).includes(h)}
+                      onClick={() => toggleHelp(h)}
+                    />
+                  ))}
+                </Box>
+              </Box>
+
+              {/* ★ TC-16: Notes hint clarified as accepted-passengers only */}
+              <Box>
+                <Stack
+                  direction="row" spacing={1} alignItems="baseline"
+                  flexWrap="wrap" useFlexGap
+                  sx={{ mb: 0.9, columnGap: 1, rowGap: 0.25 }}
+                >
+                  <Typography sx={{ ...labelSx, mb: 0 }}>Notes</Typography>
+                  <Typography sx={{ fontSize: { xs: 12, sm: 12.5 }, color: MUTED }}>
+                    (optional, shown to accepted passengers — no phone numbers)
+                  </Typography>
+                </Stack>
+                <TextField
+                  fullWidth multiline minRows={3} maxRows={8} size={inputSize}
+                  placeholder="Leaving from the Metro station lot."
+                  value={offerForm.notes}
+                  onChange={(e) => updateOffer("notes", sanitizeNotes(e.target.value))}
+                  sx={tfSx}
+                />
+              </Box>
+
+              <Button
+                onClick={() => {
+                  if (validateOfferStep()) {
+                    setShowErrors(false);
+                    setStep(2);
+                  }
+                }}
+                sx={primaryBtn}
+              >
+                Next: Review
+              </Button>
+            </Stack>
+          )}
+
+          {/* ══════════════════════════════════════════════════════
+             OFFER FLOW — STEP 2 (Review)
+          ══════════════════════════════════════════════════════ */}
+          {mode === "offer" && step === 2 && (
+            <Stack spacing={{ xs: 2.25, sm: 2.5, md: 3 }}>
+              {serverError && (
+                <Alert severity="error" sx={{ borderRadius: 2, overflowWrap: "anywhere" }}>
+                  {serverError}
+                </Alert>
+              )}
+
+              <Paper variant="outlined" sx={{ p: { xs: 1.75, sm: 2.5 }, borderRadius: 2.5, borderColor: BORDER, bgcolor: CARD }}>
+                <Stack direction="row" spacing={{ xs: 1.5, sm: 2 }} alignItems="flex-start" sx={{ minWidth: 0 }}>
+                  <Avatar
+                    src={currentUser?.currentUser?.profileImageUrl}
+                    sx={{
+                      width: { xs: 40, sm: 48 }, height: { xs: 40, sm: 48 },
+                      borderRadius: "50%", bgcolor: "#FEF7E0", color: "#B06000",
+                      display: "grid", placeItems: "center",
+                      fontWeight: 800, fontSize: { xs: 13, sm: 15 }, flexShrink: 0,
+                    }}
+                  >
+                    {(user?.firstName?.[0] || "U") + (user?.lastName?.[0] || "").toUpperCase()}
+                  </Avatar>
+
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography sx={{ fontSize: { xs: 14.5, sm: 16 }, fontWeight: 700, lineHeight: 1.35, color: INK, overflowWrap: "anywhere", wordBreak: "break-word" }}>
+                      {offerForm.from || "—"} → {offerForm.destination || "—"}
+                    </Typography>
+                    <Typography sx={{ fontSize: { xs: 12, sm: 12.5 }, color: MUTED, mt: 0.4, overflowWrap: "anywhere" }}>
+                      {formatDate(offerForm.date)} · {formatTime12Hour(offerForm.time)} {offerForm.timeZone} · {offerForm.availableSeats} seat{offerForm.availableSeats === 1 ? "" : "s"}
+                    </Typography>
+
+                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, mt: 1.25 }}>
+                      {offerForm.category && (
+                        <Chip size="small" label={offerForm.category === "Other" ? offerForm.customCategory : offerForm.category}
+                          sx={{ borderRadius: 999, fontSize: 11.5, maxWidth: "100%", bgcolor: "#EAF3FB", color: "#1A3E8A" }} />
+                      )}
+                      {offerForm.costPerSeat && (
+                        <Chip size="small" label={`Cost share $${offerForm.costPerSeat}`}
+                          sx={{ borderRadius: 999, fontSize: 11.5, bgcolor: "#E6F4EA", color: "#14532D" }} />
+                      )}
+                      {offerForm.childFriendly && (
+                        <Chip size="small" label="Child-friendly"
+                          sx={{ borderRadius: 999, fontSize: 11.5, bgcolor: "#FEF7E0", color: "#B06000" }} />
+                      )}
+                      {offerForm.luggageSpace && offerForm.luggageSpace !== "None" && (
+                        <Chip size="small" label={offerForm.luggageSpace}
+                          sx={{ borderRadius: 999, fontSize: 11.5, bgcolor: "#EAF3FB", color: "#1A3E8A" }} />
+                      )}
+                      {(offerForm.helpCanOffer || []).map((h) => (
+                        <Chip key={h} size="small" label={h}
+                          sx={{ borderRadius: 999, fontSize: 11.5, bgcolor: "#FFF3E8", color: "#A85F00" }} />
+                      ))}
+                    </Box>
+                  </Box>
+                </Stack>
+              </Paper>
+
+              <Paper variant="outlined" sx={{ p: { xs: 1.75, sm: 2.25 }, borderRadius: 2, borderColor: BORDER, bgcolor: CARD }}>
+                {/* ★ TC-16: Description now appears on Review */}
+                {offerForm.description && (
+                  <>
+                    <Typography sx={{ fontSize: { xs: 13.5, sm: 14 }, fontWeight: 700, color: INK, mb: 0.5 }}>
+                      Description
+                    </Typography>
+                    <Typography
+                      sx={{
+                        fontSize: { xs: 13, sm: 13.5 },
+                        color: MUTED,
+                        mb: 1.5,
+                        lineHeight: 1.5,
+                        overflowWrap: "anywhere",
+                        whiteSpace: "pre-wrap",
+                      }}
+                    >
+                      {offerForm.description}
+                    </Typography>
+                  </>
+                )}
+
+                <Typography sx={{ fontSize: { xs: 13.5, sm: 14 }, fontWeight: 700, color: INK, mb: 0.5 }}>
+                  Exact pickup address (private)
+                </Typography>
+                <Typography sx={{ fontSize: { xs: 13, sm: 13.5 }, color: MUTED, mb: 1.5, lineHeight: 1.5, overflowWrap: "anywhere" }}>
+                  {offerForm.exactPickup || offerForm.fromLocation?.address || "Will be shared after you accept"}
+                </Typography>
+
+                {offerForm.notes && (
+                  <>
+                    <Typography sx={{ fontSize: { xs: 13.5, sm: 14 }, fontWeight: 700, color: INK, mb: 0.5 }}>
+                      Notes
+                    </Typography>
+                    <Typography
+                      sx={{
+                        fontSize: { xs: 13, sm: 13.5 },
+                        color: MUTED,
+                        mb: 1.5,
+                        lineHeight: 1.5,
+                        overflowWrap: "anywhere",
+                        whiteSpace: "pre-wrap",
+                      }}
+                    >
+                      {offerForm.notes}
+                    </Typography>
+                  </>
+                )}
+
+                <Typography sx={{ fontSize: { xs: 12, sm: 12.5 }, color: MUTED }}>
+                  The exact address and your phone number are shown only to passengers you accept.
+                </Typography>
+              </Paper>
+
+              <FormControlLabel
+                sx={{ alignItems: "flex-start", mr: 0, ml: { xs: -0.5, sm: -1 } }}
+                control={
+                  <Checkbox
+                    checked={offerForm.confirmCostSharing}
+                    onChange={(e) => updateOffer("confirmCostSharing", e.target.checked)}
+                    sx={{ "&.Mui-checked": { color: RUST }, color: "#BBB", pt: 0.5 }}
+                  />
                 }
-              }}
-              disabled={saving}
-              startIcon={saving ? <CircularProgress size={18} sx={{ color: "#fff" }} /> : null}
-              sx={primaryBtn}
-            >
-              {saving
-                ? isEditMode ? "Updating..." : "Posting..."
-                : isEditMode ? "Update ride" : "Post ride"}
-            </Button>
-          </Stack>
-        )}
-      </Box>
-    </PageLayout>
+                label={
+                  <Typography sx={{ fontSize: { xs: 12.5, sm: 13.5 }, lineHeight: 1.5, color: INK, pt: 0.5 }}>
+                    I confirm this is a cost-sharing trip I am already making. I hold a valid
+                    license and insurance for this vehicle.
+                  </Typography>
+                }
+              />
+              {showErrors && errors.confirmCostSharing && (
+                <Typography sx={{ ...errTextSx, mt: -1.5 }}>{errors.confirmCostSharing}</Typography>
+              )}
+
+              <Alert icon={<Info size={18} />} severity="info" sx={infoAlertSx}>
+                What happens next: members request seats, you Accept or Decline in My Rides, and we
+                share phone numbers once you accept. If nobody is accepted, the ride moves to
+                Expired after departure; if at least one was accepted, it moves to Completed.
+              </Alert>
+
+              <Button
+                onClick={() => {
+                  if (validateOfferStep()) {
+                    if (isEditMode) updateOfferRide();
+                    else createOffer();
+                  }
+                }}
+                disabled={saving}
+                startIcon={saving ? <CircularProgress size={18} sx={{ color: "#fff" }} /> : null}
+                sx={primaryBtn}
+              >
+                {saving
+                  ? isEditMode ? "Updating..." : "Posting..."
+                  : isEditMode ? "Update ride" : "Post ride"}
+              </Button>
+            </Stack>
+          )}
+        </Box>
+      </PageLayout>
+    </LocalizationProvider>
   );
 }

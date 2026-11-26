@@ -129,11 +129,7 @@ export const AuthProvider = ({ children }) => {
             );
 
             const user = res.data.user;
-            const token = res?.data?.token;
-
-            // console.log("Response:", res);
-            // console.log("OTP Login Response:", res.data);
-            // console.log("TOKEN:", res.data.token);
+            const token = res.data.token;
 
             if (!token) {
                 throw new Error("Token was not returned by the server");
@@ -151,15 +147,15 @@ export const AuthProvider = ({ children }) => {
                 user,
                 token,
             };
-        } catch (error) {
-            const message =
-                error.response?.data?.message ||
-                error.message ||
-                "OTP login failed";
 
-            throw new Error(message);
+        } catch (error) {
+            // Keep Axios response data, including attemptsRemaining
+            // and lockedUntil, for Login.jsx
+            throw error;
         }
     };
+
+
 
 
     // =====================================================

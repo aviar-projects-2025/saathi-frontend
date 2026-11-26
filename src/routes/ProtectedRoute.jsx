@@ -5,9 +5,7 @@ import { useAuth } from "../context/AuthContext";
 const ProtectedRoute = ({ allowedRoles }) => {
   const { token, user, loading, isAuthenticated } = useAuth();
 
-  // ✅ FIXED: single source of truth — read role from user (context), not localStorage
   const role = user?.role || localStorage.getItem("role");
-
   // 1. Still verifying session
   if (loading) {
     return (

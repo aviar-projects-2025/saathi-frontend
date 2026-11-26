@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
     Box,
     Typography,
     Stack,
-    Avatar,
     Button,
     useMediaQuery,
     useTheme,
@@ -13,7 +12,6 @@ import {
     Select,
     InputLabel,
     Chip,
-    FormHelperText,
     FormControlLabel,
     Menu,
     ListItemText,
@@ -22,34 +20,23 @@ import {
     Slider,
 } from "@mui/material";
 
-import { Autocomplete, createFilterOptions } from "@mui/material";
+import { Autocomplete } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
 import axios from "axios";
 import { toast } from "react-toastify";
-import uploadToCloudinary from "../components/uploadToCloudinary.jsx";
 import { useUser } from "../context/userConetext";
 import Api from "../Api";
-import US_Cities from "../config/US_Cities.json"
+import US_Cities from "../config/US_Cities.json";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
-import Popper from "@mui/material/Popper";
 import uploadImageToS3 from "../utils/s3Upload.js";
 import ProtectedAvatar from "../components/ProtectedAvatar.jsx";
 
 /* ─────────────────────────────────────────────────────────────
-   Name rules — SINGLE source of truth, used by:
-     • sanitizeName() (input-time filtering)
-     • validateForm() (submit-time check)
-
-   Rules:
-     • Must start with a letter (any script)
-     • Allows letters (\p{L}) + combining marks (\p{M})
-     • Space, apostrophe (' or ’), and hyphen allowed only as
-       separators between letters — never at start or end
-     • Rejects digits, other punctuation, emoji, tabs
+   Name rules — SINGLE source of truth
    ───────────────────────────────────────────────────────────── */
 const NAME_PATTERN = new RegExp(
     String.raw`^\p{L}[\p{L}\p{M}]*(?:[ '\u2019-][\p{L}\p{M}]+)*$`,
@@ -57,55 +44,6 @@ const NAME_PATTERN = new RegExp(
 );
 const NAME_STRIP = new RegExp(String.raw`[^\p{L}\p{M} '\u2019-]`, "gu");
 const sanitizeName = (value) => String(value ?? "").replace(NAME_STRIP, "");
-
-const CustomPopper = (props) => {
-    return (
-        <Popper
-            {...props}
-            placement="bottom-start"
-            modifiers={[
-                {
-                    name: "offset",
-                    options: {
-                        offset: [0, 4],
-                    },
-                },
-            ]}
-            sx={{
-                zIndex: 1500,
-
-                "& .MuiPaper-root": {
-                    width: "100%",
-                    borderRadius: 0,
-                    boxShadow: "0px 4px 12px rgba(0,0,0,0.15)",
-                },
-
-                "& .MuiAutocomplete-listbox": {
-                    padding: 0,
-                    maxHeight: "500px",
-                    overflowY: "auto",
-                },
-
-                "& .MuiAutocomplete-option": {
-                    minHeight: "50px",
-                    padding: "8px 22px !important",
-                    fontSize: "23px",
-                    display: "flex",
-                    alignItems: "center",
-                    borderRadius: 0,
-
-                    "&[aria-selected='true']": {
-                        backgroundColor: "#eaf3fb !important",
-                    },
-
-                    "&.Mui-focused": {
-                        backgroundColor: "#eaf3fb !important",
-                    },
-                },
-            }}
-        />
-    );
-};
 
 const CROP_BOX_SIZE = 260;
 const CROP_BOX_SIZE_MOBILE = 190;
@@ -118,11 +56,7 @@ const fieldFont = {
 };
 
 const EXCLUDED = ["AS", "FM", "GU", "MH", "MP", "PW", "PR", "VI", "AE", "AP"];
-const tfSx = {
-    "& .MuiInputBase-input": { fontSize: { xs: "0.8rem", sm: "0.9rem" } },
-};
-const selectSx = { fontSize: { xs: "0.8rem", sm: "0.9rem" } };
-const ilSx = { fontSize: { xs: "0.8rem", sm: "0.9rem" } };
+
 // 1. Every city paired with its state (must come first)
 const OPTIONS = US_Cities.filter((s) => !EXCLUDED.includes(s.abbr)).flatMap((s) =>
     s.cities.map((city) => ({
@@ -155,10 +89,10 @@ const filterOptions = (options, { inputValue }) => {
     }
     return [...matches, OTHER_OPTION];
 };
+
 const buildFormData = (user) => ({
     firstName: user?.firstName || "",
     lastName: user?.lastName || "",
-    // email: user?.email || "",
     language: user?.language || "",
     mobile: user?.mobile || "",
     dob: user?.dob ? dayjs(user.dob) : null,
@@ -169,10 +103,19 @@ const buildFormData = (user) => ({
     zipcode: user?.zipcode || "",
 });
 
+/* ─────────────────────────────────────────────────────────────
+   BRD 6.2 alignment:
+     REQUIRED: firstName, lastName, mobile, city, profileImage
+     OPTIONAL: zipcode, dob, gender, bio/profession, languages
+
+   So:
+     • zipcode: only validate format IF provided
+     • dob: only enforce 18+ IF provided
+   ───────────────────────────────────────────────────────────── */
 const validateForm = (formData) => {
     const errors = {};
 
-    // First Name
+    // First Name — required
     if (!formData.firstName?.trim()) {
         errors.firstName = "First name is required";
     } else if (formData.firstName.length < 2) {
@@ -182,7 +125,7 @@ const validateForm = (formData) => {
             "First name can contain only letters, spaces, apostrophes, and hyphens";
     }
 
-    // Last Name
+    // Last Name — required
     if (!formData.lastName?.trim()) {
         errors.lastName = "Last name is required";
     } else if (!NAME_PATTERN.test(formData.lastName.trim())) {
@@ -190,11 +133,12 @@ const validateForm = (formData) => {
             "Last name can contain only letters, spaces, apostrophes, and hyphens";
     }
 
-    // City
+    // City — required
     if (!formData.city?.trim()) {
         errors.city = "City is required";
     }
 
+    // Mobile — required (verified at signup)
     const phone = formData.mobile?.trim();
     if (!phone) {
         errors.mobile = "Mobile number is required";
@@ -202,19 +146,17 @@ const validateForm = (formData) => {
         errors.mobile = "Please enter a valid mobile number (10–15 digits)";
     }
 
+    // ── ZipCode — OPTIONAL; validate format only if provided ──
     const zipcode = formData.zipcode?.trim();
-    if (!zipcode) {
-        errors.zipcode = "ZipCode is required";
-    } else if (!/^\d{5}$/.test(zipcode)) {
+    if (zipcode && !/^\d{5}$/.test(zipcode)) {
         errors.zipcode = "Please enter a valid 5-digit ZipCode";
     }
 
-    // ── DOB 18+ VALIDATION ──
+    // ── DOB — OPTIONAL; if provided must be 18+ ──
     if (formData.dob) {
         const today = dayjs();
         const birthDate = dayjs(formData.dob);
         const age = today.diff(birthDate, "year");
-
         if (age < 18) {
             errors.dob = "You must be at least 18 years old";
         }
@@ -225,7 +167,6 @@ const validateForm = (formData) => {
 
 const EditProfile = ({ open, onClose }) => {
     const { currentUser, getuserData } = useUser();
-    // console.log(currentUser, "currentUser");
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
     const cropSize = isMobile ? CROP_BOX_SIZE_MOBILE : CROP_BOX_SIZE;
@@ -272,13 +213,14 @@ const EditProfile = ({ open, onClose }) => {
             setFormData(buildFormData(currentUser));
             setProfileImage(currentUser?.profileImageUrl || "");
             setProfileFile(null);
-            syncCityUI(currentUser?.city); // add
+            syncCityUI(currentUser?.city);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentUser]);
 
     const resetForm = () => {
         setFormData(buildFormData(currentUser));
-        syncCityUI(currentUser?.city); // add
+        syncCityUI(currentUser?.city);
     };
 
     const handleCloseProfile = () => {
@@ -359,7 +301,6 @@ const EditProfile = ({ open, onClose }) => {
             setNewMobile("");
             setOtp("");
 
-            // Refresh user data
             await getuserData();
 
             toast.success(
@@ -508,7 +449,6 @@ const EditProfile = ({ open, onClose }) => {
                 const file = new File([blob], "profile.jpg", { type: "image/jpeg" });
                 const previewUrl = URL.createObjectURL(blob);
 
-                // free the previous preview to avoid a memory leak
                 if (profileImage?.startsWith("blob:")) {
                     URL.revokeObjectURL(profileImage);
                 }
@@ -565,11 +505,9 @@ const EditProfile = ({ open, onClose }) => {
         setFormData((prev) => ({ ...prev, [key]: val }));
         setErrors((prev) => {
             const newErrors = { ...prev };
-
             if (val && String(val).trim() !== "") {
                 delete newErrors[key];
             }
-
             return newErrors;
         });
     };
@@ -589,29 +527,15 @@ const EditProfile = ({ open, onClose }) => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
-
-        setErrors((prev) => ({
-            ...prev,
-            [name]: "",
-        }));
+        setFormData((prev) => ({ ...prev, [name]: value }));
+        setErrors((prev) => ({ ...prev, [name]: "" }));
     };
 
     /* ── Sanitizing handler for first/last name only ── */
     const handleNameChange = (e) => {
         const { name, value } = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [name]: sanitizeName(value),
-        }));
-        setErrors((prev) => ({
-            ...prev,
-            [name]: "",
-        }));
+        setFormData((prev) => ({ ...prev, [name]: sanitizeName(value) }));
+        setErrors((prev) => ({ ...prev, [name]: "" }));
     };
 
     const [value, setValue] = useState(null);
@@ -667,12 +591,7 @@ const EditProfile = ({ open, onClose }) => {
             let uploadedImage = null;
 
             if (profileFile) {
-                const uploaded = await uploadImageToS3(
-                    profileFile,
-                    "profiles"
-                );
-
-                // Save the S3 object key
+                const uploaded = await uploadImageToS3(profileFile, "profiles");
                 uploadedImage = uploaded.key;
             }
 
@@ -680,30 +599,21 @@ const EditProfile = ({ open, onClose }) => {
                 firstName: formData.firstName,
                 lastName: formData.lastName,
                 mobile: currentUser?.mobile,
-                dob: formData.dob
-                    ? formData.dob.format("YYYY-MM-DD")
-                    : "",
+                dob: formData.dob ? formData.dob.format("YYYY-MM-DD") : "",
                 gender: formData.gender,
                 bio: formData.bio,
                 language: formData?.language,
                 city: formData.city,
                 zipcode: formData.zipcode,
-
-                // Send the S3 key to your backend
                 ...(uploadedImage && {
                     profileImage: uploadedImage,
                 }),
             };
 
-            await axios.post(
-                `${Api}/users/update/${currentUser?._id}`,
-                data
-            );
-
+            await axios.post(`${Api}/users/update/${currentUser?._id}`, data);
             await getuserData();
 
-            toast.success("Profile Updated", toast);
-
+            toast.success("Profile Updated");
             handleCloseProfile();
         } catch (error) {
             console.error(
@@ -725,9 +635,7 @@ const EditProfile = ({ open, onClose }) => {
             <Modal
                 open={!!open}
                 onClose={(event, reason) => {
-                    if (reason === "backdropClick") {
-                        return;
-                    }
+                    if (reason === "backdropClick") return;
                     handleCloseProfile();
                 }}
             >
@@ -740,37 +648,20 @@ const EditProfile = ({ open, onClose }) => {
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        width: {
-                            xs: "92%",
-                            sm: "100%",
-                        },
-                        px: {
-                            xs: 2,
-                            sm: 0,
-                        },
+                        width: { xs: "92%", sm: "100%" },
+                        px: { xs: 2, sm: 0 },
                         outline: "none",
                     }}
                 >
                     <Box
                         sx={{
                             bgcolor: "white",
-                            width: {
-                                xs: "100%",
-                                sm: "85%",
-                                md: 480,
-                                lg: 500,
-                            },
+                            width: { xs: "100%", sm: "85%", md: 480, lg: 500 },
                             maxWidth: 500,
                             borderRadius: 2,
                             boxShadow: 24,
-                            p: {
-                                xs: 2,
-                                sm: 3,
-                            },
-                            maxHeight: {
-                                xs: "85vh",
-                                sm: "90vh",
-                            },
+                            p: { xs: 2, sm: 3 },
+                            maxHeight: { xs: "85vh", sm: "90vh" },
                             overflowY: "auto",
                         }}
                     >
@@ -787,11 +678,7 @@ const EditProfile = ({ open, onClose }) => {
                                 variant="h6"
                                 sx={{
                                     fontWeight: 700,
-                                    fontSize: {
-                                        xs: "1rem",
-                                        sm: "1.15rem",
-                                        md: "1.25rem",
-                                    },
+                                    fontSize: { xs: "1rem", sm: "1.15rem", md: "1.25rem" },
                                 }}
                             >
                                 Edit Profile
@@ -806,9 +693,7 @@ const EditProfile = ({ open, onClose }) => {
                                     top: "50%",
                                     transform: "translateY(-50%)",
                                     color: "text.secondary",
-                                    "&:hover": {
-                                        bgcolor: "action.hover",
-                                    },
+                                    "&:hover": { bgcolor: "action.hover" },
                                 }}
                             >
                                 <CloseIcon />
@@ -818,10 +703,7 @@ const EditProfile = ({ open, onClose }) => {
                         <Box
                             sx={{
                                 mb: 2.5,
-                                p: {
-                                    xs: 1.5,
-                                    sm: 2,
-                                },
+                                p: { xs: 1.5, sm: 2 },
                                 borderRadius: 2,
                                 backgroundColor: "#FFF8F2",
                                 border: "1px solid #F4D8C2",
@@ -829,10 +711,7 @@ const EditProfile = ({ open, onClose }) => {
                         >
                             <Typography
                                 sx={{
-                                    fontSize: {
-                                        xs: "0.78rem",
-                                        sm: "0.85rem",
-                                    },
+                                    fontSize: { xs: "0.78rem", sm: "0.85rem" },
                                     fontWeight: 700,
                                     color: "#5D4037",
                                     mb: 0.5,
@@ -843,10 +722,7 @@ const EditProfile = ({ open, onClose }) => {
 
                             <Typography
                                 sx={{
-                                    fontSize: {
-                                        xs: "0.7rem",
-                                        sm: "0.78rem",
-                                    },
+                                    fontSize: { xs: "0.7rem", sm: "0.78rem" },
                                     lineHeight: 1.5,
                                     color: "text.secondary",
                                 }}
@@ -859,15 +735,7 @@ const EditProfile = ({ open, onClose }) => {
                             </Typography>
                         </Box>
 
-                        <Stack
-                            spacing={{
-                                xs: 1.5,
-                                sm: 2.5,
-                            }}
-                            sx={{
-                                width: "100%",
-                            }}
-                        >
+                        <Stack spacing={{ xs: 1.5, sm: 2.5 }} sx={{ width: "100%" }}>
                             {/* Profile Image */}
                             <Box
                                 sx={{
@@ -879,21 +747,9 @@ const EditProfile = ({ open, onClose }) => {
                                 <ProtectedAvatar
                                     src={profileImage || formData.profileImage || ""}
                                     sx={{
-                                        width: {
-                                            xs: 60,
-                                            sm: 85,
-                                            md: 110,
-                                        },
-                                        height: {
-                                            xs: 60,
-                                            sm: 85,
-                                            md: 110,
-                                        },
-                                        fontSize: {
-                                            xs: 18,
-                                            sm: 24,
-                                            md: 32,
-                                        },
+                                        width: { xs: 60, sm: 85, md: 110 },
+                                        height: { xs: 60, sm: 85, md: 110 },
+                                        fontSize: { xs: 18, sm: 24, md: 32 },
                                         bgcolor: SAFFRON,
                                     }}
                                 >
@@ -915,46 +771,28 @@ const EditProfile = ({ open, onClose }) => {
                                         textTransform: "none",
                                         color: "#fff",
                                         bgcolor: "#FF9933",
-                                        "&:hover": {
-                                            bgcolor: "#e68a2e",
-                                        },
+                                        "&:hover": { bgcolor: "#e68a2e" },
                                     }}
                                 >
                                     Change Photo
                                 </Button>
 
-                                {/* Photo options */}
                                 <Menu
                                     anchorEl={photoMenuAnchor}
                                     open={isPhotoMenuOpen}
                                     onClose={handlePhotoMenuClose}
-                                    anchorOrigin={{
-                                        vertical: "bottom",
-                                        horizontal: "left",
-                                    }}
-                                    transformOrigin={{
-                                        vertical: "top",
-                                        horizontal: "left",
-                                    }}
+                                    anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+                                    transformOrigin={{ vertical: "top", horizontal: "left" }}
                                 >
                                     <MenuItem
                                         onClick={handleCameraClick}
-                                        sx={{
-                                            "&:hover": {
-                                                color: "#E8650A",
-                                            },
-                                        }}
+                                        sx={{ "&:hover": { color: "#E8650A" } }}
                                     >
                                         <CameraAltIcon
                                             sx={{
                                                 mr: 1,
                                                 color: "#E8650A",
-                                                fontSize: {
-                                                    xs: "16px",
-                                                    sm: "17px",
-                                                    md: "18px",
-                                                    lg: "20px",
-                                                },
+                                                fontSize: { xs: "16px", sm: "17px", md: "18px", lg: "20px" },
                                             }}
                                         />
                                         <ListItemText primary="Camera" />
@@ -962,22 +800,13 @@ const EditProfile = ({ open, onClose }) => {
 
                                     <MenuItem
                                         onClick={handleFileClick}
-                                        sx={{
-                                            "&:hover": {
-                                                color: "#E8650A",
-                                            },
-                                        }}
+                                        sx={{ "&:hover": { color: "#E8650A" } }}
                                     >
                                         <InsertDriveFileIcon
                                             sx={{
                                                 mr: 1,
                                                 color: "#E8650A",
-                                                fontSize: {
-                                                    xs: "16px",
-                                                    sm: "17px",
-                                                    md: "18px",
-                                                    lg: "20px",
-                                                },
+                                                fontSize: { xs: "16px", sm: "17px", md: "18px", lg: "20px" },
                                             }}
                                         />
                                         <ListItemText
@@ -986,7 +815,6 @@ const EditProfile = ({ open, onClose }) => {
                                                     <Box sx={{ display: { xs: "block", sm: "none" } }}>
                                                         Gallery
                                                     </Box>
-
                                                     <Box sx={{ display: { xs: "none", sm: "block" } }}>
                                                         File
                                                     </Box>
@@ -996,7 +824,6 @@ const EditProfile = ({ open, onClose }) => {
                                     </MenuItem>
                                 </Menu>
 
-                                {/* Camera input */}
                                 <input
                                     ref={cameraFileRef}
                                     hidden
@@ -1005,8 +832,6 @@ const EditProfile = ({ open, onClose }) => {
                                     capture="environment"
                                     onChange={handlePickImage}
                                 />
-
-                                {/* File input */}
                                 <input
                                     ref={galleryFileRef}
                                     hidden
@@ -1018,17 +843,9 @@ const EditProfile = ({ open, onClose }) => {
 
                             {/* First Name / Last Name */}
                             <Stack
-                                direction={{
-                                    xs: "column",
-                                    sm: "row",
-                                }}
-                                spacing={{
-                                    xs: 2,
-                                    sm: 3,
-                                }}
-                                sx={{
-                                    width: "100%",
-                                }}
+                                direction={{ xs: "column", sm: "row" }}
+                                spacing={{ xs: 2, sm: 3 }}
+                                sx={{ width: "100%" }}
                             >
                                 <TextField
                                     name="firstName"
@@ -1197,11 +1014,7 @@ const EditProfile = ({ open, onClose }) => {
                                                     />
                                                 </Stack>
 
-                                                <Stack
-                                                    direction="row"
-                                                    spacing={1}
-                                                    sx={{ mt: 1.2 }}
-                                                >
+                                                <Stack direction="row" spacing={1} sx={{ mt: 1.2 }}>
                                                     <Button
                                                         variant="contained"
                                                         size="small"
@@ -1211,9 +1024,7 @@ const EditProfile = ({ open, onClose }) => {
                                                             px: 2,
                                                             textTransform: "none",
                                                             bgcolor: "#E8650A",
-                                                            "&:hover": {
-                                                                bgcolor: "#D95D08",
-                                                            },
+                                                            "&:hover": { bgcolor: "#D95D08" },
                                                         }}
                                                     >
                                                         {mobileLoading ? "Sending..." : "Send OTP"}
@@ -1252,8 +1063,7 @@ const EditProfile = ({ open, onClose }) => {
                                                             color: "#8A4B20",
                                                         }}
                                                     >
-                                                        OTP sent to{" "}
-                                                        <strong>{newMobile}</strong>
+                                                        OTP sent to <strong>{newMobile}</strong>
                                                     </Typography>
                                                 </Box>
 
@@ -1280,11 +1090,7 @@ const EditProfile = ({ open, onClose }) => {
                                                     InputLabelProps={fieldFont}
                                                 />
 
-                                                <Stack
-                                                    direction="row"
-                                                    spacing={1}
-                                                    sx={{ mt: 1.2 }}
-                                                >
+                                                <Stack direction="row" spacing={1} sx={{ mt: 1.2 }}>
                                                     <Button
                                                         variant="contained"
                                                         size="small"
@@ -1294,14 +1100,10 @@ const EditProfile = ({ open, onClose }) => {
                                                             px: 2,
                                                             textTransform: "none",
                                                             bgcolor: "#E8650A",
-                                                            "&:hover": {
-                                                                bgcolor: "#D95D08",
-                                                            },
+                                                            "&:hover": { bgcolor: "#D95D08" },
                                                         }}
                                                     >
-                                                        {otpLoading
-                                                            ? "Verifying..."
-                                                            : "Verify OTP"}
+                                                        {otpLoading ? "Verifying..." : "Verify OTP"}
                                                     </Button>
 
                                                     <Button
@@ -1325,9 +1127,10 @@ const EditProfile = ({ open, onClose }) => {
                                     </Box>
                                 )}
                             </Box>
+
                             <FormControl fullWidth>
-                                <InputLabel sx={ilSx}>
-                                    Languages I Speak
+                                <InputLabel sx={fieldFont.sx}>
+                                    Languages I Speak (Optional)
                                 </InputLabel>
 
                                 <Select
@@ -1340,10 +1143,9 @@ const EditProfile = ({ open, onClose }) => {
                                             ? formData.language
                                             : []
                                     }
-                                    label="Languages I Speak"
+                                    label="Languages I Speak (Optional)"
                                     onChange={(e) => {
                                         const value = e.target.value;
-
                                         update(
                                             "language",
                                             typeof value === "string"
@@ -1351,7 +1153,7 @@ const EditProfile = ({ open, onClose }) => {
                                                 : value
                                         );
                                     }}
-                                    sx={selectSx}
+                                    sx={fieldFont.sx}
                                     renderValue={(selected) => (
                                         <Box
                                             sx={{
@@ -1366,20 +1168,15 @@ const EditProfile = ({ open, onClose }) => {
                                                     key={value}
                                                     label={value}
                                                     size="small"
-                                                    onMouseDown={(e) => {
-                                                        e.stopPropagation();
-                                                    }}
+                                                    onMouseDown={(e) => e.stopPropagation()}
                                                     onDelete={(e) => {
                                                         e.stopPropagation();
-
                                                         update(
                                                             "language",
                                                             selected.filter(
                                                                 (item) => item !== value
                                                             )
                                                         );
-
-                                                        // Clear custom language
                                                         if (value === otherLanguage) {
                                                             setOtherLanguage("");
                                                         }
@@ -1390,28 +1187,16 @@ const EditProfile = ({ open, onClose }) => {
                                     )}
                                     MenuProps={{
                                         disablePortal: true,
-                                        PaperProps: {
-                                            sx: {
-                                                maxHeight: 300,
-                                            },
-                                        },
-                                        MenuListProps: {
-                                            sx: {
-                                                pb: 0,
-                                            },
-                                        },
+                                        PaperProps: { sx: { maxHeight: 300 } },
+                                        MenuListProps: { sx: { pb: 0 } },
                                     }}
                                 >
                                     {languages.map((lang) => (
-                                        <MenuItem
-                                            key={lang}
-                                            value={lang}
-                                        >
+                                        <MenuItem key={lang} value={lang}>
                                             {lang}
                                         </MenuItem>
                                     ))}
 
-                                    {/* Select Button */}
                                     <Box
                                         sx={{
                                             position: "sticky",
@@ -1427,9 +1212,7 @@ const EditProfile = ({ open, onClose }) => {
                                             e.preventDefault();
                                             e.stopPropagation();
                                         }}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                        }}
+                                        onClick={(e) => e.stopPropagation()}
                                     >
                                         <Button
                                             variant="contained"
@@ -1446,9 +1229,7 @@ const EditProfile = ({ open, onClose }) => {
                                                 color: "#fff",
                                                 mt: 0.5,
                                                 bgcolor: "#E8650A",
-                                                "&:hover": {
-                                                    bgcolor: "#D95D08",
-                                                },
+                                                "&:hover": { bgcolor: "#D95D08" },
                                             }}
                                         >
                                             Select
@@ -1458,17 +1239,9 @@ const EditProfile = ({ open, onClose }) => {
                             </FormControl>
 
                             <Stack
-                                direction={{
-                                    xs: "column",
-                                    sm: "row",
-                                }}
-                                spacing={{
-                                    xs: 1.5,
-                                    sm: 2,
-                                }}
-                                sx={{
-                                    width: "100%",
-                                }}
+                                direction={{ xs: "column", sm: "row" }}
+                                spacing={{ xs: 1.5, sm: 2 }}
+                                sx={{ width: "100%" }}
                             >
                                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                                     <DatePicker
@@ -1479,7 +1252,6 @@ const EditProfile = ({ open, onClose }) => {
                                                 ...prev,
                                                 dob: newValue,
                                             }));
-                                            // Clear the error when they change the date
                                             setErrors((prev) => ({ ...prev, dob: "" }));
                                         }}
                                         maxDate={dayjs().subtract(18, "year")}
@@ -1493,12 +1265,7 @@ const EditProfile = ({ open, onClose }) => {
                                                 InputLabelProps: fieldFont,
                                             },
                                         }}
-                                        sx={{
-                                            width: {
-                                                xs: "100%",
-                                                sm: "48%",
-                                            },
-                                        }}
+                                        sx={{ width: { xs: "100%", sm: "48%" } }}
                                     />
                                 </LocalizationProvider>
 
@@ -1508,12 +1275,7 @@ const EditProfile = ({ open, onClose }) => {
                                     name="gender"
                                     size="small"
                                     fullWidth
-                                    sx={{
-                                        width: {
-                                            xs: "100%",
-                                            sm: "48%",
-                                        },
-                                    }}
+                                    sx={{ width: { xs: "100%", sm: "48%" } }}
                                     value={formData?.gender}
                                     onChange={handleChange}
                                     error={!!errors.gender}
@@ -1521,19 +1283,14 @@ const EditProfile = ({ open, onClose }) => {
                                     InputProps={fieldFont}
                                     InputLabelProps={fieldFont}
                                 >
-                                    <MenuItem value="Male" sx={fieldFont.sx}>
-                                        Male
-                                    </MenuItem>
-
-                                    <MenuItem value="Female" sx={fieldFont.sx}>
-                                        Female
-                                    </MenuItem>
+                                    <MenuItem value="Male" sx={fieldFont.sx}>Male</MenuItem>
+                                    <MenuItem value="Female" sx={fieldFont.sx}>Female</MenuItem>
                                 </TextField>
                             </Stack>
 
-                            {/* Profession */}
+                            {/* Profession (optional) */}
                             <TextField
-                                label="Profession"
+                                label="Profession (Optional)"
                                 name="bio"
                                 multiline
                                 rows={3}
@@ -1542,7 +1299,7 @@ const EditProfile = ({ open, onClose }) => {
                                 error={!!errors.bio}
                                 helperText={
                                     errors.bio ||
-                                    "You can share your profession. For example: Software Engineer, Doctor, Teacher."
+                                    "Optional. For example: Software Engineer, Doctor, Teacher."
                                 }
                                 onChange={handleChange}
                                 placeholder="Share a little about what you do..."
@@ -1565,11 +1322,7 @@ const EditProfile = ({ open, onClose }) => {
                                 }
                                 noOptionsText="No matching city"
                                 slotProps={{
-                                    popper: {
-                                        sx: {
-                                            zIndex: 9999,
-                                        },
-                                    },
+                                    popper: { sx: { zIndex: 9999 } },
                                     listbox: {
                                         sx: {
                                             maxHeight: "200px",
@@ -1605,17 +1358,26 @@ const EditProfile = ({ open, onClose }) => {
                                     helperText={errors.city}
                                 />
                             )}
+
+                            {/* ── ZipCode — OPTIONAL, leading-zero-safe ── */}
                             <TextField
-                                label="ZipCode"
+                                label="ZipCode (Optional)"
                                 name="zipcode"
-                                type="number"
+                                type="text"
                                 fullWidth
                                 value={formData?.zipcode || ""}
                                 error={!!errors.zipcode}
                                 helperText={errors.zipcode}
-                                onChange={handleChange}
+                                onChange={(e) => {
+                                    const digits = e.target.value
+                                        .replace(/\D/g, "")
+                                        .slice(0, 5);
+                                    update("zipcode", digits);
+                                }}
                                 inputProps={{
-                                    maxLength: 16,
+                                    maxLength: 5,
+                                    inputMode: "numeric",
+                                    pattern: "[0-9]*",
                                 }}
                                 InputProps={fieldFont}
                                 InputLabelProps={fieldFont}
@@ -1624,16 +1386,10 @@ const EditProfile = ({ open, onClose }) => {
                             {/* Buttons */}
                             <Stack
                                 direction="row"
-                                spacing={{
-                                    xs: 1,
-                                    sm: 1.5,
-                                }}
+                                spacing={{ xs: 1, sm: 1.5 }}
                                 sx={{
                                     width: "100%",
-                                    mt: {
-                                        xs: 0.5,
-                                        sm: 1,
-                                    },
+                                    mt: { xs: 0.5, sm: 1 },
                                     display: "flex",
                                     justifyContent: "flex-end",
                                 }}
@@ -1642,26 +1398,11 @@ const EditProfile = ({ open, onClose }) => {
                                     variant="contained"
                                     size="small"
                                     sx={{
-                                        width: {
-                                            xs: "100%",
-                                            sm: "auto",
-                                        },
-                                        fontSize: {
-                                            xs: "0.75rem",
-                                            sm: "0.85rem",
-                                        },
-                                        py: {
-                                            xs: 0.5,
-                                            sm: 0.75,
-                                        },
-                                        px: {
-                                            xs: 1.5,
-                                            sm: 2.5,
-                                        },
-                                        minWidth: {
-                                            xs: "auto",
-                                            sm: 90,
-                                        },
+                                        width: { xs: "100%", sm: "auto" },
+                                        fontSize: { xs: "0.75rem", sm: "0.85rem" },
+                                        py: { xs: 0.5, sm: 0.75 },
+                                        px: { xs: 1.5, sm: 2.5 },
+                                        minWidth: { xs: "auto", sm: 90 },
                                         bgcolor: "#757575",
                                         color: "#fff",
                                         textTransform: "none",
@@ -1680,32 +1421,15 @@ const EditProfile = ({ open, onClose }) => {
                                     variant="contained"
                                     size="small"
                                     sx={{
-                                        width: {
-                                            xs: "100%",
-                                            sm: "auto",
-                                        },
-                                        fontSize: {
-                                            xs: "0.75rem",
-                                            sm: "0.85rem",
-                                        },
-                                        py: {
-                                            xs: 0.5,
-                                            sm: 0.75,
-                                        },
-                                        px: {
-                                            xs: 1.5,
-                                            sm: 2.5,
-                                        },
-                                        minWidth: {
-                                            xs: "auto",
-                                            sm: 110,
-                                        },
+                                        width: { xs: "100%", sm: "auto" },
+                                        fontSize: { xs: "0.75rem", sm: "0.85rem" },
+                                        py: { xs: 0.5, sm: 0.75 },
+                                        px: { xs: 1.5, sm: 2.5 },
+                                        minWidth: { xs: "auto", sm: 110 },
                                         bgcolor: "#FF9933",
                                         color: "#fff",
                                         textTransform: "none",
-                                        "&:hover": {
-                                            bgcolor: "#ef9104",
-                                        },
+                                        "&:hover": { bgcolor: "#ef9104" },
                                     }}
                                     onClick={handleUpdateProfile}
                                     disabled={submitLoading}
@@ -1735,11 +1459,7 @@ const EditProfile = ({ open, onClose }) => {
                 >
                     <Typography
                         variant="h6"
-                        sx={{
-                            fontWeight: 700,
-                            mb: 3,
-                            fontSize: "1.05rem",
-                        }}
+                        sx={{ fontWeight: 700, mb: 3, fontSize: "1.05rem" }}
                     >
                         Adjust Photo
                     </Typography>

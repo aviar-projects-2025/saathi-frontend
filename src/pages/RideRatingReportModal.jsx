@@ -13,6 +13,7 @@ import Api from "../Api";
 import { toast } from "react-toastify";
 import ToastConfig from "../components/ToastConfig.jsx";
 import ProtectedAvatar from "../components/ProtectedAvatar.jsx";
+import { formatDate } from "../utils/formatDate";
 
 export default function RideRatingReportModal({
     open,
@@ -49,7 +50,6 @@ export default function RideRatingReportModal({
     const targetUserId = String(targetUser?._id || targetUser?.id || "");
     const isSelfTarget = Boolean(currentUserId && targetUserId && currentUserId === targetUserId);
 
-    // If we're asked to rate self, close programmatically
     useEffect(() => {
         if (!open || !isSelfTarget) return;
         console.warn("[RATING MODAL] refusing to rate self — closing");
@@ -164,9 +164,9 @@ export default function RideRatingReportModal({
     const userInitials = `${targetUser?.firstName?.[0] || ""}${targetUser?.lastName?.[0] || ""}`.toUpperCase() || "U";
     const userName = `${targetUser?.firstName || ""} ${targetUser?.lastName || ""}`.trim() || "Community Member";
     const routeLabel = `${ride?.from?.split(",")[0] || "Origin"} to ${ride?.destination?.split(",")[0] || "Destination"}`;
-    const dateLabel = new Date(ride?.startTime).toLocaleDateString("en-US", {
-        month: "2-digit", day: "2-digit", year: "numeric",
-    });
+
+    // ★ TC-11: shared MM/DD/YYYY formatter, always consistent
+    const dateLabel = formatDate(ride?.startTime);
 
     const RATING_TAGS = ["On time", "Friendly", "Safe driving", "Clean car"];
 
@@ -205,7 +205,8 @@ export default function RideRatingReportModal({
                             <Box>
                                 <Typography fontWeight={700} fontSize="0.95rem">{userName}</Typography>
                                 <Typography variant="body2" color="text.secondary" fontSize="0.8rem">
-                                    {routeLabel} • {dateLabel}
+                                    {routeLabel}
+                                    {dateLabel ? ` • ${dateLabel}` : ""}
                                 </Typography>
                             </Box>
                         </Stack>

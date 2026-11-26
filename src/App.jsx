@@ -129,7 +129,7 @@ function App() {
             <Route element={<UserLayout />}>
               <Route path="/invite" element={<Invite />} />
               <Route path="/community" element={<Community />} />
-              <Route path="/my-referalls" element={<MyReferrals />} />
+              <Route path="/my-referrals" element={<MyReferrals />} />
               <Route path="/community/room/:roomId" element={<RoomDetails />} />
             </Route>
           </Route>

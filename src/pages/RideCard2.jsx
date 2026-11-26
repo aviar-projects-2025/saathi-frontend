@@ -1,3 +1,4 @@
+// components/RideCard2.jsx
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import {
@@ -10,8 +11,9 @@ import { useUser } from "../context/userConetext.jsx";
 import { useRide } from "../context/RideContext";
 import Api from "../Api";
 import ProtectedAvatar from "../components/ProtectedAvatar.jsx";
-// ★ ADDED: Import ChatModal
 import ChatModal from "./ChatModal";
+import { formatDate } from "../utils/formatDate";
+import { derivePublicLocationLabel } from "../utils/location";
 
 const FONT = '"DM Sans", "Inter", "Segoe UI", Roboto, Arial, sans-serif';
 const BRAND = "#B5440F";
@@ -45,16 +47,14 @@ export default function RideList({ ride, onIcanHelp }) {
   const { refreshRide } = useRide();
 
   const [myRequestedRides, setMyRequestedRides] = useState([]);
-  const [myHelpProposals, setMyHelpProposals] = useState([]); // ★ NEW
+  const [myHelpProposals, setMyHelpProposals] = useState([]);
   const [selectedRide, setSelectedRide] = useState(null);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [openEditModal, setOpenEditModal] = useState(false);
   const [selectedRideModal, setSelectedRideModal] = useState(null);
 
-  // Profile and Chat Modals
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null);
-  // ★ ADDED: Chat Modal State
   const [chatModalOpen, setChatModalOpen] = useState(false);
   const [chatUser, setChatUser] = useState(null);
 
@@ -69,19 +69,15 @@ export default function RideList({ ride, onIcanHelp }) {
   const isOffer = rideType === "offer";
   const isRequest = rideType === "request";
 
-  /* ───────────── API ───────────── */
   const myReqRides = async () => {
     try {
-      const res = await axios.get(
-        `${Api}/bookride/${storedUser?.id}?type=requested`,
-      );
+      const res = await axios.get(`${Api}/bookride/${storedUser?.id}?type=requested`);
       if (res.data.success) setMyRequestedRides(res.data.data || []);
     } catch (error) {
       console.log(error.message);
     }
   };
 
-  // ★ NEW: fetch my sent help proposals
   const fetchMyHelpProposals = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -109,30 +105,33 @@ export default function RideList({ ride, onIcanHelp }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshRide]);
 
-  /* ───────────── Display values ───────────── */
   const userName =
     `${user.firstName || ""} ${user.lastName || ""}`.trim() || "Saathi User";
   const initials = `${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`;
   const userProfile = user?.profileImageUrl;
 
-  const routeFrom = isFlight ? ride.fromAirport || ride.from : ride.from;
-  const routeTo = isFlight ? ride.toAirport || ride.destination : ride.destination;
+  // ★ TC-1: public labels only, never the street address
+  const routeFrom = isFlight
+    ? ride.fromAirport || ride.fromPublic || derivePublicLocationLabel(ride.from)
+    : ride.fromPublic || derivePublicLocationLabel(ride.from);
+  const routeTo = isFlight
+    ? ride.toAirport || ride.destinationPublic || derivePublicLocationLabel(ride.destination)
+    : ride.destinationPublic || derivePublicLocationLabel(ride.destination);
 
-  const dateObj = ride.startTime ? new Date(ride.startTime) : null;
-  const dateStr = dateObj
-    ? dateObj.toLocaleDateString("en-US", {
-      weekday: "short", month: "2-digit", day: "2-digit", year: "numeric",
-    })
-    : "No date";
-  const timeStr = dateObj
-    ? dateObj.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
-    : "";
+  // ★ TC-11: MM/DD/YYYY
+  const dateStr = formatDate(ride.startTime) || "No date";
+  const timeStr =
+    ride.startTime && !isNaN(new Date(ride.startTime).getTime())
+      ? new Date(ride.startTime).toLocaleTimeString("en-US", {
+          hour: "numeric",
+          minute: "2-digit",
+        })
+      : "";
 
   const languages = Array.isArray(ride?.createdBy?.language)
     ? ride.createdBy?.language.join(", ")
     : "";
 
-  /* ───────────── Request state (for offers) ───────────── */
   const pendingRequest = myRequestedRides.find(
     (item) => getRideId(item.rideId) === ride._id,
   );
@@ -157,7 +156,6 @@ export default function RideList({ ride, onIcanHelp }) {
   ).length;
   const isBlocked = cancelledRequestCount >= 3;
 
-  /* ───────────── Help proposal state (for requests) ★ NEW ───────────── */
   const myProposalForThisRide = myHelpProposals.find((p) => {
     const reqRideId =
       typeof p?.requestRideId === "object" ? p.requestRideId?._id : p?.requestRideId;
@@ -169,12 +167,9 @@ export default function RideList({ ride, onIcanHelp }) {
   const myHelpWasRejected = myProposalStatus === "REJECTED";
   const myHelpWasCancelled = myProposalStatus === "CANCELLED";
 
-  /* ★ Ride-level state — did the owner close the request (someone else accepted)? */
   const isRequestClosed =
-    isRequest &&
-    String(ride?.status || "").toUpperCase() === "CLOSED";
+    isRequest && String(ride?.status || "").toUpperCase() === "CLOSED";
 
-  /* ───────────── Seats ───────────── */
   const availableSeats = Math.max(Number(ride.availableSeats || 0), 0);
   const remainingSeatsForUser = isFlight ? 1 : availableSeats;
   const noSeats = !isFlight && availableSeats <= 0;
@@ -196,10 +191,9 @@ export default function RideList({ ride, onIcanHelp }) {
 
   const isFlightBookingClosed =
     isFlight &&
-    dateObj &&
-    new Date() >= new Date(dateObj.getTime() - 2 * 60 * 60 * 1000);
+    ride.startTime &&
+    new Date() >= new Date(new Date(ride.startTime).getTime() - 2 * 60 * 60 * 1000);
 
-  /* ───────────── Subtitle ───────────── */
   const subtitle = [
     userName,
     isFlight ? "Flight companion" : ride.modeOfTravel,
@@ -208,7 +202,6 @@ export default function RideList({ ride, onIcanHelp }) {
     .filter(Boolean)
     .join(" · ");
 
-  /* ───────────── Chips ───────────── */
   const durationText =
     ride?.duration != null
       ? ride.duration >= 60
@@ -239,14 +232,8 @@ export default function RideList({ ride, onIcanHelp }) {
         ...CHIP.slate,
       });
     }
-    if (
-      ride.luggageSpace &&
-      ride.luggageSpace.trim().toLowerCase() !== "none"
-    ) {
-      chips.push({
-        label: ride.luggageSpace,
-        ...CHIP.blue,
-      });
+    if (ride.luggageSpace && ride.luggageSpace.trim().toLowerCase() !== "none") {
+      chips.push({ label: ride.luggageSpace, ...CHIP.blue });
     }
   }
 
@@ -270,7 +257,6 @@ export default function RideList({ ride, onIcanHelp }) {
     });
   }
 
-  // ★ Help proposal chip for request rides
   if (isRequest && alreadyOfferedHelp) {
     chips.push({
       label: myProposalStatus === "ACCEPTED" ? "Your help was accepted" : "Help offer sent",
@@ -281,7 +267,6 @@ export default function RideList({ ride, onIcanHelp }) {
     chips.push({ label: "Request closed", ...CHIP.red });
   }
 
-  /* ───────────── Button Logic ───────────── */
   const isDanger = isRejected || isBlocked;
 
   const buttonDisabled =
@@ -298,52 +283,32 @@ export default function RideList({ ride, onIcanHelp }) {
   let baseLabel = isOffer ? "Request seat" : "I can drive";
 
   let buttonLabel;
-  if (womenOnlyMismatch) {
-    buttonLabel = "Women riders only";
-  } else if (genderMismatch) {
-    buttonLabel = `Only ${ride.genderPreference} allowed`;
-  } else if (isRejected) {
-    buttonLabel = "Rejected";
-  } else if (isBlocked) {
-    buttonLabel = "You cancelled too many times";
-  } else if (isFlightBookingClosed) {
-    buttonLabel = "Booking closed";
-  } else if (isRequest && alreadyOfferedHelp) {
-    buttonLabel = myProposalStatus === "ACCEPTED" ? "Offer accepted" : "Offer sent";
-  } else if (isRequest && isRequestClosed) {
-    buttonLabel = "Request closed";
-  } else if (isRequest && myHelpWasRejected) {
-    buttonLabel = "Offer rejected";
-  } else if (isRequest && myHelpWasCancelled) {
-    buttonLabel = "Offer cancelled";
-  } else if (alreadyRequested) {
+  if (womenOnlyMismatch) buttonLabel = "Women riders only";
+  else if (genderMismatch) buttonLabel = `Only ${ride.genderPreference} allowed`;
+  else if (isRejected) buttonLabel = "Rejected";
+  else if (isBlocked) buttonLabel = "You cancelled too many times";
+  else if (isFlightBookingClosed) buttonLabel = "Booking closed";
+  else if (isRequest && alreadyOfferedHelp) buttonLabel = myProposalStatus === "ACCEPTED" ? "Offer accepted" : "Offer sent";
+  else if (isRequest && isRequestClosed) buttonLabel = "Request closed";
+  else if (isRequest && myHelpWasRejected) buttonLabel = "Offer rejected";
+  else if (isRequest && myHelpWasCancelled) buttonLabel = "Offer cancelled";
+  else if (alreadyRequested) {
     if (isOffer) {
-      buttonLabel = availableSeats > 0
-        ? `Edit request (${availableSeats} left)`
-        : "View request";
+      buttonLabel = availableSeats > 0 ? `Edit request (${availableSeats} left)` : "View request";
     } else {
       buttonLabel = "View request";
     }
-  } else if (isFlight) {
-    buttonLabel = "Request companion";
-  } else if (!isOffer && !isRequest) {
-    buttonLabel = "Request seat";
-  } else if (isOffer && availableSeats <= 0) {
-    buttonLabel = "No seats available";
-  } else {
-    buttonLabel = baseLabel;
-  }
+  } else if (isFlight) buttonLabel = "Request companion";
+  else if (!isOffer && !isRequest) buttonLabel = "Request seat";
+  else if (isOffer && availableSeats <= 0) buttonLabel = "No seats available";
+  else buttonLabel = baseLabel;
 
   const handleButtonClick = (event) => {
     event.stopPropagation();
-
     if (isRequest) {
-      if (typeof onIcanHelp === "function") {
-        onIcanHelp(ride);
-      }
+      if (typeof onIcanHelp === "function") onIcanHelp(ride);
       return;
     }
-
     setSelectedRide(ride);
     setSelectedRequest(alreadyRequested ? currentRequest : null);
     setOpenEditModal(true);
@@ -415,24 +380,11 @@ export default function RideList({ ride, onIcanHelp }) {
               {`${routeFrom || "—"} → ${routeTo || "—"}`}
             </Typography>
 
-            <Typography
-              noWrap
-              sx={{ fontFamily: FONT, fontSize: FS.subtitle, color: "#6B6B6B" }}
-            >
+            <Typography noWrap sx={{ fontFamily: FONT, fontSize: FS.subtitle, color: "#6B6B6B" }}>
               {subtitle}
             </Typography>
 
-            <Box
-              sx={{
-                display: "flex",
-                flexWrap: "wrap",
-                alignItems: "center",
-                mt: 0.5,
-                gap: { xs: 0.55, md: 0.85 },
-                width: "100%",
-                minWidth: 0,
-              }}
-            >
+            <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", mt: 0.5, gap: { xs: 0.55, md: 0.85 }, width: "100%", minWidth: 0 }}>
               {chips.map((chip) => (
                 <Chip
                   key={chip.label}
@@ -463,18 +415,7 @@ export default function RideList({ ride, onIcanHelp }) {
             </Box>
           </Box>
 
-          <Box
-            sx={{
-              flexShrink: 0,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "flex-end",
-              justifyContent: "space-between",
-              gap: 0.75,
-              textAlign: "right",
-              whiteSpace: "nowrap",
-            }}
-          >
+          <Box sx={{ flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "flex-end", justifyContent: "space-between", gap: 0.75, textAlign: "right", whiteSpace: "nowrap" }}>
             <Box>
               <Typography sx={{ fontFamily: FONT, fontSize: FS.date, fontWeight: 700, color: "#1A1A1A", lineHeight: 1.3 }}>
                 {dateStr}
@@ -484,10 +425,7 @@ export default function RideList({ ride, onIcanHelp }) {
               </Typography>
             </Box>
 
-            <Tooltip
-              title={!isProfileComplete ? "Complete your profile to 100% before requesting a ride." : ""}
-              arrow
-            >
+            <Tooltip title={!isProfileComplete ? "Complete your profile to 100% before requesting a ride." : ""} arrow>
               <Box component="span">
                 <Button
                   variant="contained"
@@ -528,7 +466,6 @@ export default function RideList({ ride, onIcanHelp }) {
         </Paper>
       </Box>
 
-      {/* ★ UPDATED: Profile Modal wires directly to Chat Modal */}
       <ProfileModal
         open={profileModalOpen}
         selectedProfile={selectedProfile}
@@ -540,20 +477,17 @@ export default function RideList({ ride, onIcanHelp }) {
         }}
       />
 
-      {/* ★ ADDED: Chat Modal */}
       <ChatModal
         open={chatModalOpen}
         selectedUser={chatUser}
-        onClose={() => {
-          setChatModalOpen(false);
-          setChatUser(null);
-        }}
+        onClose={() => { setChatModalOpen(false); setChatUser(null); }}
       />
 
       {selectedRideModal && (
         <RideDetailsModal
           onClose={() => setSelectedRideModal(null)}
           ride={selectedRideModal}
+          viewerIsAcceptedPassenger={isAccepted}
         />
       )}
 
