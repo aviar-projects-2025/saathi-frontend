@@ -24,7 +24,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import PhoneIcon from "@mui/icons-material/Phone";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -36,11 +36,10 @@ import CloseIcon from "@mui/icons-material/Close";
 import Api from "../../Api";
 import US_Cities from "../../config/US_Cities.json";
 import ToastConfig from "../ToastConfig";
-import uploadToCloudinary from "../uploadToCloudinary";
-import { uploadImageToS3 } from "../../utils/s3Upload";
-import ProtectedAvatar from "../ProtectedAvatar";
+import uploadImageToS3 from "../../utils/s3Upload";
 import LegalModal from "../LegalModal";
 import saathilogo1 from "../../assets/saathilogo1.png";
+import { formatDate } from "../../utils/formatDate";
 
 const ORANGE = "#C83F08";
 const NAVY = "#132858";
@@ -104,24 +103,13 @@ const filterCityOptions = (options, { inputValue }) => {
 };
 
 /* ─────────────────────────────────────────────────────────────
-   Name rules — SINGLE source of truth, used by:
-     • sanitizeName() in the onChange handler (input-time filtering)
-     • Yup's .matches() in the validation schema (submit-time check)
-
-   Rules:
-     • Must start with a letter (any script)
-     • Allows letters (\p{L}) + combining marks (\p{M}) throughout
-     • Space, straight apostrophe, curly apostrophe, hyphen are
-       allowed as SEPARATORS, but only between letters — never at
-       the start or end
-     • Digits, other punctuation, emoji, tabs, newlines are rejected
+   Name rules — SINGLE source of truth
    ───────────────────────────────────────────────────────────── */
 const NAME_PATTERN = new RegExp(
   String.raw`^\p{L}[\p{L}\p{M}]*(?:[ '\u2019-][\p{L}\p{M}]+)*$`,
   "u"
 );
 
-// For stripping at input time: keep only letters/marks and allowed separators.
 const NAME_STRIP = new RegExp(String.raw`[^\p{L}\p{M} '\u2019-]`, "gu");
 
 const sanitizeName = (value) => String(value ?? "").replace(NAME_STRIP, "");
@@ -674,7 +662,7 @@ const Register = () => {
     await handleSendOtp();
   };
 
-  /* ================= Photo crop (copied from EditProfile) ================= */
+  /* ================= Photo crop ================= */
   const getBaseScale = (w, h, cropSize) =>
     w && h ? Math.max(cropSize / w, cropSize / h) : 1;
 
@@ -899,7 +887,6 @@ const Register = () => {
   });
 
   /* ================= Submit ================= */
-
   const registerSubmit = async (values, { setSubmitting }) => {
     if (!isOtpVerified || !registrationCredential) {
       setServerError("Please verify your mobile number again.");
@@ -1072,13 +1059,7 @@ const Register = () => {
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Member since{" "}
-              {invitation?.createdAt
-                ? new Date(invitation.createdAt).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })
-                : "N/A"}
+              {formatDate(invitation?.createdAt) || "N/A"}
               {" · "}
               {invitation?.city || "Dallas, TX"}
             </Typography>
@@ -1419,7 +1400,9 @@ const Register = () => {
             lastName: "",
             city: "",
             gender: "",
-            languages: ["Tamil", "English"],
+            // TC-6 fix: do NOT pre-select the referrer's languages.
+            // Languages are optional; leave empty.
+            languages: [],
           }}
           validationSchema={validationSchema}
           onSubmit={registerSubmit}
@@ -1434,247 +1417,268 @@ const Register = () => {
             isSubmitting,
             setFieldValue,
             setFieldTouched,
-          }) => (
-            <form onSubmit={handleSubmit}>
-              <Stack spacing={2}>
-                {serverError && (
-                  <Alert
-                    severity="error"
-                    onClose={() => setServerError("")}
-                    sx={{ borderRadius: 2 }}
-                  >
-                    {serverError}
-                  </Alert>
-                )}
+          }) => {
+            /* ── Dynamic required-fields helper for the Alert ── */
+            const missing = [];
+            if (!profileImage) missing.push("a profile photo");
+            if (!values.city?.trim()) missing.push("your city");
 
-                <Stack direction="row" spacing={1.5}>
-                  <TextField
-                    fullWidth
-                    label="First name"
-                    name="firstName"
-                    type="text"
-                    value={values.firstName}
-                    onChange={(event) => {
-                      // Strip digits / disallowed chars before Formik sees them.
-                      // 3rd arg `false` = do NOT validate on every keystroke;
-                      // blur/submit will validate (via onBlur + onSubmit).
-                      setFieldValue(
-                        "firstName",
-                        sanitizeName(event.target.value),
-                        false
-                      );
-                    }}
-                    onBlur={handleBlur}
-                    error={touched.firstName && Boolean(errors.firstName)}
-                    helperText={touched.firstName && errors.firstName}
-                    inputProps={{
-                      maxLength: 40,
-                      inputMode: "text",
-                      autoComplete: "given-name",
-                    }}
-                    sx={inputSx}
-                  />
-                  <TextField
-                    fullWidth
-                    label="Last name"
-                    name="lastName"
-                    type="text"
-                    value={values.lastName}
-                    onChange={(event) => {
-                      setFieldValue(
-                        "lastName",
-                        sanitizeName(event.target.value),
-                        false
-                      );
-                    }}
-                    onBlur={handleBlur}
-                    error={touched.lastName && Boolean(errors.lastName)}
-                    helperText={touched.lastName && errors.lastName}
-                    inputProps={{
-                      maxLength: 40,
-                      inputMode: "text",
-                      autoComplete: "family-name",
-                    }}
-                    sx={inputSx}
-                  />
-                </Stack>
+            return (
+              <form onSubmit={handleSubmit}>
+                <Stack spacing={2}>
+                  {serverError && (
+                    <Alert
+                      severity="error"
+                      onClose={() => setServerError("")}
+                      sx={{ borderRadius: 2 }}
+                    >
+                      {serverError}
+                    </Alert>
+                  )}
 
-                <Autocomplete
-                  fullWidth
-                  size="medium"
-                  options={AUTOCOMPLETE_OPTIONS}
-                  value={
-                    isOtherCity
-                      ? OTHER_OPTION
-                      : OPTIONS.find((option) => option.label === values.city) || null
-                  }
-                  onChange={(event, newValue) => {
-                    const selectedOther = newValue?.abbr === "OTHER";
-
-                    setIsOtherCity(selectedOther);
-                    setFieldValue("city", selectedOther ? "" : newValue?.label || "");
-                    setFieldTouched("city", true, false);
-                  }}
-                  onBlur={() => setFieldTouched("city", true)}
-                  filterOptions={filterCityOptions}
-                  getOptionLabel={(option) => option?.label || ""}
-                  isOptionEqualToValue={(option, selected) =>
-                    option.abbr === selected.abbr && option.city === selected.city
-                  }
-                  noOptionsText="No matching city"
-                  slotProps={{
-                    popper: { sx: { zIndex: 1500 } },
-                    listbox: {
-                      sx: {
-                        maxHeight: 240,
-                        overflowY: "auto",
-                      },
-                    },
-                  }}
-                  renderInput={(params) => (
+                  <Stack direction="row" spacing={1.5}>
                     <TextField
-                      {...params}
-                      label="City, State"
-                      placeholder="Search your city or state"
+                      fullWidth
+                      label="First name"
+                      name="firstName"
+                      type="text"
+                      value={values.firstName}
+                      onChange={(event) => {
+                        setFieldValue(
+                          "firstName",
+                          sanitizeName(event.target.value),
+                          false
+                        );
+                      }}
+                      onBlur={handleBlur}
+                      error={touched.firstName && Boolean(errors.firstName)}
+                      helperText={touched.firstName && errors.firstName}
+                      inputProps={{
+                        maxLength: 40,
+                        inputMode: "text",
+                        autoComplete: "given-name",
+                      }}
+                      sx={inputSx}
+                    />
+                    <TextField
+                      fullWidth
+                      label="Last name"
+                      name="lastName"
+                      type="text"
+                      value={values.lastName}
+                      onChange={(event) => {
+                        setFieldValue(
+                          "lastName",
+                          sanitizeName(event.target.value),
+                          false
+                        );
+                      }}
+                      onBlur={handleBlur}
+                      error={touched.lastName && Boolean(errors.lastName)}
+                      helperText={touched.lastName && errors.lastName}
+                      inputProps={{
+                        maxLength: 40,
+                        inputMode: "text",
+                        autoComplete: "family-name",
+                      }}
+                      sx={inputSx}
+                    />
+                  </Stack>
+
+                  <Autocomplete
+                    fullWidth
+                    size="medium"
+                    options={AUTOCOMPLETE_OPTIONS}
+                    value={
+                      isOtherCity
+                        ? OTHER_OPTION
+                        : OPTIONS.find((option) => option.label === values.city) || null
+                    }
+                    onChange={(event, newValue) => {
+                      const selectedOther = newValue?.abbr === "OTHER";
+
+                      setIsOtherCity(selectedOther);
+                      setFieldValue("city", selectedOther ? "" : newValue?.label || "");
+                      setFieldTouched("city", true, false);
+                    }}
+                    onBlur={() => setFieldTouched("city", true)}
+                    filterOptions={filterCityOptions}
+                    getOptionLabel={(option) => option?.label || ""}
+                    isOptionEqualToValue={(option, selected) =>
+                      option.abbr === selected.abbr && option.city === selected.city
+                    }
+                    noOptionsText="No matching city"
+                    slotProps={{
+                      popper: { sx: { zIndex: 1500 } },
+                      listbox: {
+                        sx: {
+                          maxHeight: 240,
+                          overflowY: "auto",
+                        },
+                      },
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="City, State"
+                        placeholder="Search your city or state"
+                        error={touched.city && Boolean(errors.city)}
+                        helperText={touched.city && errors.city}
+                        sx={inputSx}
+                      />
+                    )}
+                  />
+
+                  {isOtherCity && (
+                    <TextField
+                      fullWidth
+                      label="Enter City, State"
+                      name="city"
+                      placeholder="Enter your city and state"
+                      value={values.city}
+                      onChange={(event) => {
+                        setFieldValue("city", event.target.value);
+                      }}
+                      onBlur={() => setFieldTouched("city", true)}
                       error={touched.city && Boolean(errors.city)}
                       helperText={touched.city && errors.city}
+                      inputProps={{ maxLength: 100 }}
                       sx={inputSx}
                     />
                   )}
-                />
 
-                {isOtherCity && (
+                  <Box sx={{ width: "100%", minWidth: 0 }}>
+                    <Typography fontWeight={700} fontSize={14} sx={{ mb: 1 }}>
+                      Languages spoken{" "}
+                      <Typography component="span" variant="caption">
+                        (optional)
+                      </Typography>
+                    </Typography>
+
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: 0.8,
+                        width: "100%",
+                        minWidth: 0,
+                        overflow: "hidden",
+                      }}
+                    >
+                      {LANGUAGES.map((language) => {
+                        const selected = values.languages.includes(language);
+                        return (
+                          <Chip
+                            key={language}
+                            label={language}
+                            clickable
+                            onClick={() => {
+                              const nextLanguages = selected
+                                ? values.languages.filter(
+                                  (item) => item !== language
+                                )
+                                : [...values.languages, language];
+                              setFieldValue("languages", nextLanguages);
+                            }}
+                            sx={{
+                              borderRadius: "20px",
+                              backgroundColor: selected ? ORANGE : "#FFFFFF",
+                              color: selected ? "#FFFFFF" : "#25211E",
+                              border: "1px solid #DDD5CC",
+                              fontWeight: selected ? 700 : 400,
+                              fontSize: { xs: 12, sm: 13 },
+                              height: { xs: 28, sm: 32 },
+                              maxWidth: "100%",
+                              "& .MuiChip-label": {
+                                px: { xs: 1.2, sm: 1.5 },
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                              },
+                              "&:hover": {
+                                backgroundColor: selected ? "#A93205" : "#F3E9E1",
+                              },
+                            }}
+                          />
+                        );
+                      })}
+                    </Box>
+                  </Box>
+
+                  <FormControl fullWidth>
+                    <TextField
+                      select
+                      fullWidth
+                      label="Gender"
+                      name="gender"
+                      value={values.gender}
+                      onChange={handleChange}
+                      sx={inputSx}
+                    >
+                      <MenuItem value="">Prefer not to say</MenuItem>
+                      <MenuItem value="Female">Female</MenuItem>
+                      <MenuItem value="Male">Male</MenuItem>
+                    </TextField>
+                    <Typography
+                      variant="caption"
+                      sx={{ color: "#625D57", mt: 0.5 }}
+                    >
+                      Used only for women-only rides.
+                    </Typography>
+                  </FormControl>
+
                   <TextField
                     fullWidth
-                    label="Enter City, State"
-                    name="city"
-                    placeholder="Enter your city and state"
-                    value={values.city}
-                    onChange={(event) => {
-                      setFieldValue("city", event.target.value);
-                    }}
-                    onBlur={() => setFieldTouched("city", true)}
-                    error={touched.city && Boolean(errors.city)}
-                    helperText={touched.city && errors.city}
-                    inputProps={{ maxLength: 100 }}
+                    label="Referral code"
+                    value={invitation?.referralCode || ""}
+                    disabled
                     sx={inputSx}
                   />
-                )}
 
-                <Box sx={{ width: "100%", minWidth: 0 }}>
-                  <Typography fontWeight={700} fontSize={14} sx={{ mb: 1 }}>
-                    Languages spoken{" "}
-                    <Typography component="span" variant="caption">
-                      (optional)
-                    </Typography>
-                  </Typography>
+                  {/* ── TC-5 fix: dynamic progress message ── */}
+                  {missing.length === 0 ? (
+                    <Alert
+                      severity="success"
+                      sx={{
+                        borderRadius: 2,
+                        bgcolor: "#E6F4EA",
+                        color: "#14532D",
+                        "& .MuiAlert-icon": { color: "#14532D" },
+                      }}
+                    >
+                      All required details are in. Submit for approval to
+                      finish. Posting and requesting unlock after your
+                      referrer approves you.
+                    </Alert>
+                  ) : (
+                    <Alert
+                      severity="info"
+                      sx={{
+                        borderRadius: 2,
+                        bgcolor: "#E8F0FE",
+                        color: "#1A3E8A",
+                        "& .MuiAlert-icon": { color: "#1A3E8A" },
+                      }}
+                    >
+                      To reach 100%, please add{" "}
+                      <strong>{missing.join(" and ")}</strong>. Posting and
+                      requesting unlock at 100% and after approval.
+                    </Alert>
+                  )}
 
-                  <Box
-                    sx={{
-                      display: "flex",
-                      flexWrap: "wrap",
-                      gap: 0.8,
-                      width: "100%",
-                      minWidth: 0,
-                      overflow: "hidden",
-                    }}
-                  >
-                    {LANGUAGES.map((language) => {
-                      const selected = values.languages.includes(language);
-                      return (
-                        <Chip
-                          key={language}
-                          label={language}
-                          clickable
-                          onClick={() => {
-                            const nextLanguages = selected
-                              ? values.languages.filter(
-                                (item) => item !== language
-                              )
-                              : [...values.languages, language];
-                            setFieldValue("languages", nextLanguages);
-                          }}
-                          sx={{
-                            borderRadius: "20px",
-                            backgroundColor: selected ? ORANGE : "#FFFFFF",
-                            color: selected ? "#FFFFFF" : "#25211E",
-                            border: "1px solid #DDD5CC",
-                            fontWeight: selected ? 700 : 400,
-                            fontSize: { xs: 12, sm: 13 },
-                            height: { xs: 28, sm: 32 },
-                            maxWidth: "100%",
-                            "& .MuiChip-label": {
-                              px: { xs: 1.2, sm: 1.5 },
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                            },
-                            "&:hover": {
-                              backgroundColor: selected ? "#A93205" : "#F3E9E1",
-                            },
-                          }}
-                        />
-                      );
-                    })}
-                  </Box>
-                </Box>
-
-                <FormControl fullWidth>
-                  <TextField
-                    select
+                  <Button
+                    type="submit"
                     fullWidth
-                    label="Gender"
-                    name="gender"
-                    value={values.gender}
-                    onChange={handleChange}
-                    sx={inputSx}
+                    disabled={isSubmitting || submitting || !isOtpVerified}
+                    sx={{ ...primaryButtonSx, mt: 1 }}
                   >
-                    <MenuItem value="">Prefer not to say</MenuItem>
-                    <MenuItem value="Female">Female</MenuItem>
-                    <MenuItem value="Male">Male</MenuItem>
-                    {/* <MenuItem value="Other">Other</MenuItem> */}
-                  </TextField>
-                  <Typography
-                    variant="caption"
-                    sx={{ color: "#625D57", mt: 0.5 }}
-                  >
-                    Used only for women-only rides.
-                  </Typography>
-                </FormControl>
-
-                <TextField
-                  fullWidth
-                  label="Referral code"
-                  value={invitation?.referralCode || ""}
-                  disabled
-                  sx={inputSx}
-                />
-
-                <Alert
-                  severity="info"
-                  sx={{
-                    borderRadius: 2,
-                    bgcolor: "#E8F0FE",
-                    color: "#1A3E8A",
-                    "& .MuiAlert-icon": { color: "#1A3E8A" },
-                  }}
-                >
-                  Profile 80% complete. Add a photo to finish. Posting and
-                  requesting unlock at 100% and after approval.
-                </Alert>
-
-                <Button
-                  type="submit"
-                  fullWidth
-                  disabled={isSubmitting || submitting || !isOtpVerified}
-                  sx={{ ...primaryButtonSx, mt: 1 }}
-                >
-                  {isSubmitting || submitting
-                    ? "Submitting..."
-                    : "Submit for approval"}
-                </Button>
-              </Stack>
-            </form>
-          )}
+                    {isSubmitting || submitting
+                      ? "Submitting..."
+                      : "Submit for approval"}
+                  </Button>
+                </Stack>
+              </form>
+            );
+          }}
         </Formik>
 
         {/* ---- Crop modal ---- */}

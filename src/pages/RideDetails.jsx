@@ -74,6 +74,10 @@ import FlagIcon from "@mui/icons-material/Flag";
 import FemaleIcon from "@mui/icons-material/Female";
 import ProtectedAvatar from "../components/ProtectedAvatar";
 
+// ★ TC-11: shared MM/DD/YYYY formatter
+import { formatDate } from "../utils/formatDate";
+import dayjs from "dayjs";
+
 // ── Design tokens ────────────────────────────────────────────────────────
 const TOKENS = {
   paper: "#ffffff",
@@ -122,20 +126,6 @@ const statusStamp = {
   FULL: { label: "FILLED", color: TOKENS.paper, bg: TOKENS.green },
   CLOSED: { label: "VOID", color: TOKENS.red, bg: TOKENS.redSoft },
 };
-
-// function requestVisual(status) {
-//   switch (status?.toUpperCase()) {
-//     case 'ACCEPTED':
-//     case 'APPROVED':
-//       return { label: 'Approved', color: TOKENS.green, bg: TOKENS.greenSoft };
-//     case 'REJECTED':
-//       return { label: 'Rejected', color: TOKENS.red, bg: TOKENS.redSoft };
-//     default:
-//       return { label: 'Cancelled', color: TOKENS.red, bg: TOKENS.redSoft };
-
-//       // return { label: 'Pending', color: TOKENS.amber, bg: TOKENS.amberSoft };
-//   }
-// }
 
 const requestVisual = (request) => {
   const status = request?.status;
@@ -189,14 +179,6 @@ const requestVisual = (request) => {
     };
   }
 
-  // if (status === "AUTO_REJECTED") {
-  //   return {
-  //     label: "Auto Rejected",
-  //     color: TOKENS.red,
-  //     bg: TOKENS.redSoft,
-  //   };
-  // }
-
   return {
     label: "",
     color: "transparent",
@@ -216,12 +198,10 @@ function stationCode(name = "") {
     .toUpperCase();
 }
 
-
-
 const formFrom = (ride) => ride?.from || "—";
 const formTo = (ride) => ride?.destination || "—";
 
-// ── Perforated tear-line (the signature ticket element) ─────────────────
+// ── Perforated tear-line ────────────────────────────────────────────────
 function Perforation() {
   return (
     <Box sx={{ position: "relative", my: { xs: 2, sm: 2.5 } }}>
@@ -251,7 +231,7 @@ function Perforation() {
   );
 }
 
-// ── A single ticket field (label + mono value) ───────────────────────────
+// ── A single ticket field ────────────────────────────────────────────────
 function Field({ icon: Icon, label, value, span }) {
   return (
     <Box sx={{ gridColumn: span ? "1 / -1" : "auto" }}>
@@ -375,8 +355,6 @@ function PassengerStub({
     setConfirmState({ open: false, action: null });
   };
 
-  // ⋮ menu → "Approved Seat Rejection" dialog.
-  // Rejects BOTH approved AND pending (scope=all), so the request fully closes.
   const handleRejectApproved = async () => {
     if (!selectedRequest || rejectApprovedLoading) return;
 
@@ -387,7 +365,6 @@ function PassengerStub({
     const pending = Number(selectedRequest.pendingReqSeats || 0);
     const totalToReject = approved + pending;
 
-    // Optimistic: clear BOTH pools + status REJECTED
     onRequestUpdated?.(selectedRequest._id, {
       status: "REJECTED",
       approvedSeats: 0,
@@ -429,14 +406,10 @@ function PassengerStub({
     }
 
     if (confirmState.action === "rejectPending") {
-      // Banner reject → ONLY pending seats
       onReject(request._id, "pending");
       return;
     }
 
-    // "reject" — main row reject button
-    //   - If approved seats exist, this rejects everything (scope=all)
-    //   - If only pending exists, scope=pending is enough
     const scope = approvedSeats > 0 ? "all" : "pending";
     onReject(request._id, scope);
   };
@@ -445,7 +418,6 @@ function PassengerStub({
     setConfirmState({ open: false, action: null });
   };
 
-  // Determine dialog text
   const isRejectPending = confirmState.action === "rejectPending";
   const isRejectAll =
     confirmState.action === "reject" && approvedSeats > 0;
@@ -631,7 +603,7 @@ function PassengerStub({
               </>
             )}
 
-            {v.label === "Approved" && !isCurrentRide && !isRideFinished &&(
+            {v.label === "Approved" && !isCurrentRide && !isRideFinished && (
               <IconButton
                 onClick={(event) => handleMenuOpen(event, request)}
                 sx={{
@@ -762,7 +734,6 @@ function PassengerStub({
               {isApproveBusy ? <CircularProgress size={16} color="inherit" /> : <CheckCircleIcon sx={{ fontSize: 16 }} />}
             </IconButton>
 
-            {/* Banner reject → reject ONLY the pending seats (approved stays intact) */}
             <IconButton
               sx={{ color: "red", bgcolor: "rgba(255,0,0,0.1)", "&:hover": { bgcolor: "rgba(255,0,0,0.2)" } }}
               onClick={(e) => askConfirm("rejectPending", e)}
@@ -774,7 +745,6 @@ function PassengerStub({
         </Box>
       )}
 
-      {/* ── Confirmation Modal ─────────────────────────────────────────── */}
       <Dialog
         open={confirmState.open}
         onClose={(event, reason) => {
@@ -885,26 +855,16 @@ export default function RideDetailsModal({
   const isMd = useMediaQuery(theme.breakpoints.up("md"));
 
   const isRideFinished =
-  ride?.travelStatus === "Completed" || ride?.travelStatus === "Cancelled";
+    ride?.travelStatus === "Completed" || ride?.travelStatus === "Cancelled";
 
-  // console.log(requests, 'requests')
   const pendingMember = requests.flatMap((item) => item?.pendingMembers || []);
   const isStarted = ride?.travelStatus === "Started";
-  const startDate = new Date(ride?.startTime);
-  const dateLabel = !isNaN(startDate)
-    ? startDate.toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    })
-    : "—";
-  const timeLabel = !isNaN(startDate)
-    ? startDate.toLocaleTimeString("en-IN", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    })
-    : "—";
+
+  // ★ TC-11 fix: shared MM/DD/YYYY formatter + US-style 12-hour time.
+  const dateLabel = formatDate(ride?.startTime) || "—";
+
+  const startDayjs = dayjs(ride?.startTime);
+  const timeLabel = startDayjs.isValid() ? startDayjs.format("h:mm A") : "—";
 
   const stamp = statusStamp[ride?.status];
 
@@ -917,8 +877,6 @@ export default function RideDetailsModal({
     (r) => r?.status?.toUpperCase() === "PENDING",
   ).length;
 
-  // console.log("Ride Details : ", ride);
-
   return (
     <Dialog
       open
@@ -926,7 +884,6 @@ export default function RideDetailsModal({
         if (reason === "backdropClick") {
           return;
         }
-
         onClose();
       }}
       fullWidth
@@ -1079,7 +1036,6 @@ export default function RideDetailsModal({
                 width: "100%",
                 display: "flex",
                 alignItems: "center",
-                // gap: 1,
                 mb: { xs: 3, sm: 1.5 },
               }}
             >
@@ -1094,9 +1050,6 @@ export default function RideDetailsModal({
                 sx={{
                   width: 38,
                   height: 38,
-                  // borderRadius: "50%",
-                  // bgcolor: "rgba(255,255,255,.08)",
-                  // border: "1px solid rgba(255,255,255,.15)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -1327,8 +1280,6 @@ export default function RideDetailsModal({
         )}
 
         {/* ── Ticket data fields ── */}
-
-
         <Box
           sx={{
             display: "flex",
@@ -1338,10 +1289,10 @@ export default function RideDetailsModal({
             alignItems: "stretch",
             "& > *": {
               flex: {
-                xs: "1 1 calc(50% - 16px)",       // Mobile: 2
-                sm: "1 1 calc(33.333% - 16px)",   // Tablet: 3
-                md: "1 1 calc(33.333% - 16px)",   // Laptop: 3
-                lg: "1 1 calc(33.333% - 16px)",   // Desktop: 3
+                xs: "1 1 calc(50% - 16px)",
+                sm: "1 1 calc(33.333% - 16px)",
+                md: "1 1 calc(33.333% - 16px)",
+                lg: "1 1 calc(33.333% - 16px)",
               },
               minWidth: 0,
             },
@@ -1379,7 +1330,7 @@ export default function RideDetailsModal({
             <Field
               icon={RouteIcon}
               label="Distance"
-              value={`${ride.distanceKm} km`}
+              value={`${ride.distanceKm ? Math.round(ride.distanceKm * 0.621371) : 0} miles`}
             />
           )}
 
@@ -1401,7 +1352,7 @@ export default function RideDetailsModal({
               value={
                 ride.costPerSeat == null
                   ? "Free"
-                  : `₹ ${ride.costPerSeat}`
+                  : `$ ${ride.costPerSeat}`
               }
             />
           )}
@@ -1517,7 +1468,6 @@ export default function RideDetailsModal({
             />
           </Box>
         )}
-
       </DialogContent>
 
       <Box
@@ -1535,7 +1485,6 @@ export default function RideDetailsModal({
           ride?.travelStatus !== "Started" &&
           ride?.travelStatus !== "Completed" &&
           ride?.travelStatus !== "Cancelled" &&
-          // Check if there are no accepted requests in the manifest
           !requests.some(r => ["ACCEPTED", "APPROVED", "AUTO_REJECTED"].includes(r.status?.toUpperCase())) &&
           (ride?.createdBy?._id === user?.id ||
             (typeof ride?.createdBy === "string" &&
@@ -1609,6 +1558,6 @@ export default function RideDetailsModal({
           Close
         </Button>
       </Box>
-    </Dialog >
+    </Dialog>
   );
 }

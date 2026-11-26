@@ -106,9 +106,9 @@ const routeParts = (ride) => {
 
 const resolvePostImage = (post) => {
   if (!post) return "";
-  const url = post.postImageUrl;
+  const url = post?.postImageUrl;
   if (url) return Array.isArray(url) ? url[0] || "" : url;
-  const raw = post.postImage;
+  const raw = post?.postImage;
   if (!raw) return "";
   return Array.isArray(raw) ? raw[0] || "" : raw;
 };
@@ -991,6 +991,8 @@ const UserProfile = () => {
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(2, minmax(0, 1fr))", md: "repeat(3, minmax(0, 1fr))" }, gap: { xs: 1.5, sm: 2 } }}>
         {items.map((post) => {
           const image = resolvePostImage(post);
+          // console.log(post,'postt')
+          // console.log(image,'image')
           const saved = isSaved(post._id);
           return (
             <Surface
@@ -1017,6 +1019,7 @@ const UserProfile = () => {
                 "&:focus-visible": { outline: `2px solid ${C.saffron}`, outlineOffset: 2 },
               }}
             >
+              {console.log(post,'post')}
               <Box sx={{ position: "relative" }}>
                 {image ? (
                   <Box

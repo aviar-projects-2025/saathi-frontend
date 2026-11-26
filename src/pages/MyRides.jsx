@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import {
   Box, Typography, Tabs, Tab, Paper, Chip, Button, Alert, Dialog, DialogTitle, DialogContent,
-  DialogActions, IconButton, Stack, CircularProgress, Divider, useMediaQuery, Avatar, useTheme,
+  DialogActions, IconButton, Stack, CircularProgress, Divider, useMediaQuery, useTheme,
   Collapse, ToggleButton, ToggleButtonGroup,
 } from "@mui/material";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
@@ -28,10 +28,10 @@ import ToastConfig from "../components/ToastConfig.jsx";
 import { useRide } from "../context/RideContext";
 import { useNotifications } from "../context/NotificationContext";
 import { useRating } from "../context/RatingContext";
-import socket from "../socket"; // ★ IMPORT
+import socket from "../socket";
 import ProtectedAvatar from "../components/ProtectedAvatar.jsx";
+import ProfileModal from "./Avatar.jsx";
 
-/* ───────────── design tokens ───────────── */
 const BRAND = "#E8650A";
 const LINE = "#E8DED4";
 const KIND = {
@@ -43,7 +43,6 @@ const KIND = {
 
 const isMatched = (ride) => ride?.kind === "request" && Boolean(ride?.helpProposalId);
 
-// What this ride is to ME: "offer" (I'm driving) or "request" (I need a ride)
 const roleOf = (ride, userId) => {
   const me = String(userId || "");
   const driverIsMe = String(getRefId(ride?.actualDriver) || "") === me;
@@ -52,8 +51,7 @@ const roleOf = (ride, userId) => {
   return ride?.kind === "request" ? "request" : "offer";
 };
 
-const personName = (p) =>
-  [p?.firstName, p?.lastName].filter(Boolean).join(" ") || "a community member";
+const personName = (p) => [p?.firstName, p?.lastName].filter(Boolean).join(" ") || "a community member";
 
 // A request is "pending" if it still has unhandled seats.
 // Falls back to status for requests without seat fields.
@@ -97,12 +95,12 @@ const statusLabelOf = (ride, { pendingCount = 0, requestCount = 0 } = {}) => {
   if (requestCount > 0) return "All requests handled";
   return "Open for requests";
 };
+
 const travelIcons = {
   Car: DirectionsCarIcon, Bus: DirectionsBusIcon, Bike: TwoWheelerIcon,
   Flight: FlightIcon, Ship: DirectionsBoatIcon, Train: TrainIcon,
 };
 
-/* ───────────── helpers ───────────── */
 const getRefId = (v) => v?._id || v?.id || v;
 const idOf = (r) => String(r?._id || r?.id || "");
 const formFrom = (ride) => ride?.from || "—";
@@ -116,7 +114,6 @@ const fmtTime = (d) => {
   return isNaN(x) ? "—" : x.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
 };
 
-/* ───────────── small components ───────────── */
 function EmptyState({ message1, message2 }) {
   return (
     <Box sx={{ width: "100%", maxWidth: 480, textAlign: "center", mx: "auto", mt: { xs: "20%", sm: "8%" }, px: 2 }}>
@@ -215,7 +212,6 @@ function DeleteConfirmDialog({ ride, onConfirm, onClose }) {
   );
 }
 
-/* ───────────── ride card ───────────── */
 function RideCard({
   ride, user, isCurrentRide, showEdit, showDelete, onEdit, onDelete,
   rideRequests, pendingCount, offersCount, stats,
@@ -259,23 +255,11 @@ function RideCard({
       ? "This ride is complete"
       : "This ride was cancelled";
   } else if (matched) {
-    footerText = isOffer
-      ? <>Passenger: {strong(personName(ride.createdBy))}</>
-      : <>Driver: {strong(personName(ride.actualDriver))}</>;
+    footerText = isOffer ? <>Passenger: {strong(personName(ride.createdBy))}</> : <>Driver: {strong(personName(ride.actualDriver))}</>;
   } else if (isOffer) {
-    footerText = rideRequests.length > 0 && stats ? (
-      <>
-        <b style={{ color: "#2D6A4F" }}>{stats.approved} Approved</b>
-        {" · "}
-        <b style={{ color: "#9B2226" }}>{stats.rejected} Rejected</b>
-        {" · "}
-        <b style={{ color: "#C65B00" }}>{stats.pending} Pending</b>
-      </>
-    ) : "No requests yet";
+    footerText = pendingCount > 0 ? <>{strong(`${pendingCount} new request${pendingCount > 1 ? "s" : ""}`)} waiting for you</> : rideRequests.length > 0 ? "All requests handled" : "No requests yet";
   } else {
-    footerText = offersCount > 0
-      ? <>{strong(`${offersCount} offer${offersCount > 1 ? "s" : ""}`)} to help you</>
-      : "No offers yet · we’ll notify you";
+    footerText = offersCount > 0 ? <>{strong(`${offersCount} offer${offersCount > 1 ? "s" : ""}`)} to help you</> : "No offers yet · we’ll notify you";
   }
 
   return (
@@ -310,81 +294,27 @@ function RideCard({
           </Box>
         </Box>
 
-        <Stack
-          direction="row"
-          spacing={0.75}
-          useFlexGap
-          sx={{
-            display: "flex",
-            flexWrap: "wrap",
-            px: 2,
-            py: 1.5,
-            width: "100%",
-            maxWidth: "100%",
-            minWidth: 0,
-            overflowX: "visible",
-            "& .MuiChip-root": {
-              flexShrink: 0,
-              maxWidth: "100%",
-            },
-            "& .MuiChip-label": {
-              whiteSpace: "nowrap",
-            },
-          }}
-        >
-          <Chip
-            size="small"
-            variant="outlined"
-            icon={<CalendarTodayIcon />}
-            label={`${fmtDate(ride.startTime)} · ${fmtTime(ride.startTime)}`}
-          />
-
-          <Chip
-            size="small"
-            variant="outlined"
-            icon={<Mode />}
-            label={ride.modeOfTravel || "Car"}
-          />
-
+        <Stack direction="row" spacing={0.75} useFlexGap sx={{ display: "flex", flexWrap: "wrap", px: 2, py: 1.5, width: "100%", minWidth: 0, "& .MuiChip-root": { flexShrink: 0, maxWidth: "100%" }, "& .MuiChip-label": { whiteSpace: "nowrap" } }}>
+          <Chip size="small" variant="outlined" icon={<CalendarTodayIcon />} label={`${fmtDate(ride.startTime)} · ${fmtTime(ride.startTime)}`} />
+          <Chip size="small" variant="outlined" icon={<Mode />} label={ride.modeOfTravel || "Car"} />
           {ride.kind === "offer" && ride.modeOfTravel !== "Flight" && (
             <>
-              <Chip
-                size="small"
-                variant="outlined"
-                icon={<EventSeatIcon />}
-                label={`${ride.totalSeats} Total seat${ride.totalSeats === 1 ? "" : "s"}`}
-              />
-
-              <Chip
-                size="small"
-                variant="outlined"
-                icon={<EventSeatIcon />}
-                label={`${ride.availableSeats} Available seat${ride.availableSeats === 1 ? "" : "s"}`}
-              />
+              <Chip size="small" variant="outlined" icon={<EventSeatIcon />} label={`${ride.totalSeats} Total seat${ride.totalSeats === 1 ? "" : "s"}`} />
+              <Chip size="small" variant="outlined" icon={<EventSeatIcon />} label={`${ride.availableSeats} Available seat${ride.availableSeats === 1 ? "" : "s"}`} />
             </>
           )}
-
-          {ride.kind === "request" && (
-            <Chip
-              size="small"
-              variant="outlined"
-              icon={<EventSeatIcon />}
-              label={`${ride.passengers || 1} passenger${(ride.passengers || 1) === 1 ? "" : "s"}`}
-            />
-          )}
+          {ride.kind === "request" && <Chip size="small" variant="outlined" icon={<EventSeatIcon />} label={`${ride.passengers || 1} passenger${(ride.passengers || 1) === 1 ? "" : "s"}`} />}
         </Stack>
 
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 1, bgcolor: k.bg, px: 2, py: 1.25, flexWrap: "wrap" }}>
           <Typography sx={{ fontSize: "0.84rem", flex: "1 1 140px" }}>{footerText}</Typography>
           <Stack direction="row" spacing={1}>
             {isCurrentRide && canManageTravel && !isCompleted && !isCancelled && (
-              <Button size="small" variant="contained" disabled={busy} onClick={() => onTravelAction(ride)}
-                sx={{ bgcolor: isStarted ? "#C62828" : "#E8650A", boxShadow: "none", whiteSpace: "nowrap", "&:hover": { bgcolor: isStarted ? "#9B1C1C" : "#C85508" } }}>
+              <Button size="small" variant="contained" disabled={busy} onClick={() => onTravelAction(ride)} sx={{ bgcolor: isStarted ? "#C62828" : "#E8650A", boxShadow: "none", whiteSpace: "nowrap", "&:hover": { bgcolor: isStarted ? "#9B1C1C" : "#C85508" } }}>
                 {busy ? "Please wait…" : isStarted ? "Complete Ride" : "Start Ride"}
               </Button>
             )}
-            <Button size="small" variant="contained" onClick={() => setDetailsOpen(true)}
-              sx={{ bgcolor: k.color, boxShadow: "none", whiteSpace: "nowrap", "&:hover": { bgcolor: k.color, opacity: 0.9 } }}>
+            <Button size="small" variant="contained" onClick={() => setDetailsOpen(true)} sx={{ bgcolor: k.color, boxShadow: "none", whiteSpace: "nowrap", "&:hover": { bgcolor: k.color, opacity: 0.9 } }}>
               {isOffer && pendingCount > 0 ? "Review" : "View"}
             </Button>
           </Stack>
@@ -399,13 +329,11 @@ function RideCard({
           requests={rideRequests} onApprove={onApprove} onReject={onReject}
           onRequestUpdated={onRequestUpdated} approveLoading={approveLoading} rejectLoading={rejectLoading}
         />
-      )
-      }
+      )}
     </>
   );
 }
 
-/* ───────────── page ───────────── */
 const MyRides = () => {
   const location = useLocation();
   const { notifications } = useNotifications();
@@ -415,6 +343,13 @@ const MyRides = () => {
   const currentUserId = currentUser?.id || currentUser?._id;
   const ITEMS_PER_PAGE = 10;
   const toasts = ToastConfig();
+
+  // Profile and Chat Modals
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState(null);
+
+  const [chatModalOpen, setChatModalOpen] = useState(false);
+  const [chatUser, setChatUser] = useState(null);
 
   const [rideCounts, setRideCounts] = useState({ current: 0, upcoming: 0, posts: 0, history: 0 });
   const tabs = [
@@ -444,7 +379,6 @@ const MyRides = () => {
 
   const sentinelRef = useRef(null);
   const processedRideIds = useRef(new Set());
-  const processedNotificationIds = useRef(new Set());
   const categoryLoadingRef = useRef({ current: false, upcoming: false, posts: false, history: false });
 
   const active = tabs[tab];
@@ -456,7 +390,6 @@ const MyRides = () => {
   };
   const setCategory = (category, patch) => setData((prev) => ({ ...prev, [category]: { ...prev[category], ...patch } }));
 
-  /* ── help proposals ── */
   const pendingProposals = helpProposals.filter((p) => p?.status === "PENDING");
 
   const fetchHelpProposals = async () => {
@@ -487,7 +420,6 @@ const MyRides = () => {
     }
   };
 
-  /* ── data fetching ── */
   const fetchCategory = async (category, { reset = false } = {}) => {
     if (!currentUserId) { setInitialLoading(false); return; }
     const state = data[category];
@@ -554,7 +486,6 @@ const MyRides = () => {
     ]);
   };
 
-  /* ── request approve / reject ── */
   const handleApprove = async (requestId) => {
     try {
       setApproveLoading(requestId);
@@ -601,54 +532,28 @@ const MyRides = () => {
 
           if (scope === "pending") {
             const approvedSeats = Number(r.approvedSeats || 0);
-            const rejectedSeats =
-              Number(r.rejectedSeats || 0) + Number(r.pendingReqSeats || 0);
-            return {
-              ...r,
-              pendingReqSeats: 0,
-              rejectedSeats,
-              // If approved seats still exist, the request stays ACCEPTED.
-              status: approvedSeats > 0 ? "ACCEPTED" : "REJECTED",
-            };
+            const rejectedSeats = Number(r.rejectedSeats || 0) + Number(r.pendingReqSeats || 0);
+            return { ...r, pendingReqSeats: 0, rejectedSeats, status: approvedSeats > 0 ? "ACCEPTED" : "REJECTED" };
           }
 
           if (scope === "approved") {
             const pendingReqSeats = Number(r.pendingReqSeats || 0);
-            const rejectedSeats =
-              Number(r.rejectedSeats || 0) + Number(r.approvedSeats || 0);
-            return {
-              ...r,
-              approvedSeats: 0,
-              rejectedSeats,
-              status: pendingReqSeats > 0 ? "PENDING" : "REJECTED",
-            };
+            const rejectedSeats = Number(r.rejectedSeats || 0) + Number(r.approvedSeats || 0);
+            return { ...r, approvedSeats: 0, rejectedSeats, status: pendingReqSeats > 0 ? "PENDING" : "REJECTED" };
           }
 
-          // scope=all
-          return {
-            ...r,
-            approvedSeats: 0,
-            pendingReqSeats: 0,
-            status: "REJECTED",
-          };
+          return { ...r, approvedSeats: 0, pendingReqSeats: 0, status: "REJECTED" };
         })
       );
 
       toast.success(
-        scope === "pending"
-          ? "Pending seats rejected"
-          : scope === "approved"
-            ? "Approved seats rejected"
-            : "Request rejected (approved + pending)",
+        scope === "pending" ? "Pending seats rejected" : scope === "approved" ? "Approved seats rejected" : "Request rejected (approved + pending)",
         toasts
       );
       await fetchAllRequests();
       await refreshCategory(active.key);
     } catch (error) {
-      toast.error(
-        error?.response?.data?.message || "Failed to reject request",
-        toasts
-      );
+      toast.error(error?.response?.data?.message || "Failed to reject request", toasts);
     } finally {
       setRejectLoading(null);
     }
@@ -710,7 +615,6 @@ const MyRides = () => {
     await Promise.all([refreshCategory(active.key), fetchRideCounts()]);
   };
 
-  /* ── effects ── */
   useEffect(() => {
     if (!currentUserId) { setInitialLoading(false); return; }
     fetchCategory("current", { reset: true });
@@ -748,71 +652,45 @@ const MyRides = () => {
 
   // ★ Notification-driven refresh (refetch on ANY new notification)
   const lastNotificationCount = useRef(0);
-
   useEffect(() => {
     if (!notifications?.length) {
       lastNotificationCount.current = 0;
       return;
     }
-
-    // Skip the initial hydration (fetch returns 40 items at once)
     if (lastNotificationCount.current === 0) {
       lastNotificationCount.current = notifications.length;
       return;
     }
-
-    // Only fire when the count grows (a new notification was added)
     if (notifications.length > lastNotificationCount.current) {
       refreshAllCategories();
     }
-
     lastNotificationCount.current = notifications.length;
   }, [notifications]);
 
-  // ★ Direct socket listener — never misses, works even if context dedupe drops
   useEffect(() => {
     if (!currentUserId) return;
-
     const REFRESH_TYPES = new Set([
-      "new_request",
-      "request_accepted",
-      "request_rejected",
-      "request_cancelled",
-      "ride_request_update",
-      "ride_started",
-      "ride_completed",
-      "ride_updated",
-      "ride_status",
-      "ride_cancelled",
-      "help_proposal_received",
-      "help_proposal_accepted",
-      "help_proposal_rejected",
+      "new_request", "request_accepted", "request_rejected", "request_cancelled",
+      "ride_request_update", "ride_started", "ride_completed", "ride_updated",
+      "ride_status", "ride_cancelled", "help_proposal_received", "help_proposal_accepted", "help_proposal_rejected",
     ]);
-
     const onSocketNotification = (payload) => {
       const t = payload?.type;
       if (!t || !REFRESH_TYPES.has(t)) return;
       refreshAllCategories();
     };
-
     socket.on("notification", onSocketNotification);
-    return () => {
-      socket.off("notification", onSocketNotification);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => { socket.off("notification", onSocketNotification); };
   }, [currentUserId]);
 
-  // ★ Polling safety net (every 30s while on Current tab)
   useEffect(() => {
     if (!currentUserId) return;
     if (active.key !== "current") return;
-
     const interval = setInterval(() => {
       fetchCategory("current", { reset: true });
       fetchAllRequests();
       fetchRideCounts();
     }, 30_000);
-
     return () => clearInterval(interval);
   }, [currentUserId, active.key]);
 
@@ -820,7 +698,6 @@ const MyRides = () => {
     if (location.state?.refresh) refreshAllCategories();
   }, [location.state?.refreshKey]);
 
-  // "Your ride is starting" popup
   useEffect(() => {
     if (active.key !== "current") return;
     const check = () => {
@@ -842,7 +719,6 @@ const MyRides = () => {
     return () => clearInterval(timer);
   }, [active.key, data.current.rides, currentUserId]);
 
-  // infinite scroll
   useEffect(() => {
     const node = sentinelRef.current;
     if (!node) return;
@@ -861,7 +737,6 @@ const MyRides = () => {
     if (!data[category].loaded) await fetchCategory(category, { reset: true });
   };
 
-  /* ── render ── */
   const visibleRides = activeData.rides.filter((r) => kind === "all" || roleOf(r, currentUserId) === kind);
 
   const renderList = (list) =>
@@ -903,15 +778,13 @@ const MyRides = () => {
     });
 
   return (
-    <Box sx={{ width: "100%", maxWidth: 760, mx: "auto", boxSizing: "border-box", overflowX: "hidden", bgcolor: "#FAF8F5", color: "#242424", fontFamily: '"Inter","Roboto",sans-serif', px: { xs: 1.5, sm: 2, md: 3 }, py: { xs: 2, sm: 3 }, "& .MuiButton-root": { textTransform: "none", fontWeight: 600, borderRadius: "10px" } }}>
+    <Box sx={{ width: "100%", maxWidth: 760, mx: "auto", boxSizing: "border-box", overflowX: "hidden", bgcolor: "#FAF8F5", color: "#242424", px: { xs: 1.5, sm: 2, md: 3 }, py: { xs: 2, sm: 3 }, "& .MuiButton-root": { textTransform: "none", fontWeight: 600, borderRadius: "10px" } }}>
       <Typography variant="h5" fontWeight={800} sx={{ color: "#142958", fontSize: { xs: "1.35rem", sm: "1.6rem" }, letterSpacing: "-0.4px", mb: 2 }}>My Rides</Typography>
 
       {(loadingHelpProposals || pendingProposals.length > 0) && (
         <Paper elevation={0} sx={{ border: `1px solid ${LINE}`, borderLeft: `4px solid ${BRAND}`, borderRadius: "14px", overflow: "hidden", mb: 2, bgcolor: "#fff" }}>
           <Box onClick={() => setOffersOpen((o) => !o)} role="button" sx={{ display: "flex", alignItems: "center", gap: 1.25, p: 1.5, cursor: "pointer" }}>
-            {loadingHelpProposals && pendingProposals.length === 0
-              ? <CircularProgress size={22} sx={{ color: BRAND }} />
-              : <Chip label={pendingProposals.length} size="small" sx={{ bgcolor: BRAND, color: "#fff", fontWeight: 800 }} />}
+            {loadingHelpProposals && pendingProposals.length === 0 ? <CircularProgress size={22} sx={{ color: BRAND }} /> : <Chip label={pendingProposals.length} size="small" sx={{ bgcolor: BRAND, color: "#fff", fontWeight: 800 }} />}
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Typography sx={{ fontWeight: 800, fontSize: "0.95rem" }}>People offered to help you</Typography>
               <Typography variant="body2" color="text.secondary">On your ride requests · tap to review</Typography>
@@ -934,7 +807,14 @@ const MyRides = () => {
                 return (
                   <Box key={proposal._id} sx={{ p: { xs: 1.5, sm: 2 } }}>
                     <Stack direction="row" spacing={1.25} alignItems="center" sx={{ mb: 1.25 }}>
-                      <ProtectedAvatar src={helper.profileImageUrl || ""} sx={{ width: 40, height: 40, bgcolor: "#FFF0E3", color: "#C65B00", fontWeight: 800 }}>
+                      <ProtectedAvatar
+                        src={helper.profileImageUrl || ""}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setSelectedProfile(helper);
+                          setProfileModalOpen(true);
+                        }}
+                        sx={{ width: 40, height: 40, bgcolor: "#FFF0E3", color: "#C65B00", fontWeight: 800 }}>
                         {`${helper.firstName?.[0] || ""}${helper.lastName?.[0] || ""}` || "U"}
                       </ProtectedAvatar>
                       <Box sx={{ minWidth: 0, flex: 1 }}>
@@ -943,20 +823,39 @@ const MyRides = () => {
                       </Box>
                     </Stack>
                     <Paper variant="outlined" sx={{ p: 1.5, borderRadius: "12px", borderColor: "#EFE5DC", bgcolor: "#FFFCF9" }}>
-                      <Typography sx={{ fontWeight: 700, fontSize: "0.9rem", overflowWrap: "anywhere" }}>{from} <ArrowForwardIcon sx={{ fontSize: 14, color: BRAND, verticalAlign: "middle" }} /> {dest}</Typography>
-                      <Typography sx={{ mt: 0.4, fontSize: "0.8rem", color: "#777783" }}>{st ? moment(st).format("DD MMM YYYY, hh:mm A") : "Time not specified"}</Typography>
+                      <Typography sx={{ fontWeight: 700, fontSize: "0.9rem", overflowWrap: "anywhere" }}>
+                        {from} <ArrowForwardIcon sx={{ fontSize: 14, color: BRAND, verticalAlign: "middle" }} /> {dest}
+                      </Typography>
+                      <Typography sx={{ mt: 0.4, fontSize: "0.8rem", color: "#777783" }}>
+                        {st ? moment(st).format("DD MMM YYYY, hh:mm A") : "Time not specified"}
+                      </Typography>
+
                       <Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap" sx={{ mt: 1 }}>
                         <Chip size="small" variant="outlined" label={mode} />
-                        {offer.availableSeats != null && <Chip size="small" variant="outlined" label={`${offer.availableSeats} seat(s)`} />}
-                        {offer.costPerSeat != null && <Chip size="small" variant="outlined" label={`₹${offer.costPerSeat} / seat`} />}
+                        {/* Show passenger count explicitly */}
+                        <Chip size="small" variant="outlined" label={`${reqRide.passengers || 1} passenger(s)`} />
                       </Stack>
-                      {offer.description && <Typography variant="body2" sx={{ mt: 1, color: "#6B6B78", overflowWrap: "anywhere" }}>{offer.description}</Typography>}
+
+                      {/* ★ Money breakdown */}
+                      {offer.costPerSeat != null && (
+                        <Box sx={{ mt: 1.5, p: 1.5, bgcolor: "#F4F0EA", borderRadius: 1.5 }}>
+                          <Typography sx={{ fontSize: "0.85rem", fontWeight: 600, color: "#2A2A2A" }}>
+                            Cost Breakdown
+                          </Typography>
+                          <Stack direction="row" justifyContent="space-between" sx={{ mt: 0.5 }}>
+                            <Typography sx={{ fontSize: "0.85rem", color: "#666" }}>
+                              ${offer.costPerSeat} × {reqRide.passengers || 1} seats
+                            </Typography>
+                            <Typography sx={{ fontSize: "1rem", fontWeight: 800, color: BRAND }}>
+                              Total: ${(Number(offer.costPerSeat) * Number(reqRide.passengers || 1)).toFixed(2)}
+                            </Typography>
+                          </Stack>
+                        </Box>
+                      )}
                     </Paper>
                     <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ mt: 1.25 }}>
-                      <Button variant="outlined" startIcon={<CancelIcon />} disabled={Boolean(respondingProposalId)} onClick={() => respondToHelpProposal(proposal._id, "reject")}
-                        sx={{ flex: { xs: 1, sm: "0 0 auto" }, color: "#A83D36", borderColor: "#E8C6C3", bgcolor: "#fff", minHeight: 40 }}>Decline</Button>
-                      <Button variant="contained" startIcon={responding ? <CircularProgress size={16} color="inherit" /> : <CheckCircleIcon />} disabled={Boolean(respondingProposalId)} onClick={() => respondToHelpProposal(proposal._id, "accept")}
-                        sx={{ flex: { xs: 1, sm: "0 0 auto" }, bgcolor: "#2D6A4F", boxShadow: "none", minHeight: 40, "&:hover": { bgcolor: "#245640", boxShadow: "none" } }}>{responding ? "Processing…" : "Accept"}</Button>
+                      <Button variant="outlined" startIcon={<CancelIcon />} disabled={Boolean(respondingProposalId)} onClick={() => respondToHelpProposal(proposal._id, "reject")} sx={{ flex: { xs: 1, sm: "0 0 auto" }, color: "#A83D36", borderColor: "#E8C6C3", bgcolor: "#fff", minHeight: 40 }}>Decline</Button>
+                      <Button variant="contained" startIcon={responding ? <CircularProgress size={16} color="inherit" /> : <CheckCircleIcon />} disabled={Boolean(respondingProposalId)} onClick={() => respondToHelpProposal(proposal._id, "accept")} sx={{ flex: { xs: 1, sm: "0 0 auto" }, bgcolor: "#2D6A4F", boxShadow: "none", minHeight: 40, "&:hover": { bgcolor: "#245640", boxShadow: "none" } }}>{responding ? "Processing…" : "Accept"}</Button>
                     </Stack>
                   </Box>
                 );
@@ -968,10 +867,7 @@ const MyRides = () => {
 
       <Box sx={{ position: "sticky", top: 0, zIndex: 10, bgcolor: "#FAF8F5", pb: 0.5 }}>
         <Tabs value={tab} onChange={handleTabChange} variant="scrollable" scrollButtons={false}
-          sx={{
-            minHeight: 42, "& .MuiTabs-flexContainer": { gap: "8px" }, "& .MuiTabs-indicator": { display: "none" },
-            "& .MuiTab-root": { minWidth: "auto", px: 2, py: 0.75, minHeight: 38, border: `1px solid #DCD4CB`, borderRadius: "24px", bgcolor: "#fff", textTransform: "none", marginRight: 2, fontSize: { xs: "0.74rem", sm: "0.82rem" }, fontWeight: 700, color: "#292929", "&.Mui-selected": { color: "#fff", bgcolor: "#C83D08", borderColor: "#C83D08" } }
-          }}>
+          sx={{ minHeight: 42, "& .MuiTabs-flexContainer": { gap: "8px" }, "& .MuiTabs-indicator": { display: "none" }, "& .MuiTab-root": { minWidth: "auto", px: 2, py: 0.75, minHeight: 38, border: `1px solid #DCD4CB`, borderRadius: "24px", bgcolor: "#fff", textTransform: "none", marginRight: 2, fontSize: { xs: "0.74rem", sm: "0.82rem" }, fontWeight: 700, color: "#292929", "&.Mui-selected": { color: "#fff", bgcolor: "#C83D08", borderColor: "#C83D08" } } }}>
           {tabs.map((t) => <Tab key={t.key} label={t.label} />)}
         </Tabs>
       </Box>
@@ -986,10 +882,7 @@ const MyRides = () => {
         ) : (
           <>
             {visibleRides.length === 0 && !activeData.loading && (
-              <EmptyState
-                message1={`No ${KIND[kind]?.short.toLowerCase() || ""} rides here`}
-                message2={activeData.hasMore ? "Scroll down to load more, or switch the filter." : "Try switching the filter above."}
-              />
+              <EmptyState message1={`No ${KIND[kind]?.short.toLowerCase() || ""} rides here`} message2={activeData.hasMore ? "Scroll down to load more, or switch the filter." : "Try switching the filter above."} />
             )}
             {renderList(visibleRides)}
             <Box ref={sentinelRef} sx={{ minHeight: activeData.hasMore ? 80 : 24, display: "flex", alignItems: "center", justifyContent: "center", py: 1 }}>
@@ -1005,94 +898,12 @@ const MyRides = () => {
       {editRide && <EditRideModal ride={editRide} onSave={handleEdit} onClose={() => setEditRide(null)} />}
       {deleteRide && <DeleteConfirmDialog ride={deleteRide} onConfirm={handleDelete} onClose={() => setDeleteRide(null)} />}
 
-      <Dialog
-        open={!!confirmRide}
-        onClose={(e, reason) => {
-          if (reason !== "backdropClick") {
-            setConfirmRide(null);
-          }
-        }}
-        PaperProps={{
-          sx: {
-            width: {
-              xs: "calc(100% - 24px)",
-              sm: "90%",
-              md: "850px",
-              lg: "1000px",
-              xl: "1100px",
-            },
-            maxWidth: "1100px",
-            mx: "auto",
-            borderRadius: "14px",
-            overflow: "hidden",
-            border: "1px solid #FFE0B2",
-            boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
-            m: { xs: 1.5, sm: 2 },
-          },
-        }}
-      >
-        {/* HEADER */}
-        <Box
-          sx={{
-            bgcolor: "#FFF4E5",
-            borderTop: "4px solid #F89B04",
-            borderBottom: "1px solid #FFE0B2",
-            px: 2.5,
-            py: 1.75,
-          }}
-        >
-          <Typography sx={{ fontSize: "1rem", fontWeight: 700, color: "#292929" }}>
-            Looks like your ride is starting
-          </Typography>
-
-          <Typography sx={{ fontSize: "0.78rem", color: "#8A7355", mt: 0.4 }}>
-            Please confirm before starting your journey.
-          </Typography>
-        </Box>
-
-        {/* RIDE DETAILS */}
-        <DialogContent sx={{ px: 2.5, py: 2 }}>
-          <Box
-            sx={{
-              bgcolor: "#FFFAF2",
-              border: "1px solid #FFE0B2",
-              borderRadius: "10px",
-              p: 1.75,
-            }}
-          >
-            <Stack spacing={1.5}>
-              <Box>
-                <Typography sx={{ fontSize: "0.7rem", fontWeight: 700, color: "#A08B72", letterSpacing: 0.8 }}>
-                  FROM
-                </Typography>
-                <Typography sx={{ fontSize: "0.88rem", fontWeight: 600, color: "#292929", overflowWrap: "anywhere" }}>
-                  {confirmRide?.from || "—"}
-                </Typography>
-              </Box>
-
-              <Box sx={{ borderLeft: "2px dashed #F89B04", height: 10, ml: 0.5 }} />
-
-              <Box>
-                <Typography sx={{ fontSize: "0.7rem", fontWeight: 700, color: "#A08B72", letterSpacing: 0.8 }}>
-                  TO
-                </Typography>
-                <Typography sx={{ fontSize: "0.88rem", fontWeight: 600, color: "#292929", overflowWrap: "anywhere" }}>
-                  {confirmRide?.destination || "—"}
-                </Typography>
-              </Box>
-
-              <Box sx={{ borderTop: "1px solid #FFE0B2", pt: 1.25 }}>
-                <Typography sx={{ fontSize: "0.7rem", fontWeight: 700, color: "#A08B72", letterSpacing: 0.8 }}>
-                  START TIME
-                </Typography>
-                <Typography sx={{ fontSize: "0.85rem", fontWeight: 600, color: "#75552B" }}>
-                  {confirmRide?.startTime
-                    ? moment(confirmRide.startTime).format("DD MMM YYYY, hh:mm A")
-                    : "—"}
-                </Typography>
-              </Box>
-            </Stack>
-          </Box>
+      <Dialog open={!!confirmRide} onClose={(e, reason) => { if (reason !== "backdropClick") setConfirmRide(null); }} PaperProps={{ sx: { borderRadius: 3, mx: { xs: 2, sm: "auto" }, width: { xs: "calc(100% - 32px)", sm: "100%" }, maxWidth: 450 } }}>
+        <DialogContent sx={{ pb: 1 }}><Typography sx={{ fontWeight: 700 }}>Looks like your ride is starting</Typography></DialogContent>
+        <DialogContent sx={{ pt: 0 }}>
+          <Typography sx={{ fontSize: "0.9rem", mb: 0.5 }}>From: {confirmRide?.from || "—"}</Typography>
+          <Typography sx={{ fontSize: "0.9rem", mb: 0.5 }}>To: {confirmRide?.destination || "—"}</Typography>
+          <Typography sx={{ fontSize: "0.9rem" }}>Time: {confirmRide?.startTime ? moment(confirmRide.startTime).format("DD MMM YYYY, hh:mm A") : "—"}</Typography>
         </DialogContent>
 
         {/* ACTION BUTTONS */}
@@ -1156,6 +967,18 @@ const MyRides = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* ★ UPDATED: Profile Modal wires directly to Chat Modal */}
+      <ProfileModal
+        open={profileModalOpen}
+        selectedProfile={selectedProfile}
+        onClose={() => setProfileModalOpen(false)}
+        onMessage={(user) => {
+          setProfileModalOpen(false);
+          setChatUser(user);
+          setChatModalOpen(true);
+        }}
+      />
 
     </Box>
   );

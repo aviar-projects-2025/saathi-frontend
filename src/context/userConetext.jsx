@@ -12,23 +12,42 @@ export const UserProvider = ({ children }) => {
     const [saveLoading, setSaveLoading] = useState(false);
     const [savingPostId, setSavingPostId] = useState(null);
 
+    /* ─────────────────────────────────────────────────────────────
+       BRD 6.2 — User Profile (Trust Profile)
+
+       Required: first name, last name, verified phone (private),
+                 city, profile photo.
+       Optional: languages, profession, zip, bio, gender, DOB.
+
+       A profile must be 100% complete (all REQUIRED fields filled)
+       before the member can post or request a ride. Optional fields
+       must NOT count toward the gate.
+       ───────────────────────────────────────────────────────────── */
     const requiredFields = [
         "firstName",
         "lastName",
-        "bio",
-        "language",
-        "mobile",
-        "profileImage",
-        "gender",
-        "zipcode",
+        "mobile",       // verified phone (private)
+        "city",
+        "profileImage", // profile photo
     ];
 
     const calculateProfileCompletion = (user) => {
         if (!user) return 0;
+
         let completed = 0;
         requiredFields.forEach((field) => {
-            if (user[field] && user[field].toString().trim() !== "") completed++;
+            let value = user[field];
+
+            // A photo may be stored as `profileImage` (S3 key) or
+            // exposed as `profileImageUrl` (signed URL). Accept either
+            // so a member with a photo isn't reported incomplete.
+            if (field === "profileImage") {
+                value = user.profileImage || user.profileImageUrl || "";
+            }
+
+            if (value && String(value).trim() !== "") completed++;
         });
+
         return Math.round((completed / requiredFields.length) * 100);
     };
 
@@ -45,6 +64,7 @@ export const UserProvider = ({ children }) => {
             getuserData();
             getSavedPost();
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const getuserData = async () => {
@@ -52,7 +72,7 @@ export const UserProvider = ({ children }) => {
             const res = await axios.get(`${Api}/users/${storedUser.id}`, authConfig());
             setCurrentUser(res.data.data);
         } catch (error) {
-            console.log(error);
+            console.log("Failed to fetch user data:", error);
         }
     };
 
@@ -76,7 +96,7 @@ export const UserProvider = ({ children }) => {
             setSavedPage(pageNumber);
             setSavedHasNextPage(pagination?.hasNextPage ?? false);
         } catch (error) {
-            console.log(error);
+            console.log("Failed to fetch saved posts:", error);
         } finally {
             setSavedLoading(false);
         }
@@ -87,30 +107,36 @@ export const UserProvider = ({ children }) => {
         savedPost.some((item) => String(item?._id || item?.postId?._id) === String(postId));
 
     // ★ Removes the current user's save of the post.
-    //   Optimistically updates savedPost, and rolls back on failure.
     const removeSavedPost = async (postId) => {
-        if (!postId || !currentUser?._id) return false;
+        // Use fallback for userId to prevent race conditions on load
+        const userId = currentUser?._id || storedUser?.id;
+
+        if (!postId || !userId) return false;
         if (savingPostId === postId) return false;
 
         const prev = savedPost;
         setSavingPostId(postId);
         setRemoveLoading(true);
 
-        // optimistic remove
+        // Optimistic remove
         setSavedPost((list) =>
             list.filter((item) => String(item?._id || item?.postId?._id) !== String(postId))
         );
 
         try {
             await axios.delete(
-                `${Api}/save-post/${postId}/${currentUser._id}`,
+                `${Api}/save-post/${postId}/${userId}`,
                 authConfig()
             );
             return true;
         } catch (error) {
-            // rollback
+            // If it's a 404, the backend says it's already unsaved. Treat as success.
+            if (error.response?.status === 404) {
+                return true;
+            }
+            // Real error: rollback
             setSavedPost(prev);
-            console.log(error);
+            console.log("Failed to unsave:", error.response?.data || error.message);
             return false;
         } finally {
             setSavingPostId(null);
@@ -121,30 +147,33 @@ export const UserProvider = ({ children }) => {
     // ★ Saves the post (no-op if already saved).
     const savePost = async (post) => {
         const postId = post?._id;
-        if (!postId || !currentUser?._id) return false;
+        // Use fallback for userId to prevent race conditions on load
+        const userId = currentUser?._id || storedUser?.id;
+
+        if (!postId || !userId) return false;
         if (savingPostId === postId) return false;
         if (isSaved(postId)) return true;
 
         setSavingPostId(postId);
         setSaveLoading(true);
 
-        // optimistic add
+        // Optimistic add
         const optimistic = { ...post, isSaved: true, savedAt: new Date().toISOString() };
         setSavedPost((list) => [optimistic, ...list]);
 
         try {
             await axios.post(
-                `${Api}/save-post/${postId}/${currentUser._id}`,
+                `${Api}/save-post/${postId}/${userId}`,
                 {},
                 authConfig()
             );
             return true;
         } catch (error) {
-            // rollback
+            // Rollback
             setSavedPost((list) =>
                 list.filter((item) => String(item?._id) !== String(postId))
             );
-            console.log(error);
+            console.log("Failed to save:", error.response?.data || error.message);
             return false;
         } finally {
             setSavingPostId(null);
@@ -152,7 +181,7 @@ export const UserProvider = ({ children }) => {
         }
     };
 
-    // ★ One call to rule them all — the UI just calls toggleSave(post).
+    // ★ One call to rule them all.
     const toggleSave = async (post) => {
         if (!post?._id) return false;
         return isSaved(post._id) ? removeSavedPost(post._id) : savePost(post);

@@ -96,7 +96,7 @@ const Notifications = () => {
         case "referral_pending":
         case "referral_rejected":
         case "referral_approved":
-          navigate("/my-referalls");
+          navigate("/my-referrals");
           break;
 
         case "travel_buddy_request":

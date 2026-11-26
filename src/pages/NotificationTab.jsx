@@ -178,12 +178,12 @@ export default function NotificationTab({
 
         // Referral notifications.
         case "referral_approved":
-          navigate("/my-referalls");
+          navigate("/my-referrals");
           break;
 
         case "referral_pending":
         case "referral_rejected":
-          navigate("/my-referalls");
+          navigate("/my-referrals");
           break;
 
         // Travel Buddy: incoming request for the original trip owner

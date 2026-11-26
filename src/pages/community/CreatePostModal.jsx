@@ -24,6 +24,52 @@ const POST_TYPES = [
 
 const HOUSING_TAGS = ["Handyman", "Plumbing", "Electrical", "HVAC", "Cleaning", "Movers", "Pest control", "Lawn"];
 
+/* ─────────────────────────────────────────────────────────────
+   TC-12 fix — room-aware placeholders
+   Each room gets its own example title/details so a member in
+   "Schools & Kids" doesn't see a plumbing example.
+   Adjust the keys here to match the ids in rooms.js.
+   ───────────────────────────────────────────────────────────── */
+const ROOM_PLACEHOLDERS = {
+  general: {
+    title: "What would you like to ask the community?",
+    details: "Add any details that help people respond…",
+  },
+  housing: {
+    title: "Handyman this weekend for a kitchen sink leak",
+    details: "Slow leak under the sink...",
+  },
+  services: {
+    title: "Looking for a reliable plumber in the area",
+    details: "Any recommendations from neighbors?",
+  },
+  schools: {
+    title: "Good preschool near Plano for a 3-year-old?",
+    details: "Looking for a warm, play-based program…",
+  },
+  recommendations: {
+    title: "Recommend a good doctor, plumber, or restaurant",
+    details: "Tell us what worked for you…",
+  },
+  jobs: {
+    title: "Hiring — or looking for a role in your field",
+    details: "Share a job opening or ask about careers…",
+  },
+  events: {
+    title: "Community event, festival, or meetup",
+    details: "What's happening and where…",
+  },
+  buynsell: {
+    title: "What are you selling or looking for?",
+    details: "Describe the item, condition, and price…",
+  },
+};
+
+const GENERIC_PLACEHOLDER = {
+  title: "Add a short title",
+  details: "Add any details…",
+};
+
 /* Shared responsive tokens */
 const BODY_PX = { xs: 1.75, sm: 3 };
 const H_SIZE = { xs: "1.2rem", sm: "1.4rem", md: "1.5rem" };
@@ -70,6 +116,7 @@ export default function CreatePostModal({
     setDetails("");
     setTags([]);
     setTimeframe("");
+    // ★ TC-12 — zip comes from the member's profile, never hardcoded
     setZipcode(currentUser?.zipcode || "");
     setPrice("");
     setIsInsured(false);
@@ -123,6 +170,9 @@ export default function CreatePostModal({
   const typeInfo = POST_TYPES.find((t) => t.id === postType);
   const roomLabel = ALL_ROOMS.find((r) => r.id === room)?.label || room;
   const fieldProps = { fullWidth: true, InputLabelProps: { shrink: true } };
+
+  // ★ TC-12 — resolved placeholders for the current room
+  const placeholders = ROOM_PLACEHOLDERS[room] || GENERIC_PLACEHOLDER;
 
   return (
     <Box
@@ -371,7 +421,8 @@ export default function CreatePostModal({
                 required
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Plumber this weekend for a kitchen sink leak"
+                // ★ TC-12: room-aware placeholder, no more hardcoded plumber hint
+                placeholder={placeholders.title}
                 inputProps={{ maxLength: 100 }}
                 helperText={`${title.length}/100`}
                 FormHelperTextProps={{ sx: { textAlign: "right", mx: 0 } }}
@@ -383,20 +434,6 @@ export default function CreatePostModal({
                 <TextField {...fieldProps} label="Zip code" disabled value={zipcode} onChange={(e) => setZipcode(e.target.value)} placeholder="75034" sx={{ "& .MuiInputBase-input": { fontSize: { xs: "0.92rem", sm: "1rem" } } }} />
               </Stack>
 
-              {/* {postType === "offering" && (
-                <Stack direction="row" spacing={{ xs: 1.25, sm: 2 }} alignItems="center">
-                  <TextField {...fieldProps} label="Price" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="$60/hr" sx={{ "& .MuiInputBase-input": { fontSize: { xs: "0.92rem", sm: "1rem" } } }} />
-                  <FormControlLabel
-                    sx={{
-                      m: 0, whiteSpace: "nowrap", flexShrink: 0,
-                      "& .MuiFormControlLabel-label": { fontSize: { xs: "0.85rem", sm: "1rem" } },
-                    }}
-                    control={<Checkbox checked={isInsured} onChange={(e) => setIsInsured(e.target.checked)} sx={{ p: { xs: 0.75, sm: 1 }, "&.Mui-checked": { color: "#E8650A" } }} />}
-                    label="Insured"
-                  />
-                </Stack>
-              )} */}
-
               <TextField
                 {...fieldProps}
                 multiline
@@ -404,7 +441,8 @@ export default function CreatePostModal({
                 label="Details (optional)"
                 value={details}
                 onChange={(e) => setDetails(e.target.value)}
-                placeholder="Slow leak under the sink..."
+                // ★ TC-12: room-aware placeholder
+                placeholder={placeholders.details}
                 sx={{ "& .MuiInputBase-input": { fontSize: { xs: "0.92rem", sm: "1rem" } } }}
               />
 

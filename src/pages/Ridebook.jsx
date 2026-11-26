@@ -87,6 +87,7 @@ export default function Ridebook({
     name: `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`.trim(),
     age: calculateAge(currentUser?.dob),
   });
+  const selfAge = calculateAge(currentUser?.dob);
   const emptyRequestData = {
     seatsRequested: 1,
     message: "",
@@ -982,7 +983,7 @@ export default function Ridebook({
           rows={isMobile ? 3 : 4}
           size={isMobile ? "small" : "medium"}
           label={
-            "Message to Rider"
+            "Message to Driver"
           }
           value={requestData.message}
           sx={{

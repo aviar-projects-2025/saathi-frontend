@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
     Paper, Typography, Chip, Stack, Divider, Button, Box, IconButton,
-    Menu, MenuItem, ListItemIcon, ListItemText,
+    Menu, MenuItem, ListItemIcon, ListItemText, CircularProgress,
 } from "@mui/material";
 import axios from "axios";
 import ThumbUpOffAltIcon from "@mui/icons-material/ThumbUpOffAlt";
@@ -19,6 +19,7 @@ import CommunityImage from "../../components/CommunityImage.jsx";
 import { getRoom } from "./rooms.js";
 import ProtectedAvatar from "../../components/ProtectedAvatar.jsx";
 import { usePost } from "../../context/PostContext.jsx";
+import { useUser } from "../../context/userConetext"; // ★ IMPORT THE CONTEXT
 
 const SAFFRON = "#E8650A";
 const RUST = "#B33A00";
@@ -66,16 +67,15 @@ const AuthorAvatar = ({ author, onClick }) => {
 export default function CommunityFeedItem({
     post,
     currentUser,
-    isPostSaved,
     onToggleLike,
-    onToggleSave,
     onUserClick,
     onMessage,
-    // Kept for backward compatibility; no longer used for edit/delete flow.
     onDeletePost,
     onUpdatePost,
 }) {
     const { openEdit, openDelete, onPostUpdated, onPostDeleted } = usePost();
+    // ★ WIRE IN THE SAVE CONTEXT
+    const { isSaved, toggleSave, savingPostId } = useUser();
 
     // ─── Local mirror so this card reacts to edits/deletes made elsewhere ───
     const [livePost, setLivePost] = useState(post);
@@ -130,7 +130,10 @@ export default function CommunityFeedItem({
     const author = livePost?.authorId;
     const isOffering = livePost?.postType === "offering";
     const isAuthor = !!author?._id && author._id === currentUser?._id;
-    const saved = isPostSaved(livePost?._id);
+    
+    // ★ USE CONTEXT FOR SAVED STATE
+    const saved = isSaved(livePost?._id);
+    const isSavingThisPost = savingPostId === livePost?._id;
     const room = getRoom(livePost?.room);
 
     const hasTitle = !!livePost?.title;
@@ -140,6 +143,8 @@ export default function CommunityFeedItem({
     const openProfile = () => onUserClick?.(author);
     const handleEdit = () => { setMenuAnchor(null); openEdit(livePost); };
     const handleDelete = () => { setMenuAnchor(null); openDelete(livePost); };
+    // ★ CALL CONTEXT TOGGLE
+    const handleToggleSave = () => { toggleSave(livePost); };
 
     return (
         <>
@@ -412,14 +417,15 @@ export default function CommunityFeedItem({
                         {
                             key: "save",
                             active: saved,
-                            onClick: () => onToggleSave?.(livePost),
-                            icon: saved ? <BookmarkIcon /> : <BookmarkBorderIcon />,
+                            onClick: handleToggleSave, // ★ CONTEXT CALL
+                            icon: isSavingThisPost ? <CircularProgress size={18} color="inherit" /> : (saved ? <BookmarkIcon /> : <BookmarkBorderIcon />),
                             label: saved ? "Saved" : "Save",
                         },
                     ].map((a) => (
                         <Button
                             key={a.key}
                             onClick={a.onClick}
+                            disabled={isSavingThisPost && a.key === "save"}
                             startIcon={a.icon}
                             sx={{
                                 flex: 1,
@@ -463,7 +469,7 @@ export default function CommunityFeedItem({
                 )}
             </Paper>
 
-            {/* Author menu (Edit / Delete) — the actual dialogs live in PostProvider */}
+            {/* Author menu (Edit / Delete) */}
             <Menu
                 anchorEl={menuAnchor}
                 open={Boolean(menuAnchor)}

@@ -10,8 +10,9 @@ import { useUser } from "../context/userConetext.jsx";
 import { useRide } from "../context/RideContext";
 import Api from "../Api";
 import ProtectedAvatar from "../components/ProtectedAvatar.jsx";
-// ★ ADDED: Import ChatModal
 import ChatModal from "./ChatModal";
+// ★ TC-11: shared MM/DD/YYYY formatter
+import { formatDate } from "../utils/formatDate";
 
 const FONT = '"DM Sans", "Inter", "Segoe UI", Roboto, Arial, sans-serif';
 const BRAND = "#B5440F";
@@ -45,16 +46,14 @@ export default function RideList({ ride, onIcanHelp }) {
   const { refreshRide } = useRide();
 
   const [myRequestedRides, setMyRequestedRides] = useState([]);
-  const [myHelpProposals, setMyHelpProposals] = useState([]); // ★ NEW
+  const [myHelpProposals, setMyHelpProposals] = useState([]);
   const [selectedRide, setSelectedRide] = useState(null);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [openEditModal, setOpenEditModal] = useState(false);
   const [selectedRideModal, setSelectedRideModal] = useState(null);
 
-  // Profile and Chat Modals
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null);
-  // ★ ADDED: Chat Modal State
   const [chatModalOpen, setChatModalOpen] = useState(false);
   const [chatUser, setChatUser] = useState(null);
 
@@ -69,19 +68,15 @@ export default function RideList({ ride, onIcanHelp }) {
   const isOffer = rideType === "offer";
   const isRequest = rideType === "request";
 
-  /* ───────────── API ───────────── */
   const myReqRides = async () => {
     try {
-      const res = await axios.get(
-        `${Api}/bookride/${storedUser?.id}?type=requested`,
-      );
+      const res = await axios.get(`${Api}/bookride/${storedUser?.id}?type=requested`);
       if (res.data.success) setMyRequestedRides(res.data.data || []);
     } catch (error) {
       console.log(error.message);
     }
   };
 
-  // ★ NEW: fetch my sent help proposals
   const fetchMyHelpProposals = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -109,7 +104,6 @@ export default function RideList({ ride, onIcanHelp }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshRide]);
 
-  /* ───────────── Display values ───────────── */
   const userName =
     `${user.firstName || ""} ${user.lastName || ""}`.trim() || "Saathi User";
   const initials = `${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`;
@@ -118,21 +112,20 @@ export default function RideList({ ride, onIcanHelp }) {
   const routeFrom = isFlight ? ride.fromAirport || ride.from : ride.from;
   const routeTo = isFlight ? ride.toAirport || ride.destination : ride.destination;
 
-  const dateObj = ride.startTime ? new Date(ride.startTime) : null;
-  const dateStr = dateObj
-    ? dateObj.toLocaleDateString("en-US", {
-      weekday: "short", month: "2-digit", day: "2-digit", year: "numeric",
-    })
-    : "No date";
-  const timeStr = dateObj
-    ? dateObj.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
-    : "";
+  // ★ TC-11 fix: shared MM/DD/YYYY formatter + US-style time
+  const dateStr = formatDate(ride.startTime) || "No date";
+  const timeStr =
+    ride.startTime && !isNaN(new Date(ride.startTime).getTime())
+      ? new Date(ride.startTime).toLocaleTimeString("en-US", {
+          hour: "numeric",
+          minute: "2-digit",
+        })
+      : "";
 
   const languages = Array.isArray(ride?.createdBy?.language)
     ? ride.createdBy?.language.join(", ")
     : "";
 
-  /* ───────────── Request state (for offers) ───────────── */
   const pendingRequest = myRequestedRides.find(
     (item) => getRideId(item.rideId) === ride._id,
   );
@@ -157,7 +150,6 @@ export default function RideList({ ride, onIcanHelp }) {
   ).length;
   const isBlocked = cancelledRequestCount >= 3;
 
-  /* ───────────── Help proposal state (for requests) ★ NEW ───────────── */
   const myProposalForThisRide = myHelpProposals.find((p) => {
     const reqRideId =
       typeof p?.requestRideId === "object" ? p.requestRideId?._id : p?.requestRideId;
@@ -169,12 +161,9 @@ export default function RideList({ ride, onIcanHelp }) {
   const myHelpWasRejected = myProposalStatus === "REJECTED";
   const myHelpWasCancelled = myProposalStatus === "CANCELLED";
 
-  /* ★ Ride-level state — did the owner close the request (someone else accepted)? */
   const isRequestClosed =
-    isRequest &&
-    String(ride?.status || "").toUpperCase() === "CLOSED";
+    isRequest && String(ride?.status || "").toUpperCase() === "CLOSED";
 
-  /* ───────────── Seats ───────────── */
   const availableSeats = Math.max(Number(ride.availableSeats || 0), 0);
   const remainingSeatsForUser = isFlight ? 1 : availableSeats;
   const noSeats = !isFlight && availableSeats <= 0;
@@ -196,10 +185,9 @@ export default function RideList({ ride, onIcanHelp }) {
 
   const isFlightBookingClosed =
     isFlight &&
-    dateObj &&
-    new Date() >= new Date(dateObj.getTime() - 2 * 60 * 60 * 1000);
+    ride.startTime &&
+    new Date() >= new Date(new Date(ride.startTime).getTime() - 2 * 60 * 60 * 1000);
 
-  /* ───────────── Subtitle ───────────── */
   const subtitle = [
     userName,
     isFlight ? "Flight companion" : ride.modeOfTravel,
@@ -208,7 +196,6 @@ export default function RideList({ ride, onIcanHelp }) {
     .filter(Boolean)
     .join(" · ");
 
-  /* ───────────── Chips ───────────── */
   const durationText =
     ride?.duration != null
       ? ride.duration >= 60
@@ -239,14 +226,8 @@ export default function RideList({ ride, onIcanHelp }) {
         ...CHIP.slate,
       });
     }
-    if (
-      ride.luggageSpace &&
-      ride.luggageSpace.trim().toLowerCase() !== "none"
-    ) {
-      chips.push({
-        label: ride.luggageSpace,
-        ...CHIP.blue,
-      });
+    if (ride.luggageSpace && ride.luggageSpace.trim().toLowerCase() !== "none") {
+      chips.push({ label: ride.luggageSpace, ...CHIP.blue });
     }
   }
 
@@ -270,7 +251,6 @@ export default function RideList({ ride, onIcanHelp }) {
     });
   }
 
-  // ★ Help proposal chip for request rides
   if (isRequest && alreadyOfferedHelp) {
     chips.push({
       label: myProposalStatus === "ACCEPTED" ? "Your help was accepted" : "Help offer sent",
@@ -281,7 +261,6 @@ export default function RideList({ ride, onIcanHelp }) {
     chips.push({ label: "Request closed", ...CHIP.red });
   }
 
-  /* ───────────── Button Logic ───────────── */
   const isDanger = isRejected || isBlocked;
 
   const buttonDisabled =
@@ -528,7 +507,6 @@ export default function RideList({ ride, onIcanHelp }) {
         </Paper>
       </Box>
 
-      {/* ★ UPDATED: Profile Modal wires directly to Chat Modal */}
       <ProfileModal
         open={profileModalOpen}
         selectedProfile={selectedProfile}
@@ -540,7 +518,6 @@ export default function RideList({ ride, onIcanHelp }) {
         }}
       />
 
-      {/* ★ ADDED: Chat Modal */}
       <ChatModal
         open={chatModalOpen}
         selectedUser={chatUser}

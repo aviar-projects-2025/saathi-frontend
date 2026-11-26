@@ -19,6 +19,8 @@ import RideList from "./RideCard2.jsx";
 import Api from "../Api";
 import OfferRide from "./OfferRide.jsx";
 import { useUser } from "../context/userConetext.jsx";
+// ★ TC-11: shared MM/DD/YYYY formatter
+import { formatDate } from "../utils/formatDate";
 
 /* ─────────── Design tokens ─────────── */
 const saffron = { 50: "#FFF8EE", 200: "#FFD492", 500: "#F59300", 700: "#A85F00" };
@@ -76,8 +78,7 @@ const CATEGORY_OPTIONS = [
   { label: "Temple / event", value: "Temple / event" },
   { label: "Grocery / shopping", value: "Grocery / shopping" },
   { label: "Regular commute", value: "Regular commute" },
-  // { label: "Ride request", value: "Ride request" },
-];;
+];
 
 const LANGUAGE_OPTIONS = ["Tamil", "English", "Hindi", "Telugu"];
 
@@ -90,7 +91,7 @@ const RADIUS_OPTIONS = [
 
 const NAVBAR_HEIGHT = 35;
 const SCROLL_COLLAPSE_THRESHOLD = 24;
-const WELCOME_BANNER_DISMISS_KEY = "saathi_welcome_banner_dismissed";   // ← ADD
+const WELCOME_BANNER_DISMISS_KEY = "saathi_welcome_banner_dismissed";
 
 /* ─────────── Defaults ─────────── */
 const emptyFilters = {
@@ -103,7 +104,7 @@ const emptyFilters = {
   womenRidersOnly: false,
   dateFrom: "",
   dateTo: "",
-  radiusMi: null, // ← no radius by default so distant rides remain visible
+  radiusMi: null,
 };
 
 /* ─────────── Filtering logic ─────────── */
@@ -154,27 +155,21 @@ const matchesFilters = (ride, filters, searchFrom, searchDestination, userLocati
   const n = normalizeRide(ride);
   if (!n) return false;
 
-  // Type ("Offers" → offer, "Requests" → request)
   if (filters.type) {
     const wantedKind = filters.type === "Offers" ? "offer" : "request";
     if (n.kind !== wantedKind) return false;
   }
 
-  // Transport mode
   if (filters.transportMode && n.transportMode !== filters.transportMode.toLowerCase()) return false;
 
-  // Category
   if (filters.category && n.category !== normalizeCategory(filters.category)) return false;
 
-  // Language
   if (filters.language && !n.languages.includes(filters.language.toLowerCase())) return false;
 
-  // Boolean toggles
   if (filters.freeRidesOnly && !n.freeRides) return false;
   if (filters.childFriendly && !n.childFriendly) return false;
   if (filters.womenRidersOnly && !n.womenOnly) return false;
 
-  // Date range — compare in UTC
   if (n.startTime) {
     if (filters.dateFrom) {
       const from = new Date(filters.dateFrom + "T00:00:00Z");
@@ -186,11 +181,9 @@ const matchesFilters = (ride, filters, searchFrom, searchDestination, userLocati
     }
   }
 
-  // Text search
   if (searchFrom && !n.fromText.includes(searchFrom.toLowerCase())) return false;
   if (searchDestination && !n.toText.includes(searchDestination.toLowerCase())) return false;
 
-  // Radius — only when user explicitly picked one
   if (userLocation && filters.radiusMi && Number.isFinite(n.lat) && Number.isFinite(n.lng)) {
     const R = 6371;
     const dLat = ((n.lat - userLocation.latitude) * Math.PI) / 180;
@@ -404,10 +397,6 @@ export default function FindRides() {
   const [showWelcomeBanner, setShowWelcomeBanner] = useState(false);
   const hasCheckedWelcomeRef = useRef(false);
 
-  // console.log("currentUser:", currentUser);
-  // console.log("createdAt raw:", currentUser?.createdAt);
-  // console.log("createdAt parsed:", new Date(currentUser?.createdAt));
-
   /* ─────────── Fetch rides ─────────── */
   const fetchRides = async ({ pageNumber = 1, reset = false } = {}) => {
     if (loadingMoreRef.current) return;
@@ -454,13 +443,11 @@ export default function FindRides() {
     if (hasCheckedWelcomeRef.current) return;
     if (!currentUser || !currentUser._id) return;
 
-    // Already dismissed → never show again
     if (localStorage.getItem(WELCOME_BANNER_DISMISS_KEY) === "true") {
       hasCheckedWelcomeRef.current = true;
       return;
     }
 
-    // Must have joined within last 7 days
     const createdAt = currentUser.createdAt ? new Date(currentUser.createdAt) : null;
     if (!createdAt || isNaN(createdAt.getTime())) {
       hasCheckedWelcomeRef.current = true;
@@ -473,7 +460,6 @@ export default function FindRides() {
       return;
     }
 
-    // Must not have posted/requested any rides yet
     const checkUserRides = async () => {
       try {
         const res = await axios.get(`${Api}/rides/my/counts`, {
@@ -505,7 +491,6 @@ export default function FindRides() {
   };
 
   const handleWelcomeFindRide = () => {
-    // handleDismissWelcomeBanner();
     resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
@@ -513,7 +498,7 @@ export default function FindRides() {
 
   const tryOpenOfferRide = () => {
     if (!isProfileComplete) {
-      setProfileGateOpen(true); // reuse the "Complete Your Profile" dialog
+      setProfileGateOpen(true);
       return;
     }
     setOpen(true);
@@ -649,7 +634,6 @@ export default function FindRides() {
     return () => window.removeEventListener("scroll", onWindowScroll);
   }, []);
 
-  /* Update BOTH draft and applied so the list re-filters immediately */
   const updateFilterAndApply = (key, value) => {
     setDraftFilters((prev) => {
       const next = { ...prev, [key]: value };
@@ -728,14 +712,15 @@ export default function FindRides() {
         setDraftFilters(next);
       },
     },
+    // ★ TC-11 fix: MM/DD/YYYY via shared formatter (was raw YYYY-MM-DD)
     (appliedFilters.dateFrom || appliedFilters.dateTo) && {
       key: "dates",
       label:
         appliedFilters.dateFrom && appliedFilters.dateTo
-          ? `${appliedFilters.dateFrom} → ${appliedFilters.dateTo}`
+          ? `${formatDate(appliedFilters.dateFrom)} → ${formatDate(appliedFilters.dateTo)}`
           : appliedFilters.dateFrom
-            ? `From ${appliedFilters.dateFrom}`
-            : `Until ${appliedFilters.dateTo}`,
+            ? `From ${formatDate(appliedFilters.dateFrom)}`
+            : `Until ${formatDate(appliedFilters.dateTo)}`,
       clear: () => {
         const next = { ...appliedFilters, dateFrom: "", dateTo: "" };
         setAppliedFilters(next);
@@ -1059,7 +1044,6 @@ export default function FindRides() {
           maxWidth: "100%",
           boxSizing: "border-box",
           bgcolor: "#FAF8F5",
-          // p: { xs: 0.5, sm: 1.5, md: 2.5, lg: 3 },
           overflowX: "clip",
         }}
       >
@@ -1082,7 +1066,6 @@ export default function FindRides() {
               Find a ride
             </Typography>
           </Stack>
-          {/* {console.log(showWelcomeBanner, 'showWelcomeBanner')} */}
 
           {showWelcomeBanner && (
             <WelcomeBanner
@@ -1093,7 +1076,6 @@ export default function FindRides() {
               postDisabled={!isProfileComplete}
             />
           )}
-
 
           <Box
             sx={{
@@ -1254,7 +1236,6 @@ export default function FindRides() {
                     }}
                   />
 
-                  {/* Only show radius options if a location is present */}
                   {(userLocation || searchFromLocation.trim().length > 0) && (
                     <Box sx={{ display: "flex", flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 1 }}>
                       <Typography sx={{ fontSize: { xs: 12, sm: 13 }, color: "text.secondary" }}>within</Typography>
