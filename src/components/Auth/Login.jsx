@@ -242,6 +242,7 @@ const Login = () => {
 
         const phone = `${countryCode}${cleaned}`;
 
+          console.log(phone,'phone')
         // Check saved lock before sending OTP
         const lockKey = getOtpLockKey(phone);
         const savedLock = localStorage.getItem(lockKey);
