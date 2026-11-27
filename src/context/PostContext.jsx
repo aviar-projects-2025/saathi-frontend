@@ -150,7 +150,7 @@ export function PostProvider({ children }) {
       //   Same pattern as EditProfile.jsx: `uploadImageToS3(file, folder)` → { key }.
       let newImageKey = "";
       if (editFile) {
-        const uploaded = await uploadImageToS3(editFile, "community-posts");
+        const uploaded = await uploadImageToS3(editFile, "community");
         newImageKey = uploaded?.key || "";
         if (!newImageKey) throw new Error("Image upload failed");
       }

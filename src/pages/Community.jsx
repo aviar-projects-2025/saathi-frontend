@@ -182,6 +182,22 @@ export default function Community() {
               </Typography>
             </Paper>
 
+             <Typography
+              sx={{
+                fontSize: { xs: "0.72rem", sm: "0.78rem" },
+                color: "#7A4A00",
+                bgcolor: "#FFF7E6",
+                border: "1px solid #F5C896",
+                borderRadius: 1.5,
+                px: { xs: 1.25, sm: 1.5 },
+                py: { xs: 0.75, sm: 1 },
+                mb: { xs: 1.5, sm: 2 },
+                lineHeight: 1.45,
+              }}
+            >
+              <strong>Immigration room is not legal advice</strong> — shared by members, not attorneys.
+            </Typography>
+
             {/* Rooms */}
             <Typography fontWeight={700} sx={{ mb: { xs: 1, sm: 1.5 }, fontSize: { xs: "1.05rem", sm: "1.2rem", md: "1.25rem" } }}>
               Rooms

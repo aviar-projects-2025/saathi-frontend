@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Box, Typography, Button, Stack, Chip } from "@mui/material";
+import { Box, Typography, Button, Stack, Chip, Alert } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import AddIcon from "@mui/icons-material/Add";
+import GavelIcon from "@mui/icons-material/Gavel";
 import { toast } from "react-toastify";
 
 import PageLayout from "../../components/PageLayout.jsx";
@@ -25,7 +26,6 @@ export default function RoomDetails() {
   const [activeSub, setActiveSub] = useState("All");
   const [createOpen, setCreateOpen] = useState(false);
 
-  // Reset the filter when moving between rooms
   useEffect(() => {
     setActiveSub("All");
   }, [roomId]);
@@ -140,6 +140,41 @@ export default function RoomDetails() {
           </Typography>
         </Box>
 
+        {/* ★ TC-fix: "Not legal advice" banner — Immigration room only */}
+        {roomId === "immigration" && (
+          <Alert
+            severity="warning"
+            icon={<GavelIcon sx={{ fontSize: { xs: 20, sm: 22 } }} />}
+            sx={{
+              mb: { xs: 1.5, sm: 2 },
+              borderRadius: { xs: 1.5, sm: 2 },
+              bgcolor: "#FFF7E6",
+              color: "#7A4A00",
+              border: "1px solid #F5C896",
+              alignItems: "flex-start",
+              "& .MuiAlert-icon": { color: "#B26A00", mt: "2px" },
+              "& .MuiAlert-message": {
+                fontSize: { xs: "0.78rem", sm: "0.84rem", md: "0.88rem" },
+                lineHeight: 1.5,
+                width: "100%",
+              },
+            }}
+          >
+            <Typography
+              component="span"
+              sx={{ fontWeight: 800, display: "block", mb: 0.25, color: "#7A4A00" }}
+            >
+              Not legal advice
+            </Typography>
+            <Typography component="span" sx={{ color: "#7A4A00" }}>
+              This is a community space for sharing personal experience. Posts and
+              replies are from members, not attorneys, and are not legal advice. For
+              your situation, please consult a licensed immigration attorney or an
+              accredited representative.
+            </Typography>
+          </Alert>
+        )}
+
         {/* Sub-category Chips */}
         {subCategories && (
           <Stack
@@ -174,7 +209,6 @@ export default function RoomDetails() {
         )}
 
         <Box
-          // ref={contentRef}
           sx={{
             flex: 1,
             width: "100%",
@@ -184,11 +218,14 @@ export default function RoomDetails() {
             pb: { xs: 14, sm: 12 },
           }}
         >
-          <FeedList feed={feed} emptyText="No posts in this room yet. Be the first!" />
+          <FeedList
+            feed={feed}
+            emptyText="No posts in this room yet. Be the first!"
+          />
         </Box>
       </Box>
 
-      {/* ★ FIXED: Floating Action Button */}
+      {/* Floating Action Button */}
       <Button
         variant="contained"
         onClick={handleCreate}
@@ -196,43 +233,29 @@ export default function RoomDetails() {
         sx={{
           position: "fixed",
           zIndex: 1100,
-
           bgcolor: "#B33A00",
           color: "#fff",
           borderRadius: 99,
-
           px: { xs: 2, sm: 2.5, md: 3 },
           py: { xs: 1.1, sm: 1.3, md: 1.5 },
           fontWeight: 700,
-          fontSize: {
-            xs: "0.78rem",
-            sm: "0.88rem",
-            md: "0.95rem",
-          },
-
+          fontSize: { xs: "0.78rem", sm: "0.88rem", md: "0.95rem" },
           whiteSpace: "nowrap",
           width: "max-content",
           maxWidth: "calc(100vw - 24px)",
           minWidth: "fit-content",
-
           textTransform: "none",
           boxSizing: "border-box",
           boxShadow: "0 4px 12px rgba(179,58,0,0.4)",
-
           "& .MuiButton-startIcon": {
             mr: { xs: 0.5, sm: 1 },
             ml: 0,
             flexShrink: 0,
           },
-
-          "&:hover": {
-            bgcolor: "#8f2e00",
-          },
-
+          "&:hover": { bgcolor: "#8f2e00" },
           left: { xs: "50%", md: "auto" },
           right: { xs: "auto", md: "32px" },
           transform: { xs: "translateX(-50%)", md: "none" },
-
           bottom: {
             xs: "calc(90px + env(safe-area-inset-bottom, 0px))",
             md: "40px",
