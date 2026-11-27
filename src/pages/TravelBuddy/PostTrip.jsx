@@ -367,7 +367,7 @@ function StepFlights({ form, setForm, onNext, onCancel, isPrefilled, isEditMode 
       let value = e.target.value;
 
       if (["airline", "from", "to"].includes(key)) {
-        value = value.replace(/[^a-zA-Z\s]/g, "");
+        value = value.replace(/[^a-zA-Z\s()]/g, "");
       }
 
       if (key === "flightNumber") {

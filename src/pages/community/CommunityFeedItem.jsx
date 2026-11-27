@@ -130,7 +130,7 @@ export default function CommunityFeedItem({
     const author = livePost?.authorId;
     const isOffering = livePost?.postType === "offering";
     const isAuthor = !!author?._id && author._id === currentUser?._id;
-    
+
     // ★ USE CONTEXT FOR SAVED STATE
     const saved = isSaved(livePost?._id);
     const isSavingThisPost = savingPostId === livePost?._id;
@@ -281,7 +281,7 @@ export default function CommunityFeedItem({
                                         WebkitBoxOrient: "vertical",
                                     }}
                                 >
-                                    {body}
+                                    {body?.replace(/(\r?\n\s*){2,}/g, "\n").trim()}
                                 </Typography>
 
                                 {isLong && (

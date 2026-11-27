@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import {
     Dialog,
@@ -17,6 +18,7 @@ import VerifiedOutlinedIcon from "@mui/icons-material/VerifiedOutlined";
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
 import StarIcon from "@mui/icons-material/Star";
 import PersonAddAlt1OutlinedIcon from "@mui/icons-material/PersonAddAlt1Outlined";
+
 import axios from "axios";
 
 import ProtectedAvatar from "../components/ProtectedAvatar";
@@ -25,28 +27,33 @@ import { useChatModal } from "../context/ChatModalContext";
 import Api from "../Api";
 
 const SAFFRON = "#FF9933";
+const GREEN = "#2E7D32";
+const DARK = "#1F1A17";
 
-/* ─────────────────────────────────────────────────────────────
-   Helpers — read the referrer ("who vouched") from the profile.
-   Accepts several common field shapes so the modal works
-   regardless of how the API nests it.
-   ───────────────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────
+   Helpers
+───────────────────────────────────────────── */
+
 const getReferrerName = (p) => {
     if (!p) return "";
 
     if (typeof p.referredByName === "string" && p.referredByName.trim()) {
         return p.referredByName.trim();
     }
+
     if (typeof p.referrerName === "string" && p.referrerName.trim()) {
         return p.referrerName.trim();
     }
 
     const nested = p.referredBy || p.referrer || p.vouchedBy;
+
     if (nested && typeof nested === "object") {
         if (typeof nested.name === "string" && nested.name.trim()) {
             return nested.name.trim();
         }
+
         const composed = `${nested.firstName || ""} ${nested.lastName || ""}`.trim();
+
         if (composed) return composed;
     }
 
@@ -55,32 +62,60 @@ const getReferrerName = (p) => {
 
 const getApprovalDate = (p) => {
     if (!p) return null;
+
     return (
         p.approvedAt ||
         p.approvalDate ||
-        (p.referredBy && p.referredBy.approvedAt) ||
+        p.referredBy?.approvedAt ||
         null
     );
 };
 
-const getMembersReferredCount = (p) => {
-    if (!p) return null;
-    if (typeof p.membersReferred === "number") return p.membersReferred;
-    if (typeof p.referredMembers === "number") return p.referredMembers;
-    if (Array.isArray(p.referredMembers)) return p.referredMembers.length;
-    return null;
-};
-
 const formatDate = (value) => {
     if (!value) return "";
-    const d = new Date(value);
-    if (Number.isNaN(d.getTime())) return "";
-    return d.toLocaleDateString("en-US", {
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) return "";
+
+    return date.toLocaleDateString("en-US", {
         month: "long",
         day: "numeric",
         year: "numeric",
     });
 };
+
+const getRatingLabel = (rating) => {
+    if (rating >= 4.5) return "Excellent";
+    if (rating >= 4.0) return "Very Good";
+    if (rating >= 3.0) return "Good";
+    if (rating > 0) return "Fair";
+
+    return "New Member";
+};
+
+/* ─────────────────────────────────────────────
+   Reusable Section Heading
+───────────────────────────────────────────── */
+
+const SectionLabel = ({ children }) => (
+    <Typography
+        sx={{
+            fontSize: { xs: "0.68rem", sm: "0.72rem" },
+            fontWeight: 700,
+            color: "#888",
+            textTransform: "uppercase",
+            letterSpacing: "0.6px",
+            mb: 0.8,
+        }}
+    >
+        {children}
+    </Typography>
+);
+
+/* ─────────────────────────────────────────────
+   Profile Modal
+───────────────────────────────────────────── */
 
 const ProfileModal = ({
     open,
@@ -91,41 +126,63 @@ const ProfileModal = ({
 }) => {
     const user = useUser();
     const { openChatWith } = useChatModal();
-    const isOwnProfile = selectedProfile?._id === user?.currentUser?._id;
 
-    /* ─────────────────────────────────────────────────────────
-       Fetch the FULL profile by id whenever the modal opens.
-       `selectedProfile` is often a trimmed user object (from a
-       ride/passenger list) with no referrer/bio/rating, so we
-       hydrate it from GET /users/:id.
-       ───────────────────────────────────────────────────────── */
-    const [fullProfile, setFullProfile] = useState(null);
-    const [loadingProfile, setLoadingProfile] = useState(false);
     const profileId = selectedProfile?._id || selectedProfile?.id;
 
+    const currentUserId =
+        currentUser?._id ||
+        user?.currentUser?._id;
+
+    const isOwnProfile =
+        String(profileId || "") === String(currentUserId || "");
+
+    const [fullProfile, setFullProfile] = useState(null);
+    const [loadingProfile, setLoadingProfile] = useState(false);
+
+    /* ─────────────────────────────────────────
+       Fetch full profile
+    ───────────────────────────────────────── */
+
     useEffect(() => {
-        if (!open || !profileId) return;
+        if (!open || !profileId) {
+            setFullProfile(null);
+            setLoadingProfile(false);
+            return;
+        }
 
         let cancelled = false;
 
         const fetchProfile = async () => {
             try {
                 setLoadingProfile(true);
+                setFullProfile(null);
+
                 const token = localStorage.getItem("token");
-                const res = await axios.get(`${Api}/users/${profileId}`, {
-                    headers: token ? { Authorization: `Bearer ${token}` } : {},
-                });
-                if (cancelled) return;
-                setFullProfile(res?.data?.data || null);
-            } catch (err) {
-                // Non-fatal: fall back to the partial profile
-                if (!cancelled) setFullProfile(null);
+
+                const res = await axios.get(
+                    `${Api}/users/${profileId}`,
+                    {
+                        headers: token
+                            ? { Authorization: `Bearer ${token}` }
+                            : {},
+                    }
+                );
+
+                if (!cancelled) {
+                    setFullProfile(res?.data?.data || null);
+                }
+            } catch (error) {
+                console.error("Failed to fetch profile:", error);
+
+                if (!cancelled) {
+                    setFullProfile(null);
+                }
             } finally {
-                if (!cancelled) setLoadingProfile(false);
+                if (!cancelled) {
+                    setLoadingProfile(false);
+                }
             }
         };
-
-        console.log(fullProfile,'fullProfile')
 
         fetchProfile();
 
@@ -134,24 +191,41 @@ const ProfileModal = ({
         };
     }, [open, profileId]);
 
-    /* Merge: start with the partial, overlay the full profile */
-    const p = { ...(selectedProfile || {}), ...(fullProfile || {}) };
+    /* ─────────────────────────────────────────
+       Merge profile data
+    ───────────────────────────────────────── */
+
+    const p = {
+        ...(selectedProfile || {}),
+        ...(fullProfile || {}),
+    };
 
     const fullName =
         `${p?.firstName || ""} ${p?.lastName || ""}`.trim() ||
         p?.name ||
         "Community Member";
 
-    const city = p?.city || p?.location?.city || "Location not added";
-    const ratingValue = Number(p?.averageRating || p?.rating || 0);
-    const rideCount = Number(p?.completedRideCount || 0);
+    const city =
+        p?.city ||
+        p?.location?.city ||
+        "Location not added";
+
+    const ratingValue = Number(
+        p?.averageRating || p?.rating || 0
+    );
+
+    const rideCount = Number(
+        p?.completedRideCount || 0
+    );
 
     const memberSince = p?.createdAt
         ? new Date(p.createdAt).getFullYear()
         : null;
 
     const isVerified = Boolean(
-        p?.isPhoneVerified || p?.phoneVerified || p?.isVerified
+        p?.isPhoneVerified ||
+        p?.phoneVerified ||
+        p?.isVerified
     );
 
     const bio =
@@ -160,266 +234,553 @@ const ProfileModal = ({
         p?.profession ||
         "This member hasn't written a bio yet.";
 
-    /* ── Referral ("who vouched") data ── */
+    /* Referral details */
+
     const referrerName = getReferrerName(p);
     const approvedOn = formatDate(getApprovalDate(p));
-    const membersReferred = getMembersReferredCount(p);
+
     const hasReferralInfo = Boolean(
-        referrerName || approvedOn || membersReferred != null
+        referrerName || approvedOn
     );
 
-    const getRatingLabel = (rating) => {
-        if (rating >= 4.5) return "Excellent";
-        if (rating >= 4.0) return "Very Good";
-        if (rating >= 3.0) return "Good";
-        if (rating > 0) return "Fair";
-        return "New Member";
-    };
+    /* ─────────────────────────────────────────
+       Loading state for profile switch
+    ───────────────────────────────────────── */
+
+    const profileLoading = loadingProfile && !fullProfile;
+
+    /* ─────────────────────────────────────────
+       UI
+    ───────────────────────────────────────── */
 
     return (
         <Dialog
             open={open}
             onClose={onClose}
-            maxWidth="xs"
             fullWidth
+            maxWidth="sm"
+            scroll="paper"
             slotProps={{
                 paper: {
                     sx: {
-                        borderRadius: 5,
-                        backgroundColor: "rgba(255, 255, 255, 0.85)",
+                        width: {
+                            xs: "calc(100% - 24px)",
+                            sm: "90%",
+                            md: "520px",
+                            lg: "560px",
+                        },
+
+                        maxWidth: "560px",
+
+                        maxHeight: {
+                            xs: "calc(100% - 24px)",
+                            sm: "90vh",
+                            md: "88vh",
+                        },
+
+                        m: {
+                            xs: "12px",
+                            sm: "24px",
+                        },
+
+                        borderRadius: {
+                            xs: "18px",
+                            sm: "24px",
+                        },
+
+                        backgroundColor: "rgba(255,255,255,0.97)",
+
                         backdropFilter: "blur(20px)",
                         WebkitBackdropFilter: "blur(20px)",
+
                         boxShadow:
-                            "0 20px 40px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.6)",
-                        border: "1px solid rgba(255, 255, 255, 0.5)",
+                            "0 20px 60px rgba(0,0,0,0.16)",
+
+                        border: "1px solid rgba(255,255,255,0.7)",
+
                         overflow: "hidden",
-                        position: "relative",
                     },
                 },
+
                 backdrop: {
                     sx: {
-                        backgroundColor: "rgba(20, 15, 10, 0.6)",
+                        backgroundColor: "rgba(20,15,10,0.6)",
+                        backdropFilter: "blur(3px)",
                     },
                 },
             }}
         >
             {/* Close Button */}
+
             <IconButton
                 aria-label="close"
                 onClick={onClose}
                 sx={{
                     position: "absolute",
-                    top: 16,
-                    right: 16,
+                    top: { xs: 10, sm: 14 },
+                    right: { xs: 10, sm: 14 },
                     zIndex: 10,
+
+                    width: { xs: 32, sm: 36 },
+                    height: { xs: 32, sm: 36 },
+
                     color: "#4A4A4A",
-                    bgcolor: "rgba(255,255,255,0.6)",
-                    "&:hover": { bgcolor: "#fff", color: "#000" },
+                    bgcolor: "rgba(255,255,255,0.85)",
+
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+
+                    "&:hover": {
+                        bgcolor: "#fff",
+                        color: "#000",
+                    },
                 }}
             >
-                <CloseIcon fontSize="small" />
+                <CloseIcon sx={{ fontSize: 19 }} />
             </IconButton>
 
-            <DialogContent sx={{ p: { xs: 3, sm: 4 }, overflow: "visible" }}>
-                <Stack spacing={3} alignItems="center">
-                    {/* ── Top: Avatar & Name ── */}
-                    <Stack alignItems="center" spacing={1}>
-                        <ProtectedAvatar
-                            src={p?.profileImageUrl || ""}
-                            alt={fullName}
-                            sx={{
-                                width: 100,
-                                height: 100,
-                                bgcolor: "rgba(255, 153, 51, 0.1)",
-                                color: SAFFRON,
-                                fontSize: "2.5rem",
-                                fontWeight: 800,
-                                border: "3px solid #fff",
-                                boxShadow: "0 8px 24px rgba(255, 153, 51, 0.25)",
-                            }}
-                        >
-                            {!p?.profileImageUrl &&
-                                `${p?.firstName?.[0] || ""}${
-                                    p?.lastName?.[0] || p?.name?.[0] || ""
-                                }`.toUpperCase()}
-                        </ProtectedAvatar>
+            <DialogContent
+                sx={{
+                    p: {
+                        xs: 2,
+                        sm: 3,
+                        md: 3.5,
+                    },
 
-                        <Stack
-                            direction="row"
-                            alignItems="center"
-                            spacing={0.5}
-                            sx={{ mt: 1 }}
-                        >
-                            <Typography
-                                fontWeight={800}
-                                fontSize="1.35rem"
-                                color="#1F1A17"
-                                letterSpacing={-0.5}
-                            >
-                                {fullName}
-                            </Typography>
-                            {isVerified && (
-                                <VerifiedOutlinedIcon
-                                    sx={{ color: "#2E7D32", fontSize: 22 }}
+                    overflowY: "auto",
+                    overflowX: "hidden",
+
+                    "&::-webkit-scrollbar": {
+                        width: "5px",
+                    },
+
+                    "&::-webkit-scrollbar-thumb": {
+                        backgroundColor: "#ddd",
+                        borderRadius: "10px",
+                    },
+                }}
+            >
+                <Stack
+                    spacing={{
+                        xs: 2,
+                        sm: 2.5,
+                    }}
+                    alignItems="center"
+                    sx={{
+                        width: "100%",
+                        minWidth: 0,
+                    }}
+                >
+                    {/* ─────────────────────────
+                        Avatar & Name
+                    ───────────────────────── */}
+
+                    <Stack
+                        alignItems="center"
+                        spacing={1}
+                        sx={{
+                            width: "100%",
+                            pt: { xs: 1, sm: 0.5 },
+                        }}
+                    >
+                        {profileLoading ? (
+                            <>
+                                <Skeleton
+                                    variant="circular"
+                                    width={90}
+                                    height={90}
                                 />
-                            )}
-                        </Stack>
 
-                        <Stack
-                            direction="row"
-                            alignItems="center"
-                            spacing={0.5}
-                            sx={{ color: "#666" }}
-                        >
-                            <PlaceOutlinedIcon sx={{ fontSize: 16 }} />
-                            <Typography fontSize="0.85rem" fontWeight={500}>
-                                {city}
-                            </Typography>
-                            {memberSince && (
-                                <>
-                                    <Typography fontSize="0.85rem" sx={{ mx: 0.5 }}>
-                                        •
+                                <Skeleton
+                                    width="55%"
+                                    height={28}
+                                />
+
+                                <Skeleton
+                                    width="70%"
+                                    height={20}
+                                />
+                            </>
+                        ) : (
+                            <>
+                                <ProtectedAvatar
+                                    src={p?.profileImageUrl || ""}
+                                    alt={fullName}
+                                    sx={{
+                                        width: {
+                                            xs: 76,
+                                            sm: 90,
+                                            md: 100,
+                                        },
+
+                                        height: {
+                                            xs: 76,
+                                            sm: 90,
+                                            md: 100,
+                                        },
+
+                                        bgcolor: "rgba(255,153,51,0.1)",
+                                        color: SAFFRON,
+
+                                        fontSize: {
+                                            xs: "1.9rem",
+                                            sm: "2.2rem",
+                                            md: "2.5rem",
+                                        },
+
+                                        fontWeight: 800,
+
+                                        border: "3px solid #fff",
+
+                                        boxShadow:
+                                            "0 8px 24px rgba(255,153,51,0.2)",
+                                    }}
+                                >
+                                    {!p?.profileImageUrl &&
+                                        `${p?.firstName?.[0] || ""}${p?.lastName?.[0] ||
+                                            p?.name?.[0] ||
+                                            ""
+                                            }`.toUpperCase()}
+                                </ProtectedAvatar>
+
+                                {/* Name */}
+
+                                <Stack
+                                    direction="row"
+                                    alignItems="center"
+                                    justifyContent="center"
+                                    spacing={0.6}
+                                    sx={{
+                                        maxWidth: "100%",
+                                        flexWrap: "wrap",
+                                    }}
+                                >
+                                    <Typography
+                                        sx={{
+                                            fontWeight: 800,
+
+                                            fontSize: {
+                                                xs: "1.1rem",
+                                                sm: "1.25rem",
+                                                md: "1.4rem",
+                                            },
+
+                                            color: DARK,
+                                            letterSpacing: "-0.4px",
+                                            textAlign: "center",
+                                            overflowWrap: "anywhere",
+                                        }}
+                                    >
+                                        {fullName}
                                     </Typography>
-                                    <Typography fontSize="0.85rem" fontWeight={500}>
-                                        Member since {memberSince}
+
+                                    {isVerified && (
+                                        <VerifiedOutlinedIcon
+                                            sx={{
+                                                color: GREEN,
+                                                fontSize: {
+                                                    xs: 19,
+                                                    sm: 21,
+                                                },
+                                                flexShrink: 0,
+                                            }}
+                                        />
+                                    )}
+                                </Stack>
+
+                                {/* Location and member since */}
+
+                                <Stack
+                                    direction="row"
+                                    alignItems="center"
+                                    justifyContent="center"
+                                    flexWrap="wrap"
+                                    useFlexGap
+                                    spacing={0.6}
+                                    sx={{
+                                        color: "#666",
+                                        maxWidth: "100%",
+                                        rowGap: 0.5,
+                                    }}
+                                >
+                                    <PlaceOutlinedIcon
+                                        sx={{
+                                            fontSize: 16,
+                                            flexShrink: 0,
+                                        }}
+                                    />
+
+                                    <Typography
+                                        sx={{
+                                            fontSize: {
+                                                xs: "0.76rem",
+                                                sm: "0.83rem",
+                                            },
+                                            fontWeight: 500,
+                                            overflowWrap: "anywhere",
+                                        }}
+                                    >
+                                        {city}
                                     </Typography>
-                                </>
-                            )}
-                        </Stack>
+
+                                    {memberSince && (
+                                        <>
+                                            <Typography
+                                                sx={{
+                                                    fontSize: "0.8rem",
+                                                    mx: 0.3,
+                                                }}
+                                            >
+                                                •
+                                            </Typography>
+
+                                            <Typography
+                                                sx={{
+                                                    fontSize: {
+                                                        xs: "0.76rem",
+                                                        sm: "0.83rem",
+                                                    },
+                                                    fontWeight: 500,
+                                                }}
+                                            >
+                                                Member since {memberSince}
+                                            </Typography>
+                                        </>
+                                    )}
+                                </Stack>
+                            </>
+                        )}
                     </Stack>
 
-                    {/* ── TRUST PANEL: Who vouched for this member ── */}
-                    {loadingProfile && !hasReferralInfo ? (
+                    {/* ─────────────────────────
+                        Vouched For / Trust Panel
+                    ───────────────────────── */}
+
+                    {profileLoading ? (
                         <Skeleton
                             variant="rounded"
-                            height={64}
-                            sx={{ width: "100%", borderRadius: 3 }}
+                            height={65}
+                            sx={{
+                                width: "100%",
+                                borderRadius: 3,
+                            }}
                         />
                     ) : (
                         hasReferralInfo && (
                             <Box
                                 sx={{
                                     width: "100%",
-                                    bgcolor: "rgba(46, 125, 50, 0.06)",
-                                    borderRadius: 3,
-                                    border: "1px solid rgba(46, 125, 50, 0.2)",
-                                    px: 2,
-                                    py: 1.5,
+                                    boxSizing: "border-box",
+
+                                    bgcolor: "rgba(46,125,50,0.06)",
+
+                                    borderRadius: {
+                                        xs: 2.5,
+                                        sm: 3,
+                                    },
+
+                                    border:
+                                        "1px solid rgba(46,125,50,0.2)",
+
+                                    px: {
+                                        xs: 1.5,
+                                        sm: 2,
+                                    },
+
+                                    py: {
+                                        xs: 1.25,
+                                        sm: 1.5,
+                                    },
                                 }}
                             >
                                 <Stack
                                     direction="row"
-                                    spacing={1.25}
-                                    alignItems="flex-start"
+                                    spacing={1.2}
+                                    alignItems="center"
                                 >
                                     <Box
                                         sx={{
-                                            width: 30,
-                                            height: 30,
+                                            width: {
+                                                xs: 30,
+                                                sm: 34,
+                                            },
+
+                                            height: {
+                                                xs: 30,
+                                                sm: 34,
+                                            },
+
                                             borderRadius: "50%",
-                                            bgcolor: "rgba(46, 125, 50, 0.12)",
-                                            color: "#2E7D32",
+
+                                            bgcolor:
+                                                "rgba(46,125,50,0.12)",
+
+                                            color: GREEN,
+
                                             display: "grid",
                                             placeItems: "center",
+
                                             flexShrink: 0,
-                                            mt: 0.2,
                                         }}
                                     >
                                         <PersonAddAlt1OutlinedIcon
-                                            sx={{ fontSize: 18 }}
+                                            sx={{
+                                                fontSize: 19,
+                                            }}
                                         />
                                     </Box>
 
-                                    <Box sx={{ minWidth: 0, flex: 1 }}>
+                                    <Box
+                                        sx={{
+                                            minWidth: 0,
+                                            flex: 1,
+                                        }}
+                                    >
                                         {referrerName && (
                                             <Typography
-                                                fontSize="0.88rem"
-                                                color="#1F1A17"
-                                                lineHeight={1.5}
+                                                sx={{
+                                                    fontSize: {
+                                                        xs: "0.79rem",
+                                                        sm: "0.88rem",
+                                                    },
+
+                                                    color: DARK,
+                                                    lineHeight: 1.5,
+                                                    overflowWrap: "anywhere",
+                                                }}
                                             >
-                                                <strong>
+                                                <Box
+                                                    component="span"
+                                                    sx={{
+                                                        fontWeight: 700,
+                                                    }}
+                                                >
                                                     Vouched for by {referrerName}
-                                                </strong>
+                                                </Box>
+
                                                 {approvedOn && (
-                                                    <Typography
+                                                    <Box
                                                         component="span"
-                                                        fontSize="0.88rem"
-                                                        color="#555"
+                                                        sx={{
+                                                            color: "#666",
+                                                            fontWeight: 400,
+                                                        }}
                                                     >
-                                                        {" "}
-                                                        · approved on {approvedOn}
-                                                    </Typography>
+                                                        {" "}· approved on {approvedOn}
+                                                    </Box>
                                                 )}
                                             </Typography>
                                         )}
 
                                         {!referrerName && approvedOn && (
                                             <Typography
-                                                fontSize="0.88rem"
-                                                color="#1F1A17"
+                                                sx={{
+                                                    fontSize: {
+                                                        xs: "0.79rem",
+                                                        sm: "0.88rem",
+                                                    },
+                                                    color: DARK,
+                                                }}
                                             >
                                                 Approved on {approvedOn}
                                             </Typography>
                                         )}
-
-                                        {/* {membersReferred != null && (
-                                            <Typography
-                                                fontSize="0.78rem"
-                                                color="#555"
-                                                sx={{ mt: 0.4 }}
-                                            >
-                                                {membersReferred}{" "}
-                                                {membersReferred === 1
-                                                    ? "member"
-                                                    : "members"}{" "}
-                                                vouched for
-                                            </Typography>
-                                        )} */}
                                     </Box>
                                 </Stack>
                             </Box>
                         )
                     )}
 
-                    {/* ── Middle: Rich Stats Box ── */}
+                    {/* ─────────────────────────
+                        Statistics
+                    ───────────────────────── */}
+
                     <Box
                         sx={{
                             width: "100%",
-                            bgcolor: "rgba(255, 255, 255, 0.6)",
-                            borderRadius: 4,
-                            border: "1px solid rgba(255, 255, 255, 0.8)",
-                            boxShadow: "0 4px 12px rgba(0,0,0,0.02)",
-                            py: 2,
+                            boxSizing: "border-box",
+
+                            bgcolor: "#FAFAFA",
+
+                            borderRadius: {
+                                xs: 2.5,
+                                sm: 3,
+                            },
+
+                            border: "1px solid #EEEEEE",
+
+                            py: {
+                                xs: 1.5,
+                                sm: 2,
+                            },
+
+                            px: 1,
+
                             display: "flex",
                             justifyContent: "space-around",
                             alignItems: "center",
                         }}
                     >
-                        <Stack alignItems="center" spacing={0.5}>
+                        {/* Rating */}
+
+                        <Stack
+
+                            spacing={0.5}
+                            sx={{
+                                flex: 1,
+                                minWidth: 0,
+                                alignItems: "center",
+                            }}
+                        >
                             <Stack
                                 direction="row"
                                 alignItems="center"
-                                spacing={0.5}
+                                spacing={0.4}
                             >
                                 <StarIcon
-                                    sx={{ color: SAFFRON, fontSize: 22 }}
+                                    sx={{
+                                        color: SAFFRON,
+                                        fontSize: {
+                                            xs: 19,
+                                            sm: 22,
+                                        },
+                                    }}
                                 />
+
                                 <Typography
-                                    fontWeight={800}
-                                    fontSize="1.2rem"
-                                    color="#1F1A17"
+                                    sx={{
+                                        fontWeight: 800,
+
+                                        fontSize: {
+                                            xs: "1.05rem",
+                                            sm: "1.2rem",
+                                        },
+
+                                        color: DARK,
+                                    }}
                                 >
                                     {ratingValue > 0
                                         ? ratingValue.toFixed(1)
                                         : "—"}
                                 </Typography>
                             </Stack>
+
                             <Typography
-                                fontSize="0.72rem"
-                                fontWeight={600}
-                                color="#777"
-                                textTransform="uppercase"
-                                letterSpacing={0.5}
+                                sx={{
+                                    fontSize: {
+                                        xs: "0.62rem",
+                                        sm: "0.72rem",
+                                    },
+
+                                    fontWeight: 700,
+                                    color: "#777",
+                                    textTransform: "uppercase",
+                                    letterSpacing: {
+                                        xs: 0.2,
+                                        sm: 0.5,
+                                    },
+
+                                    textAlign: "center",
+                                }}
                             >
                                 {getRatingLabel(ratingValue)}
                             </Typography>
@@ -428,55 +789,101 @@ const ProfileModal = ({
                         <Divider
                             orientation="vertical"
                             flexItem
-                            sx={{ borderColor: "rgba(0,0,0,0.06)" }}
+                            sx={{
+                                borderColor: "#E5E5E5",
+                            }}
                         />
 
-                        <Stack alignItems="center" spacing={0.5}>
+                        {/* Rides */}
+
+                        <Stack
+
+                            spacing={0.5}
+                            sx={{
+                                flex: 1,
+                                minWidth: 0,
+                                alignItems: "center"
+                            }}
+                        >
                             <Typography
-                                fontWeight={800}
-                                fontSize="1.2rem"
-                                color="#1F1A17"
+                                sx={{
+                                    fontWeight: 800,
+
+                                    fontSize: {
+                                        xs: "1.05rem",
+                                        sm: "1.2rem",
+                                    },
+
+                                    color: DARK,
+                                }}
                             >
                                 {rideCount}
                             </Typography>
+
                             <Typography
-                                fontSize="0.72rem"
-                                fontWeight={600}
-                                color="#777"
-                                textTransform="uppercase"
-                                letterSpacing={0.5}
+                                sx={{
+                                    fontSize: {
+                                        xs: "0.62rem",
+                                        sm: "0.72rem",
+                                    },
+
+                                    fontWeight: 700,
+                                    color: "#777",
+                                    textTransform: "uppercase",
+                                    letterSpacing: {
+                                        xs: 0.2,
+                                        sm: 0.5,
+                                    },
+
+                                    textAlign: "center",
+                                }}
                             >
                                 Rides Given
                             </Typography>
                         </Stack>
                     </Box>
 
-                    {/* ── Bio ── */}
-                    <Box sx={{ width: "100%", textAlign: "left" }}>
+                    {/* ─────────────────────────
+                        About / Bio
+                    ───────────────────────── */}
+
+                    <Box
+                        sx={{
+                            width: "100%",
+                            minWidth: 0,
+                            textAlign: "left",
+                        }}
+                    >
+                        <SectionLabel>
+                            About {p?.firstName || "Member"}
+                        </SectionLabel>
+
                         <Typography
-                            fontSize="0.75rem"
-                            fontWeight={700}
-                            color="#888"
-                            textTransform="uppercase"
-                            letterSpacing={0.5}
-                            mb={1}
-                        >
-                            About {p?.firstName}
-                        </Typography>
-                        <Typography
-                            fontSize="0.92rem"
-                            color="#3F3934"
-                            lineHeight={1.6}
                             sx={{
-                                fontStyle: !bio ? "italic" : "normal",
-                                opacity: !bio ? 0.6 : 1,
+                                fontSize: {
+                                    xs: "0.82rem",
+                                    sm: "0.9rem",
+                                    md: "0.93rem",
+                                },
+
+                                color: "#3F3934",
+                                lineHeight: {
+                                    xs: 1.55,
+                                    sm: 1.65,
+                                },
+
+                                overflowWrap: "anywhere",
+                                whiteSpace: "pre-wrap",
                             }}
                         >
                             {bio}
                         </Typography>
                     </Box>
 
-                    {/* ── Call to Action ── */}
+                    {/* ─────────────────────────
+                        Message Button
+                    ───────────────────────── */}
+
                     {!isOwnProfile && profileId && (
                         <Button
                             variant="contained"
@@ -488,18 +895,39 @@ const ProfileModal = ({
                                 onClose?.();
                             }}
                             sx={{
-                                mt: 1,
-                                py: 1.2,
-                                borderRadius: 3,
-                                backgroundColor: "#1F1A17",
+                                mt: 0.5,
+
+                                py: {
+                                    xs: 1,
+                                    sm: 1.2,
+                                },
+
+                                borderRadius: 2.5,
+
+                                backgroundColor: DARK,
                                 color: "#fff",
+
                                 fontWeight: 700,
                                 textTransform: "none",
-                                fontSize: "0.95rem",
-                                boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
+
+                                fontSize: {
+                                    xs: "0.84rem",
+                                    sm: "0.93rem",
+                                },
+
+                                minHeight: {
+                                    xs: 42,
+                                    sm: 46,
+                                },
+
+                                boxShadow:
+                                    "0 6px 16px rgba(0,0,0,0.12)",
+
                                 "&:hover": {
                                     backgroundColor: "#000",
-                                    boxShadow: "0 10px 24px rgba(0,0,0,0.2)",
+
+                                    boxShadow:
+                                        "0 8px 20px rgba(0,0,0,0.18)",
                                 },
                             }}
                         >
