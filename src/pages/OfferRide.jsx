@@ -1428,7 +1428,7 @@ export default function OfferRide({ ride, requestRide, onSave, onClose, setOpen 
                   fullWidth multiline minRows={3} maxRows={8} size={inputSize}
                   placeholder="Add details — pickup area, what you're offering, etc."
                   value={offerForm.description}
-                  onChange={(e) => updateOffer("description", e.target.value)}
+                  onChange={(e) => updateOffer("description", sanitizeNotes(e.target.value))}
                   sx={tfSx}
                 />
               </Box>
