@@ -31,6 +31,7 @@ import { useRating } from "../context/RatingContext";
 import socket from "../socket";
 import ProtectedAvatar from "../components/ProtectedAvatar.jsx";
 import ProfileModal from "./Avatar.jsx";
+import { formatDate } from "../utils/formatDate";
 
 const BRAND = "#E8650A";
 const LINE = "#E8DED4";
@@ -302,7 +303,7 @@ function RideCard({
         </Box>
 
         <Stack direction="row" spacing={0.75} useFlexGap sx={{ display: "flex", flexWrap: "wrap", px: 2, py: 1.5, width: "100%", minWidth: 0, "& .MuiChip-root": { flexShrink: 0, maxWidth: "100%" }, "& .MuiChip-label": { whiteSpace: "nowrap" } }}>
-          <Chip size="small" variant="outlined" icon={<CalendarTodayIcon />} label={`${fmtDate(ride.startTime)} · ${fmtTime(ride.startTime)}`} />
+          <Chip size="small" variant="outlined" icon={<CalendarTodayIcon />} label={`${formatDate(ride.startTime)} · ${fmtTime(ride.startTime)}`} />
           <Chip size="small" variant="outlined" icon={<Mode />} label={ride.modeOfTravel || "Car"} />
           {ride.kind === "offer" && ride.modeOfTravel !== "Flight" && (
             <>

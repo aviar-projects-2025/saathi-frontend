@@ -405,7 +405,7 @@ export default function CommunityFeedItem({
                             active: livePost?.isLiked,
                             onClick: () => onToggleLike?.(livePost._id, livePost.isLiked),
                             icon: livePost?.isLiked ? <ThumbUpIcon /> : <ThumbUpOffAltIcon />,
-                            label: `${livePost?.likes || 0} Useful`,
+                            label: livePost?.likes > 0 ? `${livePost.likes} Useful` : ''
                         },
                         {
                             key: "answer",
